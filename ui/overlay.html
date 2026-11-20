@@ -237,6 +237,277 @@
     .empty-msg {
       padding: 48px 16px; text-align: center; color: var(--ink-muted); font-size: 12.5px;
     }
+
+    /* Mode 7: dejavu VPN Control Center */
+    .vpn-hero {
+      padding: 13px 14px;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+      background: linear-gradient(145deg, rgba(140, 120, 210, 0.14), rgba(20, 18, 38, 0.45));
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+      transition: border-color 0.28s ease, background 0.28s ease, box-shadow 0.28s ease;
+    }
+    .vpn-hero.connected {
+      border-color: rgba(94, 234, 212, 0.52);
+      background: linear-gradient(145deg, rgba(45, 212, 191, 0.18), rgba(56, 189, 248, 0.1) 55%, rgba(16, 20, 34, 0.46));
+      box-shadow: 0 8px 24px -10px rgba(45, 212, 191, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    }
+    .vpn-hero.connecting {
+      border-color: rgba(182, 136, 255, 0.56);
+      background: linear-gradient(145deg, rgba(168, 122, 255, 0.22), rgba(24, 18, 44, 0.48));
+    }
+    .vpn-hero.error {
+      border-color: rgba(255, 118, 146, 0.52);
+      background: linear-gradient(145deg, rgba(255, 107, 139, 0.16), rgba(28, 14, 26, 0.48));
+    }
+    .vpn-hero-top {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+    .vpn-orb {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.08);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-muted);
+      flex-shrink: 0;
+      transition: all 0.28s ease;
+    }
+    .vpn-hero.connected .vpn-orb {
+      color: #6fffe9;
+      border-color: rgba(94, 234, 212, 0.62);
+      background: rgba(45, 212, 191, 0.2);
+      box-shadow: 0 0 16px rgba(94, 234, 212, 0.36);
+    }
+    .vpn-hero.connecting .vpn-orb {
+      color: var(--accent-bright);
+      border-color: rgba(196, 156, 255, 0.6);
+      background: rgba(176, 124, 255, 0.22);
+    }
+    .vpn-hero-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .vpn-hero-title {
+      font-size: 13.8px;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vpn-hero-sub {
+      font-size: 11.4px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vpn-ip-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: rgba(8, 12, 22, 0.42);
+      border: 1px solid rgba(94, 234, 212, 0.24);
+      font-size: 11.2px;
+    }
+    .vpn-ip-val {
+      font-family: 'Cascadia Mono', 'Consolas', monospace;
+      color: #82ffec;
+      font-weight: 600;
+      font-size: 11.4px;
+    }
+    .vpn-ip-loc {
+      color: var(--ink-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vpn-prog-track {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+    .vpn-prog-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #a778ff, #6fffe9);
+      transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .vpn-badge-live {
+      font-size: 10.6px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--ink-muted);
+    }
+    .vpn-badge-live.connected {
+      color: #6fffe9;
+      background: rgba(45, 212, 191, 0.18);
+      border-color: rgba(94, 234, 212, 0.5);
+    }
+    .vpn-badge-live.connecting {
+      color: var(--accent-bright);
+      background: rgba(176, 124, 255, 0.2);
+      border-color: rgba(196, 156, 255, 0.5);
+    }
+    .vpn-country-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.16s ease, border-color 0.16s ease, transform 0.22s cubic-bezier(0.22, 1.15, 0.36, 1);
+    }
+    .vpn-country-row:hover {
+      background: var(--glass-hover-bg);
+      transform: translateX(2px);
+    }
+    .vpn-country-row.selected {
+      background: rgba(176, 124, 255, 0.18);
+      border-color: rgba(196, 156, 255, 0.42);
+    }
+    .vpn-country-row.active-conn {
+      background: rgba(45, 212, 191, 0.16);
+      border-color: rgba(94, 234, 212, 0.48);
+    }
+    .vpn-cc-pill {
+      width: 32px;
+      height: 22px;
+      border-radius: 7px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      background: rgba(176, 124, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      flex-shrink: 0;
+    }
+    .vpn-country-row.active-conn .vpn-cc-pill {
+      background: rgba(45, 212, 191, 0.24);
+      border-color: rgba(94, 234, 212, 0.55);
+      color: #82ffec;
+    }
+    .vpn-c-meta { flex: 1; min-width: 0; }
+    .vpn-c-name { font-size: 12.8px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vpn-c-reg { font-size: 10.6px; color: var(--ink-muted); }
+    .vpn-c-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #6fffe9;
+      flex-shrink: 0;
+    }
+    .vpn-foot-note {
+      font-size: 10.5px;
+      color: var(--ink-muted);
+      text-align: center;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+
+    /* Mode 8: Floating Omnibox Autocomplete Suggestions */
+    .suggest-box {
+      width: 100%;
+      height: 100%;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+    .sug-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 42px;
+      padding: 0 11px;
+      border-radius: 12px;
+      cursor: pointer;
+      color: var(--ink);
+      transition: background 0.14s ease, transform 0.18s cubic-bezier(0.22, 1.15, 0.36, 1);
+      flex-shrink: 0;
+    }
+    .sug-row:hover,
+    .sug-row.selected {
+      background: rgba(182, 136, 255, 0.22);
+    }
+    .sug-row.selected {
+      box-shadow: inset 0 0 0 1px rgba(212, 184, 255, 0.38);
+    }
+    body.theme-light .sug-row:hover,
+    body.theme-light .sug-row.selected {
+      background: rgba(124, 77, 255, 0.14);
+    }
+    .sug-ico {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-muted);
+      flex-shrink: 0;
+    }
+    .sug-ico img { width: 16px; height: 16px; border-radius: 4px; object-fit: contain; }
+    .sug-ico.is-fav { color: #ffd66b; }
+    .sug-ico.is-url, .sug-ico.is-site { color: #72e0ff; }
+    .sug-ico.is-hist { color: #c7a6ff; }
+    .sug-text {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .sug-title {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sug-sub {
+      font-size: 11.2px;
+      color: var(--ink-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-shrink: 1;
+    }
+    .sug-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--ink-subtle);
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body class="theme-dark">
@@ -399,6 +670,57 @@
     </div>
   </div>
 
+  <!-- Mode 7: Multi-Country Encrypted VPN Control Center -->
+  <div id="mode-vpn" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="22" data-lg-scale="28" data-lg-dispersion="1.2" data-lg-dome="0.045">
+    <div class="panel-box">
+      <div class="panel-head">
+        <div class="panel-title">
+          <span>dejavu VPN</span>
+          <span id="vpn-state-badge" class="vpn-badge-live">Off</span>
+        </div>
+        <button id="btn-vpn-close" class="icon-btn sm" title="Close">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div id="vpn-hero-card" class="vpn-hero">
+        <div class="vpn-hero-top">
+          <div class="vpn-orb">
+            <svg viewBox="0 0 20 20" fill="none" width="20" height="20">
+              <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
+              <ellipse cx="10" cy="10" rx="3.2" ry="7" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M3.4 7.8h13.2M3.4 12.2h13.2" stroke="currentColor" stroke-width="1.35"/>
+            </svg>
+          </div>
+          <div class="vpn-hero-info">
+            <div id="vpn-hero-country" class="vpn-hero-title">Fastest Location</div>
+            <div id="vpn-hero-status" class="vpn-hero-sub">Disconnected · Direct connection</div>
+          </div>
+          <button id="btn-vpn-toggle" class="liquid-switch" role="switch" title="Toggle Encrypted VPN"><span class="switch-knob"></span></button>
+        </div>
+
+        <div id="vpn-ip-strip" class="vpn-ip-strip hidden">
+          <span id="vpn-ip-val" class="vpn-ip-val"></span>
+          <span id="vpn-ip-loc" class="vpn-ip-loc"></span>
+        </div>
+
+        <div id="vpn-prog-wrap" class="vpn-prog-track hidden">
+          <div id="vpn-prog-fill" class="vpn-prog-fill"></div>
+        </div>
+      </div>
+
+      <input id="vpn-search-input" class="hist-search" type="text" placeholder="Search 22 major countries..." spellcheck="false" autocomplete="off">
+      <div id="vpn-country-list" class="panel-scroll"></div>
+
+      <div class="vpn-foot-note">Browser-only 3-hop encrypted tunnel · Remote DNS &amp; WebRTC shield</div>
+    </div>
+  </div>
+
+  <!-- Mode 8: Floating Omnibox Autocomplete Suggestions -->
+  <div id="mode-suggest" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="16" data-lg-scale="22" data-lg-dispersion="1.12">
+    <div id="suggest-list" class="suggest-box"></div>
+  </div>
+
   <script src="https://dejavu.local/avatars.js"></script>
   <script src="https://dejavu.local/liquid-glass.js"></script>
   <script>
@@ -412,7 +734,9 @@
       download: document.getElementById('mode-download'),
       profiles: document.getElementById('mode-profiles'),
       history: document.getElementById('mode-history'),
-      update: document.getElementById('mode-update')
+      update: document.getElementById('mode-update'),
+      vpn: document.getElementById('mode-vpn'),
+      suggest: document.getElementById('mode-suggest')
     };
 
     // Shield bindings
@@ -783,8 +1107,150 @@
         document.getElementById('upd-title').textContent = `dejavu v${d.version} is ready`;
         document.getElementById('upd-sub').textContent = `Updating from v${d.currentVersion} automatically`;
         requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.update));
+      } else if (d.mode === 'vpn') {
+        renderVpnPanel(d.vpn || {});
+        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.vpn));
+      } else if (d.mode === 'suggest') {
+        renderOmniboxSuggestions(d.items || [], typeof d.selectedIndex === 'number' ? d.selectedIndex : -1);
+        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.suggest));
       }
     });
+
+    // =========================================================================
+    // Mode 7: Multi-Country VPN Panel Logic
+    // =========================================================================
+    function escapeHtml(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    const vpnHeroCard = document.getElementById('vpn-hero-card');
+    const vpnStateBadge = document.getElementById('vpn-state-badge');
+    const vpnHeroCountry = document.getElementById('vpn-hero-country');
+    const vpnHeroStatus = document.getElementById('vpn-hero-status');
+    const btnVpnToggle = document.getElementById('btn-vpn-toggle');
+    const vpnIpStrip = document.getElementById('vpn-ip-strip');
+    const vpnIpVal = document.getElementById('vpn-ip-val');
+    const vpnIpLoc = document.getElementById('vpn-ip-loc');
+    const vpnProgWrap = document.getElementById('vpn-prog-wrap');
+    const vpnProgFill = document.getElementById('vpn-prog-fill');
+    const vpnSearchInput = document.getElementById('vpn-search-input');
+    const vpnCountryList = document.getElementById('vpn-country-list');
+    let lastVpnSnap = null;
+
+    document.getElementById('btn-vpn-close').addEventListener('click', () => send({ type: 'closePanel' }));
+    btnVpnToggle.addEventListener('click', () => send({ type: 'toggleVpn' }));
+    vpnSearchInput.addEventListener('input', () => { if (lastVpnSnap) renderVpnCountries(lastVpnSnap); });
+
+    function renderVpnPanel(v) {
+      lastVpnSnap = v;
+      const st = v.state || 'disconnected';
+      const isConn = st === 'connected';
+      const isBusy = st === 'connecting' || st === 'downloading';
+
+      vpnHeroCard.className = 'vpn-hero ' + (isConn ? 'connected' : (isBusy ? 'connecting' : (st === 'error' ? 'error' : '')));
+      vpnStateBadge.className = 'vpn-badge-live ' + (isConn ? 'connected' : (isBusy ? 'connecting' : ''));
+      vpnStateBadge.textContent = isConn ? 'Protected' : (st === 'downloading' ? 'Setup' : (isBusy ? 'Connecting' : (st === 'error' ? 'Retry' : 'Off')));
+
+      btnVpnToggle.classList.toggle('on', isConn || isBusy);
+      vpnHeroCountry.textContent = v.countryName || 'Fastest Location';
+      vpnHeroStatus.textContent = v.statusText || 'Disconnected · Direct connection';
+
+      if (isConn && v.exitIp) {
+        vpnIpStrip.classList.remove('hidden');
+        vpnIpVal.textContent = v.exitIp;
+        const loc = [v.exitCity, v.exitCountry].filter(Boolean).join(', ');
+        vpnIpLoc.textContent = (loc || v.countryName || '') + (v.latencyMs ? ` · ${v.latencyMs}ms` : '');
+      } else {
+        vpnIpStrip.classList.add('hidden');
+      }
+
+      if (isBusy) {
+        vpnProgWrap.classList.remove('hidden');
+        vpnProgFill.style.width = `${Math.max(8, Math.min(100, v.progress || 10))}%`;
+      } else {
+        vpnProgWrap.classList.add('hidden');
+      }
+
+      renderVpnCountries(v);
+    }
+
+    function renderVpnCountries(v) {
+      const q = (vpnSearchInput.value || '').trim().toLowerCase();
+      const list = Array.isArray(v.countries) ? v.countries : [];
+      const curCode = (v.countryCode || 'AUTO').toUpperCase();
+      const isConn = v.state === 'connected';
+
+      vpnCountryList.innerHTML = '';
+      const filtered = q
+        ? list.filter((c) => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || (c.region || '').toLowerCase().includes(q))
+        : list;
+
+      if (filtered.length === 0) {
+        vpnCountryList.innerHTML = '<div class="empty-msg">No matching countries</div>';
+        return;
+      }
+
+      filtered.forEach((c) => {
+        const isSel = c.code === curCode;
+        const row = document.createElement('div');
+        row.className = 'vpn-country-row' + (isSel ? (isConn ? ' active-conn' : ' selected') : '');
+        const ccLabel = c.code === 'AUTO' ? 'AUTO' : (c.code === 'GB' ? 'UK' : c.code);
+        row.innerHTML = `
+          <span class="vpn-cc-pill">${ccLabel}</span>
+          <div class="vpn-c-meta">
+            <div class="vpn-c-name">${escapeHtml(c.name)}</div>
+            <div class="vpn-c-reg">${escapeHtml(c.region || '')}</div>
+          </div>
+          <span class="vpn-c-check">${isSel ? '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3.5 8.5l3 3 6-6.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</span>
+        `;
+        row.addEventListener('click', () => send({ type: 'selectVpnCountry', code: c.code }));
+        vpnCountryList.appendChild(row);
+      });
+    }
+
+    // =========================================================================
+    // Mode 8: Floating Omnibox Autocomplete Dropdown
+    // =========================================================================
+    const suggestList = document.getElementById('suggest-list');
+
+    function getSuggestIconHtml(item) {
+      if (item.favicon) {
+        return `<img src="${escapeHtml(item.favicon)}" alt="" onerror="this.remove()">`;
+      }
+      if (item.kind === 'favorite') {
+        return '<svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 2l1.9 3.8 4.1.6-3 2.9.7 4.1L8 11.4l-3.7 2 .7-4.1-3-2.9 4.1-.6L8 2z"/></svg>';
+      }
+      if (item.kind === 'history') {
+        return '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 5.2v3l2 1.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+      }
+      if (item.kind === 'url' || item.kind === 'site') {
+        return '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><ellipse cx="8" cy="8" rx="2.5" ry="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M2.8 8h10.4" stroke="currentColor" stroke-width="1.2"/></svg>';
+      }
+      return '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="7.2" cy="7.2" r="4.5" stroke="currentColor" stroke-width="1.45"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+    }
+
+    function renderOmniboxSuggestions(items, selectedIndex) {
+      suggestList.innerHTML = '';
+      items.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = 'sug-row' + (idx === selectedIndex ? ' selected' : '');
+        const icoCls = item.kind === 'favorite' ? 'is-fav' : (item.kind === 'history' ? 'is-hist' : ((item.kind === 'url' || item.kind === 'site') ? 'is-url' : ''));
+        const badge = item.kind === 'url' ? 'Go' : (item.kind === 'site' ? 'Site' : (item.kind === 'favorite' ? 'Pinned' : ''));
+        row.innerHTML = `
+          <span class="sug-ico ${icoCls}">${getSuggestIconHtml(item)}</span>
+          <div class="sug-text">
+            <span class="sug-title">${escapeHtml(item.title || '')}</span>
+            ${item.subtitle ? `<span class="sug-sub">— ${escapeHtml(item.subtitle)}</span>` : ''}
+          </div>
+          ${badge ? `<span class="sug-badge">${badge}</span>` : ''}
+        `;
+        row.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          send({ type: 'pickSuggestion', value: item.value || item.title });
+        });
+        suggestList.appendChild(row);
+      });
+    }
   </script>
 </body>
 </html>

@@ -368,7 +368,7 @@ namespace DejavuSetup
                     if (key != null)
                     {
                         key.SetValue("DisplayName", "dejavu");
-                        key.SetValue("DisplayVersion", "2.3.1");
+                        key.SetValue("DisplayVersion", "2.4.0");
                         key.SetValue("Publisher", "dejavu");
                         key.SetValue("DisplayIcon", iconPath);
                         key.SetValue("InstallLocation", InstallDir);

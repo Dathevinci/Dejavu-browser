@@ -14,6 +14,7 @@ namespace DejavuBrowser
         private bool _ready;
         private string _pendingJson;
         private readonly bool _dismissOnDeactivate;
+        private readonly bool _neverActivate;
         private bool _everShown;
         private bool _isOpen;
         private bool _hiding;
@@ -27,9 +28,15 @@ namespace DejavuBrowser
         public event Action PopupHidden;
 
         public OverlayPopup(Form owner, bool dismissOnDeactivate)
+            : this(owner, dismissOnDeactivate, false)
+        {
+        }
+
+        public OverlayPopup(Form owner, bool dismissOnDeactivate, bool neverActivate)
         {
             _ownerForm = owner;
             _dismissOnDeactivate = dismissOnDeactivate;
+            _neverActivate = neverActivate;
             Owner = owner;
             FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
@@ -45,7 +52,7 @@ namespace DejavuBrowser
 
         protected override bool ShowWithoutActivation
         {
-            get { return !_dismissOnDeactivate; }
+            get { return _neverActivate || !_dismissOnDeactivate; }
         }
 
         protected override CreateParams CreateParams
@@ -55,6 +62,10 @@ namespace DejavuBrowser
                 CreateParams cp = base.CreateParams;
                 // Keep floating popovers out of Alt-Tab / app-level Z-order competition
                 cp.ExStyle |= NativeWin32.WS_EX_TOOLWINDOW;
+                if (_neverActivate)
+                {
+                    cp.ExStyle |= NativeWin32.WS_EX_NOACTIVATE;
+                }
                 return cp;
             }
         }
@@ -67,6 +78,12 @@ namespace DejavuBrowser
 
         protected override void WndProc(ref Message m)
         {
+            if (_neverActivate && m.Msg == NativeWin32.WM_MOUSEACTIVATE)
+            {
+                m.Result = (IntPtr)NativeWin32.MA_NOACTIVATE;
+                return;
+            }
+
             if (m.Msg == NativeWin32.WM_ACTIVATE)
             {
                 int state = (int)(m.WParam.ToInt64() & 0xFFFF);

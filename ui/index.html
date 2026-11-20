@@ -87,6 +87,14 @@
       </div>
 
       <div class="glass-pill util-pill" data-liquid-glass data-lg-bezel="12" data-lg-scale="18" data-lg-dispersion="1.0">
+        <button id="btn-vpn" class="vpn-trigger" title="dejavu VPN (Multi-Country Encrypted Tunnel)">
+          <svg class="vpn-ico" viewBox="0 0 18 18" fill="none">
+            <circle cx="9" cy="9" r="6.2" stroke="currentColor" stroke-width="1.45"/>
+            <ellipse cx="9" cy="9" rx="2.9" ry="6.2" stroke="currentColor" stroke-width="1.35"/>
+            <path d="M3.1 7.2h11.8M3.1 10.8h11.8" stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+          <span id="vpn-chip-code" class="vpn-chip-code hidden"></span>
+        </button>
         <button id="btn-history" class="icon-btn" title="History (Ctrl+H)">
           <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M9 5.8V9.2l2.4 1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -114,23 +122,26 @@
           <h1 class="hero-title">dejavu</h1>
         </div>
 
-        <form id="newtab-search-form" class="glass-pill hero-search anim-rise-2" data-liquid-glass data-lg-bezel="22" data-lg-scale="30" data-lg-dispersion="1.28" data-lg-dome="0.06">
-          <svg class="hero-search-ico" viewBox="0 0 20 20" fill="none">
-            <circle cx="9" cy="9" r="5.6" stroke="currentColor" stroke-width="1.6"/>
-            <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          </svg>
-          <input
-            id="newtab-search-input"
-            type="text"
-            spellcheck="false"
-            autocomplete="off"
-            placeholder="Search the web or type a link..."
-            aria-label="Search the web"
-          >
-          <button type="submit" class="hero-go-btn" title="Go">
-            <svg viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 4.5L14.5 9 10 13.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-        </form>
+        <div class="hero-search-wrap anim-rise-2">
+          <form id="newtab-search-form" class="glass-pill hero-search" data-liquid-glass data-lg-bezel="22" data-lg-scale="30" data-lg-dispersion="1.28" data-lg-dome="0.06">
+            <svg class="hero-search-ico" viewBox="0 0 20 20" fill="none">
+              <circle cx="9" cy="9" r="5.6" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+            <input
+              id="newtab-search-input"
+              type="text"
+              spellcheck="false"
+              autocomplete="off"
+              placeholder="Search the web or type a link..."
+              aria-label="Search the web"
+            >
+            <button type="submit" class="hero-go-btn" title="Go">
+              <svg viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 4.5L14.5 9 10 13.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </form>
+          <div id="newtab-suggest" class="glass-card hero-suggest hidden" data-liquid-glass data-lg-bezel="18" data-lg-scale="24" data-lg-dispersion="1.15"></div>
+        </div>
 
         <div id="shortcuts-grid" class="shortcuts-grid anim-rise-3"></div>
       </div>

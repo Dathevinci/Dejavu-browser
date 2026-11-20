@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Reflection;
 using System.Windows.Forms;
 
@@ -10,6 +11,17 @@ namespace DejavuBrowser
         [STAThread]
         private static void Main(string[] args)
         {
+            try
+            {
+                ServicePointManager.SecurityProtocol =
+                    SecurityProtocolType.Tls12 | (SecurityProtocolType)12288;
+                ServicePointManager.DefaultConnectionLimit = 64;
+            }
+            catch
+            {
+                try { ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12; } catch { }
+            }
+
             NativeWin32.EnablePerMonitorDpi();
 
             // Self-contained single-EXE runtime bootstrap:
@@ -22,6 +34,7 @@ namespace DejavuBrowser
 
             string initialUrl = null;
             string profileId = null;
+            int debugPort = 0;
             if (args != null)
             {
                 for (int i = 0; i < args.Length; i++)
@@ -31,20 +44,24 @@ namespace DejavuBrowser
                     {
                         profileId = a.Substring("--profile=".Length).Trim();
                     }
+                    else if (a.StartsWith("--debug-port=", StringComparison.OrdinalIgnoreCase))
+                    {
+                        int.TryParse(a.Substring("--debug-port=".Length).Trim(), out debugPort);
+                    }
                     else if (!a.StartsWith("--") && initialUrl == null)
                     {
                         initialUrl = a;
                     }
                 }
             }
-            RunApp(initialUrl, profileId);
+            RunApp(initialUrl, profileId, debugPort);
         }
 
-        private static void RunApp(string initialUrl, string profileId)
+        private static void RunApp(string initialUrl, string profileId, int debugPort)
         {
             // Keep BrowserForm in a separate method so CLR doesn't JIT WebView2 types
             // before AssemblyResolve and WebView2Loader.dll are registered.
-            using (BrowserForm form = new BrowserForm(initialUrl, profileId))
+            using (BrowserForm form = new BrowserForm(initialUrl, profileId, debugPort))
             {
                 Application.Run(form);
             }

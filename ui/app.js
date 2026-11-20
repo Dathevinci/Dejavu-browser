@@ -17,6 +17,7 @@
   const btnBack = document.getElementById('btn-back');
   const btnForward = document.getElementById('btn-forward');
   const btnReload = document.getElementById('btn-reload');
+  const omniboxPill = document.getElementById('omnibox-pill');
   const omniboxInput = document.getElementById('omnibox-input');
   const omniboxIcon = document.getElementById('omnibox-icon');
   const loadProgress = document.getElementById('load-progress');
@@ -26,6 +27,8 @@
   const tabsStrip = document.getElementById('tabs-strip');
   const activeTabGlide = document.getElementById('active-tab-glide');
   const btnNewTab = document.getElementById('btn-new-tab');
+  const btnVpn = document.getElementById('btn-vpn');
+  const vpnChipCode = document.getElementById('vpn-chip-code');
   const btnHistory = document.getElementById('btn-history');
   const btnProfile = document.getElementById('btn-profile');
   const profileAvatarSlot = document.getElementById('profile-avatar-slot');
@@ -36,6 +39,7 @@
   const newtabCanvas = document.getElementById('newtab-canvas');
   const newtabSearchForm = document.getElementById('newtab-search-form');
   const newtabSearchInput = document.getElementById('newtab-search-input');
+  const newtabSuggest = document.getElementById('newtab-suggest');
   const shortcutsGrid = document.getElementById('shortcuts-grid');
   const newtabStatText = document.getElementById('newtab-stat-text');
   const statDot = document.getElementById('stat-dot');
@@ -222,6 +226,11 @@
     send({ type: 'openShield', anchorRight: Math.round(r.right) });
   });
 
+  btnVpn.addEventListener('click', () => {
+    const r = btnVpn.getBoundingClientRect();
+    send({ type: 'openVpn', anchorRight: Math.round(r.right + 78) });
+  });
+
   btnHistory.addEventListener('click', () => {
     const r = btnHistory.getBoundingClientRect();
     send({ type: 'openHistory', anchorRight: Math.round(r.right + 42) });
@@ -236,7 +245,93 @@
     if (Math.abs(e.deltaY) > 0) favbarList.scrollLeft += e.deltaY;
   }, { passive: true });
 
+  // =========================================================================
+  // Smart Omnibox & New Tab Autocomplete Suggestions
+  // =========================================================================
+  let pendingOmniboxValue = null;
+  let ntSuggestItems = [];
+  let ntSuggestIdx = -1;
+
+  function escapeSugHtml(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function sugIconSvg(item) {
+    if (item.favicon) return `<img src="${escapeSugHtml(item.favicon)}" alt="" onerror="this.remove()">`;
+    if (item.kind === 'favorite') return '<svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 2l1.9 3.8 4.1.6-3 2.9.7 4.1L8 11.4l-3.7 2 .7-4.1-3-2.9 4.1-.6L8 2z"/></svg>';
+    if (item.kind === 'history') return '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 5.2v3l2 1.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+    if (item.kind === 'url' || item.kind === 'site') return '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><ellipse cx="8" cy="8" rx="2.5" ry="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M2.8 8h10.4" stroke="currentColor" stroke-width="1.2"/></svg>';
+    return '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="7.2" cy="7.2" r="4.5" stroke="currentColor" stroke-width="1.45"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  }
+
+  function requestOmniboxSuggest() {
+    const q = omniboxInput.value.trim();
+    if (!q) {
+      pendingOmniboxValue = null;
+      send({ type: 'suggestClose' });
+      return;
+    }
+    const r = omniboxPill.getBoundingClientRect();
+    send({
+      type: 'suggestQuery',
+      source: 'omnibox',
+      query: q,
+      left: Math.round(r.left),
+      top: Math.round(r.bottom),
+      width: Math.round(r.width)
+    });
+  }
+
+  function hideNewtabSuggestions() {
+    ntSuggestItems = [];
+    ntSuggestIdx = -1;
+    newtabSuggest.classList.add('hidden');
+    newtabSuggest.innerHTML = '';
+  }
+
+  function renderNewtabSuggestions(items) {
+    ntSuggestItems = Array.isArray(items) ? items.slice(0, 5) : [];
+    ntSuggestIdx = -1;
+    if (!ntSuggestItems.length || document.activeElement !== newtabSearchInput) {
+      hideNewtabSuggestions();
+      return;
+    }
+    newtabSuggest.innerHTML = '';
+    ntSuggestItems.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.className = 'nt-sug-row';
+      const icoCls = item.kind === 'favorite' ? 'is-fav' : (item.kind === 'history' ? 'is-hist' : ((item.kind === 'url' || item.kind === 'site') ? 'is-url' : ''));
+      const hint = item.kind === 'url' ? 'Go' : (item.kind === 'site' ? 'Site' : (item.kind === 'favorite' ? 'Pinned' : ''));
+      row.innerHTML = `
+        <span class="nt-sug-ico ${icoCls}">${sugIconSvg(item)}</span>
+        <div class="nt-sug-text">
+          <span class="nt-sug-title">${escapeSugHtml(item.title || '')}</span>
+          ${item.subtitle ? `<span class="nt-sug-sub">— ${escapeSugHtml(item.subtitle)}</span>` : ''}
+        </div>
+        ${hint ? `<span class="nt-sug-hint">${hint}</span>` : ''}
+      `;
+      row.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        hideNewtabSuggestions();
+        send({ type: 'navigate', input: item.value || item.title });
+      });
+      row.addEventListener('mouseenter', () => {
+        ntSuggestIdx = idx;
+        updateNewtabSuggestHighlight();
+      });
+      newtabSuggest.appendChild(row);
+    });
+    newtabSuggest.classList.remove('hidden');
+    requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(newtabSuggest));
+  }
+
+  function updateNewtabSuggestHighlight() {
+    const rows = newtabSuggest.querySelectorAll('.nt-sug-row');
+    rows.forEach((r, i) => r.classList.toggle('selected', i === ntSuggestIdx));
+  }
+
   omniboxInput.addEventListener('focus', () => {
+    pendingOmniboxValue = null;
     const active = state.tabs.find((t) => t.id === state.activeTabId);
     if (active && !active.isNewTab) {
       omniboxInput.value = active.url || '';
@@ -244,27 +339,87 @@
     setTimeout(() => omniboxInput.select(), 0);
   });
 
+  omniboxInput.addEventListener('input', () => {
+    pendingOmniboxValue = null;
+    requestOmniboxSuggest();
+  });
+
   omniboxInput.addEventListener('blur', () => {
+    pendingOmniboxValue = null;
+    send({ type: 'suggestClose' });
     const active = state.tabs.find((t) => t.id === state.activeTabId);
     omniboxInput.value = (active && !active.isNewTab) ? (active.displayUrl || '') : '';
   });
 
   omniboxInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'ArrowDown') {
       e.preventDefault();
-      const val = omniboxInput.value.trim();
+      send({ type: 'suggestNav', delta: 1 });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      send({ type: 'suggestNav', delta: -1 });
+    } else if (e.key === 'Tab') {
+      if (omniboxInput.value.trim()) {
+        e.preventDefault();
+        send({ type: 'suggestNav', delta: 1 });
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = (pendingOmniboxValue || omniboxInput.value).trim();
+      pendingOmniboxValue = null;
+      send({ type: 'suggestClose' });
       if (val) {
         send({ type: 'navigate', input: val });
         omniboxInput.blur();
       }
     } else if (e.key === 'Escape') {
+      pendingOmniboxValue = null;
+      send({ type: 'suggestClose' });
       omniboxInput.blur();
+    }
+  });
+
+  newtabSearchInput.addEventListener('input', () => {
+    const q = newtabSearchInput.value.trim();
+    if (!q) {
+      hideNewtabSuggestions();
+      return;
+    }
+    send({ type: 'suggestQuery', source: 'newtab', query: q });
+  });
+
+  newtabSearchInput.addEventListener('blur', () => {
+    setTimeout(hideNewtabSuggestions, 120);
+  });
+
+  newtabSearchInput.addEventListener('keydown', (e) => {
+    if (!ntSuggestItems.length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      ntSuggestIdx = (ntSuggestIdx + 1) % ntSuggestItems.length;
+      updateNewtabSuggestHighlight();
+      newtabSearchInput.value = ntSuggestItems[ntSuggestIdx].fill || ntSuggestItems[ntSuggestIdx].title || '';
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      ntSuggestIdx = (ntSuggestIdx - 1 + ntSuggestItems.length) % ntSuggestItems.length;
+      updateNewtabSuggestHighlight();
+      newtabSearchInput.value = ntSuggestItems[ntSuggestIdx].fill || ntSuggestItems[ntSuggestIdx].title || '';
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      const idx = ntSuggestIdx >= 0 ? ntSuggestIdx : 0;
+      ntSuggestIdx = idx;
+      updateNewtabSuggestHighlight();
+      newtabSearchInput.value = ntSuggestItems[idx].fill || ntSuggestItems[idx].title || '';
+    } else if (e.key === 'Escape') {
+      hideNewtabSuggestions();
     }
   });
 
   newtabSearchForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const val = newtabSearchInput.value.trim();
+    const sel = ntSuggestIdx >= 0 ? ntSuggestItems[ntSuggestIdx] : null;
+    const val = (sel ? (sel.value || sel.title) : newtabSearchInput.value).trim();
+    hideNewtabSuggestions();
     if (val) send({ type: 'navigate', input: val });
   });
 
@@ -746,6 +901,29 @@
     btnShield.classList.toggle('paused', !next.activeForSite);
     shieldCount.style.display = onNewTab ? 'none' : '';
     shieldCount.textContent = onNewTab ? '' : String(active.blockedCount || 0);
+
+    if (next.vpn) {
+      const vst = next.vpn.state || 'disconnected';
+      const isConn = vst === 'connected';
+      const isBusy = vst === 'connecting' || vst === 'downloading';
+      btnVpn.classList.toggle('connected', isConn);
+      btnVpn.classList.toggle('connecting', isBusy);
+      const rawCode = (next.vpn.exitCountryCode || next.vpn.countryCode || 'AUTO').toUpperCase();
+      const codeDisp = rawCode === 'GB' ? 'UK' : (rawCode === 'AUTO' ? 'VPN' : rawCode);
+      if (isConn) {
+        vpnChipCode.textContent = codeDisp;
+        vpnChipCode.classList.remove('hidden');
+        btnVpn.title = `dejavu VPN · Protected (${next.vpn.exitCountry || next.vpn.countryName || codeDisp}${next.vpn.exitIp ? ' · ' + next.vpn.exitIp : ''})`;
+      } else if (isBusy) {
+        vpnChipCode.textContent = `${Math.max(5, next.vpn.progress || 10)}%`;
+        vpnChipCode.classList.remove('hidden');
+        btnVpn.title = next.vpn.statusText || 'dejavu VPN · Connecting...';
+      } else {
+        vpnChipCode.textContent = '';
+        vpnChipCode.classList.add('hidden');
+        btnVpn.title = 'dejavu VPN · Disconnected (Click to connect)';
+      }
+    }
   }
 
   // Receive messages from native C# BrowserForm
@@ -777,6 +955,11 @@
       } else if (msg.type === 'focusOmnibox') {
         omniboxInput.focus();
         omniboxInput.select();
+      } else if (msg.type === 'suggestFill') {
+        omniboxInput.value = msg.fill || '';
+        pendingOmniboxValue = msg.value || msg.fill || null;
+      } else if (msg.type === 'newtabSuggestions') {
+        renderNewtabSuggestions(msg.items || []);
       }
     });
   }

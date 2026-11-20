@@ -20,6 +20,7 @@ namespace DejavuBrowser
         public List<ShortcutItem> shortcuts { get; set; }
         public string wallpaper { get; set; }
         public string customWallpaperPath { get; set; }
+        public string vpnCountry { get; set; }
 
         public DejavuSettings()
         {
@@ -29,6 +30,7 @@ namespace DejavuBrowser
             totalBlocked = 0;
             wallpaper = "live:obsidian-prism";
             customWallpaperPath = "";
+            vpnCountry = "AUTO";
             shortcuts = new List<ShortcutItem>
             {
                 new ShortcutItem { name = "YouTube", url = "https://www.youtube.com" },
@@ -83,6 +85,7 @@ namespace DejavuBrowser
                             if (string.IsNullOrEmpty(loaded.searchEngine)) loaded.searchEngine = "google";
                             if (string.IsNullOrEmpty(loaded.wallpaper)) loaded.wallpaper = "live:obsidian-prism";
                             if (loaded.customWallpaperPath == null) loaded.customWallpaperPath = "";
+                            if (string.IsNullOrEmpty(loaded.vpnCountry)) loaded.vpnCountry = "AUTO";
                             if (loaded.pausedHosts == null) loaded.pausedHosts = new List<string>();
                             if (loaded.shortcuts == null || loaded.shortcuts.Count == 0)
                             {

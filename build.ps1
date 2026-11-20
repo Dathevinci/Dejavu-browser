@@ -53,6 +53,9 @@ $args = @(
   "$root\src\SettingsStore.cs",
   "$root\src\ProfileManager.cs",
   "$root\src\AutoUpdater.cs",
+  "$root\src\LocalProxyBridge.cs",
+  "$root\src\VpnManager.cs",
+  "$root\src\SuggestEngine.cs",
   "$root\src\AdBlocker.cs",
   "$root\src\OverlayPopup.cs",
   "$root\src\BrowserForm.cs"

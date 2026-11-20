@@ -6,6 +6,7 @@ namespace DejavuBrowser
     internal static class NativeWin32
     {
         public const int WM_ACTIVATE = 0x0006;
+        public const int WM_MOUSEACTIVATE = 0x0021;
         public const int WM_NCHITTEST = 0x0084;
         public const int WM_NCCALCSIZE = 0x0083;
         public const int WM_NCLBUTTONDOWN = 0x00A1;
@@ -13,9 +14,11 @@ namespace DejavuBrowser
         public const int WM_SYSCOMMAND = 0x0112;
 
         public const int WA_INACTIVE = 0;
+        public const int MA_NOACTIVATE = 3;
 
         public const int WS_MINIMIZEBOX = 0x00020000;
         public const int WS_EX_TOOLWINDOW = 0x00000080;
+        public const int WS_EX_NOACTIVATE = 0x08000000;
 
         public const uint SWP_NOSIZE = 0x0001;
         public const uint SWP_NOMOVE = 0x0002;

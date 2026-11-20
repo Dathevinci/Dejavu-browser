@@ -7,6 +7,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
@@ -59,7 +60,11 @@ namespace DejavuBrowser
         private DejavuSettings _settings;
         private readonly AdBlocker _adBlocker;
         private readonly AutoUpdater _updater;
+        private readonly LocalProxyBridge _proxyBridge;
+        private readonly VpnManager _vpn;
+        private readonly SuggestEngine _suggest = new SuggestEngine();
         private readonly string _initialUrl;
+        private readonly int _debugPort;
 
         private readonly Dictionary<string, CoreWebView2Environment> _envCache =
             new Dictionary<string, CoreWebView2Environment>(StringComparer.OrdinalIgnoreCase);
@@ -69,14 +74,22 @@ namespace DejavuBrowser
         private WebView2 _shellView;
         private bool _shellReady;
 
-        // Consolidated 2 lightweight reusable popups (50%+ less memory & zero startup lag)
-        private OverlayPopup _popoverPopup;   // Auto-dismiss on click outside: Shield, Profiles, History
+        // Lightweight reusable Liquid Glass overlay windows
+        private OverlayPopup _popoverPopup;   // Auto-dismiss on click outside: Shield, VPN, Profiles, History
         private OverlayPopup _hudPopup;       // Non-stealing or explicit close: Find, Download, Update
-        private Timer _downloadHideTimer;
+        private OverlayPopup _suggestPopup;   // Never-activating Omnibox Suggestions dropdown (floats over webpages!)
+        private System.Windows.Forms.Timer _downloadHideTimer;
         private string _activePopoverMode = "";
         private string _activeHudMode = "";
         private string _lastHiddenPopoverMode = "";
         private DateTime _lastPopoverHiddenUtc = DateTime.MinValue;
+
+        private CancellationTokenSource _suggestCts;
+        private int _suggestSeq;
+        private List<SuggestItem> _lastSuggestItems = new List<SuggestItem>();
+        private int _suggestSelectedIndex = -1;
+        private string _suggestBackdropCache = "";
+        private Rectangle _suggestLastRect = Rectangle.Empty;
 
         private readonly List<BrowserTab> _tabs = new List<BrowserTab>();
         private int _activeTabId = -1;
@@ -99,9 +112,10 @@ namespace DejavuBrowser
             "id.twitch.tv", "www.facebook.com", "api.twitter.com", "x.com"
         };
 
-        public BrowserForm(string initialUrl, string requestedProfileId)
+        public BrowserForm(string initialUrl, string requestedProfileId, int debugPort)
         {
             _initialUrl = initialUrl;
+            _debugPort = debugPort;
             _profiles = new ProfileManager(requestedProfileId);
             _settings = _profiles.LoadActiveSettings();
             _adBlocker = new AdBlocker(_settings, _profiles.ActiveSettingsPath);
@@ -111,6 +125,10 @@ namespace DejavuBrowser
             _updater = new AutoUpdater();
             _updater.UpdateReady += OnUpdateReady;
             _updater.StatusChanged += OnUpdaterStatusChanged;
+
+            _proxyBridge = new LocalProxyBridge();
+            _vpn = new VpnManager(_proxyBridge, _settings.vpnCountry);
+            _vpn.StateChanged += OnVpnStateChanged;
 
             Text = "dejavu";
             FormBorderStyle = FormBorderStyle.None;
@@ -126,7 +144,7 @@ namespace DejavuBrowser
             _shellView.DefaultBackgroundColor = Color.FromArgb(7, 6, 13);
             Controls.Add(_shellView);
 
-            _downloadHideTimer = new Timer();
+            _downloadHideTimer = new System.Windows.Forms.Timer();
             _downloadHideTimer.Interval = 9000;
             _downloadHideTimer.Tick += (s, e) =>
             {
@@ -141,6 +159,7 @@ namespace DejavuBrowser
             Load += OnFormLoad;
             Resize += (s, e) =>
             {
+                HideSuggestPopup();
                 if (WindowState == FormWindowState.Minimized)
                 {
                     HidePopover(false);
@@ -152,13 +171,17 @@ namespace DejavuBrowser
             Move += (s, e) =>
             {
                 HidePopover(false);
+                HideSuggestPopup();
                 RepositionActiveHud();
             };
             FormClosing += (s, e) =>
             {
                 _adBlocker.FlushStats();
+                if (_vpn != null) _vpn.Dispose();
+                if (_proxyBridge != null) _proxyBridge.Dispose();
                 if (_popoverPopup != null) _popoverPopup.Close();
                 if (_hudPopup != null) _hudPopup.Close();
+                if (_suggestPopup != null) _suggestPopup.Close();
             };
         }
 
@@ -324,11 +347,22 @@ namespace DejavuBrowser
                 return existing;
             }
 
+            // Ensure no external WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS env var overrides our VPN proxy args
+            try { Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", null); } catch { }
+
             string userDataDir = _profiles.GetWebViewUserDataDir(profileId);
             CoreWebView2EnvironmentOptions opts = new CoreWebView2EnvironmentOptions();
-            opts.AdditionalBrowserArguments =
-                "--enable-quic --enable-gpu-rasterization --enable-zero-copy " +
-                "--ignore-gpu-blocklist --enable-features=ParallelDownloading,BackForwardCache";
+            string extraArgs =
+                "--enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist " +
+                "--enable-features=ParallelDownloading,BackForwardCache " +
+                "--proxy-server=http://127.0.0.1:" + _proxyBridge.ListenPort + " " +
+                "--proxy-bypass-list=localhost;127.0.0.1;[::1];dejavu.local " +
+                "--force-webrtc-ip-handling-policy=disable_non_proxied_udp";
+            if (_debugPort > 1024 && _debugPort < 65535)
+            {
+                extraArgs += " --remote-debugging-port=" + _debugPort;
+            }
+            opts.AdditionalBrowserArguments = extraArgs;
 
             CoreWebView2Environment env = await CoreWebView2Environment.CreateAsync(null, userDataDir, opts);
             _envCache[profileId] = env;
@@ -393,6 +427,24 @@ namespace DejavuBrowser
             }));
         }
 
+        private void OnVpnStateChanged(VpnStatusSnapshot snap)
+        {
+            if (IsDisposed || !IsHandleCreated) return;
+            try
+            {
+                BeginInvoke((Action)(() =>
+                {
+                    if (IsDisposed) return;
+                    PushFullStateToShell();
+                    if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "vpn")
+                    {
+                        SendVpnPanelState(null);
+                    }
+                }));
+            }
+            catch { }
+        }
+
         private async Task InitializeShellViewAsync()
         {
             await _shellView.EnsureCoreWebView2Async(_shellEnv);
@@ -443,6 +495,10 @@ namespace DejavuBrowser
                 _hudPopup.MessageReceived += OnOverlayWebMessage;
                 _hudPopup.PopupHidden += () => { _activeHudMode = ""; };
                 await _hudPopup.InitializeAsync(_shellEnv, HandleVirtualResource);
+
+                _suggestPopup = new OverlayPopup(this, false, true);
+                _suggestPopup.MessageReceived += OnOverlayWebMessage;
+                await _suggestPopup.InitializeAsync(_shellEnv, HandleVirtualResource);
             }
             catch { }
         }
@@ -590,6 +646,7 @@ namespace DejavuBrowser
             if (!_profiles.SwitchProfile(profileId)) return;
 
             HidePopover();
+            HideSuggestPopup();
             if (_activeHudMode == "find") HideHud();
 
             // Dispose previous profile's live tabs cleanly
@@ -670,6 +727,7 @@ namespace DejavuBrowser
             _activeTabId = tabId;
 
             HidePopover();
+            HideSuggestPopup();
             if (_activeHudMode == "find") HideHud();
 
             if (!tab.IsNewTab && tab.WebView == null)
@@ -1186,6 +1244,7 @@ namespace DejavuBrowser
             }
             if (ShouldSkipToggleReopen("shield")) return;
 
+            HideSuggestPopup();
             _activePopoverMode = "shield";
             float sc = DpiScale;
             int popW = (int)Math.Round(300 * sc);
@@ -1231,6 +1290,7 @@ namespace DejavuBrowser
             }
             if (ShouldSkipToggleReopen("profiles")) return;
 
+            HideSuggestPopup();
             _activePopoverMode = "profiles";
             float sc = DpiScale;
             int popW = (int)Math.Round(396 * sc);
@@ -1281,6 +1341,7 @@ namespace DejavuBrowser
             }
             if (ShouldSkipToggleReopen("history")) return;
 
+            HideSuggestPopup();
             _activePopoverMode = "history";
             float sc = DpiScale;
             int popW = (int)Math.Round(396 * sc);
@@ -1293,6 +1354,215 @@ namespace DejavuBrowser
             string backdrop = await CaptureBackdropCropAsync(clientRect);
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildHistoryPayloadJson(backdrop), true);
+        }
+
+        private async void ShowVpnPopoverAt(int anchorRightCss)
+        {
+            if (_popoverPopup == null) return;
+            if (_popoverPopup.IsPopupOpen && _activePopoverMode == "vpn")
+            {
+                HidePopover();
+                return;
+            }
+            if (ShouldSkipToggleReopen("vpn")) return;
+
+            HideSuggestPopup();
+            _activePopoverMode = "vpn";
+            float sc = DpiScale;
+            int popW = (int)Math.Round(384 * sc);
+            int popH = (int)Math.Round(536 * sc);
+            int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
+            int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
+            int y = (int)Math.Round(BASE_CHROME_HEIGHT * sc) + (int)Math.Round(4 * sc);
+
+            Rectangle clientRect = new Rectangle(x, y, popW, popH);
+            string backdrop = await CaptureBackdropCropAsync(clientRect);
+            Point screenPt = PointToScreen(new Point(x, y));
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildVpnPayloadJson(backdrop), true);
+        }
+
+        private string BuildVpnPayloadJson(string backdrop)
+        {
+            BrowserTab tab = GetActiveTab();
+            VpnStatusSnapshot snap = _vpn.GetSnapshot();
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "vpn" },
+                { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
+                { "backdrop", backdrop ?? "" },
+                { "vpn", snap }
+            };
+            return _json.Serialize(payload);
+        }
+
+        private void SendVpnPanelState(string backdrop)
+        {
+            if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "vpn")
+            {
+                _popoverPopup.UpdateState(BuildVpnPayloadJson(backdrop));
+            }
+        }
+
+        private void HideSuggestPopup()
+        {
+            if (_suggestCts != null)
+            {
+                try { _suggestCts.Cancel(); } catch { }
+            }
+            _lastSuggestItems = new List<SuggestItem>();
+            _suggestSelectedIndex = -1;
+            _suggestBackdropCache = "";
+            _suggestLastRect = Rectangle.Empty;
+            if (_suggestPopup != null && _suggestPopup.IsPopupOpen)
+            {
+                _suggestPopup.HidePopup(false);
+            }
+        }
+
+        private async void HandleSuggestQueryAsync(string source, string query, int leftCss, int topCss, int widthCss)
+        {
+            if (_suggestCts != null)
+            {
+                try { _suggestCts.Cancel(); } catch { }
+                try { _suggestCts.Dispose(); } catch { }
+            }
+            _suggestCts = new CancellationTokenSource();
+            CancellationToken token = _suggestCts.Token;
+            int seq = ++_suggestSeq;
+
+            string trimmed = (query ?? "").Trim();
+            if (trimmed.Length == 0)
+            {
+                if (source == "omnibox") HideSuggestPopup();
+                else PushNewTabSuggestionsToShell(seq, new List<SuggestItem>());
+                return;
+            }
+
+            // Phase 1: Instant <1ms local suggestions (Favorites, Shortcuts, History, Popular Websites)
+            List<SuggestItem> local = _suggest.BuildLocalSuggestions(trimmed, _profiles.Favorites, _settings.shortcuts, _profiles.History);
+            _suggestSelectedIndex = -1;
+
+            if (source == "omnibox")
+            {
+                _lastSuggestItems = local;
+                if (local.Count > 0)
+                {
+                    await ShowOmniboxSuggestPopupAsync(local, leftCss, topCss, widthCss, token);
+                }
+            }
+            else
+            {
+                PushNewTabSuggestionsToShell(seq, local);
+            }
+
+            // Phase 2: Async live search suggestions (90ms debounce, zero IP leak when VPN is ON!)
+            try
+            {
+                await Task.Delay(90, token);
+                if (token.IsCancellationRequested || seq != _suggestSeq) return;
+
+                List<SuggestItem> merged = await _suggest.MergeWithLiveSuggestionsAsync(
+                    trimmed, _settings.searchEngine, local, _vpn.IsBusyOrConnected, _vpn.ActiveSocksPort, token);
+
+                if (token.IsCancellationRequested || seq != _suggestSeq || IsDisposed) return;
+
+                if (source == "omnibox")
+                {
+                    _lastSuggestItems = merged;
+                    if (merged.Count == 0) HideSuggestPopup();
+                    else await ShowOmniboxSuggestPopupAsync(merged, leftCss, topCss, widthCss, token);
+                }
+                else
+                {
+                    PushNewTabSuggestionsToShell(seq, merged);
+                }
+            }
+            catch { }
+        }
+
+        private async Task ShowOmniboxSuggestPopupAsync(List<SuggestItem> items, int leftCss, int topCss, int widthCss, CancellationToken token)
+        {
+            if (_suggestPopup == null || IsDisposed || items == null || items.Count == 0) return;
+
+            float sc = DpiScale;
+            int wCss = Math.Max(320, widthCss);
+            int hCss = Math.Min(334, items.Count * 44 + 16);
+            int x = Math.Max((int)(8 * sc), (int)Math.Round(leftCss * sc));
+            int y = (int)Math.Round((topCss + 6) * sc);
+            int w = Math.Min(ClientSize.Width - x - (int)(8 * sc), (int)Math.Round(wCss * sc));
+            int h = (int)Math.Round(hCss * sc);
+            Rectangle clientRect = new Rectangle(x, y, Math.Max(200, w), Math.Max(48, h));
+
+            // Capture backdrop once per typing session (keeps typing at 120fps with zero stutter!)
+            if (string.IsNullOrEmpty(_suggestBackdropCache) || !_suggestPopup.IsPopupOpen ||
+                Math.Abs(_suggestLastRect.X - clientRect.X) > 20 || Math.Abs(_suggestLastRect.Width - clientRect.Width) > 20)
+            {
+                Rectangle capRect = new Rectangle(clientRect.X, clientRect.Y, clientRect.Width, (int)Math.Round(334 * sc));
+                _suggestBackdropCache = await CaptureBackdropCropAsync(capRect);
+                _suggestLastRect = clientRect;
+                if (token.IsCancellationRequested || IsDisposed) return;
+            }
+
+            BrowserTab tab = GetActiveTab();
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "suggest" },
+                { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
+                { "backdrop", _suggestBackdropCache ?? "" },
+                { "items", items },
+                { "selectedIndex", _suggestSelectedIndex }
+            };
+
+            Point screenPt = PointToScreen(new Point(clientRect.X, clientRect.Y));
+            _suggestPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, clientRect.Width, clientRect.Height), _json.Serialize(payload), false);
+        }
+
+        private void HandleSuggestNav(int delta)
+        {
+            if (_suggestPopup == null || !_suggestPopup.IsPopupOpen || _lastSuggestItems == null || _lastSuggestItems.Count == 0) return;
+            int count = _lastSuggestItems.Count;
+            if (_suggestSelectedIndex < 0)
+            {
+                _suggestSelectedIndex = (delta > 0) ? 0 : (count - 1);
+            }
+            else
+            {
+                _suggestSelectedIndex = (_suggestSelectedIndex + delta + count) % count;
+            }
+
+            BrowserTab tab = GetActiveTab();
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "suggest" },
+                { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
+                { "items", _lastSuggestItems },
+                { "selectedIndex", _suggestSelectedIndex }
+            };
+            _suggestPopup.UpdateState(_json.Serialize(payload));
+
+            SuggestItem sel = _lastSuggestItems[_suggestSelectedIndex];
+            if (_shellReady && _shellView != null && _shellView.CoreWebView2 != null)
+            {
+                var msg = new Dictionary<string, object>
+                {
+                    { "type", "suggestFill" },
+                    { "fill", sel.fill ?? sel.title ?? "" },
+                    { "value", sel.value ?? sel.title ?? "" }
+                };
+                try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(msg)); } catch { }
+            }
+        }
+
+        private void PushNewTabSuggestionsToShell(int seq, List<SuggestItem> items)
+        {
+            if (!_shellReady || _shellView == null || _shellView.CoreWebView2 == null) return;
+            var msg = new Dictionary<string, object>
+            {
+                { "type", "newtabSuggestions" },
+                { "seq", seq },
+                { "items", items }
+            };
+            try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(msg)); } catch { }
         }
 
         private string BuildHistoryPayloadJson(string backdrop)
@@ -1560,6 +1830,7 @@ namespace DejavuBrowser
                         }
                         break;
                     case "navigate":
+                        HideSuggestPopup();
                         NavigateActiveTab(Convert.ToString(msg["input"]));
                         break;
                     case "newTab":
@@ -1592,6 +1863,23 @@ namespace DejavuBrowser
                         break;
                     case "openHistory":
                         ShowHistoryPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1140);
+                        break;
+                    case "openVpn":
+                        ShowVpnPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1100);
+                        break;
+                    case "suggestQuery":
+                        HandleSuggestQueryAsync(
+                            msg.ContainsKey("source") ? Convert.ToString(msg["source"]) : "omnibox",
+                            msg.ContainsKey("query") ? Convert.ToString(msg["query"]) : "",
+                            msg.ContainsKey("left") ? Convert.ToInt32(msg["left"]) : 240,
+                            msg.ContainsKey("top") ? Convert.ToInt32(msg["top"]) : 80,
+                            msg.ContainsKey("width") ? Convert.ToInt32(msg["width"]) : 560);
+                        break;
+                    case "suggestNav":
+                        HandleSuggestNav(msg.ContainsKey("delta") ? Convert.ToInt32(msg["delta"]) : 1);
+                        break;
+                    case "suggestClose":
+                        HideSuggestPopup();
                         break;
                     case "toggleFavorite":
                         ToggleFavoriteActiveTab();
@@ -1738,6 +2026,30 @@ namespace DejavuBrowser
                 {
                     HidePopover();
                 }
+                else if (type == "toggleVpn")
+                {
+                    await _vpn.ToggleAsync();
+                }
+                else if (type == "selectVpnCountry")
+                {
+                    string code = VpnManager.NormalizeCountryCode(Convert.ToString(msg["code"]));
+                    _settings.vpnCountry = code;
+                    _profiles.SaveActiveSettings(_settings);
+                    await _vpn.ConnectAsync(code);
+                }
+                else if (type == "disconnectVpn")
+                {
+                    _vpn.Disconnect();
+                }
+                else if (type == "pickSuggestion")
+                {
+                    string val = Convert.ToString(msg["value"]);
+                    HideSuggestPopup();
+                    if (!string.IsNullOrWhiteSpace(val))
+                    {
+                        NavigateActiveTab(val);
+                    }
+                }
                 else if (type == "findQuery")
                 {
                     string query = Convert.ToString(msg["query"]);
@@ -1859,6 +2171,7 @@ namespace DejavuBrowser
                 { "globalAdBlockEnabled", _adBlocker.GlobalEnabled },
                 { "activeForSite", _adBlocker.IsActiveForHost(host) },
                 { "totalBlocked", _adBlocker.TotalBlocked },
+                { "vpn", _vpn.GetSnapshot() },
                 { "wallpaper", _settings.wallpaper ?? "live:obsidian-prism" },
                 { "hasCustomWallpaper", !string.IsNullOrEmpty(_settings.customWallpaperPath) && File.Exists(_settings.customWallpaperPath) },
                 { "baseRgb", active != null ? active.BaseRgb : new int[] { 11, 9, 20 } },

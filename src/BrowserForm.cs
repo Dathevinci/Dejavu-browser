@@ -75,6 +75,8 @@ namespace DejavuBrowser
         private Timer _downloadHideTimer;
         private string _activePopoverMode = "";
         private string _activeHudMode = "";
+        private string _lastHiddenPopoverMode = "";
+        private DateTime _lastPopoverHiddenUtc = DateTime.MinValue;
 
         private readonly List<BrowserTab> _tabs = new List<BrowserTab>();
         private int _activeTabId = -1;
@@ -132,19 +134,24 @@ namespace DejavuBrowser
                 if (_hudPopup != null && _activeHudMode == "download")
                 {
                     _activeHudMode = "";
-                    _hudPopup.HidePopup();
+                    _hudPopup.HidePopup(false);
                 }
             };
 
             Load += OnFormLoad;
             Resize += (s, e) =>
             {
+                if (WindowState == FormWindowState.Minimized)
+                {
+                    HidePopover(false);
+                    return;
+                }
                 LayoutViews();
                 RepositionActiveHud();
             };
             Move += (s, e) =>
             {
-                HidePopover();
+                HidePopover(false);
                 RepositionActiveHud();
             };
             FormClosing += (s, e) =>
@@ -180,19 +187,49 @@ namespace DejavuBrowser
 
         private void HidePopover()
         {
+            HidePopover(true);
+        }
+
+        private void HidePopover(bool keepOwnerForeground)
+        {
             _activePopoverMode = "";
-            if (_popoverPopup != null) _popoverPopup.HidePopup();
+            if (_popoverPopup != null) _popoverPopup.HidePopup(keepOwnerForeground);
         }
 
         private void HideHud()
         {
+            HideHud(true);
+        }
+
+        private void HideHud(bool keepOwnerForeground)
+        {
             _activeHudMode = "";
-            if (_hudPopup != null) _hudPopup.HidePopup();
+            if (_hudPopup != null) _hudPopup.HidePopup(keepOwnerForeground);
+        }
+
+        private bool ShouldSkipToggleReopen(string mode)
+        {
+            if (_lastHiddenPopoverMode == mode && (DateTime.UtcNow - _lastPopoverHiddenUtc).TotalMilliseconds < 240)
+            {
+                _lastHiddenPopoverMode = "";
+                return true;
+            }
+            return false;
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                cp.Style |= NativeWin32.WS_MINIMIZEBOX;
+                return cp;
+            }
         }
 
         private void RepositionActiveHud()
         {
-            if (_hudPopup == null || !_hudPopup.Visible) return;
+            if (_hudPopup == null || !_hudPopup.IsPopupOpen) return;
             Rectangle r;
             if (_activeHudMode == "find") r = GetFindClientRect();
             else if (_activeHudMode == "download") r = GetDownloadClientRect();
@@ -349,7 +386,7 @@ namespace DejavuBrowser
             if (IsDisposed) return;
             BeginInvoke((Action)(() =>
             {
-                if (_popoverPopup != null && _popoverPopup.Visible && _activePopoverMode == "profiles")
+                if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "profiles")
                 {
                     SendProfilesPanelState(null);
                 }
@@ -391,10 +428,20 @@ namespace DejavuBrowser
             {
                 _popoverPopup = new OverlayPopup(this, true);
                 _popoverPopup.MessageReceived += OnOverlayWebMessage;
+                _popoverPopup.PopupHidden += () =>
+                {
+                    if (!string.IsNullOrEmpty(_activePopoverMode))
+                    {
+                        _lastHiddenPopoverMode = _activePopoverMode;
+                        _lastPopoverHiddenUtc = DateTime.UtcNow;
+                        _activePopoverMode = "";
+                    }
+                };
                 await _popoverPopup.InitializeAsync(_shellEnv, HandleVirtualResource);
 
                 _hudPopup = new OverlayPopup(this, false);
                 _hudPopup.MessageReceived += OnOverlayWebMessage;
+                _hudPopup.PopupHidden += () => { _activeHudMode = ""; };
                 await _hudPopup.InitializeAsync(_shellEnv, HandleVirtualResource);
             }
             catch { }
@@ -499,7 +546,11 @@ namespace DejavuBrowser
                 _shellView.BringToFront();
                 foreach (BrowserTab t in _tabs)
                 {
-                    if (t.WebView != null) t.WebView.Visible = false;
+                    if (t.WebView != null && t.WebView.Visible)
+                    {
+                        if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
+                        t.WebView.Visible = false;
+                    }
                 }
             }
             else
@@ -515,8 +566,9 @@ namespace DejavuBrowser
                         t.WebView.Visible = true;
                         t.WebView.BringToFront();
                     }
-                    else
+                    else if (t.WebView.Visible)
                     {
+                        if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
                         t.WebView.Visible = false;
                     }
                 }
@@ -653,6 +705,7 @@ namespace DejavuBrowser
             {
                 if (tab.WebView != null)
                 {
+                    if (tab.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
                     Controls.Remove(tab.WebView);
                     tab.WebView.Dispose();
                     tab.WebView = null;
@@ -670,6 +723,7 @@ namespace DejavuBrowser
 
             if (tab.WebView != null)
             {
+                if (tab.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
                 Controls.Remove(tab.WebView);
                 tab.WebView.Dispose();
             }
@@ -1125,11 +1179,12 @@ namespace DejavuBrowser
         private async void ShowShieldPopoverAt(int anchorRightCss)
         {
             if (_popoverPopup == null) return;
-            if (_popoverPopup.Visible && _activePopoverMode == "shield")
+            if (_popoverPopup.IsPopupOpen && _activePopoverMode == "shield")
             {
                 HidePopover();
                 return;
             }
+            if (ShouldSkipToggleReopen("shield")) return;
 
             _activePopoverMode = "shield";
             float sc = DpiScale;
@@ -1169,11 +1224,12 @@ namespace DejavuBrowser
         private async void ShowProfilesPopoverAt(int anchorRightCss)
         {
             if (_popoverPopup == null) return;
-            if (_popoverPopup.Visible && _activePopoverMode == "profiles")
+            if (_popoverPopup.IsPopupOpen && _activePopoverMode == "profiles")
             {
                 HidePopover();
                 return;
             }
+            if (ShouldSkipToggleReopen("profiles")) return;
 
             _activePopoverMode = "profiles";
             float sc = DpiScale;
@@ -1209,7 +1265,7 @@ namespace DejavuBrowser
 
         private void SendProfilesPanelState(string backdrop)
         {
-            if (_popoverPopup != null && _popoverPopup.Visible && _activePopoverMode == "profiles")
+            if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "profiles")
             {
                 _popoverPopup.UpdateState(BuildProfilesPayloadJson(backdrop));
             }
@@ -1218,11 +1274,12 @@ namespace DejavuBrowser
         private async void ShowHistoryPopoverAt(int anchorRightCss)
         {
             if (_popoverPopup == null) return;
-            if (_popoverPopup.Visible && _activePopoverMode == "history")
+            if (_popoverPopup.IsPopupOpen && _activePopoverMode == "history")
             {
                 HidePopover();
                 return;
             }
+            if (ShouldSkipToggleReopen("history")) return;
 
             _activePopoverMode = "history";
             float sc = DpiScale;
@@ -1299,7 +1356,7 @@ namespace DejavuBrowser
         {
             if (_hudPopup == null) return;
             _downloadHideTimer.Stop();
-            bool wasVisible = _hudPopup.Visible && _activeHudMode == "download";
+            bool wasVisible = _hudPopup.IsPopupOpen && _activeHudMode == "download";
             _activeHudMode = "download";
 
             BrowserTab tab = GetActiveTab();
@@ -1664,7 +1721,7 @@ namespace DejavuBrowser
                 else if (type == "deleteHistoryItem")
                 {
                     _profiles.DeleteHistoryItem(Convert.ToString(msg["id"]));
-                    if (_popoverPopup != null && _popoverPopup.Visible && _activePopoverMode == "history")
+                    if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "history")
                     {
                         _popoverPopup.UpdateState(BuildHistoryPayloadJson(null));
                     }
@@ -1672,7 +1729,7 @@ namespace DejavuBrowser
                 else if (type == "clearHistory")
                 {
                     _profiles.ClearHistory();
-                    if (_popoverPopup != null && _popoverPopup.Visible && _activePopoverMode == "history")
+                    if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "history")
                     {
                         _popoverPopup.UpdateState(BuildHistoryPayloadJson(null));
                     }

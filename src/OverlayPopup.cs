@@ -1,6 +1,5 @@
 using System;
 using System.Drawing;
-using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
@@ -10,15 +9,26 @@ namespace DejavuBrowser
 {
     internal sealed class OverlayPopup : Form
     {
+        private readonly Form _ownerForm;
         private readonly WebView2 _wv;
         private bool _ready;
         private string _pendingJson;
         private readonly bool _dismissOnDeactivate;
+        private bool _everShown;
+        private bool _isOpen;
+        private bool _hiding;
+
+        public bool IsPopupOpen
+        {
+            get { return _isOpen; }
+        }
 
         public event Action<string> MessageReceived;
+        public event Action PopupHidden;
 
         public OverlayPopup(Form owner, bool dismissOnDeactivate)
         {
+            _ownerForm = owner;
             _dismissOnDeactivate = dismissOnDeactivate;
             Owner = owner;
             FormBorderStyle = FormBorderStyle.None;
@@ -31,11 +41,6 @@ namespace DejavuBrowser
             _wv.Dock = DockStyle.Fill;
             _wv.DefaultBackgroundColor = Color.FromArgb(12, 10, 22);
             Controls.Add(_wv);
-
-            if (_dismissOnDeactivate)
-            {
-                Deactivate += (s, e) => HidePopup();
-            }
         }
 
         protected override bool ShowWithoutActivation
@@ -43,10 +48,77 @@ namespace DejavuBrowser
             get { return !_dismissOnDeactivate; }
         }
 
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                // Keep floating popovers out of Alt-Tab / app-level Z-order competition
+                cp.ExStyle |= NativeWin32.WS_EX_TOOLWINDOW;
+                return cp;
+            }
+        }
+
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
             NativeWin32.ApplyWindows11Chrome(Handle, true, true);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == NativeWin32.WM_ACTIVATE)
+            {
+                int state = (int)(m.WParam.ToInt64() & 0xFFFF);
+                IntPtr activatedHwnd = m.LParam;
+                base.WndProc(ref m);
+
+                // NEVER hide synchronously inside WM_ACTIVATE / Deactivate!
+                // Doing so on an owned Form hosting an out-of-process WebView2 triggers
+                // win32k ActivateOtherWindow() and pushes BrowserForm behind Chrome.
+                if (state == NativeWin32.WA_INACTIVE && _dismissOnDeactivate && _isOpen && !_hiding && IsHandleCreated)
+                {
+                    try
+                    {
+                        BeginInvoke((Action)(() => HandleDeferredDeactivate(activatedHwnd)));
+                    }
+                    catch { }
+                }
+                return;
+            }
+
+            base.WndProc(ref m);
+        }
+
+        private void HandleDeferredDeactivate(IntPtr activatedHwnd)
+        {
+            if (!_isOpen || IsDisposed || _hiding) return;
+
+            IntPtr fg = NativeWin32.GetForegroundWindow();
+            if (fg == Handle) return; // Still active
+
+            bool clickedOwner = false;
+            if (_ownerForm != null && !_ownerForm.IsDisposed && _ownerForm.IsHandleCreated)
+            {
+                IntPtr ownerHwnd = _ownerForm.Handle;
+                if (fg == ownerHwnd || activatedHwnd == ownerHwnd)
+                {
+                    clickedOwner = true;
+                }
+                else if (fg != IntPtr.Zero &&
+                    (NativeWin32.IsChild(ownerHwnd, fg) || NativeWin32.GetAncestor(fg, NativeWin32.GA_ROOT) == ownerHwnd))
+                {
+                    clickedOwner = true;
+                }
+                else if (fg == IntPtr.Zero && _ownerForm.Visible &&
+                    _ownerForm.WindowState != FormWindowState.Minimized &&
+                    _ownerForm.Bounds.Contains(Cursor.Position))
+                {
+                    clickedOwner = true;
+                }
+            }
+
+            HidePopup(clickedOwner);
         }
 
         public async Task InitializeAsync(CoreWebView2Environment env, Action<CoreWebView2WebResourceRequestedEventArgs> virtualResourceHandler)
@@ -97,22 +169,44 @@ namespace DejavuBrowser
                 _pendingJson = stateJson;
             }
 
-            if (!Visible)
+            if (Owner == null && _ownerForm != null && !_ownerForm.IsDisposed)
             {
+                Owner = _ownerForm;
+            }
+
+            if (!_everShown)
+            {
+                _everShown = true;
+                _isOpen = true;
                 if (activate)
                 {
-                    Show(Owner);
+                    Show();
                     Activate();
                 }
                 else
                 {
-                    // Show without stealing focus (ideal for Download Toast)
-                    NativeWin32.ShowWindow(Handle, NativeWin32.SW_SHOWNOACTIVATE);
+                    // ShowWithoutActivation is true for non-activating HUDs
                     Visible = true;
                 }
+                return;
             }
-            else if (activate)
+
+            _isOpen = true;
+            uint flags = NativeWin32.SWP_SHOWWINDOW | NativeWin32.SWP_NOZORDER | NativeWin32.SWP_NOOWNERZORDER;
+            if (!activate) flags |= NativeWin32.SWP_NOACTIVATE;
+
+            NativeWin32.SetWindowPos(
+                Handle,
+                IntPtr.Zero,
+                screenBounds.X,
+                screenBounds.Y,
+                screenBounds.Width,
+                screenBounds.Height,
+                flags);
+
+            if (activate)
             {
+                NativeWin32.SetForegroundWindow(Handle);
                 Activate();
             }
         }
@@ -131,9 +225,76 @@ namespace DejavuBrowser
 
         public void HidePopup()
         {
-            if (Visible)
+            HidePopup(true);
+        }
+
+        public void HidePopup(bool keepOwnerForeground)
+        {
+            if (!_isOpen || IsDisposed || _hiding) return;
+            _hiding = true;
+            try
             {
-                Hide();
+                _isOpen = false;
+
+                bool canKeepOwner = keepOwnerForeground &&
+                    _ownerForm != null &&
+                    !_ownerForm.IsDisposed &&
+                    _ownerForm.IsHandleCreated &&
+                    _ownerForm.Visible &&
+                    _ownerForm.WindowState != FormWindowState.Minimized;
+
+                IntPtr fgBefore = NativeWin32.GetForegroundWindow();
+
+                // 1. If this popup (or its out-of-process WebView2) still holds foreground,
+                //    transfer foreground + focus to BrowserForm BEFORE hiding so win32k
+                //    never calls ActivateOtherWindow() to promote a background app.
+                if (canKeepOwner && (fgBefore == Handle || fgBefore == IntPtr.Zero))
+                {
+                    NativeWin32.SetForegroundWindow(_ownerForm.Handle);
+                    NativeWin32.SetFocus(_ownerForm.Handle);
+                }
+
+                // 2. CRITICAL: Hide ONLY via SetWindowPos(SWP_HIDEWINDOW | SWP_NOACTIVATE |
+                //    SWP_NOZORDER | SWP_NOOWNERZORDER) instead of WinForms Form.Hide()!
+                //    Calling Form.Hide() triggers WebView2.OnVisibleChanged -> async COM IPC
+                //    CoreWebView2Controller.IsVisible = false in msedgewebview2.exe, which
+                //    drops BrowserForm behind background apps (Chrome) ~66ms later (WebView2 #2929).
+                if (IsHandleCreated)
+                {
+                    NativeWin32.SetWindowPos(
+                        Handle,
+                        IntPtr.Zero,
+                        0, 0, 0, 0,
+                        NativeWin32.SWP_HIDEWINDOW |
+                        NativeWin32.SWP_NOACTIVATE |
+                        NativeWin32.SWP_NOMOVE |
+                        NativeWin32.SWP_NOSIZE |
+                        NativeWin32.SWP_NOZORDER |
+                        NativeWin32.SWP_NOOWNERZORDER);
+                }
+
+                // 3. Keep BrowserForm locked cleanly on top if focus stayed inside dejavu.
+                if (canKeepOwner)
+                {
+                    NativeWin32.SetWindowPos(
+                        _ownerForm.Handle,
+                        NativeWin32.HWND_TOP,
+                        0, 0, 0, 0,
+                        NativeWin32.SWP_NOMOVE | NativeWin32.SWP_NOSIZE | NativeWin32.SWP_NOACTIVATE);
+
+                    IntPtr fgAfter = NativeWin32.GetForegroundWindow();
+                    if (fgAfter != _ownerForm.Handle)
+                    {
+                        NativeWin32.SetForegroundWindow(_ownerForm.Handle);
+                    }
+                }
+
+                Action cb = PopupHidden;
+                if (cb != null) cb();
+            }
+            finally
+            {
+                _hiding = false;
             }
         }
     }

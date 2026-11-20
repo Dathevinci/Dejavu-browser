@@ -5,11 +5,28 @@ namespace DejavuBrowser
 {
     internal static class NativeWin32
     {
+        public const int WM_ACTIVATE = 0x0006;
         public const int WM_NCHITTEST = 0x0084;
         public const int WM_NCCALCSIZE = 0x0083;
         public const int WM_NCLBUTTONDOWN = 0x00A1;
         public const int WM_GETMINMAXINFO = 0x0024;
         public const int WM_SYSCOMMAND = 0x0112;
+
+        public const int WA_INACTIVE = 0;
+
+        public const int WS_MINIMIZEBOX = 0x00020000;
+        public const int WS_EX_TOOLWINDOW = 0x00000080;
+
+        public const uint SWP_NOSIZE = 0x0001;
+        public const uint SWP_NOMOVE = 0x0002;
+        public const uint SWP_NOZORDER = 0x0004;
+        public const uint SWP_NOACTIVATE = 0x0010;
+        public const uint SWP_SHOWWINDOW = 0x0040;
+        public const uint SWP_HIDEWINDOW = 0x0080;
+        public const uint SWP_NOOWNERZORDER = 0x0200;
+
+        public const uint GA_ROOT = 2;
+        public static readonly IntPtr HWND_TOP = IntPtr.Zero;
 
         public const int HTCAPTION = 2;
         public const int HTLEFT = 10;
@@ -92,6 +109,24 @@ namespace DejavuBrowser
 
         [DllImport("user32.dll")]
         public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr SetFocus(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        [DllImport("user32.dll")]
+        public static extern bool IsChild(IntPtr hWndParent, IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetAncestor(IntPtr hwnd, uint gaFlags);
 
         [DllImport("user32.dll")]
         public static extern uint GetDpiForWindow(IntPtr hwnd);

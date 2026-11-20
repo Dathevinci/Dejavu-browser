@@ -1,5 +1,5 @@
 /* ==========================================================================
-   dejavu v2.7 — A-to-Z macOS Safari Butterfly Liquid Glass Design System
+   dejavu v2.9 — A-to-Z macOS Safari Tahoe Butterfly Liquid Glass Design System
    ZERO CSS Gaussian filtering. Every glass surface uses real Snell's Law SVG
    refraction, Cauchy RGB dispersion, and Schlick Fresnel specular caustics.
    ========================================================================== */
@@ -546,11 +546,11 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .icon-btn.is-active {
 }
 
 /* ==========================================================================
-   Iconic macOS Safari Smart Search Field (#omnibox-pill)
-   - Left inside pill: Privacy Shield + Reader View (fades cleanly when typing)
-   - Center: Clean centered domain + green lock when idle
-   - Right inside pill: Favorite Star + Reload/Stop
-   - Focused: Left-aligned glare-free smoked obsidian / crisp porcelain!
+   Iconic macOS Safari Tahoe Smart Search Field (#omnibox-pill)
+   - Idle: Sculpted recessed Tahoe optical glass trough + centered domain & lock
+   - Left inside pill: Privacy Shield + Reader View (auto-tucked while typing)
+   - Right inside pill: Zoom Pill + Favorite Star + Reload/Stop
+   - Focused: Left-aligned glare-free smoked obsidian / pure porcelain bloom!
    ========================================================================== */
 .omnibox-pill {
   width: 100%;
@@ -562,51 +562,69 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .icon-btn.is-active {
   gap: 0;
   overflow: hidden;
   cursor: text;
-  background: linear-gradient(180deg, rgba(16, 14, 28, 0.78) 0%, rgba(12, 10, 22, 0.84) 100%);
-  --spec-opacity: 0.34;
+  background: linear-gradient(180deg, rgba(13, 11, 25, 0.72) 0%, rgba(19, 16, 34, 0.82) 100%);
+  border-color: rgba(255, 255, 255, 0.125);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.34),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    0 5px 16px -6px rgba(0, 0, 0, 0.42);
+  --spec-opacity: 0.32;
   transition:
-    background 0.20s var(--apple-fluid),
-    border-color 0.20s var(--apple-fluid),
-    box-shadow 0.22s var(--apple-fluid),
+    background 0.22s var(--apple-fluid),
+    border-color 0.22s var(--apple-fluid),
+    box-shadow 0.24s var(--apple-fluid),
     transform 0.26s var(--apple-fluid);
 }
 
 body.theme-light:not(.on-newtab):not(.tab-overview-open) .omnibox-pill {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(246, 244, 253, 0.92) 100%);
-  --spec-opacity: 0.28;
+  background: linear-gradient(180deg, rgba(238, 236, 248, 0.86) 0%, rgba(251, 250, 255, 0.94) 100%);
+  border-color: rgba(24, 18, 52, 0.105);
+  box-shadow:
+    inset 0 1px 2px rgba(24, 18, 52, 0.065),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.96),
+    0 3px 10px -5px rgba(24, 18, 52, 0.08);
+  --spec-opacity: 0.26;
 }
 
 .omnibox-pill:hover:not(:focus-within):not(.is-editing) {
-  border-color: rgba(212, 188, 255, 0.24);
-  background: linear-gradient(180deg, rgba(21, 18, 36, 0.84) 0%, rgba(15, 13, 27, 0.88) 100%);
+  border-color: rgba(212, 188, 255, 0.26);
+  background: linear-gradient(180deg, rgba(19, 16, 35, 0.82) 0%, rgba(24, 20, 42, 0.88) 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.26),
+    inset 0 -1px 0 rgba(214, 188, 255, 0.16),
+    0 6px 18px -6px rgba(0, 0, 0, 0.44);
 }
 
 body.theme-light:not(.on-newtab):not(.tab-overview-open) .omnibox-pill:hover:not(:focus-within):not(.is-editing) {
   border-color: rgba(124, 77, 255, 0.24);
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(180deg, rgba(246, 244, 253, 0.94) 0%, rgba(255, 255, 255, 0.98) 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(24, 18, 52, 0.04),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.98),
+    0 4px 12px -5px rgba(24, 18, 52, 0.10);
 }
 
 .omnibox-pill:focus-within,
 .omnibox-pill.is-editing {
   padding-left: 12px;
-  background: rgba(10, 9, 20, 0.96);
-  border-color: rgba(186, 144, 255, 0.58);
-  --spec-opacity: 0.14;
+  background: rgba(10, 9, 20, 0.97);
+  border-color: rgba(192, 152, 255, 0.62);
+  --spec-opacity: 0.12;
   box-shadow:
-    0 10px 26px -8px rgba(0, 0, 0, 0.58),
-    0 0 0 2px rgba(176, 124, 255, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+    0 12px 28px -8px rgba(0, 0, 0, 0.60),
+    0 0 0 2.5px rgba(176, 124, 255, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
 
 body.theme-light:not(.on-newtab):not(.tab-overview-open) .omnibox-pill:focus-within,
 body.theme-light:not(.on-newtab):not(.tab-overview-open) .omnibox-pill.is-editing {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: rgba(124, 77, 255, 0.48);
-  --spec-opacity: 0.12;
+  background: rgba(255, 255, 255, 0.99);
+  border-color: rgba(124, 77, 255, 0.50);
+  --spec-opacity: 0.10;
   box-shadow:
-    0 8px 22px -8px rgba(24, 16, 64, 0.16),
-    0 0 0 2px rgba(124, 77, 255, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+    0 8px 24px -8px rgba(24, 16, 64, 0.16),
+    0 0 0 2.5px rgba(124, 77, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 /* Suppress pointer caustic spot over text while typing (100% zero glare!) */
@@ -748,9 +766,9 @@ body.on-newtab .omnibox-display {
 .omnibox-icon.secure .ico-search { display: none; }
 
 .omnibox-domain {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.004em;
+  font-size: 12.8px;
+  font-weight: 520;
+  letter-spacing: -0.008em;
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
@@ -760,7 +778,8 @@ body.on-newtab .omnibox-display {
 
 .omnibox-domain.is-placeholder {
   color: var(--ink-muted);
-  font-weight: 430;
+  font-weight: 440;
+  letter-spacing: -0.004em;
 }
 
 /* Actual editable address input (razor-clear left-aligned text on focus) */
@@ -955,16 +974,18 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) #omnibox-input::selecti
 }
 
 /* ==========================================================================
-   Row 2: Authentic macOS Safari Full-Width Tab Bar
+   Row 2: Authentic macOS Safari Tahoe Full-Width Tab Bar
+   - Quiet recessed Safari tab trough with 14px vertical hairline dividers
+   - Dividers auto-hide adjacent to active or hovered tab (exact macOS Safari!)
    - Pinned tabs (38px compact favicon-only on far left)
-   - Equal-width stretching Safari tabs (flex: 1 1 0; min: 108px; max: 340px)
-   - Authentic Safari LEFT-SIDE hover '×' close button (never shifts centered title!)
-   - GPU-composited sliding #active-tab-glide pill
+   - Equal-width stretching Safari tabs (flex: 1 1 0; min: 110px)
+   - Rock-solid left-side 20x20px '×' close button (ZERO scale shift on :active!)
+   - GPU-composited sculpted Tahoe Liquid Glass #active-tab-glide capsule
    ========================================================================== */
 #tabs-area {
   flex: 1;
   min-width: 0;
-  height: 32px;
+  height: 34px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -975,15 +996,30 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) #omnibox-input::selecti
   position: relative;
   flex: 1 1 0;
   min-width: 0;
-  height: 32px;
+  height: 34px;
   display: flex;
   align-items: center;
   gap: 5px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
-  padding: 1px 2px;
+  padding: 2px 3px;
+  border-radius: 999px;
+  background: rgba(11, 9, 22, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.34),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.055);
   scroll-behavior: smooth;
+  transition: background 0.22s var(--apple-fluid), border-color 0.22s var(--apple-fluid);
+}
+
+body.theme-light:not(.on-newtab):not(.tab-overview-open) #tabs-strip {
+  background: rgba(24, 18, 52, 0.052);
+  border-color: rgba(24, 18, 52, 0.075);
+  box-shadow:
+    inset 0 1px 2px rgba(24, 18, 52, 0.055),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.86);
 }
 
 #tabs-strip.scrollable {
@@ -995,51 +1031,53 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) #omnibox-input::selecti
   display: none;
 }
 
-/* Apple-style GPU sliding active tab liquid pill with amethyst butterfly iridescence */
+/* Sculpted macOS Tahoe Liquid Glass sliding active tab capsule with amethyst rim light */
 #active-tab-glide {
   position: absolute;
-  top: 1px;
+  top: 2px;
   left: 0;
-  height: 30px;
+  height: 28px;
   width: 0;
   border-radius: 999px;
   background: linear-gradient(
-    160deg,
-    rgba(46, 36, 78, 0.86) 0%,
-    rgba(24, 19, 44, 0.90) 56%,
-    rgba(29, 22, 52, 0.88) 100%
+    165deg,
+    rgba(54, 43, 92, 0.90) 0%,
+    rgba(28, 22, 50, 0.93) 52%,
+    rgba(35, 27, 62, 0.91) 100%
   );
-  border: 1px solid rgba(196, 158, 255, 0.44);
+  border: 1px solid rgba(208, 174, 255, 0.48);
   box-shadow:
-    0 4px 14px -4px rgba(0, 0, 0, 0.44),
-    0 0 12px -4px rgba(176, 124, 255, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -1px 0 rgba(128, 214, 255, 0.16);
+    0 4px 14px -4px rgba(0, 0, 0, 0.48),
+    0 1px 3px rgba(0, 0, 0, 0.24),
+    0 0 14px -5px rgba(182, 136, 255, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(140, 216, 255, 0.18);
   pointer-events: none;
   z-index: 0;
   opacity: 0;
   will-change: transform, width;
   transition:
-    transform 0.38s var(--apple-spring),
-    width 0.32s var(--apple-fluid),
-    opacity 0.18s ease;
+    transform 0.36s var(--apple-spring),
+    width 0.30s var(--apple-fluid),
+    opacity 0.16s ease;
 }
 
 body.theme-light:not(.on-newtab):not(.tab-overview-open) #active-tab-glide {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97) 0%, rgba(244, 239, 255, 0.94) 100%);
-  border-color: rgba(124, 77, 255, 0.30);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 241, 255, 0.95) 100%);
+  border-color: rgba(124, 77, 255, 0.28);
   box-shadow:
-    0 4px 12px -4px rgba(24, 16, 64, 0.12),
-    0 0 10px -4px rgba(124, 77, 255, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    0 3px 10px -3px rgba(24, 16, 64, 0.13),
+    0 1px 2px rgba(24, 16, 64, 0.06),
+    0 0 10px -4px rgba(124, 77, 255, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
     inset 0 -1px 0 rgba(124, 77, 255, 0.10);
 }
 
-/* Authentic Safari Equal-Width Stretching Tabs */
+/* Authentic macOS Safari Quiet Recessed Equal-Width Tabs */
 .tab-pill {
   position: relative;
   z-index: 1;
-  height: 30px;
+  height: 28px;
   flex: 1 1 0;
   min-width: 110px;
   max-width: none;
@@ -1050,12 +1088,53 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) #active-tab-glide {
   justify-content: center;
   cursor: pointer;
   color: var(--ink-muted);
-  background: rgba(255, 255, 255, 0.032);
-  border: 1px solid rgba(255, 255, 255, 0.055);
+  background: transparent;
+  border: 1px solid transparent;
   box-shadow: none;
-  --spec-opacity: 0.12;
-  opacity: 0.86;
-  animation: tabBloom 0.28s var(--apple-spring);
+  opacity: 0.80;
+  animation: tabBloom 0.26s var(--apple-spring);
+  transition:
+    background 0.18s var(--apple-fluid),
+    border-color 0.18s var(--apple-fluid),
+    color 0.18s var(--apple-fluid),
+    opacity 0.18s var(--apple-fluid),
+    box-shadow 0.18s var(--apple-fluid);
+}
+
+/* Ultra-subtle 14px vertical hairline dividers between adjacent inactive tabs */
+.tab-sep {
+  position: absolute;
+  right: -3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 14px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.17);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.16s var(--apple-fluid);
+}
+
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-sep {
+  background: rgba(24, 18, 52, 0.15);
+}
+
+/* Subtle Safari pinned/unpinned group hairline */
+.tab-pill.pinned:has(+ .tab-pill:not(.pinned)) .tab-sep {
+  height: 16px;
+  background: rgba(196, 158, 255, 0.36);
+}
+
+/* Auto-hide dividers adjacent to active, hovered, closing, or last tab */
+.tab-pill:last-child .tab-sep,
+.tab-pill.active .tab-sep,
+.tab-pill:hover .tab-sep,
+.tab-pill.closing .tab-sep,
+.tab-pill:has(+ .tab-pill.active) .tab-sep,
+.tab-pill:has(+ .tab-pill:hover) .tab-sep,
+.tab-pill:has(+ .tab-pill.closing) .tab-sep {
+  opacity: 0;
 }
 
 /* Safari Compact Pinned Tab (Favicon-Only on Far Left!) */
@@ -1064,7 +1143,6 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) #active-tab-glide {
   min-width: 38px !important;
   max-width: 38px !important;
   padding: 0 !important;
-  border-color: rgba(196, 158, 255, 0.22);
 }
 
 .tab-pill.pinned .tab-title,
@@ -1078,15 +1156,9 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) #active-tab-glide {
   height: 15px;
 }
 
-body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill {
-  background: rgba(24, 18, 52, 0.045);
-  border-color: rgba(24, 18, 52, 0.07);
-  --spec-opacity: 0.10;
-}
-
 @keyframes tabBloom {
-  from { opacity: 0; transform: scale(0.88) translateX(-8px); }
-  to { opacity: 0.84; transform: scale(1) translateX(0); }
+  from { opacity: 0; transform: scale(0.92) translateY(2px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .tab-pill.closing {
@@ -1100,7 +1172,7 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill {
   margin-left: -5px !important;
   border-width: 0 !important;
   overflow: hidden !important;
-  transform: scale(0.78);
+  transform: scale(0.84);
   pointer-events: none;
   transition:
     flex-basis 0.22s var(--apple-fluid),
@@ -1118,7 +1190,7 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill {
 }
 
 @keyframes tabResetPulse {
-  0% { transform: scale(0.94); opacity: 0.65; }
+  0% { transform: scale(0.96); opacity: 0.68; }
   100% { transform: scale(1); opacity: 1; }
 }
 
@@ -1126,14 +1198,17 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill {
   opacity: 0.98;
   color: var(--ink);
   background: rgba(255, 255, 255, 0.085);
-  border-color: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.105);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
 
 body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.68);
-  border-color: rgba(24, 18, 52, 0.11);
+  background: rgba(255, 255, 255, 0.64);
+  border-color: rgba(24, 18, 52, 0.085);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.90);
 }
 
+/* NEVER put transform: scale() on .tab-pill:active so .tab-close never shifts under the cursor! */
 .tab-pill:active:not(:has(.tab-close:active)):not(:has(.tab-audio-btn:active)) {
   filter: brightness(0.94);
   transition-duration: 0.08s;
@@ -1146,7 +1221,6 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill:hover:not(.ac
   background: transparent;
   border-color: transparent;
   box-shadow: none;
-  --spec-opacity: 0;
 }
 
 .tab-pill.active .tab-title {
@@ -1189,13 +1263,13 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill:hover:not(.ac
   min-width: 0;
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: -0.002em;
+  letter-spacing: -0.004em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Authentic Safari LEFT-SIDE close button — ALWAYS accessible on active tab + instant on hover! */
+/* Authentic Safari LEFT-SIDE close button — 20x20px rock-solid clickable on active & hover! */
 .tab-close {
   position: absolute !important;
   left: 6px;
@@ -1218,20 +1292,20 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill:hover:not(.ac
 }
 
 .tab-pill.active .tab-close {
-  opacity: 0.64;
+  opacity: 0.68;
   transform: translateY(-50%) scale(1);
   pointer-events: auto;
 }
 
 .tab-pill:hover .tab-close {
-  opacity: 0.90;
+  opacity: 0.92;
   transform: translateY(-50%) scale(1);
   pointer-events: auto;
 }
 
 .tab-close:hover {
   opacity: 1 !important;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.17);
   color: var(--ink);
   transform: translateY(-50%) scale(1.06);
 }
@@ -1287,8 +1361,8 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-close:hover {
 
 /* Clean '+' New Tab Button at Right End of Tab Bar */
 .circle-btn {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -1319,7 +1393,7 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-close:hover {
   height: 100%;
 }
 
-/* Window Controls Capsule (Row 1 Right) */
+/* Window Controls Capsule (Row 1 Right) — MacBook-inspired amber/emerald/rose polish with crisp Windows icons */
 .win-pill {
   height: 34px;
   padding: 2px 4px;
@@ -1340,7 +1414,7 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-close:hover {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+  transition: background 0.18s var(--apple-fluid), color 0.18s var(--apple-fluid), box-shadow 0.18s var(--apple-fluid), transform 0.24s var(--apple-spring);
 }
 
 .win-btn svg {
@@ -1348,14 +1422,47 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-close:hover {
   height: 11.5px;
 }
 
+.win-btn .ico-restore { display: none; }
+body.is-maximized .win-btn .ico-max { display: none; }
+body.is-maximized .win-btn .ico-restore { display: block; }
+
 .win-btn:hover {
-  background: var(--glass-hover-bg);
-  color: var(--ink);
+  transform: scale(1.05);
+}
+
+.win-btn:active {
+  transform: scale(0.88);
+  transition-duration: 0.08s;
+}
+
+.win-btn.win-min:hover {
+  background: rgba(254, 188, 46, 0.24);
+  color: #ffd56b;
+  box-shadow: inset 0 0 0 1px rgba(254, 188, 46, 0.42);
+}
+
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .win-btn.win-min:hover {
+  background: rgba(245, 166, 35, 0.22);
+  color: #9a5d00;
+  box-shadow: inset 0 0 0 1px rgba(217, 138, 12, 0.36);
+}
+
+.win-btn.win-max:hover {
+  background: rgba(40, 200, 64, 0.22);
+  color: #74f08a;
+  box-shadow: inset 0 0 0 1px rgba(40, 200, 64, 0.40);
+}
+
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .win-btn.win-max:hover {
+  background: rgba(34, 178, 58, 0.20);
+  color: #136e28;
+  box-shadow: inset 0 0 0 1px rgba(24, 146, 48, 0.34);
 }
 
 .win-btn.win-close:hover {
-  background: rgba(255, 86, 118, 0.80);
+  background: rgba(255, 95, 87, 0.86);
   color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 166, 160, 0.54), 0 0 10px -2px rgba(255, 95, 87, 0.44);
 }
 
 /* ==========================================================================
@@ -1425,12 +1532,12 @@ body.on-newtab:not(.tab-overview-open) #newtab-view {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .hero-logo-wrap {
-  width: 68px;
-  height: 68px;
+  width: 66px;
+  height: 66px;
   border-radius: 50%;
   background: radial-gradient(circle at 50% 50%, rgba(176, 124, 255, 0.18) 0%, rgba(176, 124, 255, 0.04) 50%, transparent 74%);
   display: flex;
@@ -1445,8 +1552,8 @@ body.on-newtab:not(.tab-overview-open) #newtab-view {
 }
 
 #newtab-logo {
-  width: 62px;
-  height: 62px;
+  width: 60px;
+  height: 60px;
   object-fit: contain;
   filter: drop-shadow(0 0 20px rgba(170, 114, 255, 0.54));
 }
@@ -1458,6 +1565,66 @@ body.on-newtab:not(.tab-overview-open) #newtab-view {
   text-transform: lowercase;
   color: rgba(248, 244, 255, 0.96);
   text-shadow: 0 2px 20px rgba(168, 114, 255, 0.36);
+}
+
+/* Safari-style Start Page Profile Greeting Badge */
+.sp-profile-badge {
+  height: 26px;
+  padding: 0 11px 0 6px;
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11.4px;
+  font-weight: 500;
+  letter-spacing: -0.004em;
+  color: rgba(238, 232, 255, 0.88);
+  background: linear-gradient(165deg, rgba(28, 22, 50, 0.72) 0%, rgba(14, 11, 28, 0.80) 100%);
+  border-color: rgba(255, 255, 255, 0.14);
+  --spec-opacity: 0.30;
+}
+
+.sp-profile-badge:hover {
+  transform: translateY(-1px) scale(1.025);
+  border-color: rgba(212, 180, 255, 0.50);
+  color: #ffffff;
+}
+
+.sp-profile-badge:active {
+  transform: scale(0.95);
+}
+
+.sp-badge-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.sp-badge-greeting {
+  color: rgba(214, 204, 242, 0.78);
+  font-weight: 460;
+}
+
+.sp-badge-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(196, 158, 255, 0.65);
+  flex-shrink: 0;
+}
+
+.sp-badge-name {
+  color: rgba(248, 244, 255, 0.96);
+  font-weight: 600;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Liquid Glass Hero Smart Search Pill */
@@ -1564,11 +1731,11 @@ body.on-newtab:not(.tab-overview-open) #newtab-view {
 }
 
 .sp-section-title {
-  font-size: 15.5px;
-  font-weight: 640;
-  letter-spacing: -0.012em;
-  color: rgba(248, 244, 255, 0.94);
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.018em;
+  color: rgba(248, 244, 255, 0.95);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.48);
 }
 
 /* Safari Favorites: Squircle Glass Icon Tiles with Crisp Labels BELOW Each Tile */
@@ -1608,8 +1775,12 @@ body.on-newtab:not(.tab-overview-open) #newtab-view {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(155deg, rgba(30, 24, 52, 0.74) 0%, rgba(16, 13, 30, 0.82) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(155deg, rgba(32, 26, 56, 0.76) 0%, rgba(16, 13, 30, 0.84) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 8px 20px -8px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(182, 136, 255, 0.12);
   --spec-opacity: 0.44;
   transition:
     transform 0.34s var(--apple-spring),
@@ -1619,19 +1790,19 @@ body.on-newtab:not(.tab-overview-open) #newtab-view {
 }
 
 .safari-fav-item:hover .safari-fav-squircle {
-  transform: translateY(-4px) scale(1.06);
+  transform: translateY(-5px) scale(1.065);
   background: linear-gradient(
     145deg,
-    rgba(68, 46, 120, 0.80) 0%,
-    rgba(30, 22, 58, 0.84) 55%,
-    rgba(22, 34, 62, 0.80) 100%
+    rgba(68, 46, 120, 0.82) 0%,
+    rgba(30, 22, 58, 0.86) 55%,
+    rgba(22, 34, 62, 0.82) 100%
   );
-  border-color: rgba(212, 178, 255, 0.62);
+  border-color: rgba(214, 182, 255, 0.64);
   box-shadow:
-    0 14px 28px -8px rgba(0, 0, 0, 0.56),
-    0 0 22px -6px rgba(176, 124, 255, 0.40),
-    inset 0 1px 0 rgba(238, 222, 255, 0.34),
-    inset 0 -1px 0 rgba(125, 211, 252, 0.22);
+    0 16px 30px -8px rgba(0, 0, 0, 0.58),
+    0 0 24px -6px rgba(176, 124, 255, 0.42),
+    inset 0 1px 0 rgba(242, 228, 255, 0.38),
+    inset 0 -1px 0 rgba(125, 211, 252, 0.24);
 }
 
 .safari-fav-item:active .safari-fav-squircle {
@@ -1734,15 +1905,17 @@ body.on-newtab:not(.tab-overview-open) #newtab-view {
   cursor: pointer;
   font-family: inherit;
   color: var(--ink);
-  background: linear-gradient(155deg, rgba(28, 23, 48, 0.72) 0%, rgba(16, 13, 30, 0.80) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(155deg, rgba(28, 23, 48, 0.74) 0%, rgba(16, 13, 30, 0.82) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.14);
   --spec-opacity: 0.34;
 }
 
 .freq-card:hover {
-  transform: translateY(-2px) scale(1.02);
-  border-color: rgba(206, 174, 255, 0.48);
-  background: linear-gradient(155deg, rgba(46, 35, 80, 0.78) 0%, rgba(22, 18, 42, 0.84) 100%);
+  transform: translateY(-2.5px) scale(1.018);
+  border-color: rgba(210, 178, 255, 0.52);
+  background: linear-gradient(155deg, rgba(48, 36, 84, 0.82) 0%, rgba(22, 18, 42, 0.86) 100%);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(236, 220, 255, 0.26);
 }
 
 .freq-card:active {
@@ -1983,15 +2156,18 @@ body.on-newtab:not(.tab-overview-open) #newtab-view {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  background: linear-gradient(155deg, rgba(28, 23, 48, 0.72) 0%, rgba(16, 13, 30, 0.80) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(155deg, rgba(28, 23, 48, 0.74) 0%, rgba(16, 13, 30, 0.82) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.14);
   --spec-opacity: 0.34;
-  transition: transform 0.26s var(--apple-spring), border-color 0.20s ease, background 0.20s ease;
+  transition: transform 0.28s var(--apple-spring), border-color 0.20s ease, background 0.20s ease, box-shadow 0.22s ease;
 }
 
 .reading-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(206, 174, 255, 0.48);
+  transform: translateY(-2.5px) scale(1.015);
+  border-color: rgba(210, 178, 255, 0.52);
+  background: linear-gradient(155deg, rgba(48, 36, 84, 0.82) 0%, rgba(22, 18, 42, 0.86) 100%);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(236, 220, 255, 0.26);
 }
 
 .reading-card-rm {
@@ -2020,6 +2196,57 @@ body.on-newtab:not(.tab-overview-open) #newtab-view {
 .reading-card-rm:hover {
   background: rgba(255, 86, 118, 0.86);
   color: #ffffff;
+}
+
+/* MacBook Safari Bottom-Left Link Hover Status Pill */
+.sp-status-pill {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  height: 28px;
+  max-width: min(460px, calc(100vw - 170px));
+  padding: 0 11px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(165deg, rgba(22, 18, 40, 0.88) 0%, rgba(12, 10, 24, 0.92) 100%);
+  border: 1px solid rgba(206, 174, 255, 0.22);
+  box-shadow:
+    0 8px 22px -6px rgba(0, 0, 0, 0.54),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  color: rgba(242, 236, 255, 0.90);
+  font-size: 11.4px;
+  font-weight: 500;
+  letter-spacing: -0.004em;
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0;
+  transform: translateY(6px) scale(0.97);
+  transition: opacity 0.18s var(--apple-fluid), transform 0.24s var(--apple-spring);
+}
+
+.sp-status-pill.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.sp-status-lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--shield-green);
+  flex-shrink: 0;
+}
+
+.sp-status-lock.hidden {
+  display: none;
+}
+
+.sp-status-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Bottom-Right Iconic Safari Customize Sliders Button */
@@ -3028,6 +3255,10 @@ body.on-newtab .anim-rise-4 { animation: riseSpring 0.56s var(--apple-fluid) 0.1
 .fav-star-btn.starred {
   color: #facc15;
   animation: starBurst 0.40s var(--apple-spring);
+}
+
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .fav-star-btn.starred {
+  color: #d97706;
 }
 
 .fav-star-btn.starred svg path {

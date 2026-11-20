@@ -137,6 +137,7 @@ namespace DejavuBrowser
         private int _latencyMs;
         private DateTime _connectedUtc = DateTime.MinValue;
         private bool _autoConnect;
+        private bool _coreInstalledCache;
         private bool _disposed;
 
         public event Action<VpnStatusSnapshot> StateChanged;
@@ -203,6 +204,7 @@ namespace DejavuBrowser
             }
             catch { }
 
+            _coreInstalledCache = IsCoreInstalled();
             CleanupStaleTorProcesses();
         }
 
@@ -229,7 +231,7 @@ namespace DejavuBrowser
                     exitCountry = _exitCountry,
                     exitCountryCode = _exitCountryCode,
                     latencyMs = _latencyMs,
-                    coreInstalled = IsCoreInstalled(),
+                    coreInstalled = _coreInstalledCache,
                     bytesSent = sent,
                     bytesReceived = recv,
                     connectedSeconds = connSec,
@@ -302,11 +304,27 @@ namespace DejavuBrowser
 
         private void UpdateStatus(string state, string statusText, int progress, bool clearExit)
         {
+            int clampedProgress = Math.Max(0, Math.Min(100, progress));
             lock (_sync)
             {
+                bool exitAlreadyClear =
+                    string.IsNullOrEmpty(_exitIp) &&
+                    string.IsNullOrEmpty(_exitCity) &&
+                    string.IsNullOrEmpty(_exitCountry) &&
+                    string.IsNullOrEmpty(_exitCountryCode) &&
+                    _latencyMs == 0;
+
+                if (string.Equals(_state, state, StringComparison.Ordinal) &&
+                    string.Equals(_statusText, statusText, StringComparison.Ordinal) &&
+                    _progress == clampedProgress &&
+                    (!clearExit || exitAlreadyClear))
+                {
+                    return;
+                }
+
                 _state = state;
                 _statusText = statusText;
-                _progress = Math.Max(0, Math.Min(100, progress));
+                _progress = clampedProgress;
                 if (state == "connected")
                 {
                     if (_connectedUtc == DateTime.MinValue)
@@ -341,11 +359,14 @@ namespace DejavuBrowser
 
         public void SetCountryPreferenceOnly(string code)
         {
+            string norm = NormalizeCountryCode(code);
+            bool changed;
             lock (_sync)
             {
-                _countryCode = NormalizeCountryCode(code);
+                changed = !string.Equals(_countryCode, norm, StringComparison.Ordinal);
+                _countryCode = norm;
             }
-            NotifyStateChanged();
+            if (changed) NotifyStateChanged();
         }
 
         public async Task ToggleAsync()
@@ -380,10 +401,13 @@ namespace DejavuBrowser
                 }
 
                 // 1. Download official Tor core once on first use
-                if (!IsCoreInstalled())
+                bool coreReady = IsCoreInstalled();
+                lock (_sync) { _coreInstalledCache = coreReady; }
+                if (!coreReady)
                 {
                     UpdateStatus("downloading", "Downloading encrypted VPN core (one-time)...", 4, true);
                     bool installed = await DownloadAndExtractTorCoreAsync(token).ConfigureAwait(false);
+                    lock (_sync) { _coreInstalledCache = installed; }
                     if (token.IsCancellationRequested) return;
                     if (!installed)
                     {

@@ -1,5 +1,5 @@
 /**
- * dejavu v2.7 Native Shell Controller — A-to-Z macOS Safari Butterfly Liquid Glass Edition
+ * dejavu v2.9 Native Shell Controller — A-to-Z macOS Safari Tahoe Butterfly Liquid Glass Edition
  */
 (function () {
   const send = (msg) => {
@@ -49,8 +49,17 @@
   const btnProfile = document.getElementById('btn-profile');
   const profileAvatarSlot = document.getElementById('profile-avatar-slot');
   const profileUpdateDot = document.getElementById('profile-update-dot');
+  const winMaxBtn = document.getElementById('win-max');
   const favbar = document.getElementById('favbar');
   const favbarList = document.getElementById('favbar-list');
+
+  const startpageProfileBadge = document.getElementById('startpage-profile-badge');
+  const spBadgeAvatar = document.getElementById('sp-badge-avatar');
+  const spBadgeGreeting = document.getElementById('sp-badge-greeting');
+  const spBadgeName = document.getElementById('sp-badge-name');
+  const startpageStatusPill = document.getElementById('startpage-status-pill');
+  const spStatusLock = document.getElementById('sp-status-lock');
+  const startpageStatusText = document.getElementById('startpage-status-text');
 
   const newtabCanvas = document.getElementById('newtab-canvas');
   const newtabSearchForm = document.getElementById('newtab-search-form');
@@ -106,16 +115,16 @@
   const prefReading = document.getElementById('pref-reading');
 
   const WALLPAPER_CATALOG = [
-    { id: 'art:wp-amethyst.jpg', cat: 'art', name: 'Amethyst Glasswing', desc: 'Crystalline violet & cyan wings', img: 'https://dejavu.local/wp-amethyst.jpg' },
-    { id: 'art:wp-aurora.jpg', cat: 'art', name: 'Aurora Glasswing', desc: 'Emerald northern lights & amethyst', img: 'https://dejavu.local/wp-aurora.jpg' },
-    { id: 'art:wp-celestial.jpg', cat: 'art', name: 'Celestial Sapphire', desc: 'Faceted cobalt morpho glass wings', img: 'https://dejavu.local/wp-celestial.jpg' },
-    { id: 'art:wp-rosequartz.jpg', cat: 'art', name: 'Rose Quartz Dusk', desc: 'Blush crystal & velvet twilight plum', img: 'https://dejavu.local/wp-rosequartz.jpg' },
-    { id: 'art:wp-arctic.jpg', cat: 'art', name: 'Arctic Diamond', desc: 'Glacial ice-crystal prism wings', img: 'https://dejavu.local/wp-arctic.jpg' },
-    { id: 'art:wp-nebula.jpg', cat: 'art', name: 'Amethyst Nebula', desc: 'Deep-space ultraviolet wing filaments', img: 'https://dejavu.local/wp-nebula.jpg' },
-    { id: 'art:wp-gilded.jpg', cat: 'art', name: 'Gilded Obsidian', desc: 'Smoked obsidian & champagne gold', img: 'https://dejavu.local/wp-gilded.jpg' },
-    { id: 'art:wp-morpho.jpg', cat: 'art', name: 'Morpho Nocturne', desc: 'Iridescent sapphire butterfly arc', img: 'https://dejavu.local/wp-morpho.jpg' },
-    { id: 'art:wp-monarch.jpg', cat: 'art', name: 'Monarch Eclipse', desc: 'Obsidian & molten amber gold', img: 'https://dejavu.local/wp-monarch.jpg' },
-    { id: 'art:wp-sakura.jpg', cat: 'art', name: 'Sakura Glasswing', desc: 'Frosted pearl & pastel rose dusk', img: 'https://dejavu.local/wp-sakura.jpg' },
+    { id: 'art:wp-amethyst.jpg', cat: 'art', name: 'Amethyst Glasswing', desc: 'Faceted amethyst prism-glass in indigo twilight', img: 'https://dejavu.local/wp-amethyst.jpg' },
+    { id: 'art:wp-aurora.jpg', cat: 'art', name: 'Aurora Glasswing', desc: 'Emerald & violet aurora over glacial mirror lake', img: 'https://dejavu.local/wp-aurora.jpg' },
+    { id: 'art:wp-celestial.jpg', cat: 'art', name: 'Celestial Sapphire', desc: 'Iridescent Blue Morpho & moonlit sapphire water', img: 'https://dejavu.local/wp-celestial.jpg' },
+    { id: 'art:wp-rosequartz.jpg', cat: 'art', name: 'Rose Quartz Dusk', desc: 'Rose-quartz glass wings in velvet plum clouds', img: 'https://dejavu.local/wp-rosequartz.jpg' },
+    { id: 'art:wp-arctic.jpg', cat: 'art', name: 'Arctic Diamond', desc: 'Frosted ice butterflies & sapphire cavern prisms', img: 'https://dejavu.local/wp-arctic.jpg' },
+    { id: 'art:wp-nebula.jpg', cat: 'art', name: 'Amethyst Nebula', desc: 'Deep-space ultraviolet cosmic butterfly nebula', img: 'https://dejavu.local/wp-nebula.jpg' },
+    { id: 'art:wp-gilded.jpg', cat: 'art', name: 'Gilded Obsidian', desc: '24k champagne-gold filigree on charcoal slate', img: 'https://dejavu.local/wp-gilded.jpg' },
+    { id: 'art:wp-morpho.jpg', cat: 'art', name: 'Morpho Nocturne', desc: 'Luminous cobalt morphos & dewy nocturnal ferns', img: 'https://dejavu.local/wp-morpho.jpg' },
+    { id: 'art:wp-monarch.jpg', cat: 'art', name: 'Monarch Eclipse', desc: 'Golden eclipse corona & translucent amber wings', img: 'https://dejavu.local/wp-monarch.jpg' },
+    { id: 'art:wp-sakura.jpg', cat: 'art', name: 'Sakura Glasswing', desc: 'Moonlit Kyoto blossoms & pearl mirror pond', img: 'https://dejavu.local/wp-sakura.jpg' },
     { id: 'live:obsidian-prism', cat: 'live', name: 'Obsidian Prism', desc: 'Violet & cyan caustic ribbons', grad: 'radial-gradient(circle at 30% 35%, #5b31b8 0%, #160f2c 55%, #06050b 100%), linear-gradient(120deg, transparent 35%, rgba(118,212,255,0.45) 55%, transparent 75%)' },
     { id: 'live:aurora-borealis', cat: 'live', name: 'Aurora Borealis', desc: 'Emerald, violet & arctic cyan waves', grad: 'radial-gradient(circle at 35% 35%, #16b8a0 0%, #1d1646 54%, #03060d 100%)' },
     { id: 'live:crimson-velvet', cat: 'live', name: 'Crimson Velvet', desc: 'Deep ruby & rose gold silk', grad: 'radial-gradient(circle at 60% 32%, #c92c5f 0%, #2a0c1a 56%, #070306 100%)' },
@@ -372,6 +381,63 @@
     const r = btnProfile.getBoundingClientRect();
     send({ type: 'openProfiles', anchorRight: Math.round(r.right + 6) });
   });
+
+  if (startpageProfileBadge) {
+    startpageProfileBadge.addEventListener('click', () => {
+      const r = btnProfile.getBoundingClientRect();
+      send({ type: 'openProfiles', anchorRight: Math.round(r.right + 6) });
+    });
+  }
+
+  function getTimeGreeting() {
+    const hr = new Date().getHours();
+    if (hr < 5) return 'Good night';
+    if (hr < 12) return 'Good morning';
+    if (hr < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  let lastSpBadgeKey = '';
+  function syncStartPageProfileBadge(profile) {
+    if (!startpageProfileBadge) return;
+    const greeting = getTimeGreeting();
+    if (spBadgeGreeting) spBadgeGreeting.textContent = greeting;
+    if (!profile) return;
+    const key = `${profile.avatar}_${profile.name}`;
+    if (key !== lastSpBadgeKey) {
+      lastSpBadgeKey = key;
+      if (spBadgeName) spBadgeName.textContent = profile.name || 'Default';
+      if (spBadgeAvatar && window.DejavuAvatars) {
+        spBadgeAvatar.innerHTML = window.DejavuAvatars.renderHtml(profile.avatar, 16);
+      }
+    }
+  }
+
+  function formatStatusUrl(url) {
+    if (!url) return '';
+    try {
+      const u = new URL(url);
+      const host = u.host.replace(/^www\./i, '');
+      const path = (u.pathname === '/' && !u.search) ? '' : (u.pathname + u.search);
+      return host + path;
+    } catch {
+      return String(url).replace(/^https?:\/\/(www\.)?/i, '');
+    }
+  }
+
+  function showStartPageStatus(url) {
+    if (!startpageStatusPill || !startpageStatusText || !url) return;
+    startpageStatusText.textContent = formatStatusUrl(url);
+    if (spStatusLock) {
+      spStatusLock.classList.toggle('hidden', !/^https:\/\//i.test(url));
+    }
+    startpageStatusPill.classList.add('visible');
+  }
+
+  function hideStartPageStatus() {
+    if (!startpageStatusPill) return;
+    startpageStatusPill.classList.remove('visible');
+  }
 
   favbarList.addEventListener('wheel', (e) => {
     if (Math.abs(e.deltaY) > 0) favbarList.scrollLeft += e.deltaY;
@@ -682,7 +748,12 @@
 
       item.appendChild(sq);
       item.appendChild(label);
-      item.addEventListener('click', () => send({ type: 'navigate', input: sc.url }));
+      item.addEventListener('pointerenter', () => showStartPageStatus(sc.url));
+      item.addEventListener('pointerleave', hideStartPageStatus);
+      item.addEventListener('click', () => {
+        hideStartPageStatus();
+        send({ type: 'navigate', input: sc.url });
+      });
       shortcutsGrid.appendChild(item);
     });
 
@@ -744,7 +815,12 @@
       img.onerror = () => { img.src = 'https://dejavu.local/logo-transparent.png'; };
       card.querySelector('.freq-title').textContent = item.title || host;
       card.querySelector('.freq-host').textContent = host;
-      card.addEventListener('click', () => send({ type: 'navigate', input: item.url }));
+      card.addEventListener('pointerenter', () => showStartPageStatus(item.url));
+      card.addEventListener('pointerleave', hideStartPageStatus);
+      card.addEventListener('click', () => {
+        hideStartPageStatus();
+        send({ type: 'navigate', input: item.url });
+      });
       frequentGrid.appendChild(card);
     });
   }
@@ -786,9 +862,15 @@
       card.querySelector('.freq-host').textContent = host;
       card.querySelector('.reading-card-rm').addEventListener('click', (e) => {
         e.stopPropagation();
+        hideStartPageStatus();
         send({ type: 'removeReadingList', id: item.id });
       });
-      card.addEventListener('click', () => send({ type: 'navigate', input: item.url }));
+      card.addEventListener('pointerenter', () => showStartPageStatus(item.url));
+      card.addEventListener('pointerleave', hideStartPageStatus);
+      card.addEventListener('click', () => {
+        hideStartPageStatus();
+        send({ type: 'navigate', input: item.url });
+      });
       readingGrid.appendChild(card);
     });
   }
@@ -1063,8 +1145,10 @@
       return;
     }
     const left = activeEl.offsetLeft;
+    const top = activeEl.offsetTop;
     const width = activeEl.offsetWidth;
     if (width > 10) {
+      activeTabGlide.style.top = `${top}px`;
       activeTabGlide.style.transform = `translate3d(${left}px, 0, 0)`;
       activeTabGlide.style.width = `${width}px`;
       activeTabGlide.style.opacity = '1';
@@ -1099,7 +1183,10 @@
     el.classList.add('closing');
     setTimeout(() => {
       send({ type: 'closeTab', id: tabId });
-      setTimeout(() => closingTabIds.delete(tabId), 260);
+      setTimeout(() => {
+        closingTabIds.delete(tabId);
+        updateActiveTabGlide(state.activeTabId);
+      }, 240);
     }, 110);
   }
 
@@ -1118,12 +1205,8 @@
       const isNew = !el;
       if (!el) {
         el = document.createElement('div');
-        el.className = 'glass-pill tab-pill';
+        el.className = 'tab-pill';
         el.setAttribute('role', 'tab');
-        el.setAttribute('data-liquid-glass', '');
-        el.setAttribute('data-lg-fast', '1');
-        el.setAttribute('data-lg-bezel', '9');
-        el.setAttribute('data-lg-scale', '12');
         el.innerHTML = `
           <button type="button" class="tab-close" title="Close tab (Ctrl+W)" aria-label="Close tab">
             <svg viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -1137,6 +1220,7 @@
             <svg class="ico-vol-on" viewBox="0 0 16 16" fill="none"><path d="M3 6.4h2.4l3-2.6v8.4l-3-2.6H3V6.4z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M10.8 5.6a3.4 3.4 0 0 1 0 4.8M12.5 4a5.6 5.6 0 0 1 0 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
             <svg class="ico-vol-off hidden" viewBox="0 0 16 16" fill="none"><path d="M3 6.4h2.4l3-2.6v8.4l-3-2.6H3V6.4z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M10.6 6.2l3.2 3.6M13.8 6.2l-3.2 3.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           </button>
+          <span class="tab-sep" aria-hidden="true"></span>
         `;
 
         const closeBtn = el.querySelector('.tab-close');
@@ -1274,9 +1358,9 @@
   let lastFavoritesSig = '';
   let lastAvatarRendered = '';
 
-  function renderFavoritesBar(list) {
+  function renderFavoritesBar(list, showFavoritesBar) {
     const favs = Array.isArray(list) ? list : [];
-    const hasFavs = favs.length > 0;
+    const hasFavs = showFavoritesBar !== false && favs.length > 0;
     const changedVisibility = body.classList.contains('has-favorites') !== hasFavs;
 
     body.classList.toggle('has-favorites', hasFavs);
@@ -1352,9 +1436,12 @@
     renderShortcuts(next.shortcuts || []);
     renderFrequentlyVisited(next.frequentlyVisited || [], prefs.hideFrequentlyVisited);
     renderReadingListSection(next.readingList || [], prefs.hideReadingList);
-    renderFavoritesBar(next.favorites || []);
+    renderFavoritesBar(next.favorites || [], next.showFavoritesBar);
     updateStatText(next.globalAdBlockEnabled, next.totalBlocked);
     updateNewtabVpnChip(next.vpn);
+
+    body.classList.toggle('is-maximized', !!next.isMaximized);
+    if (winMaxBtn) winMaxBtn.title = next.isMaximized ? 'Restore' : 'Maximize';
 
     // Tab Group pill in toolbar (shown neatly whenever user switches into a custom group)
     const isCustomGroup = next.activeTabGroupId && next.activeTabGroupId !== 'default';
@@ -1390,6 +1477,7 @@
         profileAvatarSlot.innerHTML = window.DejavuAvatars.renderHtml(next.activeProfile.avatar, 24);
         btnProfile.title = `${next.activeProfile.name} · Profiles & Updates`;
       }
+      syncStartPageProfileBadge(next.activeProfile);
     }
     profileUpdateDot.classList.toggle('hidden', !next.updateAvailable);
 
@@ -1425,11 +1513,13 @@
       body.classList.add('on-newtab', 'theme-dark');
       body.classList.remove('theme-light');
       window.DejavuNewTabCanvas.start();
+      if (ovOpen) hideStartPageStatus();
       if (!ovOpen && lastActiveId !== next.activeTabId) {
         newtabSearchInput.value = '';
         setTimeout(() => newtabSearchInput.focus(), 40);
       }
     } else {
+      hideStartPageStatus();
       body.classList.remove('on-newtab');
       if (!ovOpen) window.DejavuNewTabCanvas.stop();
       body.classList.toggle('theme-light', !ovOpen && !!active.isLight);
@@ -1535,11 +1625,12 @@
   if (bootData.shortcuts) renderShortcuts(bootData.shortcuts);
   if (bootData.frequentlyVisited) renderFrequentlyVisited(bootData.frequentlyVisited, state.startPagePrefs.hideFrequentlyVisited);
   if (bootData.readingList) renderReadingListSection(bootData.readingList, state.startPagePrefs.hideReadingList);
-  if (bootData.favorites) renderFavoritesBar(bootData.favorites);
+  if (bootData.favorites) renderFavoritesBar(bootData.favorites, bootData.showFavoritesBar);
   updateStatText(state.globalAdBlockEnabled, state.totalBlocked);
   if (bootData.activeProfile && window.DejavuAvatars) {
     lastAvatarRendered = `${bootData.activeProfile.avatar}_${bootData.activeProfile.name}`;
     profileAvatarSlot.innerHTML = window.DejavuAvatars.renderHtml(bootData.activeProfile.avatar, 24);
     btnProfile.title = `${bootData.activeProfile.name} · Profiles & Updates`;
+    syncStartPageProfileBadge(bootData.activeProfile);
   }
 })();

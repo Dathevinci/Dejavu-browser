@@ -153,14 +153,15 @@
         </div>
 
         <div class="glass-pill win-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10">
-          <button id="win-min" class="win-btn" title="Minimize">
-            <svg viewBox="0 0 14 14" fill="none"><path d="M3.2 7h7.6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+          <button id="win-min" class="win-btn win-min" title="Minimize">
+            <svg viewBox="0 0 14 14" fill="none"><path d="M3.2 7h7.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           </button>
-          <button id="win-max" class="win-btn" title="Maximize">
-            <svg viewBox="0 0 14 14" fill="none"><rect x="3.3" y="3.3" width="7.4" height="7.4" rx="1.6" stroke="currentColor" stroke-width="1.3"/></svg>
+          <button id="win-max" class="win-btn win-max" title="Maximize">
+            <svg class="ico-max" viewBox="0 0 14 14" fill="none"><rect x="3.3" y="3.3" width="7.4" height="7.4" rx="1.7" stroke="currentColor" stroke-width="1.35"/></svg>
+            <svg class="ico-restore" viewBox="0 0 14 14" fill="none"><rect x="2.8" y="4.5" width="6.3" height="6.3" rx="1.4" stroke="currentColor" stroke-width="1.3"/><path d="M5.1 4.5V3.6A1.3 1.3 0 0 1 6.4 2.3h3.9a1.3 1.3 0 0 1 1.3 1.3v3.9a1.3 1.3 0 0 1-1.3 1.3h-.9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           </button>
           <button id="win-close" class="win-btn win-close" title="Close">
-            <svg viewBox="0 0 14 14" fill="none"><path d="M3.6 3.6l6.8 6.8M10.4 3.6l-6.8 6.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+            <svg viewBox="0 0 14 14" fill="none"><path d="M3.6 3.6l6.8 6.8M10.4 3.6l-6.8 6.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           </button>
         </div>
       </div>
@@ -191,12 +192,18 @@
     <section id="newtab-view">
       <div class="startpage-scroll">
         <div class="startpage-container">
-          <!-- Butterfly Hero Brand + Smart Search Pill -->
+          <!-- Butterfly Hero Brand + Safari Profile Greeting + Smart Search Pill -->
           <div class="hero-brand anim-rise-1">
             <div class="hero-logo-wrap">
               <img src="https://dejavu.local/logo-transparent.png" id="newtab-logo" alt="dejavu butterfly logo" draggable="false">
             </div>
             <h1 class="hero-title">dejavu</h1>
+            <button type="button" id="startpage-profile-badge" class="glass-pill sp-profile-badge" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10" title="Switch Profile &amp; Updates">
+              <span id="sp-badge-avatar" class="sp-badge-avatar"></span>
+              <span id="sp-badge-greeting" class="sp-badge-greeting">Good day</span>
+              <span class="sp-badge-dot" aria-hidden="true"></span>
+              <span id="sp-badge-name" class="sp-badge-name">Default</span>
+            </button>
           </div>
 
           <div class="hero-search-wrap anim-rise-2">
@@ -279,6 +286,14 @@
             <div id="reading-grid" class="safari-reading-grid"></div>
           </div>
         </div>
+      </div>
+
+      <!-- MacBook Safari Bottom-Left Link Hover Status Pill -->
+      <div id="startpage-status-pill" class="sp-status-pill" aria-hidden="true">
+        <span id="sp-status-lock" class="sp-status-lock">
+          <svg viewBox="0 0 14 14" fill="none" width="11" height="11"><rect x="3.2" y="6.2" width="7.6" height="5.4" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M4.9 6.2V4.7a2.1 2.1 0 0 1 4.2 0v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </span>
+        <span id="startpage-status-text" class="sp-status-text"></span>
       </div>
 
       <!-- Iconic Bottom-Right Safari Customize Sliders Button -->

@@ -123,6 +123,8 @@ namespace DejavuBrowser
         private readonly List<DownloadEntry> _downloads = new List<DownloadEntry>();
         private string _activeTabGroupId = "default";
         private bool _tabOverviewOpen;
+        private bool _favoritesBarHidden;
+        private FormWindowState _lastWindowState = FormWindowState.Normal;
         private int _activeTabId = -1;
         private int _nextTabId = 1;
 
@@ -211,6 +213,11 @@ namespace DejavuBrowser
                 }
                 LayoutViews();
                 RepositionActiveHud();
+                if (WindowState != _lastWindowState)
+                {
+                    _lastWindowState = WindowState;
+                    if (_shellReady) PushFullStateToShell();
+                }
             };
             Move += (s, e) =>
             {
@@ -241,7 +248,7 @@ namespace DejavuBrowser
 
         private bool HasFavoritesBar
         {
-            get { return _profiles.Favorites != null && _profiles.Favorites.Count > 0; }
+            get { return !_favoritesBarHidden && _profiles.Favorites != null && _profiles.Favorites.Count > 0; }
         }
 
         private int ChromeCssHeight
@@ -675,6 +682,7 @@ namespace DejavuBrowser
                         { "activeProfile", _profiles.ActiveProfile },
                         { "shortcuts", _settings.shortcuts },
                         { "favorites", _profiles.Favorites },
+                        { "showFavoritesBar", HasFavoritesBar },
                         { "readingList", _profiles.ReadingList },
                         { "frequentlyVisited", _profiles.GetFrequentlyVisited(6) },
                         { "startPagePrefs", bootStartPagePrefs },
@@ -796,6 +804,7 @@ namespace DejavuBrowser
             _activeTabId = -1;
             _activeTabGroupId = "default";
             _tabOverviewOpen = false;
+            _favoritesBarHidden = false;
 
             _settings = _profiles.LoadActiveSettings();
             if (_vpn != null) _vpn.AutoConnect = _settings.vpnAutoConnect;
@@ -1027,8 +1036,9 @@ namespace DejavuBrowser
             BrowserTab tab = GetActiveTab();
             if (tab == null) return;
             tab.IsNewTab = true;
+            tab.ReaderActive = false;
             tab.Url = "dejavu://newtab";
-            tab.Title = "New Tab";
+            tab.Title = "Start Page";
             tab.Favicon = "";
             tab.IsLoading = false;
             tab.BlockedCount = 0;
@@ -2076,16 +2086,20 @@ namespace DejavuBrowser
             if (alt && !ctrl && key == Keys.D) { FocusShellOmnibox(); return true; }
             if (alt && key == Keys.Left) { GoBackActiveTab(); return true; }
             if (alt && key == Keys.Right) { GoForwardActiveTab(); return true; }
+            if (ctrl && alt && !shift && key == Keys.R) { ToggleReaderModeActiveTabAsync(); return true; }
 
             if (ctrl && !alt)
             {
                 if (shift && key == Keys.T) { ReopenLastClosedTab(); return true; }
+                if (shift && key == Keys.B) { ToggleFavoritesBarVisibility(); return true; }
                 if (shift && key == Keys.L) { ShowSidebarPopover(); return true; }
                 if (shift && key == Keys.R) { ToggleReaderModeActiveTabAsync(); return true; }
                 if (shift && (key == Keys.O || key == Keys.OemPipe)) { ToggleTabOverviewAsync(!_tabOverviewOpen); return true; }
                 if (shift && key == Keys.D) { ToggleReadingListActiveTab(); return true; }
                 if (key == Keys.T) { CreateTab(null, true); return true; }
-                if (key == Keys.W) { CloseTab(_activeTabId); return true; }
+                if (key == Keys.W || (!shift && key == Keys.F4)) { CloseTab(_activeTabId); return true; }
+                if (!shift && key == Keys.N) { OpenProfileInNewWindow(_profiles.ActiveProfile.id); return true; }
+                if (!shift && key == Keys.J) { ShowDownloadsPopoverAt((int)(ClientSize.Width / DpiScale) - 180); return true; }
                 if (key == Keys.L) { FocusShellOmnibox(); return true; }
                 if (key == Keys.R) { ReloadActiveTab(); return true; }
                 if (key == Keys.F) { OpenFindPopup(); return true; }
@@ -2131,12 +2145,29 @@ namespace DejavuBrowser
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
+        private void ToggleFavoritesBarVisibility()
+        {
+            if (_profiles.Favorites == null || _profiles.Favorites.Count == 0)
+            {
+                ShowSidebarPopover();
+                return;
+            }
+            _favoritesBarHidden = !_favoritesBarHidden;
+            LayoutViews();
+            PushFullStateToShell();
+        }
+
         private void ToggleFavoriteActiveTab()
         {
             BrowserTab tab = GetActiveTab();
             if (tab == null || tab.IsNewTab || string.IsNullOrEmpty(tab.Url)) return;
             bool hadBar = HasFavoritesBar;
+            int prevCount = _profiles.Favorites != null ? _profiles.Favorites.Count : 0;
             _profiles.ToggleFavorite(tab.Url, tab.Title, tab.Favicon);
+            if (_profiles.Favorites != null && _profiles.Favorites.Count > prevCount)
+            {
+                _favoritesBarHidden = false;
+            }
             if (hadBar != HasFavoritesBar) LayoutViews();
             PushFullStateToShell();
             RefreshSidebarIfOpen();
@@ -3207,6 +3238,8 @@ namespace DejavuBrowser
                 { "tabGroups", _profiles.TabGroups },
                 { "shortcuts", _settings.shortcuts },
                 { "favorites", _profiles.Favorites },
+                { "showFavoritesBar", HasFavoritesBar },
+                { "isMaximized", WindowState == FormWindowState.Maximized },
                 { "readingList", _profiles.ReadingList },
                 { "frequentlyVisited", _profiles.GetFrequentlyVisited(6) },
                 { "startPagePrefs", startPagePrefs },

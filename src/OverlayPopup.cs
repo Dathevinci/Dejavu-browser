@@ -112,7 +112,11 @@ namespace DejavuBrowser
             if (!_isOpen || IsDisposed || _hiding) return;
 
             IntPtr fg = NativeWin32.GetForegroundWindow();
-            if (fg == Handle) return; // Still active
+            if (fg == Handle || (fg != IntPtr.Zero &&
+                (NativeWin32.IsChild(Handle, fg) || NativeWin32.GetAncestor(fg, NativeWin32.GA_ROOT) == Handle)))
+            {
+                return; // Still active (including out-of-process WebView2 surface)
+            }
 
             bool clickedOwner = false;
             if (_ownerForm != null && !_ownerForm.IsDisposed && _ownerForm.IsHandleCreated)
@@ -176,7 +180,6 @@ namespace DejavuBrowser
 
         public void ShowAt(Rectangle screenBounds, string stateJson, bool activate)
         {
-            Bounds = screenBounds;
             if (_ready && _wv.CoreWebView2 != null)
             {
                 _wv.CoreWebView2.PostWebMessageAsJson(stateJson);
@@ -193,13 +196,14 @@ namespace DejavuBrowser
 
             if (!_everShown)
             {
+                Bounds = screenBounds;
                 _everShown = true;
                 _isOpen = true;
                 if (activate)
                 {
                     Show();
                     Activate();
-                    try { _wv.Focus(); } catch { }
+                    FocusWebViewForInput();
                 }
                 else
                 {
@@ -209,24 +213,72 @@ namespace DejavuBrowser
                 return;
             }
 
+            bool wasOpen = _isOpen;
+            bool boundsChanged = (Bounds != screenBounds);
             _isOpen = true;
-            uint flags = NativeWin32.SWP_SHOWWINDOW | NativeWin32.SWP_NOZORDER | NativeWin32.SWP_NOOWNERZORDER;
-            if (!activate) flags |= NativeWin32.SWP_NOACTIVATE;
 
-            NativeWin32.SetWindowPos(
-                Handle,
-                IntPtr.Zero,
-                screenBounds.X,
-                screenBounds.Y,
-                screenBounds.Width,
-                screenBounds.Height,
-                flags);
+            if (!wasOpen || boundsChanged)
+            {
+                uint flags = NativeWin32.SWP_NOZORDER | NativeWin32.SWP_NOOWNERZORDER;
+                if (!wasOpen) flags |= NativeWin32.SWP_SHOWWINDOW;
+                if (!boundsChanged) flags |= NativeWin32.SWP_NOMOVE | NativeWin32.SWP_NOSIZE;
+                if (!activate) flags |= NativeWin32.SWP_NOACTIVATE;
+
+                NativeWin32.SetWindowPos(
+                    Handle,
+                    IntPtr.Zero,
+                    screenBounds.X,
+                    screenBounds.Y,
+                    screenBounds.Width,
+                    screenBounds.Height,
+                    flags);
+            }
 
             if (activate)
             {
-                NativeWin32.SetForegroundWindow(Handle);
-                Activate();
-                try { _wv.Focus(); } catch { }
+                if (!wasOpen || NativeWin32.GetForegroundWindow() != Handle)
+                {
+                    NativeWin32.SetForegroundWindow(Handle);
+                    Activate();
+                }
+                FocusWebViewForInput();
+            }
+        }
+
+        private void FocusWebViewForInput()
+        {
+            if (IsDisposed || _wv == null || _wv.IsDisposed) return;
+            try
+            {
+                ActiveControl = _wv;
+                _wv.Focus();
+            }
+            catch { }
+
+            // Out-of-process WebView2 may finish processing SWP_SHOWWINDOW one UI tick
+            // after WinForms Activate(); ensure wheel + keyboard focus lands inside
+            // WebView2 cleanly without fighting window activation if already dismissed.
+            if (IsHandleCreated)
+            {
+                try
+                {
+                    BeginInvoke((Action)(() =>
+                    {
+                        if (!_isOpen || IsDisposed || _hiding || _wv == null || _wv.IsDisposed) return;
+                        IntPtr fg = NativeWin32.GetForegroundWindow();
+                        if (fg != Handle) return;
+                        try
+                        {
+                            if (!_wv.ContainsFocus)
+                            {
+                                ActiveControl = _wv;
+                                _wv.Focus();
+                            }
+                        }
+                        catch { }
+                    }));
+                }
+                catch { }
             }
         }
 

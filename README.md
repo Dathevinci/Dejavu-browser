@@ -1,27 +1,29 @@
 # dejavu
 
-An A-to-Z **macOS Safari-inspired** native Windows browser built with **real physics-based Liquid Glass** (strictly zero Gaussian blur), a **built-in 100/100 Ad Blocker**, a **46-country encrypted VPN**, and **20 Butterfly Studio wallpapers** — powered natively by Windows' Chromium WebView2 engine (**no Electron, no Node.js**).
+An A-to-Z **Apple MacBook macOS Safari (Sequoia / Tahoe)** inspired native Windows browser built with **real physics-based Liquid Glass** (strictly zero Gaussian blur), a **built-in 100/100 Ad Blocker**, a **46-country encrypted VPN**, and **20 high-resolution Butterfly Studio wallpapers** — powered natively by Windows' Chromium WebView2 engine (**no Electron, no Node.js**).
+
+🌐 **Official Website:** **[dathevinci.github.io/Dejavu-browser](https://dathevinci.github.io/Dejavu-browser/)**
 
 ## Download (Windows 10 / 11 x64)
 
-Grab the latest release from **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
+Visit the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or grab the latest release directly from **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
 - **`dejavu-Setup.exe`** — Butterfly-themed Liquid Glass setup wizard (adds Desktop & Start Menu shortcuts, registers in Windows Installed Apps, no admin required).
 - **`dejavu.exe`** — Standalone portable single-file executable (double-click to run directly).
 
-## Features (v2.8.0)
+## Features (v2.9.0)
 
-- **A-to-Z macOS Safari Experience — Butterfly Amethyst Liquid Glass Edition**:
-  - **Unified Safari Toolbar & Smart Search Field**: Centered domain + HTTPS lock when idle, glare-free smoked glass typing with grouped autocomplete (`Top Hit`, `Bookmarks & Websites`, `Search Suggestions`), tucked Privacy Shield, Reader View (`Ctrl+Shift+R`), Zoom pill, Favorite Star, and Reload/Stop.
-  - **Full-Width Safari Tab Bar**: Equal-width stretching tabs, compact `38px` Pinned favicon tabs, accessible left-side `×` close buttons, click-to-mute audio speaker badges (`Ctrl+M`), GPU-composited sliding `#active-tab-glide`, and floating Right-Click Tab Context Menu.
+- **MacBook macOS Safari (Sequoia / Tahoe) Fidelity — Butterfly Amethyst Liquid Glass Edition**:
+  - **Unified Safari Tahoe Toolbar & Smart Search Field**: Sculpted recessed optical glass capsule with dead-center HTTPS lock + clean domain when idle, glare-free smoked obsidian (dark) / pure porcelain (light) bloom on focus with grouped autocomplete (`Top Hit`, `Bookmarks & History`, `Search Suggestions`), tucked Privacy Shield, Reader View (`Ctrl+Shift+R` / `Ctrl+Alt+R`), Zoom pill, Favorite Star, Reload/Stop, and MacBook-inspired amber/emerald/rose window control polish.
+  - **Quiet Recessed Safari Tab Bar**: Equal-width stretching tabs inside a Tahoe translucent track with smart `14px` vertical hairline dividers (auto-hidden next to the active or hovered tab), sculpted amethyst-rimmed `#active-tab-glide` capsule, compact `38px` Pinned favicon tabs, rock-solid left-side `×` close buttons, click-to-mute audio speaker badges (`Ctrl+M`), and floating Right-Click Tab Context Menu.
   - **Safari Tab Overview Grid (`Ctrl+Shift+O`)**: Full-window Apple spring zoom over the living butterfly canvas with live JPEG previews of every open tab and live `Search Tabs` filtering.
   - **Floating macOS Tahoe Liquid Glass Sidebar (`Ctrl+Shift+L`)**: Color-coded **Tab Groups**, Open Tabs, Favorites, **Reading List (`Ctrl+Shift+D`)**, and Recent History.
-  - **Safari Reader Mode (`Ctrl+Shift+R`)**: Clean distraction-free reading overlay with `A−`/`A+`, Serif/Sans toggle, and Dark · Sepia · Light themes.
-  - **Safari Share Sheet & Downloads Popover**: 1-click Copy Link, Favorites, Reading List, Reader View, Pin/Duplicate Tab, New Window, and live Downloads manager.
-  - **Customizable Safari Start Page**: Favorites squircle tiles, Frequently Visited cards, Privacy Report banner + live VPN status chip, Reading List shelf, and section visibility toggles inside `Customize`.
-- **Real Liquid Glass Optics (Zero Gaussian Blur)**: Exact SDF rounded-rectangle geometry, Snell's Law refraction ($n = 1.52$), Cauchy RGB chromatic dispersion, Schlick Fresnel specular rims, pointer-tracked caustics, Apple damped spring curves, and automatic dark/light site polarity.
+  - **Safari Reader Mode (`Ctrl+Shift+R` / `Ctrl+Alt+R`)**: Clean distraction-free reading overlay with `A−`/`A+`, Serif/Sans toggle, and Dark · Sepia · Light themes.
+  - **Safari Share Sheet & Downloads Popover (`Ctrl+J`)**: 1-click Copy Link, Favorites, Reading List, Reader View, Pin/Duplicate Tab, New Window (`Ctrl+N`), and live Downloads manager.
+  - **Customizable Safari Start Page**: Active Profile greeting badge, Favorites squircle tiles with bottom-left Safari link hover status pill, Frequently Visited cards, Privacy Report banner + live VPN status chip, Reading List shelf, and section visibility toggles inside `Customize`.
+- **Real 120fps Liquid Glass Optics (Zero Gaussian Blur)**: Exact SDF rounded-rectangle geometry, Snell's Law refraction ($n = 1.52$), Cauchy RGB chromatic dispersion, Schlick Fresnel specular rims, pre-baked 0ms-scroll Snell's Law popover backdrops, Apple damped spring curves, and automatic dark/light site polarity.
 - **Built-in 46-Country Encrypted VPN**: Browser-scoped 3-hop encrypted tunnel across North America, Europe, Asia-Pacific, South America, and Middle East & Africa with region filters, 1-click **New IP** rotation, fail-closed kill-switch, remote DNS, WebRTC shield, live telemetry, and optional auto-connect on startup.
 - **Built-in Native 100/100 Ad Blocker**: **279,000+** network filter domains + **8,400+** per-site cosmetic rules + YouTube/Reddit/X ad neutralization, ON by default.
-- **20 Butterfly Studio Wallpapers**: 10 bespoke 16:9 Crystal Butterfly artworks + 10 live 60fps interactive butterfly & caustic motion themes + custom photo upload.
+- **20 High-Resolution Butterfly Studio Wallpapers**: 10 museum-grade 2K (`2560×1440`) Butterfly artworks + 10 live 60/120Hz interactive butterfly & caustic motion themes + custom photo upload.
 - **Chrome-Style Isolated Profiles & 16 Butterfly Avatars**: Fully isolated cookies, logins, Tab Groups, Reading List, favorites, history & wallpapers per profile, plus silent background auto-updates.
 
 ## Build from Source (Windows 10 / 11)
@@ -42,9 +44,11 @@ powershell -ExecutionPolicy Bypass -File .\build-setup.ps1
 | `Ctrl+L` / `Alt+D` / `F6` | Focus Smart Search Field |
 | `Ctrl+Shift+L` | Toggle Floating Safari Sidebar |
 | `Ctrl+Shift+O` | Toggle Safari Tab Overview Grid |
-| `Ctrl+Shift+R` | Toggle Safari Reader Mode |
+| `Ctrl+Shift+R` / `Ctrl+Alt+R` | Toggle Safari Reader Mode |
+| `Ctrl+Shift+B` | Toggle Favorites Bar Visibility |
 | `Ctrl+D` / `Ctrl+Shift+D` | Toggle Favorite / Toggle Reading List |
 | `Ctrl+M` | Mute / Unmute Active Tab |
-| `Ctrl+H` / `Ctrl+Shift+M` | History / Profiles & Updates |
-| `Ctrl+F` / `Ctrl+R` / `F11` | Find on Page / Reload / Fullscreen |
+| `Ctrl+H` / `Ctrl+J` / `Ctrl+Shift+M` | History / Downloads / Profiles & Updates |
+| `Ctrl+N` / `Alt+Left` / `Alt+Right` | New Window / Back / Forward |
+| `Ctrl+F` / `Ctrl+R` / `F5` / `F11` | Find on Page / Reload / Fullscreen |
 | `Ctrl++` / `Ctrl+-` / `Ctrl+0` | Zoom In / Zoom Out / Reset Zoom |

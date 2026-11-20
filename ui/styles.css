@@ -6,6 +6,10 @@
 
 :root {
   --topbar-h: 54px;
+  --favbar-h: 0px;
+  --chrome-h: calc(var(--topbar-h) + var(--favbar-h));
+  --spring: cubic-bezier(0.22, 1.18, 0.36, 1);
+  --spring-soft: cubic-bezier(0.16, 1.0, 0.3, 1);
   --font-sans: 'Segoe UI Variable Display', 'Segoe UI Variable', 'SF Pro Display', 'Inter', system-ui, -apple-system, sans-serif;
 
   /* Dark Liquid Glass tokens */
@@ -190,18 +194,23 @@ body.on-newtab #newtab-canvas {
   opacity: 1;
 }
 
+body.has-favorites {
+  --favbar-h: 36px;
+  --chrome-h: 90px;
+}
+
 #top-backdrop-wrap {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: var(--topbar-h);
+  height: var(--chrome-h);
   z-index: 1;
   overflow: hidden;
   pointer-events: none;
   opacity: 1;
   background: #0c0a15;
-  transition: opacity 0.28s ease, background 0.28s ease;
+  transition: height 0.28s var(--spring-soft), opacity 0.28s ease, background 0.28s ease;
 }
 
 body.on-newtab #top-backdrop-wrap {
@@ -524,18 +533,35 @@ body.is-fullscreen #top-backdrop-wrap {
   color: var(--ink-muted);
   opacity: 0.84;
   flex-shrink: 1;
+  animation: tabBloom 0.3s var(--spring);
+}
+
+@keyframes tabBloom {
+  from { opacity: 0; transform: scale(0.84) translateX(-8px); }
+  to { opacity: 0.84; transform: scale(1) translateX(0); }
+}
+
+.tab-pill.closing {
+  opacity: 0 !important;
+  transform: scale(0.82) translateY(-2px);
+  pointer-events: none;
 }
 
 .tab-pill:hover {
   opacity: 0.98;
   color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.tab-pill:active {
+  transform: scale(0.96);
 }
 
 .tab-pill.active {
   opacity: 1;
   color: var(--ink);
   background: var(--glass-tint-active);
-  border-color: rgba(212, 184, 255, 0.52);
+  border-color: rgba(212, 184, 255, 0.56);
 }
 
 .tab-favicon {
@@ -678,12 +704,13 @@ body.is-fullscreen #top-backdrop-wrap {
    ========================================================================== */
 #viewport {
   position: fixed;
-  top: var(--topbar-h);
+  top: var(--chrome-h);
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 10;
   overflow: hidden;
+  transition: top 0.28s var(--spring-soft);
 }
 
 body.is-fullscreen #viewport {
@@ -1648,4 +1675,227 @@ body.on-newtab #newtab-view {
   margin: 4px 8px;
   background: var(--glass-border);
   opacity: 0.45;
+}
+
+
+/* ==========================================================================
+   v2.1 Fluid Animations, Favorites Bar, History & Butterfly Profiles
+   ========================================================================== */
+@keyframes riseSpring {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+body.on-newtab .anim-rise-1 { animation: riseSpring 0.44s var(--spring-soft) both; }
+body.on-newtab .anim-rise-2 { animation: riseSpring 0.52s var(--spring-soft) 0.05s both; }
+body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1s both; }
+
+/* Favorite Star inside Omnibox */
+.fav-star-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.2s ease, background 0.18s ease, transform 0.28s var(--spring);
+}
+
+.fav-star-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.fav-star-btn:hover {
+  color: var(--ink);
+  background: var(--glass-hover-bg);
+  transform: scale(1.1);
+}
+
+.fav-star-btn:active {
+  transform: scale(0.86);
+}
+
+.fav-star-btn.starred {
+  color: #facc15;
+  animation: starBurst 0.42s var(--spring);
+}
+
+.fav-star-btn.starred svg path {
+  fill: currentColor;
+}
+
+@keyframes starBurst {
+  0% { transform: scale(0.75) rotate(-18deg); }
+  55% { transform: scale(1.26) rotate(8deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* History + Butterfly Profile Utility Capsule */
+.util-pill {
+  height: 36px;
+  padding: 3px 4px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.profile-trigger {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.26s var(--spring);
+}
+
+.profile-trigger:hover {
+  transform: scale(1.1);
+}
+
+.profile-trigger:active {
+  transform: scale(0.92);
+}
+
+.update-dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  border: 1.5px solid #090714;
+  box-shadow: 0 0 8px #38bdf8;
+  animation: pulseDot 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.22); opacity: 0.78; }
+}
+
+/* Shared Butterfly Avatar Medallion */
+.bf-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1.4px solid rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 12px rgba(0, 0, 0, 0.36);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Slim Floating Liquid Glass Favorites Ribbon */
+.favbar {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  right: 0;
+  height: 36px;
+  padding: 0 12px 6px;
+  z-index: 38;
+  display: flex;
+  align-items: center;
+  animation: favbarSlide 0.28s var(--spring-soft);
+}
+
+@keyframes favbarSlide {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.favbar-list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 1px 0;
+}
+
+.favbar-list::-webkit-scrollbar {
+  display: none;
+}
+
+.fav-chip {
+  height: 26px;
+  max-width: 162px;
+  padding: 0 8px 0 9px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 11.6px;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+  animation: tabBloom 0.26s var(--spring);
+}
+
+.fav-chip:hover {
+  transform: translateY(-1px) scale(1.03);
+  border-color: rgba(214, 186, 255, 0.58);
+}
+
+.fav-chip:active {
+  transform: scale(0.94);
+}
+
+.fav-chip-ico {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.fav-chip-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fav-chip-rm {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  margin-left: -2px;
+  transition: opacity 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+
+.fav-chip:hover .fav-chip-rm {
+  opacity: 0.85;
+}
+
+.fav-chip-rm:hover {
+  opacity: 1 !important;
+  background: var(--glass-hover-bg);
+  color: var(--ink);
 }

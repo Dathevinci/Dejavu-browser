@@ -65,13 +65,18 @@ namespace DejavuBrowser
 
         public static DejavuSettings Load()
         {
+            return LoadFromPath(SettingsPath);
+        }
+
+        public static DejavuSettings LoadFromPath(string path)
+        {
             lock (Sync)
             {
                 try
                 {
-                    if (File.Exists(SettingsPath))
+                    if (File.Exists(path))
                     {
-                        string text = File.ReadAllText(SettingsPath);
+                        string text = File.ReadAllText(path);
                         DejavuSettings loaded = Json.Deserialize<DejavuSettings>(text);
                         if (loaded != null)
                         {
@@ -94,12 +99,19 @@ namespace DejavuBrowser
 
         public static void Save(DejavuSettings settings)
         {
+            SaveToPath(SettingsPath, settings);
+        }
+
+        public static void SaveToPath(string path, DejavuSettings settings)
+        {
             lock (Sync)
             {
                 try
                 {
+                    string dir = Path.GetDirectoryName(path);
+                    if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
                     string text = Json.Serialize(settings);
-                    File.WriteAllText(SettingsPath, text);
+                    File.WriteAllText(path, text);
                 }
                 catch { }
             }

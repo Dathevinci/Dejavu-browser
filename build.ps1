@@ -39,6 +39,7 @@ $args = @(
   "/resource:$root\ui\styles.css,styles.css",
   "/resource:$root\ui\liquid-glass.js,liquid-glass.js",
   "/resource:$root\ui\newtab.js,newtab.js",
+  "/resource:$root\ui\avatars.js,avatars.js",
   "/resource:$root\ui\app.js,app.js",
   "/resource:$root\assets\logo-transparent.png,logo-transparent.png",
   "/resource:$root\assets\dejavu-icon.png,dejavu-icon.png",
@@ -50,6 +51,8 @@ $args = @(
   "$root\src\Program.cs",
   "$root\src\NativeWin32.cs",
   "$root\src\SettingsStore.cs",
+  "$root\src\ProfileManager.cs",
+  "$root\src\AutoUpdater.cs",
   "$root\src\AdBlocker.cs",
   "$root\src\OverlayPopup.cs",
   "$root\src\BrowserForm.cs"

@@ -20,15 +20,31 @@ namespace DejavuBrowser
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            string initialUrl = (args != null && args.Length > 0) ? args[0] : null;
-            RunApp(initialUrl);
+            string initialUrl = null;
+            string profileId = null;
+            if (args != null)
+            {
+                for (int i = 0; i < args.Length; i++)
+                {
+                    string a = args[i] ?? "";
+                    if (a.StartsWith("--profile=", StringComparison.OrdinalIgnoreCase))
+                    {
+                        profileId = a.Substring("--profile=".Length).Trim();
+                    }
+                    else if (!a.StartsWith("--") && initialUrl == null)
+                    {
+                        initialUrl = a;
+                    }
+                }
+            }
+            RunApp(initialUrl, profileId);
         }
 
-        private static void RunApp(string initialUrl)
+        private static void RunApp(string initialUrl, string profileId)
         {
             // Keep BrowserForm in a separate method so CLR doesn't JIT WebView2 types
             // before AssemblyResolve and WebView2Loader.dll are registered.
-            using (BrowserForm form = new BrowserForm(initialUrl))
+            using (BrowserForm form = new BrowserForm(initialUrl, profileId))
             {
                 Application.Run(form);
             }

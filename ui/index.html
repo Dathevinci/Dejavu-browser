@@ -16,7 +16,7 @@
     <div class="top-backdrop-sheen"></div>
   </div>
 
-  <!-- Minimal Single-Row Floating Liquid Glass Chrome -->
+  <!-- Minimal Floating Liquid Glass Top Chrome -->
   <header id="topbar">
     <div class="glass-pill nav-pill" data-liquid-glass data-lg-bezel="14" data-lg-scale="20" data-lg-dispersion="1.05">
       <button id="btn-home" class="icon-btn brand-btn" title="dejavu Home (New Tab)">
@@ -48,6 +48,9 @@
         placeholder="Search or enter website"
         aria-label="Address bar"
       >
+      <button id="btn-fav-star" class="fav-star-btn hidden" title="Pin to top bar favorites (Ctrl+D)">
+        <svg viewBox="0 0 18 18" fill="none"><path d="M9 2.3l2.1 4.2 4.6.7-3.3 3.2.8 4.6L9 12.8 4.8 15l.8-4.6L2.3 7.2l4.6-.7L9 2.3z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg>
+      </button>
       <button id="btn-shield" class="shield-chip active" title="dejavu Ad Blocker">
         <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.8L3 3.8v3.9c0 3.2 2.1 5.6 5 6.6 2.9-1 5-3.4 5-6.6V3.8L8 1.8z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path class="shield-check" d="M5.8 8.1l1.5 1.5 3-3.2" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span id="shield-count"></span>
@@ -63,6 +66,17 @@
       <div id="drag-spacer" class="drag-spacer"></div>
     </div>
 
+    <!-- Clean History + Butterfly Profile Pill -->
+    <div class="glass-pill util-pill" data-liquid-glass data-lg-bezel="12" data-lg-scale="18" data-lg-dispersion="1.0">
+      <button id="btn-history" class="icon-btn" title="History (Ctrl+H)">
+        <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M9 5.8V9.2l2.4 1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="btn-profile" class="profile-trigger" title="Profiles &amp; Updates">
+        <span id="profile-avatar-slot"></span>
+        <span id="profile-update-dot" class="update-dot hidden"></span>
+      </button>
+    </div>
+
     <div class="glass-pill win-pill" data-liquid-glass data-lg-bezel="12" data-lg-scale="18" data-lg-dispersion="0.95">
       <button id="win-min" class="win-btn" title="Minimize">
         <svg viewBox="0 0 14 14" fill="none"><path d="M3 7h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
@@ -76,18 +90,23 @@
     </div>
   </header>
 
+  <!-- Sleek Floating Liquid Glass Favorites Bar (auto-appears smoothly when you favorite a site) -->
+  <nav id="favbar" class="favbar hidden" aria-label="Favorite websites">
+    <div id="favbar-list" class="favbar-list"></div>
+  </nav>
+
   <!-- New Tab Living Liquid Glass Experience -->
   <main id="viewport">
     <section id="newtab-view">
       <div class="newtab-center">
-        <div class="hero-brand">
+        <div class="hero-brand anim-rise-1">
           <div class="hero-logo-wrap">
             <img src="https://dejavu.local/logo-transparent.png" id="newtab-logo" alt="dejavu butterfly logo" draggable="false">
           </div>
           <h1 class="hero-title">dejavu</h1>
         </div>
 
-        <form id="newtab-search-form" class="glass-pill hero-search" data-liquid-glass data-lg-bezel="22" data-lg-scale="30" data-lg-dispersion="1.28" data-lg-dome="0.06">
+        <form id="newtab-search-form" class="glass-pill hero-search anim-rise-2" data-liquid-glass data-lg-bezel="22" data-lg-scale="30" data-lg-dispersion="1.28" data-lg-dome="0.06">
           <svg class="hero-search-ico" viewBox="0 0 20 20" fill="none">
             <circle cx="9" cy="9" r="5.6" stroke="currentColor" stroke-width="1.6"/>
             <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
@@ -105,7 +124,7 @@
           </button>
         </form>
 
-        <div id="shortcuts-grid" class="shortcuts-grid"></div>
+        <div id="shortcuts-grid" class="shortcuts-grid anim-rise-3"></div>
       </div>
 
       <div class="newtab-bottom-bar">
@@ -148,7 +167,7 @@
       <div id="wallpaper-grid" class="wallpaper-grid"></div>
     </div>
 
-    <!-- Add Quick Site Modal (visible on New Tab) -->
+    <!-- Add Quick Site Modal -->
     <div id="shortcut-modal" class="glass-card shortcut-modal hidden" data-liquid-glass data-lg-bezel="22" data-lg-scale="26" data-lg-dispersion="1.15">
       <div class="modal-title">Add Quick Site</div>
       <input id="sc-name" class="modal-input" type="text" placeholder="Name (e.g. Spotify)" autocomplete="off">
@@ -160,6 +179,7 @@
     </div>
   </main>
 
+  <script src="https://dejavu.local/avatars.js"></script>
   <script src="https://dejavu.local/liquid-glass.js"></script>
   <script src="https://dejavu.local/newtab.js"></script>
   <script src="https://dejavu.local/app.js"></script>

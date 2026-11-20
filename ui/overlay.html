@@ -7,85 +7,227 @@
   <link rel="stylesheet" href="https://dejavu.local/styles.css">
   <style>
     html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
+      width: 100%; height: 100%; overflow: hidden;
       background: #0b0916;
     }
     body.theme-light {
       background: #f5f4fa;
-    }
-    #backdrop-img {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .overlay-shell {
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-      display: flex;
-      width: 100%;
-      height: 100%;
-      border-radius: 14px;
-    }
-    .shield-box {
-      width: 100%;
-      height: 100%;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .find-box {
-      width: 100%;
-      height: 100%;
-      padding: 0 8px 0 14px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .find-box input {
-      flex: 1;
-      min-width: 0;
-      border: none;
-      outline: none;
-      background: transparent;
-      color: var(--ink);
-      font-family: inherit;
-      font-size: 13px;
-      user-select: text;
-    }
-    .dl-box {
-      width: 100%;
-      height: 100%;
-      padding: 13px 15px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 8px;
-    }
-    /* Match dark/light polarity directly on overlay body */
-    body.theme-light {
       --ink: rgba(16, 14, 26, 0.94);
       --ink-muted: rgba(28, 24, 46, 0.62);
       --ink-subtle: rgba(34, 30, 56, 0.38);
       --glass-tint-strong: radial-gradient(
-        ellipse 88% 84% at 50% 50%,
-        rgba(253, 251, 255, 0.92) 0%,
-        rgba(247, 244, 255, 0.84) 72%,
-        rgba(255, 255, 255, 0.28) 100%
+        ellipse 90% 86% at 50% 50%,
+        rgba(253, 251, 255, 0.95) 0%,
+        rgba(247, 244, 255, 0.88) 76%,
+        rgba(255, 255, 255, 0.32) 100%
       );
       --glass-border: rgba(255, 255, 255, 0.82);
       --glass-hover-bg: rgba(24, 18, 52, 0.08);
       --accent: #7c4dff;
       --accent-bright: #6435e8;
       --shield-green: #0d9488;
+    }
+    #backdrop-img {
+      position: fixed; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; pointer-events: none; z-index: 0;
+    }
+    .overlay-shell {
+      position: fixed; inset: 0; z-index: 2;
+      display: flex; width: 100%; height: 100%;
+      border-radius: 14px;
+      animation: ovPop 0.22s cubic-bezier(0.22, 1.18, 0.36, 1);
+    }
+    @keyframes ovPop {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Shield, Find, Download, Update Boxes */
+    .shield-box {
+      width: 100%; height: 100%; padding: 16px;
+      display: flex; flex-direction: column; justify-content: space-between; gap: 12px;
+    }
+    .find-box {
+      width: 100%; height: 100%; padding: 0 8px 0 14px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .find-box input {
+      flex: 1; min-width: 0; border: none; outline: none;
+      background: transparent; color: var(--ink); font-family: inherit; font-size: 13px; user-select: text;
+    }
+    .dl-box {
+      width: 100%; height: 100%; padding: 13px 15px;
+      display: flex; flex-direction: column; justify-content: center; gap: 8px;
+    }
+
+    /* Update Toast */
+    .upd-box {
+      width: 100%; height: 100%; padding: 13px 15px;
+      display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+    }
+    .upd-top { display: flex; align-items: center; gap: 10px; }
+    .upd-top img { width: 26px; height: 26px; object-fit: contain; filter: drop-shadow(0 0 8px rgba(176,124,255,0.6)); }
+    .upd-title { font-size: 13px; font-weight: 600; }
+    .upd-sub { font-size: 11px; color: var(--ink-muted); margin-top: 1px; }
+    .upd-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+    .pill-btn {
+      height: 28px; padding: 0 13px; border-radius: 999px;
+      border: 1px solid var(--glass-border); background: transparent;
+      color: var(--ink); font-family: inherit; font-size: 11.5px; font-weight: 600;
+      cursor: pointer; transition: transform 0.2s cubic-bezier(0.22,1.2,0.36,1), background 0.18s ease;
+    }
+    .pill-btn:hover { background: var(--glass-hover-bg); }
+    .pill-btn:active { transform: scale(0.94); }
+    .pill-btn.primary {
+      background: linear-gradient(135deg, #8b5cf6, #a855f7);
+      border-color: rgba(226, 202, 255, 0.58);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.36);
+    }
+    .pill-btn.primary:hover { filter: brightness(1.08); }
+
+    /* Shared Panel Layout (Profiles & History) */
+    .panel-box {
+      width: 100%; height: 100%; padding: 16px;
+      display: flex; flex-direction: column; gap: 12px;
+      overflow: hidden;
+    }
+    .panel-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      flex-shrink: 0;
+    }
+    .panel-title { font-size: 14.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .panel-scroll {
+      flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+      display: flex; flex-direction: column; gap: 8px;
+      padding-right: 3px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(186, 152, 255, 0.34) transparent;
+    }
+
+    /* Profile Hub */
+    .active-profile-card {
+      padding: 14px; border-radius: 18px;
+      background: rgba(176, 124, 255, 0.12);
+      border: 1px solid rgba(196, 158, 255, 0.34);
+      display: flex; align-items: center; gap: 13px;
+      flex-shrink: 0;
+    }
+    .active-prof-meta { flex: 1; min-width: 0; }
+    .active-prof-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .active-prof-sub { font-size: 11.2px; color: var(--ink-muted); margin-top: 2px; }
+
+    .section-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--ink-muted); padding: 2px 4px 0;
+    }
+    .prof-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 14px;
+      border: 1px solid transparent;
+      background: rgba(128, 118, 168, 0.09);
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.2s cubic-bezier(0.22,1.2,0.36,1), border-color 0.18s ease;
+    }
+    .prof-row:hover {
+      background: var(--glass-hover-bg);
+      border-color: var(--glass-border);
+      transform: translateX(2px);
+    }
+    .prof-row-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .prof-row-actions { display: flex; align-items: center; gap: 3px; }
+    .mini-act {
+      width: 24px; height: 24px; border-radius: 50%; border: none; background: transparent;
+      color: var(--ink-muted); display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s ease, color 0.15s ease;
+    }
+    .mini-act:hover { background: var(--glass-hover-bg); color: var(--ink); }
+    .mini-act.del:hover { background: rgba(255, 86, 118, 0.24); color: #ff6b8b; }
+
+    .prof-footer {
+      flex-shrink: 0;
+      padding-top: 10px;
+      border-top: 1px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .ver-info { font-size: 11px; color: var(--ink-muted); }
+
+    /* Profile Editor + 16 Butterfly Avatars Grid */
+    .editor-preview {
+      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+    }
+    .editor-input {
+      flex: 1; height: 38px; padding: 0 13px; border-radius: 13px;
+      border: 1px solid var(--glass-border);
+      background: rgba(128, 120, 168, 0.12);
+      color: var(--ink); font-family: inherit; font-size: 13.5px; outline: none; user-select: text;
+    }
+    .editor-input:focus { border-color: var(--accent); }
+
+    .avatar-grid {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px;
+      padding: 2px;
+    }
+    .av-choice {
+      padding: 7px 3px 6px; border-radius: 13px;
+      border: 1px solid transparent;
+      background: rgba(128, 120, 168, 0.08);
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      cursor: pointer; color: var(--ink-muted); font-family: inherit;
+      min-width: 0; overflow: hidden;
+      transition: transform 0.22s cubic-bezier(0.22,1.2,0.36,1), border-color 0.18s ease, background 0.18s ease;
+    }
+    .av-choice:hover {
+      transform: translateY(-2px) scale(1.04);
+      background: var(--glass-hover-bg);
+      color: var(--ink);
+    }
+    .av-choice.selected {
+      border-color: var(--accent);
+      background: rgba(176, 124, 255, 0.22);
+      color: var(--ink);
+      box-shadow: 0 0 0 1.5px rgba(176, 124, 255, 0.4);
+    }
+    .av-choice-label {
+      width: 100%;
+      padding: 0 2px;
+      font-size: 9.2px; font-weight: 500; text-align: center;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* History Panel */
+    .hist-search {
+      width: 100%; height: 36px; padding: 0 13px; border-radius: 999px;
+      border: 1px solid var(--glass-border);
+      background: rgba(128, 120, 168, 0.12);
+      color: var(--ink); font-family: inherit; font-size: 12.8px; outline: none; user-select: text;
+      flex-shrink: 0;
+    }
+    .hist-search:focus { border-color: var(--accent); }
+    .hist-group-title {
+      font-size: 10.8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--ink-muted); padding: 6px 4px 2px;
+    }
+    .hist-row {
+      display: flex; align-items: center; gap: 9px;
+      padding: 7px 9px; border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.18s ease;
+    }
+    .hist-row:hover {
+      background: var(--glass-hover-bg);
+      transform: translateX(2px);
+    }
+    .hist-ico { width: 16px; height: 16px; border-radius: 4px; object-fit: contain; flex-shrink: 0; }
+    .hist-meta { flex: 1; min-width: 0; }
+    .hist-title { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hist-url { font-size: 10.8px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .hist-time { font-size: 10.5px; color: var(--ink-subtle); flex-shrink: 0; }
+    .hist-row-acts { display: none; align-items: center; gap: 2px; flex-shrink: 0; }
+    .hist-row:hover .hist-time { display: none; }
+    .hist-row:hover .hist-row-acts { display: flex; }
+    .empty-msg {
+      padding: 48px 16px; text-align: center; color: var(--ink-muted); font-size: 12.5px;
     }
   </style>
 </head>
@@ -168,16 +310,104 @@
     </div>
   </div>
 
+  <!-- Mode 4: Butterfly Profile Hub + 16-Avatar Editor + Auto-Updater -->
+  <div id="mode-profiles" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="22" data-lg-scale="28" data-lg-dispersion="1.2" data-lg-dome="0.045">
+    <!-- List View -->
+    <div id="prof-view-list" class="panel-box">
+      <div class="panel-head">
+        <div class="panel-title">Profiles</div>
+        <button id="btn-add-profile" class="pill-btn primary">+ Add Profile</button>
+      </div>
+
+      <div id="active-prof-card" class="active-profile-card"></div>
+
+      <div class="section-label" id="other-prof-label">Switch Profile</div>
+      <div id="other-prof-list" class="panel-scroll"></div>
+
+      <div class="prof-footer">
+        <div id="prof-ver-text" class="ver-info">dejavu v2.1.0</div>
+        <button id="btn-update-action" class="pill-btn">Check updates</button>
+      </div>
+    </div>
+
+    <!-- Create / Edit Profile + Butterfly Avatar Picker -->
+    <div id="prof-view-editor" class="panel-box hidden">
+      <div class="panel-head">
+        <div id="editor-heading" class="panel-title">Set Up Profile</div>
+        <button id="btn-editor-cancel" class="pill-btn">Back</button>
+      </div>
+
+      <div class="editor-preview">
+        <div id="editor-avatar-preview"></div>
+        <input id="editor-name-input" class="editor-input" type="text" maxlength="28" placeholder="Profile name (e.g. Work, Gaming)">
+      </div>
+
+      <div class="section-label">Choose your butterfly (16 styles)</div>
+      <div class="panel-scroll">
+        <div id="avatar-picker-grid" class="avatar-grid"></div>
+      </div>
+
+      <div class="prof-footer">
+        <span class="ver-info">Isolated logins, favorites &amp; history</span>
+        <button id="btn-editor-save" class="pill-btn primary">Save Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mode 5: Browsing History Panel -->
+  <div id="mode-history" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="22" data-lg-scale="28" data-lg-dispersion="1.2" data-lg-dome="0.045">
+    <div class="panel-box">
+      <div class="panel-head">
+        <div class="panel-title">
+          <span>History</span>
+          <span id="hist-prof-badge" class="engine-badge">Personal</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button id="btn-hist-clear" class="pill-btn">Clear</button>
+          <button id="btn-hist-close" class="icon-btn sm" title="Close">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+      <input id="hist-search-input" class="hist-search" type="text" placeholder="Search history..." spellcheck="false" autocomplete="off">
+      <div id="hist-list" class="panel-scroll"></div>
+    </div>
+  </div>
+
+  <!-- Mode 6: Automatic Update Ready Floating Toast -->
+  <div id="mode-update" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="16" data-lg-scale="22" data-lg-dispersion="1.15">
+    <div class="upd-box">
+      <div class="upd-top">
+        <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
+        <div>
+          <div id="upd-title" class="upd-title">dejavu update ready</div>
+          <div id="upd-sub" class="upd-sub">Downloaded automatically in background</div>
+        </div>
+      </div>
+      <div class="upd-actions">
+        <button id="btn-upd-later" class="pill-btn">Later</button>
+        <button id="btn-upd-restart" class="pill-btn primary">Restart &amp; Update</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://dejavu.local/avatars.js"></script>
   <script src="https://dejavu.local/liquid-glass.js"></script>
   <script>
     const send = (msg) => { try { window.chrome.webview.postMessage(msg); } catch {} };
     window.LiquidGlass.init();
 
     const backdropImg = document.getElementById('backdrop-img');
-    const modeShield = document.getElementById('mode-shield');
-    const modeFind = document.getElementById('mode-find');
-    const modeDownload = document.getElementById('mode-download');
+    const modes = {
+      shield: document.getElementById('mode-shield'),
+      find: document.getElementById('mode-find'),
+      download: document.getElementById('mode-download'),
+      profiles: document.getElementById('mode-profiles'),
+      history: document.getElementById('mode-history'),
+      update: document.getElementById('mode-update')
+    };
 
+    // Shield bindings
     const popDot = document.getElementById('pop-dot');
     const popBadge = document.getElementById('pop-badge');
     const popSiteRow = document.getElementById('pop-site-row');
@@ -188,16 +418,6 @@
     const btnGlobalToggle = document.getElementById('btn-global-toggle');
     const segEngines = document.getElementById('seg-engines');
 
-    const findQ = document.getElementById('find-q');
-
-    function formatBytes(b) {
-      if (!b) return '0 B';
-      const u = ['B', 'KB', 'MB', 'GB'];
-      let i = 0, v = b;
-      while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
-      return `${v.toFixed(i > 1 ? 1 : 0)} ${u[i]}`;
-    }
-
     btnSiteToggle.addEventListener('click', () => send({ type: 'toggleSiteShield' }));
     btnGlobalToggle.addEventListener('click', () => send({ type: 'toggleGlobalShield' }));
     segEngines.addEventListener('click', (e) => {
@@ -207,22 +427,280 @@
       send({ type: 'setSearchEngine', engine: btn.dataset.engine });
     });
 
+    // Find bindings
+    const findQ = document.getElementById('find-q');
     findQ.addEventListener('input', () => send({ type: 'findQuery', query: findQ.value, backwards: false }));
     findQ.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        send({ type: 'findQuery', query: findQ.value, backwards: e.shiftKey });
-      } else if (e.key === 'Escape') {
-        send({ type: 'closeFind' });
-      }
+      if (e.key === 'Enter') { e.preventDefault(); send({ type: 'findQuery', query: findQ.value, backwards: e.shiftKey }); }
+      else if (e.key === 'Escape') send({ type: 'closeFind' });
     });
     document.getElementById('f-next').addEventListener('click', () => send({ type: 'findQuery', query: findQ.value, backwards: false }));
     document.getElementById('f-prev').addEventListener('click', () => send({ type: 'findQuery', query: findQ.value, backwards: true }));
     document.getElementById('f-close').addEventListener('click', () => send({ type: 'closeFind' }));
 
+    // Download bindings
     document.getElementById('dl-open').addEventListener('click', () => send({ type: 'openDownload' }));
     document.getElementById('dl-reveal').addEventListener('click', () => send({ type: 'revealDownload' }));
     document.getElementById('dl-dismiss').addEventListener('click', () => send({ type: 'dismissDownload' }));
+
+    // Update toast bindings
+    document.getElementById('btn-upd-later').addEventListener('click', () => send({ type: 'dismissUpdate' }));
+    document.getElementById('btn-upd-restart').addEventListener('click', () => send({ type: 'applyUpdate' }));
+
+    // Profiles Hub & 16-Avatar Editor
+    const profViewList = document.getElementById('prof-view-list');
+    const profViewEditor = document.getElementById('prof-view-editor');
+    const activeProfCard = document.getElementById('active-prof-card');
+    const otherProfList = document.getElementById('other-prof-list');
+    const otherProfLabel = document.getElementById('other-prof-label');
+    const profVerText = document.getElementById('prof-ver-text');
+    const btnUpdateAction = document.getElementById('btn-update-action');
+    const editorHeading = document.getElementById('editor-heading');
+    const editorAvatarPreview = document.getElementById('editor-avatar-preview');
+    const editorNameInput = document.getElementById('editor-name-input');
+    const avatarPickerGrid = document.getElementById('avatar-picker-grid');
+
+    let latestProfileData = null;
+    let editingProfileId = null; // null = create new, string = edit existing
+    let selectedAvatarId = 'blue-morpho';
+
+    function openProfileEditor(profileOrNull) {
+      profViewList.classList.add('hidden');
+      profViewEditor.classList.remove('hidden');
+      if (profileOrNull) {
+        editingProfileId = profileOrNull.id;
+        editorHeading.textContent = 'Edit Profile';
+        editorNameInput.value = profileOrNull.name || '';
+        selectedAvatarId = profileOrNull.avatar || 'dejavu-halftone';
+      } else {
+        editingProfileId = null;
+        editorHeading.textContent = 'New Profile';
+        editorNameInput.value = '';
+        const used = new Set((latestProfileData?.profiles || []).map((p) => p.avatar));
+        const unused = window.DejavuAvatars.list.find((a) => !used.has(a.id));
+        selectedAvatarId = unused ? unused.id : 'blue-morpho';
+      }
+      renderAvatarPicker();
+      setTimeout(() => editorNameInput.focus(), 40);
+    }
+
+    function renderAvatarPicker() {
+      editorAvatarPreview.innerHTML = window.DejavuAvatars.renderHtml(selectedAvatarId, 48);
+      avatarPickerGrid.innerHTML = '';
+      window.DejavuAvatars.list.forEach((av) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'av-choice' + (av.id === selectedAvatarId ? ' selected' : '');
+        btn.title = av.name;
+        btn.innerHTML = `${window.DejavuAvatars.renderHtml(av.id, 38)}<span class="av-choice-label"></span>`;
+        btn.querySelector('.av-choice-label').textContent = av.name;
+        btn.addEventListener('click', () => {
+          selectedAvatarId = av.id;
+          renderAvatarPicker();
+        });
+        avatarPickerGrid.appendChild(btn);
+      });
+    }
+
+    document.getElementById('btn-add-profile').addEventListener('click', () => openProfileEditor(null));
+    document.getElementById('btn-editor-cancel').addEventListener('click', () => {
+      profViewEditor.classList.add('hidden');
+      profViewList.classList.remove('hidden');
+    });
+    document.getElementById('btn-editor-save').addEventListener('click', () => {
+      const av = window.DejavuAvatars.get(selectedAvatarId);
+      const name = editorNameInput.value.trim() || av.name;
+      if (editingProfileId) {
+        send({ type: 'updateProfile', id: editingProfileId, name, avatar: av.id, color: av.color });
+        profViewEditor.classList.add('hidden');
+        profViewList.classList.remove('hidden');
+      } else {
+        send({ type: 'createProfile', name, avatar: av.id, color: av.color });
+      }
+    });
+    editorNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btn-editor-save').click();
+    });
+
+    btnUpdateAction.addEventListener('click', () => {
+      if (latestProfileData && latestProfileData.updateReadyVersion) {
+        send({ type: 'applyUpdate' });
+      } else {
+        send({ type: 'checkUpdate' });
+      }
+    });
+
+    function renderProfilesHub(d) {
+      latestProfileData = d;
+      profViewEditor.classList.add('hidden');
+      profViewList.classList.remove('hidden');
+
+      const profiles = d.profiles || [];
+      const active = profiles.find((p) => p.id === d.activeProfileId) || profiles[0];
+      const others = profiles.filter((p) => !active || p.id !== active.id);
+
+      if (active) {
+        activeProfCard.innerHTML = `
+          ${window.DejavuAvatars.renderHtml(active.avatar, 50)}
+          <div class="active-prof-meta">
+            <div class="active-prof-name"></div>
+            <div class="active-prof-sub">Active profile · Isolated data</div>
+          </div>
+          <button id="btn-edit-active" class="pill-btn">Edit</button>
+        `;
+        activeProfCard.querySelector('.active-prof-name').textContent = active.name;
+        activeProfCard.querySelector('#btn-edit-active').addEventListener('click', () => openProfileEditor(active));
+      }
+
+      otherProfList.innerHTML = '';
+      otherProfLabel.style.display = others.length ? '' : 'none';
+      if (others.length === 0) {
+        otherProfList.innerHTML = `<div class="empty-msg" style="padding:26px 12px;">Add separate profiles for Work, Gaming, or Personal — each gets its own butterfly icon, logins, favorites &amp; history.</div>`;
+      } else {
+        others.forEach((p) => {
+          const row = document.createElement('div');
+          row.className = 'prof-row';
+          row.innerHTML = `
+            ${window.DejavuAvatars.renderHtml(p.avatar, 32)}
+            <span class="prof-row-name"></span>
+            <div class="prof-row-actions">
+              <button class="mini-act win-open" title="Open in new window">
+                <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><path d="M9.5 3H13v3.5M13 3L7.5 8.5M6.5 4H4a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V9.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              ${p.id !== 'default' ? `<button class="mini-act del" title="Delete profile"><svg viewBox="0 0 16 16" width="13" height="13" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>` : ''}
+            </div>
+          `;
+          row.querySelector('.prof-row-name').textContent = p.name;
+          row.addEventListener('click', (e) => {
+            if (e.target.closest('.mini-act')) return;
+            send({ type: 'switchProfile', id: p.id });
+          });
+          row.querySelector('.win-open').addEventListener('click', (e) => {
+            e.stopPropagation();
+            send({ type: 'openProfileWindow', id: p.id });
+          });
+          const delBtn = row.querySelector('.del');
+          if (delBtn) {
+            delBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              send({ type: 'deleteProfile', id: p.id });
+            });
+          }
+          otherProfList.appendChild(row);
+        });
+      }
+
+      if (d.updateReadyVersion) {
+        profVerText.textContent = `v${d.updateReadyVersion} ready!`;
+        btnUpdateAction.textContent = 'Restart & Update';
+        btnUpdateAction.classList.add('primary');
+      } else {
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '2.1.0'}`;
+        btnUpdateAction.textContent = 'Check updates';
+        btnUpdateAction.classList.remove('primary');
+      }
+    }
+
+    // History Panel
+    const histProfBadge = document.getElementById('hist-prof-badge');
+    const histSearchInput = document.getElementById('hist-search-input');
+    const histList = document.getElementById('hist-list');
+    let allHistoryItems = [];
+
+    document.getElementById('btn-hist-close').addEventListener('click', () => send({ type: 'closePanel' }));
+    document.getElementById('btn-hist-clear').addEventListener('click', () => send({ type: 'clearHistory' }));
+    histSearchInput.addEventListener('input', () => renderHistoryItems());
+
+    function extractHost(url) {
+      try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url || ''; }
+    }
+
+    function formatTime(ms) {
+      try {
+        return new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } catch { return ''; }
+    }
+
+    function getDayBucket(ms) {
+      const now = new Date();
+      const d = new Date(ms);
+      const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const startYesterday = startToday - 86400000;
+      if (ms >= startToday) return 'Today';
+      if (ms >= startYesterday) return 'Yesterday';
+      return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+
+    function renderHistoryItems() {
+      const q = (histSearchInput.value || '').trim().toLowerCase();
+      const filtered = q
+        ? allHistoryItems.filter((it) => (it.title || '').toLowerCase().includes(q) || (it.url || '').toLowerCase().includes(q))
+        : allHistoryItems;
+
+      histList.innerHTML = '';
+      if (filtered.length === 0) {
+        histList.innerHTML = `<div class="empty-msg">${q ? 'No matching history entries.' : 'Your browsing history will appear here.'}</div>`;
+        return;
+      }
+
+      let lastBucket = '';
+      filtered.slice(0, 120).forEach((item) => {
+        const bucket = getDayBucket(item.visitedAtMs || Date.now());
+        if (bucket !== lastBucket) {
+          lastBucket = bucket;
+          const h = document.createElement('div');
+          h.className = 'hist-group-title';
+          h.textContent = bucket;
+          histList.appendChild(h);
+        }
+
+        const row = document.createElement('div');
+        row.className = 'hist-row';
+        const host = extractHost(item.url);
+        const icoSrc = item.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : 'https://dejavu.local/logo-transparent.png');
+
+        row.innerHTML = `
+          <img class="hist-ico" alt="" draggable="false">
+          <div class="hist-meta">
+            <div class="hist-title"></div>
+            <div class="hist-url"></div>
+          </div>
+          <span class="hist-time"></span>
+          <div class="hist-row-acts">
+            <button class="mini-act open-nt" title="Open in new tab">+</button>
+            <button class="mini-act del" title="Remove">×</button>
+          </div>
+        `;
+        const img = row.querySelector('.hist-ico');
+        img.src = icoSrc;
+        img.onerror = () => { img.src = 'https://dejavu.local/logo-transparent.png'; };
+        row.querySelector('.hist-title').textContent = item.title || host;
+        row.querySelector('.hist-url').textContent = host;
+        row.querySelector('.hist-time').textContent = formatTime(item.visitedAtMs);
+
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.mini-act')) return;
+          send({ type: 'openHistoryUrl', url: item.url, newTab: false });
+        });
+        row.querySelector('.open-nt').addEventListener('click', (e) => {
+          e.stopPropagation();
+          send({ type: 'openHistoryUrl', url: item.url, newTab: true });
+        });
+        row.querySelector('.del').addEventListener('click', (e) => {
+          e.stopPropagation();
+          send({ type: 'deleteHistoryItem', id: item.id });
+        });
+        histList.appendChild(row);
+      });
+    }
+
+    function formatBytes(b) {
+      if (!b) return '0 B';
+      const u = ['B', 'KB', 'MB', 'GB'];
+      let i = 0, v = b;
+      while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+      return `${v.toFixed(i > 1 ? 1 : 0)} ${u[i]}`;
+    }
 
     window.chrome.webview.addEventListener('message', (ev) => {
       const d = ev.data;
@@ -234,13 +712,11 @@
       if (d.backdrop) {
         backdropImg.src = d.backdrop;
         backdropImg.style.display = 'block';
-      } else {
+      } else if (d.backdrop === '') {
         backdropImg.style.display = 'none';
       }
 
-      modeShield.classList.toggle('hidden', d.mode !== 'shield');
-      modeFind.classList.toggle('hidden', d.mode !== 'find');
-      modeDownload.classList.toggle('hidden', d.mode !== 'download');
+      Object.keys(modes).forEach((k) => modes[k].classList.toggle('hidden', d.mode !== k));
 
       if (d.mode === 'shield') {
         popDot.classList.toggle('off', !d.activeForSite);
@@ -258,12 +734,11 @@
         segEngines.querySelectorAll('.seg-btn').forEach((b) => {
           b.classList.toggle('active', b.dataset.engine === d.searchEngine);
         });
-        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modeShield));
+        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.shield));
       } else if (d.mode === 'find') {
         requestAnimationFrame(() => {
-          window.LiquidGlass.updateElementGlass(modeFind);
-          findQ.focus();
-          findQ.select();
+          window.LiquidGlass.updateElementGlass(modes.find);
+          findQ.focus(); findQ.select();
         });
       } else if (d.mode === 'download') {
         document.getElementById('dl-name').textContent = d.filename || 'Download';
@@ -283,7 +758,23 @@
           st.textContent = d.total > 0 ? `${formatBytes(d.received)} / ${formatBytes(d.total)}` : formatBytes(d.received);
           acts.classList.add('hidden');
         }
-        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modeDownload));
+        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.download));
+      } else if (d.mode === 'profiles') {
+        renderProfilesHub(d);
+        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.profiles));
+      } else if (d.mode === 'history') {
+        histProfBadge.textContent = d.profileName || 'Personal';
+        allHistoryItems = Array.isArray(d.items) ? d.items : [];
+        histSearchInput.value = '';
+        renderHistoryItems();
+        requestAnimationFrame(() => {
+          window.LiquidGlass.updateElementGlass(modes.history);
+          histSearchInput.focus();
+        });
+      } else if (d.mode === 'update') {
+        document.getElementById('upd-title').textContent = `dejavu v${d.version} is ready`;
+        document.getElementById('upd-sub').textContent = `Updating from v${d.currentVersion} automatically`;
+        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.update));
       }
     });
   </script>

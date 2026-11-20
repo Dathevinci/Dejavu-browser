@@ -18,10 +18,17 @@
   const omniboxInput = document.getElementById('omnibox-input');
   const omniboxIcon = document.getElementById('omnibox-icon');
   const loadProgress = document.getElementById('load-progress');
+  const btnFavStar = document.getElementById('btn-fav-star');
   const btnShield = document.getElementById('btn-shield');
   const shieldCount = document.getElementById('shield-count');
   const tabsStrip = document.getElementById('tabs-strip');
   const btnNewTab = document.getElementById('btn-new-tab');
+  const btnHistory = document.getElementById('btn-history');
+  const btnProfile = document.getElementById('btn-profile');
+  const profileAvatarSlot = document.getElementById('profile-avatar-slot');
+  const profileUpdateDot = document.getElementById('profile-update-dot');
+  const favbar = document.getElementById('favbar');
+  const favbarList = document.getElementById('favbar-list');
 
   const newtabCanvas = document.getElementById('newtab-canvas');
   const newtabSearchForm = document.getElementById('newtab-search-form');
@@ -100,10 +107,14 @@
   // =========================================================================
   // Site-Adaptive Top-Bar Optical Light-Guide (Zero Text Ghosting!)
   // =========================================================================
+  function getChromeHeight() {
+    return body.classList.contains('has-favorites') ? 90 : 54;
+  }
+
   function resizeTopBackdrop() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const w = Math.max(1, window.innerWidth);
-    const h = 54;
+    const h = getChromeHeight();
     topBackdropCanvas.width = Math.round(w * dpr);
     topBackdropCanvas.height = Math.round(h * dpr);
     topBackdropCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -115,7 +126,7 @@
   function drawTopLightGuide({ baseRgb, accents, isLight }) {
     currentPalette = { baseRgb, accents, isLight };
     const w = window.innerWidth;
-    const h = 54;
+    const h = getChromeHeight();
     const [br, bg, bb] = baseRgb || (isLight ? [245, 244, 250] : [11, 9, 20]);
 
     topBackdropCtx.fillStyle = `rgb(${br}, ${bg}, ${bb})`;
@@ -171,10 +182,26 @@
   btnReload.addEventListener('click', () => send({ type: 'reload' }));
   btnNewTab.addEventListener('click', () => send({ type: 'newTab' }));
 
+  btnFavStar.addEventListener('click', () => send({ type: 'toggleFavorite' }));
+
   btnShield.addEventListener('click', () => {
     const r = btnShield.getBoundingClientRect();
     send({ type: 'openShield', anchorRight: Math.round(r.right) });
   });
+
+  btnHistory.addEventListener('click', () => {
+    const r = btnHistory.getBoundingClientRect();
+    send({ type: 'openHistory', anchorRight: Math.round(r.right + 42) });
+  });
+
+  btnProfile.addEventListener('click', () => {
+    const r = btnProfile.getBoundingClientRect();
+    send({ type: 'openProfiles', anchorRight: Math.round(r.right + 6) });
+  });
+
+  favbarList.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaY) > 0) favbarList.scrollLeft += e.deltaY;
+  }, { passive: true });
 
   omniboxInput.addEventListener('focus', () => {
     const active = state.tabs.find((t) => t.id === state.activeTabId);
@@ -486,11 +513,89 @@
     }
   }
 
+  let lastFavoritesSig = '';
+  let lastAvatarRendered = '';
+
+  function renderFavoritesBar(list) {
+    const favs = Array.isArray(list) ? list : [];
+    const hasFavs = favs.length > 0;
+    const changedVisibility = body.classList.contains('has-favorites') !== hasFavs;
+
+    body.classList.toggle('has-favorites', hasFavs);
+    favbar.classList.toggle('hidden', !hasFavs);
+    if (changedVisibility) {
+      resizeTopBackdrop();
+    }
+
+    const sig = JSON.stringify(favs);
+    if (sig === lastFavoritesSig) return;
+    lastFavoritesSig = sig;
+
+    favbarList.innerHTML = '';
+    favs.forEach((fav) => {
+      const chip = document.createElement('div');
+      chip.className = 'glass-pill fav-chip';
+      chip.setAttribute('data-liquid-glass', '');
+      chip.setAttribute('data-lg-bezel', '9');
+      chip.setAttribute('data-lg-scale', '13');
+      chip.setAttribute('data-lg-dispersion', '0.92');
+      chip.title = fav.url;
+
+      const host = extractHost(fav.url);
+      const ico = document.createElement('img');
+      ico.className = 'fav-chip-ico';
+      ico.alt = '';
+      ico.draggable = false;
+      ico.src = fav.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : 'https://dejavu.local/logo-transparent.png');
+      ico.onerror = () => { ico.src = 'https://dejavu.local/logo-transparent.png'; };
+
+      const label = document.createElement('span');
+      label.className = 'fav-chip-label';
+      label.textContent = fav.title || host;
+
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'fav-chip-rm';
+      rm.textContent = '×';
+      rm.title = 'Remove favorite';
+      rm.addEventListener('click', (e) => {
+        e.stopPropagation();
+        send({ type: 'removeFavorite', id: fav.id });
+      });
+
+      chip.appendChild(ico);
+      chip.appendChild(label);
+      chip.appendChild(rm);
+
+      chip.addEventListener('click', () => send({ type: 'navigate', input: fav.url }));
+      chip.addEventListener('auxclick', (e) => {
+        if (e.button === 1) {
+          e.preventDefault();
+          send({ type: 'newTab', url: fav.url });
+        }
+      });
+
+      favbarList.appendChild(chip);
+    });
+  }
+
   function applyState(next) {
     state = next;
     syncTabs(next.tabs || [], next.activeTabId);
     renderShortcuts(next.shortcuts || []);
+    renderFavoritesBar(next.favorites || []);
     updateStatText(next.globalAdBlockEnabled, next.totalBlocked);
+
+    if (next.activeProfile && window.DejavuAvatars) {
+      const avKey = `${next.activeProfile.avatar}_${next.activeProfile.name}`;
+      if (avKey !== lastAvatarRendered) {
+        lastAvatarRendered = avKey;
+        profileAvatarSlot.innerHTML = window.DejavuAvatars.renderHtml(next.activeProfile.avatar, 26);
+        btnProfile.title = `${next.activeProfile.name} · Profiles & Updates`;
+      }
+    }
+    profileUpdateDot.classList.toggle('hidden', !next.updateAvailable);
+
     if (next.wallpaper) {
       window.DejavuNewTabCanvas.setWallpaper(next.wallpaper);
     }
@@ -500,6 +605,10 @@
 
     const active = (next.tabs || []).find((t) => t.id === next.activeTabId);
     const onNewTab = !active || active.isNewTab;
+
+    btnFavStar.classList.toggle('hidden', onNewTab);
+    btnFavStar.classList.toggle('starred', !!next.isCurrentFavorite);
+    btnFavStar.title = next.isCurrentFavorite ? 'Remove from top bar favorites (Ctrl+D)' : 'Pin to top bar favorites (Ctrl+D)';
 
     if (onNewTab) {
       body.classList.add('on-newtab', 'theme-dark');

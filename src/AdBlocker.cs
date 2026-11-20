@@ -22,7 +22,8 @@ namespace DejavuBrowser
         private bool _globalEnabled;
         private long _totalBlocked;
         private bool _listsReady;
-        private readonly DejavuSettings _settings;
+        private DejavuSettings _settings;
+        private string _settingsPath;
         private DateTime _lastSave = DateTime.MinValue;
 
         // 1x1 transparent GIF for clean zero-error ad image replacement
@@ -281,9 +282,10 @@ namespace DejavuBrowser
 
         public event Action<long> TotalBlockedChanged;
 
-        public AdBlocker(DejavuSettings settings)
+        public AdBlocker(DejavuSettings settings, string settingsPath)
         {
             _settings = settings;
+            _settingsPath = settingsPath;
             _globalEnabled = settings.globalAdBlockEnabled;
             _totalBlocked = settings.totalBlocked;
             _pausedHosts = new HashSet<string>(settings.pausedHosts, StringComparer.OrdinalIgnoreCase);
@@ -293,6 +295,31 @@ namespace DejavuBrowser
             _anyUrlPatterns = new List<string>(CoreAnyUrlSnippets);
             _thirdPartyUrlPatterns = new List<string>(CoreThirdPartyUrlSnippets);
             _siteCosmetics = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        public void SwitchProfileSettings(DejavuSettings settings, string settingsPath)
+        {
+            lock (_lock)
+            {
+                _settings = settings;
+                _settingsPath = settingsPath;
+                _globalEnabled = settings.globalAdBlockEnabled;
+                Interlocked.Exchange(ref _totalBlocked, settings.totalBlocked);
+                _pausedHosts.Clear();
+                if (settings.pausedHosts != null)
+                {
+                    for (int i = 0; i < settings.pausedHosts.Count; i++)
+                    {
+                        _pausedHosts.Add(settings.pausedHosts[i]);
+                    }
+                }
+            }
+        }
+
+        private void SaveCurrentSettings()
+        {
+            if (!string.IsNullOrEmpty(_settingsPath)) SettingsStore.SaveToPath(_settingsPath, _settings);
+            else SettingsStore.Save(_settings);
         }
 
         public bool GlobalEnabled { get { return _globalEnabled; } }
@@ -726,7 +753,7 @@ namespace DejavuBrowser
                 else _pausedHosts.Add(host);
                 _settings.pausedHosts = new List<string>(_pausedHosts);
             }
-            SettingsStore.Save(_settings);
+            SaveCurrentSettings();
         }
 
         public void SetGlobalEnabled(bool enabled)
@@ -736,7 +763,7 @@ namespace DejavuBrowser
                 _globalEnabled = enabled;
                 _settings.globalAdBlockEnabled = enabled;
             }
-            SettingsStore.Save(_settings);
+            SaveCurrentSettings();
         }
 
         public bool IsSpamPopup(string url)
@@ -903,7 +930,7 @@ namespace DejavuBrowser
             {
                 _lastSave = now;
                 _settings.totalBlocked = next;
-                Task.Run(() => SettingsStore.Save(_settings));
+                Task.Run(() => SaveCurrentSettings());
             }
             Action<long> handler = TotalBlockedChanged;
             if (handler != null) handler(next);
@@ -913,7 +940,7 @@ namespace DejavuBrowser
         public void FlushStats()
         {
             _settings.totalBlocked = Interlocked.Read(ref _totalBlocked);
-            SettingsStore.Save(_settings);
+            SaveCurrentSettings();
         }
 
         /// <summary>

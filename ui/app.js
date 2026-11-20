@@ -9,7 +9,9 @@
   };
 
   const body = document.body;
-  const topbar = document.getElementById('topbar');
+  const chromeHeader = document.getElementById('chrome-header');
+  const tabbar = document.getElementById('tabbar');
+  const toolbar = document.getElementById('toolbar');
   const dragSpacer = document.getElementById('drag-spacer');
   const btnHome = document.getElementById('btn-home');
   const btnBack = document.getElementById('btn-back');
@@ -90,15 +92,15 @@
   document.getElementById('win-close').addEventListener('click', () => send({ type: 'windowClose' }));
 
   function isDraggableTarget(el) {
-    return el === topbar || el === dragSpacer || el.id === 'tabs-area';
+    return el === chromeHeader || el === tabbar || el === toolbar || el === dragSpacer || el.id === 'tabs-area';
   }
 
-  topbar.addEventListener('mousedown', (e) => {
+  chromeHeader.addEventListener('mousedown', (e) => {
     if (e.button === 0 && isDraggableTarget(e.target)) {
       send({ type: 'windowDrag' });
     }
   });
-  topbar.addEventListener('dblclick', (e) => {
+  chromeHeader.addEventListener('dblclick', (e) => {
     if (isDraggableTarget(e.target)) {
       send({ type: 'windowMax' });
     }
@@ -108,7 +110,7 @@
   // Site-Adaptive Top-Bar Optical Light-Guide (Zero Text Ghosting!)
   // =========================================================================
   function getChromeHeight() {
-    return body.classList.contains('has-favorites') ? 90 : 54;
+    return body.classList.contains('has-favorites') ? 122 : 88;
   }
 
   function resizeTopBackdrop() {
@@ -455,14 +457,15 @@
 
     tabs.forEach((tab) => {
       let el = tabEls.get(tab.id);
+      const isNew = !el;
       if (!el) {
         el = document.createElement('div');
         el.className = 'glass-pill tab-pill';
         el.setAttribute('role', 'tab');
         el.setAttribute('data-liquid-glass', '');
+        el.setAttribute('data-lg-fast', '1');
         el.setAttribute('data-lg-bezel', '11');
-        el.setAttribute('data-lg-scale', '16');
-        el.setAttribute('data-lg-dispersion', '0.96');
+        el.setAttribute('data-lg-scale', '15');
         el.innerHTML = `
           <span class="tab-spinner hidden"></span>
           <img class="tab-favicon" alt="" draggable="false">
@@ -473,7 +476,8 @@
         `;
         el.addEventListener('click', (e) => {
           if (e.target.closest('.tab-close')) {
-            send({ type: 'closeTab', id: tab.id });
+            el.classList.add('closing');
+            setTimeout(() => send({ type: 'closeTab', id: tab.id }), 90);
             return;
           }
           send({ type: 'activateTab', id: tab.id });
@@ -481,14 +485,18 @@
         el.addEventListener('auxclick', (e) => {
           if (e.button === 1) {
             e.preventDefault();
-            send({ type: 'closeTab', id: tab.id });
+            el.classList.add('closing');
+            setTimeout(() => send({ type: 'closeTab', id: tab.id }), 90);
           }
         });
         tabsStrip.appendChild(el);
         tabEls.set(tab.id, el);
       }
 
-      el.classList.toggle('active', tab.id === activeId);
+      const wasActive = el.classList.contains('active');
+      const nowActive = tab.id === activeId;
+      el.classList.toggle('active', nowActive);
+      el.title = tab.title || 'New Tab';
       const spinner = el.querySelector('.tab-spinner');
       const fav = el.querySelector('.tab-favicon');
       const titleEl = el.querySelector('.tab-title');
@@ -498,6 +506,16 @@
       const favSrc = tab.favicon || 'https://dejavu.local/logo-transparent.png';
       if (fav.getAttribute('src') !== favSrc) fav.setAttribute('src', favSrc);
       titleEl.textContent = tab.title || 'New Tab';
+
+      if ((isNew || (!wasActive && nowActive)) && nowActive) {
+        requestAnimationFrame(() => {
+          try { el.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' }); } catch {}
+        });
+      }
+    });
+
+    requestAnimationFrame(() => {
+      tabsStrip.classList.toggle('scrollable', tabsStrip.scrollWidth > tabsStrip.clientWidth + 4);
     });
   }
 
@@ -536,9 +554,9 @@
       const chip = document.createElement('div');
       chip.className = 'glass-pill fav-chip';
       chip.setAttribute('data-liquid-glass', '');
+      chip.setAttribute('data-lg-fast', '1');
       chip.setAttribute('data-lg-bezel', '9');
       chip.setAttribute('data-lg-scale', '13');
-      chip.setAttribute('data-lg-dispersion', '0.92');
       chip.title = fav.url;
 
       const host = extractHost(fav.url);

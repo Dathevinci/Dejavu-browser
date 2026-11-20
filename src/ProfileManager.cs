@@ -336,8 +336,7 @@ namespace DejavuBrowser
                 }
             }
 
-            string cleanTitle = string.IsNullOrWhiteSpace(title) ? AdBlocker.ExtractHost(url).Replace("www.", "") : title.Trim();
-            if (cleanTitle.Length > 26) cleanTitle = cleanTitle.Substring(0, 25) + "…";
+            string cleanTitle = CleanFavoriteTitle(title, url);
             Favorites.Add(new FavoriteItem
             {
                 id = "fav-" + DateTime.UtcNow.Ticks.ToString("x"),
@@ -347,6 +346,42 @@ namespace DejavuBrowser
             });
             SaveFavorites();
             return true;
+        }
+
+        private static string CleanFavoriteTitle(string rawTitle, string url)
+        {
+            string s = (rawTitle ?? "").Trim();
+            // Strip leading notification counters like "(1) YouTube" or "(12) X"
+            if (s.StartsWith("("))
+            {
+                int close = s.IndexOf(')');
+                if (close > 1 && close <= 5)
+                {
+                    bool allDigits = true;
+                    for (int i = 1; i < close; i++)
+                    {
+                        if (!char.IsDigit(s[i]) && s[i] != '+') { allDigits = false; break; }
+                    }
+                    if (allDigits) s = s.Substring(close + 1).Trim();
+                }
+            }
+            // Trim verbose tagline suffixes ("GitHub · Change is constant...", "YouTube - Home")
+            string[] seps = new string[] { " · ", " | ", " — ", " – ", " - " };
+            for (int i = 0; i < seps.Length; i++)
+            {
+                int idx = s.IndexOf(seps[i], StringComparison.Ordinal);
+                if (idx >= 2)
+                {
+                    s = s.Substring(0, idx).Trim();
+                    break;
+                }
+            }
+            if (string.IsNullOrWhiteSpace(s))
+            {
+                s = AdBlocker.ExtractHost(url).Replace("www.", "");
+            }
+            if (s.Length > 20) s = s.Substring(0, 19) + "…";
+            return s;
         }
 
         public void RemoveFavorite(string idOrUrl)

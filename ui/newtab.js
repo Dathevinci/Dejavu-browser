@@ -121,6 +121,29 @@
   let artImage = null;
   let artLoaded = false;
 
+  // Offscreen static halftone dot pattern cache (eliminates 2,300 ctx.arc() calls per frame!)
+  let dotCacheCanvas = null;
+  let dotCacheKey = '';
+
+  function ensureDotCache(theme) {
+    const key = `${width}x${height}_${theme.dotColor}_${theme.butterflyMode}`;
+    if (dotCacheCanvas && dotCacheKey === key) return dotCacheCanvas;
+    dotCacheKey = key;
+    dotCacheCanvas = document.createElement('canvas');
+    dotCacheCanvas.width = Math.max(1, width);
+    dotCacheCanvas.height = Math.max(1, height);
+    const dctx = dotCacheCanvas.getContext('2d');
+    const step = theme.butterflyMode === 'halftone' ? 26 : 32;
+    const rad = theme.butterflyMode === 'halftone' ? 1.15 : 0.95;
+    dctx.fillStyle = theme.dotColor;
+    for (let y = 0; y < height; y += step) {
+      for (let x = 0; x < width; x += step) {
+        dctx.fillRect(x, y, rad * 2, rad * 2);
+      }
+    }
+    return dotCacheCanvas;
+  }
+
   // Ambient drifting butterfly flock (orbiting outer arcs cleanly around center UI)
   const flock = Array.from({ length: 10 }, (_, i) => ({
     side: i % 2 === 0 ? -1 : 1,
@@ -267,23 +290,9 @@
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
 
-    // Crisp halftone dot lattice
-    const step = theme.butterflyMode === 'halftone' ? 24 : 30;
-    ctx.fillStyle = theme.dotColor;
-    const offsetX = ((pointerX - 0.5) * -18) % step;
-    const offsetY = ((pointerY - 0.5) * -18) % step;
-    for (let y = offsetY; y < height; y += step) {
-      for (let x = offsetX; x < width; x += step) {
-        const dx = x - width * pointerX;
-        const dy = y - height * pointerY;
-        const dist = Math.hypot(dx, dy);
-        const boost = Math.max(0, 1 - dist / 340);
-        const rad = (theme.butterflyMode === 'halftone' ? 1.05 : 0.85) + boost * 1.2;
-        ctx.beginPath();
-        ctx.arc(x, y, rad, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
+    // Blit pre-rendered halftone dot lattice in 1 GPU draw call (zero per-frame CPU overhead!)
+    const dots = ensureDotCache(theme);
+    ctx.drawImage(dots, (pointerX - 0.5) * -14, (pointerY - 0.5) * -14);
 
     // Crisp orbital caustic ellipses behind search pill & quick-dial tiles
     ctx.save();

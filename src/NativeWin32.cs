@@ -93,8 +93,28 @@ namespace DejavuBrowser
         [DllImport("user32.dll")]
         public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
+        [DllImport("user32.dll")]
+        public static extern uint GetDpiForWindow(IntPtr hwnd);
+
         [DllImport("dwmapi.dll")]
         public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        public static float GetRealDpiScale(IntPtr hwnd)
+        {
+            try
+            {
+                if (hwnd != IntPtr.Zero)
+                {
+                    uint dpi = GetDpiForWindow(hwnd);
+                    if (dpi >= 96 && dpi <= 480)
+                    {
+                        return dpi / 96.0f;
+                    }
+                }
+            }
+            catch { }
+            return 1.0f;
+        }
 
         [DllImport("dwmapi.dll")]
         public static extern int DwmExtendFrameIntoClientArea(IntPtr hWnd, ref MARGINS pMarInset);

@@ -26,6 +26,7 @@ namespace DejavuSetup
         [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
         [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
         [DllImport("user32.dll")] public static extern bool SetProcessDpiAwarenessContext(IntPtr flag);
+        [DllImport("user32.dll")] public static extern uint GetDpiForWindow(IntPtr hwnd);
         [DllImport("dwmapi.dll")] public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int val, int size);
         [DllImport("dwmapi.dll")] public static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref MARGINS m);
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] public static extern bool SetDllDirectory(string dir);
@@ -169,9 +170,14 @@ namespace DejavuSetup
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            float scale = DeviceDpi / 96.0f;
-            if (scale < 1.0f) scale = 1.0f;
-            Size = new Size((int)Math.Round(700 * scale), (int)Math.Round(565 * scale));
+            float scale = 1.0f;
+            try
+            {
+                uint dpi = Native.GetDpiForWindow(Handle);
+                if (dpi >= 96 && dpi <= 480) scale = dpi / 96.0f;
+            }
+            catch { }
+            Size = new Size((int)Math.Round(620 * scale), (int)Math.Round(510 * scale));
             CenterToScreen();
             Native.StyleWin11(Handle);
         }
@@ -362,7 +368,7 @@ namespace DejavuSetup
                     if (key != null)
                     {
                         key.SetValue("DisplayName", "dejavu");
-                        key.SetValue("DisplayVersion", "2.1.0");
+                        key.SetValue("DisplayVersion", "2.2.0");
                         key.SetValue("Publisher", "dejavu");
                         key.SetValue("DisplayIcon", iconPath);
                         key.SetValue("InstallLocation", InstallDir);

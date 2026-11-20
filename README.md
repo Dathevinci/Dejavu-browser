@@ -2,6 +2,12 @@
 
 A minimal, fast Windows browser built with **real physics-based Liquid Glass** (zero Gaussian blur), a **built-in 100/100 Ad Blocker** on by default, and a **Butterfly Studio** wallpaper gallery — powered natively by Windows' Chromium WebView2 engine (**no Electron, no Node.js**).
 
+## Download (Windows 10 / 11 x64)
+
+Grab the latest release from **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
+- **`dejavu-Setup.exe`** — Butterfly-themed Liquid Glass setup wizard (adds Desktop & Start Menu shortcuts, registers in Windows Installed Apps, no admin required).
+- **`dejavu.exe`** — Standalone portable single-file executable (double-click to run directly).
+
 ## Features
 
 - **Real Liquid Glass Optics (Zero Gaussian Blur)**: Exact SDF rounded-rectangle geometry, Snell's Law refraction ($n = 1.52$), Cauchy RGB chromatic dispersion, Schlick Fresnel specular rims, pointer-tracked caustics, and automatic dark/light polarity adaptation.

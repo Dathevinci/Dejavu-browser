@@ -1,0 +1,46 @@
+name: Build & Release dejavu
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build dejavu.exe
+        shell: pwsh
+        run: .\build.ps1
+
+      - name: Build dejavu-Setup.exe
+        shell: pwsh
+        run: .\build-setup.ps1
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dejavu-windows-x64
+          path: |
+            dist/dejavu.exe
+            dist/dejavu-Setup.exe
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release create $tag `
+            dist\dejavu-Setup.exe `
+            dist\dejavu.exe `
+            --title "dejavu $tag" `
+            --notes "### dejavu $tag — Native Liquid Glass Browser for Windows`n`n- **dejavu-Setup.exe** — Butterfly-themed Liquid Glass installer (Desktop & Start Menu shortcuts, Windows Installed Apps integration, no admin rights required)`n- **dejavu.exe** — Portable single-file native Chromium WebView2 browser (no Electron, no Node.js)`n- **100/100 Ad Blocker** (OISD Big + EasyList + EasyPrivacy + uBlock Origin + YouTube ad shield)`n- **Butterfly Studio** — 4 crystal butterfly artworks, 6 live 60fps themes, + custom wallpapers"

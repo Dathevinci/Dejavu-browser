@@ -1162,6 +1162,8 @@ namespace DejavuBrowser
                 };
 
                 core.HistoryChanged += (s, e) => PushFullStateToShell();
+                core.IsDocumentPlayingAudioChanged += (s, e) => PushFullStateToShell();
+                core.IsMutedChanged += (s, e) => PushFullStateToShell();
                 core.ContainsFullScreenElementChanged += (s, e) => SetHtmlFullscreen(core.ContainsFullScreenElement);
                 core.NewWindowRequested += (s, e) => HandleNewWindowRequested(envForTab, e);
                 core.DownloadStarting += (s, e) => HandleDownloadStarting(e);
@@ -1696,8 +1698,8 @@ namespace DejavuBrowser
             HideSuggestPopup();
             _activePopoverMode = "vpn";
             float sc = DpiScale;
-            int popW = (int)Math.Round(384 * sc);
-            int popH = (int)Math.Round(536 * sc);
+            int popW = (int)Math.Round(396 * sc);
+            int popH = (int)Math.Round(566 * sc);
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
@@ -2090,6 +2092,7 @@ namespace DejavuBrowser
                 if (key == Keys.H) { ShowHistoryPopoverAt((int)(ClientSize.Width / DpiScale) - 110); return true; }
                 if (key == Keys.D) { ToggleFavoriteActiveTab(); return true; }
                 if (shift && key == Keys.M) { ShowProfilesPopoverAt((int)(ClientSize.Width / DpiScale) - 108); return true; }
+                if (!shift && key == Keys.M) { ToggleMuteTab(_activeTabId); return true; }
                 if (!shift && ((key >= Keys.D1 && key <= Keys.D8) || (key >= Keys.NumPad1 && key <= Keys.NumPad8)))
                 {
                     List<BrowserTab> groupTabs = GetActiveGroupTabs();
@@ -2509,8 +2512,8 @@ namespace DejavuBrowser
             HideSuggestPopup();
             _activePopoverMode = "tabmenu";
             float sc = DpiScale;
-            int popW = (int)Math.Round(200 * sc);
-            int popH = (int)Math.Round(154 * sc);
+            int popW = (int)Math.Round(208 * sc);
+            int popH = (int)Math.Round(190 * sc);
             int x = Math.Max((int)(8 * sc), Math.Min(ClientSize.Width - popW - (int)(8 * sc), (int)Math.Round(xCss * sc)));
             int y = Math.Max((int)(46 * sc), Math.Min(ClientSize.Height - popH - (int)(8 * sc), (int)Math.Round(yCss * sc)));
 
@@ -2519,6 +2522,7 @@ namespace DejavuBrowser
             bool captureShell = (_tabOverviewOpen || active == null || active.IsNewTab);
             bool isLight = !captureShell && active.IsLight;
             string cached = TryCropCachedBackdrop(clientRect, captureShell, active != null ? active.Id : -1, isLight);
+            bool isMuted = target.CoreReady && target.WebView != null && target.WebView.CoreWebView2.IsMuted;
 
             var payload = new Dictionary<string, object>
             {
@@ -2526,7 +2530,9 @@ namespace DejavuBrowser
                 { "isLight", isLight },
                 { "backdrop", cached ?? "" },
                 { "tabId", target.Id },
-                { "isPinned", target.IsPinned }
+                { "isPinned", target.IsPinned },
+                { "isMuted", isMuted },
+                { "isNewTab", target.IsNewTab }
             };
 
             Point screenPt = PointToScreen(new Point(x, y));
@@ -2567,8 +2573,9 @@ namespace DejavuBrowser
         {
             BrowserTab t = GetActiveTab();
             if (t == null || t.IsNewTab || t.WebView == null) return;
-            t.ZoomFactor = Math.Max(0.5, Math.Min(2.5, t.ZoomFactor + delta));
+            t.ZoomFactor = Math.Round(Math.Max(0.5, Math.Min(2.5, t.ZoomFactor + delta)), 2);
             t.WebView.ZoomFactor = t.ZoomFactor;
+            PushFullStateToShell();
         }
 
         private void ResetZoom()
@@ -2577,6 +2584,19 @@ namespace DejavuBrowser
             if (t == null || t.IsNewTab || t.WebView == null) return;
             t.ZoomFactor = 1.0;
             t.WebView.ZoomFactor = 1.0;
+            PushFullStateToShell();
+        }
+
+        private void ToggleMuteTab(int tabId)
+        {
+            BrowserTab t = FindTab(tabId);
+            if (t == null || t.IsNewTab || !t.CoreReady || t.WebView == null) return;
+            try
+            {
+                t.WebView.CoreWebView2.IsMuted = !t.WebView.CoreWebView2.IsMuted;
+                PushFullStateToShell();
+            }
+            catch { }
         }
 
         // =====================================================================
@@ -2704,6 +2724,12 @@ namespace DejavuBrowser
                         break;
                     case "closeOtherTabs":
                         CloseOtherTabs(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
+                        break;
+                    case "toggleTabMute":
+                        ToggleMuteTab(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
+                        break;
+                    case "resetZoom":
+                        ResetZoom();
                         break;
                     case "toggleReadingList":
                         ToggleReadingListActiveTab();
@@ -3034,6 +3060,7 @@ namespace DejavuBrowser
                     int tid = msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId;
                     HidePopover();
                     if (act == "pin") PinOrUnpinTab(tid);
+                    else if (act == "mute") ToggleMuteTab(tid);
                     else if (act == "duplicate") DuplicateTab(tid);
                     else if (act == "closeOthers") CloseOtherTabs(tid);
                     else if (act == "close") CloseTab(tid);
@@ -3140,6 +3167,9 @@ namespace DejavuBrowser
                     { "loading", t.IsLoading },
                     { "blockedCount", t.BlockedCount },
                     { "isLight", t.IsLight },
+                    { "isAudible", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.IsDocumentPlayingAudio },
+                    { "isMuted", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.IsMuted },
+                    { "zoomPercent", (int)Math.Round(t.ZoomFactor * 100.0) },
                     { "canGoBack", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.CanGoBack },
                     { "canGoForward", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.CanGoForward }
                 });

@@ -35,12 +35,25 @@
       transition: opacity 0.16s ease;
     }
     #backdrop-img.loaded { opacity: 1; }
+    /* Dedicated sibling Snell's Law Liquid Glass surface — keeps 100% real refraction
+       + Fresnel rim WITHOUT wrapping scroll containers in backdrop-filter: url(#svg),
+       guaranteeing silky 120fps native scrolling in VPN, History, Sidebar & Profiles! */
+    .overlay-glass-bg {
+      position: fixed; inset: 0; z-index: 1;
+      border-radius: 14px;
+      pointer-events: none;
+      --spec-opacity: 0.38;
+    }
     .overlay-shell {
       position: fixed; inset: 0; z-index: 2;
       display: flex; width: 100%; height: 100%;
       border-radius: 14px;
-      --spec-opacity: 0.38;
-      animation: ovPop 0.24s var(--apple-spring);
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      animation: ovPop 0.22s var(--apple-spring);
     }
     @keyframes ovPop {
       from { opacity: 0; transform: translateY(-5px) scale(0.955); }
@@ -85,11 +98,12 @@
     .upd-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
     .pill-btn {
       height: 29px; padding: 0 13px; border-radius: 999px;
-      border: 1px solid var(--glass-border); background: transparent;
+      border: 1px solid var(--glass-border); background: transparent; outline: none;
       color: var(--ink); font-family: inherit; font-size: 11.6px; font-weight: 600;
       cursor: pointer;
       transition: transform 0.34s var(--apple-spring), background 0.16s ease, filter 0.16s ease, border-color 0.16s ease;
     }
+    .pill-btn:focus-visible { box-shadow: 0 0 0 2px rgba(182, 136, 255, 0.55); }
     .pill-btn:hover { background: var(--glass-hover-bg); transform: translateY(-1px); }
     .pill-btn:active { transform: scale(0.93); transition-duration: 0.09s; }
     .pill-btn.primary {
@@ -116,12 +130,35 @@
       letter-spacing: -0.005em;
     }
     .panel-scroll {
-      flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
-      display: flex; flex-direction: column; gap: 5px;
-      padding-right: 3px;
+      flex: 1 1 0; min-height: 0; overflow-y: auto; overflow-x: hidden;
+      overscroll-behavior: contain;
+      display: flex; flex-direction: column; gap: 4px;
+      padding-right: 4px;
       scrollbar-width: thin;
-      scrollbar-color: rgba(186, 152, 255, 0.34) transparent;
+      scrollbar-color: rgba(186, 152, 255, 0.38) transparent;
     }
+    .panel-scroll::-webkit-scrollbar,
+    .sb-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .panel-scroll::-webkit-scrollbar-track,
+    .sb-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .panel-scroll::-webkit-scrollbar-thumb,
+    .sb-scroll::-webkit-scrollbar-thumb {
+      background: rgba(196, 162, 255, 0.34);
+      border-radius: 999px;
+    }
+    .panel-scroll::-webkit-scrollbar-thumb:hover,
+    .sb-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(212, 184, 255, 0.58);
+    }
+    body.theme-light .panel-scroll::-webkit-scrollbar-thumb,
+    body.theme-light .sb-scroll::-webkit-scrollbar-thumb {
+      background: rgba(124, 77, 255, 0.26);
+    }
+    .prof-row, .hist-row, .sb-row, .dls-row { flex-shrink: 0; }
 
     /* Profile Hub */
     .active-profile-card {
@@ -497,20 +534,66 @@
       border-color: rgba(196, 156, 255, 0.46);
     }
 
-    /* Country List Rows + Crisp Green Speed Dot */
+    /* Safari VPN Region Filter Pills */
+    .vpn-region-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 1px 0;
+    }
+    .vpn-region-tabs::-webkit-scrollbar { display: none; }
+    .vpn-reg-pill {
+      height: 24px;
+      padding: 0 9px;
+      border-radius: 999px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.045);
+      color: var(--ink-muted);
+      font-family: inherit;
+      font-size: 10.6px;
+      font-weight: 560;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+    }
+    .vpn-reg-pill:hover {
+      background: var(--glass-hover-bg);
+      color: var(--ink);
+    }
+    .vpn-reg-pill.active {
+      background: rgba(176, 124, 255, 0.26);
+      border-color: rgba(206, 174, 255, 0.50);
+      color: var(--ink);
+    }
+    body.theme-light .vpn-reg-pill {
+      background: rgba(24, 18, 52, 0.045);
+    }
+    body.theme-light .vpn-reg-pill.active {
+      background: rgba(124, 77, 255, 0.14);
+      border-color: rgba(124, 77, 255, 0.34);
+      color: #6435e8;
+    }
+
+    /* Country List Rows + Crisp Green Speed Dot (zero scroll jitter!) */
     .vpn-country-row {
       display: flex;
       align-items: center;
       gap: 9px;
-      padding: 6px 9px;
+      padding: 7px 9px;
+      min-height: 41px;
+      flex-shrink: 0;
       border-radius: 11px;
       border: 1px solid transparent;
       cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease, transform 0.20s var(--apple-spring);
+      transition: background 0.14s ease, border-color 0.14s ease;
     }
     .vpn-country-row:hover {
       background: var(--glass-hover-bg);
-      transform: translateX(2px);
+      border-color: rgba(255, 255, 255, 0.08);
     }
     .vpn-country-row.selected {
       background: rgba(176, 124, 255, 0.16);
@@ -930,9 +1013,10 @@
 </head>
 <body class="theme-dark">
   <img id="backdrop-img" alt="" style="display:none;">
+  <div id="overlay-glass-bg" class="overlay-glass-bg glass-card" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.024"></div>
 
   <!-- Mode 1: Ad-Shield Popover -->
-  <div id="mode-shield" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.025">
+  <div id="mode-shield" class="overlay-shell hidden">
     <div class="shield-box">
       <div class="popover-head">
         <div class="popover-title-row">
@@ -972,7 +1056,7 @@
   </div>
 
   <!-- Mode 2: Find-in-Page Pill -->
-  <div id="mode-find" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="12" data-lg-scale="14" data-lg-dome="0.02">
+  <div id="mode-find" class="overlay-shell hidden">
     <div class="find-box">
       <input id="find-q" type="text" placeholder="Find on page..." spellcheck="false" autocomplete="off">
       <button id="f-prev" class="icon-btn sm" title="Previous">
@@ -988,7 +1072,7 @@
   </div>
 
   <!-- Mode 3: Download Progress Toast -->
-  <div id="mode-download" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.025">
+  <div id="mode-download" class="overlay-shell hidden">
     <div class="dl-box">
       <div class="dl-head">
         <span id="dl-name" class="dl-name">Download</span>
@@ -1008,7 +1092,7 @@
   </div>
 
   <!-- Mode 4: Butterfly Profile Hub + 16-Avatar Editor + Auto-Updater -->
-  <div id="mode-profiles" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.025">
+  <div id="mode-profiles" class="overlay-shell hidden">
     <!-- List View -->
     <div id="prof-view-list" class="panel-box">
       <div class="panel-head">
@@ -1022,7 +1106,7 @@
       <div id="other-prof-list" class="panel-scroll"></div>
 
       <div class="prof-footer">
-        <div id="prof-ver-text" class="ver-info">dejavu v2.7.0</div>
+        <div id="prof-ver-text" class="ver-info">dejavu v2.8.0</div>
         <button id="btn-update-action" class="pill-btn">Check updates</button>
       </div>
     </div>
@@ -1052,7 +1136,7 @@
   </div>
 
   <!-- Mode 5: Browsing History Panel -->
-  <div id="mode-history" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.025">
+  <div id="mode-history" class="overlay-shell hidden">
     <div class="panel-box">
       <div class="panel-head">
         <div class="panel-title">
@@ -1072,7 +1156,7 @@
   </div>
 
   <!-- Mode 6: Automatic Update Ready Floating Toast -->
-  <div id="mode-update" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.025">
+  <div id="mode-update" class="overlay-shell hidden">
     <div class="upd-box">
       <div class="upd-top">
         <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
@@ -1089,7 +1173,7 @@
   </div>
 
   <!-- Mode 7: Safari Butterfly VPN Control Center -->
-  <div id="mode-vpn" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.025">
+  <div id="mode-vpn" class="overlay-shell hidden">
     <div class="panel-box vpn-panel-box">
       <div class="panel-head">
         <div class="panel-title">
@@ -1146,7 +1230,15 @@
         </div>
       </div>
 
-      <input id="vpn-search-input" class="hist-search" type="text" placeholder="Search 22 locations..." spellcheck="false" autocomplete="off">
+      <input id="vpn-search-input" class="hist-search" type="text" placeholder="Search 46 countries &amp; regions..." spellcheck="false" autocomplete="off">
+      <div id="vpn-region-tabs" class="vpn-region-tabs">
+        <button type="button" class="vpn-reg-pill active" data-reg="all">All (46)</button>
+        <button type="button" class="vpn-reg-pill" data-reg="fast">Fast</button>
+        <button type="button" class="vpn-reg-pill" data-reg="americas">Americas</button>
+        <button type="button" class="vpn-reg-pill" data-reg="europe">Europe</button>
+        <button type="button" class="vpn-reg-pill" data-reg="asia">Asia-Pacific</button>
+        <button type="button" class="vpn-reg-pill" data-reg="mea">MEA</button>
+      </div>
       <div id="vpn-country-list" class="panel-scroll"></div>
 
       <div class="vpn-footer">
@@ -1160,12 +1252,12 @@
   </div>
 
   <!-- Mode 8: Safari Grouped Floating Omnibox Autocomplete Suggestions -->
-  <div id="mode-suggest" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="12" data-lg-scale="14" data-lg-dome="0.02">
+  <div id="mode-suggest" class="overlay-shell hidden">
     <div id="suggest-list" class="suggest-box"></div>
   </div>
 
   <!-- Mode 9: Floating macOS Tahoe Liquid Glass Safari Sidebar -->
-  <div id="mode-sidebar" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.022">
+  <div id="mode-sidebar" class="overlay-shell hidden">
     <div class="sb-box">
       <div class="sb-head">
         <div class="sb-prof">
@@ -1240,7 +1332,7 @@
   </div>
 
   <!-- Mode 10: Authentic macOS Safari Share Sheet -->
-  <div id="mode-share" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.024">
+  <div id="mode-share" class="overlay-shell hidden">
     <div class="share-box">
       <div class="share-head">
         <div class="share-ico-wrap"><img id="share-fav" src="https://dejavu.local/logo-transparent.png" alt="" draggable="false"></div>
@@ -1285,7 +1377,7 @@
   </div>
 
   <!-- Mode 11: Authentic macOS Safari Downloads Popover -->
-  <div id="mode-downloads" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.024">
+  <div id="mode-downloads" class="overlay-shell hidden">
     <div class="panel-box">
       <div class="panel-head">
         <div class="panel-title">Downloads</div>
@@ -1301,11 +1393,15 @@
   </div>
 
   <!-- Mode 12: Native Floating Safari Right-Click Tab Context Menu (Never clips on webpages!) -->
-  <div id="mode-tabmenu" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="12" data-lg-scale="14" data-lg-dome="0.02">
+  <div id="mode-tabmenu" class="overlay-shell hidden">
     <div class="share-box" style="padding:7px;gap:2px;">
       <button type="button" class="share-item" data-tm="pin">
         <svg viewBox="0 0 16 16" fill="none"><path d="M9.8 2.8l3.4 3.4-1.4 1.4-.9-.4-2.5 2.5.4 1.8-1.2 1.2-2.2-2.2-2.6 2.6-.7-.7 2.6-2.6-2.2-2.2 1.2-1.2 1.8.4 2.5-2.5-.4-.9 1.4-1.4z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
         <span id="tm-pin-lbl">Pin Tab</span>
+      </button>
+      <button type="button" class="share-item" id="tm-mute-btn" data-tm="mute">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M3 6.4h2.4l3-2.6v8.4l-3-2.6H3V6.4z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M10.8 5.6a3.4 3.4 0 0 1 0 4.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span id="tm-mute-lbl">Mute Tab</span>
       </button>
       <button type="button" class="share-item" data-tm="duplicate">
         <svg viewBox="0 0 16 16" fill="none"><rect x="5.2" y="5.2" width="7.8" height="7.8" rx="1.8" stroke="currentColor" stroke-width="1.3"/><path d="M3 10.5V4.4A1.4 1.4 0 0 1 4.4 3h6.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -1330,6 +1426,7 @@
     window.LiquidGlass.init();
 
     const backdropImg = document.getElementById('backdrop-img');
+    const overlayGlassBg = document.getElementById('overlay-glass-bg');
     const modes = {
       shield: document.getElementById('mode-shield'),
       find: document.getElementById('mode-find'),
@@ -1533,7 +1630,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '2.7.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '2.8.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -1677,6 +1774,7 @@
       }
 
       Object.keys(modes).forEach((k) => modes[k].classList.toggle('hidden', d.mode !== k));
+      requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(overlayGlassBg));
 
       if (d.mode === 'shield') {
         popDot.classList.toggle('off', !d.activeForSite);
@@ -1694,12 +1792,8 @@
         segEngines.querySelectorAll('.seg-btn').forEach((b) => {
           b.classList.toggle('active', b.dataset.engine === d.searchEngine);
         });
-        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.shield));
       } else if (d.mode === 'find') {
-        requestAnimationFrame(() => {
-          window.LiquidGlass.updateElementGlass(modes.find);
-          findQ.focus(); findQ.select();
-        });
+        requestAnimationFrame(() => { findQ.focus(); findQ.select(); });
       } else if (d.mode === 'download') {
         document.getElementById('dl-name').textContent = d.filename || 'Download';
         const fill = document.getElementById('dl-fill');
@@ -1718,41 +1812,29 @@
           st.textContent = d.total > 0 ? `${formatBytes(d.received)} / ${formatBytes(d.total)}` : formatBytes(d.received);
           acts.classList.add('hidden');
         }
-        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.download));
       } else if (d.mode === 'profiles') {
         renderProfilesHub(d);
-        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.profiles));
       } else if (d.mode === 'history') {
         histProfBadge.textContent = d.profileName || 'Personal';
         allHistoryItems = Array.isArray(d.items) ? d.items : [];
         histSearchInput.value = '';
         renderHistoryItems();
-        requestAnimationFrame(() => {
-          window.LiquidGlass.updateElementGlass(modes.history);
-          histSearchInput.focus();
-        });
+        requestAnimationFrame(() => histSearchInput.focus());
       } else if (d.mode === 'update') {
         document.getElementById('upd-title').textContent = `dejavu v${d.version} is ready`;
         document.getElementById('upd-sub').textContent = `Updating from v${d.currentVersion} automatically`;
-        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.update));
       } else if (d.mode === 'vpn') {
         renderVpnPanel(d.vpn || {});
-        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.vpn));
       } else if (d.mode === 'suggest') {
         renderOmniboxSuggestions(d.items || [], typeof d.selectedIndex === 'number' ? d.selectedIndex : -1);
-        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.suggest));
       } else if (d.mode === 'sidebar') {
         renderSidebarPanel(d);
-        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.sidebar));
       } else if (d.mode === 'share') {
         renderSharePanel(d);
-        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.share));
       } else if (d.mode === 'downloads') {
         renderDownloadsPanel(d);
-        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.downloads));
       } else if (d.mode === 'tabmenu') {
         renderTabMenuPanel(d);
-        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.tabmenu));
       }
     });
 
@@ -1779,18 +1861,30 @@
     const vpnProgWrap = document.getElementById('vpn-prog-wrap');
     const vpnProgFill = document.getElementById('vpn-prog-fill');
     const vpnSearchInput = document.getElementById('vpn-search-input');
+    const vpnRegionTabs = document.getElementById('vpn-region-tabs');
     const vpnCountryList = document.getElementById('vpn-country-list');
     const btnVpnAutoConnect = document.getElementById('btn-vpn-autoconnect');
     const vpnProtocolNote = document.getElementById('vpn-protocol-note');
 
     let lastVpnSnap = null;
     let lastVpnListSig = '';
+    let vpnRegionFilter = 'all';
     let lastObservedExitIp = '';
     let wasBusyWhileRotating = false;
     let rotateFeedbackTimer = null;
 
     document.getElementById('btn-vpn-close').addEventListener('click', () => send({ type: 'closePanel' }));
     btnVpnToggle.addEventListener('click', () => send({ type: 'toggleVpn' }));
+
+    vpnRegionTabs.addEventListener('click', (e) => {
+      const pill = e.target.closest('.vpn-reg-pill');
+      if (!pill) return;
+      vpnRegionFilter = pill.dataset.reg || 'all';
+      vpnRegionTabs.querySelectorAll('.vpn-reg-pill').forEach((p) => p.classList.toggle('active', p === pill));
+      lastVpnListSig = '';
+      vpnCountryList.scrollTop = 0;
+      if (lastVpnSnap) renderVpnCountries(lastVpnSnap);
+    });
 
     btnVpnRotate.addEventListener('click', () => {
       if (btnVpnRotate.classList.contains('rotating')) return;
@@ -1881,26 +1975,44 @@
       renderVpnCountries(v);
     }
 
+    function matchesVpnRegion(c, reg) {
+      if (!reg || reg === 'all') return true;
+      if (reg === 'fast') return !!c.fast;
+      const r = (c.region || '').toLowerCase();
+      if (reg === 'americas') return r.includes('america');
+      if (reg === 'europe') return r.includes('europe');
+      if (reg === 'asia') return r.includes('asia');
+      if (reg === 'mea') return r.includes('middle east') || r.includes('africa');
+      return true;
+    }
+
     function renderVpnCountries(v) {
       const q = (vpnSearchInput.value || '').trim().toLowerCase();
       const list = Array.isArray(v.countries) ? v.countries : [];
       const curCode = (v.countryCode || 'AUTO').toUpperCase();
       const isConn = v.state === 'connected';
       const fastCount = list.reduce((acc, c) => acc + (c && c.fast ? 1 : 0), 0);
-      const sig = `${q}|${curCode}|${isConn ? 1 : 0}|${list.length}|${fastCount}`;
+      const sig = `${q}|${vpnRegionFilter}|${curCode}|${isConn ? 1 : 0}|${list.length}|${fastCount}`;
       if (sig === lastVpnListSig) return;
       lastVpnListSig = sig;
 
+      const allPill = vpnRegionTabs.querySelector('[data-reg="all"]');
+      if (allPill && list.length > 0) allPill.textContent = `All (${list.length})`;
+
+      const prevScroll = vpnCountryList.scrollTop;
       vpnCountryList.innerHTML = '';
-      const filtered = q
-        ? list.filter((c) => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || (c.region || '').toLowerCase().includes(q))
-        : list;
+      const filtered = list.filter((c) => {
+        if (!matchesVpnRegion(c, vpnRegionFilter)) return false;
+        if (!q) return true;
+        return c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || (c.region || '').toLowerCase().includes(q);
+      });
 
       if (filtered.length === 0) {
         vpnCountryList.innerHTML = '<div class="empty-msg">No matching locations</div>';
         return;
       }
 
+      const frag = document.createDocumentFragment();
       filtered.forEach((c) => {
         const isSel = c.code === curCode;
         const row = document.createElement('div');
@@ -1922,8 +2034,10 @@
           </span>
         `;
         row.addEventListener('click', () => send({ type: 'selectVpnCountry', code: c.code }));
-        vpnCountryList.appendChild(row);
+        frag.appendChild(row);
       });
+      vpnCountryList.appendChild(frag);
+      vpnCountryList.scrollTop = prevScroll;
     }
 
     // =========================================================================
@@ -2267,15 +2381,19 @@
     // Mode 12: Floating Safari Tab Context Menu
     // =========================================================================
     const tmPinLbl = document.getElementById('tm-pin-lbl');
+    const tmMuteBtn = document.getElementById('tm-mute-btn');
+    const tmMuteLbl = document.getElementById('tm-mute-lbl');
     let tmTabId = -1;
     modes.tabmenu.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-tm]');
-      if (!btn || tmTabId < 0) return;
+      if (!btn || btn.disabled || tmTabId < 0) return;
       send({ type: 'tabMenuAction', act: btn.dataset.tm, id: tmTabId });
     });
     function renderTabMenuPanel(d) {
       tmTabId = typeof d.tabId === 'number' ? d.tabId : -1;
       tmPinLbl.textContent = d.isPinned ? 'Unpin Tab' : 'Pin Tab';
+      tmMuteBtn.disabled = !!d.isNewTab;
+      tmMuteLbl.textContent = d.isMuted ? 'Unmute Tab' : 'Mute Tab';
     }
   </script>
 </body>

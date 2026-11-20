@@ -29,6 +29,7 @@
   const omniboxIcon = document.getElementById('omnibox-icon');
   const omniboxDomain = document.getElementById('omnibox-domain');
   const loadProgress = document.getElementById('load-progress');
+  const btnZoomPill = document.getElementById('btn-zoom-pill');
   const btnFavStar = document.getElementById('btn-fav-star');
   const btnShield = document.getElementById('btn-shield');
   const shieldCount = document.getElementById('shield-count');
@@ -106,10 +107,20 @@
 
   const WALLPAPER_CATALOG = [
     { id: 'art:wp-amethyst.jpg', cat: 'art', name: 'Amethyst Glasswing', desc: 'Crystalline violet & cyan wings', img: 'https://dejavu.local/wp-amethyst.jpg' },
+    { id: 'art:wp-aurora.jpg', cat: 'art', name: 'Aurora Glasswing', desc: 'Emerald northern lights & amethyst', img: 'https://dejavu.local/wp-aurora.jpg' },
+    { id: 'art:wp-celestial.jpg', cat: 'art', name: 'Celestial Sapphire', desc: 'Faceted cobalt morpho glass wings', img: 'https://dejavu.local/wp-celestial.jpg' },
+    { id: 'art:wp-rosequartz.jpg', cat: 'art', name: 'Rose Quartz Dusk', desc: 'Blush crystal & velvet twilight plum', img: 'https://dejavu.local/wp-rosequartz.jpg' },
+    { id: 'art:wp-arctic.jpg', cat: 'art', name: 'Arctic Diamond', desc: 'Glacial ice-crystal prism wings', img: 'https://dejavu.local/wp-arctic.jpg' },
+    { id: 'art:wp-nebula.jpg', cat: 'art', name: 'Amethyst Nebula', desc: 'Deep-space ultraviolet wing filaments', img: 'https://dejavu.local/wp-nebula.jpg' },
+    { id: 'art:wp-gilded.jpg', cat: 'art', name: 'Gilded Obsidian', desc: 'Smoked obsidian & champagne gold', img: 'https://dejavu.local/wp-gilded.jpg' },
     { id: 'art:wp-morpho.jpg', cat: 'art', name: 'Morpho Nocturne', desc: 'Iridescent sapphire butterfly arc', img: 'https://dejavu.local/wp-morpho.jpg' },
     { id: 'art:wp-monarch.jpg', cat: 'art', name: 'Monarch Eclipse', desc: 'Obsidian & molten amber gold', img: 'https://dejavu.local/wp-monarch.jpg' },
     { id: 'art:wp-sakura.jpg', cat: 'art', name: 'Sakura Glasswing', desc: 'Frosted pearl & pastel rose dusk', img: 'https://dejavu.local/wp-sakura.jpg' },
     { id: 'live:obsidian-prism', cat: 'live', name: 'Obsidian Prism', desc: 'Violet & cyan caustic ribbons', grad: 'radial-gradient(circle at 30% 35%, #5b31b8 0%, #160f2c 55%, #06050b 100%), linear-gradient(120deg, transparent 35%, rgba(118,212,255,0.45) 55%, transparent 75%)' },
+    { id: 'live:aurora-borealis', cat: 'live', name: 'Aurora Borealis', desc: 'Emerald, violet & arctic cyan waves', grad: 'radial-gradient(circle at 35% 35%, #16b8a0 0%, #1d1646 54%, #03060d 100%)' },
+    { id: 'live:crimson-velvet', cat: 'live', name: 'Crimson Velvet', desc: 'Deep ruby & rose gold silk', grad: 'radial-gradient(circle at 60% 32%, #c92c5f 0%, #2a0c1a 56%, #070306 100%)' },
+    { id: 'live:arctic-prism', cat: 'live', name: 'Arctic Prism', desc: 'Glacial diamond & silver-blue caustics', grad: 'radial-gradient(circle at 40% 34%, #5ca8f5 0%, #12213c 56%, #04070e 100%)' },
+    { id: 'live:midnight-gold', cat: 'live', name: 'Midnight Gold', desc: 'Royal obsidian & champagne gold', grad: 'radial-gradient(circle at 50% 34%, #d6a244 0%, #201712 56%, #060508 100%)' },
     { id: 'live:morpho-abyss', cat: 'live', name: 'Morpho Abyss', desc: 'Electric sapphire butterfly wings', grad: 'radial-gradient(circle at 65% 30%, #1d70e8 0%, #091736 56%, #03060f 100%)' },
     { id: 'live:velvet-monarch', cat: 'live', name: 'Velvet Monarch', desc: 'Molten amber & rose gold', grad: 'radial-gradient(circle at 35% 35%, #d96b27 0%, #2b1210 56%, #080506 100%)' },
     { id: 'live:sakura-chrysalis', cat: 'live', name: 'Sakura Chrysalis', desc: 'Twilight plum & pastel rose', grad: 'radial-gradient(circle at 60% 30%, #c95ea4 0%, #26112e 55%, #08050d 100%)' },
@@ -323,6 +334,7 @@
   btnReload.addEventListener('click', () => send({ type: 'reload' }));
   btnNewTab.addEventListener('click', () => send({ type: 'newTab' }));
   btnFavStar.addEventListener('click', () => send({ type: 'toggleFavorite' }));
+  if (btnZoomPill) btnZoomPill.addEventListener('click', () => send({ type: 'resetZoom' }));
   btnReader.addEventListener('click', () => send({ type: 'toggleReaderMode' }));
   btnTabOverview.addEventListener('click', () => send({ type: 'toggleTabOverview', open: !state.tabOverviewOpen }));
 
@@ -1038,9 +1050,10 @@
   });
 
   // =========================================================================
-  // Authentic Safari Tabs (Pinned + Equal-Width Flex + Left '×' + GPU Glide)
+  // Authentic Safari Tabs (Pinned + Equal-Width Flex + Left '×' + Audio Mute + GPU Glide)
   // =========================================================================
   const tabEls = new Map();
+  const closingTabIds = new Set();
 
   function updateActiveTabGlide(activeId) {
     if (!activeTabGlide) return;
@@ -1073,6 +1086,7 @@
   }
 
   function requestCloseTab(tabId, el) {
+    if (closingTabIds.has(tabId)) return;
     if ((state.tabs || []).length <= 1) {
       el.classList.remove('closing');
       el.classList.remove('reset-pulse');
@@ -1081,8 +1095,12 @@
       send({ type: 'closeTab', id: tabId });
       return;
     }
+    closingTabIds.add(tabId);
     el.classList.add('closing');
-    setTimeout(() => send({ type: 'closeTab', id: tabId }), 175);
+    setTimeout(() => {
+      send({ type: 'closeTab', id: tabId });
+      setTimeout(() => closingTabIds.delete(tabId), 260);
+    }, 110);
   }
 
   function syncTabs(tabs, activeId) {
@@ -1091,10 +1109,11 @@
       if (!alive.has(id)) {
         el.remove();
         tabEls.delete(id);
+        closingTabIds.delete(id);
       }
     }
 
-    tabs.forEach((tab) => {
+    tabs.forEach((tab, idx) => {
       let el = tabEls.get(tab.id);
       const isNew = !el;
       if (!el) {
@@ -1106,20 +1125,42 @@
         el.setAttribute('data-lg-bezel', '9');
         el.setAttribute('data-lg-scale', '12');
         el.innerHTML = `
-          <button class="tab-close" title="Close tab (Ctrl+W)" aria-label="Close tab">
-            <svg viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <button type="button" class="tab-close" title="Close tab (Ctrl+W)" aria-label="Close tab">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           </button>
           <span class="tab-content">
             <span class="tab-spinner hidden"></span>
             <img class="tab-favicon" alt="" draggable="false">
             <span class="tab-title"></span>
           </span>
+          <button type="button" class="tab-audio-btn hidden" title="Mute tab (Ctrl+M)" aria-label="Toggle tab audio">
+            <svg class="ico-vol-on" viewBox="0 0 16 16" fill="none"><path d="M3 6.4h2.4l3-2.6v8.4l-3-2.6H3V6.4z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M10.8 5.6a3.4 3.4 0 0 1 0 4.8M12.5 4a5.6 5.6 0 0 1 0 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <svg class="ico-vol-off hidden" viewBox="0 0 16 16" fill="none"><path d="M3 6.4h2.4l3-2.6v8.4l-3-2.6H3V6.4z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M10.6 6.2l3.2 3.6M13.8 6.2l-3.2 3.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </button>
         `;
+
+        const closeBtn = el.querySelector('.tab-close');
+        closeBtn.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        });
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          requestCloseTab(tab.id, el);
+        });
+
+        const audioBtn = el.querySelector('.tab-audio-btn');
+        audioBtn.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        });
+        audioBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          send({ type: 'toggleTabMute', id: tab.id });
+        });
+
         el.addEventListener('click', (e) => {
-          if (e.target.closest('.tab-close')) {
-            requestCloseTab(tab.id, el);
-            return;
-          }
+          if (e.target.closest('.tab-close') || e.target.closest('.tab-audio-btn')) return;
           send({ type: 'activateTab', id: tab.id });
         });
         el.addEventListener('auxclick', (e) => {
@@ -1136,11 +1177,17 @@
         tabsStrip.appendChild(el);
         tabEls.set(tab.id, el);
       } else {
-        // Keep DOM order matched to backend sort order (pinned tabs smoothly move to far left!)
-        tabsStrip.appendChild(el);
+        // CRITICAL: Only move DOM node if order ACTUALLY changed (e.g. pin/unpin)!
+        // Unconditional appendChild detaches the tab mid-click and kills hover/close clicks!
+        const desiredAt = tabsStrip.children[idx + 1]; // index 0 is #active-tab-glide
+        if (el !== desiredAt) {
+          tabsStrip.insertBefore(el, desiredAt || null);
+        }
       }
 
-      el.classList.remove('closing');
+      if (!closingTabIds.has(tab.id)) {
+        el.classList.remove('closing');
+      }
       el.classList.toggle('pinned', !!tab.isPinned);
 
       const wasActive = el.classList.contains('active');
@@ -1151,12 +1198,20 @@
       const spinner = el.querySelector('.tab-spinner');
       const fav = el.querySelector('.tab-favicon');
       const titleEl = el.querySelector('.tab-title');
+      const audioBtn = el.querySelector('.tab-audio-btn');
 
       spinner.classList.toggle('hidden', !tab.loading);
       fav.classList.toggle('hidden', !!tab.loading);
       const favSrc = tab.favicon || 'https://dejavu.local/logo-transparent.png';
       if (fav.getAttribute('src') !== favSrc) fav.setAttribute('src', favSrc);
       titleEl.textContent = tab.title || 'Start Page';
+
+      const showAudio = !tab.isNewTab && !tab.isPinned && (tab.isAudible || tab.isMuted);
+      audioBtn.classList.toggle('hidden', !showAudio);
+      audioBtn.classList.toggle('muted', !!tab.isMuted);
+      audioBtn.title = tab.isMuted ? 'Unmute tab (Ctrl+M)' : 'Mute tab (Ctrl+M)';
+      audioBtn.querySelector('.ico-vol-on').classList.toggle('hidden', !!tab.isMuted);
+      audioBtn.querySelector('.ico-vol-off').classList.toggle('hidden', !tab.isMuted);
 
       if ((isNew || (!wasActive && nowActive)) && nowActive) {
         requestAnimationFrame(() => {
@@ -1193,7 +1248,7 @@
     if (!vpn) {
       newtabVpnChip.classList.remove('connected', 'connecting');
       newtabVpnText.textContent = 'VPN: Off';
-      if (newtabVpnSub) newtabVpnSub.textContent = '22 encrypted locations';
+      if (newtabVpnSub) newtabVpnSub.textContent = '46 encrypted locations';
       return;
     }
     const vst = vpn.state || 'disconnected';
@@ -1212,7 +1267,7 @@
       if (newtabVpnSub) newtabVpnSub.textContent = vpn.statusText || 'Building encrypted tunnel';
     } else {
       newtabVpnText.textContent = 'VPN: Off';
-      if (newtabVpnSub) newtabVpnSub.textContent = '22 encrypted locations';
+      if (newtabVpnSub) newtabVpnSub.textContent = '46 encrypted locations';
     }
   }
 
@@ -1351,6 +1406,12 @@
     btnFavStar.classList.toggle('hidden', onNewTab);
     btnFavStar.classList.toggle('starred', !!next.isCurrentFavorite);
     btnFavStar.title = next.isCurrentFavorite ? 'Remove from Favorites Bar (Ctrl+D)' : 'Pin to Favorites Bar (Ctrl+D)';
+
+    if (btnZoomPill) {
+      const zp = (!onNewTab && active && active.zoomPercent) ? active.zoomPercent : 100;
+      btnZoomPill.classList.toggle('hidden', zp === 100);
+      if (zp !== 100) btnZoomPill.textContent = `${zp}%`;
+    }
 
     btnReader.classList.toggle('hidden', onNewTab);
     btnReader.classList.toggle('active', !!next.readerActive);

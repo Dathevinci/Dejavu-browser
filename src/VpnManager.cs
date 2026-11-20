@@ -57,27 +57,56 @@ namespace DejavuBrowser
         private static readonly List<VpnCountryOption> CountryCatalog = new List<VpnCountryOption>
         {
             new VpnCountryOption { code = "AUTO", name = "Fastest Location", region = "Optimal Global", fast = true },
+            // North America
             new VpnCountryOption { code = "US", name = "United States", region = "North America", fast = true },
+            new VpnCountryOption { code = "CA", name = "Canada", region = "North America", fast = true },
+            new VpnCountryOption { code = "MX", name = "Mexico", region = "North America", fast = false },
+            // Europe (High-Capacity + Broad Coverage)
             new VpnCountryOption { code = "GB", name = "United Kingdom", region = "Europe", fast = true },
             new VpnCountryOption { code = "DE", name = "Germany", region = "Europe", fast = true },
             new VpnCountryOption { code = "NL", name = "Netherlands", region = "Europe", fast = true },
             new VpnCountryOption { code = "FR", name = "France", region = "Europe", fast = true },
-            new VpnCountryOption { code = "CA", name = "Canada", region = "North America", fast = false },
             new VpnCountryOption { code = "CH", name = "Switzerland", region = "Europe", fast = true },
             new VpnCountryOption { code = "SE", name = "Sweden", region = "Europe", fast = true },
-            new VpnCountryOption { code = "SG", name = "Singapore", region = "Asia-Pacific", fast = true },
-            new VpnCountryOption { code = "JP", name = "Japan", region = "Asia-Pacific", fast = false },
-            new VpnCountryOption { code = "AU", name = "Australia", region = "Asia-Pacific", fast = false },
+            new VpnCountryOption { code = "NO", name = "Norway", region = "Europe", fast = true },
+            new VpnCountryOption { code = "FI", name = "Finland", region = "Europe", fast = true },
+            new VpnCountryOption { code = "DK", name = "Denmark", region = "Europe", fast = true },
+            new VpnCountryOption { code = "IE", name = "Ireland", region = "Europe", fast = true },
+            new VpnCountryOption { code = "AT", name = "Austria", region = "Europe", fast = true },
+            new VpnCountryOption { code = "BE", name = "Belgium", region = "Europe", fast = true },
+            new VpnCountryOption { code = "LU", name = "Luxembourg", region = "Europe", fast = true },
             new VpnCountryOption { code = "IT", name = "Italy", region = "Europe", fast = true },
             new VpnCountryOption { code = "ES", name = "Spain", region = "Europe", fast = false },
-            new VpnCountryOption { code = "IN", name = "India", region = "Asia-Pacific", fast = false },
-            new VpnCountryOption { code = "KR", name = "South Korea", region = "Asia-Pacific", fast = false },
-            new VpnCountryOption { code = "NO", name = "Norway", region = "Europe", fast = true },
-            new VpnCountryOption { code = "AT", name = "Austria", region = "Europe", fast = true },
-            new VpnCountryOption { code = "FI", name = "Finland", region = "Europe", fast = true },
+            new VpnCountryOption { code = "PT", name = "Portugal", region = "Europe", fast = false },
             new VpnCountryOption { code = "PL", name = "Poland", region = "Europe", fast = true },
+            new VpnCountryOption { code = "CZ", name = "Czech Republic", region = "Europe", fast = true },
             new VpnCountryOption { code = "RO", name = "Romania", region = "Europe", fast = true },
-            new VpnCountryOption { code = "HK", name = "Hong Kong", region = "Asia-Pacific", fast = false }
+            new VpnCountryOption { code = "HU", name = "Hungary", region = "Europe", fast = false },
+            new VpnCountryOption { code = "BG", name = "Bulgaria", region = "Europe", fast = true },
+            new VpnCountryOption { code = "GR", name = "Greece", region = "Europe", fast = false },
+            new VpnCountryOption { code = "IS", name = "Iceland", region = "Europe", fast = true },
+            new VpnCountryOption { code = "UA", name = "Ukraine", region = "Europe", fast = false },
+            // Asia-Pacific
+            new VpnCountryOption { code = "SG", name = "Singapore", region = "Asia-Pacific", fast = true },
+            new VpnCountryOption { code = "JP", name = "Japan", region = "Asia-Pacific", fast = true },
+            new VpnCountryOption { code = "KR", name = "South Korea", region = "Asia-Pacific", fast = false },
+            new VpnCountryOption { code = "AU", name = "Australia", region = "Asia-Pacific", fast = true },
+            new VpnCountryOption { code = "NZ", name = "New Zealand", region = "Asia-Pacific", fast = false },
+            new VpnCountryOption { code = "IN", name = "India", region = "Asia-Pacific", fast = false },
+            new VpnCountryOption { code = "HK", name = "Hong Kong", region = "Asia-Pacific", fast = false },
+            new VpnCountryOption { code = "TW", name = "Taiwan", region = "Asia-Pacific", fast = false },
+            new VpnCountryOption { code = "MY", name = "Malaysia", region = "Asia-Pacific", fast = false },
+            new VpnCountryOption { code = "TH", name = "Thailand", region = "Asia-Pacific", fast = false },
+            new VpnCountryOption { code = "ID", name = "Indonesia", region = "Asia-Pacific", fast = false },
+            // South America
+            new VpnCountryOption { code = "BR", name = "Brazil", region = "South America", fast = false },
+            new VpnCountryOption { code = "AR", name = "Argentina", region = "South America", fast = false },
+            new VpnCountryOption { code = "CL", name = "Chile", region = "South America", fast = false },
+            new VpnCountryOption { code = "CO", name = "Colombia", region = "South America", fast = false },
+            // Middle East & Africa
+            new VpnCountryOption { code = "AE", name = "United Arab Emirates", region = "Middle East & Africa", fast = false },
+            new VpnCountryOption { code = "IL", name = "Israel", region = "Middle East & Africa", fast = false },
+            new VpnCountryOption { code = "ZA", name = "South Africa", region = "Middle East & Africa", fast = false }
         };
 
         private readonly LocalProxyBridge _bridge;

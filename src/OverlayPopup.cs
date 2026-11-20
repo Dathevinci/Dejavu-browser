@@ -199,6 +199,7 @@ namespace DejavuBrowser
                 {
                     Show();
                     Activate();
+                    try { _wv.Focus(); } catch { }
                 }
                 else
                 {
@@ -225,6 +226,7 @@ namespace DejavuBrowser
             {
                 NativeWin32.SetForegroundWindow(Handle);
                 Activate();
+                try { _wv.Focus(); } catch { }
             }
         }
 

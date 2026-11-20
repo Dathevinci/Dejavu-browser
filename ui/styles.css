@@ -466,6 +466,7 @@ body.tab-overview-open .tabbar-row {
   height: 28px;
   border-radius: 999px;
   border: none;
+  outline: none;
   background: transparent;
   color: var(--ink);
   display: inline-flex;
@@ -473,6 +474,10 @@ body.tab-overview-open .tabbar-row {
   justify-content: center;
   cursor: pointer;
   transition: background 0.16s ease, transform 0.24s var(--apple-spring), opacity 0.16s ease, color 0.16s ease;
+}
+
+.icon-btn:focus-visible {
+  box-shadow: 0 0 0 2px rgba(182, 136, 255, 0.55);
 }
 
 .icon-btn svg {
@@ -861,6 +866,32 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) #omnibox-input::selecti
   box-shadow: 0 0 12px rgba(176, 124, 255, 0.50);
 }
 
+/* Safari Tucked Zoom Pill inside Smart Search Field */
+.omnibox-zoom-pill {
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(196, 162, 255, 0.34);
+  background: rgba(176, 124, 255, 0.18);
+  color: var(--accent-bright);
+  font-family: inherit;
+  font-size: 10.6px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.16s ease, transform 0.22s var(--apple-spring);
+}
+
+.omnibox-zoom-pill:hover {
+  background: rgba(176, 124, 255, 0.30);
+  transform: scale(1.05);
+}
+
+.omnibox-zoom-pill:active {
+  transform: scale(0.92);
+}
+
 /* Safari Tucked Reload/Stop Button inside Smart Search Field */
 .omnibox-reload-btn {
   width: 26px;
@@ -1010,21 +1041,21 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) #active-tab-glide {
   z-index: 1;
   height: 30px;
   flex: 1 1 0;
-  min-width: 108px;
+  min-width: 110px;
   max-width: none;
-  padding: 0 26px;
+  padding: 0 30px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: var(--ink-muted);
-  background: rgba(255, 255, 255, 0.038);
-  border: 1px solid rgba(255, 255, 255, 0.065);
+  background: rgba(255, 255, 255, 0.032);
+  border: 1px solid rgba(255, 255, 255, 0.055);
   box-shadow: none;
-  --spec-opacity: 0.14;
-  opacity: 0.84;
-  animation: tabBloom 0.34s var(--apple-spring);
+  --spec-opacity: 0.12;
+  opacity: 0.86;
+  animation: tabBloom 0.28s var(--apple-spring);
 }
 
 /* Safari Compact Pinned Tab (Favicon-Only on Far Left!) */
@@ -1037,7 +1068,8 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) #active-tab-glide {
 }
 
 .tab-pill.pinned .tab-title,
-.tab-pill.pinned .tab-close {
+.tab-pill.pinned .tab-close,
+.tab-pill.pinned .tab-audio-btn {
   display: none !important;
 }
 
@@ -1102,9 +1134,9 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill:hover:not(.ac
   border-color: rgba(24, 18, 52, 0.11);
 }
 
-.tab-pill:active {
-  transform: scale(0.97);
-  transition-duration: 0.09s;
+.tab-pill:active:not(:has(.tab-close:active)):not(:has(.tab-audio-btn:active)) {
+  filter: brightness(0.94);
+  transition-duration: 0.08s;
   transition-timing-function: var(--apple-press);
 }
 
@@ -1163,14 +1195,14 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill:hover:not(.ac
   text-overflow: ellipsis;
 }
 
-/* Authentic Safari LEFT-SIDE hover close button (never shifts centered title!) */
+/* Authentic Safari LEFT-SIDE close button — ALWAYS accessible on active tab + instant on hover! */
 .tab-close {
   position: absolute !important;
   left: 6px;
   top: 50%;
-  transform: translateY(-50%) scale(0.84);
-  width: 17px;
-  height: 17px;
+  transform: translateY(-50%) scale(0.90);
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   border: none;
   background: transparent;
@@ -1181,25 +1213,76 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill:hover:not(.ac
   cursor: pointer;
   opacity: 0;
   pointer-events: none;
-  z-index: 4 !important;
-  transition: opacity 0.14s ease, transform 0.22s var(--apple-spring), background 0.14s ease, color 0.14s ease;
+  z-index: 6 !important;
+  transition: opacity 0.14s ease, transform 0.20s var(--apple-spring), background 0.14s ease, color 0.14s ease;
+}
+
+.tab-pill.active .tab-close {
+  opacity: 0.64;
+  transform: translateY(-50%) scale(1);
+  pointer-events: auto;
 }
 
 .tab-pill:hover .tab-close {
-  opacity: 0.80;
+  opacity: 0.90;
   transform: translateY(-50%) scale(1);
   pointer-events: auto;
 }
 
 .tab-close:hover {
   opacity: 1 !important;
-  background: var(--glass-hover-bg);
+  background: rgba(255, 255, 255, 0.16);
   color: var(--ink);
+  transform: translateY(-50%) scale(1.06);
+}
+
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-close:hover {
+  background: rgba(24, 18, 52, 0.11);
+}
+
+.tab-close:active {
+  transform: translateY(-50%) scale(0.88);
 }
 
 .tab-close svg {
-  width: 10px;
-  height: 10px;
+  width: 10.5px;
+  height: 10.5px;
+  pointer-events: none;
+}
+
+/* Authentic Safari Right-Side Audio Playing / Click-to-Mute Speaker Button */
+.tab-audio-btn {
+  position: absolute !important;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--accent-bright);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 6 !important;
+  transition: background 0.14s ease, color 0.14s ease, transform 0.20s var(--apple-spring);
+}
+
+.tab-audio-btn:hover {
+  background: var(--glass-hover-bg);
+  transform: translateY(-50%) scale(1.10);
+}
+
+.tab-audio-btn.muted {
+  color: var(--ink-muted);
+}
+
+.tab-audio-btn svg {
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
 }
 
 /* Clean '+' New Tab Button at Right End of Tab Bar */
@@ -2486,9 +2569,20 @@ body.on-newtab:not(.tab-overview-open) #newtab-view {
   align-content: start;
   gap: 12px;
   overflow-y: auto;
-  padding: 2px 2px 6px;
+  overscroll-behavior: contain;
+  padding: 2px 4px 6px 2px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(196, 158, 255, 0.32) transparent;
+  scrollbar-color: rgba(196, 158, 255, 0.36) transparent;
+}
+
+.wallpaper-grid::-webkit-scrollbar { width: 6px; }
+.wallpaper-grid::-webkit-scrollbar-track { background: transparent; }
+.wallpaper-grid::-webkit-scrollbar-thumb {
+  background: rgba(196, 158, 255, 0.34);
+  border-radius: 999px;
+}
+.wallpaper-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 184, 255, 0.56);
 }
 
 .wp-card {

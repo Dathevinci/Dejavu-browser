@@ -101,6 +101,70 @@
         { amp: 0.17, freq: 1.12, speed: -0.18, yBase: 0.62, width: 2.2, color: 'rgba(232, 186, 255, 0.58)', glow: 'rgba(186, 120, 255, 0.24)', phase: 3.1 }
       ],
       motes: ['#caa0ff', '#e8c4ff', '#9c78ff']
+    },
+    'live:aurora-borealis': {
+      name: 'Aurora Borealis',
+      subtitle: 'Emerald, violet & arctic cyan waves',
+      bg0: '#0a2232', bg1: '#071022', bg2: '#03060d',
+      dotColor: 'rgba(120, 236, 224, 0.085)',
+      ringA: 'rgba(94, 234, 212, 0.24)', ringB: 'rgba(176, 124, 255, 0.20)',
+      butterflyColor: 'rgba(94, 234, 212, 0.20)',
+      butterflyEdge: 'rgba(182, 255, 244, 0.64)',
+      butterflyMode: 'glow',
+      ribbons: [
+        { amp: 0.17, freq: 1.22, speed: 0.25, yBase: 0.26, width: 2.5, color: 'rgba(94, 234, 212, 0.78)', glow: 'rgba(45, 212, 191, 0.30)', phase: 0.3 },
+        { amp: 0.19, freq: 1.02, speed: -0.18, yBase: 0.48, width: 2.6, color: 'rgba(182, 136, 255, 0.66)', glow: 'rgba(140, 88, 255, 0.26)', phase: 2.0 },
+        { amp: 0.14, freq: 1.56, speed: 0.28, yBase: 0.68, width: 2.0, color: 'rgba(116, 216, 255, 0.58)', glow: 'rgba(56, 189, 248, 0.22)', phase: 4.0 }
+      ],
+      motes: ['#5eead4', '#c49bff', '#7dd3fc']
+    },
+    'live:crimson-velvet': {
+      name: 'Crimson Velvet',
+      subtitle: 'Deep ruby & rose gold silk',
+      bg0: '#2b0d1b', bg1: '#150710', bg2: '#070306',
+      dotColor: 'rgba(255, 148, 178, 0.08)',
+      ringA: 'rgba(255, 118, 152, 0.22)', ringB: 'rgba(255, 188, 156, 0.17)',
+      butterflyColor: 'rgba(244, 92, 134, 0.22)',
+      butterflyEdge: 'rgba(255, 198, 214, 0.60)',
+      butterflyMode: 'glow',
+      ribbons: [
+        { amp: 0.16, freq: 1.30, speed: 0.22, yBase: 0.29, width: 2.4, color: 'rgba(255, 122, 156, 0.76)', glow: 'rgba(225, 48, 102, 0.30)', phase: 0.6 },
+        { amp: 0.19, freq: 1.04, speed: -0.17, yBase: 0.52, width: 2.6, color: 'rgba(255, 194, 162, 0.62)', glow: 'rgba(232, 136, 108, 0.24)', phase: 2.4 },
+        { amp: 0.13, freq: 1.62, speed: 0.27, yBase: 0.72, width: 1.9, color: 'rgba(255, 164, 210, 0.54)', glow: 'rgba(218, 86, 154, 0.20)', phase: 4.5 }
+      ],
+      motes: ['#ff7a9c', '#ffc2a2', '#ffa6d4']
+    },
+    'live:arctic-prism': {
+      name: 'Arctic Prism',
+      subtitle: 'Glacial diamond & silver-blue caustics',
+      bg0: '#0f1c32', bg1: '#091120', bg2: '#04070e',
+      dotColor: 'rgba(206, 232, 255, 0.085)',
+      ringA: 'rgba(186, 224, 255, 0.24)', ringB: 'rgba(196, 174, 255, 0.18)',
+      butterflyColor: 'rgba(176, 218, 255, 0.20)',
+      butterflyEdge: 'rgba(232, 246, 255, 0.66)',
+      butterflyMode: 'outline',
+      ribbons: [
+        { amp: 0.15, freq: 1.36, speed: 0.20, yBase: 0.28, width: 2.2, color: 'rgba(204, 234, 255, 0.76)', glow: 'rgba(116, 186, 255, 0.28)', phase: 1.0 },
+        { amp: 0.18, freq: 0.98, speed: -0.16, yBase: 0.50, width: 2.5, color: 'rgba(196, 176, 255, 0.62)', glow: 'rgba(148, 122, 248, 0.22)', phase: 2.9 },
+        { amp: 0.14, freq: 1.54, speed: 0.24, yBase: 0.71, width: 1.9, color: 'rgba(164, 242, 255, 0.56)', glow: 'rgba(84, 204, 240, 0.20)', phase: 4.7 }
+      ],
+      motes: ['#d6eeff', '#c9b4ff', '#a2f0ff']
+    },
+    'live:midnight-gold': {
+      name: 'Midnight Gold',
+      subtitle: 'Royal obsidian & champagne gold',
+      bg0: '#1f1812', bg1: '#100d10', bg2: '#060508',
+      dotColor: 'rgba(248, 214, 146, 0.08)',
+      ringA: 'rgba(246, 206, 126, 0.22)', ringB: 'rgba(188, 146, 255, 0.16)',
+      butterflyColor: 'rgba(242, 198, 114, 0.20)',
+      butterflyEdge: 'rgba(255, 232, 178, 0.64)',
+      butterflyMode: 'glow',
+      ribbons: [
+        { amp: 0.15, freq: 1.26, speed: 0.21, yBase: 0.30, width: 2.3, color: 'rgba(252, 214, 134, 0.76)', glow: 'rgba(224, 166, 62, 0.28)', phase: 0.8 },
+        { amp: 0.18, freq: 1.02, speed: -0.18, yBase: 0.52, width: 2.5, color: 'rgba(202, 164, 255, 0.54)', glow: 'rgba(146, 102, 238, 0.22)', phase: 2.6 },
+        { amp: 0.13, freq: 1.60, speed: 0.25, yBase: 0.71, width: 1.9, color: 'rgba(255, 236, 190, 0.56)', glow: 'rgba(218, 178, 98, 0.20)', phase: 4.4 }
+      ],
+      motes: ['#fcd88a', '#e8d0ff', '#fff0c4']
     }
   };
 

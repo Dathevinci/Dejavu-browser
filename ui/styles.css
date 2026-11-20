@@ -20,83 +20,83 @@
   --spring-soft: var(--apple-fluid);
   --font-sans: 'Segoe UI Variable Display', 'Segoe UI Variable', 'SF Pro Display', 'Inter', system-ui, -apple-system, sans-serif;
 
-  /* Dark Liquid Glass tokens */
-  --ink: rgba(248, 246, 255, 0.96);
-  --ink-muted: rgba(226, 218, 255, 0.62);
-  --ink-subtle: rgba(210, 198, 250, 0.38);
+  /* Calm, Eye-Pleasing Smoked Obsidian Liquid Glass tokens */
+  --ink: rgba(246, 244, 255, 0.96);
+  --ink-muted: rgba(212, 206, 236, 0.66);
+  --ink-subtle: rgba(196, 188, 226, 0.42);
 
   --glass-tint: linear-gradient(
-    155deg,
-    rgba(255, 255, 255, 0.14) 0%,
-    rgba(194, 168, 255, 0.055) 48%,
-    rgba(16, 13, 28, 0.28) 100%
+    165deg,
+    rgba(28, 24, 44, 0.62) 0%,
+    rgba(18, 15, 31, 0.68) 54%,
+    rgba(12, 10, 22, 0.74) 100%
   );
   --glass-tint-strong: radial-gradient(
-    ellipse 90% 86% at 50% 50%,
-    rgba(14, 11, 25, 0.92) 0%,
-    rgba(18, 14, 34, 0.84) 76%,
-    rgba(34, 28, 58, 0.34) 100%
+    ellipse 92% 88% at 50% 50%,
+    rgba(13, 11, 24, 0.94) 0%,
+    rgba(17, 14, 32, 0.88) 78%,
+    rgba(30, 25, 52, 0.48) 100%
   );
   --glass-tint-active: linear-gradient(
-    155deg,
-    rgba(255, 255, 255, 0.21) 0%,
-    rgba(182, 140, 255, 0.12) 52%,
-    rgba(22, 18, 40, 0.32) 100%
+    160deg,
+    rgba(42, 34, 68, 0.76) 0%,
+    rgba(24, 20, 42, 0.80) 58%,
+    rgba(17, 14, 32, 0.84) 100%
   );
-  --glass-border: rgba(255, 255, 255, 0.24);
+  --glass-border: rgba(255, 255, 255, 0.14);
   --glass-shadow:
-    0 10px 30px -6px rgba(0, 0, 0, 0.52),
-    0 2px 8px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -1px 0 rgba(178, 138, 255, 0.18);
-  --glass-hover-bg: rgba(255, 255, 255, 0.11);
+    0 8px 24px -6px rgba(0, 0, 0, 0.48),
+    0 2px 6px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(178, 138, 255, 0.10);
+  --glass-hover-bg: rgba(255, 255, 255, 0.09);
   --accent: #b688ff;
   --accent-bright: #d4b8ff;
-  --accent-glow: rgba(176, 124, 255, 0.36);
+  --accent-glow: rgba(176, 124, 255, 0.30);
   --shield-on: #9e7cff;
   --shield-green: #5eead4;
   --danger: #ff6b8b;
-  --spec-opacity: 0.92;
-  --caustic-spot: rgba(235, 222, 255, 0.18);
+  --spec-opacity: 0.62;
+  --caustic-spot: rgba(220, 204, 255, 0.11);
 }
 
 /* Adaptive Light Polarity when browsing bright light webpages */
 body.theme-light:not(.on-newtab) {
   --ink: rgba(16, 14, 26, 0.94);
-  --ink-muted: rgba(28, 24, 46, 0.62);
-  --ink-subtle: rgba(34, 30, 56, 0.38);
+  --ink-muted: rgba(34, 30, 52, 0.62);
+  --ink-subtle: rgba(44, 38, 66, 0.40);
 
   --glass-tint: linear-gradient(
-    155deg,
-    rgba(255, 255, 255, 0.52) 0%,
-    rgba(244, 240, 255, 0.34) 55%,
-    rgba(226, 220, 246, 0.42) 100%
+    165deg,
+    rgba(255, 255, 255, 0.78) 0%,
+    rgba(247, 245, 253, 0.72) 55%,
+    rgba(238, 234, 248, 0.76) 100%
   );
   --glass-tint-strong: radial-gradient(
-    ellipse 90% 86% at 50% 50%,
-    rgba(253, 251, 255, 0.95) 0%,
-    rgba(247, 244, 255, 0.88) 76%,
-    rgba(255, 255, 255, 0.34) 100%
+    ellipse 92% 88% at 50% 50%,
+    rgba(253, 252, 255, 0.96) 0%,
+    rgba(247, 245, 253, 0.92) 78%,
+    rgba(255, 255, 255, 0.56) 100%
   );
   --glass-tint-active: linear-gradient(
-    155deg,
-    rgba(255, 255, 255, 0.72) 0%,
-    rgba(232, 222, 255, 0.48) 100%
+    160deg,
+    rgba(255, 255, 255, 0.94) 0%,
+    rgba(242, 237, 255, 0.88) 100%
   );
-  --glass-border: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(24, 18, 52, 0.13);
   --glass-shadow:
-    0 10px 28px -8px rgba(18, 12, 42, 0.18),
-    0 2px 6px rgba(18, 12, 42, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    inset 0 -1px 0 rgba(120, 96, 210, 0.18);
-  --glass-hover-bg: rgba(24, 18, 52, 0.08);
+    0 8px 22px -8px rgba(18, 12, 42, 0.14),
+    0 2px 5px rgba(18, 12, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    inset 0 -1px 0 rgba(120, 96, 210, 0.10);
+  --glass-hover-bg: rgba(24, 18, 52, 0.06);
   --accent: #7c4dff;
   --accent-bright: #6435e8;
-  --accent-glow: rgba(124, 77, 255, 0.22);
+  --accent-glow: rgba(124, 77, 255, 0.20);
   --shield-on: #7c4dff;
   --shield-green: #0d9488;
-  --spec-opacity: 0.95;
-  --caustic-spot: rgba(255, 255, 255, 0.42);
+  --spec-opacity: 0.55;
+  --caustic-spot: rgba(255, 255, 255, 0.28);
 }
 
 * {
@@ -334,6 +334,7 @@ body.is-fullscreen #top-backdrop-wrap {
   width: 32px;
   height: 32px;
   padding: 0;
+  background: radial-gradient(circle at 42% 38%, rgba(36, 26, 62, 0.86), rgba(12, 10, 22, 0.90));
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -345,7 +346,7 @@ body.is-fullscreen #top-backdrop-wrap {
   width: 22px;
   height: 22px;
   object-fit: contain;
-  filter: drop-shadow(0 0 8px rgba(176, 124, 255, 0.6));
+  filter: drop-shadow(0 0 6px rgba(190, 148, 255, 0.78));
   transition: transform 0.28s var(--spring);
 }
 
@@ -449,24 +450,40 @@ body.is-fullscreen #top-backdrop-wrap {
   flex: 1 1 560px;
   max-width: 720px;
   min-width: 240px;
-  padding: 0 4px 0 12px;
+  padding: 0 4px 0 13px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   overflow: hidden;
+  background: linear-gradient(180deg, rgba(16, 14, 28, 0.76) 0%, rgba(12, 11, 22, 0.82) 100%);
+  --spec-opacity: 0.42;
   transition:
-    border-color 0.22s ease,
-    box-shadow 0.24s ease,
+    background 0.2s var(--apple-fluid),
+    border-color 0.2s var(--apple-fluid),
+    box-shadow 0.22s var(--apple-fluid),
     transform 0.28s var(--spring);
 }
 
+body.theme-light:not(.on-newtab) .omnibox-pill {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(246, 244, 252, 0.90) 100%);
+  --spec-opacity: 0.36;
+}
+
 .omnibox-pill:focus-within {
-  transform: scale(1.008);
-  border-color: rgba(196, 158, 255, 0.72);
+  transform: scale(1.005);
+  background: rgba(11, 10, 21, 0.94);
+  border-color: rgba(188, 148, 255, 0.62);
+  --spec-opacity: 0.24;
   box-shadow:
-    0 10px 30px -6px rgba(0, 0, 0, 0.52),
-    0 0 0 2px var(--accent-glow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    0 10px 28px -8px rgba(0, 0, 0, 0.56),
+    0 0 0 2px rgba(176, 124, 255, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+body.theme-light:not(.on-newtab) .omnibox-pill:focus-within {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(124, 77, 255, 0.52);
+  --spec-opacity: 0.22;
 }
 
 .omnibox-icon {
@@ -503,6 +520,12 @@ body.is-fullscreen #top-backdrop-wrap {
 
 #omnibox-input::placeholder {
   color: var(--ink-muted);
+}
+
+#omnibox-input::selection,
+#newtab-search-input::selection {
+  background: rgba(176, 124, 255, 0.42);
+  color: #ffffff;
 }
 
 /* Embedded Ad-Blocker Shield Chip */
@@ -614,12 +637,11 @@ body.is-fullscreen #top-backdrop-wrap {
   height: 31px;
   width: 0;
   border-radius: 999px;
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.24) 0%, rgba(188, 148, 255, 0.16) 55%, rgba(120, 210, 255, 0.10) 100%);
-  border: 1px solid rgba(224, 200, 255, 0.72);
+  background: linear-gradient(160deg, rgba(40, 34, 66, 0.86) 0%, rgba(22, 18, 38, 0.90) 100%);
+  border: 1px solid rgba(192, 162, 255, 0.44);
   box-shadow:
-    0 6px 20px -4px rgba(0, 0, 0, 0.36),
-    0 0 12px rgba(176, 124, 255, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.68);
+    0 5px 16px -4px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
   pointer-events: none;
   z-index: 0;
   opacity: 0;
@@ -631,10 +653,10 @@ body.is-fullscreen #top-backdrop-wrap {
 }
 
 body.theme-light:not(.on-newtab) #active-tab-glide {
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.86) 0%, rgba(232, 222, 255, 0.56) 100%);
-  border-color: rgba(124, 77, 255, 0.45);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96) 0%, rgba(244, 240, 255, 0.92) 100%);
+  border-color: rgba(124, 77, 255, 0.32);
   box-shadow:
-    0 6px 18px -5px rgba(24, 16, 64, 0.16),
+    0 4px 14px -5px rgba(24, 16, 64, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.96);
 }
 

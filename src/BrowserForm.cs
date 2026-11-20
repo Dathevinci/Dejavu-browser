@@ -28,6 +28,7 @@ namespace DejavuBrowser
         public bool IsLight;
         public int[] BaseRgb;
         public List<int[]> AccentPalette;
+        public string PaletteCapturedUrl;
         public WebView2 WebView;
         public bool CoreReady;
         public string PendingNavigateUrl;
@@ -90,6 +91,13 @@ namespace DejavuBrowser
         private int _suggestSelectedIndex = -1;
         private string _suggestBackdropCache = "";
         private Rectangle _suggestLastRect = Rectangle.Empty;
+
+        // Fast 1.4s JPEG viewport cache so switching VPN / Profile / History / Shield is 0ms instant!
+        private byte[] _cachedBackdropJpeg;
+        private int _cachedBackdropTabId = -1;
+        private bool _cachedBackdropIsShell;
+        private DateTime _cachedBackdropUtc = DateTime.MinValue;
+        private int _popoverBackdropSeq;
 
         private readonly List<BrowserTab> _tabs = new List<BrowserTab>();
         private int _activeTabId = -1;
@@ -245,7 +253,14 @@ namespace DejavuBrowser
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.Style |= NativeWin32.WS_MINIMIZEBOX;
+                // Native Win32 resizable frameless chrome styles:
+                // Gives native Windows 11 outer resize grips, Aero Snap, Win+Arrows,
+                // maximized-drag restore, and native minimize/maximize animations!
+                cp.Style |= NativeWin32.WS_THICKFRAME |
+                            NativeWin32.WS_CAPTION |
+                            NativeWin32.WS_SYSMENU |
+                            NativeWin32.WS_MINIMIZEBOX |
+                            NativeWin32.WS_MAXIMIZEBOX;
                 return cp;
             }
         }
@@ -286,6 +301,27 @@ namespace DejavuBrowser
 
         protected override void WndProc(ref Message m)
         {
+            if (m.Msg == NativeWin32.WM_NCCALCSIZE && m.WParam != IntPtr.Zero)
+            {
+                // Strip the standard Win32 titlebar completely while keeping native WS_THICKFRAME
+                // invisible outer resize borders, Aero Snap, and rounded corners intact!
+                if (WindowState == FormWindowState.Maximized && !_isHtmlFullscreen)
+                {
+                    NativeWin32.NCCALCSIZE_PARAMS ncp =
+                        (NativeWin32.NCCALCSIZE_PARAMS)Marshal.PtrToStructure(m.LParam, typeof(NativeWin32.NCCALCSIZE_PARAMS));
+                    int pad = NativeWin32.GetSystemMetrics(NativeWin32.SM_CXPADDEDBORDER);
+                    int fx = NativeWin32.GetSystemMetrics(NativeWin32.SM_CXFRAME) + pad;
+                    int fy = NativeWin32.GetSystemMetrics(NativeWin32.SM_CYFRAME) + pad;
+                    ncp.rgrc0.Left += fx;
+                    ncp.rgrc0.Right -= fx;
+                    ncp.rgrc0.Top += fy;
+                    ncp.rgrc0.Bottom -= fy;
+                    Marshal.StructureToPtr(ncp, m.LParam, false);
+                }
+                m.Result = IntPtr.Zero;
+                return;
+            }
+
             if (m.Msg == 0x02E0) // WM_DPICHANGED
             {
                 base.WndProc(ref m);
@@ -742,7 +778,7 @@ namespace DejavuBrowser
             LayoutViews();
             PushFullStateToShell();
 
-            if (!tab.IsNewTab && tab.CoreReady)
+            if (!tab.IsNewTab && tab.CoreReady && !string.Equals(tab.PaletteCapturedUrl, tab.Url, StringComparison.Ordinal))
             {
                 CaptureActiveSitePaletteAsync(tab, true);
             }
@@ -1113,13 +1149,13 @@ namespace DejavuBrowser
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    await tab.WebView.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, ms);
-                    byte[] pngBytes = ms.ToArray();
+                    await tab.WebView.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Jpeg, ms);
+                    byte[] imgBytes = ms.ToArray();
 
                     // Run pixel color extraction completely off the UI thread so animations stay 120fps smooth!
                     var extracted = await Task.Run(() =>
                     {
-                        using (MemoryStream bgMs = new MemoryStream(pngBytes))
+                        using (MemoryStream bgMs = new MemoryStream(imgBytes))
                         using (Bitmap bmp = new Bitmap(bgMs))
                         {
                             int sampleW = Math.Max(16, bmp.Width - 26);
@@ -1158,8 +1194,8 @@ namespace DejavuBrowser
 
                             if (acc.Count == 0)
                             {
-                                acc.Add(light ? new int[] { 146, 122, 238 } : new int[] { 148, 108, 248 });
-                                acc.Add(light ? new int[] { 96, 178, 245 } : new int[] { 84, 184, 245 });
+                                acc.Add(light ? new int[] { 146, 122, 238 } : new int[] { 132, 94, 236 });
+                                acc.Add(light ? new int[] { 96, 178, 245 } : new int[] { 76, 162, 228 });
                             }
 
                             return new Tuple<bool, int[], List<int[]>>(light, new int[] { br, bg, bb }, acc);
@@ -1169,6 +1205,7 @@ namespace DejavuBrowser
                     tab.IsLight = extracted.Item1;
                     tab.BaseRgb = extracted.Item2;
                     tab.AccentPalette = extracted.Item3;
+                    tab.PaletteCapturedUrl = tab.Url;
 
                     if (tab.Id == _activeTabId && !tab.IsNewTab && !IsDisposed)
                     {
@@ -1183,46 +1220,42 @@ namespace DejavuBrowser
             }
         }
 
-        private async Task<string> CaptureBackdropCropAsync(Rectangle clientRect)
+        private string TryCropCachedBackdrop(Rectangle clientRect, bool captureShell, int activeId, bool isLight)
         {
-            BrowserTab tab = GetActiveTab();
-            bool captureShell = (tab == null || tab.IsNewTab);
-            WebView2 sourceWv = captureShell ? _shellView : tab.WebView;
-            if (sourceWv == null || sourceWv.IsDisposed || sourceWv.CoreWebView2 == null) return "";
-
+            if (_cachedBackdropJpeg == null ||
+                _cachedBackdropTabId != activeId ||
+                _cachedBackdropIsShell != captureShell ||
+                (DateTime.UtcNow - _cachedBackdropUtc).TotalMilliseconds > 1400)
+            {
+                return null;
+            }
             int topOffset = captureShell ? 0 : TopBarHeightPx;
-            bool isLight = !captureShell && tab.IsLight;
+            return CropJpegBytesToDataUrl(_cachedBackdropJpeg, clientRect, topOffset, isLight);
+        }
 
+        private static string CropJpegBytesToDataUrl(byte[] jpegBytes, Rectangle clientRect, int topOffset, bool isLight)
+        {
             try
             {
-                using (MemoryStream ms = new MemoryStream())
+                using (MemoryStream bgMs = new MemoryStream(jpegBytes))
+                using (Bitmap full = new Bitmap(bgMs))
                 {
-                    await sourceWv.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, ms);
-                    byte[] pngBytes = ms.ToArray();
+                    int rx = Math.Max(0, Math.Min(full.Width - 1, clientRect.X));
+                    int ry = Math.Max(0, Math.Min(full.Height - 1, clientRect.Y - topOffset));
+                    int rw = Math.Max(1, Math.Min(full.Width - rx, clientRect.Width));
+                    int rh = Math.Max(1, Math.Min(full.Height - ry, clientRect.Height));
 
-                    return await Task.Run(() =>
+                    using (Bitmap crop = new Bitmap(clientRect.Width, clientRect.Height))
+                    using (Graphics g = Graphics.FromImage(crop))
                     {
-                        using (MemoryStream bgMs = new MemoryStream(pngBytes))
-                        using (Bitmap full = new Bitmap(bgMs))
+                        g.Clear(isLight ? Color.FromArgb(245, 244, 250) : Color.FromArgb(12, 10, 22));
+                        g.DrawImage(full, new Rectangle(0, 0, rw, rh), new Rectangle(rx, ry, rw, rh), GraphicsUnit.Pixel);
+                        using (MemoryStream outMs = new MemoryStream())
                         {
-                            int rx = Math.Max(0, Math.Min(full.Width - 1, clientRect.X));
-                            int ry = Math.Max(0, Math.Min(full.Height - 1, clientRect.Y - topOffset));
-                            int rw = Math.Max(1, Math.Min(full.Width - rx, clientRect.Width));
-                            int rh = Math.Max(1, Math.Min(full.Height - ry, clientRect.Height));
-
-                            using (Bitmap crop = new Bitmap(clientRect.Width, clientRect.Height))
-                            using (Graphics g = Graphics.FromImage(crop))
-                            {
-                                g.Clear(isLight ? Color.FromArgb(245, 244, 250) : Color.FromArgb(12, 10, 22));
-                                g.DrawImage(full, new Rectangle(0, 0, rw, rh), new Rectangle(rx, ry, rw, rh), GraphicsUnit.Pixel);
-                                using (MemoryStream outMs = new MemoryStream())
-                                {
-                                    crop.Save(outMs, ImageFormat.Jpeg);
-                                    return "data:image/jpeg;base64," + Convert.ToBase64String(outMs.ToArray());
-                                }
-                            }
+                            crop.Save(outMs, ImageFormat.Jpeg);
+                            return "data:image/jpeg;base64," + Convert.ToBase64String(outMs.ToArray());
                         }
-                    });
+                    }
                 }
             }
             catch
@@ -1231,10 +1264,60 @@ namespace DejavuBrowser
             }
         }
 
+        private async Task<string> CaptureBackdropCropAsync(Rectangle clientRect)
+        {
+            BrowserTab tab = GetActiveTab();
+            bool captureShell = (tab == null || tab.IsNewTab);
+            int tabId = tab != null ? tab.Id : -1;
+            WebView2 sourceWv = captureShell ? _shellView : tab.WebView;
+            if (sourceWv == null || sourceWv.IsDisposed || sourceWv.CoreWebView2 == null) return "";
+
+            int topOffset = captureShell ? 0 : TopBarHeightPx;
+            bool isLight = !captureShell && tab.IsLight;
+
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tabId, isLight);
+            if (cached != null) return cached;
+
+            try
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    await sourceWv.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Jpeg, ms);
+                    byte[] jpegBytes = ms.ToArray();
+                    _cachedBackdropJpeg = jpegBytes;
+                    _cachedBackdropTabId = tabId;
+                    _cachedBackdropIsShell = captureShell;
+                    _cachedBackdropUtc = DateTime.UtcNow;
+
+                    return await Task.Run(() => CropJpegBytesToDataUrl(jpegBytes, clientRect, topOffset, isLight));
+                }
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        private async void StreamBackdropToPopupAsync(OverlayPopup popup, Rectangle clientRect, string expectedPopoverMode)
+        {
+            int seq = ++_popoverBackdropSeq;
+            string dataUrl = await CaptureBackdropCropAsync(clientRect);
+            if (IsDisposed || string.IsNullOrEmpty(dataUrl) || popup == null || !popup.IsPopupOpen) return;
+            if (!string.IsNullOrEmpty(expectedPopoverMode) && _activePopoverMode != expectedPopoverMode) return;
+            if (!string.IsNullOrEmpty(expectedPopoverMode) && seq != _popoverBackdropSeq) return;
+
+            var patch = new Dictionary<string, object>
+            {
+                { "mode", "backdrop" },
+                { "backdrop", dataUrl }
+            };
+            popup.UpdateState(_json.Serialize(patch));
+        }
+
         // =====================================================================
-        // Floating Native Windows-11-Rounded Liquid Glass Popovers (2 Consolidated Windows)
+        // Floating Native Windows-11-Rounded Liquid Glass Popovers (Zero-Lag Instant Open!)
         // =====================================================================
-        private async void ShowShieldPopoverAt(int anchorRightCss)
+        private void ShowShieldPopoverAt(int anchorRightCss)
         {
             if (_popoverPopup == null) return;
             if (_popoverPopup.IsPopupOpen && _activePopoverMode == "shield")
@@ -1255,17 +1338,19 @@ namespace DejavuBrowser
             int y = (int)Math.Round(BASE_CHROME_HEIGHT * sc) + (int)Math.Round(4 * sc);
 
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
-            string backdropDataUrl = await CaptureBackdropCropAsync(clientRect);
-
             BrowserTab tab = GetActiveTab();
+            bool captureShell = (tab == null || tab.IsNewTab);
+            bool isLight = !captureShell && tab.IsLight;
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, isLight);
+
             string host = (tab != null && !tab.IsNewTab) ? AdBlocker.ExtractHost(tab.Url) : "";
             bool activeForSite = _adBlocker.IsActiveForHost(host);
 
             var payload = new Dictionary<string, object>
             {
                 { "mode", "shield" },
-                { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
-                { "backdrop", backdropDataUrl },
+                { "isLight", isLight },
+                { "backdrop", cached ?? "" },
                 { "host", host },
                 { "tabBlocked", tab != null ? tab.BlockedCount : 0 },
                 { "totalBlocked", _adBlocker.TotalBlocked },
@@ -1278,9 +1363,10 @@ namespace DejavuBrowser
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), _json.Serialize(payload), true);
+            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "shield");
         }
 
-        private async void ShowProfilesPopoverAt(int anchorRightCss)
+        private void ShowProfilesPopoverAt(int anchorRightCss)
         {
             if (_popoverPopup == null) return;
             if (_popoverPopup.IsPopupOpen && _activePopoverMode == "profiles")
@@ -1300,9 +1386,13 @@ namespace DejavuBrowser
             int y = (int)Math.Round(BASE_CHROME_HEIGHT * sc) + (int)Math.Round(4 * sc);
 
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
-            string backdrop = await CaptureBackdropCropAsync(clientRect);
+            BrowserTab tab = GetActiveTab();
+            bool captureShell = (tab == null || tab.IsNewTab);
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, !captureShell && tab.IsLight);
+
             Point screenPt = PointToScreen(new Point(x, y));
-            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildProfilesPayloadJson(backdrop), true);
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildProfilesPayloadJson(cached ?? ""), true);
+            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "profiles");
         }
 
         private string BuildProfilesPayloadJson(string backdrop)
@@ -1313,13 +1403,13 @@ namespace DejavuBrowser
             {
                 { "mode", "profiles" },
                 { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
-                { "backdrop", backdrop ?? "" },
                 { "activeProfileId", _profiles.ActiveProfile.id },
                 { "profiles", _profiles.Manifest.profiles },
                 { "appVersion", AutoUpdater.CurrentVersion },
                 { "updateStatus", _updateStatusText },
                 { "updateReadyVersion", (upd != null && upd.IsReady) ? upd.Version : "" }
             };
+            if (backdrop != null) payload["backdrop"] = backdrop;
             return _json.Serialize(payload);
         }
 
@@ -1331,7 +1421,7 @@ namespace DejavuBrowser
             }
         }
 
-        private async void ShowHistoryPopoverAt(int anchorRightCss)
+        private void ShowHistoryPopoverAt(int anchorRightCss)
         {
             if (_popoverPopup == null) return;
             if (_popoverPopup.IsPopupOpen && _activePopoverMode == "history")
@@ -1351,12 +1441,16 @@ namespace DejavuBrowser
             int y = (int)Math.Round(BASE_CHROME_HEIGHT * sc) + (int)Math.Round(4 * sc);
 
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
-            string backdrop = await CaptureBackdropCropAsync(clientRect);
+            BrowserTab tab = GetActiveTab();
+            bool captureShell = (tab == null || tab.IsNewTab);
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, !captureShell && tab.IsLight);
+
             Point screenPt = PointToScreen(new Point(x, y));
-            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildHistoryPayloadJson(backdrop), true);
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildHistoryPayloadJson(cached ?? ""), true);
+            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "history");
         }
 
-        private async void ShowVpnPopoverAt(int anchorRightCss)
+        private void ShowVpnPopoverAt(int anchorRightCss)
         {
             if (_popoverPopup == null) return;
             if (_popoverPopup.IsPopupOpen && _activePopoverMode == "vpn")
@@ -1376,9 +1470,13 @@ namespace DejavuBrowser
             int y = (int)Math.Round(BASE_CHROME_HEIGHT * sc) + (int)Math.Round(4 * sc);
 
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
-            string backdrop = await CaptureBackdropCropAsync(clientRect);
+            BrowserTab tab = GetActiveTab();
+            bool captureShell = (tab == null || tab.IsNewTab);
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, !captureShell && tab.IsLight);
+
             Point screenPt = PointToScreen(new Point(x, y));
-            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildVpnPayloadJson(backdrop), true);
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildVpnPayloadJson(cached ?? ""), true);
+            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "vpn");
         }
 
         private string BuildVpnPayloadJson(string backdrop)
@@ -1389,9 +1487,9 @@ namespace DejavuBrowser
             {
                 { "mode", "vpn" },
                 { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
-                { "backdrop", backdrop ?? "" },
                 { "vpn", snap }
             };
+            if (backdrop != null) payload["backdrop"] = backdrop;
             return _json.Serialize(payload);
         }
 
@@ -1447,7 +1545,7 @@ namespace DejavuBrowser
                 _lastSuggestItems = local;
                 if (local.Count > 0)
                 {
-                    await ShowOmniboxSuggestPopupAsync(local, leftCss, topCss, widthCss, token);
+                    ShowOmniboxSuggestPopup(local, leftCss, topCss, widthCss);
                 }
             }
             else
@@ -1470,7 +1568,7 @@ namespace DejavuBrowser
                 {
                     _lastSuggestItems = merged;
                     if (merged.Count == 0) HideSuggestPopup();
-                    else await ShowOmniboxSuggestPopupAsync(merged, leftCss, topCss, widthCss, token);
+                    else ShowOmniboxSuggestPopup(merged, leftCss, topCss, widthCss);
                 }
                 else
                 {
@@ -1480,7 +1578,7 @@ namespace DejavuBrowser
             catch { }
         }
 
-        private async Task ShowOmniboxSuggestPopupAsync(List<SuggestItem> items, int leftCss, int topCss, int widthCss, CancellationToken token)
+        private void ShowOmniboxSuggestPopup(List<SuggestItem> items, int leftCss, int topCss, int widthCss)
         {
             if (_suggestPopup == null || IsDisposed || items == null || items.Count == 0) return;
 
@@ -1493,22 +1591,31 @@ namespace DejavuBrowser
             int h = (int)Math.Round(hCss * sc);
             Rectangle clientRect = new Rectangle(x, y, Math.Max(200, w), Math.Max(48, h));
 
-            // Capture backdrop once per typing session (keeps typing at 120fps with zero stutter!)
-            if (string.IsNullOrEmpty(_suggestBackdropCache) || !_suggestPopup.IsPopupOpen ||
-                Math.Abs(_suggestLastRect.X - clientRect.X) > 20 || Math.Abs(_suggestLastRect.Width - clientRect.Width) > 20)
+            BrowserTab tab = GetActiveTab();
+            bool captureShell = (tab == null || tab.IsNewTab);
+            bool isLight = !captureShell && tab.IsLight;
+            bool needBackdrop = string.IsNullOrEmpty(_suggestBackdropCache) || !_suggestPopup.IsPopupOpen ||
+                Math.Abs(_suggestLastRect.X - clientRect.X) > 20 || Math.Abs(_suggestLastRect.Width - clientRect.Width) > 20;
+
+            string initialBackdrop = _suggestBackdropCache;
+            if (needBackdrop)
             {
                 Rectangle capRect = new Rectangle(clientRect.X, clientRect.Y, clientRect.Width, (int)Math.Round(334 * sc));
-                _suggestBackdropCache = await CaptureBackdropCropAsync(capRect);
+                string cached = TryCropCachedBackdrop(capRect, captureShell, tab != null ? tab.Id : -1, isLight);
+                initialBackdrop = cached ?? "";
+                _suggestBackdropCache = initialBackdrop;
                 _suggestLastRect = clientRect;
-                if (token.IsCancellationRequested || IsDisposed) return;
+                if (cached == null)
+                {
+                    StreamBackdropToPopupAsync(_suggestPopup, capRect, "");
+                }
             }
 
-            BrowserTab tab = GetActiveTab();
             var payload = new Dictionary<string, object>
             {
                 { "mode", "suggest" },
-                { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
-                { "backdrop", _suggestBackdropCache ?? "" },
+                { "isLight", isLight },
+                { "backdrop", initialBackdrop },
                 { "items", items },
                 { "selectedIndex", _suggestSelectedIndex }
             };
@@ -1823,10 +1930,35 @@ namespace DejavuBrowser
                         Close();
                         break;
                     case "windowDrag":
-                        if (WindowState == FormWindowState.Normal)
+                        // Allow dragging even when maximized (Windows natively un-maximizes under cursor!)
+                        if (!_isHtmlFullscreen)
                         {
+                            HidePopover(false);
+                            HideSuggestPopup();
                             NativeWin32.ReleaseCapture();
                             NativeWin32.SendMessage(Handle, NativeWin32.WM_NCLBUTTONDOWN, (IntPtr)NativeWin32.HTCAPTION, IntPtr.Zero);
+                        }
+                        break;
+                    case "windowResize":
+                        if (WindowState == FormWindowState.Normal && !_isHtmlFullscreen)
+                        {
+                            string edge = msg.ContainsKey("edge") ? Convert.ToString(msg["edge"]) : "";
+                            int wmsz = 0;
+                            if (edge == "left") wmsz = NativeWin32.WMSZ_LEFT;
+                            else if (edge == "right") wmsz = NativeWin32.WMSZ_RIGHT;
+                            else if (edge == "top") wmsz = NativeWin32.WMSZ_TOP;
+                            else if (edge == "bottom") wmsz = NativeWin32.WMSZ_BOTTOM;
+                            else if (edge == "topleft") wmsz = NativeWin32.WMSZ_TOPLEFT;
+                            else if (edge == "topright") wmsz = NativeWin32.WMSZ_TOPRIGHT;
+                            else if (edge == "bottomleft") wmsz = NativeWin32.WMSZ_BOTTOMLEFT;
+                            else if (edge == "bottomright") wmsz = NativeWin32.WMSZ_BOTTOMRIGHT;
+                            if (wmsz > 0)
+                            {
+                                HidePopover(false);
+                                HideSuggestPopup();
+                                NativeWin32.ReleaseCapture();
+                                NativeWin32.SendMessage(Handle, NativeWin32.WM_SYSCOMMAND, (IntPtr)(NativeWin32.SC_SIZE + wmsz), IntPtr.Zero);
+                            }
                         }
                         break;
                     case "navigate":

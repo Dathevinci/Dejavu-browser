@@ -58,12 +58,12 @@
     const dispImg = dispCtx.createImageData(cw, ch);
     const dData = dispImg.data;
 
-    // Specular rim rendered at 1x (capped cleanly) so thin Fresnel caustic highlights stay razor-sharp
-    const specScale = Math.max(W, H) > 780 ? 780 / Math.max(W, H) : 1;
+    // Specular rim capped at <= 320px (fast <1.5ms generation + smooth bilinear edge gleam)
+    const specScale = Math.max(W, H) > 320 ? 320 / Math.max(W, H) : 0.75;
     const sw = Math.max(24, Math.round(W * specScale));
     const sh = Math.max(18, Math.round(H * specScale));
     const sr = Math.min(R * specScale, sw / 2, sh / 2);
-    const sb = Math.min(bezel * specScale, Math.min(sw, sh) * 0.46);
+    const sb = Math.min(bezel * specScale, Math.min(sw, sh) * 0.44);
     const shw = sw / 2;
     const shh = sh / 2;
 
@@ -150,12 +150,13 @@
 
         const dot1 = Math.max(0, onx * L1x + ony * L1y);
         const dot2 = Math.max(0, onx * L2x + ony * L2y);
-        const rimBand = Math.exp(-Math.pow((dist - 1.35) / 2.1, 2));
-        const innerBand = Math.pow(1 - u, 2.2) * 0.40;
+        // Tight, jewel-like hairline Fresnel lip (keeps glass interior 100% crystal-clear over text!)
+        const rimBand = Math.exp(-Math.pow((dist - 1.05) / 1.25, 2));
+        const innerBand = Math.pow(1 - u, 3.6) * 0.08;
 
-        const primaryCaustic = Math.pow(dot1, 1.55) * (rimBand * 0.95 + innerBand * fresnel);
-        const bounceCaustic = Math.pow(dot2, 2.1) * (rimBand * 0.54 + innerBand * fresnel * 0.62);
-        const specAlpha = Math.min(1, primaryCaustic + bounceCaustic + rimBand * 0.16);
+        const primaryCaustic = Math.pow(dot1, 1.8) * (rimBand * 0.62 + innerBand * fresnel);
+        const bounceCaustic = Math.pow(dot2, 2.3) * (rimBand * 0.32 + innerBand * fresnel * 0.45);
+        const specAlpha = Math.min(0.62, primaryCaustic + bounceCaustic + rimBand * 0.08);
 
         const idx = (y * sw + x) * 4;
         if (bounceCaustic > primaryCaustic * 0.65) {

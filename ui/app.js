@@ -130,13 +130,55 @@
     return el === chromeHeader || el === tabbar || el === toolbar || el === dragSpacer || el.id === 'tabs-area';
   }
 
+  function detectResizeEdge(e) {
+    const pad = 5;
+    const x = e.clientX;
+    const y = e.clientY;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const top = y <= pad;
+    const left = x <= pad;
+    const right = x >= w - pad;
+    const bottom = body.classList.contains('on-newtab') && y >= h - pad;
+    if (top && left) return 'topleft';
+    if (top && right) return 'topright';
+    if (bottom && left) return 'bottomleft';
+    if (bottom && right) return 'bottomright';
+    if (top) return 'top';
+    if (bottom) return 'bottom';
+    if (left) return 'left';
+    if (right) return 'right';
+    return '';
+  }
+
+  const edgeCursors = {
+    top: 'ns-resize', bottom: 'ns-resize',
+    left: 'ew-resize', right: 'ew-resize',
+    topleft: 'nwse-resize', bottomright: 'nwse-resize',
+    topright: 'nesw-resize', bottomleft: 'nesw-resize'
+  };
+
+  document.addEventListener('pointermove', (e) => {
+    const edge = detectResizeEdge(e);
+    document.documentElement.style.cursor = edge ? edgeCursors[edge] : '';
+  }, { passive: true });
+
+  document.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    const edge = detectResizeEdge(e);
+    if (edge) {
+      e.preventDefault();
+      send({ type: 'windowResize', edge });
+    }
+  });
+
   chromeHeader.addEventListener('mousedown', (e) => {
-    if (e.button === 0 && isDraggableTarget(e.target)) {
+    if (e.button === 0 && !detectResizeEdge(e) && isDraggableTarget(e.target)) {
       send({ type: 'windowDrag' });
     }
   });
   chromeHeader.addEventListener('dblclick', (e) => {
-    if (isDraggableTarget(e.target)) {
+    if (!detectResizeEdge(e) && isDraggableTarget(e.target)) {
       send({ type: 'windowMax' });
     }
   });
@@ -164,50 +206,44 @@
     currentPalette = { baseRgb, accents, isLight };
     const w = window.innerWidth;
     const h = getChromeHeight();
-    const [br, bg, bb] = baseRgb || (isLight ? [245, 244, 250] : [11, 9, 20]);
+    let [br, bg, bb] = baseRgb || (isLight ? [246, 245, 250] : [13, 12, 20]);
 
-    topBackdropCtx.fillStyle = `rgb(${br}, ${bg}, ${bb})`;
+    // Keep dark sites rich, cohesive & soothing (never washed-out milky grey!)
+    if (!isLight) {
+      br = Math.min(br, 26);
+      bg = Math.min(bg, 24);
+      bb = Math.min(bb, 36);
+    }
+
+    const baseGrad = topBackdropCtx.createLinearGradient(0, 0, 0, h);
+    if (isLight) {
+      baseGrad.addColorStop(0, `rgb(${Math.min(255, br + 4)}, ${Math.min(255, bg + 4)}, ${Math.min(255, bb + 6)})`);
+      baseGrad.addColorStop(1, `rgb(${br}, ${bg}, ${bb})`);
+    } else {
+      baseGrad.addColorStop(0, `rgb(${Math.max(9, br + 4)}, ${Math.max(8, bg + 3)}, ${Math.max(16, bb + 8)})`);
+      baseGrad.addColorStop(1, `rgb(${Math.max(8, br)}, ${Math.max(8, bg)}, ${Math.max(13, bb)})`);
+    }
+    topBackdropCtx.fillStyle = baseGrad;
     topBackdropCtx.fillRect(0, 0, w, h);
 
     const zones = (Array.isArray(accents) && accents.length > 0) ? accents : [
-      isLight ? [150, 120, 245] : [138, 92, 255],
-      isLight ? [96, 178, 245] : [76, 182, 248],
-      isLight ? [216, 134, 224] : [196, 102, 218]
+      isLight ? [146, 120, 238] : [132, 94, 236],
+      isLight ? [96, 172, 238] : [76, 162, 228]
     ];
 
-    const grad = topBackdropCtx.createLinearGradient(0, 0, w, 0);
-    zones.forEach((rgb, idx) => {
-      const stop = zones.length === 1 ? 0.5 : idx / (zones.length - 1);
-      grad.addColorStop(stop, `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${isLight ? 0.20 : 0.28})`);
-    });
-    topBackdropCtx.fillStyle = grad;
+    // Whisper-soft ambient site color aura along top edge only — ZERO harsh ribbons cutting across URL text!
+    const aura = topBackdropCtx.createRadialGradient(w * 0.25, 0, 10, w * 0.35, 0, w * 0.72);
+    const c0 = zones[0];
+    const c1 = zones[zones.length - 1];
+    aura.addColorStop(0, `rgba(${c0[0]}, ${c0[1]}, ${c0[2]}, ${isLight ? 0.08 : 0.13})`);
+    aura.addColorStop(0.55, `rgba(${c1[0]}, ${c1[1]}, ${c1[2]}, ${isLight ? 0.05 : 0.08})`);
+    aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    topBackdropCtx.fillStyle = aura;
     topBackdropCtx.fillRect(0, 0, w, h);
 
-    // Crisp luminous filaments behind the Liquid Glass pill bezels
-    for (let r = 0; r < 2; r++) {
-      const col = zones[r % zones.length];
-      topBackdropCtx.save();
-      topBackdropCtx.beginPath();
-      const segs = 48;
-      for (let i = 0; i <= segs; i++) {
-        const u = i / segs;
-        const x = u * w;
-        const y = h * (r === 0 ? 0.42 : 0.66) + Math.sin(u * Math.PI * (2.6 + r * 1.1) + r * 1.7) * (10 + r * 3);
-        if (i === 0) topBackdropCtx.moveTo(x, y);
-        else topBackdropCtx.lineTo(x, y);
-      }
-      topBackdropCtx.strokeStyle = `rgba(${col[0]}, ${col[1]}, ${col[2]}, ${isLight ? 0.16 : 0.24})`;
-      topBackdropCtx.lineWidth = 10;
-      topBackdropCtx.lineCap = 'round';
-      topBackdropCtx.stroke();
-
-      topBackdropCtx.strokeStyle = isLight
-        ? `rgba(${Math.max(40, col[0] - 35)}, ${Math.max(40, col[1] - 35)}, ${Math.max(60, col[2] - 15)}, 0.42)`
-        : `rgba(${Math.min(255, col[0] + 65)}, ${Math.min(255, col[1] + 65)}, ${Math.min(255, col[2] + 75)}, 0.58)`;
-      topBackdropCtx.lineWidth = r === 0 ? 1.75 : 1.25;
-      topBackdropCtx.stroke();
-      topBackdropCtx.restore();
-    }
+    // Subtle 1px bottom hairline separating chrome cleanly from webpage content
+    topBackdropCtx.fillStyle = isLight ? 'rgba(24, 18, 52, 0.09)' : 'rgba(255, 255, 255, 0.07)';
+    topBackdropCtx.fillRect(0, h - 1, w, 1);
   }
 
   // =========================================================================

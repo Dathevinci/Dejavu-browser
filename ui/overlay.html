@@ -30,12 +30,16 @@
     #backdrop-img {
       position: fixed; inset: 0; width: 100%; height: 100%;
       object-fit: cover; pointer-events: none; z-index: 0;
+      opacity: 0;
+      transition: opacity 0.16s ease;
     }
+    #backdrop-img.loaded { opacity: 1; }
     .overlay-shell {
       position: fixed; inset: 0; z-index: 2;
       display: flex; width: 100%; height: 100%;
       border-radius: 14px;
-      animation: ovPop 0.34s var(--apple-spring);
+      --spec-opacity: 0.46;
+      animation: ovPop 0.28s var(--apple-spring);
     }
     @keyframes ovPop {
       from { opacity: 0; transform: translateY(-6px) scale(0.94); }
@@ -514,7 +518,7 @@
   <img id="backdrop-img" alt="" style="display:none;">
 
   <!-- Mode 1: Ad-Shield Popover -->
-  <div id="mode-shield" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="22" data-lg-scale="28" data-lg-dispersion="1.22" data-lg-dome="0.05">
+  <div id="mode-shield" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="16" data-lg-dome="0.03">
     <div class="shield-box">
       <div class="popover-head">
         <div class="popover-title-row">
@@ -590,7 +594,7 @@
   </div>
 
   <!-- Mode 4: Butterfly Profile Hub + 16-Avatar Editor + Auto-Updater -->
-  <div id="mode-profiles" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="22" data-lg-scale="28" data-lg-dispersion="1.2" data-lg-dome="0.045">
+  <div id="mode-profiles" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="16" data-lg-dome="0.03">
     <!-- List View -->
     <div id="prof-view-list" class="panel-box">
       <div class="panel-head">
@@ -634,7 +638,7 @@
   </div>
 
   <!-- Mode 5: Browsing History Panel -->
-  <div id="mode-history" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="22" data-lg-scale="28" data-lg-dispersion="1.2" data-lg-dome="0.045">
+  <div id="mode-history" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="16" data-lg-dome="0.03">
     <div class="panel-box">
       <div class="panel-head">
         <div class="panel-title">
@@ -671,7 +675,7 @@
   </div>
 
   <!-- Mode 7: Multi-Country Encrypted VPN Control Center -->
-  <div id="mode-vpn" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="22" data-lg-scale="28" data-lg-dispersion="1.2" data-lg-dome="0.045">
+  <div id="mode-vpn" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="16" data-lg-dome="0.03">
     <div class="panel-box">
       <div class="panel-head">
         <div class="panel-title">
@@ -717,7 +721,7 @@
   </div>
 
   <!-- Mode 8: Floating Omnibox Autocomplete Suggestions -->
-  <div id="mode-suggest" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="16" data-lg-scale="22" data-lg-dispersion="1.12">
+  <div id="mode-suggest" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="12" data-lg-scale="14" data-lg-dome="0.02">
     <div id="suggest-list" class="suggest-box"></div>
   </div>
 
@@ -1038,13 +1042,25 @@
       const d = ev.data;
       if (!d) return;
 
+      // Fast async backdrop-only patch (zero DOM rebuild, instant popover open!)
+      if (d.mode === 'backdrop') {
+        if (d.backdrop) {
+          backdropImg.src = d.backdrop;
+          backdropImg.style.display = 'block';
+          requestAnimationFrame(() => backdropImg.classList.add('loaded'));
+        }
+        return;
+      }
+
       document.body.classList.toggle('theme-light', !!d.isLight);
       document.body.classList.toggle('theme-dark', !d.isLight);
 
       if (d.backdrop) {
         backdropImg.src = d.backdrop;
         backdropImg.style.display = 'block';
+        backdropImg.classList.add('loaded');
       } else if (d.backdrop === '') {
+        backdropImg.classList.remove('loaded');
         backdropImg.style.display = 'none';
       }
 
@@ -1136,10 +1152,14 @@
     const vpnSearchInput = document.getElementById('vpn-search-input');
     const vpnCountryList = document.getElementById('vpn-country-list');
     let lastVpnSnap = null;
+    let lastVpnListSig = '';
 
     document.getElementById('btn-vpn-close').addEventListener('click', () => send({ type: 'closePanel' }));
     btnVpnToggle.addEventListener('click', () => send({ type: 'toggleVpn' }));
-    vpnSearchInput.addEventListener('input', () => { if (lastVpnSnap) renderVpnCountries(lastVpnSnap); });
+    vpnSearchInput.addEventListener('input', () => {
+      lastVpnListSig = '';
+      if (lastVpnSnap) renderVpnCountries(lastVpnSnap);
+    });
 
     function renderVpnPanel(v) {
       lastVpnSnap = v;
@@ -1179,6 +1199,9 @@
       const list = Array.isArray(v.countries) ? v.countries : [];
       const curCode = (v.countryCode || 'AUTO').toUpperCase();
       const isConn = v.state === 'connected';
+      const sig = `${q}|${curCode}|${isConn ? 1 : 0}|${list.length}`;
+      if (sig === lastVpnListSig) return;
+      lastVpnListSig = sig;
 
       vpnCountryList.innerHTML = '';
       const filtered = q

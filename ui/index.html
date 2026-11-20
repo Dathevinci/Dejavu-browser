@@ -21,7 +21,7 @@
   <header id="chrome-header">
     <!-- Row 1: Dedicated Liquid Glass Tab Bar + Window Controls -->
     <div id="tabbar" class="chrome-row tabbar-row">
-      <button id="btn-home" class="glass-pill brand-pill" data-liquid-glass data-lg-bezel="10" data-lg-scale="15" data-lg-dispersion="1.0" title="dejavu Home (New Tab)">
+      <button id="btn-home" class="glass-pill brand-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10" title="dejavu Home (New Tab)">
         <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
       </button>
 
@@ -29,13 +29,13 @@
         <div id="tabs-strip" role="tablist">
           <div id="active-tab-glide" aria-hidden="true"></div>
         </div>
-        <button id="btn-new-tab" class="glass-pill circle-btn" data-liquid-glass data-lg-bezel="10" data-lg-scale="15" data-lg-dispersion="1.0" title="New Tab (Ctrl+T)">
+        <button id="btn-new-tab" class="glass-pill circle-btn" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10" title="New Tab (Ctrl+T)">
           <svg viewBox="0 0 18 18" fill="none"><path d="M9 4v10M4 9h10" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
         </button>
         <div id="drag-spacer" class="drag-spacer"></div>
       </div>
 
-      <div class="glass-pill win-pill" data-liquid-glass data-lg-bezel="11" data-lg-scale="16" data-lg-dispersion="0.95">
+      <div class="glass-pill win-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10">
         <button id="win-min" class="win-btn" title="Minimize">
           <svg viewBox="0 0 14 14" fill="none"><path d="M3 7h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
         </button>
@@ -48,9 +48,9 @@
       </div>
     </div>
 
-    <!-- Row 2: Clean Navigation, Spacious Centered Omnibox, History & Butterfly Profile -->
+    <!-- Row 2: Clean Navigation, Spacious Centered Omnibox, VPN, History & Butterfly Profile -->
     <div id="toolbar" class="chrome-row toolbar-row">
-      <div class="glass-pill nav-pill" data-liquid-glass data-lg-bezel="13" data-lg-scale="19" data-lg-dispersion="1.05">
+      <div class="glass-pill nav-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="11">
         <button id="btn-back" class="icon-btn" title="Back (Alt+Left)" disabled>
           <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4.5L7 10l5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -63,7 +63,7 @@
         </button>
       </div>
 
-      <div id="omnibox-pill" class="glass-pill omnibox-pill" data-liquid-glass data-lg-bezel="14" data-lg-scale="22" data-lg-dispersion="1.14">
+      <div id="omnibox-pill" class="glass-pill omnibox-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="11" data-lg-dome="0.015">
         <span id="omnibox-icon" class="omnibox-icon" aria-hidden="true">
           <svg class="ico-lock" viewBox="0 0 16 16" fill="none"><rect x="3.5" y="7" width="9" height="6.5" rx="1.8" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           <svg class="ico-search" viewBox="0 0 16 16" fill="none"><circle cx="7.2" cy="7.2" r="4.4" stroke="currentColor" stroke-width="1.45"/><path d="M10.8 10.8L13.6 13.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -86,7 +86,7 @@
         <div id="load-progress" class="load-progress"></div>
       </div>
 
-      <div class="glass-pill util-pill" data-liquid-glass data-lg-bezel="12" data-lg-scale="18" data-lg-dispersion="1.0">
+      <div class="glass-pill util-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="11">
         <button id="btn-vpn" class="vpn-trigger" title="dejavu VPN (Multi-Country Encrypted Tunnel)">
           <svg class="vpn-ico" viewBox="0 0 18 18" fill="none">
             <circle cx="9" cy="9" r="6.2" stroke="currentColor" stroke-width="1.45"/>

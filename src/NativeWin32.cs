@@ -16,9 +16,27 @@ namespace DejavuBrowser
         public const int WA_INACTIVE = 0;
         public const int MA_NOACTIVATE = 3;
 
+        public const int WS_CAPTION = 0x00C00000;
+        public const int WS_SYSMENU = 0x00080000;
+        public const int WS_THICKFRAME = 0x00040000;
         public const int WS_MINIMIZEBOX = 0x00020000;
+        public const int WS_MAXIMIZEBOX = 0x00010000;
         public const int WS_EX_TOOLWINDOW = 0x00000080;
         public const int WS_EX_NOACTIVATE = 0x08000000;
+
+        public const int SC_SIZE = 0xF000;
+        public const int WMSZ_LEFT = 1;
+        public const int WMSZ_RIGHT = 2;
+        public const int WMSZ_TOP = 3;
+        public const int WMSZ_TOPLEFT = 4;
+        public const int WMSZ_TOPRIGHT = 5;
+        public const int WMSZ_BOTTOM = 6;
+        public const int WMSZ_BOTTOMLEFT = 7;
+        public const int WMSZ_BOTTOMRIGHT = 8;
+
+        public const int SM_CXFRAME = 32;
+        public const int SM_CYFRAME = 33;
+        public const int SM_CXPADDEDBORDER = 92;
 
         public const uint SWP_NOSIZE = 0x0001;
         public const uint SWP_NOMOVE = 0x0002;
@@ -84,6 +102,15 @@ namespace DejavuBrowser
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        public struct NCCALCSIZE_PARAMS
+        {
+            public RECT rgrc0;
+            public RECT rgrc1;
+            public RECT rgrc2;
+            public IntPtr lppos;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
         public struct MONITORINFO
         {
             public int cbSize;
@@ -130,6 +157,9 @@ namespace DejavuBrowser
 
         [DllImport("user32.dll")]
         public static extern IntPtr GetAncestor(IntPtr hwnd, uint gaFlags);
+
+        [DllImport("user32.dll")]
+        public static extern int GetSystemMetrics(int nIndex);
 
         [DllImport("user32.dll")]
         public static extern uint GetDpiForWindow(IntPtr hwnd);

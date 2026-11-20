@@ -1,5 +1,5 @@
 /* ==========================================================================
-   dejavu — macOS Safari-Inspired Butterfly Liquid Glass Design System (v2.6)
+   dejavu v2.7 — A-to-Z macOS Safari Butterfly Liquid Glass Design System
    ZERO CSS Gaussian filtering. Every glass surface uses real Snell's Law SVG
    refraction, Cauchy RGB dispersion, and Schlick Fresnel specular caustics.
    ========================================================================== */
@@ -36,7 +36,7 @@
     ellipse 92% 88% at 50% 50%,
     rgba(12, 10, 23, 0.95) 0%,
     rgba(16, 13, 30, 0.90) 78%,
-    rgba(28, 23, 50, 0.52) 100%
+    rgba(28, 23, 50, 0.54) 100%
   );
   --glass-tint-active: linear-gradient(
     160deg,
@@ -57,21 +57,21 @@
   --shield-on: #9e7cff;
   --shield-green: #5eead4;
   --danger: #ff6b8b;
-  --spec-opacity: 0.52;
+  --spec-opacity: 0.50;
   --caustic-spot: rgba(214, 196, 255, 0.09);
 }
 
-/* Adaptive Light Polarity when browsing bright light webpages */
-body.theme-light:not(.on-newtab) {
+/* Adaptive Light Polarity when browsing bright light webpages (unless Tab Overview is open) */
+body.theme-light:not(.on-newtab):not(.tab-overview-open) {
   --ink: rgba(16, 14, 26, 0.94);
   --ink-muted: rgba(34, 30, 52, 0.62);
   --ink-subtle: rgba(44, 38, 66, 0.42);
 
   --glass-tint: linear-gradient(
     165deg,
-    rgba(255, 255, 255, 0.82) 0%,
-    rgba(247, 245, 253, 0.76) 55%,
-    rgba(239, 236, 249, 0.80) 100%
+    rgba(255, 255, 255, 0.84) 0%,
+    rgba(247, 245, 253, 0.78) 55%,
+    rgba(239, 236, 249, 0.82) 100%
   );
   --glass-tint-strong: radial-gradient(
     ellipse 92% 88% at 50% 50%,
@@ -96,7 +96,7 @@ body.theme-light:not(.on-newtab) {
   --accent-glow: rgba(124, 77, 255, 0.18);
   --shield-on: #7c4dff;
   --shield-green: #0d9488;
-  --spec-opacity: 0.46;
+  --spec-opacity: 0.44;
   --caustic-spot: rgba(255, 255, 255, 0.24);
 }
 
@@ -135,7 +135,7 @@ html, body {
   box-shadow: var(--glass-shadow);
   isolation: isolate;
   transition:
-    transform 0.42s var(--apple-spring),
+    transform 0.40s var(--apple-spring),
     background 0.22s var(--apple-fluid),
     border-color 0.22s var(--apple-fluid),
     opacity 0.22s var(--apple-fluid);
@@ -143,7 +143,7 @@ html, body {
 
 button.glass-pill:active,
 button[data-liquid-glass]:active {
-  transition-duration: 0.1s;
+  transition-duration: 0.10s;
   transition-timing-function: var(--apple-press);
 }
 
@@ -161,11 +161,11 @@ body.app-booting #newtab-canvas {
 }
 
 #chrome-header {
-  transition: opacity 0.42s var(--apple-fluid), transform 0.48s var(--apple-fluid);
+  transition: opacity 0.40s var(--apple-fluid), transform 0.46s var(--apple-fluid);
 }
 
 #newtab-canvas {
-  transition: opacity 0.48s var(--apple-fluid), transform 0.68s var(--apple-fluid);
+  transition: opacity 0.46s var(--apple-fluid), transform 0.64s var(--apple-fluid);
 }
 
 /* Exact Fresnel Specular Caustic Rim generated from SDF surface normals */
@@ -228,10 +228,11 @@ body.app-booting #newtab-canvas {
   z-index: 0;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.34s var(--apple-fluid), transform 0.56s var(--apple-fluid);
 }
 
-body.on-newtab #newtab-canvas {
+body.on-newtab #newtab-canvas,
+body.tab-overview-open #newtab-canvas {
   opacity: 1;
 }
 
@@ -251,14 +252,15 @@ body.has-favorites {
   pointer-events: none;
   opacity: 1;
   background: #0c0a15;
-  transition: height 0.28s var(--spring-soft), opacity 0.28s ease, background 0.28s ease;
+  transition: height 0.26s var(--apple-fluid), opacity 0.26s ease, background 0.26s ease;
 }
 
-body.on-newtab #top-backdrop-wrap {
+body.on-newtab #top-backdrop-wrap,
+body.tab-overview-open #top-backdrop-wrap {
   opacity: 0;
 }
 
-body.theme-light:not(.on-newtab) #top-backdrop-wrap {
+body.theme-light:not(.on-newtab):not(.tab-overview-open) #top-backdrop-wrap {
   background: #f3f2f8;
 }
 
@@ -268,7 +270,6 @@ body.theme-light:not(.on-newtab) #top-backdrop-wrap {
   display: block;
 }
 
-/* Whisper-thin bottom meniscus edge separating chrome cleanly from webpage */
 .top-backdrop-sheen {
   position: absolute;
   inset: 0;
@@ -281,7 +282,7 @@ body.theme-light:not(.on-newtab) #top-backdrop-wrap {
   border-bottom: 1px solid rgba(255, 255, 255, 0.09);
 }
 
-body.theme-light:not(.on-newtab) .top-backdrop-sheen {
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .top-backdrop-sheen {
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.22) 0%,
@@ -292,7 +293,7 @@ body.theme-light:not(.on-newtab) .top-backdrop-sheen {
 }
 
 /* ==========================================================================
-   Safari-Inspired Unified 2-Row Butterfly Liquid Glass Chrome
+   Authentic macOS Safari Unified 2-Row Butterfly Liquid Glass Chrome
    Exact total height: 2px top + 44px Row 1 + 38px Row 2 + 4px bottom = 88px
    With favorites ribbon (+34px): 122px exact match with BrowserForm.cs!
    ========================================================================== */
@@ -322,16 +323,16 @@ body.is-fullscreen #top-backdrop-wrap {
   height: 44px;
   padding: 4px 10px 2px;
   display: grid;
-  grid-template-columns: minmax(112px, 1fr) minmax(260px, 536px) minmax(232px, 1fr);
+  grid-template-columns: minmax(140px, 1fr) minmax(220px, min(480px, 42vw)) minmax(288px, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .toolbar-left {
   justify-self: start;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -339,7 +340,7 @@ body.is-fullscreen #top-backdrop-wrap {
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -351,46 +352,93 @@ body.is-fullscreen #top-backdrop-wrap {
   display: flex;
   align-items: center;
   gap: 6px;
+  transition: opacity 0.22s var(--apple-fluid), transform 0.26s var(--apple-fluid);
 }
 
-/* Butterfly Home Pill */
-.brand-pill {
-  width: 34px;
+body.tab-overview-open .tabbar-row {
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+/* Left Safari Capsule: Butterfly Home + Sidebar Toggle */
+.left-capsule {
   height: 34px;
+  padding: 2px 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.brand-inner-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
   padding: 0;
-  background: radial-gradient(circle at 42% 38%, rgba(40, 28, 68, 0.88), rgba(12, 10, 22, 0.92));
-  border-color: rgba(196, 158, 255, 0.24);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: background 0.16s ease, transform 0.28s var(--apple-spring);
+}
+
+.brand-inner-btn img {
+  width: 19px;
+  height: 19px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(188, 146, 255, 0.72));
+  transition: transform 0.28s var(--apple-spring);
+}
+
+.brand-inner-btn:hover {
+  background: var(--glass-hover-bg);
+}
+
+.brand-inner-btn:hover img {
+  transform: scale(1.10) rotate(-4deg);
+}
+
+.brand-inner-btn:active {
+  transform: scale(0.90);
+}
+
+/* Active Custom Tab Group Badge in Toolbar */
+.group-badge-pill {
+  height: 30px;
+  max-width: 120px;
+  padding: 0 10px 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11.4px;
+  font-weight: 560;
+  color: var(--ink);
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.group-badge-pill:hover {
+  border-color: rgba(206, 170, 255, 0.44);
+  transform: translateY(-0.5px);
+}
+
+.group-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
   flex-shrink: 0;
 }
 
-body.theme-light:not(.on-newtab) .brand-pill {
-  background: radial-gradient(circle at 42% 38%, rgba(255, 255, 255, 0.96), rgba(238, 232, 254, 0.92));
-  border-color: rgba(124, 77, 255, 0.22);
-}
-
-.brand-pill img {
-  width: 21px;
-  height: 21px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 6px rgba(188, 146, 255, 0.72));
-  transition: transform 0.28s var(--spring);
-}
-
-.brand-pill:hover {
-  transform: scale(1.06);
-  border-color: rgba(206, 170, 255, 0.48);
-}
-
-.brand-pill:hover img {
-  transform: scale(1.08) rotate(-4deg);
-}
-
-.brand-pill:active {
-  transform: scale(0.92);
+.group-badge-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Compact Safari Back/Forward Capsule */
@@ -413,6 +461,7 @@ body.theme-light:not(.on-newtab) .brand-pill {
 }
 
 .icon-btn {
+  position: relative;
   width: 28px;
   height: 28px;
   border-radius: 999px;
@@ -423,7 +472,7 @@ body.theme-light:not(.on-newtab) .brand-pill {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.16s ease, transform 0.22s var(--apple-spring), opacity 0.16s ease, color 0.16s ease;
+  transition: background 0.16s ease, transform 0.24s var(--apple-spring), opacity 0.16s ease, color 0.16s ease;
 }
 
 .icon-btn svg {
@@ -446,25 +495,63 @@ body.theme-light:not(.on-newtab) .brand-pill {
 }
 
 .icon-btn:active:not(:disabled) {
-  transform: scale(0.9);
+  transform: scale(0.89);
 }
 
 .icon-btn:disabled {
-  opacity: 0.30;
+  opacity: 0.28;
   cursor: default;
 }
 
+.icon-btn.is-active {
+  background: rgba(176, 124, 255, 0.26);
+  color: var(--accent-bright);
+}
+
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .icon-btn.is-active {
+  background: rgba(124, 77, 255, 0.16);
+  color: #6435e8;
+}
+
+/* Safari Downloads Active Indicator Dot */
+.dl-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6.5px;
+  height: 6.5px;
+  border-radius: 50%;
+  background: var(--accent-bright);
+  box-shadow: 0 0 7px var(--accent);
+}
+
+.dl-trigger.downloading .dl-dot {
+  background: #5eead4;
+  box-shadow: 0 0 9px #5eead4;
+  animation: pulseDot 1.1s ease-in-out infinite;
+}
+
+@media (max-width: 900px) {
+  .history-toolbar-btn {
+    display: none;
+  }
+  .toolbar-row {
+    grid-template-columns: minmax(136px, auto) minmax(200px, 1fr) auto;
+  }
+}
+
 /* ==========================================================================
-   Iconic Safari Smart Search Field (#omnibox-pill)
-   - Idle on webpage: centered domain text + green lock icon right beside it!
-   - Focused/editing: smoothly left-aligned, serene smoked obsidian, 0 glare!
-   - Reload/Stop, Favorite Star & Ad-Shield neatly tucked on right inside pill!
+   Iconic macOS Safari Smart Search Field (#omnibox-pill)
+   - Left inside pill: Privacy Shield + Reader View (fades cleanly when typing)
+   - Center: Clean centered domain + green lock when idle
+   - Right inside pill: Favorite Star + Reload/Stop
+   - Focused: Left-aligned glare-free smoked obsidian / crisp porcelain!
    ========================================================================== */
 .omnibox-pill {
   width: 100%;
   height: 34px;
   justify-self: center;
-  padding: 0 4px 0 12px;
+  padding: 0 4px 0 5px;
   display: flex;
   align-items: center;
   gap: 0;
@@ -473,13 +560,13 @@ body.theme-light:not(.on-newtab) .brand-pill {
   background: linear-gradient(180deg, rgba(16, 14, 28, 0.78) 0%, rgba(12, 10, 22, 0.84) 100%);
   --spec-opacity: 0.34;
   transition:
-    background 0.2s var(--apple-fluid),
-    border-color 0.2s var(--apple-fluid),
+    background 0.20s var(--apple-fluid),
+    border-color 0.20s var(--apple-fluid),
     box-shadow 0.22s var(--apple-fluid),
     transform 0.26s var(--apple-fluid);
 }
 
-body.theme-light:not(.on-newtab) .omnibox-pill {
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .omnibox-pill {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(246, 244, 253, 0.92) 100%);
   --spec-opacity: 0.28;
 }
@@ -489,27 +576,28 @@ body.theme-light:not(.on-newtab) .omnibox-pill {
   background: linear-gradient(180deg, rgba(21, 18, 36, 0.84) 0%, rgba(15, 13, 27, 0.88) 100%);
 }
 
-body.theme-light:not(.on-newtab) .omnibox-pill:hover:not(:focus-within):not(.is-editing) {
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .omnibox-pill:hover:not(:focus-within):not(.is-editing) {
   border-color: rgba(124, 77, 255, 0.24);
   background: rgba(255, 255, 255, 0.95);
 }
 
 .omnibox-pill:focus-within,
 .omnibox-pill.is-editing {
+  padding-left: 12px;
   background: rgba(10, 9, 20, 0.96);
   border-color: rgba(186, 144, 255, 0.58);
-  --spec-opacity: 0.16;
+  --spec-opacity: 0.14;
   box-shadow:
     0 10px 26px -8px rgba(0, 0, 0, 0.58),
     0 0 0 2px rgba(176, 124, 255, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
 
-body.theme-light:not(.on-newtab) .omnibox-pill:focus-within,
-body.theme-light:not(.on-newtab) .omnibox-pill.is-editing {
-  background: rgba(255, 255, 255, 0.97);
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .omnibox-pill:focus-within,
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .omnibox-pill.is-editing {
+  background: rgba(255, 255, 255, 0.98);
   border-color: rgba(124, 77, 255, 0.48);
-  --spec-opacity: 0.14;
+  --spec-opacity: 0.12;
   box-shadow:
     0 8px 22px -8px rgba(24, 16, 64, 0.16),
     0 0 0 2px rgba(124, 77, 255, 0.16),
@@ -519,8 +607,71 @@ body.theme-light:not(.on-newtab) .omnibox-pill.is-editing {
 /* Suppress pointer caustic spot over text while typing (100% zero glare!) */
 .omnibox-pill:focus-within::after,
 .omnibox-pill.is-editing::after,
-.hero-search:focus-within::after {
+.hero-search:focus-within::after,
+.ov-search-pill:focus-within::after {
   opacity: 0 !important;
+}
+
+/* Left Actions inside Safari Smart Search Field (Shield + Reader View) */
+.omnibox-left-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  z-index: 3 !important;
+  transition: opacity 0.16s ease, max-width 0.20s var(--apple-fluid);
+  max-width: 112px;
+  overflow: hidden;
+}
+
+.omnibox-pill:focus-within .omnibox-left-actions,
+.omnibox-pill.is-editing .omnibox-left-actions {
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Safari Reader Mode Button inside Smart Search Field */
+.omnibox-reader-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.22s var(--apple-spring);
+}
+
+.omnibox-reader-btn svg {
+  width: 13.5px;
+  height: 13.5px;
+}
+
+.omnibox-reader-btn:hover {
+  background: var(--glass-hover-bg);
+  color: var(--ink);
+  transform: scale(1.06);
+}
+
+.omnibox-reader-btn:active {
+  transform: scale(0.88);
+}
+
+.omnibox-reader-btn.active {
+  background: rgba(176, 124, 255, 0.28);
+  border-color: rgba(206, 174, 255, 0.54);
+  color: #f4ecff;
+}
+
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .omnibox-reader-btn.active {
+  background: rgba(124, 77, 255, 0.16);
+  border-color: rgba(124, 77, 255, 0.36);
+  color: #6435e8;
 }
 
 /* Left search icon shown cleanly only during editing */
@@ -547,25 +698,25 @@ body.theme-light:not(.on-newtab) .omnibox-pill.is-editing {
 .omnibox-pill.is-editing .omnibox-edit-ico {
   width: 15px;
   margin-right: 7px;
-  opacity: 0.76;
+  opacity: 0.78;
 }
 
 /* Centered Safari Domain + Green Lock Overlay (shown when unfocused) */
 .omnibox-display {
   position: absolute !important;
   inset: 0;
-  padding: 0 112px;
+  padding: 0 92px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
   pointer-events: none;
   z-index: 2 !important;
-  transition: opacity 0.16s ease, transform 0.2s var(--apple-fluid);
+  transition: opacity 0.16s ease, transform 0.20s var(--apple-fluid);
 }
 
 body.on-newtab .omnibox-display {
-  padding: 0 48px;
+  padding: 0 54px;
 }
 
 .omnibox-pill:focus-within .omnibox-display,
@@ -643,12 +794,13 @@ body.on-newtab .omnibox-display {
 }
 
 #omnibox-input::selection,
-#newtab-search-input::selection {
+#newtab-search-input::selection,
+#ov-search-input::selection {
   background: rgba(176, 124, 255, 0.38);
   color: #ffffff;
 }
 
-body.theme-light:not(.on-newtab) #omnibox-input::selection {
+body.theme-light:not(.on-newtab):not(.tab-overview-open) #omnibox-input::selection {
   background: rgba(124, 77, 255, 0.24);
   color: #100e1a;
 }
@@ -657,17 +809,17 @@ body.theme-light:not(.on-newtab) #omnibox-input::selection {
 .omnibox-actions {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   flex-shrink: 0;
   z-index: 3 !important;
 }
 
-/* Embedded Ad-Blocker Shield Chip */
+/* Embedded Safari Left-Side Privacy Shield Chip */
 .shield-chip {
   height: 24px;
   padding: 0 7px 0 6px;
   border-radius: 999px;
-  border: 1px solid rgba(182, 140, 255, 0.30);
+  border: 1px solid rgba(182, 140, 255, 0.28);
   background: rgba(158, 114, 255, 0.14);
   color: var(--accent-bright);
   display: inline-flex;
@@ -678,12 +830,12 @@ body.theme-light:not(.on-newtab) #omnibox-input::selection {
   font-weight: 600;
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.2s var(--apple-fluid);
+  transition: all 0.20s var(--apple-fluid);
 }
 
 .shield-chip svg {
-  width: 13px;
-  height: 13px;
+  width: 12.5px;
+  height: 12.5px;
 }
 
 .shield-chip:hover {
@@ -692,7 +844,7 @@ body.theme-light:not(.on-newtab) #omnibox-input::selection {
 }
 
 .shield-chip:active {
-  transform: scale(0.93);
+  transform: scale(0.92);
 }
 
 .shield-chip.paused {
@@ -772,7 +924,11 @@ body.theme-light:not(.on-newtab) #omnibox-input::selection {
 }
 
 /* ==========================================================================
-   Row 2: Safari Separate Full-Width Tab Bar (Balanced Flex Tabs + Glide Pill)
+   Row 2: Authentic macOS Safari Full-Width Tab Bar
+   - Pinned tabs (38px compact favicon-only on far left)
+   - Equal-width stretching Safari tabs (flex: 1 1 0; min: 108px; max: 340px)
+   - Authentic Safari LEFT-SIDE hover '×' close button (never shifts centered title!)
+   - GPU-composited sliding #active-tab-glide pill
    ========================================================================== */
 #tabs-area {
   flex: 1;
@@ -808,7 +964,7 @@ body.theme-light:not(.on-newtab) #omnibox-input::selection {
   display: none;
 }
 
-/* Apple-style GPU sliding active tab liquid pill with subtle amethyst butterfly iridescence */
+/* Apple-style GPU sliding active tab liquid pill with amethyst butterfly iridescence */
 #active-tab-glide {
   position: absolute;
   top: 1px;
@@ -822,10 +978,10 @@ body.theme-light:not(.on-newtab) #omnibox-input::selection {
     rgba(24, 19, 44, 0.90) 56%,
     rgba(29, 22, 52, 0.88) 100%
   );
-  border: 1px solid rgba(196, 158, 255, 0.42);
+  border: 1px solid rgba(196, 158, 255, 0.44);
   box-shadow:
     0 4px 14px -4px rgba(0, 0, 0, 0.44),
-    0 0 12px -4px rgba(176, 124, 255, 0.24),
+    0 0 12px -4px rgba(176, 124, 255, 0.26),
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
     inset 0 -1px 0 rgba(128, 214, 255, 0.16);
   pointer-events: none;
@@ -833,14 +989,14 @@ body.theme-light:not(.on-newtab) #omnibox-input::selection {
   opacity: 0;
   will-change: transform, width;
   transition:
-    transform 0.40s var(--apple-spring),
-    width 0.34s var(--apple-fluid),
-    opacity 0.20s ease;
+    transform 0.38s var(--apple-spring),
+    width 0.32s var(--apple-fluid),
+    opacity 0.18s ease;
 }
 
-body.theme-light:not(.on-newtab) #active-tab-glide {
+body.theme-light:not(.on-newtab):not(.tab-overview-open) #active-tab-glide {
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.97) 0%, rgba(244, 239, 255, 0.94) 100%);
-  border-color: rgba(124, 77, 255, 0.28);
+  border-color: rgba(124, 77, 255, 0.30);
   box-shadow:
     0 4px 12px -4px rgba(24, 16, 64, 0.12),
     0 0 10px -4px rgba(124, 77, 255, 0.14),
@@ -848,14 +1004,14 @@ body.theme-light:not(.on-newtab) #active-tab-glide {
     inset 0 -1px 0 rgba(124, 77, 255, 0.10);
 }
 
-/* Safari Balanced Flex Tabs */
+/* Authentic Safari Equal-Width Stretching Tabs */
 .tab-pill {
   position: relative;
   z-index: 1;
   height: 30px;
-  flex: 1 1 140px;
-  min-width: 112px;
-  max-width: 248px;
+  flex: 1 1 0;
+  min-width: 108px;
+  max-width: none;
   padding: 0 26px;
   border-radius: 999px;
   display: inline-flex;
@@ -868,10 +1024,29 @@ body.theme-light:not(.on-newtab) #active-tab-glide {
   box-shadow: none;
   --spec-opacity: 0.14;
   opacity: 0.84;
-  animation: tabBloom 0.36s var(--apple-spring);
+  animation: tabBloom 0.34s var(--apple-spring);
 }
 
-body.theme-light:not(.on-newtab) .tab-pill {
+/* Safari Compact Pinned Tab (Favicon-Only on Far Left!) */
+.tab-pill.pinned {
+  flex: 0 0 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  padding: 0 !important;
+  border-color: rgba(196, 158, 255, 0.22);
+}
+
+.tab-pill.pinned .tab-title,
+.tab-pill.pinned .tab-close {
+  display: none !important;
+}
+
+.tab-pill.pinned .tab-favicon {
+  width: 15px;
+  height: 15px;
+}
+
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill {
   background: rgba(24, 18, 52, 0.045);
   border-color: rgba(24, 18, 52, 0.07);
   --spec-opacity: 0.10;
@@ -922,8 +1097,8 @@ body.theme-light:not(.on-newtab) .tab-pill {
   border-color: rgba(255, 255, 255, 0.13);
 }
 
-body.theme-light:not(.on-newtab) .tab-pill:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.65);
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .tab-pill:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.68);
   border-color: rgba(24, 18, 52, 0.11);
 }
 
@@ -988,12 +1163,12 @@ body.theme-light:not(.on-newtab) .tab-pill:hover:not(.active) {
   text-overflow: ellipsis;
 }
 
-/* Hover-only Safari Close Button (never shifts centered title!) */
+/* Authentic Safari LEFT-SIDE hover close button (never shifts centered title!) */
 .tab-close {
   position: absolute !important;
-  right: 6px;
+  left: 6px;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(0.84);
   width: 17px;
   height: 17px;
   border-radius: 50%;
@@ -1007,11 +1182,12 @@ body.theme-light:not(.on-newtab) .tab-pill:hover:not(.active) {
   opacity: 0;
   pointer-events: none;
   z-index: 4 !important;
-  transition: opacity 0.14s ease, background 0.14s ease, color 0.14s ease;
+  transition: opacity 0.14s ease, transform 0.22s var(--apple-spring), background 0.14s ease, color 0.14s ease;
 }
 
 .tab-pill:hover .tab-close {
-  opacity: 0.78;
+  opacity: 0.80;
+  transform: translateY(-50%) scale(1);
   pointer-events: auto;
 }
 
@@ -1100,7 +1276,7 @@ body.theme-light:not(.on-newtab) .tab-pill:hover:not(.active) {
 }
 
 /* ==========================================================================
-   Main Viewport & Webview Layers
+   Main Viewport
    ========================================================================== */
 #viewport {
   position: fixed;
@@ -1110,7 +1286,7 @@ body.theme-light:not(.on-newtab) .tab-pill:hover:not(.active) {
   bottom: 0;
   z-index: 10;
   overflow: hidden;
-  transition: top 0.28s var(--spring-soft);
+  transition: top 0.26s var(--apple-fluid);
 }
 
 body.is-fullscreen #viewport {
@@ -1118,50 +1294,62 @@ body.is-fullscreen #viewport {
 }
 
 /* ==========================================================================
-   Safari Start Page — Butterfly Edition
+   Authentic macOS Safari Start Page — Butterfly Amethyst Edition
    ========================================================================== */
 #newtab-view {
   position: absolute;
   inset: 0;
   z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 18px 24px 74px;
   opacity: 0;
   pointer-events: none;
   transform: scale(0.985);
-  transition: opacity 0.28s ease, transform 0.34s var(--apple-fluid);
+  transition: opacity 0.28s var(--apple-fluid), transform 0.34s var(--apple-fluid);
 }
 
-body.on-newtab #newtab-view {
+body.on-newtab:not(.tab-overview-open) #newtab-view {
   opacity: 1;
   pointer-events: auto;
   transform: scale(1);
 }
 
-.newtab-center {
+.startpage-scroll {
   width: 100%;
-  max-width: 680px;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 16px 28px 54px;
+}
+
+.startpage-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.startpage-container {
+  width: 100%;
+  max-width: 720px;
+  margin: auto 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
 }
 
 .hero-brand {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .hero-logo-wrap {
-  width: 104px;
-  height: 104px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, rgba(176, 124, 255, 0.16) 0%, rgba(176, 124, 255, 0.04) 48%, transparent 72%);
+  background: radial-gradient(circle at 50% 50%, rgba(176, 124, 255, 0.18) 0%, rgba(176, 124, 255, 0.04) 50%, transparent 74%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1170,23 +1358,23 @@ body.on-newtab #newtab-view {
 
 @keyframes butterflyFloat {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-6px) rotate(1.3deg); }
+  50% { transform: translateY(-5px) rotate(1.2deg); }
 }
 
 #newtab-logo {
-  width: 94px;
-  height: 94px;
+  width: 62px;
+  height: 62px;
   object-fit: contain;
-  filter: drop-shadow(0 0 22px rgba(170, 114, 255, 0.50));
+  filter: drop-shadow(0 0 20px rgba(170, 114, 255, 0.54));
 }
 
 .hero-title {
-  font-size: 36px;
+  font-size: 26px;
   font-weight: 300;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.16em;
   text-transform: lowercase;
   color: rgba(248, 244, 255, 0.96);
-  text-shadow: 0 2px 22px rgba(168, 114, 255, 0.34);
+  text-shadow: 0 2px 20px rgba(168, 114, 255, 0.36);
 }
 
 /* Liquid Glass Hero Smart Search Pill */
@@ -1199,8 +1387,8 @@ body.on-newtab #newtab-view {
 
 .hero-search {
   width: 100%;
-  height: 52px;
-  padding: 0 7px 0 19px;
+  height: 50px;
+  padding: 0 7px 0 18px;
   display: flex;
   align-items: center;
   gap: 11px;
@@ -1210,9 +1398,9 @@ body.on-newtab #newtab-view {
 
 .hero-search:focus-within {
   transform: scale(1.012);
-  background: rgba(11, 9, 22, 0.94);
+  background: rgba(11, 9, 22, 0.95);
   border-color: rgba(204, 168, 255, 0.60);
-  --spec-opacity: 0.22;
+  --spec-opacity: 0.20;
   box-shadow:
     0 18px 44px -10px rgba(0, 0, 0, 0.62),
     0 0 0 2px rgba(176, 124, 255, 0.28),
@@ -1236,7 +1424,7 @@ body.on-newtab #newtab-view {
   color: #f8f6ff;
   caret-color: var(--accent-bright);
   font-family: inherit;
-  font-size: 15px;
+  font-size: 14.8px;
   font-weight: 420;
   user-select: text;
 }
@@ -1246,8 +1434,8 @@ body.on-newtab #newtab-view {
 }
 
 .hero-go-btn {
-  width: 36px;
-  height: 36px;
+  width: 35px;
+  height: 35px;
   border-radius: 999px;
   border: 1px solid rgba(214, 186, 255, 0.28);
   background: linear-gradient(135deg, rgba(164, 114, 255, 0.34), rgba(124, 77, 255, 0.26));
@@ -1257,7 +1445,7 @@ body.on-newtab #newtab-view {
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.2s ease, transform 0.26s var(--apple-spring), border-color 0.2s ease;
+  transition: background 0.20s ease, transform 0.26s var(--apple-spring), border-color 0.20s ease;
 }
 
 .hero-go-btn svg {
@@ -1275,125 +1463,139 @@ body.on-newtab #newtab-view {
   transform: scale(0.92);
 }
 
-/* Safari Start Page Favorites Section + Soft Amethyst Butterfly-Wing Hover Gleam */
-.favorites-section {
+/* ==========================================================================
+   Authentic macOS Safari Start Page Sections (Left-Aligned Bold Titles!)
+   ========================================================================== */
+.sp-section {
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 11px;
-}
-
-.favorites-heading {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-  color: rgba(224, 214, 250, 0.54);
-}
-
-.shortcuts-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
   gap: 12px;
-  max-width: 680px;
 }
 
-.shortcut-tile {
-  width: 80px;
-  height: 84px;
-  border-radius: 22px;
-  padding: 11px 6px 8px;
+.sp-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.sp-section-title {
+  font-size: 15.5px;
+  font-weight: 640;
+  letter-spacing: -0.012em;
+  color: rgba(248, 244, 255, 0.94);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+}
+
+/* Safari Favorites: Squircle Glass Icon Tiles with Crisp Labels BELOW Each Tile */
+.safari-fav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 84px));
+  justify-content: start;
+  gap: 14px 12px;
+  width: 100%;
+}
+
+.safari-fav-item {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 7px;
+  background: transparent;
+  border: none;
+  padding: 0;
   cursor: pointer;
   color: rgba(246, 242, 255, 0.94);
-  background: linear-gradient(160deg, rgba(28, 23, 48, 0.66) 0%, rgba(16, 13, 30, 0.74) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  --spec-opacity: 0.44;
-  text-decoration: none;
-  animation: tileCascade 0.46s var(--apple-spring) calc(var(--stagger-i, 0) * 30ms) both;
+  font-family: inherit;
+  animation: tileCascade 0.44s var(--apple-spring) calc(var(--stagger-i, 0) * 28ms) both;
 }
 
 @keyframes tileCascade {
-  from { opacity: 0; transform: translateY(14px) scale(0.88); }
+  from { opacity: 0; transform: translateY(12px) scale(0.88); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.shortcut-tile:hover {
-  transform: translateY(-4px) scale(1.055);
-  background: linear-gradient(
-    145deg,
-    rgba(64, 44, 114, 0.76) 0%,
-    rgba(30, 22, 58, 0.80) 54%,
-    rgba(24, 34, 62, 0.78) 100%
-  );
-  border-color: rgba(208, 174, 255, 0.58);
-  box-shadow:
-    0 14px 28px -8px rgba(0, 0, 0, 0.54),
-    0 0 20px -6px rgba(176, 124, 255, 0.36),
-    inset 0 1px 0 rgba(236, 218, 255, 0.32),
-    inset 0 -1px 0 rgba(125, 211, 252, 0.22);
-}
-
-.shortcut-tile:active {
-  transform: scale(0.92);
-  transition-duration: 0.1s;
-  transition-timing-function: var(--apple-press);
-}
-
-.shortcut-ico-wrap {
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+.safari-fav-squircle {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 17px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  font-size: 14px;
+  background: linear-gradient(155deg, rgba(30, 24, 52, 0.74) 0%, rgba(16, 13, 30, 0.82) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  --spec-opacity: 0.44;
+  transition:
+    transform 0.34s var(--apple-spring),
+    background 0.22s var(--apple-fluid),
+    border-color 0.22s var(--apple-fluid),
+    box-shadow 0.24s var(--apple-fluid);
+}
+
+.safari-fav-item:hover .safari-fav-squircle {
+  transform: translateY(-4px) scale(1.06);
+  background: linear-gradient(
+    145deg,
+    rgba(68, 46, 120, 0.80) 0%,
+    rgba(30, 22, 58, 0.84) 55%,
+    rgba(22, 34, 62, 0.80) 100%
+  );
+  border-color: rgba(212, 178, 255, 0.62);
+  box-shadow:
+    0 14px 28px -8px rgba(0, 0, 0, 0.56),
+    0 0 22px -6px rgba(176, 124, 255, 0.40),
+    inset 0 1px 0 rgba(238, 222, 255, 0.34),
+    inset 0 -1px 0 rgba(125, 211, 252, 0.22);
+}
+
+.safari-fav-item:active .safari-fav-squircle {
+  transform: scale(0.92);
+  transition-duration: 0.09s;
+  transition-timing-function: var(--apple-press);
+}
+
+.safari-fav-squircle img {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  object-fit: contain;
+  transition: transform 0.28s var(--apple-spring);
+}
+
+.safari-fav-item:hover .safari-fav-squircle img {
+  transform: scale(1.06);
+}
+
+.safari-fav-letter {
+  font-size: 22px;
   font-weight: 600;
   color: var(--accent-bright);
-  transition: transform 0.28s var(--apple-spring), background 0.2s ease, border-color 0.2s ease;
 }
 
-.shortcut-tile:hover .shortcut-ico-wrap {
-  transform: scale(1.06);
-  background: rgba(196, 158, 255, 0.16);
-  border-color: rgba(214, 186, 255, 0.32);
-}
-
-.shortcut-ico-wrap img {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-}
-
-.shortcut-name {
-  font-size: 11px;
+.safari-fav-label {
+  font-size: 11.4px;
   font-weight: 500;
-  max-width: 68px;
+  max-width: 78px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  opacity: 0.90;
+  color: rgba(244, 240, 255, 0.90);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.65);
 }
 
 .shortcut-remove {
   position: absolute !important;
-  top: 4px;
-  right: 4px;
-  width: 18px;
-  height: 18px;
+  top: -5px;
+  right: -5px;
+  width: 19px;
+  height: 19px;
   border-radius: 50%;
-  border: none;
-  background: rgba(10, 8, 18, 0.78);
-  color: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(14, 11, 26, 0.92);
+  color: rgba(255, 255, 255, 0.90);
   font-size: 11px;
   line-height: 1;
   display: flex;
@@ -1401,82 +1603,239 @@ body.on-newtab #newtab-view {
   justify-content: center;
   cursor: pointer;
   opacity: 0;
-  z-index: 5 !important;
-  transition: opacity 0.16s ease, background 0.16s ease;
+  transform: scale(0.75);
+  z-index: 6 !important;
+  transition: opacity 0.16s ease, transform 0.22s var(--apple-spring), background 0.16s ease;
 }
 
-.shortcut-tile:hover .shortcut-remove {
+.safari-fav-item:hover .shortcut-remove {
   opacity: 1;
+  transform: scale(1);
 }
 
 .shortcut-remove:hover {
-  background: rgba(255, 86, 118, 0.86);
+  background: rgba(255, 86, 118, 0.90);
+  border-color: rgba(255, 160, 178, 0.65);
 }
 
-.shortcut-add {
-  opacity: 0.72;
+.safari-fav-item.shortcut-add .safari-fav-squircle {
+  opacity: 0.78;
 }
 
-.shortcut-add:hover {
+.safari-fav-item.shortcut-add:hover .safari-fav-squircle {
   opacity: 1;
 }
 
-/* Safari-Style Bottom Privacy Report Pill + Butterfly Wallpapers Trigger */
-.newtab-bottom-bar {
-  position: absolute;
-  bottom: 20px;
-  left: 24px;
-  right: 24px;
+/* Safari Frequently Visited Compact Single-Row Cards */
+.safari-frequent-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .safari-frequent-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.freq-card {
+  height: 56px;
+  padding: 0 12px;
+  border-radius: 15px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  pointer-events: none;
-}
-
-.privacy-report-pill {
-  height: 36px;
-  padding: 3px 5px;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  pointer-events: auto;
-  background: linear-gradient(165deg, rgba(22, 18, 38, 0.74) 0%, rgba(13, 11, 25, 0.82) 100%);
-  --spec-opacity: 0.36;
-}
-
-.privacy-seg {
-  height: 28px;
-  padding: 0 11px;
-  border: none;
-  border-radius: 999px;
-  background: transparent;
-  color: rgba(238, 232, 255, 0.90);
-  font-family: inherit;
-  font-size: 11.8px;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+  gap: 10px;
+  text-align: left;
   cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.18s ease, color 0.18s ease, transform 0.22s var(--apple-spring);
+  font-family: inherit;
+  color: var(--ink);
+  background: linear-gradient(155deg, rgba(28, 23, 48, 0.72) 0%, rgba(16, 13, 30, 0.80) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  --spec-opacity: 0.34;
 }
 
-.privacy-seg:hover {
-  background: rgba(255, 255, 255, 0.09);
-  color: #ffffff;
+.freq-card:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: rgba(206, 174, 255, 0.48);
+  background: linear-gradient(155deg, rgba(46, 35, 80, 0.78) 0%, rgba(22, 18, 42, 0.84) 100%);
 }
 
-.privacy-seg:active {
+.freq-card:active {
   transform: scale(0.96);
 }
 
-.privacy-sep {
-  width: 1px;
-  height: 15px;
-  background: rgba(255, 255, 255, 0.14);
+.freq-ico {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.freq-ico img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.freq-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.freq-title {
+  font-size: 12.2px;
+  font-weight: 560;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.freq-host {
+  font-size: 10.6px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+/* Iconic Safari Privacy Report Banner Card + Live VPN Pill */
+.safari-privacy-card {
+  width: 100%;
+  min-height: 66px;
+  padding: 8px 10px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: linear-gradient(155deg, rgba(25, 20, 44, 0.78) 0%, rgba(14, 11, 26, 0.86) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  --spec-opacity: 0.36;
+}
+
+.sp-privacy-main {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.24s var(--apple-spring);
+}
+
+.sp-privacy-main:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.sp-privacy-main:active {
+  transform: scale(0.985);
+}
+
+.sp-shield-medallion {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(164, 116, 255, 0.28), rgba(94, 234, 212, 0.16));
+  border: 1px solid rgba(196, 162, 255, 0.34);
+  color: var(--accent-bright);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sp-privacy-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.sp-privacy-headline {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.4px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+#newtab-stat-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-bright);
+}
+
+.sp-privacy-sub {
+  font-size: 11.4px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-privacy-divider {
+  width: 1px;
+  height: 34px;
+  background: rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.sp-vpn-chip {
+  padding: 8px 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  font-family: inherit;
+  text-align: left;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.24s var(--apple-spring);
+}
+
+.sp-vpn-chip:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(206, 174, 255, 0.38);
+  transform: translateY(-1px);
+}
+
+.sp-vpn-chip:active {
+  transform: scale(0.96);
+}
+
+.sp-vpn-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sp-vpn-title {
+  font-size: 12.2px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sp-vpn-sub {
+  font-size: 10.6px;
+  color: var(--ink-muted);
+  white-space: nowrap;
 }
 
 .stat-dot {
@@ -1489,93 +1848,543 @@ body.on-newtab #newtab-view {
 }
 
 .vpn-status-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: rgba(204, 196, 236, 0.42);
   flex-shrink: 0;
   transition: background 0.22s ease, box-shadow 0.22s ease;
 }
 
-.privacy-seg.vpn-seg.connected {
-  color: #82ffec;
+.sp-vpn-chip.connected {
+  border-color: rgba(94, 234, 212, 0.44);
   background: rgba(45, 212, 191, 0.14);
 }
 
-.privacy-seg.vpn-seg.connected .vpn-status-dot {
+.sp-vpn-chip.connected .sp-vpn-title {
+  color: #82ffec;
+}
+
+.sp-vpn-chip.connected .vpn-status-dot {
   background: #5eead4;
   box-shadow: 0 0 9px #5eead4;
 }
 
-.privacy-seg.vpn-seg.connecting {
-  color: var(--accent-bright);
+.sp-vpn-chip.connecting {
+  border-color: rgba(196, 158, 255, 0.46);
   background: rgba(176, 124, 255, 0.16);
 }
 
-.privacy-seg.vpn-seg.connecting .vpn-status-dot {
+.sp-vpn-chip.connecting .sp-vpn-title {
+  color: var(--accent-bright);
+}
+
+.sp-vpn-chip.connecting .vpn-status-dot {
   background: var(--accent-bright);
   box-shadow: 0 0 9px var(--accent-bright);
 }
 
-.wallpaper-trigger {
+/* Safari Reading List Shelf Cards */
+.safari-reading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+.reading-card {
+  position: relative;
+  padding: 11px 12px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  background: linear-gradient(155deg, rgba(28, 23, 48, 0.72) 0%, rgba(16, 13, 30, 0.80) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  --spec-opacity: 0.34;
+  transition: transform 0.26s var(--apple-spring), border-color 0.20s ease, background 0.20s ease;
+}
+
+.reading-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(206, 174, 255, 0.48);
+}
+
+.reading-card-rm {
   position: absolute !important;
-  right: 0;
-  height: 36px;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(10, 8, 20, 0.80);
+  color: var(--ink-muted);
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.reading-card:hover .reading-card-rm {
+  opacity: 1;
+}
+
+.reading-card-rm:hover {
+  background: rgba(255, 86, 118, 0.86);
+  color: #ffffff;
+}
+
+/* Bottom-Right Iconic Safari Customize Sliders Button */
+.customize-trigger {
+  position: fixed !important;
+  right: 20px;
+  bottom: 18px;
+  height: 34px;
   padding: 0 14px;
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: rgba(242, 234, 255, 0.92);
+  color: rgba(242, 236, 255, 0.92);
   font-family: inherit;
-  font-size: 11.8px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 560;
   cursor: pointer;
-  pointer-events: auto;
-  background: linear-gradient(165deg, rgba(24, 19, 42, 0.74) 0%, rgba(14, 11, 26, 0.82) 100%);
-  --spec-opacity: 0.36;
+  z-index: 20;
+  background: linear-gradient(165deg, rgba(24, 19, 42, 0.78) 0%, rgba(14, 11, 26, 0.86) 100%);
+  --spec-opacity: 0.38;
 }
 
-.wallpaper-trigger:hover {
-  transform: translateY(-2px) scale(1.035);
+.customize-trigger:hover {
+  transform: translateY(-2px) scale(1.04);
   border-color: rgba(214, 186, 255, 0.56);
   color: #ffffff;
 }
 
-.wallpaper-trigger:active {
-  transform: scale(0.95);
+.customize-trigger:active {
+  transform: scale(0.94);
 }
 
-@media (max-width: 920px) {
-  .newtab-bottom-bar {
-    justify-content: space-between;
+@media (max-width: 720px) {
+  .safari-privacy-card {
+    flex-direction: column;
+    align-items: stretch;
   }
-  .wallpaper-trigger {
-    position: relative !important;
-    right: auto;
+  .sp-privacy-divider {
+    width: 100%;
+    height: 1px;
   }
 }
 
 /* ==========================================================================
-   Butterfly Studio — Liquid Glass Wallpaper Store Modal
+   Authentic macOS Safari Tab Overview Grid (Full-Window Spring Zoom!)
+   ========================================================================== */
+.tab-overview {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  padding: 18px 26px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: radial-gradient(ellipse at 50% 20%, rgba(16, 12, 32, 0.52), rgba(7, 6, 14, 0.78));
+  animation: overviewZoomIn 0.34s var(--apple-spring);
+}
+
+@keyframes overviewZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(1.045);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.overview-bar {
+  display: grid;
+  grid-template-columns: 1fr minmax(200px, 340px) 1fr;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.overview-bar-left {
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overview-bar-right {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ov-group-pill {
+  height: 34px;
+  padding: 0 10px 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.6px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ov-group-pill:hover {
+  border-color: rgba(206, 174, 255, 0.48);
+}
+
+.ov-count-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(176, 124, 255, 0.24);
+  color: var(--accent-bright);
+}
+
+.ov-search-pill {
+  width: 100%;
+  height: 34px;
+  padding: 0 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-muted);
+  background: rgba(12, 10, 24, 0.86);
+  --spec-opacity: 0.24;
+}
+
+.ov-search-pill:focus-within {
+  border-color: rgba(196, 158, 255, 0.56);
+  background: rgba(10, 8, 20, 0.96);
+}
+
+#ov-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12.8px;
+  user-select: text;
+}
+
+#ov-search-input::placeholder {
+  color: var(--ink-muted);
+}
+
+.ov-act-btn {
+  height: 34px;
+  padding: 0 13px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ov-act-btn:hover {
+  border-color: rgba(206, 174, 255, 0.46);
+  transform: translateY(-1px);
+}
+
+.ov-done-btn {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 202, 255, 0.54);
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12.2px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(139, 92, 246, 0.36);
+  transition: transform 0.24s var(--apple-spring), filter 0.16s ease;
+}
+
+.ov-done-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.ov-done-btn:active {
+  transform: scale(0.93);
+}
+
+.overview-grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  align-content: start;
+  gap: 18px;
+  padding: 4px 2px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196, 158, 255, 0.34) transparent;
+}
+
+.ov-card {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(16, 13, 28, 0.84);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.54);
+  animation: tileCascade 0.36s var(--apple-spring) calc(var(--stagger-i, 0) * 24ms) both;
+  transition: transform 0.30s var(--apple-spring), border-color 0.20s ease, box-shadow 0.22s ease;
+}
+
+.ov-card:hover {
+  transform: translateY(-4px) scale(1.022);
+  border-color: rgba(212, 180, 255, 0.62);
+  box-shadow: 0 18px 36px -10px rgba(0, 0, 0, 0.64), 0 0 24px -6px rgba(176, 124, 255, 0.32);
+}
+
+.ov-card.active {
+  border-color: #c49bff;
+  box-shadow: 0 0 0 2px rgba(176, 124, 255, 0.44), 0 16px 34px -8px rgba(0, 0, 0, 0.60);
+}
+
+.ov-card-head {
+  height: 32px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ov-card-close {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.72;
+  transition: opacity 0.14s ease, background 0.14s ease, color 0.14s ease;
+}
+
+.ov-card:hover .ov-card-close {
+  opacity: 1;
+}
+
+.ov-card-close:hover {
+  background: rgba(255, 86, 118, 0.84);
+  color: #ffffff;
+}
+
+.ov-card-fav {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.ov-card-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.8px;
+  font-weight: 560;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ov-card-pin {
+  font-size: 9.8px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(176, 124, 255, 0.24);
+  color: var(--accent-bright);
+  flex-shrink: 0;
+}
+
+.ov-card-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: radial-gradient(circle at 35% 30%, rgba(88, 52, 168, 0.34), rgba(10, 8, 20, 0.96) 72%);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ov-card-preview img.ov-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.ov-card-fallback-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  opacity: 0.88;
+  filter: drop-shadow(0 0 14px rgba(176, 124, 255, 0.56));
+}
+
+.ov-card-fallback-host {
+  font-size: 11.4px;
+  color: var(--ink-muted);
+  max-width: 82%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   Right-Click Safari Tab Context Menu
+   ========================================================================== */
+.tab-ctx-menu {
+  position: fixed;
+  width: 196px;
+  padding: 6px;
+  border-radius: 14px;
+  z-index: 220;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transform-origin: top left;
+  animation: ctxPop 0.22s var(--apple-spring);
+}
+
+@keyframes ctxPop {
+  from { opacity: 0; transform: scale(0.90) translateY(-4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.ctx-item {
+  height: 31px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12.2px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.ctx-item svg {
+  width: 14px;
+  height: 14px;
+  color: var(--ink-muted);
+  flex-shrink: 0;
+}
+
+.ctx-item:hover {
+  background: rgba(176, 124, 255, 0.22);
+}
+
+.ctx-item:hover svg {
+  color: var(--accent-bright);
+}
+
+.ctx-item.danger:hover {
+  background: rgba(255, 86, 118, 0.24);
+  color: #ff9cb0;
+}
+
+.ctx-item.danger:hover svg {
+  color: #ff809a;
+}
+
+.ctx-sep {
+  height: 1px;
+  margin: 3px 6px;
+  background: var(--glass-border);
+  opacity: 0.55;
+}
+
+/* ==========================================================================
+   Safari Start Page Customize + Butterfly Studio Modal
    ========================================================================== */
 .wallpaper-store {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(740px, calc(100vw - 40px));
-  max-height: min(520px, calc(100vh - 110px));
+  width: min(760px, calc(100vw - 40px));
+  max-height: min(580px, calc(100vh - 96px));
   padding: 18px 20px 20px;
   z-index: 165;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   animation: storeIn 0.24s var(--apple-fluid);
 }
 
 @keyframes storeIn {
   from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
   to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.sp-prefs-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  flex-shrink: 0;
+}
+
+@media (max-width: 680px) {
+  .sp-prefs-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.sp-pref-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11.6px;
+  font-weight: 540;
+  color: var(--ink);
+  cursor: pointer;
 }
 
 .store-head {
@@ -1686,7 +2495,7 @@ body.on-newtab #newtab-view {
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 162px;
+  min-height: 158px;
   padding: 0;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -1696,7 +2505,7 @@ body.on-newtab #newtab-view {
   text-align: left;
   color: var(--ink);
   font-family: inherit;
-  transition: transform 0.24s var(--apple-spring), border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.24s var(--apple-spring), border-color 0.20s ease, box-shadow 0.20s ease;
 }
 
 .wp-card:hover {
@@ -1711,7 +2520,7 @@ body.on-newtab #newtab-view {
 
 .wp-thumb {
   width: 100%;
-  height: 108px;
+  height: 104px;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -1762,16 +2571,16 @@ body.on-newtab #newtab-view {
 }
 
 .wp-meta {
-  padding: 9px 11px 10px;
+  padding: 8px 11px 9px;
 }
 
 .wp-name {
-  font-size: 12.5px;
+  font-size: 12.4px;
   font-weight: 600;
 }
 
 .wp-desc {
-  font-size: 10.8px;
+  font-size: 10.6px;
   color: var(--ink-muted);
   margin-top: 2px;
 }
@@ -1883,7 +2692,6 @@ body.on-newtab #newtab-view {
   transform: translateX(19px);
 }
 
-/* Compact Switch Variant (for Auto-connect footer toggle) */
 .liquid-switch.sm {
   width: 34px;
   height: 20px;
@@ -1952,10 +2760,11 @@ body.on-newtab #newtab-view {
   transform: translate(-50%, -50%);
   width: 310px;
   padding: 20px;
-  z-index: 150;
+  z-index: 170;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  animation: storeIn 0.22s var(--apple-fluid);
 }
 
 .modal-title {
@@ -1996,7 +2805,7 @@ body.on-newtab #newtab-view {
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: transform 0.20s var(--apple-spring), background 0.20s ease;
 }
 
 .modal-btn.secondary {
@@ -2042,7 +2851,7 @@ body.on-newtab #newtab-view {
   width: 0%;
   border-radius: 999px;
   background: linear-gradient(90deg, #8b5cf6, #67e8f9);
-  transition: width 0.2s ease;
+  transition: width 0.20s ease;
 }
 
 .dl-foot {
@@ -2082,13 +2891,14 @@ body.on-newtab #newtab-view {
    Fluid Entrance Animations, Favorite Star, Utility Pill & Favorites Ribbon
    ========================================================================== */
 @keyframes riseSpring {
-  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  from { opacity: 0; transform: translateY(12px) scale(0.975); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-body.on-newtab .anim-rise-1 { animation: riseSpring 0.42s var(--spring-soft) both; }
-body.on-newtab .anim-rise-2 { animation: riseSpring 0.50s var(--spring-soft) 0.05s both; }
-body.on-newtab .anim-rise-3 { animation: riseSpring 0.56s var(--spring-soft) 0.10s both; }
+body.on-newtab .anim-rise-1 { animation: riseSpring 0.40s var(--apple-fluid) both; }
+body.on-newtab .anim-rise-2 { animation: riseSpring 0.46s var(--apple-fluid) 0.04s both; }
+body.on-newtab .anim-rise-3 { animation: riseSpring 0.52s var(--apple-fluid) 0.08s both; }
+body.on-newtab .anim-rise-4 { animation: riseSpring 0.56s var(--apple-fluid) 0.12s both; }
 
 /* Favorite Star inside Safari Smart Search Field */
 .fav-star-btn {
@@ -2103,7 +2913,7 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.56s var(--spring-soft) 0.1
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: color 0.18s ease, background 0.16s ease, transform 0.26s var(--spring);
+  transition: color 0.18s ease, background 0.16s ease, transform 0.26s var(--apple-spring);
 }
 
 .fav-star-btn svg {
@@ -2123,7 +2933,7 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.56s var(--spring-soft) 0.1
 
 .fav-star-btn.starred {
   color: #facc15;
-  animation: starBurst 0.40s var(--spring);
+  animation: starBurst 0.40s var(--apple-spring);
 }
 
 .fav-star-btn.starred svg path {
@@ -2136,13 +2946,13 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.56s var(--spring-soft) 0.1
   100% { transform: scale(1) rotate(0deg); }
 }
 
-/* Sleek Utility Capsule (VPN, History, Butterfly Profile) */
+/* Safari Right Action Capsule */
 .util-pill {
   height: 34px;
   padding: 2px 4px;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   flex-shrink: 0;
 }
 
@@ -2158,7 +2968,7 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.56s var(--spring-soft) 0.1
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.24s var(--spring);
+  transition: transform 0.24s var(--apple-spring);
 }
 
 .profile-trigger:hover {
@@ -2199,7 +3009,7 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.56s var(--spring-soft) 0.1
   flex-shrink: 0;
 }
 
-/* Slim Floating Liquid Glass Favorites Ribbon (Row 3 inside #chrome-header, exactly 34px) */
+/* Slim Floating Liquid Glass Favorites Ribbon (Row 3 inside #chrome-header, 34px) */
 .favbar {
   position: relative;
   width: 100%;
@@ -2208,7 +3018,7 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.56s var(--spring-soft) 0.1
   z-index: 38;
   display: flex;
   align-items: center;
-  animation: favbarSlide 0.24s var(--spring-soft);
+  animation: favbarSlide 0.24s var(--apple-fluid);
 }
 
 @keyframes favbarSlide {
@@ -2244,7 +3054,7 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.56s var(--spring-soft) 0.1
   font-weight: 500;
   cursor: pointer;
   flex-shrink: 0;
-  animation: tabBloom 0.26s var(--spring);
+  animation: tabBloom 0.26s var(--apple-spring);
 }
 
 .fav-chip:hover {
@@ -2350,7 +3160,7 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.56s var(--spring-soft) 0.1
   box-shadow: 0 0 12px rgba(94, 234, 212, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
-body.theme-light:not(.on-newtab) .vpn-trigger.connected {
+body.theme-light:not(.on-newtab):not(.tab-overview-open) .vpn-trigger.connected {
   color: #0f766e;
   background: rgba(20, 184, 166, 0.16);
   border-color: rgba(13, 148, 136, 0.42);
@@ -2379,7 +3189,7 @@ body.theme-light:not(.on-newtab) .vpn-trigger.connected {
 }
 
 /* ==========================================================================
-   New Tab Hero Search Autocomplete Dropdown (Crisp 5-Row, Zero Scrollbars)
+   Safari Grouped Hero Search Autocomplete Dropdown (5-Row, Zero Scrollbars)
    ========================================================================== */
 .hero-suggest {
   position: absolute;
@@ -2396,13 +3206,13 @@ body.theme-light:not(.on-newtab) .vpn-trigger.connected {
     rgba(28, 22, 52, 0.62) 100%
   );
   border: 1px solid rgba(196, 158, 255, 0.22);
-  --spec-opacity: 0.28;
+  --spec-opacity: 0.26;
   display: flex;
   flex-direction: column;
   gap: 2px;
   z-index: 40;
   transform-origin: top center;
-  animation: suggestBloom 0.26s var(--apple-spring);
+  animation: suggestBloom 0.24s var(--apple-spring);
 }
 
 .hero-suggest.hidden {
@@ -2410,22 +3220,25 @@ body.theme-light:not(.on-newtab) .vpn-trigger.connected {
 }
 
 @keyframes suggestBloom {
-  from {
-    opacity: 0;
-    transform: translateY(-6px) scale(0.975);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(-6px) scale(0.975); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.nt-sug-group {
+  font-size: 10.2px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-subtle);
+  padding: 5px 12px 2px;
 }
 
 .nt-sug-row {
   display: flex;
   align-items: center;
   gap: 11px;
-  height: 38px;
-  min-height: 38px;
+  height: 37px;
+  min-height: 37px;
   padding: 0 12px;
   border-radius: 12px;
   cursor: pointer;
@@ -2443,9 +3256,9 @@ body.theme-light:not(.on-newtab) .vpn-trigger.connected {
 }
 
 .nt-sug-ico {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2474,7 +3287,7 @@ body.theme-light:not(.on-newtab) .vpn-trigger.connected {
 }
 
 .nt-sug-title {
-  font-size: 13.4px;
+  font-size: 13.2px;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -2482,7 +3295,7 @@ body.theme-light:not(.on-newtab) .vpn-trigger.connected {
 }
 
 .nt-sug-sub {
-  font-size: 11.4px;
+  font-size: 11.2px;
   color: var(--ink-muted);
   white-space: nowrap;
   overflow: hidden;

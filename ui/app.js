@@ -1,5 +1,5 @@
 /**
- * dejavu Native Shell Controller (communicates directly with native C# WebView2 host)
+ * dejavu v2.7 Native Shell Controller — A-to-Z macOS Safari Butterfly Liquid Glass Edition
  */
 (function () {
   const send = (msg) => {
@@ -14,10 +14,16 @@
   const toolbar = document.getElementById('toolbar');
   const tabsArea = document.getElementById('tabs-area');
   const dragSpacer = document.getElementById('drag-spacer');
+
   const btnHome = document.getElementById('btn-home');
+  const btnSidebar = document.getElementById('btn-sidebar');
+  const btnGroupPill = document.getElementById('btn-group-pill');
+  const groupBadgeDot = document.getElementById('group-badge-dot');
+  const groupBadgeName = document.getElementById('group-badge-name');
   const btnBack = document.getElementById('btn-back');
   const btnForward = document.getElementById('btn-forward');
   const btnReload = document.getElementById('btn-reload');
+
   const omniboxPill = document.getElementById('omnibox-pill');
   const omniboxInput = document.getElementById('omnibox-input');
   const omniboxIcon = document.getElementById('omnibox-icon');
@@ -26,11 +32,18 @@
   const btnFavStar = document.getElementById('btn-fav-star');
   const btnShield = document.getElementById('btn-shield');
   const shieldCount = document.getElementById('shield-count');
+  const btnReader = document.getElementById('btn-reader');
+
   const tabsStrip = document.getElementById('tabs-strip');
   const activeTabGlide = document.getElementById('active-tab-glide');
   const btnNewTab = document.getElementById('btn-new-tab');
+
+  const btnDownloads = document.getElementById('btn-downloads');
+  const dlDot = document.getElementById('dl-dot');
   const btnVpn = document.getElementById('btn-vpn');
   const vpnChipCode = document.getElementById('vpn-chip-code');
+  const btnShare = document.getElementById('btn-share');
+  const btnTabOverview = document.getElementById('btn-tab-overview');
   const btnHistory = document.getElementById('btn-history');
   const btnProfile = document.getElementById('btn-profile');
   const profileAvatarSlot = document.getElementById('profile-avatar-slot');
@@ -43,11 +56,35 @@
   const newtabSearchInput = document.getElementById('newtab-search-input');
   const newtabSuggest = document.getElementById('newtab-suggest');
   const shortcutsGrid = document.getElementById('shortcuts-grid');
+  const frequentGrid = document.getElementById('frequent-grid');
+  const readingGrid = document.getElementById('reading-grid');
+
+  const spSecFavorites = document.getElementById('sp-sec-favorites');
+  const spSecFrequent = document.getElementById('sp-sec-frequent');
+  const spSecPrivacy = document.getElementById('sp-sec-privacy');
+  const spSecReading = document.getElementById('sp-sec-reading');
+
   const newtabShieldChip = document.getElementById('newtab-shield-chip');
+  const newtabStatCount = document.getElementById('newtab-stat-count');
+  const newtabStatLabel = document.getElementById('newtab-stat-label');
   const newtabStatText = document.getElementById('newtab-stat-text');
   const statDot = document.getElementById('stat-dot');
   const newtabVpnChip = document.getElementById('newtab-vpn-chip');
   const newtabVpnText = document.getElementById('newtab-vpn-text');
+  const newtabVpnSub = document.getElementById('newtab-vpn-sub');
+
+  const tabOverview = document.getElementById('tab-overview');
+  const btnOvGroup = document.getElementById('btn-ov-group');
+  const ovGroupDot = document.getElementById('ov-group-dot');
+  const ovGroupName = document.getElementById('ov-group-name');
+  const ovTabCount = document.getElementById('ov-tab-count');
+  const ovSearchInput = document.getElementById('ov-search-input');
+  const btnOvNew = document.getElementById('btn-ov-new');
+  const btnOvDone = document.getElementById('btn-ov-done');
+  const overviewGrid = document.getElementById('overview-grid');
+
+  const tabContextMenu = document.getElementById('tab-context-menu');
+  const ctxPinLabel = document.getElementById('ctx-pin-label');
 
   const shortcutModal = document.getElementById('shortcut-modal');
   const scName = document.getElementById('sc-name');
@@ -61,6 +98,11 @@
   const btnCustomWp = document.getElementById('btn-custom-wp');
   const storeTabs = document.getElementById('store-tabs');
   const wallpaperGrid = document.getElementById('wallpaper-grid');
+
+  const prefFavorites = document.getElementById('pref-favorites');
+  const prefFrequent = document.getElementById('pref-frequent');
+  const prefPrivacy = document.getElementById('pref-privacy');
+  const prefReading = document.getElementById('pref-reading');
 
   const WALLPAPER_CATALOG = [
     { id: 'art:wp-amethyst.jpg', cat: 'art', name: 'Amethyst Glasswing', desc: 'Crystalline violet & cyan wings', img: 'https://dejavu.local/wp-amethyst.jpg' },
@@ -87,8 +129,23 @@
   let state = {
     activeTabId: -1,
     tabs: [],
+    tabOverviewOpen: false,
+    activeTabGroupId: bootData.activeTabGroupId || 'default',
+    activeTabGroupName: 'Start Tabs',
+    tabGroups: bootData.tabGroups || [],
     shortcuts: bootData.shortcuts || [],
     favorites: bootData.favorites || [],
+    readingList: bootData.readingList || [],
+    frequentlyVisited: bootData.frequentlyVisited || [],
+    startPagePrefs: bootData.startPagePrefs || {
+      hideFavorites: false,
+      hideFrequentlyVisited: false,
+      hidePrivacyReport: false,
+      hideReadingList: false
+    },
+    downloadsCount: 0,
+    hasActiveDownload: false,
+    readerActive: false,
     activeProfile: bootData.activeProfile || null,
     wallpaper: bootData.wallpaper || 'live:obsidian-prism',
     hasCustomWallpaper: !!bootData.hasCustomWallpaper,
@@ -98,9 +155,9 @@
   };
   let currentPalette = null;
   let lastActiveId = -1;
+  let ctxTargetTabId = -1;
 
-  // Reveal entire app together in ONE unified Apple spring motion ONLY after BOTH:
-  // (1) the user's real wallpaper has decoded, AND (2) the initial tab bar is populated!
+  // Unified Apple boot reveal (zero flash of default wallpaper or unstyled pills!)
   let bootWallpaperReady = false;
   let bootTabsReady = false;
   let bootRevealed = false;
@@ -151,7 +208,7 @@
     const top = y <= pad;
     const left = x <= pad;
     const right = x >= w - pad;
-    const bottom = body.classList.contains('on-newtab') && y >= h - pad;
+    const bottom = (body.classList.contains('on-newtab') || body.classList.contains('tab-overview-open')) && y >= h - pad;
     if (top && left) return 'topleft';
     if (top && right) return 'topright';
     if (bottom && left) return 'bottomleft';
@@ -220,7 +277,6 @@
     const h = getChromeHeight();
     let [br, bg, bb] = baseRgb || (isLight ? [246, 245, 250] : [13, 12, 20]);
 
-    // Keep dark sites rich, cohesive & soothing (never washed-out milky grey!)
     if (!isLight) {
       br = Math.min(br, 24);
       bg = Math.min(bg, 22);
@@ -243,7 +299,6 @@
       isLight ? [96, 172, 238] : [76, 162, 228]
     ];
 
-    // Whisper-soft ambient site color aura along top edge only — ZERO harsh glare across URL text!
     const aura = topBackdropCtx.createRadialGradient(w * 0.25, 0, 10, w * 0.35, 0, w * 0.72);
     const c0 = zones[0];
     const c1 = zones[zones.length - 1];
@@ -253,37 +308,48 @@
     topBackdropCtx.fillStyle = aura;
     topBackdropCtx.fillRect(0, 0, w, h);
 
-    // Subtle 1px bottom hairline separating chrome cleanly from webpage content
     topBackdropCtx.fillStyle = isLight ? 'rgba(24, 18, 52, 0.09)' : 'rgba(255, 255, 255, 0.07)';
     topBackdropCtx.fillRect(0, h - 1, w, 1);
   }
 
   // =========================================================================
-  // Navigation & Top Bar Interactions
+  // Authentic Safari Toolbar Interactions
   // =========================================================================
   btnHome.addEventListener('click', () => send({ type: 'home' }));
+  btnSidebar.addEventListener('click', () => send({ type: 'openSidebar' }));
+  btnGroupPill.addEventListener('click', () => send({ type: 'openSidebar' }));
   btnBack.addEventListener('click', () => send({ type: 'back' }));
   btnForward.addEventListener('click', () => send({ type: 'forward' }));
   btnReload.addEventListener('click', () => send({ type: 'reload' }));
   btnNewTab.addEventListener('click', () => send({ type: 'newTab' }));
-
   btnFavStar.addEventListener('click', () => send({ type: 'toggleFavorite' }));
+  btnReader.addEventListener('click', () => send({ type: 'toggleReaderMode' }));
+  btnTabOverview.addEventListener('click', () => send({ type: 'toggleTabOverview', open: !state.tabOverviewOpen }));
 
   function openShieldPopover() {
     const r = btnShield.getBoundingClientRect();
-    send({ type: 'openShield', anchorRight: Math.round(r.right) });
+    send({ type: 'openShield', anchorRight: Math.round(r.left + 296) });
   }
 
   function openVpnPopover() {
     const r = btnVpn.getBoundingClientRect();
-    send({ type: 'openVpn', anchorRight: Math.round(r.right + 78) });
+    send({ type: 'openVpn', anchorRight: Math.round(r.right + 120) });
   }
 
   btnShield.addEventListener('click', openShieldPopover);
   btnVpn.addEventListener('click', openVpnPopover);
-
   if (newtabShieldChip) newtabShieldChip.addEventListener('click', openShieldPopover);
   if (newtabVpnChip) newtabVpnChip.addEventListener('click', openVpnPopover);
+
+  btnDownloads.addEventListener('click', () => {
+    const r = btnDownloads.getBoundingClientRect();
+    send({ type: 'openDownloads', anchorRight: Math.round(r.right + 120) });
+  });
+
+  btnShare.addEventListener('click', () => {
+    const r = btnShare.getBoundingClientRect();
+    send({ type: 'openShare', anchorRight: Math.round(r.right + 76) });
+  });
 
   btnHistory.addEventListener('click', () => {
     const r = btnHistory.getBoundingClientRect();
@@ -300,11 +366,15 @@
   }, { passive: true });
 
   // =========================================================================
-  // Safari Smart Search Field & New Tab Autocomplete Suggestions
+  // Safari Smart Search Field & Grouped Autocomplete Suggestions
   // =========================================================================
   let pendingOmniboxValue = null;
   let ntSuggestItems = [];
   let ntSuggestIdx = -1;
+
+  function extractHost(url) {
+    try { return new URL(url).hostname.replace(/^www\./i, '').toLowerCase(); } catch { return ''; }
+  }
 
   function extractCleanDomain(url, fallback) {
     if (!url || url === 'dejavu://newtab') return '';
@@ -326,7 +396,7 @@
       omniboxDomain.textContent = domain || active.displayUrl || '';
       omniboxDomain.classList.remove('is-placeholder');
     } else {
-      omniboxDomain.textContent = 'Search or enter website';
+      omniboxDomain.textContent = 'Search or enter website name';
       omniboxDomain.classList.add('is-placeholder');
     }
   }
@@ -376,11 +446,27 @@
       return;
     }
     newtabSuggest.innerHTML = '';
+    let lastGroup = '';
+
     ntSuggestItems.forEach((item, idx) => {
+      const k = item.kind || 'search';
+      let group = 'Search Suggestions';
+      if (idx === 0 && (k === 'url' || k === 'site' || k === 'favorite')) group = 'Top Hit';
+      else if (k === 'favorite' || k === 'history') group = 'Bookmarks & History';
+
+      if (group !== lastGroup) {
+        lastGroup = group;
+        const hdr = document.createElement('div');
+        hdr.className = 'nt-sug-group';
+        hdr.textContent = group;
+        newtabSuggest.appendChild(hdr);
+      }
+
       const row = document.createElement('div');
       row.className = 'nt-sug-row';
-      const icoCls = item.kind === 'favorite' ? 'is-fav' : (item.kind === 'history' ? 'is-hist' : ((item.kind === 'url' || item.kind === 'site') ? 'is-url' : ''));
-      const hint = item.kind === 'url' ? 'Go' : (item.kind === 'site' ? 'Site' : (item.kind === 'favorite' ? 'Pinned' : ''));
+      row.dataset.idx = String(idx);
+      const icoCls = k === 'favorite' ? 'is-fav' : (k === 'history' ? 'is-hist' : ((k === 'url' || k === 'site') ? 'is-url' : ''));
+      const hint = k === 'url' ? 'Go' : (k === 'site' ? 'Site' : (k === 'favorite' ? 'Favorite' : ''));
       row.innerHTML = `
         <span class="nt-sug-ico ${icoCls}">${sugIconSvg(item)}</span>
         <div class="nt-sug-text">
@@ -406,7 +492,7 @@
 
   function updateNewtabSuggestHighlight() {
     const rows = newtabSuggest.querySelectorAll('.nt-sug-row');
-    rows.forEach((r, i) => r.classList.toggle('selected', i === ntSuggestIdx));
+    rows.forEach((r) => r.classList.toggle('selected', Number(r.dataset.idx) === ntSuggestIdx));
   }
 
   omniboxPill.addEventListener('click', (e) => {
@@ -518,13 +604,11 @@
   }, { passive: true });
 
   // =========================================================================
-  // Safari Start Page Favorites Grid
+  // Authentic Safari Start Page Sections: Favorites, Frequently Visited, Reading List
   // =========================================================================
   let lastShortcutsSig = '';
-
-  function extractHost(url) {
-    try { return new URL(url).hostname.toLowerCase(); } catch { return ''; }
-  }
+  let lastFrequentSig = '';
+  let lastReadingSig = '';
 
   function renderShortcuts(list) {
     const sig = JSON.stringify(list || []);
@@ -534,34 +618,40 @@
 
     (list || []).forEach((sc, index) => {
       const host = extractHost(sc.url);
-      const tile = document.createElement('button');
-      tile.type = 'button';
-      tile.className = 'shortcut-tile';
-      tile.style.setProperty('--stagger-i', String(index));
-      tile.setAttribute('data-liquid-glass', '');
-      tile.setAttribute('data-lg-bezel', '16');
-      tile.setAttribute('data-lg-scale', '22');
-      tile.setAttribute('data-lg-dispersion', '1.14');
-      tile.setAttribute('data-lg-dome', '0.06');
-      tile.title = sc.url;
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'safari-fav-item';
+      item.style.setProperty('--stagger-i', String(index));
+      item.title = sc.url;
 
-      const icoWrap = document.createElement('div');
-      icoWrap.className = 'shortcut-ico-wrap';
+      const sq = document.createElement('div');
+      sq.className = 'safari-fav-squircle';
+      sq.setAttribute('data-liquid-glass', '');
+      sq.setAttribute('data-lg-bezel', '15');
+      sq.setAttribute('data-lg-scale', '20');
+      sq.setAttribute('data-lg-dispersion', '1.14');
+      sq.setAttribute('data-lg-dome', '0.055');
+
       const letter = (sc.name || host || '?')[0].toUpperCase();
       if (host) {
         const img = document.createElement('img');
         img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
         img.alt = '';
         img.draggable = false;
-        img.onerror = () => { img.remove(); icoWrap.textContent = letter; };
-        icoWrap.appendChild(img);
+        img.onerror = () => {
+          img.remove();
+          const sp = document.createElement('span');
+          sp.className = 'safari-fav-letter';
+          sp.textContent = letter;
+          sq.appendChild(sp);
+        };
+        sq.appendChild(img);
       } else {
-        icoWrap.textContent = letter;
+        const sp = document.createElement('span');
+        sp.className = 'safari-fav-letter';
+        sp.textContent = letter;
+        sq.appendChild(sp);
       }
-
-      const nameEl = document.createElement('span');
-      nameEl.className = 'shortcut-name';
-      nameEl.textContent = sc.name || host;
 
       const rmBtn = document.createElement('span');
       rmBtn.className = 'shortcut-remove';
@@ -572,63 +662,167 @@
         const next = list.filter((_, i) => i !== index);
         send({ type: 'saveShortcuts', shortcuts: next });
       });
+      sq.appendChild(rmBtn);
 
-      tile.appendChild(rmBtn);
-      tile.appendChild(icoWrap);
-      tile.appendChild(nameEl);
-      tile.addEventListener('click', () => send({ type: 'navigate', input: sc.url }));
-      shortcutsGrid.appendChild(tile);
+      const label = document.createElement('span');
+      label.className = 'safari-fav-label';
+      label.textContent = sc.name || host;
+
+      item.appendChild(sq);
+      item.appendChild(label);
+      item.addEventListener('click', () => send({ type: 'navigate', input: sc.url }));
+      shortcutsGrid.appendChild(item);
     });
 
-    if ((list || []).length < 8) {
-      const addTile = document.createElement('button');
-      addTile.type = 'button';
-      addTile.className = 'shortcut-tile shortcut-add';
-      addTile.style.setProperty('--stagger-i', String((list || []).length));
-      addTile.setAttribute('data-liquid-glass', '');
-      addTile.setAttribute('data-lg-bezel', '16');
-      addTile.setAttribute('data-lg-scale', '20');
-      addTile.setAttribute('data-lg-dispersion', '1.08');
-      addTile.title = 'Add favorite site';
-      addTile.innerHTML = `
-        <div class="shortcut-ico-wrap">
-          <svg viewBox="0 0 18 18" width="18" height="18" fill="none"><path d="M9 4v10M4 9h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    if ((list || []).length < 12) {
+      const addItem = document.createElement('button');
+      addItem.type = 'button';
+      addItem.className = 'safari-fav-item shortcut-add';
+      addItem.style.setProperty('--stagger-i', String((list || []).length));
+      addItem.title = 'Add favorite site';
+      addItem.innerHTML = `
+        <div class="safari-fav-squircle" data-liquid-glass data-lg-bezel="15" data-lg-scale="18">
+          <svg viewBox="0 0 20 20" width="22" height="22" fill="none"><path d="M10 4.5v11M4.5 10h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </div>
-        <span class="shortcut-name">Add</span>
+        <span class="safari-fav-label">Add</span>
       `;
-      addTile.addEventListener('click', () => {
+      addItem.addEventListener('click', () => {
         scName.value = '';
         scUrl.value = '';
         shortcutModal.classList.remove('hidden');
         window.LiquidGlass.updateElementGlass(shortcutModal);
         scName.focus();
       });
-      shortcutsGrid.appendChild(addTile);
+      shortcutsGrid.appendChild(addItem);
     }
   }
+
+  function renderFrequentlyVisited(list, hidePref) {
+    const items = Array.isArray(list) ? list : [];
+    const show = !hidePref && items.length > 0;
+    spSecFrequent.classList.toggle('hidden', !show);
+    if (!show) return;
+
+    const sig = JSON.stringify(items);
+    if (sig === lastFrequentSig) return;
+    lastFrequentSig = sig;
+    frequentGrid.innerHTML = '';
+
+    items.slice(0, 4).forEach((item) => {
+      const host = extractHost(item.url);
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'freq-card';
+      card.setAttribute('data-liquid-glass', '');
+      card.setAttribute('data-lg-fast', '1');
+      card.setAttribute('data-lg-bezel', '11');
+      card.setAttribute('data-lg-scale', '14');
+      card.title = item.url;
+
+      const icoSrc = item.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64` : 'https://dejavu.local/logo-transparent.png');
+      card.innerHTML = `
+        <span class="freq-ico"><img alt="" draggable="false"></span>
+        <div class="freq-meta">
+          <div class="freq-title"></div>
+          <div class="freq-host"></div>
+        </div>
+      `;
+      const img = card.querySelector('img');
+      img.src = icoSrc;
+      img.onerror = () => { img.src = 'https://dejavu.local/logo-transparent.png'; };
+      card.querySelector('.freq-title').textContent = item.title || host;
+      card.querySelector('.freq-host').textContent = host;
+      card.addEventListener('click', () => send({ type: 'navigate', input: item.url }));
+      frequentGrid.appendChild(card);
+    });
+  }
+
+  function renderReadingListSection(list, hidePref) {
+    const items = Array.isArray(list) ? list : [];
+    const show = !hidePref && items.length > 0;
+    spSecReading.classList.toggle('hidden', !show);
+    if (!show) return;
+
+    const sig = JSON.stringify(items);
+    if (sig === lastReadingSig) return;
+    lastReadingSig = sig;
+    readingGrid.innerHTML = '';
+
+    items.slice(0, 4).forEach((item) => {
+      const host = extractHost(item.url);
+      const card = document.createElement('div');
+      card.className = 'reading-card';
+      card.setAttribute('data-liquid-glass', '');
+      card.setAttribute('data-lg-fast', '1');
+      card.setAttribute('data-lg-bezel', '11');
+      card.setAttribute('data-lg-scale', '14');
+      card.title = item.url;
+
+      const icoSrc = item.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64` : 'https://dejavu.local/logo-transparent.png');
+      card.innerHTML = `
+        <span class="freq-ico"><img alt="" draggable="false"></span>
+        <div class="freq-meta">
+          <div class="freq-title"></div>
+          <div class="freq-host"></div>
+        </div>
+        <button type="button" class="reading-card-rm" title="Remove from Reading List">×</button>
+      `;
+      const img = card.querySelector('img');
+      img.src = icoSrc;
+      img.onerror = () => { img.src = 'https://dejavu.local/logo-transparent.png'; };
+      card.querySelector('.freq-title').textContent = item.title || host;
+      card.querySelector('.freq-host').textContent = host;
+      card.querySelector('.reading-card-rm').addEventListener('click', (e) => {
+        e.stopPropagation();
+        send({ type: 'removeReadingList', id: item.id });
+      });
+      card.addEventListener('click', () => send({ type: 'navigate', input: item.url }));
+      readingGrid.appendChild(card);
+    });
+  }
+
+  function applyStartPagePrefs(prefs) {
+    const p = prefs || {};
+    spSecFavorites.classList.toggle('hidden', !!p.hideFavorites);
+    spSecPrivacy.classList.toggle('hidden', !!p.hidePrivacyReport);
+    prefFavorites.classList.toggle('on', !p.hideFavorites);
+    prefFrequent.classList.toggle('on', !p.hideFrequentlyVisited);
+    prefPrivacy.classList.toggle('on', !p.hidePrivacyReport);
+    prefReading.classList.toggle('on', !p.hideReadingList);
+  }
+
+  function bindStartPagePrefSwitch(btn, field) {
+    btn.addEventListener('click', () => {
+      const nextShow = !btn.classList.contains('on');
+      btn.classList.toggle('on', nextShow);
+      state.startPagePrefs = state.startPagePrefs || {};
+      state.startPagePrefs[field] = !nextShow;
+      applyStartPagePrefs(state.startPagePrefs);
+      renderFrequentlyVisited(state.frequentlyVisited, state.startPagePrefs.hideFrequentlyVisited);
+      renderReadingListSection(state.readingList, state.startPagePrefs.hideReadingList);
+      send({ type: 'updateStartPagePrefs', [field]: !nextShow });
+    });
+  }
+
+  bindStartPagePrefSwitch(prefFavorites, 'hideFavorites');
+  bindStartPagePrefSwitch(prefFrequent, 'hideFrequentlyVisited');
+  bindStartPagePrefSwitch(prefPrivacy, 'hidePrivacyReport');
+  bindStartPagePrefSwitch(prefReading, 'hideReadingList');
 
   scCancel.addEventListener('click', () => shortcutModal.classList.add('hidden'));
   scSave.addEventListener('click', () => {
     const rawUrl = scUrl.value.trim();
     if (!rawUrl) return;
     const url = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
-    const name = scName.value.trim() || extractHost(url).replace(/^www\./, '').split('.')[0] || 'Site';
+    const name = scName.value.trim() || extractHost(url).split('.')[0] || 'Site';
     const next = [...(state.shortcuts || []), { name, url }];
     shortcutModal.classList.add('hidden');
     send({ type: 'saveShortcuts', shortcuts: next });
   });
   scUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') scSave.click(); });
-  document.addEventListener('mousedown', (e) => {
-    if (!shortcutModal.classList.contains('hidden') && !shortcutModal.contains(e.target) && !e.target.closest('.shortcut-add')) {
-      shortcutModal.classList.add('hidden');
-    }
-    if (!wallpaperStore.classList.contains('hidden') && !wallpaperStore.contains(e.target) && !btnWallpaperStore.contains(e.target)) {
-      wallpaperStore.classList.add('hidden');
-    }
-  });
 
   // =========================================================================
-  // Butterfly Studio — Liquid Glass Wallpaper Store
+  // Safari Start Page Customize + Butterfly Studio Modal
   // =========================================================================
   function renderWallpaperGrid() {
     wallpaperGrid.innerHTML = '';
@@ -703,6 +897,7 @@
     const opening = wallpaperStore.classList.contains('hidden');
     wallpaperStore.classList.toggle('hidden', !opening);
     if (opening) {
+      applyStartPagePrefs(state.startPagePrefs);
       renderWallpaperGrid();
       requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(wallpaperStore));
     }
@@ -720,7 +915,130 @@
   });
 
   // =========================================================================
-  // Safari Balanced Flex Tabs & GPU Active Tab Liquid Glide
+  // Authentic Safari Tab Overview Grid
+  // =========================================================================
+  btnOvDone.addEventListener('click', () => send({ type: 'toggleTabOverview', open: false }));
+  btnOvNew.addEventListener('click', () => send({ type: 'newTab' }));
+  btnOvGroup.addEventListener('click', () => send({ type: 'openSidebar' }));
+  ovSearchInput.addEventListener('input', () => renderTabOverview());
+  ovSearchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      send({ type: 'toggleTabOverview', open: false });
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (!tabContextMenu.classList.contains('hidden')) {
+        hideTabContextMenu();
+      } else if (!wallpaperStore.classList.contains('hidden')) {
+        wallpaperStore.classList.add('hidden');
+      } else if (!shortcutModal.classList.contains('hidden')) {
+        shortcutModal.classList.add('hidden');
+      } else if (state.tabOverviewOpen) {
+        send({ type: 'toggleTabOverview', open: false });
+      }
+    }
+  });
+
+  function renderTabOverview() {
+    const tabs = state.tabs || [];
+    const q = (ovSearchInput.value || '').trim().toLowerCase();
+    const filtered = q
+      ? tabs.filter((t) => (t.title || '').toLowerCase().includes(q) || (t.url || '').toLowerCase().includes(q))
+      : tabs;
+
+    const grp = (state.tabGroups || []).find((g) => g.id === state.activeTabGroupId);
+    const grpColor = grp ? grp.color : '#b688ff';
+    ovGroupDot.style.background = grpColor;
+    ovGroupDot.style.boxShadow = `0 0 8px ${grpColor}`;
+    ovGroupName.textContent = state.activeTabGroupName || 'Start Tabs';
+    ovTabCount.textContent = String(tabs.length);
+
+    overviewGrid.innerHTML = '';
+    filtered.forEach((tab, idx) => {
+      const card = document.createElement('div');
+      card.className = 'ov-card' + (tab.id === state.activeTabId ? ' active' : '');
+      card.style.setProperty('--stagger-i', String(idx));
+
+      const favSrc = tab.favicon || 'https://dejavu.local/logo-transparent.png';
+      const titleText = tab.isNewTab ? 'Start Page' : (tab.title || tab.displayUrl || 'Tab');
+      const hostText = tab.isNewTab ? 'dejavu Start Page' : (extractCleanDomain(tab.url, tab.displayUrl) || '');
+
+      const previewHtml = (!tab.isNewTab && tab.thumbnail)
+        ? `<img class="ov-thumb-img" src="${tab.thumbnail}" alt="" draggable="false">`
+        : `<img class="ov-card-fallback-logo" src="${tab.isNewTab ? 'https://dejavu.local/logo-transparent.png' : escapeSugHtml(favSrc)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'"><span class="ov-card-fallback-host">${escapeSugHtml(hostText)}</span>`;
+
+      card.innerHTML = `
+        <div class="ov-card-head">
+          <button type="button" class="ov-card-close" title="Close Tab">
+            <svg viewBox="0 0 12 12" width="9" height="9" fill="none"><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+          <img class="ov-card-fav" src="${escapeSugHtml(favSrc)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'">
+          <span class="ov-card-title"></span>
+          ${tab.isPinned ? '<span class="ov-card-pin">Pinned</span>' : ''}
+        </div>
+        <div class="ov-card-preview">${previewHtml}</div>
+      `;
+      card.querySelector('.ov-card-title').textContent = titleText;
+
+      card.querySelector('.ov-card-close').addEventListener('click', (e) => {
+        e.stopPropagation();
+        send({ type: 'closeTab', id: tab.id });
+      });
+
+      card.addEventListener('click', () => {
+        send({ type: 'activateTab', id: tab.id });
+      });
+
+      overviewGrid.appendChild(card);
+    });
+  }
+
+  // =========================================================================
+  // Right-Click Safari Tab Context Menu
+  // =========================================================================
+  function hideTabContextMenu() {
+    tabContextMenu.classList.add('hidden');
+    ctxTargetTabId = -1;
+  }
+
+  function showTabContextMenu(tab, clientX, clientY) {
+    // Open as native floating Liquid Glass overlay so it NEVER clips on live webpages!
+    send({
+      type: 'openTabMenu',
+      id: tab.id,
+      x: Math.round(clientX),
+      y: Math.round(clientY)
+    });
+  }
+
+  tabContextMenu.addEventListener('click', (e) => {
+    const btn = e.target.closest('.ctx-item');
+    if (!btn || ctxTargetTabId < 0) return;
+    const act = btn.dataset.act;
+    const tid = ctxTargetTabId;
+    hideTabContextMenu();
+    if (act === 'pin') send({ type: 'pinTab', id: tid });
+    else if (act === 'duplicate') send({ type: 'duplicateTab', id: tid });
+    else if (act === 'closeOthers') send({ type: 'closeOtherTabs', id: tid });
+    else if (act === 'close') send({ type: 'closeTab', id: tid });
+  });
+
+  document.addEventListener('mousedown', (e) => {
+    if (!tabContextMenu.classList.contains('hidden') && !tabContextMenu.contains(e.target)) {
+      hideTabContextMenu();
+    }
+    if (!shortcutModal.classList.contains('hidden') && !shortcutModal.contains(e.target) && !e.target.closest('.shortcut-add')) {
+      shortcutModal.classList.add('hidden');
+    }
+    if (!wallpaperStore.classList.contains('hidden') && !wallpaperStore.contains(e.target) && !btnWallpaperStore.contains(e.target)) {
+      wallpaperStore.classList.add('hidden');
+    }
+  });
+
+  // =========================================================================
+  // Authentic Safari Tabs (Pinned + Equal-Width Flex + Left '×' + GPU Glide)
   // =========================================================================
   const tabEls = new Map();
 
@@ -756,7 +1074,6 @@
 
   function requestCloseTab(tabId, el) {
     if ((state.tabs || []).length <= 1) {
-      // Closing the last tab resets it to a fresh New Tab — NEVER hide it with .closing!
       el.classList.remove('closing');
       el.classList.remove('reset-pulse');
       void el.offsetWidth;
@@ -765,7 +1082,7 @@
       return;
     }
     el.classList.add('closing');
-    setTimeout(() => send({ type: 'closeTab', id: tabId }), 180);
+    setTimeout(() => send({ type: 'closeTab', id: tabId }), 175);
   }
 
   function syncTabs(tabs, activeId) {
@@ -789,14 +1106,14 @@
         el.setAttribute('data-lg-bezel', '9');
         el.setAttribute('data-lg-scale', '12');
         el.innerHTML = `
+          <button class="tab-close" title="Close tab (Ctrl+W)" aria-label="Close tab">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
           <span class="tab-content">
             <span class="tab-spinner hidden"></span>
             <img class="tab-favicon" alt="" draggable="false">
             <span class="tab-title"></span>
           </span>
-          <button class="tab-close" title="Close tab (Ctrl+W)" aria-label="Close tab">
-            <svg viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </button>
         `;
         el.addEventListener('click', (e) => {
           if (e.target.closest('.tab-close')) {
@@ -811,17 +1128,26 @@
             requestCloseTab(tab.id, el);
           }
         });
+        el.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          const latest = (state.tabs || []).find((t) => t.id === tab.id) || tab;
+          showTabContextMenu(latest, e.clientX, e.clientY);
+        });
         tabsStrip.appendChild(el);
         tabEls.set(tab.id, el);
+      } else {
+        // Keep DOM order matched to backend sort order (pinned tabs smoothly move to far left!)
+        tabsStrip.appendChild(el);
       }
 
-      // Always ensure surviving/reused tabs are visible and never stuck in .closing
       el.classList.remove('closing');
+      el.classList.toggle('pinned', !!tab.isPinned);
 
       const wasActive = el.classList.contains('active');
       const nowActive = tab.id === activeId;
       el.classList.toggle('active', nowActive);
-      el.title = tab.title || 'New Tab';
+      el.title = tab.isPinned ? `${tab.title || 'Pinned Tab'} (Pinned — Right-click to unpin)` : (tab.title || 'Start Page');
+
       const spinner = el.querySelector('.tab-spinner');
       const fav = el.querySelector('.tab-favicon');
       const titleEl = el.querySelector('.tab-title');
@@ -830,7 +1156,7 @@
       fav.classList.toggle('hidden', !!tab.loading);
       const favSrc = tab.favicon || 'https://dejavu.local/logo-transparent.png';
       if (fav.getAttribute('src') !== favSrc) fav.setAttribute('src', favSrc);
-      titleEl.textContent = tab.title || 'New Tab';
+      titleEl.textContent = tab.title || 'Start Page';
 
       if ((isNew || (!wasActive && nowActive)) && nowActive) {
         requestAnimationFrame(() => {
@@ -846,12 +1172,17 @@
   }
 
   function updateStatText(globalEnabled, total) {
+    const n = Number(total || 0);
     if (!globalEnabled) {
-      newtabStatText.textContent = 'Ad blocker paused';
+      if (newtabStatCount) newtabStatCount.textContent = 'Paused';
+      if (newtabStatLabel) newtabStatLabel.textContent = '· Ad Blocker off';
+      if (newtabStatText) newtabStatText.textContent = 'Click to re-enable tracker & ad protection';
       statDot.style.background = 'rgba(255,255,255,0.35)';
       statDot.style.boxShadow = 'none';
     } else {
-      newtabStatText.textContent = `Ad blocker active · ${Number(total || 0).toLocaleString()} blocked`;
+      if (newtabStatCount) newtabStatCount.textContent = n.toLocaleString();
+      if (newtabStatLabel) newtabStatLabel.textContent = n === 1 ? 'tracker & ad prevented' : 'trackers & ads prevented';
+      if (newtabStatText) newtabStatText.textContent = 'Built-in 100/100 Ad Blocker is actively protecting your browsing';
       statDot.style.background = '';
       statDot.style.boxShadow = '';
     }
@@ -862,6 +1193,7 @@
     if (!vpn) {
       newtabVpnChip.classList.remove('connected', 'connecting');
       newtabVpnText.textContent = 'VPN: Off';
+      if (newtabVpnSub) newtabVpnSub.textContent = '22 encrypted locations';
       return;
     }
     const vst = vpn.state || 'disconnected';
@@ -873,11 +1205,14 @@
       const rawCode = (vpn.exitCountryCode || vpn.countryCode || 'AUTO').toUpperCase();
       const codeDisp = rawCode === 'GB' ? 'UK' : (rawCode === 'AUTO' ? 'Auto' : rawCode);
       const locLabel = vpn.exitCountry || vpn.countryName || codeDisp;
-      newtabVpnText.textContent = `VPN: Protected (${locLabel})`;
+      newtabVpnText.textContent = `Protected · ${locLabel}`;
+      if (newtabVpnSub) newtabVpnSub.textContent = vpn.exitIp ? `Exit IP ${vpn.exitIp}` : '3-hop encrypted tunnel';
     } else if (isBusy) {
-      newtabVpnText.textContent = `VPN: Connecting…`;
+      newtabVpnText.textContent = 'VPN: Connecting…';
+      if (newtabVpnSub) newtabVpnSub.textContent = vpn.statusText || 'Building encrypted tunnel';
     } else {
       newtabVpnText.textContent = 'VPN: Off';
+      if (newtabVpnSub) newtabVpnSub.textContent = '22 encrypted locations';
     }
   }
 
@@ -948,16 +1283,50 @@
   }
 
   function applyState(next) {
+    const wasOverview = !!state.tabOverviewOpen;
     state = next;
+
     syncTabs(next.tabs || [], next.activeTabId);
     if (!bootTabsReady && next.tabs && next.tabs.length > 0) {
       bootTabsReady = true;
       tryRevealApp();
     }
+
+    const prefs = next.startPagePrefs || {};
+    applyStartPagePrefs(prefs);
     renderShortcuts(next.shortcuts || []);
+    renderFrequentlyVisited(next.frequentlyVisited || [], prefs.hideFrequentlyVisited);
+    renderReadingListSection(next.readingList || [], prefs.hideReadingList);
     renderFavoritesBar(next.favorites || []);
     updateStatText(next.globalAdBlockEnabled, next.totalBlocked);
     updateNewtabVpnChip(next.vpn);
+
+    // Tab Group pill in toolbar (shown neatly whenever user switches into a custom group)
+    const isCustomGroup = next.activeTabGroupId && next.activeTabGroupId !== 'default';
+    btnGroupPill.classList.toggle('hidden', !isCustomGroup);
+    if (isCustomGroup) {
+      const grp = (next.tabGroups || []).find((g) => g.id === next.activeTabGroupId);
+      const col = grp ? grp.color : '#b688ff';
+      groupBadgeDot.style.background = col;
+      groupBadgeDot.style.boxShadow = `0 0 8px ${col}`;
+      groupBadgeName.textContent = next.activeTabGroupName || 'Tab Group';
+    }
+
+    // Downloads toolbar indicator
+    const hasDl = Number(next.downloadsCount || 0) > 0;
+    dlDot.classList.toggle('hidden', !hasDl);
+    btnDownloads.classList.toggle('downloading', !!next.hasActiveDownload);
+
+    // Tab Overview Grid
+    const ovOpen = !!next.tabOverviewOpen;
+    body.classList.toggle('tab-overview-open', ovOpen);
+    tabOverview.classList.toggle('hidden', !ovOpen);
+    btnTabOverview.classList.toggle('is-active', ovOpen);
+    if (ovOpen) {
+      if (!wasOverview) ovSearchInput.value = '';
+      renderTabOverview();
+      window.DejavuNewTabCanvas.start();
+    }
 
     if (next.activeProfile && window.DejavuAvatars) {
       const avKey = `${next.activeProfile.avatar}_${next.activeProfile.name}`;
@@ -981,7 +1350,11 @@
 
     btnFavStar.classList.toggle('hidden', onNewTab);
     btnFavStar.classList.toggle('starred', !!next.isCurrentFavorite);
-    btnFavStar.title = next.isCurrentFavorite ? 'Remove from top bar favorites (Ctrl+D)' : 'Pin to top bar favorites (Ctrl+D)';
+    btnFavStar.title = next.isCurrentFavorite ? 'Remove from Favorites Bar (Ctrl+D)' : 'Pin to Favorites Bar (Ctrl+D)';
+
+    btnReader.classList.toggle('hidden', onNewTab);
+    btnReader.classList.toggle('active', !!next.readerActive);
+    btnReader.title = next.readerActive ? 'Hide Reader View (Ctrl+Shift+R)' : 'Show Reader View (Ctrl+Shift+R)';
 
     btnReload.classList.toggle('hidden', onNewTab);
     btnReload.classList.toggle('loading', !!(active && active.loading));
@@ -991,15 +1364,15 @@
       body.classList.add('on-newtab', 'theme-dark');
       body.classList.remove('theme-light');
       window.DejavuNewTabCanvas.start();
-      if (lastActiveId !== next.activeTabId) {
+      if (!ovOpen && lastActiveId !== next.activeTabId) {
         newtabSearchInput.value = '';
         setTimeout(() => newtabSearchInput.focus(), 40);
       }
     } else {
       body.classList.remove('on-newtab');
-      window.DejavuNewTabCanvas.stop();
-      body.classList.toggle('theme-light', !!active.isLight);
-      body.classList.toggle('theme-dark', !active.isLight);
+      if (!ovOpen) window.DejavuNewTabCanvas.stop();
+      body.classList.toggle('theme-light', !ovOpen && !!active.isLight);
+      body.classList.toggle('theme-dark', ovOpen || !active.isLight);
       drawTopLightGuide({
         baseRgb: next.baseRgb,
         accents: next.accents,
@@ -1066,7 +1439,7 @@
       if (msg.type === 'state') {
         applyState(msg);
       } else if (msg.type === 'palette') {
-        if (!body.classList.contains('on-newtab')) {
+        if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open')) {
           body.classList.toggle('theme-light', !!msg.isLight);
           body.classList.toggle('theme-dark', !msg.isLight);
           drawTopLightGuide({
@@ -1097,7 +1470,10 @@
   }
 
   // Hydrate boot state synchronously BEFORE first paint (zero flash!)
+  applyStartPagePrefs(state.startPagePrefs);
   if (bootData.shortcuts) renderShortcuts(bootData.shortcuts);
+  if (bootData.frequentlyVisited) renderFrequentlyVisited(bootData.frequentlyVisited, state.startPagePrefs.hideFrequentlyVisited);
+  if (bootData.readingList) renderReadingListSection(bootData.readingList, state.startPagePrefs.hideReadingList);
   if (bootData.favorites) renderFavoritesBar(bootData.favorites);
   updateStatText(state.globalAdBlockEnabled, state.totalBlocked);
   if (bootData.activeProfile && window.DejavuAvatars) {

@@ -61,6 +61,23 @@ namespace DejavuBrowser
         public long visitedAtMs { get; set; }
     }
 
+    public class ReadingListItem
+    {
+        public string id { get; set; }
+        public string title { get; set; }
+        public string url { get; set; }
+        public string favicon { get; set; }
+        public string host { get; set; }
+        public long savedAtMs { get; set; }
+    }
+
+    public class TabGroupItem
+    {
+        public string id { get; set; }
+        public string name { get; set; }
+        public string color { get; set; }
+    }
+
     internal sealed class ProfileManager
     {
         private static readonly object Sync = new object();
@@ -70,6 +87,8 @@ namespace DejavuBrowser
         public ProfileInfo ActiveProfile { get; private set; }
         public List<FavoriteItem> Favorites { get; private set; }
         public List<HistoryItem> History { get; private set; }
+        public List<ReadingListItem> ReadingList { get; private set; }
+        public List<TabGroupItem> TabGroups { get; private set; }
 
         private string ManifestPath
         {
@@ -183,6 +202,16 @@ namespace DejavuBrowser
             get { return Path.Combine(GetProfileDataDir(ActiveProfile.id), "history.json"); }
         }
 
+        private string ActiveReadingListPath
+        {
+            get { return Path.Combine(GetProfileDataDir(ActiveProfile.id), "reading-list.json"); }
+        }
+
+        private string ActiveTabGroupsPath
+        {
+            get { return Path.Combine(GetProfileDataDir(ActiveProfile.id), "tab-groups.json"); }
+        }
+
         public DejavuSettings LoadActiveSettings()
         {
             return SettingsStore.LoadFromPath(ActiveSettingsPath);
@@ -199,6 +228,8 @@ namespace DejavuBrowser
             {
                 Favorites = new List<FavoriteItem>();
                 History = new List<HistoryItem>();
+                ReadingList = new List<ReadingListItem>();
+                TabGroups = new List<TabGroupItem>();
                 try
                 {
                     if (File.Exists(ActiveFavoritesPath))
@@ -217,6 +248,44 @@ namespace DejavuBrowser
                     }
                 }
                 catch { }
+                try
+                {
+                    if (File.Exists(ActiveReadingListPath))
+                    {
+                        List<ReadingListItem> rl = Json.Deserialize<List<ReadingListItem>>(File.ReadAllText(ActiveReadingListPath));
+                        if (rl != null) ReadingList = rl;
+                    }
+                }
+                catch { }
+                try
+                {
+                    if (File.Exists(ActiveTabGroupsPath))
+                    {
+                        List<TabGroupItem> tg = Json.Deserialize<List<TabGroupItem>>(File.ReadAllText(ActiveTabGroupsPath));
+                        if (tg != null) TabGroups = tg;
+                    }
+                }
+                catch { }
+                if (TabGroups.Count == 0)
+                {
+                    TabGroups.Add(new TabGroupItem { id = "default", name = "Start Tabs", color = "#b688ff" });
+                }
+            }
+        }
+
+        public void SaveReadingList()
+        {
+            lock (Sync)
+            {
+                try { File.WriteAllText(ActiveReadingListPath, Json.Serialize(ReadingList)); } catch { }
+            }
+        }
+
+        public void SaveTabGroups()
+        {
+            lock (Sync)
+            {
+                try { File.WriteAllText(ActiveTabGroupsPath, Json.Serialize(TabGroups)); } catch { }
             }
         }
 
@@ -492,6 +561,146 @@ namespace DejavuBrowser
                 History.Clear();
             }
             SaveHistory();
+        }
+
+        // =====================================================================
+        // Safari Reading List, Tab Groups & Frequently Visited
+        // =====================================================================
+        public bool IsInReadingList(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return false;
+            string norm = NormalizeUrl(url);
+            lock (Sync)
+            {
+                for (int i = 0; i < ReadingList.Count; i++)
+                {
+                    if (string.Equals(NormalizeUrl(ReadingList[i].url), norm, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        public bool ToggleReadingList(string url, string title, string favicon)
+        {
+            if (string.IsNullOrEmpty(url) || url == "dejavu://newtab") return false;
+            string norm = NormalizeUrl(url);
+            bool added = false;
+            lock (Sync)
+            {
+                for (int i = 0; i < ReadingList.Count; i++)
+                {
+                    if (string.Equals(NormalizeUrl(ReadingList[i].url), norm, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ReadingList.RemoveAt(i);
+                        SaveReadingList();
+                        return false;
+                    }
+                }
+                string host = "";
+                try { host = new Uri(url).Host.Replace("www.", ""); } catch { }
+                long nowMs = (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+                ReadingList.Insert(0, new ReadingListItem
+                {
+                    id = "rl-" + nowMs.ToString("x"),
+                    title = CleanFavoriteTitle(title, url),
+                    url = url,
+                    favicon = favicon ?? "",
+                    host = host,
+                    savedAtMs = nowMs
+                });
+                if (ReadingList.Count > 120) ReadingList.RemoveRange(120, ReadingList.Count - 120);
+                added = true;
+            }
+            SaveReadingList();
+            return added;
+        }
+
+        public void RemoveReadingListItem(string id)
+        {
+            lock (Sync)
+            {
+                for (int i = ReadingList.Count - 1; i >= 0; i--)
+                {
+                    if (string.Equals(ReadingList[i].id, id, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ReadingList.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+            SaveReadingList();
+        }
+
+        public TabGroupItem CreateTabGroup(string name, string color)
+        {
+            string clean = string.IsNullOrWhiteSpace(name) ? ("Group " + TabGroups.Count) : name.Trim();
+            if (clean.Length > 24) clean = clean.Substring(0, 24);
+            TabGroupItem g = new TabGroupItem
+            {
+                id = "tg-" + DateTime.UtcNow.Ticks.ToString("x"),
+                name = clean,
+                color = string.IsNullOrWhiteSpace(color) ? "#b688ff" : color
+            };
+            lock (Sync)
+            {
+                TabGroups.Add(g);
+            }
+            SaveTabGroups();
+            return g;
+        }
+
+        public bool DeleteTabGroup(string id)
+        {
+            if (string.Equals(id, "default", StringComparison.OrdinalIgnoreCase)) return false;
+            bool removed = false;
+            lock (Sync)
+            {
+                for (int i = TabGroups.Count - 1; i >= 0; i--)
+                {
+                    if (string.Equals(TabGroups[i].id, id, StringComparison.OrdinalIgnoreCase))
+                    {
+                        TabGroups.RemoveAt(i);
+                        removed = true;
+                        break;
+                    }
+                }
+            }
+            if (removed) SaveTabGroups();
+            return removed;
+        }
+
+        public List<HistoryItem> GetFrequentlyVisited(int maxCount)
+        {
+            List<HistoryItem> top = new List<HistoryItem>();
+            Dictionary<string, int> counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, HistoryItem> bestByHost = new Dictionary<string, HistoryItem>(StringComparer.OrdinalIgnoreCase);
+            lock (Sync)
+            {
+                for (int i = 0; i < History.Count; i++)
+                {
+                    HistoryItem h = History[i];
+                    if (h == null || string.IsNullOrEmpty(h.url)) continue;
+                    string host = "";
+                    try { host = new Uri(h.url).Host.ToLowerInvariant(); } catch { continue; }
+                    if (host.StartsWith("www.")) host = host.Substring(4);
+                    if (string.IsNullOrEmpty(host)) continue;
+                    int c;
+                    counts.TryGetValue(host, out c);
+                    counts[host] = c + 1;
+                    if (!bestByHost.ContainsKey(host))
+                    {
+                        bestByHost[host] = h;
+                    }
+                }
+            }
+            List<KeyValuePair<string, int>> pairs = new List<KeyValuePair<string, int>>(counts);
+            pairs.Sort((a, b) => b.Value.CompareTo(a.Value));
+            for (int i = 0; i < pairs.Count && top.Count < maxCount; i++)
+            {
+                top.Add(bestByHost[pairs[i].Key]);
+            }
+            return top;
         }
 
         private static string NormalizeUrl(string url)

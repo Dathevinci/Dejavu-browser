@@ -623,23 +623,32 @@
       text-overflow: ellipsis;
     }
 
-    /* Mode 8: Floating Omnibox Autocomplete Suggestions */
+    /* Mode 8: Safari Grouped Floating Omnibox Autocomplete */
     .suggest-box {
       width: 100%;
       height: 100%;
-      padding: 8px;
+      padding: 7px 8px;
       display: flex;
       flex-direction: column;
       gap: 2px;
       overflow: hidden;
     }
+    .sug-group-hdr {
+      font-size: 10px;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-subtle);
+      padding: 4px 10px 2px;
+      flex-shrink: 0;
+    }
     .sug-row {
       display: flex;
       align-items: center;
       gap: 10px;
-      height: 42px;
-      padding: 0 11px;
-      border-radius: 12px;
+      height: 38px;
+      padding: 0 10px;
+      border-radius: 11px;
       cursor: pointer;
       color: var(--ink);
       transition: background 0.14s ease, transform 0.18s var(--apple-spring);
@@ -658,13 +667,17 @@
       box-shadow: inset 0 0 0 1px rgba(124, 77, 255, 0.24);
     }
     .sug-ico {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       color: var(--ink-muted);
       flex-shrink: 0;
+    }
+    .sug-row.top-hit .sug-ico {
+      background: rgba(176, 124, 255, 0.18);
     }
     .sug-ico img { width: 16px; height: 16px; border-radius: 4px; object-fit: contain; }
     .sug-ico.is-fav { color: #ffd66b; }
@@ -681,14 +694,14 @@
       gap: 8px;
     }
     .sug-title {
-      font-size: 13px;
+      font-size: 12.8px;
       font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .sug-sub {
-      font-size: 11.2px;
+      font-size: 11px;
       color: var(--ink-muted);
       white-space: nowrap;
       overflow: hidden;
@@ -696,7 +709,7 @@
       flex-shrink: 1;
     }
     .sug-badge {
-      font-size: 10px;
+      font-size: 9.8px;
       font-weight: 600;
       color: var(--ink-subtle);
       padding: 2px 6px;
@@ -708,6 +721,211 @@
       background: rgba(24, 18, 52, 0.06);
       color: var(--ink-muted);
     }
+
+    /* =========================================================================
+       Mode 9: Floating macOS Tahoe Liquid Glass Safari Sidebar
+       ========================================================================= */
+    #mode-sidebar {
+      animation: sidebarSlideIn 0.28s var(--apple-spring);
+    }
+    @keyframes sidebarSlideIn {
+      from { opacity: 0; transform: translateX(-20px) scale(0.98); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    .sb-box {
+      width: 100%; height: 100%;
+      padding: 13px 12px 12px;
+      display: flex; flex-direction: column; gap: 10px;
+      overflow: hidden;
+    }
+    .sb-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 0 2px 8px;
+      border-bottom: 1px solid var(--glass-border);
+      flex-shrink: 0;
+    }
+    .sb-prof {
+      display: flex; align-items: center; gap: 9px; min-width: 0;
+    }
+    .sb-prof-name {
+      font-size: 13.4px; font-weight: 640; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sb-prof-sub {
+      font-size: 10.4px; color: var(--ink-muted);
+    }
+    .sb-scroll {
+      flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+      display: flex; flex-direction: column; gap: 12px;
+      padding-right: 2px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(186, 152, 255, 0.30) transparent;
+    }
+    .sb-sec {
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .sb-sec-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      padding: 0 6px 3px;
+    }
+    .sb-sec-title {
+      font-size: 10.5px; font-weight: 660; text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--ink-muted);
+    }
+    .sb-mini-pill {
+      height: 21px; padding: 0 8px; border-radius: 999px;
+      border: 1px solid rgba(196, 162, 255, 0.34);
+      background: rgba(176, 124, 255, 0.16);
+      color: var(--accent-bright);
+      font-family: inherit; font-size: 10.2px; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.16s ease, transform 0.20s var(--apple-spring);
+    }
+    .sb-mini-pill:hover { background: rgba(176, 124, 255, 0.30); transform: scale(1.03); }
+    .sb-mini-pill:active { transform: scale(0.94); }
+    .sb-mini-pill.saved {
+      border-color: rgba(94, 234, 212, 0.44);
+      background: rgba(45, 212, 191, 0.16);
+      color: #82ffec;
+    }
+    body.theme-light .sb-mini-pill.saved { color: #0f766e; }
+    .sb-row {
+      display: flex; align-items: center; gap: 8px;
+      height: 31px; padding: 0 8px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      color: var(--ink);
+      transition: background 0.14s ease, border-color 0.14s ease, transform 0.18s var(--apple-spring);
+    }
+    .sb-row:hover {
+      background: var(--glass-hover-bg);
+      transform: translateX(2px);
+    }
+    .sb-row.active {
+      background: rgba(176, 124, 255, 0.20);
+      border-color: rgba(196, 162, 255, 0.38);
+      font-weight: 560;
+    }
+    body.theme-light .sb-row.active {
+      background: rgba(124, 77, 255, 0.11);
+      border-color: rgba(124, 77, 255, 0.24);
+    }
+    .sb-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .sb-ico {
+      width: 14px; height: 14px; border-radius: 3.5px; object-fit: contain; flex-shrink: 0;
+    }
+    .sb-label {
+      flex: 1; min-width: 0;
+      font-size: 12.2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sb-rm {
+      width: 18px; height: 18px; border-radius: 50%; border: none; background: transparent;
+      color: var(--ink-muted); font-size: 12px; line-height: 1;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; opacity: 0; flex-shrink: 0;
+      transition: opacity 0.14s ease, background 0.14s ease, color 0.14s ease;
+    }
+    .sb-row:hover .sb-rm { opacity: 0.85; }
+    .sb-rm:hover { opacity: 1 !important; background: rgba(255, 86, 118, 0.26); color: #ff809a; }
+    .sb-empty {
+      font-size: 11.2px; color: var(--ink-subtle); padding: 4px 8px;
+    }
+    .sb-new-group-box {
+      padding: 8px; border-radius: 12px;
+      background: rgba(128, 120, 168, 0.10);
+      border: 1px solid var(--glass-border);
+      display: flex; flex-direction: column; gap: 7px;
+      margin: 2px 0 4px;
+    }
+    .sb-new-group-box input {
+      width: 100%; height: 29px; padding: 0 10px; border-radius: 9px;
+      border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.22);
+      color: var(--ink); font-family: inherit; font-size: 12px; outline: none; user-select: text;
+    }
+    body.theme-light .sb-new-group-box input { background: rgba(255, 255, 255, 0.86); }
+    .sb-new-group-box input:focus { border-color: var(--accent); }
+    .sb-swatches-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    }
+    .sb-swatches { display: flex; align-items: center; gap: 5px; }
+    .sb-swatch {
+      width: 16px; height: 16px; border-radius: 50%; border: 2px solid transparent;
+      cursor: pointer; transition: transform 0.18s var(--apple-spring);
+    }
+    .sb-swatch.sel { border-color: #ffffff; transform: scale(1.16); }
+
+    /* =========================================================================
+       Mode 10: Authentic macOS Safari Share Sheet
+       ========================================================================= */
+    .share-box {
+      width: 100%; height: 100%; padding: 12px 11px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .share-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 7px 10px;
+      border-bottom: 1px solid var(--glass-border);
+      flex-shrink: 0;
+    }
+    .share-ico-wrap {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: rgba(176, 124, 255, 0.14);
+      border: 1px solid rgba(196, 162, 255, 0.26);
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0; overflow: hidden;
+    }
+    .share-ico-wrap img { width: 20px; height: 20px; object-fit: contain; }
+    .share-meta { flex: 1; min-width: 0; }
+    .share-title { font-size: 12.6px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .share-host { font-size: 10.8px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .share-list { display: flex; flex-direction: column; gap: 2px; }
+    .share-item {
+      height: 33px; padding: 0 10px;
+      border: none; border-radius: 10px; outline: none;
+      background: transparent; color: var(--ink);
+      font-family: inherit; font-size: 12.4px; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer; text-align: left;
+      transition: background 0.14s ease, transform 0.20s var(--apple-spring), color 0.14s ease;
+    }
+    .share-item:focus-visible { box-shadow: inset 0 0 0 1.5px rgba(196, 162, 255, 0.52); }
+    .share-item svg { width: 15px; height: 15px; color: var(--ink-muted); flex-shrink: 0; }
+    .share-item:hover:not(:disabled) { background: rgba(176, 124, 255, 0.20); transform: translateX(2px); }
+    .share-item:hover:not(:disabled) svg { color: var(--accent-bright); }
+    .share-item:active:not(:disabled) { transform: scale(0.97); }
+    .share-item:disabled { opacity: 0.36; cursor: default; }
+    .share-item.copied { background: rgba(45, 212, 191, 0.20); color: #82ffec; }
+    .share-item.copied svg { color: #5eead4; }
+    body.theme-light .share-item.copied { color: #0f766e; }
+    .share-sep { height: 1px; margin: 3px 6px; background: var(--glass-border); opacity: 0.55; }
+
+    /* =========================================================================
+       Mode 11: Authentic macOS Safari Downloads Popover
+       ========================================================================= */
+    .dls-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 9px; border-radius: 12px;
+      background: rgba(128, 120, 168, 0.09);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    body.theme-light .dls-row { background: rgba(24, 18, 52, 0.045); border-color: rgba(24, 18, 52, 0.08); }
+    .dls-row:hover { background: var(--glass-hover-bg); border-color: var(--glass-border); }
+    .dls-ico {
+      width: 30px; height: 30px; border-radius: 9px;
+      background: rgba(176, 124, 255, 0.16);
+      color: var(--accent-bright);
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .dls-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .dls-name { font-size: 12.2px; font-weight: 560; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dls-sub { font-size: 10.6px; color: var(--ink-muted); }
+    .dls-acts { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
   </style>
 </head>
 <body class="theme-dark">
@@ -804,7 +1022,7 @@
       <div id="other-prof-list" class="panel-scroll"></div>
 
       <div class="prof-footer">
-        <div id="prof-ver-text" class="ver-info">dejavu v2.6.0</div>
+        <div id="prof-ver-text" class="ver-info">dejavu v2.7.0</div>
         <button id="btn-update-action" class="pill-btn">Check updates</button>
       </div>
     </div>
@@ -941,9 +1159,168 @@
     </div>
   </div>
 
-  <!-- Mode 8: Floating Omnibox Autocomplete Suggestions -->
+  <!-- Mode 8: Safari Grouped Floating Omnibox Autocomplete Suggestions -->
   <div id="mode-suggest" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="12" data-lg-scale="14" data-lg-dome="0.02">
     <div id="suggest-list" class="suggest-box"></div>
+  </div>
+
+  <!-- Mode 9: Floating macOS Tahoe Liquid Glass Safari Sidebar -->
+  <div id="mode-sidebar" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.022">
+    <div class="sb-box">
+      <div class="sb-head">
+        <div class="sb-prof">
+          <span id="sb-prof-avatar"></span>
+          <div style="min-width:0;">
+            <div id="sb-prof-name" class="sb-prof-name">Personal</div>
+            <div class="sb-prof-sub">Safari Butterfly Sidebar</div>
+          </div>
+        </div>
+        <button id="btn-sb-close" class="icon-btn sm" title="Hide Sidebar (Ctrl+Shift+L)">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div class="sb-scroll">
+        <!-- Tab Groups -->
+        <div class="sb-sec">
+          <div class="sb-sec-head">
+            <span class="sb-sec-title">Tab Groups</span>
+            <button id="btn-sb-add-group" class="sb-mini-pill" type="button">+ New</button>
+          </div>
+          <div id="sb-new-group-box" class="sb-new-group-box hidden">
+            <input id="sb-new-group-input" type="text" maxlength="24" placeholder="Group name (e.g. Work, Research)">
+            <div class="sb-swatches-row">
+              <div class="sb-swatches" id="sb-swatches">
+                <button type="button" class="sb-swatch sel" data-col="#b688ff" style="background:#b688ff"></button>
+                <button type="button" class="sb-swatch" data-col="#38bdf8" style="background:#38bdf8"></button>
+                <button type="button" class="sb-swatch" data-col="#34d399" style="background:#34d399"></button>
+                <button type="button" class="sb-swatch" data-col="#f472b6" style="background:#f472b6"></button>
+                <button type="button" class="sb-swatch" data-col="#fb923c" style="background:#fb923c"></button>
+              </div>
+              <button id="btn-sb-create-group" class="sb-mini-pill" type="button">Create</button>
+            </div>
+          </div>
+          <div id="sb-groups-list"></div>
+        </div>
+
+        <!-- Open Tabs -->
+        <div class="sb-sec">
+          <div class="sb-sec-head">
+            <span class="sb-sec-title">Open Tabs</span>
+          </div>
+          <div id="sb-tabs-list"></div>
+        </div>
+
+        <!-- Favorites -->
+        <div class="sb-sec">
+          <div class="sb-sec-head">
+            <span class="sb-sec-title">Favorites</span>
+          </div>
+          <div id="sb-favs-list"></div>
+        </div>
+
+        <!-- Reading List -->
+        <div class="sb-sec">
+          <div class="sb-sec-head">
+            <span class="sb-sec-title">Reading List</span>
+            <button id="btn-sb-save-rl" class="sb-mini-pill hidden" type="button">+ Save Page</button>
+          </div>
+          <div id="sb-reading-list"></div>
+        </div>
+
+        <!-- Recent History -->
+        <div class="sb-sec">
+          <div class="sb-sec-head">
+            <span class="sb-sec-title">Recent History</span>
+          </div>
+          <div id="sb-hist-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mode 10: Authentic macOS Safari Share Sheet -->
+  <div id="mode-share" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.024">
+    <div class="share-box">
+      <div class="share-head">
+        <div class="share-ico-wrap"><img id="share-fav" src="https://dejavu.local/logo-transparent.png" alt="" draggable="false"></div>
+        <div class="share-meta">
+          <div id="share-title" class="share-title">Start Page</div>
+          <div id="share-host" class="share-host">dejavu</div>
+        </div>
+      </div>
+
+      <div class="share-list">
+        <button id="sh-copy" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="5.4" y="5.4" width="7.4" height="7.4" rx="1.6" stroke="currentColor" stroke-width="1.35"/><path d="M3.2 10.4V4.6A1.4 1.4 0 0 1 4.6 3.2h5.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+          <span id="sh-copy-lbl">Copy Link</span>
+        </button>
+        <button id="sh-fav" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M8 2.2l1.8 3.6 4 .6-2.9 2.8.7 4L8 11.3l-3.6 1.9.7-4-2.9-2.8 4-.6L8 2.2z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/></svg>
+          <span id="sh-fav-lbl">Add to Favorites</span>
+        </button>
+        <button id="sh-reading" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="5.2" cy="8.4" r="2.4" stroke="currentColor" stroke-width="1.35"/><circle cx="10.8" cy="8.4" r="2.4" stroke="currentColor" stroke-width="1.35"/><path d="M7.6 8.4h.8" stroke="currentColor" stroke-width="1.35"/></svg>
+          <span id="sh-reading-lbl">Add to Reading List</span>
+        </button>
+        <button id="sh-reader" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 4.5h10M3 7.5h10M3 10.5h7.2M3 13.2h5.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <span id="sh-reader-lbl">Show Reader View</span>
+        </button>
+        <div class="share-sep"></div>
+        <button id="sh-pin" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M9.8 2.8l3.4 3.4-1.4 1.4-.9-.4-2.5 2.5.4 1.8-1.2 1.2-2.2-2.2-2.6 2.6-.7-.7 2.6-2.6-2.2-2.2 1.2-1.2 1.8.4 2.5-2.5-.4-.9 1.4-1.4z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
+          <span id="sh-pin-lbl">Pin Tab</span>
+        </button>
+        <button id="sh-dup" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="2.8" y="4.2" width="7.4" height="8.6" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M6.4 4.2V3.2a1 1 0 0 1 1-1h4.8a1 1 0 0 1 1 1v7.6a1 1 0 0 1-1 1h-2" stroke="currentColor" stroke-width="1.3"/></svg>
+          <span>Duplicate Tab</span>
+        </button>
+        <button id="sh-newwin" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="2.5" y="3.2" width="11" height="9.6" rx="1.8" stroke="currentColor" stroke-width="1.3"/><path d="M2.6 6h10.8" stroke="currentColor" stroke-width="1.3"/></svg>
+          <span>New Window</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mode 11: Authentic macOS Safari Downloads Popover -->
+  <div id="mode-downloads" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.024">
+    <div class="panel-box">
+      <div class="panel-head">
+        <div class="panel-title">Downloads</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button id="btn-dls-clear" class="pill-btn hidden" type="button">Clear</button>
+          <button id="btn-dls-close" class="icon-btn sm" title="Close">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="dls-list" class="panel-scroll"></div>
+    </div>
+  </div>
+
+  <!-- Mode 12: Native Floating Safari Right-Click Tab Context Menu (Never clips on webpages!) -->
+  <div id="mode-tabmenu" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="12" data-lg-scale="14" data-lg-dome="0.02">
+    <div class="share-box" style="padding:7px;gap:2px;">
+      <button type="button" class="share-item" data-tm="pin">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M9.8 2.8l3.4 3.4-1.4 1.4-.9-.4-2.5 2.5.4 1.8-1.2 1.2-2.2-2.2-2.6 2.6-.7-.7 2.6-2.6-2.2-2.2 1.2-1.2 1.8.4 2.5-2.5-.4-.9 1.4-1.4z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
+        <span id="tm-pin-lbl">Pin Tab</span>
+      </button>
+      <button type="button" class="share-item" data-tm="duplicate">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="5.2" y="5.2" width="7.8" height="7.8" rx="1.8" stroke="currentColor" stroke-width="1.3"/><path d="M3 10.5V4.4A1.4 1.4 0 0 1 4.4 3h6.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span>Duplicate Tab</span>
+      </button>
+      <div class="share-sep"></div>
+      <button type="button" class="share-item" data-tm="closeOthers">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="2.5" y="4" width="11" height="8" rx="1.8" stroke="currentColor" stroke-width="1.3"/><path d="M6.4 6.5l3.2 3M9.6 6.5l-3.2 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span>Close Other Tabs</span>
+      </button>
+      <button type="button" class="share-item" data-tm="close" style="color:#ff94aa;">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>
+        <span>Close Tab</span>
+      </button>
+    </div>
   </div>
 
   <script src="https://dejavu.local/avatars.js"></script>
@@ -961,7 +1338,11 @@
       history: document.getElementById('mode-history'),
       update: document.getElementById('mode-update'),
       vpn: document.getElementById('mode-vpn'),
-      suggest: document.getElementById('mode-suggest')
+      suggest: document.getElementById('mode-suggest'),
+      sidebar: document.getElementById('mode-sidebar'),
+      share: document.getElementById('mode-share'),
+      downloads: document.getElementById('mode-downloads'),
+      tabmenu: document.getElementById('mode-tabmenu')
     };
 
     // Shield bindings
@@ -1152,7 +1533,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '2.6.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '2.7.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -1360,6 +1741,18 @@
       } else if (d.mode === 'suggest') {
         renderOmniboxSuggestions(d.items || [], typeof d.selectedIndex === 'number' ? d.selectedIndex : -1);
         requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.suggest));
+      } else if (d.mode === 'sidebar') {
+        renderSidebarPanel(d);
+        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.sidebar));
+      } else if (d.mode === 'share') {
+        renderSharePanel(d);
+        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.share));
+      } else if (d.mode === 'downloads') {
+        renderDownloadsPanel(d);
+        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.downloads));
+      } else if (d.mode === 'tabmenu') {
+        renderTabMenuPanel(d);
+        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modes.tabmenu));
       }
     });
 
@@ -1556,11 +1949,25 @@
 
     function renderOmniboxSuggestions(items, selectedIndex) {
       suggestList.innerHTML = '';
+      let lastGroup = '';
       items.forEach((item, idx) => {
+        const k = item.kind || 'search';
+        let group = 'Search Suggestions';
+        if (idx === 0 && (k === 'url' || k === 'site' || k === 'favorite')) group = 'Top Hit';
+        else if (k === 'favorite' || k === 'history' || k === 'site' || k === 'url') group = 'Bookmarks & Websites';
+
+        if (group !== lastGroup) {
+          lastGroup = group;
+          const hdr = document.createElement('div');
+          hdr.className = 'sug-group-hdr';
+          hdr.textContent = group;
+          suggestList.appendChild(hdr);
+        }
+
         const row = document.createElement('div');
-        row.className = 'sug-row' + (idx === selectedIndex ? ' selected' : '');
-        const icoCls = item.kind === 'favorite' ? 'is-fav' : (item.kind === 'history' ? 'is-hist' : ((item.kind === 'url' || item.kind === 'site') ? 'is-url' : ''));
-        const badge = item.kind === 'url' ? 'Go' : (item.kind === 'site' ? 'Site' : (item.kind === 'favorite' ? 'Pinned' : ''));
+        row.className = 'sug-row' + (group === 'Top Hit' ? ' top-hit' : '') + (idx === selectedIndex ? ' selected' : '');
+        const icoCls = k === 'favorite' ? 'is-fav' : (k === 'history' ? 'is-hist' : ((k === 'url' || k === 'site') ? 'is-url' : ''));
+        const badge = k === 'url' ? 'Go' : (k === 'site' ? 'Site' : (k === 'favorite' ? 'Favorite' : ''));
         row.innerHTML = `
           <span class="sug-ico ${icoCls}">${getSuggestIconHtml(item)}</span>
           <div class="sug-text">
@@ -1575,6 +1982,300 @@
         });
         suggestList.appendChild(row);
       });
+    }
+
+    // =========================================================================
+    // Mode 9: Floating macOS Tahoe Liquid Glass Safari Sidebar
+    // =========================================================================
+    const sbProfAvatar = document.getElementById('sb-prof-avatar');
+    const sbProfName = document.getElementById('sb-prof-name');
+    const sbGroupsList = document.getElementById('sb-groups-list');
+    const sbTabsList = document.getElementById('sb-tabs-list');
+    const sbFavsList = document.getElementById('sb-favs-list');
+    const sbReadingList = document.getElementById('sb-reading-list');
+    const sbHistList = document.getElementById('sb-hist-list');
+    const btnSbAddGroup = document.getElementById('btn-sb-add-group');
+    const sbNewGroupBox = document.getElementById('sb-new-group-box');
+    const sbNewGroupInput = document.getElementById('sb-new-group-input');
+    const sbSwatches = document.getElementById('sb-swatches');
+    const btnSbCreateGroup = document.getElementById('btn-sb-create-group');
+    const btnSbSaveRl = document.getElementById('btn-sb-save-rl');
+    let sbGroupColor = '#b688ff';
+
+    document.getElementById('btn-sb-close').addEventListener('click', () => send({ type: 'closePanel' }));
+    btnSbAddGroup.addEventListener('click', () => {
+      const opening = sbNewGroupBox.classList.contains('hidden');
+      sbNewGroupBox.classList.toggle('hidden', !opening);
+      if (opening) {
+        sbNewGroupInput.value = '';
+        setTimeout(() => sbNewGroupInput.focus(), 30);
+      }
+    });
+    sbSwatches.addEventListener('click', (e) => {
+      const sw = e.target.closest('.sb-swatch');
+      if (!sw) return;
+      sbGroupColor = sw.dataset.col || '#b688ff';
+      sbSwatches.querySelectorAll('.sb-swatch').forEach((s) => s.classList.toggle('sel', s === sw));
+    });
+    function submitNewSidebarGroup() {
+      const name = sbNewGroupInput.value.trim();
+      if (!name) return;
+      sbNewGroupBox.classList.add('hidden');
+      send({ type: 'sidebarCreateGroup', name, color: sbGroupColor });
+    }
+    btnSbCreateGroup.addEventListener('click', submitNewSidebarGroup);
+    sbNewGroupInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitNewSidebarGroup();
+      else if (e.key === 'Escape') sbNewGroupBox.classList.add('hidden');
+    });
+    btnSbSaveRl.addEventListener('click', () => send({ type: 'sidebarToggleReadingList' }));
+
+    function renderSidebarPanel(d) {
+      if (d.profile && window.DejavuAvatars) {
+        sbProfAvatar.innerHTML = window.DejavuAvatars.renderHtml(d.profile.avatar, 30);
+        sbProfName.textContent = d.profile.name || 'Personal';
+      }
+
+      // Tab Groups
+      sbGroupsList.innerHTML = '';
+      const groups = Array.isArray(d.tabGroups) && d.tabGroups.length
+        ? d.tabGroups
+        : [{ id: 'default', name: 'Start Tabs', color: '#b688ff' }];
+      groups.forEach((g) => {
+        const row = document.createElement('div');
+        row.className = 'sb-row' + (g.id === d.activeGroupId ? ' active' : '');
+        const col = g.color || '#b688ff';
+        row.innerHTML = `
+          <span class="sb-dot" style="background:${escapeHtml(col)};box-shadow:0 0 8px ${escapeHtml(col)};"></span>
+          <span class="sb-label"></span>
+          ${g.id !== 'default' ? '<button class="sb-rm" type="button" title="Delete Tab Group">×</button>' : ''}
+        `;
+        row.querySelector('.sb-label').textContent = g.name || 'Tab Group';
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.sb-rm')) return;
+          send({ type: 'sidebarSwitchGroup', id: g.id });
+        });
+        const rm = row.querySelector('.sb-rm');
+        if (rm) {
+          rm.addEventListener('click', (e) => {
+            e.stopPropagation();
+            send({ type: 'sidebarDeleteGroup', id: g.id });
+          });
+        }
+        sbGroupsList.appendChild(row);
+      });
+
+      // Open Tabs
+      sbTabsList.innerHTML = '';
+      (d.tabs || []).forEach((t) => {
+        const row = document.createElement('div');
+        row.className = 'sb-row' + (t.active ? ' active' : '');
+        const fav = t.favicon || 'https://dejavu.local/logo-transparent.png';
+        row.innerHTML = `
+          <img class="sb-ico" src="${escapeHtml(fav)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'">
+          <span class="sb-label"></span>
+          <button class="sb-rm" type="button" title="Close Tab">×</button>
+        `;
+        row.querySelector('.sb-label').textContent = t.title || 'Start Page';
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.sb-rm')) return;
+          send({ type: 'sidebarActivateTab', id: t.id });
+        });
+        row.querySelector('.sb-rm').addEventListener('click', (e) => {
+          e.stopPropagation();
+          send({ type: 'sidebarCloseTab', id: t.id });
+        });
+        sbTabsList.appendChild(row);
+      });
+
+      // Favorites
+      sbFavsList.innerHTML = '';
+      const favs = d.favorites || [];
+      if (!favs.length) {
+        sbFavsList.innerHTML = '<div class="sb-empty">Star any page (Ctrl+D) to pin it here</div>';
+      } else {
+        favs.forEach((f) => {
+          const host = extractHost(f.url);
+          const ico = f.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : 'https://dejavu.local/logo-transparent.png');
+          const row = document.createElement('div');
+          row.className = 'sb-row';
+          row.title = f.url;
+          row.innerHTML = `<img class="sb-ico" src="${escapeHtml(ico)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'"><span class="sb-label"></span>`;
+          row.querySelector('.sb-label').textContent = f.title || host;
+          row.addEventListener('click', () => send({ type: 'sidebarOpenUrl', url: f.url }));
+          sbFavsList.appendChild(row);
+        });
+      }
+
+      // Reading List
+      btnSbSaveRl.classList.toggle('hidden', !d.canSaveCurrent);
+      btnSbSaveRl.classList.toggle('saved', !!d.isCurrentInReadingList);
+      btnSbSaveRl.textContent = d.isCurrentInReadingList ? '✓ Saved' : '+ Save Page';
+
+      sbReadingList.innerHTML = '';
+      const rlist = d.readingList || [];
+      if (!rlist.length) {
+        sbReadingList.innerHTML = '<div class="sb-empty">Save articles to read later (Ctrl+Shift+D)</div>';
+      } else {
+        rlist.forEach((r) => {
+          const host = extractHost(r.url);
+          const ico = r.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : 'https://dejavu.local/logo-transparent.png');
+          const row = document.createElement('div');
+          row.className = 'sb-row';
+          row.title = r.url;
+          row.innerHTML = `<img class="sb-ico" src="${escapeHtml(ico)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'"><span class="sb-label"></span><button class="sb-rm" type="button" title="Remove">×</button>`;
+          row.querySelector('.sb-label').textContent = r.title || host;
+          row.addEventListener('click', (e) => {
+            if (e.target.closest('.sb-rm')) return;
+            send({ type: 'sidebarOpenUrl', url: r.url });
+          });
+          row.querySelector('.sb-rm').addEventListener('click', (e) => {
+            e.stopPropagation();
+            send({ type: 'sidebarRemoveReadingList', id: r.id });
+          });
+          sbReadingList.appendChild(row);
+        });
+      }
+
+      // Recent History
+      sbHistList.innerHTML = '';
+      const hist = d.recentHistory || [];
+      if (!hist.length) {
+        sbHistList.innerHTML = '<div class="sb-empty">No recent pages yet</div>';
+      } else {
+        hist.forEach((h) => {
+          const host = extractHost(h.url);
+          const ico = h.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : 'https://dejavu.local/logo-transparent.png');
+          const row = document.createElement('div');
+          row.className = 'sb-row';
+          row.title = h.url;
+          row.innerHTML = `<img class="sb-ico" src="${escapeHtml(ico)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'"><span class="sb-label"></span>`;
+          row.querySelector('.sb-label').textContent = h.title || host;
+          row.addEventListener('click', () => send({ type: 'sidebarOpenUrl', url: h.url }));
+          sbHistList.appendChild(row);
+        });
+      }
+    }
+
+    // =========================================================================
+    // Mode 10: Authentic macOS Safari Share Sheet
+    // =========================================================================
+    const shareFav = document.getElementById('share-fav');
+    const shareTitle = document.getElementById('share-title');
+    const shareHost = document.getElementById('share-host');
+    const shCopy = document.getElementById('sh-copy');
+    const shCopyLbl = document.getElementById('sh-copy-lbl');
+    const shFav = document.getElementById('sh-fav');
+    const shFavLbl = document.getElementById('sh-fav-lbl');
+    const shReading = document.getElementById('sh-reading');
+    const shReadingLbl = document.getElementById('sh-reading-lbl');
+    const shReader = document.getElementById('sh-reader');
+    const shReaderLbl = document.getElementById('sh-reader-lbl');
+    const shPin = document.getElementById('sh-pin');
+    const shPinLbl = document.getElementById('sh-pin-lbl');
+    let copyResetTimer = null;
+
+    shCopy.addEventListener('click', () => {
+      send({ type: 'shareCopyUrl' });
+      shCopy.classList.add('copied');
+      shCopyLbl.textContent = 'Copied ✓';
+      if (copyResetTimer) clearTimeout(copyResetTimer);
+      copyResetTimer = setTimeout(() => {
+        shCopy.classList.remove('copied');
+        shCopyLbl.textContent = 'Copy Link';
+        send({ type: 'closePanel' });
+      }, 720);
+    });
+    shFav.addEventListener('click', () => send({ type: 'shareToggleFavorite' }));
+    shReading.addEventListener('click', () => send({ type: 'shareToggleReadingList' }));
+    shReader.addEventListener('click', () => send({ type: 'shareToggleReader' }));
+    shPin.addEventListener('click', () => send({ type: 'shareTogglePin' }));
+    document.getElementById('sh-dup').addEventListener('click', () => send({ type: 'shareDuplicateTab' }));
+    document.getElementById('sh-newwin').addEventListener('click', () => send({ type: 'shareNewWindow' }));
+
+    function renderSharePanel(d) {
+      shCopy.classList.remove('copied');
+      shCopyLbl.textContent = 'Copy Link';
+      shareFav.src = d.favicon || 'https://dejavu.local/logo-transparent.png';
+      shareFav.onerror = () => { shareFav.src = 'https://dejavu.local/logo-transparent.png'; };
+      shareTitle.textContent = d.title || 'Start Page';
+      shareHost.textContent = d.host || 'dejavu';
+
+      const isNt = !!d.isNewTab;
+      shCopy.disabled = isNt;
+      shFav.disabled = isNt;
+      shReading.disabled = isNt;
+      shReader.disabled = isNt;
+
+      shFavLbl.textContent = d.isFavorite ? 'Remove from Favorites' : 'Add to Favorites';
+      shReadingLbl.textContent = d.isReadingList ? 'Remove from Reading List' : 'Add to Reading List';
+      shReaderLbl.textContent = d.readerActive ? 'Hide Reader View' : 'Show Reader View';
+      shPinLbl.textContent = d.isPinned ? 'Unpin Tab' : 'Pin Tab';
+    }
+
+    // =========================================================================
+    // Mode 11: Authentic macOS Safari Downloads Popover
+    // =========================================================================
+    const dlsList = document.getElementById('dls-list');
+    const btnDlsClear = document.getElementById('btn-dls-clear');
+    document.getElementById('btn-dls-close').addEventListener('click', () => send({ type: 'closePanel' }));
+    btnDlsClear.addEventListener('click', () => send({ type: 'clearDownloads' }));
+
+    function renderDownloadsPanel(d) {
+      const items = Array.isArray(d.items) ? d.items : [];
+      btnDlsClear.classList.toggle('hidden', items.length === 0);
+      dlsList.innerHTML = '';
+
+      if (items.length === 0) {
+        dlsList.innerHTML = '<div class="empty-msg">No downloads yet.<br>Files you download appear right here.</div>';
+        return;
+      }
+
+      items.forEach((it) => {
+        const row = document.createElement('div');
+        row.className = 'dls-row';
+        const isDone = it.state === 'completed';
+        const isProg = it.state === 'progressing';
+        const pct = it.total > 0 ? Math.min(100, Math.round((it.received / it.total) * 100)) : 40;
+        const subText = isDone
+          ? `Completed · ${formatBytes(it.total || it.received)}`
+          : (isProg ? `${formatBytes(it.received)} / ${it.total > 0 ? formatBytes(it.total) : '…'}` : 'Interrupted');
+
+        row.innerHTML = `
+          <span class="dls-ico">
+            <svg viewBox="0 0 18 18" width="15" height="15" fill="none">
+              <path d="M9 3.6v7.4M6.2 8.4L9 11.2l2.8-2.8M4.2 14h9.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div class="dls-meta">
+            <div class="dls-name"></div>
+            ${isProg ? `<div class="dl-bar-track"><div class="dl-bar-fill" style="width:${pct}%"></div></div>` : ''}
+            <div class="dls-sub">${escapeHtml(subText)}</div>
+          </div>
+          ${isDone ? `<div class="dls-acts"><button type="button" class="dl-act-btn d-open">Open</button><button type="button" class="dl-act-btn d-rev">Folder</button></div>` : ''}
+        `;
+        row.querySelector('.dls-name').textContent = it.filename || 'Download';
+        const openBtn = row.querySelector('.d-open');
+        const revBtn = row.querySelector('.d-rev');
+        if (openBtn) openBtn.addEventListener('click', () => send({ type: 'openDownloadPath', path: it.filePath }));
+        if (revBtn) revBtn.addEventListener('click', () => send({ type: 'revealDownloadPath', path: it.filePath }));
+        dlsList.appendChild(row);
+      });
+    }
+
+    // =========================================================================
+    // Mode 12: Floating Safari Tab Context Menu
+    // =========================================================================
+    const tmPinLbl = document.getElementById('tm-pin-lbl');
+    let tmTabId = -1;
+    modes.tabmenu.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-tm]');
+      if (!btn || tmTabId < 0) return;
+      send({ type: 'tabMenuAction', act: btn.dataset.tm, id: tmTabId });
+    });
+    function renderTabMenuPanel(d) {
+      tmTabId = typeof d.tabId === 'number' ? d.tabId : -1;
+      tmPinLbl.textContent = d.isPinned ? 'Unpin Tab' : 'Pin Tab';
     }
   </script>
 </body>

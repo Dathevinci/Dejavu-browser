@@ -16,6 +16,16 @@ using Microsoft.Web.WebView2.WinForms;
 
 namespace DejavuBrowser
 {
+    public class DownloadEntry
+    {
+        public string id { get; set; }
+        public string filename { get; set; }
+        public string filePath { get; set; }
+        public long received { get; set; }
+        public long total { get; set; }
+        public string state { get; set; }
+    }
+
     internal sealed class BrowserTab
     {
         public int Id;
@@ -26,6 +36,10 @@ namespace DejavuBrowser
         public bool IsLoading;
         public int BlockedCount;
         public bool IsLight;
+        public bool IsPinned;
+        public string GroupId;
+        public bool ReaderActive;
+        public string ThumbnailDataUrl;
         public int[] BaseRgb;
         public List<int[]> AccentPalette;
         public string PaletteCapturedUrl;
@@ -34,16 +48,20 @@ namespace DejavuBrowser
         public string PendingNavigateUrl;
         public double ZoomFactor;
 
-        public BrowserTab(int id)
+        public BrowserTab(int id, string groupId)
         {
             Id = id;
             Url = "dejavu://newtab";
-            Title = "New Tab";
+            Title = "Start Page";
             Favicon = "";
             IsNewTab = true;
             IsLoading = false;
             BlockedCount = 0;
             IsLight = false;
+            IsPinned = false;
+            GroupId = string.IsNullOrEmpty(groupId) ? "default" : groupId;
+            ReaderActive = false;
+            ThumbnailDataUrl = "";
             BaseRgb = new int[] { 11, 9, 20 };
             AccentPalette = null;
             ZoomFactor = 1.0;
@@ -102,6 +120,9 @@ namespace DejavuBrowser
 
         private readonly List<BrowserTab> _tabs = new List<BrowserTab>();
         private readonly Stack<string> _closedTabUrls = new Stack<string>();
+        private readonly List<DownloadEntry> _downloads = new List<DownloadEntry>();
+        private string _activeTabGroupId = "default";
+        private bool _tabOverviewOpen;
         private int _activeTabId = -1;
         private int _nextTabId = 1;
 
@@ -640,6 +661,13 @@ namespace DejavuBrowser
                 if (lower == "index.html")
                 {
                     string html = System.Text.Encoding.UTF8.GetString(data);
+                    var bootStartPagePrefs = new Dictionary<string, object>
+                    {
+                        { "hideFavorites", _settings.hideFavorites },
+                        { "hideFrequentlyVisited", _settings.hideFrequentlyVisited },
+                        { "hidePrivacyReport", _settings.hidePrivacyReport },
+                        { "hideReadingList", _settings.hideReadingList }
+                    };
                     var boot = new Dictionary<string, object>
                     {
                         { "wallpaper", _settings.wallpaper ?? "live:obsidian-prism" },
@@ -647,6 +675,11 @@ namespace DejavuBrowser
                         { "activeProfile", _profiles.ActiveProfile },
                         { "shortcuts", _settings.shortcuts },
                         { "favorites", _profiles.Favorites },
+                        { "readingList", _profiles.ReadingList },
+                        { "frequentlyVisited", _profiles.GetFrequentlyVisited(6) },
+                        { "startPagePrefs", bootStartPagePrefs },
+                        { "tabGroups", _profiles.TabGroups },
+                        { "activeTabGroupId", _activeTabGroupId },
                         { "globalAdBlockEnabled", _adBlocker.GlobalEnabled },
                         { "totalBlocked", _adBlocker.TotalBlocked }
                     };
@@ -696,7 +729,7 @@ namespace DejavuBrowser
 
             _shellView.Visible = true;
 
-            if (active == null || active.IsNewTab)
+            if (_tabOverviewOpen || active == null || active.IsNewTab)
             {
                 _shellView.Bounds = new Rectangle(0, 0, w, h);
                 _shellView.BringToFront();
@@ -761,6 +794,8 @@ namespace DejavuBrowser
             _tabs.Clear();
             _closedTabUrls.Clear();
             _activeTabId = -1;
+            _activeTabGroupId = "default";
+            _tabOverviewOpen = false;
 
             _settings = _profiles.LoadActiveSettings();
             if (_vpn != null) _vpn.AutoConnect = _settings.vpnAutoConnect;
@@ -803,7 +838,7 @@ namespace DejavuBrowser
 
         private void CreateTab(string initialUrl, bool activate)
         {
-            BrowserTab tab = new BrowserTab(_nextTabId++);
+            BrowserTab tab = new BrowserTab(_nextTabId++, _activeTabGroupId);
             if (!string.IsNullOrEmpty(initialUrl))
             {
                 tab.IsNewTab = false;
@@ -818,15 +853,27 @@ namespace DejavuBrowser
                 EnsureTabWebViewAsync(tab);
             }
 
-            if (activate) ActivateTab(tab.Id);
+            if (activate)
+            {
+                _tabOverviewOpen = false;
+                ActivateTab(tab.Id);
+            }
             else PushFullStateToShell();
         }
 
         private void ActivateTab(int tabId)
         {
+            BrowserTab prev = GetActiveTab();
+            if (prev != null && prev.Id != tabId && !prev.IsNewTab && prev.CoreReady)
+            {
+                Task ignoreThumb = CaptureTabThumbnailAsync(prev);
+            }
+
             BrowserTab tab = FindTab(tabId);
             if (tab == null) return;
             _activeTabId = tabId;
+            _activeTabGroupId = tab.GroupId;
+            _tabOverviewOpen = false;
 
             HidePopover();
             HideSuggestPopup();
@@ -886,6 +933,19 @@ namespace DejavuBrowser
             }
         }
 
+        private List<BrowserTab> GetActiveGroupTabs()
+        {
+            List<BrowserTab> list = new List<BrowserTab>();
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                if (string.Equals(_tabs[i].GroupId, _activeTabGroupId, StringComparison.OrdinalIgnoreCase))
+                {
+                    list.Add(_tabs[i]);
+                }
+            }
+            return list;
+        }
+
         private void CloseTab(int tabId)
         {
             int idx = -1;
@@ -901,7 +961,18 @@ namespace DejavuBrowser
                 RecordClosedTabUrl(tab.Url);
             }
 
-            if (_tabs.Count == 1)
+            List<BrowserTab> groupTabs = new List<BrowserTab>();
+            int groupIdx = -1;
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                if (string.Equals(_tabs[i].GroupId, tab.GroupId, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (_tabs[i].Id == tabId) groupIdx = groupTabs.Count;
+                    groupTabs.Add(_tabs[i]);
+                }
+            }
+
+            if (groupTabs.Count <= 1)
             {
                 if (tab.WebView != null)
                 {
@@ -912,8 +983,11 @@ namespace DejavuBrowser
                     tab.CoreReady = false;
                 }
                 tab.IsNewTab = true;
+                tab.IsPinned = false;
+                tab.ReaderActive = false;
+                tab.ThumbnailDataUrl = "";
                 tab.Url = "dejavu://newtab";
-                tab.Title = "New Tab";
+                tab.Title = "Start Page";
                 tab.Favicon = "";
                 tab.IsLoading = false;
                 tab.BlockedCount = 0;
@@ -928,11 +1002,19 @@ namespace DejavuBrowser
                 tab.WebView.Dispose();
             }
             _tabs.RemoveAt(idx);
+            groupTabs.RemoveAt(groupIdx);
 
             if (_activeTabId == tabId)
             {
-                int nextIdx = Math.Min(idx, _tabs.Count - 1);
-                ActivateTab(_tabs[nextIdx].Id);
+                bool keepOverview = _tabOverviewOpen;
+                int nextIdx = Math.Min(groupIdx, groupTabs.Count - 1);
+                ActivateTab(groupTabs[nextIdx].Id);
+                if (keepOverview)
+                {
+                    _tabOverviewOpen = true;
+                    LayoutViews();
+                    PushFullStateToShell();
+                }
             }
             else
             {
@@ -1046,6 +1128,7 @@ namespace DejavuBrowser
                 core.NavigationCompleted += (s, e) =>
                 {
                     tab.IsLoading = false;
+                    tab.ReaderActive = false;
                     tab.Url = core.Source;
                     if (!string.IsNullOrEmpty(core.DocumentTitle)) tab.Title = core.DocumentTitle;
                     InjectSiteCosmetics(core, core.Source);
@@ -1219,6 +1302,18 @@ namespace DejavuBrowser
                 e.ResultFilePath = target;
                 _lastDownloadPath = target;
 
+                DownloadEntry entry = new DownloadEntry
+                {
+                    id = "dl-" + DateTime.UtcNow.Ticks.ToString("x"),
+                    filename = Path.GetFileName(target),
+                    filePath = target,
+                    received = 0,
+                    total = (long)(e.DownloadOperation.TotalBytesToReceive ?? 0UL),
+                    state = "progressing"
+                };
+                _downloads.Insert(0, entry);
+                if (_downloads.Count > 30) _downloads.RemoveRange(30, _downloads.Count - 30);
+
                 CoreWebView2DownloadOperation op = e.DownloadOperation;
                 Action pushUpdate = () =>
                 {
@@ -1228,7 +1323,15 @@ namespace DejavuBrowser
                         string st = "progressing";
                         if (op.State == CoreWebView2DownloadState.Completed) st = "completed";
                         else if (op.State == CoreWebView2DownloadState.Interrupted) st = "interrupted";
-                        ShowDownloadToast(Path.GetFileName(target), target, op.BytesReceived, (long)(op.TotalBytesToReceive ?? 0UL), st);
+                        entry.received = op.BytesReceived;
+                        entry.total = (long)(op.TotalBytesToReceive ?? 0UL);
+                        entry.state = st;
+                        ShowDownloadToast(entry.filename, target, entry.received, entry.total, st);
+                        PushFullStateToShell();
+                        if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "downloads")
+                        {
+                            _popoverPopup.UpdateState(BuildDownloadsPayloadJson(null));
+                        }
                     }));
                 };
 
@@ -1304,7 +1407,24 @@ namespace DejavuBrowser
                                 acc.Add(light ? new int[] { 96, 178, 245 } : new int[] { 76, 162, 228 });
                             }
 
-                            return new Tuple<bool, int[], List<int[]>>(light, new int[] { br, bg, bb }, acc);
+                            string thumbDataUrl = "";
+                            try
+                            {
+                                using (Bitmap small = new Bitmap(320, 200))
+                                using (Graphics g = Graphics.FromImage(small))
+                                {
+                                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
+                                    g.DrawImage(bmp, new Rectangle(0, 0, 320, 200));
+                                    using (MemoryStream tms = new MemoryStream())
+                                    {
+                                        small.Save(tms, ImageFormat.Jpeg);
+                                        thumbDataUrl = "data:image/jpeg;base64," + Convert.ToBase64String(tms.ToArray());
+                                    }
+                                }
+                            }
+                            catch { }
+
+                            return new Tuple<bool, int[], List<int[]>, string>(light, new int[] { br, bg, bb }, acc, thumbDataUrl);
                         }
                     });
 
@@ -1312,6 +1432,10 @@ namespace DejavuBrowser
                     tab.BaseRgb = extracted.Item2;
                     tab.AccentPalette = extracted.Item3;
                     tab.PaletteCapturedUrl = tab.Url;
+                    if (!string.IsNullOrEmpty(extracted.Item4))
+                    {
+                        tab.ThumbnailDataUrl = extracted.Item4;
+                    }
 
                     if (tab.Id == _activeTabId && !tab.IsNewTab && !IsDisposed)
                     {
@@ -1441,7 +1565,7 @@ namespace DejavuBrowser
 
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
-            int y = (int)Math.Round(BASE_CHROME_HEIGHT * sc) + (int)Math.Round(4 * sc);
+            int y = (int)Math.Round(50 * sc);
 
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
             BrowserTab tab = GetActiveTab();
@@ -1490,7 +1614,7 @@ namespace DejavuBrowser
             int popH = (int)Math.Round(526 * sc);
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
-            int y = (int)Math.Round(BASE_CHROME_HEIGHT * sc) + (int)Math.Round(4 * sc);
+            int y = (int)Math.Round(50 * sc);
 
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
             BrowserTab tab = GetActiveTab();
@@ -1546,7 +1670,7 @@ namespace DejavuBrowser
             int popH = (int)Math.Round(520 * sc);
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
-            int y = (int)Math.Round(BASE_CHROME_HEIGHT * sc) + (int)Math.Round(4 * sc);
+            int y = (int)Math.Round(50 * sc);
 
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
             BrowserTab tab = GetActiveTab();
@@ -1576,7 +1700,7 @@ namespace DejavuBrowser
             int popH = (int)Math.Round(536 * sc);
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
-            int y = (int)Math.Round(BASE_CHROME_HEIGHT * sc) + (int)Math.Round(4 * sc);
+            int y = (int)Math.Round(50 * sc);
 
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
             BrowserTab tab = GetActiveTab();
@@ -1688,21 +1812,36 @@ namespace DejavuBrowser
             catch { }
         }
 
+        private static int CountSuggestSectionHeaders(List<SuggestItem> items)
+        {
+            if (items == null || items.Count == 0) return 0;
+            bool hasTop = false, hasSaved = false, hasSearch = false;
+            for (int i = 0; i < items.Count; i++)
+            {
+                string k = items[i].kind ?? "";
+                if (i == 0 && (k == "url" || k == "site" || k == "favorite")) hasTop = true;
+                else if (k == "favorite" || k == "history" || k == "site" || k == "url") hasSaved = true;
+                else hasSearch = true;
+            }
+            return (hasTop ? 1 : 0) + (hasSaved ? 1 : 0) + (hasSearch ? 1 : 0);
+        }
+
         private void ShowOmniboxSuggestPopup(List<SuggestItem> items, int leftCss, int topCss, int widthCss)
         {
             if (_suggestPopup == null || IsDisposed || items == null || items.Count == 0) return;
 
             float sc = DpiScale;
-            int wCss = Math.Max(320, widthCss);
-            int hCss = Math.Min(334, items.Count * 44 + 16);
+            int wCss = Math.Max(340, widthCss);
+            int headers = CountSuggestSectionHeaders(items);
+            int hCss = Math.Min(392, items.Count * 40 + headers * 22 + 18);
             int x = Math.Max((int)(8 * sc), (int)Math.Round(leftCss * sc));
             int y = (int)Math.Round((topCss + 6) * sc);
             int w = Math.Min(ClientSize.Width - x - (int)(8 * sc), (int)Math.Round(wCss * sc));
             int h = (int)Math.Round(hCss * sc);
-            Rectangle clientRect = new Rectangle(x, y, Math.Max(200, w), Math.Max(48, h));
+            Rectangle clientRect = new Rectangle(x, y, Math.Max(200, w), Math.Max(52, h));
 
             BrowserTab tab = GetActiveTab();
-            bool captureShell = (tab == null || tab.IsNewTab);
+            bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
             bool isLight = !captureShell && tab.IsLight;
             bool needBackdrop = string.IsNullOrEmpty(_suggestBackdropCache) || !_suggestPopup.IsPopupOpen ||
                 Math.Abs(_suggestLastRect.X - clientRect.X) > 20 || Math.Abs(_suggestLastRect.Width - clientRect.Width) > 20;
@@ -1710,7 +1849,7 @@ namespace DejavuBrowser
             string initialBackdrop = _suggestBackdropCache;
             if (needBackdrop)
             {
-                Rectangle capRect = new Rectangle(clientRect.X, clientRect.Y, clientRect.Width, (int)Math.Round(334 * sc));
+                Rectangle capRect = new Rectangle(clientRect.X, clientRect.Y, clientRect.Width, (int)Math.Round(392 * sc));
                 string cached = TryCropCachedBackdrop(capRect, captureShell, tab != null ? tab.Id : -1, isLight);
                 initialBackdrop = cached ?? "";
                 _suggestBackdropCache = initialBackdrop;
@@ -1939,6 +2078,10 @@ namespace DejavuBrowser
             if (ctrl && !alt)
             {
                 if (shift && key == Keys.T) { ReopenLastClosedTab(); return true; }
+                if (shift && key == Keys.L) { ShowSidebarPopover(); return true; }
+                if (shift && key == Keys.R) { ToggleReaderModeActiveTabAsync(); return true; }
+                if (shift && (key == Keys.O || key == Keys.OemPipe)) { ToggleTabOverviewAsync(!_tabOverviewOpen); return true; }
+                if (shift && key == Keys.D) { ToggleReadingListActiveTab(); return true; }
                 if (key == Keys.T) { CreateTab(null, true); return true; }
                 if (key == Keys.W) { CloseTab(_activeTabId); return true; }
                 if (key == Keys.L) { FocusShellOmnibox(); return true; }
@@ -1949,28 +2092,31 @@ namespace DejavuBrowser
                 if (shift && key == Keys.M) { ShowProfilesPopoverAt((int)(ClientSize.Width / DpiScale) - 108); return true; }
                 if (!shift && ((key >= Keys.D1 && key <= Keys.D8) || (key >= Keys.NumPad1 && key <= Keys.NumPad8)))
                 {
+                    List<BrowserTab> groupTabs = GetActiveGroupTabs();
                     int tabIndex = (key >= Keys.NumPad1) ? (key - Keys.NumPad1) : (key - Keys.D1);
-                    if (tabIndex >= 0 && tabIndex < _tabs.Count)
+                    if (tabIndex >= 0 && tabIndex < groupTabs.Count)
                     {
-                        ActivateTab(_tabs[tabIndex].Id);
+                        ActivateTab(groupTabs[tabIndex].Id);
                     }
                     return true;
                 }
                 if (!shift && (key == Keys.D9 || key == Keys.NumPad9))
                 {
-                    if (_tabs.Count > 0)
+                    List<BrowserTab> groupTabs = GetActiveGroupTabs();
+                    if (groupTabs.Count > 0)
                     {
-                        ActivateTab(_tabs[_tabs.Count - 1].Id);
+                        ActivateTab(groupTabs[groupTabs.Count - 1].Id);
                     }
                     return true;
                 }
                 if (key == Keys.Tab)
                 {
-                    if (_tabs.Count > 1)
+                    List<BrowserTab> groupTabs = GetActiveGroupTabs();
+                    if (groupTabs.Count > 1)
                     {
-                        int cur = _tabs.FindIndex(t => t.Id == _activeTabId);
-                        int next = (cur + (shift ? -1 : 1) + _tabs.Count) % _tabs.Count;
-                        ActivateTab(_tabs[next].Id);
+                        int cur = groupTabs.FindIndex(t => t.Id == _activeTabId);
+                        int next = (cur + (shift ? -1 : 1) + groupTabs.Count) % groupTabs.Count;
+                        ActivateTab(groupTabs[next].Id);
                     }
                     return true;
                 }
@@ -1990,6 +2136,402 @@ namespace DejavuBrowser
             _profiles.ToggleFavorite(tab.Url, tab.Title, tab.Favicon);
             if (hadBar != HasFavoritesBar) LayoutViews();
             PushFullStateToShell();
+            RefreshSidebarIfOpen();
+        }
+
+        private void ToggleReadingListActiveTab()
+        {
+            BrowserTab tab = GetActiveTab();
+            if (tab == null || tab.IsNewTab || string.IsNullOrEmpty(tab.Url)) return;
+            _profiles.ToggleReadingList(tab.Url, tab.Title, tab.Favicon);
+            PushFullStateToShell();
+            RefreshSidebarIfOpen();
+        }
+
+        private void PinOrUnpinTab(int tabId)
+        {
+            BrowserTab tab = FindTab(tabId);
+            if (tab == null) return;
+            tab.IsPinned = !tab.IsPinned;
+            // Keep pinned tabs sorted smoothly to the left of the tab bar (just like Safari!)
+            _tabs.Sort((a, b) =>
+            {
+                if (a.IsPinned == b.IsPinned) return a.Id.CompareTo(b.Id);
+                return a.IsPinned ? -1 : 1;
+            });
+            PushFullStateToShell();
+            RefreshSidebarIfOpen();
+        }
+
+        private void DuplicateTab(int tabId)
+        {
+            BrowserTab tab = FindTab(tabId);
+            if (tab == null) return;
+            CreateTab(tab.IsNewTab ? null : tab.Url, true);
+        }
+
+        private void CloseOtherTabs(int keepId)
+        {
+            BrowserTab keep = FindTab(keepId);
+            if (keep == null) return;
+            for (int i = _tabs.Count - 1; i >= 0; i--)
+            {
+                BrowserTab t = _tabs[i];
+                if (t.Id == keepId || t.GroupId != _activeTabGroupId || t.IsPinned) continue;
+                if (!t.IsNewTab && !string.IsNullOrEmpty(t.Url)) _closedTabUrls.Push(t.Url);
+                if (t.WebView != null)
+                {
+                    if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
+                    Controls.Remove(t.WebView);
+                    t.WebView.Dispose();
+                }
+                _tabs.RemoveAt(i);
+            }
+            ActivateTab(keepId);
+        }
+
+        private void SwitchTabGroup(string groupId)
+        {
+            if (string.IsNullOrEmpty(groupId)) groupId = "default";
+            _activeTabGroupId = groupId;
+            BrowserTab firstInGroup = null;
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                if (string.Equals(_tabs[i].GroupId, groupId, StringComparison.OrdinalIgnoreCase))
+                {
+                    firstInGroup = _tabs[i];
+                    break;
+                }
+            }
+            if (firstInGroup != null)
+            {
+                ActivateTab(firstInGroup.Id);
+            }
+            else
+            {
+                CreateTab(null, true);
+            }
+            RefreshSidebarIfOpen();
+        }
+
+        private async Task CaptureTabThumbnailAsync(BrowserTab tab)
+        {
+            if (tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed) return;
+            try
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    await tab.WebView.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Jpeg, ms);
+                    byte[] raw = ms.ToArray();
+                    string thumb = await Task.Run(() =>
+                    {
+                        using (MemoryStream bgMs = new MemoryStream(raw))
+                        using (Bitmap full = new Bitmap(bgMs))
+                        using (Bitmap small = new Bitmap(320, 200))
+                        using (Graphics g = Graphics.FromImage(small))
+                        {
+                            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
+                            g.DrawImage(full, new Rectangle(0, 0, 320, 200));
+                            using (MemoryStream outMs = new MemoryStream())
+                            {
+                                small.Save(outMs, ImageFormat.Jpeg);
+                                return "data:image/jpeg;base64," + Convert.ToBase64String(outMs.ToArray());
+                            }
+                        }
+                    });
+                    if (!string.IsNullOrEmpty(thumb))
+                    {
+                        tab.ThumbnailDataUrl = thumb;
+                        if (_tabOverviewOpen && !IsDisposed) PushFullStateToShell();
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private async void ToggleTabOverviewAsync(bool open)
+        {
+            HidePopover();
+            HideSuggestPopup();
+            if (open)
+            {
+                BrowserTab active = GetActiveTab();
+                if (active != null && !active.IsNewTab && active.CoreReady && active.WebView != null && active.WebView.Visible)
+                {
+                    // Capture fresh live preview right before hiding the WebView (max 220ms budget so it stays instant!)
+                    try
+                    {
+                        await Task.WhenAny(CaptureTabThumbnailAsync(active), Task.Delay(220));
+                    }
+                    catch { }
+                }
+            }
+            if (IsDisposed) return;
+            _tabOverviewOpen = open;
+            LayoutViews();
+            PushFullStateToShell();
+        }
+
+        private async void ToggleReaderModeActiveTabAsync()
+        {
+            BrowserTab tab = GetActiveTab();
+            if (tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed) return;
+
+            string readerJs =
+                "(function(){" +
+                "var ID='__dejavu_safari_reader__';" +
+                "var ex=document.getElementById(ID);" +
+                "if(ex){ex.style.opacity='0';setTimeout(function(){ex.remove();},180);return 'off';}" +
+                "var root=document.querySelector('#mw-content-text .mw-parser-output,article,[role=\"main\"] article,main,.post-content,.article-body,.entry-content')||document.body;" +
+                "var h1=(document.querySelector('#firstHeading,article h1,main h1,h1')||{textContent:document.title}).textContent.trim();" +
+                "var host=location.hostname.replace(/^www\\./,'');" +
+                "var nodes=root.querySelectorAll('h2,h3,p,blockquote,pre');" +
+                "var parts=[];var seen={};" +
+                "for(var i=0;i<nodes.length&&parts.length<120;i++){" +
+                "  var n=nodes[i];" +
+                "  if(n.closest('nav,aside,.toc,.vector-toc,.navbox,.infobox,.sidebar,.hatnote,.mw-editsection,.reflist,.references,footer,header'))continue;" +
+                "  var clone=n.cloneNode(true);" +
+                "  clone.querySelectorAll('.mw-editsection,sup.reference,style,script').forEach(function(x){x.remove();});" +
+                "  var t=(clone.textContent||'').replace(/\\s+/g,' ').trim();" +
+                "  var tag=n.tagName.toLowerCase();" +
+                "  if(tag==='p'&&t.length<35)continue;" +
+                "  if(t.length<6||seen[t])continue;seen[t]=1;" +
+                "  parts.push('<'+tag+'>'+t.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</'+tag+'>');" +
+                "}" +
+                "if(parts.length===0){parts.push('<p>'+(document.body.innerText||'').slice(0,5000).replace(/</g,'&lt;')+'</p>');}" +
+                "var ov=document.createElement('div');ov.id=ID;" +
+                "ov.style.cssText='position:fixed;inset:0;z-index:2147483647;overflow-y:auto;background:#0d0b16;color:#f1ecff;font-family:Georgia,serif;font-size:19px;line-height:1.78;padding:72px 28px 96px;opacity:0;transition:opacity 0.24s cubic-bezier(0.22,1,0.36,1),background 0.22s ease,color 0.22s ease;';" +
+                "var css='<style>#__dejavu_safari_reader__ *{box-sizing:border-box;}#__dj_r_body,#__dj_r_body *{color:inherit!important;background:transparent!important;border:none!important;box-shadow:none!important;text-shadow:none!important;}#__dj_r_body h1{font-size:2.05em!important;line-height:1.18!important;margin:0 0 22px!important;font-weight:700!important;letter-spacing:-0.015em!important;}#__dj_r_body h2{font-size:1.35em!important;line-height:1.3!important;margin:28px 0 12px!important;font-weight:700!important;border-bottom:1px solid rgba(182,136,255,0.22)!important;padding-bottom:6px!important;}#__dj_r_body h3{font-size:1.12em!important;margin:22px 0 8px!important;font-weight:600!important;}#__dj_r_body p{margin:0 0 16px!important;opacity:0.93;}#__dj_r_body blockquote{margin:18px 0!important;padding:4px 0 4px 16px!important;border-left:3px solid #b688ff!important;opacity:0.86;font-style:italic;}</style>';" +
+                "ov.innerHTML=css+'<div style=\"position:fixed;top:14px;right:20px;display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(20,17,34,0.92);border:1px solid rgba(196,164,255,0.36);color:#f4f0ff;font-family:Segoe UI,system-ui,sans-serif;font-size:12px;z-index:2;box-shadow:0 10px 26px rgba(0,0,0,0.45);\">'+'" +
+                "<button data-a=\"dec\" style=\"background:none;border:none;color:#f4f0ff;cursor:pointer;padding:3px 7px;font-size:12px;\">A−</button>'+'" +
+                "<button data-a=\"inc\" style=\"background:none;border:none;color:#f4f0ff;cursor:pointer;padding:3px 7px;font-size:14px;font-weight:600;\">A+</button>'+'" +
+                "<button data-a=\"font\" style=\"background:rgba(255,255,255,0.10);border:none;border-radius:999px;color:#f4f0ff;cursor:pointer;padding:3px 9px;\">Aa</button>'+'" +
+                "<button data-t=\"dark\" style=\"width:18px;height:18px;border-radius:50%;border:1.5px solid #b688ff;background:#0d0b16;cursor:pointer;\"></button>'+'" +
+                "<button data-t=\"sepia\" style=\"width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,0.35);background:#f6eedc;cursor:pointer;\"></button>'+'" +
+                "<button data-t=\"light\" style=\"width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,0.35);background:#ffffff;cursor:pointer;\"></button>'+'" +
+                "<button data-a=\"close\" style=\"background:linear-gradient(135deg,#8b5cf6,#a855f7);border:none;border-radius:999px;color:#fff;cursor:pointer;padding:4px 12px;font-weight:600;\">Done</button></div>'+'" +
+                "<div id=\"__dj_r_body\" style=\"max-width:680px;margin:0 auto;\"><div style=\"font-family:Segoe UI,system-ui,sans-serif;font-size:11.5px;text-transform:uppercase;letter-spacing:0.09em;opacity:0.58;margin-bottom:10px;\">'+host+' · Safari Reader</div><h1>'+h1.replace(/</g,'&lt;')+'</h1>'+parts.join('')+'</div>';" +
+                "var sz=19,serif=true;" +
+                "ov.addEventListener('click',function(e){" +
+                "  var a=e.target.getAttribute('data-a'),t=e.target.getAttribute('data-t');" +
+                "  if(a==='dec'){sz=Math.max(14,sz-2);ov.style.fontSize=sz+'px';}" +
+                "  else if(a==='inc'){sz=Math.min(30,sz+2);ov.style.fontSize=sz+'px';}" +
+                "  else if(a==='font'){serif=!serif;ov.style.fontFamily=serif?'Georgia,serif':'Segoe UI Variable,system-ui,sans-serif';}" +
+                "  else if(a==='close'){ov.style.opacity='0';setTimeout(function(){ov.remove();},180);}" +
+                "  else if(t==='dark'){ov.style.background='#0d0b16';ov.style.color='#f1ecff';}" +
+                "  else if(t==='sepia'){ov.style.background='#f6eedc';ov.style.color='#2d2418';}" +
+                "  else if(t==='light'){ov.style.background='#fbfbfd';ov.style.color='#181622';}" +
+                "});" +
+                "var onEsc=function(e){if(e.key==='Escape'&&document.getElementById(ID)){ov.style.opacity='0';setTimeout(function(){ov.remove();},180);window.removeEventListener('keydown',onEsc);}};" +
+                "window.addEventListener('keydown',onEsc);" +
+                "document.body.appendChild(ov);requestAnimationFrame(function(){ov.style.opacity='1';});return 'on';" +
+                "})();";
+
+            try
+            {
+                string res = await tab.WebView.CoreWebView2.ExecuteScriptAsync(readerJs);
+                tab.ReaderActive = (res != null && res.Contains("on"));
+                PushFullStateToShell();
+            }
+            catch { }
+        }
+
+        private void ShowSidebarPopover()
+        {
+            if (_popoverPopup == null) return;
+            if (_popoverPopup.IsPopupOpen && _activePopoverMode == "sidebar")
+            {
+                HidePopover();
+                return;
+            }
+            if (ShouldSkipToggleReopen("sidebar")) return;
+
+            HideSuggestPopup();
+            _activePopoverMode = "sidebar";
+            float sc = DpiScale;
+            int popW = (int)Math.Round(284 * sc);
+            int topY = TopBarHeightPx + (int)Math.Round(6 * sc);
+            int popH = Math.Max((int)Math.Round(340 * sc), ClientSize.Height - topY - (int)Math.Round(12 * sc));
+            int x = (int)Math.Round(10 * sc);
+
+            Rectangle clientRect = new Rectangle(x, topY, popW, popH);
+            BrowserTab tab = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, !captureShell && tab.IsLight);
+
+            Point screenPt = PointToScreen(new Point(x, topY));
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildSidebarPayloadJson(cached ?? ""), true);
+            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "sidebar");
+        }
+
+        private void RefreshSidebarIfOpen()
+        {
+            if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "sidebar")
+            {
+                _popoverPopup.UpdateState(BuildSidebarPayloadJson(null));
+            }
+        }
+
+        private string BuildSidebarPayloadJson(string backdrop)
+        {
+            BrowserTab active = GetActiveTab();
+            List<Dictionary<string, object>> openTabs = new List<Dictionary<string, object>>();
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab t = _tabs[i];
+                if (!string.Equals(t.GroupId, _activeTabGroupId, StringComparison.OrdinalIgnoreCase)) continue;
+                openTabs.Add(new Dictionary<string, object>
+                {
+                    { "id", t.Id },
+                    { "title", t.IsNewTab ? "Start Page" : (string.IsNullOrEmpty(t.Title) ? FormatDisplayUrl(t.Url) : t.Title) },
+                    { "url", t.Url },
+                    { "favicon", t.Favicon ?? "" },
+                    { "isPinned", t.IsPinned },
+                    { "active", t.Id == _activeTabId }
+                });
+            }
+
+            List<HistoryItem> recentHist = new List<HistoryItem>();
+            for (int i = 0; i < Math.Min(_profiles.History.Count, 12); i++) recentHist.Add(_profiles.History[i]);
+
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "sidebar" },
+                { "isLight", !_tabOverviewOpen && active != null && !active.IsNewTab && active.IsLight },
+                { "profile", _profiles.ActiveProfile },
+                { "tabGroups", _profiles.TabGroups },
+                { "activeGroupId", _activeTabGroupId },
+                { "tabs", openTabs },
+                { "favorites", _profiles.Favorites },
+                { "readingList", _profiles.ReadingList },
+                { "recentHistory", recentHist },
+                { "canSaveCurrent", active != null && !active.IsNewTab },
+                { "isCurrentInReadingList", active != null && !active.IsNewTab && _profiles.IsInReadingList(active.Url) }
+            };
+            if (backdrop != null) payload["backdrop"] = backdrop;
+            return _json.Serialize(payload);
+        }
+
+        private void ShowSharePopoverAt(int anchorRightCss)
+        {
+            if (_popoverPopup == null) return;
+            if (_popoverPopup.IsPopupOpen && _activePopoverMode == "share")
+            {
+                HidePopover();
+                return;
+            }
+            if (ShouldSkipToggleReopen("share")) return;
+
+            HideSuggestPopup();
+            _activePopoverMode = "share";
+            float sc = DpiScale;
+            int popW = (int)Math.Round(268 * sc);
+            int popH = (int)Math.Round(332 * sc);
+            int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
+            int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
+            int y = (int)Math.Round(50 * sc);
+
+            Rectangle clientRect = new Rectangle(x, y, popW, popH);
+            BrowserTab tab = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
+            bool isLight = !captureShell && tab.IsLight;
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, isLight);
+
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "share" },
+                { "isLight", isLight },
+                { "backdrop", cached ?? "" },
+                { "isNewTab", tab == null || tab.IsNewTab },
+                { "title", (tab != null && !tab.IsNewTab) ? (string.IsNullOrEmpty(tab.Title) ? FormatDisplayUrl(tab.Url) : tab.Title) : "Start Page" },
+                { "url", (tab != null && !tab.IsNewTab) ? tab.Url : "" },
+                { "host", (tab != null && !tab.IsNewTab) ? FormatDisplayUrl(tab.Url) : "dejavu" },
+                { "favicon", tab != null ? (tab.Favicon ?? "") : "" },
+                { "isFavorite", tab != null && !tab.IsNewTab && _profiles.IsFavorite(tab.Url) },
+                { "isReadingList", tab != null && !tab.IsNewTab && _profiles.IsInReadingList(tab.Url) },
+                { "readerActive", tab != null && tab.ReaderActive },
+                { "isPinned", tab != null && tab.IsPinned }
+            };
+
+            Point screenPt = PointToScreen(new Point(x, y));
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), _json.Serialize(payload), true);
+            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "share");
+        }
+
+        private void ShowDownloadsPopoverAt(int anchorRightCss)
+        {
+            if (_popoverPopup == null) return;
+            if (_popoverPopup.IsPopupOpen && _activePopoverMode == "downloads")
+            {
+                HidePopover();
+                return;
+            }
+            if (ShouldSkipToggleReopen("downloads")) return;
+
+            HideSuggestPopup();
+            _activePopoverMode = "downloads";
+            float sc = DpiScale;
+            int popW = (int)Math.Round(346 * sc);
+            int popH = (int)Math.Round(320 * sc);
+            int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
+            int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
+            int y = (int)Math.Round(50 * sc);
+
+            Rectangle clientRect = new Rectangle(x, y, popW, popH);
+            BrowserTab tab = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, !captureShell && tab.IsLight);
+
+            Point screenPt = PointToScreen(new Point(x, y));
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildDownloadsPayloadJson(cached ?? ""), true);
+            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "downloads");
+        }
+
+        private string BuildDownloadsPayloadJson(string backdrop)
+        {
+            BrowserTab tab = GetActiveTab();
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "downloads" },
+                { "isLight", !_tabOverviewOpen && tab != null && !tab.IsNewTab && tab.IsLight },
+                { "items", _downloads }
+            };
+            if (backdrop != null) payload["backdrop"] = backdrop;
+            return _json.Serialize(payload);
+        }
+
+        private void ShowTabMenuPopoverAt(int tabId, int xCss, int yCss)
+        {
+            if (_popoverPopup == null) return;
+            BrowserTab target = FindTab(tabId);
+            if (target == null) return;
+
+            HideSuggestPopup();
+            _activePopoverMode = "tabmenu";
+            float sc = DpiScale;
+            int popW = (int)Math.Round(200 * sc);
+            int popH = (int)Math.Round(154 * sc);
+            int x = Math.Max((int)(8 * sc), Math.Min(ClientSize.Width - popW - (int)(8 * sc), (int)Math.Round(xCss * sc)));
+            int y = Math.Max((int)(46 * sc), Math.Min(ClientSize.Height - popH - (int)(8 * sc), (int)Math.Round(yCss * sc)));
+
+            Rectangle clientRect = new Rectangle(x, y, popW, popH);
+            BrowserTab active = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || active == null || active.IsNewTab);
+            bool isLight = !captureShell && active.IsLight;
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, active != null ? active.Id : -1, isLight);
+
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "tabmenu" },
+                { "isLight", isLight },
+                { "backdrop", cached ?? "" },
+                { "tabId", target.Id },
+                { "isPinned", target.IsPinned }
+            };
+
+            Point screenPt = PointToScreen(new Point(x, y));
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), _json.Serialize(payload), true);
+            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "tabmenu");
         }
 
         private void FocusShellOmnibox()
@@ -2131,6 +2673,53 @@ namespace DejavuBrowser
                         break;
                     case "openVpn":
                         ShowVpnPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1100);
+                        break;
+                    case "openSidebar":
+                        ShowSidebarPopover();
+                        break;
+                    case "openShare":
+                        ShowSharePopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1120);
+                        break;
+                    case "openDownloads":
+                        ShowDownloadsPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1060);
+                        break;
+                    case "openTabMenu":
+                        ShowTabMenuPopoverAt(
+                            msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId,
+                            msg.ContainsKey("x") ? Convert.ToInt32(msg["x"]) : 120,
+                            msg.ContainsKey("y") ? Convert.ToInt32(msg["y"]) : 86);
+                        break;
+                    case "toggleReaderMode":
+                        ToggleReaderModeActiveTabAsync();
+                        break;
+                    case "toggleTabOverview":
+                        bool wantOpen = msg.ContainsKey("open") ? Convert.ToBoolean(msg["open"]) : !_tabOverviewOpen;
+                        ToggleTabOverviewAsync(wantOpen);
+                        break;
+                    case "pinTab":
+                        PinOrUnpinTab(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
+                        break;
+                    case "duplicateTab":
+                        DuplicateTab(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
+                        break;
+                    case "closeOtherTabs":
+                        CloseOtherTabs(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
+                        break;
+                    case "toggleReadingList":
+                        ToggleReadingListActiveTab();
+                        break;
+                    case "removeReadingList":
+                        _profiles.RemoveReadingListItem(Convert.ToString(msg["id"]));
+                        PushFullStateToShell();
+                        RefreshSidebarIfOpen();
+                        break;
+                    case "updateStartPagePrefs":
+                        if (msg.ContainsKey("hideFavorites")) _settings.hideFavorites = Convert.ToBoolean(msg["hideFavorites"]);
+                        if (msg.ContainsKey("hideFrequentlyVisited")) _settings.hideFrequentlyVisited = Convert.ToBoolean(msg["hideFrequentlyVisited"]);
+                        if (msg.ContainsKey("hidePrivacyReport")) _settings.hidePrivacyReport = Convert.ToBoolean(msg["hidePrivacyReport"]);
+                        if (msg.ContainsKey("hideReadingList")) _settings.hideReadingList = Convert.ToBoolean(msg["hideReadingList"]);
+                        _profiles.SaveActiveSettings(_settings);
+                        PushFullStateToShell();
                         break;
                     case "suggestQuery":
                         HandleSuggestQueryAsync(
@@ -2328,6 +2917,127 @@ namespace DejavuBrowser
                         NavigateActiveTab(val);
                     }
                 }
+                else if (type == "sidebarActivateTab")
+                {
+                    int tid = Convert.ToInt32(msg["id"]);
+                    HidePopover();
+                    ActivateTab(tid);
+                }
+                else if (type == "sidebarCloseTab")
+                {
+                    CloseTab(Convert.ToInt32(msg["id"]));
+                    RefreshSidebarIfOpen();
+                }
+                else if (type == "sidebarCreateGroup")
+                {
+                    string gname = msg.ContainsKey("name") ? Convert.ToString(msg["name"]) : "New Group";
+                    string gcol = msg.ContainsKey("color") ? Convert.ToString(msg["color"]) : "#b688ff";
+                    TabGroupItem g = _profiles.CreateTabGroup(gname, gcol);
+                    SwitchTabGroup(g.id);
+                }
+                else if (type == "sidebarSwitchGroup")
+                {
+                    SwitchTabGroup(Convert.ToString(msg["id"]));
+                }
+                else if (type == "sidebarDeleteGroup")
+                {
+                    string gid = Convert.ToString(msg["id"]);
+                    if (_profiles.DeleteTabGroup(gid))
+                    {
+                        for (int i = 0; i < _tabs.Count; i++)
+                        {
+                            if (string.Equals(_tabs[i].GroupId, gid, StringComparison.OrdinalIgnoreCase)) _tabs[i].GroupId = "default";
+                        }
+                        if (string.Equals(_activeTabGroupId, gid, StringComparison.OrdinalIgnoreCase)) _activeTabGroupId = "default";
+                        PushFullStateToShell();
+                        RefreshSidebarIfOpen();
+                    }
+                }
+                else if (type == "sidebarToggleReadingList")
+                {
+                    ToggleReadingListActiveTab();
+                }
+                else if (type == "sidebarRemoveReadingList")
+                {
+                    _profiles.RemoveReadingListItem(Convert.ToString(msg["id"]));
+                    PushFullStateToShell();
+                    RefreshSidebarIfOpen();
+                }
+                else if (type == "sidebarOpenUrl")
+                {
+                    string u = Convert.ToString(msg["url"]);
+                    HidePopover();
+                    if (!string.IsNullOrEmpty(u)) NavigateActiveTab(u);
+                }
+                else if (type == "shareCopyUrl")
+                {
+                    BrowserTab t = GetActiveTab();
+                    if (t != null && !t.IsNewTab && !string.IsNullOrEmpty(t.Url))
+                    {
+                        try { Clipboard.SetText(t.Url); } catch { }
+                    }
+                }
+                else if (type == "shareToggleFavorite")
+                {
+                    ToggleFavoriteActiveTab();
+                    HidePopover();
+                }
+                else if (type == "shareToggleReadingList")
+                {
+                    ToggleReadingListActiveTab();
+                    HidePopover();
+                }
+                else if (type == "shareToggleReader")
+                {
+                    HidePopover();
+                    ToggleReaderModeActiveTabAsync();
+                }
+                else if (type == "shareTogglePin")
+                {
+                    PinOrUnpinTab(_activeTabId);
+                    HidePopover();
+                }
+                else if (type == "shareDuplicateTab")
+                {
+                    HidePopover();
+                    DuplicateTab(_activeTabId);
+                }
+                else if (type == "shareNewWindow")
+                {
+                    HidePopover();
+                    OpenProfileInNewWindow(_profiles.ActiveProfile.id);
+                }
+                else if (type == "openDownloadPath")
+                {
+                    string p = Convert.ToString(msg["path"]);
+                    if (!string.IsNullOrEmpty(p) && File.Exists(p))
+                        Process.Start(new ProcessStartInfo(p) { UseShellExecute = true });
+                }
+                else if (type == "revealDownloadPath")
+                {
+                    string p = Convert.ToString(msg["path"]);
+                    if (!string.IsNullOrEmpty(p) && File.Exists(p))
+                        Process.Start("explorer.exe", "/select,\"" + p + "\"");
+                }
+                else if (type == "clearDownloads")
+                {
+                    _downloads.Clear();
+                    PushFullStateToShell();
+                    if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "downloads")
+                    {
+                        _popoverPopup.UpdateState(BuildDownloadsPayloadJson(null));
+                    }
+                }
+                else if (type == "tabMenuAction")
+                {
+                    string act = Convert.ToString(msg["act"]);
+                    int tid = msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId;
+                    HidePopover();
+                    if (act == "pin") PinOrUnpinTab(tid);
+                    else if (act == "duplicate") DuplicateTab(tid);
+                    else if (act == "closeOthers") CloseOtherTabs(tid);
+                    else if (act == "close") CloseTab(tid);
+                }
                 else if (type == "findQuery")
                 {
                     string query = Convert.ToString(msg["query"]);
@@ -2414,14 +3124,19 @@ namespace DejavuBrowser
             for (int i = 0; i < _tabs.Count; i++)
             {
                 BrowserTab t = _tabs[i];
+                if (!string.Equals(t.GroupId, _activeTabGroupId, StringComparison.OrdinalIgnoreCase)) continue;
                 tabList.Add(new Dictionary<string, object>
                 {
                     { "id", t.Id },
                     { "url", t.Url },
                     { "displayUrl", FormatDisplayUrl(t.Url) },
-                    { "title", t.IsNewTab ? "New Tab" : (string.IsNullOrEmpty(t.Title) ? FormatDisplayUrl(t.Url) : t.Title) },
+                    { "title", t.IsNewTab ? "Start Page" : (string.IsNullOrEmpty(t.Title) ? FormatDisplayUrl(t.Url) : t.Title) },
                     { "favicon", t.Favicon ?? "" },
                     { "isNewTab", t.IsNewTab },
+                    { "isPinned", t.IsPinned },
+                    { "groupId", t.GroupId },
+                    { "readerActive", t.ReaderActive },
+                    { "thumbnail", _tabOverviewOpen ? (t.ThumbnailDataUrl ?? "") : "" },
                     { "loading", t.IsLoading },
                     { "blockedCount", t.BlockedCount },
                     { "isLight", t.IsLight },
@@ -2433,15 +3148,43 @@ namespace DejavuBrowser
             BrowserTab active = GetActiveTab();
             string host = (active != null && !active.IsNewTab) ? AdBlocker.ExtractHost(active.Url) : "";
             UpdateInfo upd = _updater.ReadyUpdate;
+            string activeGroupName = "Start Tabs";
+            for (int i = 0; i < _profiles.TabGroups.Count; i++)
+            {
+                if (string.Equals(_profiles.TabGroups[i].id, _activeTabGroupId, StringComparison.OrdinalIgnoreCase))
+                {
+                    activeGroupName = _profiles.TabGroups[i].name;
+                    break;
+                }
+            }
+
+            var startPagePrefs = new Dictionary<string, object>
+            {
+                { "hideFavorites", _settings.hideFavorites },
+                { "hideFrequentlyVisited", _settings.hideFrequentlyVisited },
+                { "hidePrivacyReport", _settings.hidePrivacyReport },
+                { "hideReadingList", _settings.hideReadingList }
+            };
 
             var state = new Dictionary<string, object>
             {
                 { "type", "state" },
                 { "activeTabId", _activeTabId },
                 { "tabs", tabList },
+                { "tabOverviewOpen", _tabOverviewOpen },
+                { "activeTabGroupId", _activeTabGroupId },
+                { "activeTabGroupName", activeGroupName },
+                { "tabGroups", _profiles.TabGroups },
                 { "shortcuts", _settings.shortcuts },
                 { "favorites", _profiles.Favorites },
+                { "readingList", _profiles.ReadingList },
+                { "frequentlyVisited", _profiles.GetFrequentlyVisited(6) },
+                { "startPagePrefs", startPagePrefs },
+                { "downloadsCount", _downloads.Count },
+                { "hasActiveDownload", _downloads.Exists(d => d.state == "progressing") },
                 { "isCurrentFavorite", active != null && !active.IsNewTab && _profiles.IsFavorite(active.Url) },
+                { "isCurrentInReadingList", active != null && !active.IsNewTab && _profiles.IsInReadingList(active.Url) },
+                { "readerActive", active != null && active.ReaderActive },
                 { "activeProfile", _profiles.ActiveProfile },
                 { "appVersion", AutoUpdater.CurrentVersion },
                 { "updateAvailable", upd != null && upd.IsReady },

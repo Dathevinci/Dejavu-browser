@@ -22,6 +22,10 @@ namespace DejavuBrowser
         public string customWallpaperPath { get; set; }
         public string vpnCountry { get; set; }
         public bool vpnAutoConnect { get; set; }
+        public bool hideFavorites { get; set; }
+        public bool hideFrequentlyVisited { get; set; }
+        public bool hidePrivacyReport { get; set; }
+        public bool hideReadingList { get; set; }
 
         public DejavuSettings()
         {

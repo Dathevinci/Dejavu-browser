@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dejavu Setup</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-font-smoothing: antialiased; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #06050b;
+      color: rgba(248, 245, 255, 0.96);
+      font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+    }
+    .bg-art {
+      position: fixed; inset: 0;
+      background: url('https://setup.local/wp-amethyst.jpg') center/cover no-repeat;
+      transform: scale(1.06);
+      z-index: 0;
+    }
+    .bg-vignette {
+      position: fixed; inset: 0; z-index: 1;
+      background: radial-gradient(ellipse 75% 75% at 50% 48%, rgba(8, 6, 16, 0.56) 0%, rgba(5, 4, 11, 0.78) 100%);
+    }
+    .drag-bar {
+      position: fixed; top: 0; left: 0; right: 0; height: 42px; z-index: 20;
+      display: flex; align-items: center; justify-content: flex-end; padding: 0 10px;
+    }
+    .close-btn {
+      width: 30px; height: 30px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(16,13,28,0.45); color: rgba(240,234,255,0.85);
+      display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+    .close-btn:hover { background: rgba(255, 86, 118, 0.82); color: #fff; }
+    .close-btn:active { transform: scale(0.92); }
+
+    .wrap {
+      position: relative; z-index: 10;
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: 28px;
+    }
+
+    .liquid-glass {
+      position: relative;
+      background: radial-gradient(ellipse 88% 84% at 50% 50%, rgba(16, 13, 28, 0.76) 0%, rgba(18, 14, 34, 0.62) 72%, rgba(32, 24, 58, 0.24) 100%);
+      backdrop-filter: var(--lg-filter);
+      -webkit-backdrop-filter: var(--lg-filter);
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      isolation: isolate;
+    }
+    .liquid-glass::before {
+      content: ''; position: absolute; inset: -1px; border-radius: inherit;
+      background-image: var(--lg-specular); background-size: 100% 100%;
+      pointer-events: none; z-index: 3; opacity: 0.94;
+    }
+    .liquid-glass > * { position: relative; z-index: 1; }
+
+    .card {
+      width: 100%; max-width: 448px;
+      border-radius: 26px;
+      padding: 28px 28px 24px;
+      display: flex; flex-direction: column; align-items: center; gap: 18px;
+      text-align: center;
+    }
+
+    .logo-wrap {
+      width: 82px; height: 82px;
+      display: flex; align-items: center; justify-content: center;
+      animation: floatBf 4.8s ease-in-out infinite;
+    }
+    @keyframes floatBf {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .logo-wrap img {
+      width: 78px; height: 78px; object-fit: contain;
+      filter: drop-shadow(0 0 22px rgba(176, 120, 255, 0.65));
+    }
+
+    .title { font-size: 28px; font-weight: 300; letter-spacing: 0.14em; text-transform: lowercase; }
+    .subtitle { font-size: 12.8px; color: rgba(226, 216, 255, 0.72); margin-top: -10px; line-height: 1.45; }
+
+    .options {
+      width: 100%;
+      display: flex; flex-direction: column; gap: 9px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      text-align: left;
+    }
+    .opt-row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12.8px; color: rgba(242, 236, 255, 0.9); cursor: pointer;
+    }
+    .opt-row input[type="checkbox"] {
+      width: 16px; height: 16px; accent-color: #a855f7; cursor: pointer;
+    }
+
+    .progress-wrap { width: 100%; display: none; flex-direction: column; gap: 8px; }
+    .progress-wrap.show { display: flex; }
+    .bar-track {
+      width: 100%; height: 6px; border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12); overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%; width: 0%; border-radius: 999px;
+      background: linear-gradient(90deg, #8b5cf6, #c084fc, #67e8f9);
+      transition: width 0.25s ease;
+    }
+    .status-text { font-size: 12px; color: rgba(226, 216, 255, 0.78); }
+
+    .cta-btn {
+      width: 100%; height: 44px;
+      border-radius: 999px;
+      border: 1px solid rgba(228, 206, 255, 0.58);
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.92), rgba(168, 85, 247, 0.92));
+      color: #ffffff;
+      font-family: inherit; font-size: 14px; font-weight: 600; letter-spacing: 0.02em;
+      cursor: pointer;
+      box-shadow: 0 10px 28px rgba(139, 92, 246, 0.44), inset 0 1px 0 rgba(255, 255, 255, 0.48);
+      transition: transform 0.22s cubic-bezier(0.22, 1.2, 0.36, 1), filter 0.18s ease;
+    }
+    .cta-btn:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+    .cta-btn:active:not(:disabled) { transform: scale(0.97); }
+    .cta-btn:disabled { opacity: 0.65; cursor: default; }
+
+    .cta-btn.danger {
+      background: linear-gradient(135deg, rgba(225, 65, 108, 0.9), rgba(190, 40, 86, 0.9));
+      border-color: rgba(255, 190, 206, 0.5);
+      box-shadow: 0 10px 26px rgba(225, 65, 108, 0.36);
+    }
+
+    .foot-note { font-size: 11px; color: rgba(210, 198, 248, 0.48); }
+  </style>
+</head>
+<body>
+  <div class="bg-art"></div>
+  <div class="bg-vignette"></div>
+
+  <div class="drag-bar" id="drag-bar">
+    <button class="close-btn" id="btn-close" title="Close">
+      <svg viewBox="0 0 14 14" width="12" height="12" fill="none"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <div class="wrap">
+    <div class="card liquid-glass" id="setup-card" data-liquid-glass data-lg-bezel="24" data-lg-scale="28" data-lg-dispersion="1.22" data-lg-dome="0.045">
+      <div class="logo-wrap">
+        <img src="https://setup.local/logo-transparent.png" alt="dejavu" draggable="false">
+      </div>
+      <div class="title">dejavu</div>
+      <div class="subtitle" id="sub-text">Liquid Glass browser with built-in ad blocking &amp; native Chromium speed.</div>
+
+      <div class="options" id="options-box">
+        <label class="opt-row"><input type="checkbox" id="opt-desktop" checked> Create Desktop shortcut</label>
+        <label class="opt-row"><input type="checkbox" id="opt-startmenu" checked> Add to Start Menu</label>
+        <label class="opt-row"><input type="checkbox" id="opt-launch" checked> Launch dejavu after setup</label>
+      </div>
+
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="bar-track"><div class="bar-fill" id="bar-fill"></div></div>
+        <div class="status-text" id="status-text">Preparing installation...</div>
+      </div>
+
+      <button class="cta-btn" id="btn-action">Install dejavu</button>
+      <div class="foot-note" id="foot-note">Installs cleanly for your user account · No admin rights needed</div>
+    </div>
+  </div>
+
+  <script src="https://setup.local/liquid-glass.js"></script>
+  <script>
+    const send = (m) => { try { window.chrome.webview.postMessage(m); } catch {} };
+    window.LiquidGlass.init();
+
+    const dragBar = document.getElementById('drag-bar');
+    const btnClose = document.getElementById('btn-close');
+    const btnAction = document.getElementById('btn-action');
+    const optionsBox = document.getElementById('options-box');
+    const progressWrap = document.getElementById('progress-wrap');
+    const barFill = document.getElementById('bar-fill');
+    const statusText = document.getElementById('status-text');
+    const subText = document.getElementById('sub-text');
+    const footNote = document.getElementById('foot-note');
+
+    let isUninstall = false;
+    let isDone = false;
+
+    dragBar.addEventListener('mousedown', (e) => {
+      if (e.target === dragBar) send({ type: 'drag' });
+    });
+    btnClose.addEventListener('click', () => send({ type: 'close' }));
+
+    btnAction.addEventListener('click', () => {
+      if (isDone) {
+        send({ type: 'finish', launch: !isUninstall && document.getElementById('opt-launch').checked });
+        return;
+      }
+      btnAction.disabled = true;
+      optionsBox.style.display = 'none';
+      progressWrap.classList.add('show');
+      if (isUninstall) {
+        send({ type: 'startUninstall' });
+      } else {
+        send({
+          type: 'startInstall',
+          desktop: document.getElementById('opt-desktop').checked,
+          startMenu: document.getElementById('opt-startmenu').checked,
+          launch: document.getElementById('opt-launch').checked
+        });
+      }
+    });
+
+    window.chrome.webview.addEventListener('message', (ev) => {
+      const d = ev.data;
+      if (!d) return;
+      if (d.type === 'init') {
+        isUninstall = !!d.uninstall;
+        if (isUninstall) {
+          subText.textContent = 'Remove dejavu browser and its shortcuts from this computer?';
+          optionsBox.style.display = 'none';
+          btnAction.textContent = 'Uninstall dejavu';
+          btnAction.classList.add('danger');
+          footNote.textContent = 'Your bookmarks & profile data can be removed anytime from AppData';
+        }
+      } else if (d.type === 'progress') {
+        barFill.style.width = `${d.percent}%`;
+        statusText.textContent = d.status || '';
+      } else if (d.type === 'done') {
+        isDone = true;
+        barFill.style.width = '100%';
+        statusText.textContent = d.status || 'All done!';
+        btnAction.disabled = false;
+        btnAction.classList.remove('danger');
+        btnAction.textContent = isUninstall ? 'Close' : (document.getElementById('opt-launch').checked ? 'Launch dejavu' : 'Finish');
+      } else if (d.type === 'error') {
+        statusText.textContent = d.status || 'Something went wrong.';
+        btnAction.disabled = false;
+        btnAction.textContent = 'Retry';
+      }
+    });
+  </script>
+</body>
+</html>

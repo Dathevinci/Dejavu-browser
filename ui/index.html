@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dejavu</title>
+  <link rel="stylesheet" href="https://dejavu.local/styles.css">
+</head>
+<body class="theme-dark on-newtab">
+  <!-- Living Fluid Optical Canvas (New Tab) -->
+  <canvas id="newtab-canvas"></canvas>
+
+  <!-- Live Site-Adaptive Optical Light-Guide Backdrop (when browsing real websites) -->
+  <div id="top-backdrop-wrap" aria-hidden="true">
+    <canvas id="optical-top-backdrop"></canvas>
+    <div class="top-backdrop-sheen"></div>
+  </div>
+
+  <!-- Minimal Single-Row Floating Liquid Glass Chrome -->
+  <header id="topbar">
+    <div class="glass-pill nav-pill" data-liquid-glass data-lg-bezel="14" data-lg-scale="20" data-lg-dispersion="1.05">
+      <button id="btn-home" class="icon-btn brand-btn" title="dejavu Home (New Tab)">
+        <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
+      </button>
+      <div class="pill-sep"></div>
+      <button id="btn-back" class="icon-btn" title="Back (Alt+Left)" disabled>
+        <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4.5L7 10l5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="btn-forward" class="icon-btn" title="Forward (Alt+Right)" disabled>
+        <svg viewBox="0 0 20 20" fill="none"><path d="M7.5 4.5L13 10l-5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="btn-reload" class="icon-btn" title="Reload (Ctrl+R)">
+        <svg class="icon-reload" viewBox="0 0 20 20" fill="none"><path d="M15.8 10a5.8 5.8 0 1 1-1.5-3.9M15.8 4.2v3.2h-3.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="icon-stop" viewBox="0 0 20 20" fill="none"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div id="omnibox-pill" class="glass-pill omnibox-pill" data-liquid-glass data-lg-bezel="15" data-lg-scale="22" data-lg-dispersion="1.12">
+      <span id="omnibox-icon" class="omnibox-icon" aria-hidden="true">
+        <svg class="ico-lock" viewBox="0 0 16 16" fill="none"><rect x="3.5" y="7" width="9" height="6.5" rx="1.8" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <svg class="ico-search" viewBox="0 0 16 16" fill="none"><circle cx="7.2" cy="7.2" r="4.4" stroke="currentColor" stroke-width="1.45"/><path d="M10.8 10.8L13.6 13.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </span>
+      <input
+        id="omnibox-input"
+        type="text"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder="Search or enter website"
+        aria-label="Address bar"
+      >
+      <button id="btn-shield" class="shield-chip active" title="dejavu Ad Blocker">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.8L3 3.8v3.9c0 3.2 2.1 5.6 5 6.6 2.9-1 5-3.4 5-6.6V3.8L8 1.8z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path class="shield-check" d="M5.8 8.1l1.5 1.5 3-3.2" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="shield-count"></span>
+      </button>
+      <div id="load-progress" class="load-progress"></div>
+    </div>
+
+    <div id="tabs-area">
+      <div id="tabs-strip" role="tablist"></div>
+      <button id="btn-new-tab" class="glass-pill circle-btn" data-liquid-glass data-lg-bezel="11" data-lg-scale="16" data-lg-dispersion="1.0" title="New Tab (Ctrl+T)">
+        <svg viewBox="0 0 18 18" fill="none"><path d="M9 4v10M4 9h10" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+      </button>
+      <div id="drag-spacer" class="drag-spacer"></div>
+    </div>
+
+    <div class="glass-pill win-pill" data-liquid-glass data-lg-bezel="12" data-lg-scale="18" data-lg-dispersion="0.95">
+      <button id="win-min" class="win-btn" title="Minimize">
+        <svg viewBox="0 0 14 14" fill="none"><path d="M3 7h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+      <button id="win-max" class="win-btn" title="Maximize">
+        <svg viewBox="0 0 14 14" fill="none"><rect x="3.2" y="3.2" width="7.6" height="7.6" rx="1.6" stroke="currentColor" stroke-width="1.35"/></svg>
+      </button>
+      <button id="win-close" class="win-btn win-close" title="Close">
+        <svg viewBox="0 0 14 14" fill="none"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- New Tab Living Liquid Glass Experience -->
+  <main id="viewport">
+    <section id="newtab-view">
+      <div class="newtab-center">
+        <div class="hero-brand">
+          <div class="hero-logo-wrap">
+            <img src="https://dejavu.local/logo-transparent.png" id="newtab-logo" alt="dejavu butterfly logo" draggable="false">
+          </div>
+          <h1 class="hero-title">dejavu</h1>
+        </div>
+
+        <form id="newtab-search-form" class="glass-pill hero-search" data-liquid-glass data-lg-bezel="22" data-lg-scale="30" data-lg-dispersion="1.28" data-lg-dome="0.06">
+          <svg class="hero-search-ico" viewBox="0 0 20 20" fill="none">
+            <circle cx="9" cy="9" r="5.6" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+          <input
+            id="newtab-search-input"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="Search the web or type a link..."
+            aria-label="Search the web"
+          >
+          <button type="submit" class="hero-go-btn" title="Go">
+            <svg viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 4.5L14.5 9 10 13.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </form>
+
+        <div id="shortcuts-grid" class="shortcuts-grid"></div>
+      </div>
+
+      <div class="newtab-bottom-bar">
+        <div id="newtab-stat" class="glass-pill newtab-stat" data-liquid-glass data-lg-bezel="12" data-lg-scale="18" data-lg-dispersion="1.05">
+          <span class="stat-dot" id="stat-dot"></span>
+          <span id="newtab-stat-text">Ad blocker active · 0 ads blocked</span>
+        </div>
+
+        <button id="btn-wallpaper-store" class="glass-pill wallpaper-trigger" data-liquid-glass data-lg-bezel="12" data-lg-scale="18" data-lg-dispersion="1.08" title="Butterfly Wallpapers">
+          <svg viewBox="0 0 18 18" fill="none" width="15" height="15">
+            <path d="M9 9C7.4 5.4 3.5 4.2 2.7 6.8c-.6 2 1.2 3.5 3.4 3.3C4.4 11.4 3.9 13.7 5.6 14.3 7.2 14.9 8.6 12.6 9 10.6c.4 2 1.8 4.3 3.4 3.7 1.7-.6 1.2-2.9-.5-4.2 2.2.2 4-1.3 3.4-3.3C14.5 4.2 10.6 5.4 9 9z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/>
+          </svg>
+          <span>Wallpapers</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Liquid Glass Butterfly Wallpaper Store Modal -->
+    <div id="wallpaper-store" class="glass-card wallpaper-store hidden" data-liquid-glass data-lg-bezel="24" data-lg-scale="30" data-lg-dispersion="1.22" data-lg-dome="0.04">
+      <div class="store-head">
+        <div class="store-brand">
+          <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
+          <div>
+            <div class="store-title">Butterfly Studio</div>
+            <div class="store-sub">Aesthetic themes &amp; artworks for dejavu</div>
+          </div>
+        </div>
+        <div class="store-controls">
+          <div class="store-tabs" id="store-tabs">
+            <button class="store-tab active" data-cat="all">All</button>
+            <button class="store-tab" data-cat="art">Crystal Art</button>
+            <button class="store-tab" data-cat="live">Live Motion</button>
+          </div>
+          <button id="btn-custom-wp" class="store-upload-btn" title="Use your own image">+ Custom</button>
+          <button id="btn-store-close" class="icon-btn sm" title="Close">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="wallpaper-grid" class="wallpaper-grid"></div>
+    </div>
+
+    <!-- Add Quick Site Modal (visible on New Tab) -->
+    <div id="shortcut-modal" class="glass-card shortcut-modal hidden" data-liquid-glass data-lg-bezel="22" data-lg-scale="26" data-lg-dispersion="1.15">
+      <div class="modal-title">Add Quick Site</div>
+      <input id="sc-name" class="modal-input" type="text" placeholder="Name (e.g. Spotify)" autocomplete="off">
+      <input id="sc-url" class="modal-input" type="text" placeholder="Website (e.g. open.spotify.com)" autocomplete="off">
+      <div class="modal-actions">
+        <button id="sc-cancel" class="modal-btn secondary">Cancel</button>
+        <button id="sc-save" class="modal-btn primary">Add</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://dejavu.local/liquid-glass.js"></script>
+  <script src="https://dejavu.local/newtab.js"></script>
+  <script src="https://dejavu.local/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,583 @@
+/**
+ * dejavu Native Shell Controller (communicates directly with native C# WebView2 host)
+ */
+(function () {
+  const send = (msg) => {
+    try {
+      window.chrome.webview.postMessage(msg);
+    } catch {}
+  };
+
+  const body = document.body;
+  const topbar = document.getElementById('topbar');
+  const dragSpacer = document.getElementById('drag-spacer');
+  const btnHome = document.getElementById('btn-home');
+  const btnBack = document.getElementById('btn-back');
+  const btnForward = document.getElementById('btn-forward');
+  const btnReload = document.getElementById('btn-reload');
+  const omniboxInput = document.getElementById('omnibox-input');
+  const omniboxIcon = document.getElementById('omnibox-icon');
+  const loadProgress = document.getElementById('load-progress');
+  const btnShield = document.getElementById('btn-shield');
+  const shieldCount = document.getElementById('shield-count');
+  const tabsStrip = document.getElementById('tabs-strip');
+  const btnNewTab = document.getElementById('btn-new-tab');
+
+  const newtabCanvas = document.getElementById('newtab-canvas');
+  const newtabSearchForm = document.getElementById('newtab-search-form');
+  const newtabSearchInput = document.getElementById('newtab-search-input');
+  const shortcutsGrid = document.getElementById('shortcuts-grid');
+  const newtabStatText = document.getElementById('newtab-stat-text');
+  const statDot = document.getElementById('stat-dot');
+
+  const shortcutModal = document.getElementById('shortcut-modal');
+  const scName = document.getElementById('sc-name');
+  const scUrl = document.getElementById('sc-url');
+  const scCancel = document.getElementById('sc-cancel');
+  const scSave = document.getElementById('sc-save');
+
+  const btnWallpaperStore = document.getElementById('btn-wallpaper-store');
+  const wallpaperStore = document.getElementById('wallpaper-store');
+  const btnStoreClose = document.getElementById('btn-store-close');
+  const btnCustomWp = document.getElementById('btn-custom-wp');
+  const storeTabs = document.getElementById('store-tabs');
+  const wallpaperGrid = document.getElementById('wallpaper-grid');
+
+  const WALLPAPER_CATALOG = [
+    { id: 'art:wp-amethyst.jpg', cat: 'art', name: 'Amethyst Glasswing', desc: 'Crystalline violet & cyan wings', img: 'https://dejavu.local/wp-amethyst.jpg' },
+    { id: 'art:wp-morpho.jpg', cat: 'art', name: 'Morpho Nocturne', desc: 'Iridescent sapphire butterfly arc', img: 'https://dejavu.local/wp-morpho.jpg' },
+    { id: 'art:wp-monarch.jpg', cat: 'art', name: 'Monarch Eclipse', desc: 'Obsidian & molten amber gold', img: 'https://dejavu.local/wp-monarch.jpg' },
+    { id: 'art:wp-sakura.jpg', cat: 'art', name: 'Sakura Glasswing', desc: 'Frosted pearl & pastel rose dusk', img: 'https://dejavu.local/wp-sakura.jpg' },
+    { id: 'live:obsidian-prism', cat: 'live', name: 'Obsidian Prism', desc: 'Violet & cyan caustic ribbons', grad: 'radial-gradient(circle at 30% 35%, #5b31b8 0%, #160f2c 55%, #06050b 100%), linear-gradient(120deg, transparent 35%, rgba(118,212,255,0.45) 55%, transparent 75%)' },
+    { id: 'live:morpho-abyss', cat: 'live', name: 'Morpho Abyss', desc: 'Electric sapphire butterfly wings', grad: 'radial-gradient(circle at 65% 30%, #1d70e8 0%, #091736 56%, #03060f 100%)' },
+    { id: 'live:velvet-monarch', cat: 'live', name: 'Velvet Monarch', desc: 'Molten amber & rose gold', grad: 'radial-gradient(circle at 35% 35%, #d96b27 0%, #2b1210 56%, #080506 100%)' },
+    { id: 'live:sakura-chrysalis', cat: 'live', name: 'Sakura Chrysalis', desc: 'Twilight plum & pastel rose', grad: 'radial-gradient(circle at 60% 30%, #c95ea4 0%, #26112e 55%, #08050d 100%)' },
+    { id: 'live:emerald-glasswing', cat: 'live', name: 'Emerald Glasswing', desc: 'Iridescent jade & aurora mist', grad: 'radial-gradient(circle at 40% 35%, #19a88d 0%, #082325 56%, #03080a 100%)' },
+    { id: 'live:halftone-swarm', cat: 'live', name: 'Halftone Swarm', desc: 'Dotted lavender butterfly matrix', grad: 'radial-gradient(circle at 50% 40%, #8652e6 0%, #160c2c 58%, #040308 100%)' }
+  ];
+  let storeFilterCat = 'all';
+
+  const topBackdropCanvas = document.getElementById('optical-top-backdrop');
+  const topBackdropCtx = topBackdropCanvas.getContext('2d');
+
+  // Boot Real Liquid Glass Optical Engine & Living New Tab Canvas
+  window.LiquidGlass.init();
+  window.DejavuNewTabCanvas.init(newtabCanvas);
+
+  let state = {
+    activeTabId: -1,
+    tabs: [],
+    shortcuts: [],
+    globalAdBlockEnabled: true,
+    activeForSite: true,
+    totalBlocked: 0
+  };
+  let currentPalette = null;
+  let lastActiveId = -1;
+
+  // =========================================================================
+  // Native Win32 Frameless Window Drag & Controls
+  // =========================================================================
+  document.getElementById('win-min').addEventListener('click', () => send({ type: 'windowMin' }));
+  document.getElementById('win-max').addEventListener('click', () => send({ type: 'windowMax' }));
+  document.getElementById('win-close').addEventListener('click', () => send({ type: 'windowClose' }));
+
+  function isDraggableTarget(el) {
+    return el === topbar || el === dragSpacer || el.id === 'tabs-area';
+  }
+
+  topbar.addEventListener('mousedown', (e) => {
+    if (e.button === 0 && isDraggableTarget(e.target)) {
+      send({ type: 'windowDrag' });
+    }
+  });
+  topbar.addEventListener('dblclick', (e) => {
+    if (isDraggableTarget(e.target)) {
+      send({ type: 'windowMax' });
+    }
+  });
+
+  // =========================================================================
+  // Site-Adaptive Top-Bar Optical Light-Guide (Zero Text Ghosting!)
+  // =========================================================================
+  function resizeTopBackdrop() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.max(1, window.innerWidth);
+    const h = 54;
+    topBackdropCanvas.width = Math.round(w * dpr);
+    topBackdropCanvas.height = Math.round(h * dpr);
+    topBackdropCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (currentPalette) drawTopLightGuide(currentPalette);
+  }
+  resizeTopBackdrop();
+  window.addEventListener('resize', resizeTopBackdrop);
+
+  function drawTopLightGuide({ baseRgb, accents, isLight }) {
+    currentPalette = { baseRgb, accents, isLight };
+    const w = window.innerWidth;
+    const h = 54;
+    const [br, bg, bb] = baseRgb || (isLight ? [245, 244, 250] : [11, 9, 20]);
+
+    topBackdropCtx.fillStyle = `rgb(${br}, ${bg}, ${bb})`;
+    topBackdropCtx.fillRect(0, 0, w, h);
+
+    const zones = (Array.isArray(accents) && accents.length > 0) ? accents : [
+      isLight ? [150, 120, 245] : [138, 92, 255],
+      isLight ? [96, 178, 245] : [76, 182, 248],
+      isLight ? [216, 134, 224] : [196, 102, 218]
+    ];
+
+    const grad = topBackdropCtx.createLinearGradient(0, 0, w, 0);
+    zones.forEach((rgb, idx) => {
+      const stop = zones.length === 1 ? 0.5 : idx / (zones.length - 1);
+      grad.addColorStop(stop, `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${isLight ? 0.20 : 0.28})`);
+    });
+    topBackdropCtx.fillStyle = grad;
+    topBackdropCtx.fillRect(0, 0, w, h);
+
+    // Crisp luminous filaments behind the Liquid Glass pill bezels
+    for (let r = 0; r < 2; r++) {
+      const col = zones[r % zones.length];
+      topBackdropCtx.save();
+      topBackdropCtx.beginPath();
+      const segs = 48;
+      for (let i = 0; i <= segs; i++) {
+        const u = i / segs;
+        const x = u * w;
+        const y = h * (r === 0 ? 0.42 : 0.66) + Math.sin(u * Math.PI * (2.6 + r * 1.1) + r * 1.7) * (10 + r * 3);
+        if (i === 0) topBackdropCtx.moveTo(x, y);
+        else topBackdropCtx.lineTo(x, y);
+      }
+      topBackdropCtx.strokeStyle = `rgba(${col[0]}, ${col[1]}, ${col[2]}, ${isLight ? 0.16 : 0.24})`;
+      topBackdropCtx.lineWidth = 10;
+      topBackdropCtx.lineCap = 'round';
+      topBackdropCtx.stroke();
+
+      topBackdropCtx.strokeStyle = isLight
+        ? `rgba(${Math.max(40, col[0] - 35)}, ${Math.max(40, col[1] - 35)}, ${Math.max(60, col[2] - 15)}, 0.42)`
+        : `rgba(${Math.min(255, col[0] + 65)}, ${Math.min(255, col[1] + 65)}, ${Math.min(255, col[2] + 75)}, 0.58)`;
+      topBackdropCtx.lineWidth = r === 0 ? 1.75 : 1.25;
+      topBackdropCtx.stroke();
+      topBackdropCtx.restore();
+    }
+  }
+
+  // =========================================================================
+  // Navigation & Top Bar Interactions
+  // =========================================================================
+  btnHome.addEventListener('click', () => send({ type: 'home' }));
+  btnBack.addEventListener('click', () => send({ type: 'back' }));
+  btnForward.addEventListener('click', () => send({ type: 'forward' }));
+  btnReload.addEventListener('click', () => send({ type: 'reload' }));
+  btnNewTab.addEventListener('click', () => send({ type: 'newTab' }));
+
+  btnShield.addEventListener('click', () => {
+    const r = btnShield.getBoundingClientRect();
+    send({ type: 'openShield', anchorRight: Math.round(r.right) });
+  });
+
+  omniboxInput.addEventListener('focus', () => {
+    const active = state.tabs.find((t) => t.id === state.activeTabId);
+    if (active && !active.isNewTab) {
+      omniboxInput.value = active.url || '';
+    }
+    setTimeout(() => omniboxInput.select(), 0);
+  });
+
+  omniboxInput.addEventListener('blur', () => {
+    const active = state.tabs.find((t) => t.id === state.activeTabId);
+    omniboxInput.value = (active && !active.isNewTab) ? (active.displayUrl || '') : '';
+  });
+
+  omniboxInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = omniboxInput.value.trim();
+      if (val) {
+        send({ type: 'navigate', input: val });
+        omniboxInput.blur();
+      }
+    } else if (e.key === 'Escape') {
+      omniboxInput.blur();
+    }
+  });
+
+  newtabSearchForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const val = newtabSearchInput.value.trim();
+    if (val) send({ type: 'navigate', input: val });
+  });
+
+  tabsStrip.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaY) > 0) tabsStrip.scrollLeft += e.deltaY;
+  }, { passive: true });
+
+  // =========================================================================
+  // Shortcuts Grid on New Tab
+  // =========================================================================
+  let lastShortcutsSig = '';
+
+  function extractHost(url) {
+    try { return new URL(url).hostname.toLowerCase(); } catch { return ''; }
+  }
+
+  function renderShortcuts(list) {
+    const sig = JSON.stringify(list || []);
+    if (sig === lastShortcutsSig) return;
+    lastShortcutsSig = sig;
+    shortcutsGrid.innerHTML = '';
+
+    (list || []).forEach((sc, index) => {
+      const host = extractHost(sc.url);
+      const tile = document.createElement('button');
+      tile.type = 'button';
+      tile.className = 'shortcut-tile';
+      tile.setAttribute('data-liquid-glass', '');
+      tile.setAttribute('data-lg-bezel', '16');
+      tile.setAttribute('data-lg-scale', '22');
+      tile.setAttribute('data-lg-dispersion', '1.14');
+      tile.setAttribute('data-lg-dome', '0.07');
+      tile.title = sc.url;
+
+      const icoWrap = document.createElement('div');
+      icoWrap.className = 'shortcut-ico-wrap';
+      const letter = (sc.name || host || '?')[0].toUpperCase();
+      if (host) {
+        const img = document.createElement('img');
+        img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
+        img.alt = '';
+        img.draggable = false;
+        img.onerror = () => { img.remove(); icoWrap.textContent = letter; };
+        icoWrap.appendChild(img);
+      } else {
+        icoWrap.textContent = letter;
+      }
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'shortcut-name';
+      nameEl.textContent = sc.name || host;
+
+      const rmBtn = document.createElement('span');
+      rmBtn.className = 'shortcut-remove';
+      rmBtn.textContent = '×';
+      rmBtn.title = 'Remove';
+      rmBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const next = list.filter((_, i) => i !== index);
+        send({ type: 'saveShortcuts', shortcuts: next });
+      });
+
+      tile.appendChild(rmBtn);
+      tile.appendChild(icoWrap);
+      tile.appendChild(nameEl);
+      tile.addEventListener('click', () => send({ type: 'navigate', input: sc.url }));
+      shortcutsGrid.appendChild(tile);
+    });
+
+    if ((list || []).length < 8) {
+      const addTile = document.createElement('button');
+      addTile.type = 'button';
+      addTile.className = 'shortcut-tile shortcut-add';
+      addTile.setAttribute('data-liquid-glass', '');
+      addTile.setAttribute('data-lg-bezel', '16');
+      addTile.setAttribute('data-lg-scale', '20');
+      addTile.setAttribute('data-lg-dispersion', '1.08');
+      addTile.title = 'Add quick site';
+      addTile.innerHTML = `
+        <div class="shortcut-ico-wrap">
+          <svg viewBox="0 0 18 18" width="18" height="18" fill="none"><path d="M9 4v10M4 9h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <span class="shortcut-name">Add</span>
+      `;
+      addTile.addEventListener('click', () => {
+        scName.value = '';
+        scUrl.value = '';
+        shortcutModal.classList.remove('hidden');
+        window.LiquidGlass.updateElementGlass(shortcutModal);
+        scName.focus();
+      });
+      shortcutsGrid.appendChild(addTile);
+    }
+  }
+
+  scCancel.addEventListener('click', () => shortcutModal.classList.add('hidden'));
+  scSave.addEventListener('click', () => {
+    const rawUrl = scUrl.value.trim();
+    if (!rawUrl) return;
+    const url = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+    const name = scName.value.trim() || extractHost(url).replace(/^www\./, '').split('.')[0] || 'Site';
+    const next = [...(state.shortcuts || []), { name, url }];
+    shortcutModal.classList.add('hidden');
+    send({ type: 'saveShortcuts', shortcuts: next });
+  });
+  scUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') scSave.click(); });
+  document.addEventListener('mousedown', (e) => {
+    if (!shortcutModal.classList.contains('hidden') && !shortcutModal.contains(e.target) && !e.target.closest('.shortcut-add')) {
+      shortcutModal.classList.add('hidden');
+    }
+    if (!wallpaperStore.classList.contains('hidden') && !wallpaperStore.contains(e.target) && !btnWallpaperStore.contains(e.target)) {
+      wallpaperStore.classList.add('hidden');
+    }
+  });
+
+  // =========================================================================
+  // Butterfly Studio — Liquid Glass Wallpaper Store
+  // =========================================================================
+  function renderWallpaperGrid() {
+    wallpaperGrid.innerHTML = '';
+    const activeWp = state.wallpaper || 'live:obsidian-prism';
+
+    const items = WALLPAPER_CATALOG.filter((item) => storeFilterCat === 'all' || item.cat === storeFilterCat);
+    if (state.hasCustomWallpaper && (storeFilterCat === 'all' || storeFilterCat === 'art')) {
+      items.unshift({
+        id: activeWp.startsWith('custom') ? activeWp : 'custom',
+        cat: 'art',
+        name: 'My Wallpaper',
+        desc: 'Custom photo from your PC',
+        img: `https://dejavu.local/custom-wallpaper?t=${Date.now()}`,
+        isCustom: true
+      });
+    }
+
+    items.forEach((item) => {
+      const isSelected = item.isCustom ? activeWp.startsWith('custom') : (activeWp === item.id);
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'wp-card' + (isSelected ? ' active' : '');
+
+      const thumb = document.createElement('div');
+      thumb.className = 'wp-thumb';
+      if (item.img) {
+        const img = document.createElement('img');
+        img.src = item.img;
+        img.alt = item.name;
+        img.draggable = false;
+        thumb.appendChild(img);
+      } else {
+        thumb.style.background = item.grad;
+        thumb.innerHTML = `<svg viewBox="0 0 160 90" style="width:100%;height:100%;opacity:0.62" fill="none">
+          <path d="M0 54 Q40 24 80 48 T160 36" stroke="rgba(255,255,255,0.52)" stroke-width="1.6"/>
+          <path d="M0 66 Q45 38 90 58 T160 48" stroke="rgba(220,200,255,0.34)" stroke-width="1.1"/>
+          <path d="M80 45 C74 30 58 26 55 36 C53 44 60 49 69 48 C62 53 60 62 67 64 C73 66 78 57 80 50 C82 57 87 66 93 64 C100 62 98 53 91 48 C100 49 107 44 105 36 C102 26 86 30 80 45 Z" stroke="rgba(255,255,255,0.68)" fill="rgba(255,255,255,0.14)" stroke-width="1.2"/>
+        </svg>`;
+      }
+
+      const badge = document.createElement('span');
+      badge.className = 'wp-badge';
+      badge.textContent = item.isCustom ? 'Custom' : (item.cat === 'live' ? 'Live 60fps' : 'Crystal Art');
+      thumb.appendChild(badge);
+
+      const check = document.createElement('span');
+      check.className = 'wp-check';
+      check.textContent = '✓';
+      thumb.appendChild(check);
+
+      const meta = document.createElement('div');
+      meta.className = 'wp-meta';
+      meta.innerHTML = `<div class="wp-name"></div><div class="wp-desc"></div>`;
+      meta.querySelector('.wp-name').textContent = item.name;
+      meta.querySelector('.wp-desc').textContent = item.desc;
+
+      card.appendChild(thumb);
+      card.appendChild(meta);
+      card.addEventListener('click', () => {
+        state.wallpaper = item.id;
+        window.DejavuNewTabCanvas.setWallpaper(item.id);
+        renderWallpaperGrid();
+        send({ type: 'setWallpaper', wallpaper: item.id });
+      });
+
+      wallpaperGrid.appendChild(card);
+    });
+  }
+
+  btnWallpaperStore.addEventListener('click', () => {
+    shortcutModal.classList.add('hidden');
+    const opening = wallpaperStore.classList.contains('hidden');
+    wallpaperStore.classList.toggle('hidden', !opening);
+    if (opening) {
+      renderWallpaperGrid();
+      requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(wallpaperStore));
+    }
+  });
+
+  btnStoreClose.addEventListener('click', () => wallpaperStore.classList.add('hidden'));
+  btnCustomWp.addEventListener('click', () => send({ type: 'pickCustomWallpaper' }));
+
+  storeTabs.addEventListener('click', (e) => {
+    const btn = e.target.closest('.store-tab');
+    if (!btn) return;
+    storeFilterCat = btn.dataset.cat || 'all';
+    storeTabs.querySelectorAll('.store-tab').forEach((b) => b.classList.toggle('active', b === btn));
+    renderWallpaperGrid();
+  });
+
+  // =========================================================================
+  // Render Tabs & Synchronize State From Native Host
+  // =========================================================================
+  const tabEls = new Map();
+
+  function syncTabs(tabs, activeId) {
+    const alive = new Set(tabs.map((t) => t.id));
+    for (const [id, el] of tabEls.entries()) {
+      if (!alive.has(id)) {
+        el.remove();
+        tabEls.delete(id);
+      }
+    }
+
+    tabs.forEach((tab) => {
+      let el = tabEls.get(tab.id);
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'glass-pill tab-pill';
+        el.setAttribute('role', 'tab');
+        el.setAttribute('data-liquid-glass', '');
+        el.setAttribute('data-lg-bezel', '11');
+        el.setAttribute('data-lg-scale', '16');
+        el.setAttribute('data-lg-dispersion', '0.96');
+        el.innerHTML = `
+          <span class="tab-spinner hidden"></span>
+          <img class="tab-favicon" alt="" draggable="false">
+          <span class="tab-title"></span>
+          <button class="tab-close" title="Close tab (Ctrl+W)" aria-label="Close tab">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+        `;
+        el.addEventListener('click', (e) => {
+          if (e.target.closest('.tab-close')) {
+            send({ type: 'closeTab', id: tab.id });
+            return;
+          }
+          send({ type: 'activateTab', id: tab.id });
+        });
+        el.addEventListener('auxclick', (e) => {
+          if (e.button === 1) {
+            e.preventDefault();
+            send({ type: 'closeTab', id: tab.id });
+          }
+        });
+        tabsStrip.appendChild(el);
+        tabEls.set(tab.id, el);
+      }
+
+      el.classList.toggle('active', tab.id === activeId);
+      const spinner = el.querySelector('.tab-spinner');
+      const fav = el.querySelector('.tab-favicon');
+      const titleEl = el.querySelector('.tab-title');
+
+      spinner.classList.toggle('hidden', !tab.loading);
+      fav.classList.toggle('hidden', !!tab.loading);
+      const favSrc = tab.favicon || 'https://dejavu.local/logo-transparent.png';
+      if (fav.getAttribute('src') !== favSrc) fav.setAttribute('src', favSrc);
+      titleEl.textContent = tab.title || 'New Tab';
+    });
+  }
+
+  function updateStatText(globalEnabled, total) {
+    if (!globalEnabled) {
+      newtabStatText.textContent = 'Ad blocker paused';
+      statDot.style.background = 'rgba(255,255,255,0.35)';
+      statDot.style.boxShadow = 'none';
+    } else {
+      newtabStatText.textContent = `Ad blocker active · ${Number(total || 0).toLocaleString()} ads blocked`;
+      statDot.style.background = '';
+      statDot.style.boxShadow = '';
+    }
+  }
+
+  function applyState(next) {
+    state = next;
+    syncTabs(next.tabs || [], next.activeTabId);
+    renderShortcuts(next.shortcuts || []);
+    updateStatText(next.globalAdBlockEnabled, next.totalBlocked);
+    if (next.wallpaper) {
+      window.DejavuNewTabCanvas.setWallpaper(next.wallpaper);
+    }
+    if (!wallpaperStore.classList.contains('hidden')) {
+      renderWallpaperGrid();
+    }
+
+    const active = (next.tabs || []).find((t) => t.id === next.activeTabId);
+    const onNewTab = !active || active.isNewTab;
+
+    if (onNewTab) {
+      body.classList.add('on-newtab', 'theme-dark');
+      body.classList.remove('theme-light');
+      window.DejavuNewTabCanvas.start();
+      if (lastActiveId !== next.activeTabId) {
+        newtabSearchInput.value = '';
+        setTimeout(() => newtabSearchInput.focus(), 40);
+      }
+    } else {
+      body.classList.remove('on-newtab');
+      window.DejavuNewTabCanvas.stop();
+      body.classList.toggle('theme-light', !!active.isLight);
+      body.classList.toggle('theme-dark', !active.isLight);
+      drawTopLightGuide({
+        baseRgb: next.baseRgb,
+        accents: next.accents,
+        isLight: !!active.isLight
+      });
+    }
+    lastActiveId = next.activeTabId;
+
+    btnBack.disabled = !active || active.isNewTab || !active.canGoBack;
+    btnForward.disabled = !active || active.isNewTab || !active.canGoForward;
+    btnReload.classList.toggle('loading', !!(active && active.loading));
+
+    if (active && active.loading) {
+      loadProgress.classList.add('active');
+      loadProgress.style.transform = 'scaleX(0.55)';
+    } else if (loadProgress.classList.contains('active')) {
+      loadProgress.style.transform = 'scaleX(1)';
+      setTimeout(() => {
+        loadProgress.classList.remove('active');
+        loadProgress.style.transform = 'scaleX(0)';
+      }, 200);
+    }
+
+    omniboxIcon.classList.toggle('secure', !!(active && !active.isNewTab && /^https:\/\//i.test(active.url || '')));
+    if (document.activeElement !== omniboxInput) {
+      omniboxInput.value = (active && !active.isNewTab) ? (active.displayUrl || '') : '';
+    }
+
+    btnShield.classList.toggle('active', !!next.activeForSite);
+    btnShield.classList.toggle('paused', !next.activeForSite);
+    shieldCount.style.display = onNewTab ? 'none' : '';
+    shieldCount.textContent = onNewTab ? '' : String(active.blockedCount || 0);
+  }
+
+  // Receive messages from native C# BrowserForm
+  if (window.chrome && window.chrome.webview) {
+    window.chrome.webview.addEventListener('message', (ev) => {
+      const msg = ev.data;
+      if (!msg || !msg.type) return;
+
+      if (msg.type === 'state') {
+        applyState(msg);
+      } else if (msg.type === 'palette') {
+        if (!body.classList.contains('on-newtab')) {
+          body.classList.toggle('theme-light', !!msg.isLight);
+          body.classList.toggle('theme-dark', !msg.isLight);
+          drawTopLightGuide({
+            baseRgb: msg.baseRgb,
+            accents: msg.accents,
+            isLight: !!msg.isLight
+          });
+        }
+      } else if (msg.type === 'adBlocked') {
+        state.totalBlocked = msg.totalBlocked;
+        updateStatText(state.globalAdBlockEnabled, msg.totalBlocked);
+        if (msg.tabId === state.activeTabId) {
+          shieldCount.textContent = String(msg.tabBlocked || 0);
+          btnShield.classList.add('pulse');
+          setTimeout(() => btnShield.classList.remove('pulse'), 320);
+        }
+      } else if (msg.type === 'focusOmnibox') {
+        omniboxInput.focus();
+        omniboxInput.select();
+      }
+    });
+  }
+})();

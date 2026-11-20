@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dejavu overlay</title>
+  <link rel="stylesheet" href="https://dejavu.local/styles.css">
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0b0916;
+    }
+    body.theme-light {
+      background: #f5f4fa;
+    }
+    #backdrop-img {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .overlay-shell {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      width: 100%;
+      height: 100%;
+      border-radius: 14px;
+    }
+    .shield-box {
+      width: 100%;
+      height: 100%;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .find-box {
+      width: 100%;
+      height: 100%;
+      padding: 0 8px 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .find-box input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 13px;
+      user-select: text;
+    }
+    .dl-box {
+      width: 100%;
+      height: 100%;
+      padding: 13px 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+    }
+    /* Match dark/light polarity directly on overlay body */
+    body.theme-light {
+      --ink: rgba(16, 14, 26, 0.94);
+      --ink-muted: rgba(28, 24, 46, 0.62);
+      --ink-subtle: rgba(34, 30, 56, 0.38);
+      --glass-tint-strong: radial-gradient(
+        ellipse 88% 84% at 50% 50%,
+        rgba(253, 251, 255, 0.92) 0%,
+        rgba(247, 244, 255, 0.84) 72%,
+        rgba(255, 255, 255, 0.28) 100%
+      );
+      --glass-border: rgba(255, 255, 255, 0.82);
+      --glass-hover-bg: rgba(24, 18, 52, 0.08);
+      --accent: #7c4dff;
+      --accent-bright: #6435e8;
+      --shield-green: #0d9488;
+    }
+  </style>
+</head>
+<body class="theme-dark">
+  <img id="backdrop-img" alt="" style="display:none;">
+
+  <!-- Mode 1: Ad-Shield Popover -->
+  <div id="mode-shield" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="22" data-lg-scale="28" data-lg-dispersion="1.22" data-lg-dome="0.05">
+    <div class="shield-box">
+      <div class="popover-head">
+        <div class="popover-title-row">
+          <span id="pop-dot" class="popover-shield-dot"></span>
+          <span class="popover-title">Ad Blocker</span>
+        </div>
+        <span id="pop-badge" class="engine-badge">Active</span>
+      </div>
+
+      <div id="pop-site-row" class="popover-row">
+        <div class="popover-row-text">
+          <div id="pop-host" class="row-label">This site</div>
+          <div id="pop-site-sub" class="row-sub">0 blocked on this page</div>
+        </div>
+        <button id="btn-site-toggle" class="liquid-switch on" role="switch"><span class="switch-knob"></span></button>
+      </div>
+
+      <div class="popover-row">
+        <div class="popover-row-text">
+          <div class="row-label">Block ads everywhere</div>
+          <div id="pop-total-sub" class="row-sub">0 total blocked</div>
+        </div>
+        <button id="btn-global-toggle" class="liquid-switch on" role="switch"><span class="switch-knob"></span></button>
+      </div>
+
+      <div class="popover-divider"></div>
+
+      <div class="popover-search-row">
+        <span class="row-sub">Search with</span>
+        <div class="engine-segmented" id="seg-engines">
+          <button data-engine="google" class="seg-btn active">Google</button>
+          <button data-engine="duckduckgo" class="seg-btn">DuckDuckGo</button>
+          <button data-engine="brave" class="seg-btn">Brave</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mode 2: Find-in-Page Pill -->
+  <div id="mode-find" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="14" data-lg-scale="20" data-lg-dispersion="1.08">
+    <div class="find-box">
+      <input id="find-q" type="text" placeholder="Find on page..." spellcheck="false" autocomplete="off">
+      <button id="f-prev" class="icon-btn sm" title="Previous">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 9.8L8 6.2l3.5 3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="f-next" class="icon-btn sm" title="Next">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 6.2L8 9.8l3.5-3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="f-close" class="icon-btn sm" title="Close (Esc)">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mode 3: Download Progress Toast -->
+  <div id="mode-download" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="16" data-lg-scale="22" data-lg-dispersion="1.12">
+    <div class="dl-box">
+      <div class="dl-head">
+        <span id="dl-name" class="dl-name">Download</span>
+        <button id="dl-dismiss" class="icon-btn sm" title="Dismiss">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="dl-bar-track"><div id="dl-fill" class="dl-bar-fill"></div></div>
+      <div class="dl-foot">
+        <span id="dl-status" class="dl-status">Starting...</span>
+        <div id="dl-acts" class="dl-actions hidden">
+          <button id="dl-open" class="dl-act-btn">Open</button>
+          <button id="dl-reveal" class="dl-act-btn">Folder</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://dejavu.local/liquid-glass.js"></script>
+  <script>
+    const send = (msg) => { try { window.chrome.webview.postMessage(msg); } catch {} };
+    window.LiquidGlass.init();
+
+    const backdropImg = document.getElementById('backdrop-img');
+    const modeShield = document.getElementById('mode-shield');
+    const modeFind = document.getElementById('mode-find');
+    const modeDownload = document.getElementById('mode-download');
+
+    const popDot = document.getElementById('pop-dot');
+    const popBadge = document.getElementById('pop-badge');
+    const popSiteRow = document.getElementById('pop-site-row');
+    const popHost = document.getElementById('pop-host');
+    const popSiteSub = document.getElementById('pop-site-sub');
+    const popTotalSub = document.getElementById('pop-total-sub');
+    const btnSiteToggle = document.getElementById('btn-site-toggle');
+    const btnGlobalToggle = document.getElementById('btn-global-toggle');
+    const segEngines = document.getElementById('seg-engines');
+
+    const findQ = document.getElementById('find-q');
+
+    function formatBytes(b) {
+      if (!b) return '0 B';
+      const u = ['B', 'KB', 'MB', 'GB'];
+      let i = 0, v = b;
+      while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+      return `${v.toFixed(i > 1 ? 1 : 0)} ${u[i]}`;
+    }
+
+    btnSiteToggle.addEventListener('click', () => send({ type: 'toggleSiteShield' }));
+    btnGlobalToggle.addEventListener('click', () => send({ type: 'toggleGlobalShield' }));
+    segEngines.addEventListener('click', (e) => {
+      const btn = e.target.closest('.seg-btn');
+      if (!btn) return;
+      segEngines.querySelectorAll('.seg-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      send({ type: 'setSearchEngine', engine: btn.dataset.engine });
+    });
+
+    findQ.addEventListener('input', () => send({ type: 'findQuery', query: findQ.value, backwards: false }));
+    findQ.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        send({ type: 'findQuery', query: findQ.value, backwards: e.shiftKey });
+      } else if (e.key === 'Escape') {
+        send({ type: 'closeFind' });
+      }
+    });
+    document.getElementById('f-next').addEventListener('click', () => send({ type: 'findQuery', query: findQ.value, backwards: false }));
+    document.getElementById('f-prev').addEventListener('click', () => send({ type: 'findQuery', query: findQ.value, backwards: true }));
+    document.getElementById('f-close').addEventListener('click', () => send({ type: 'closeFind' }));
+
+    document.getElementById('dl-open').addEventListener('click', () => send({ type: 'openDownload' }));
+    document.getElementById('dl-reveal').addEventListener('click', () => send({ type: 'revealDownload' }));
+    document.getElementById('dl-dismiss').addEventListener('click', () => send({ type: 'dismissDownload' }));
+
+    window.chrome.webview.addEventListener('message', (ev) => {
+      const d = ev.data;
+      if (!d) return;
+
+      document.body.classList.toggle('theme-light', !!d.isLight);
+      document.body.classList.toggle('theme-dark', !d.isLight);
+
+      if (d.backdrop) {
+        backdropImg.src = d.backdrop;
+        backdropImg.style.display = 'block';
+      } else {
+        backdropImg.style.display = 'none';
+      }
+
+      modeShield.classList.toggle('hidden', d.mode !== 'shield');
+      modeFind.classList.toggle('hidden', d.mode !== 'find');
+      modeDownload.classList.toggle('hidden', d.mode !== 'download');
+
+      if (d.mode === 'shield') {
+        popDot.classList.toggle('off', !d.activeForSite);
+        popBadge.textContent = d.activeForSite ? 'Active' : 'Paused';
+        if (d.host) {
+          popSiteRow.classList.remove('hidden');
+          popHost.textContent = d.host.replace(/^www\./, '');
+          popSiteSub.textContent = `${Number(d.tabBlocked || 0).toLocaleString()} blocked on this page`;
+          btnSiteToggle.classList.toggle('on', !d.sitePaused && d.globalEnabled);
+        } else {
+          popSiteRow.classList.add('hidden');
+        }
+        popTotalSub.textContent = `${Number(d.totalBlocked || 0).toLocaleString()} total blocked`;
+        btnGlobalToggle.classList.toggle('on', !!d.globalEnabled);
+        segEngines.querySelectorAll('.seg-btn').forEach((b) => {
+          b.classList.toggle('active', b.dataset.engine === d.searchEngine);
+        });
+        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modeShield));
+      } else if (d.mode === 'find') {
+        requestAnimationFrame(() => {
+          window.LiquidGlass.updateElementGlass(modeFind);
+          findQ.focus();
+          findQ.select();
+        });
+      } else if (d.mode === 'download') {
+        document.getElementById('dl-name').textContent = d.filename || 'Download';
+        const fill = document.getElementById('dl-fill');
+        const st = document.getElementById('dl-status');
+        const acts = document.getElementById('dl-acts');
+        if (d.state === 'completed') {
+          fill.style.width = '100%';
+          st.textContent = `Saved · ${formatBytes(d.total || d.received)}`;
+          acts.classList.remove('hidden');
+        } else if (d.state === 'interrupted') {
+          st.textContent = 'Download stopped';
+          acts.classList.add('hidden');
+        } else {
+          const pct = d.total > 0 ? Math.min(100, Math.round((d.received / d.total) * 100)) : 35;
+          fill.style.width = `${pct}%`;
+          st.textContent = d.total > 0 ? `${formatBytes(d.received)} / ${formatBytes(d.total)}` : formatBytes(d.received);
+          acts.classList.add('hidden');
+        }
+        requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(modeDownload));
+      }
+    });
+  </script>
+</body>
+</html>

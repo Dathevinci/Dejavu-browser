@@ -432,6 +432,26 @@ namespace DejavuBrowser
                     return;
                 }
 
+                // Inject synchronous boot state directly into index.html BEFORE first paint
+                // so the real wallpaper, profile butterfly, shortcuts & stats render on frame 1 with ZERO flash!
+                if (lower == "index.html")
+                {
+                    string html = System.Text.Encoding.UTF8.GetString(data);
+                    var boot = new Dictionary<string, object>
+                    {
+                        { "wallpaper", _settings.wallpaper ?? "live:obsidian-prism" },
+                        { "hasCustomWallpaper", !string.IsNullOrEmpty(_settings.customWallpaperPath) && File.Exists(_settings.customWallpaperPath) },
+                        { "activeProfile", _profiles.ActiveProfile },
+                        { "shortcuts", _settings.shortcuts },
+                        { "favorites", _profiles.Favorites },
+                        { "globalAdBlockEnabled", _adBlocker.GlobalEnabled },
+                        { "totalBlocked", _adBlocker.TotalBlocked }
+                    };
+                    string bootScript = "<script>window.__DEJAVU_BOOT__=" + _json.Serialize(boot) + ";</script>";
+                    html = html.Replace("<!--DEJAVU_BOOT-->", bootScript);
+                    data = System.Text.Encoding.UTF8.GetBytes(html);
+                }
+
                 string mime = "application/octet-stream";
                 if (lower.EndsWith(".html")) mime = "text/html; charset=utf-8";
                 else if (lower.EndsWith(".css")) mime = "text/css; charset=utf-8";
@@ -1268,21 +1288,23 @@ namespace DejavuBrowser
         private Rectangle GetDownloadClientRect()
         {
             float sc = DpiScale;
-            int w = (int)Math.Round(292 * sc);
-            int h = (int)Math.Round(96 * sc);
+            int w = (int)Math.Round(312 * sc);
+            int h = (int)Math.Round(108 * sc);
             int x = Math.Max(8, ClientSize.Width - w - (int)Math.Round(16 * sc));
             int y = Math.Max(TopBarHeightPx + 8, ClientSize.Height - h - (int)Math.Round(16 * sc));
             return new Rectangle(x, y, w, h);
         }
 
-        private void ShowDownloadToast(string filename, string filePath, long received, long total, string state)
+        private async void ShowDownloadToast(string filename, string filePath, long received, long total, string state)
         {
             if (_hudPopup == null) return;
             _downloadHideTimer.Stop();
+            bool wasVisible = _hudPopup.Visible && _activeHudMode == "download";
             _activeHudMode = "download";
 
             BrowserTab tab = GetActiveTab();
             Rectangle r = GetDownloadClientRect();
+            string backdrop = wasVisible ? null : await CaptureBackdropCropAsync(r);
             Point sp = PointToScreen(new Point(r.X, r.Y));
 
             var payload = new Dictionary<string, object>
@@ -1295,6 +1317,7 @@ namespace DejavuBrowser
                 { "total", total },
                 { "state", state }
             };
+            if (backdrop != null) payload["backdrop"] = backdrop;
 
             _hudPopup.ShowAt(new Rectangle(sp.X, sp.Y, r.Width, r.Height), _json.Serialize(payload), false);
             if (state == "completed" || state == "interrupted") _downloadHideTimer.Start();
@@ -1303,25 +1326,27 @@ namespace DejavuBrowser
         private Rectangle GetUpdateClientRect()
         {
             float sc = DpiScale;
-            int w = (int)Math.Round(316 * sc);
-            int h = (int)Math.Round(98 * sc);
+            int w = (int)Math.Round(346 * sc);
+            int h = (int)Math.Round(120 * sc);
             int x = Math.Max(8, ClientSize.Width - w - (int)Math.Round(16 * sc));
             int y = Math.Max(TopBarHeightPx + 8, ClientSize.Height - h - (int)Math.Round(16 * sc));
             return new Rectangle(x, y, w, h);
         }
 
-        private void ShowUpdateToast(UpdateInfo info)
+        private async void ShowUpdateToast(UpdateInfo info)
         {
             if (_hudPopup == null || info == null) return;
             _activeHudMode = "update";
             BrowserTab tab = GetActiveTab();
             Rectangle r = GetUpdateClientRect();
+            string backdrop = await CaptureBackdropCropAsync(r);
             Point sp = PointToScreen(new Point(r.X, r.Y));
 
             var payload = new Dictionary<string, object>
             {
                 { "mode", "update" },
                 { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
+                { "backdrop", backdrop ?? "" },
                 { "version", info.Version },
                 { "currentVersion", AutoUpdater.CurrentVersion }
             };

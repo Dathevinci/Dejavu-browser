@@ -117,9 +117,50 @@
   let targetY = 0.42;
   let startTime = performance.now();
 
-  let currentWallpaper = 'live:obsidian-prism';
+  let currentWallpaper = (window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.wallpaper) || 'live:obsidian-prism';
   let artImage = null;
+  let prevArtImage = null;
+  let artFadeStart = 0;
+  const ART_FADE_MS = 280;
   let artLoaded = false;
+  let readyResolvers = [];
+  let initialReadyDone = false;
+
+  function markReady() {
+    if (initialReadyDone) return;
+    initialReadyDone = true;
+    const list = readyResolvers.slice();
+    readyResolvers = [];
+    for (const fn of list) { try { fn(); } catch {} }
+  }
+
+  function loadArtSource(wpId) {
+    const img = new Image();
+    const onDone = () => {
+      if (currentWallpaper !== wpId) return;
+      if (artImage && artImage !== img && artLoaded) {
+        prevArtImage = artImage;
+        artFadeStart = performance.now();
+      } else {
+        prevArtImage = null;
+        artFadeStart = 0;
+      }
+      artImage = img;
+      artLoaded = true;
+      if (ctx && width > 0 && height > 0) drawArtworkMode((performance.now() - startTime) * 0.001);
+      markReady();
+    };
+    img.onload = () => {
+      if (img.decode) img.decode().then(onDone, onDone);
+      else onDone();
+    };
+    img.onerror = () => markReady();
+    if (wpId.startsWith('art:')) {
+      img.src = `https://dejavu.local/${wpId.slice(4)}`;
+    } else {
+      img.src = `https://dejavu.local/custom-wallpaper?t=${Date.now()}`;
+    }
+  }
 
   // Offscreen static halftone dot pattern cache (eliminates 2,300 ctx.arc() calls per frame!)
   let dotCacheCanvas = null;
@@ -231,26 +272,43 @@
     ctx.restore();
   }
 
+  function drawCoverImage(img, alpha) {
+    if (!img || !img.naturalWidth) return;
+    const pad = 1.045;
+    const imgAspect = img.naturalWidth / img.naturalHeight;
+    const winAspect = width / height;
+    let dw, dh;
+    if (winAspect > imgAspect) {
+      dw = width * pad;
+      dh = dw / imgAspect;
+    } else {
+      dh = height * pad;
+      dw = dh * imgAspect;
+    }
+    const ox = (width - dw) / 2 - (pointerX - 0.5) * 26;
+    const oy = (height - dh) / 2 - (pointerY - 0.5) * 18;
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(img, ox, oy, dw, dh);
+    ctx.globalAlpha = 1;
+  }
+
   function drawArtworkMode(t) {
     ctx.fillStyle = '#06050b';
     ctx.fillRect(0, 0, width, height);
 
     if (artLoaded && artImage && artImage.naturalWidth > 0) {
-      // Subtle gentle parallax cover draw so wings breathe alive
-      const pad = 1.045;
-      const imgAspect = artImage.naturalWidth / artImage.naturalHeight;
-      const winAspect = width / height;
-      let dw, dh;
-      if (winAspect > imgAspect) {
-        dw = width * pad;
-        dh = dw / imgAspect;
+      if (prevArtImage && artFadeStart > 0) {
+        const raw = Math.min(1, (performance.now() - artFadeStart) / ART_FADE_MS);
+        const eased = 1 - Math.pow(1 - raw, 3);
+        drawCoverImage(prevArtImage, 1);
+        drawCoverImage(artImage, eased);
+        if (raw >= 1) {
+          prevArtImage = null;
+          artFadeStart = 0;
+        }
       } else {
-        dh = height * pad;
-        dw = dh * imgAspect;
+        drawCoverImage(artImage, 1);
       }
-      const ox = (width - dw) / 2 - (pointerX - 0.5) * 26;
-      const oy = (height - dh) / 2 - (pointerY - 0.5) * 18;
-      ctx.drawImage(artImage, ox, oy, dw, dh);
 
       // Gentle center radial vignette so hero logo & search glass stay ultra-legible
       const vig = ctx.createRadialGradient(
@@ -400,24 +458,21 @@
 
   function setWallpaper(wpId) {
     const next = wpId || 'live:obsidian-prism';
-    if (next === currentWallpaper) return;
+    if (next === currentWallpaper && (artLoaded || (!next.startsWith('art:') && !next.startsWith('custom')))) return;
     currentWallpaper = next;
 
-    if (next.startsWith('art:')) {
-      const file = next.slice(4);
-      artLoaded = false;
-      const img = new Image();
-      img.onload = () => { artImage = img; artLoaded = true; };
-      img.src = `https://dejavu.local/${file}`;
-    } else if (next.startsWith('custom')) {
-      artLoaded = false;
-      const img = new Image();
-      img.onload = () => { artImage = img; artLoaded = true; };
-      img.src = `https://dejavu.local/custom-wallpaper?t=${Date.now()}`;
+    if (next.startsWith('art:') || next.startsWith('custom')) {
+      loadArtSource(next);
     } else {
       artImage = null;
       artLoaded = false;
+      markReady();
     }
+  }
+
+  function whenReady(cb) {
+    if (initialReadyDone) { cb(); return; }
+    readyResolvers.push(cb);
   }
 
   function init(canvasEl) {
@@ -430,6 +485,13 @@
       targetX = Math.max(0.05, Math.min(0.95, e.clientX / width));
       targetY = Math.max(0.05, Math.min(0.95, e.clientY / height));
     }, { passive: true });
+
+    if (currentWallpaper.startsWith('art:') || currentWallpaper.startsWith('custom')) {
+      loadArtSource(currentWallpaper);
+      setTimeout(markReady, 450); // Safety ceiling so UI always reveals immediately
+    } else {
+      markReady();
+    }
     start();
   }
 
@@ -447,5 +509,5 @@
     }
   }
 
-  window.DejavuNewTabCanvas = { init, start, stop, resize, setWallpaper, LIVE_THEMES };
+  window.DejavuNewTabCanvas = { init, start, stop, resize, setWallpaper, whenReady, LIVE_THEMES };
 })();

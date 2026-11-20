@@ -8,8 +8,16 @@
   --topbar-h: 88px;
   --favbar-h: 0px;
   --chrome-h: 88px;
-  --spring: cubic-bezier(0.22, 1.18, 0.36, 1);
-  --spring-soft: cubic-bezier(0.16, 1.0, 0.3, 1);
+  /* Authentic Apple damped harmonic spring curves (GPU compositor only = zero lag) */
+  --apple-spring: linear(
+    0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.45 9.4%, 0.723 13.9%,
+    0.938 18.8%, 1.017 22%, 1.046 25.4%, 1.052 28.5%, 1.044 33%,
+    1.015 44%, 1.002 54%, 0.998 66%, 1 82%, 1
+  );
+  --apple-fluid: cubic-bezier(0.22, 1, 0.36, 1);
+  --apple-press: cubic-bezier(0.2, 0, 0, 1);
+  --spring: var(--apple-spring);
+  --spring-soft: var(--apple-fluid);
   --font-sans: 'Segoe UI Variable Display', 'Segoe UI Variable', 'SF Pro Display', 'Inter', system-ui, -apple-system, sans-serif;
 
   /* Dark Liquid Glass tokens */
@@ -111,20 +119,53 @@ html, body {
 
 /* ==========================================================================
    Core REAL Liquid Glass Optical Surface Class
+   Applied immediately to [data-liquid-glass] & .glass-pill so buttons NEVER
+   flash default browser white before JS mounts!
    ========================================================================== */
+[data-liquid-glass],
+.glass-pill,
+.glass-card,
 .liquid-glass {
   position: relative;
   background: var(--glass-tint);
+  color: var(--ink);
   backdrop-filter: var(--lg-filter);
   -webkit-backdrop-filter: var(--lg-filter);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   isolation: isolate;
   transition:
-    transform 0.34s cubic-bezier(0.22, 1.18, 0.36, 1),
-    background 0.25s ease,
-    border-color 0.25s ease,
-    box-shadow 0.25s ease;
+    transform 0.44s var(--apple-spring),
+    background 0.24s var(--apple-fluid),
+    border-color 0.24s var(--apple-fluid),
+    opacity 0.24s var(--apple-fluid);
+}
+
+button.glass-pill:active,
+button[data-liquid-glass]:active {
+  transition-duration: 0.1s;
+  transition-timing-function: var(--apple-press);
+}
+
+/* Unified Apple Boot Reveal (zero flash of default wallpaper or unstyled pills!) */
+body.app-booting #chrome-header,
+body.app-booting #newtab-view {
+  opacity: 0 !important;
+  transform: translateY(8px) scale(0.988);
+  pointer-events: none;
+}
+
+body.app-booting #newtab-canvas {
+  opacity: 0 !important;
+  transform: scale(1.032);
+}
+
+#chrome-header {
+  transition: opacity 0.42s var(--apple-fluid), transform 0.48s var(--apple-fluid);
+}
+
+#newtab-canvas {
+  transition: opacity 0.48s var(--apple-fluid), transform 0.68s var(--apple-fluid);
 }
 
 /* Exact Fresnel Specular Caustic Rim generated from SDF surface normals */
@@ -511,7 +552,7 @@ body.is-fullscreen #top-backdrop-wrap {
   box-shadow: 0 0 14px rgba(176, 124, 255, 0.55);
 }
 
-/* Hairline liquid progress filament */
+/* Hairline liquid prism progress shimmer */
 .load-progress {
   position: absolute !important;
   left: 16px;
@@ -519,17 +560,24 @@ body.is-fullscreen #top-backdrop-wrap {
   bottom: 0;
   height: 2px;
   border-radius: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), #7dd3fc, var(--accent-bright));
+  background: linear-gradient(90deg, transparent, var(--accent), #7dd3fc, var(--accent-bright), transparent);
+  background-size: 200% 100%;
   transform-origin: left center;
   transform: scaleX(0);
   opacity: 0;
   pointer-events: none;
-  transition: transform 0.28s ease, opacity 0.25s ease;
+  transition: transform 0.36s var(--apple-fluid), opacity 0.28s ease;
   z-index: 4 !important;
 }
 
 .load-progress.active {
   opacity: 1;
+  animation: prismFlow 1.2s linear infinite;
+}
+
+@keyframes prismFlow {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }
 
 /* ==========================================================================
@@ -546,6 +594,7 @@ body.is-fullscreen #top-backdrop-wrap {
 }
 
 #tabs-strip {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -555,6 +604,38 @@ body.is-fullscreen #top-backdrop-wrap {
   scrollbar-width: none;
   padding: 1px 4px;
   scroll-behavior: smooth;
+}
+
+/* Apple-style GPU sliding active tab liquid aura */
+#active-tab-glide {
+  position: absolute;
+  top: 1px;
+  left: 0;
+  height: 31px;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.24) 0%, rgba(188, 148, 255, 0.16) 55%, rgba(120, 210, 255, 0.10) 100%);
+  border: 1px solid rgba(224, 200, 255, 0.72);
+  box-shadow:
+    0 6px 20px -4px rgba(0, 0, 0, 0.36),
+    0 0 12px rgba(176, 124, 255, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  will-change: transform, width;
+  transition:
+    transform 0.42s var(--apple-spring),
+    width 0.36s var(--apple-fluid),
+    opacity 0.22s ease;
+}
+
+body.theme-light:not(.on-newtab) #active-tab-glide {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.86) 0%, rgba(232, 222, 255, 0.56) 100%);
+  border-color: rgba(124, 77, 255, 0.45);
+  box-shadow:
+    0 6px 18px -5px rgba(24, 16, 64, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
 }
 
 #tabs-strip.scrollable {
@@ -567,10 +648,13 @@ body.is-fullscreen #top-backdrop-wrap {
 }
 
 .tab-pill {
+  position: relative;
+  z-index: 1;
   height: 31px;
   min-width: 126px;
   max-width: 212px;
-  flex: 0 1 182px;
+  width: 182px;
+  flex: 0 0 auto;
   padding: 0 8px 0 11px;
   border-radius: 999px;
   display: inline-flex;
@@ -578,53 +662,66 @@ body.is-fullscreen #top-backdrop-wrap {
   gap: 7px;
   cursor: pointer;
   color: var(--ink-muted);
-  opacity: 0.72;
-  flex-shrink: 0;
-  animation: tabBloom 0.28s var(--spring);
+  opacity: 0.76;
+  animation: tabBloom 0.42s var(--apple-spring);
 }
 
 @keyframes tabBloom {
-  from { opacity: 0; transform: scale(0.86) translateX(-8px); }
-  to { opacity: 0.72; transform: scale(1) translateX(0); }
+  from { opacity: 0; transform: scale(0.84) translateX(-10px); }
+  to { opacity: 0.76; transform: scale(1) translateX(0); }
 }
 
 .tab-pill.closing {
   opacity: 0 !important;
-  transform: scale(0.84) translateY(-2px);
+  min-width: 0 !important;
+  width: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: -6px !important;
+  border-width: 0 !important;
+  overflow: hidden !important;
+  transform: scale(0.76);
   pointer-events: none;
+  transition:
+    width 0.24s var(--apple-fluid),
+    min-width 0.24s var(--apple-fluid),
+    padding 0.24s var(--apple-fluid),
+    margin 0.24s var(--apple-fluid),
+    opacity 0.18s ease,
+    transform 0.24s var(--apple-fluid) !important;
+}
+
+.tab-pill.reset-pulse {
+  animation: tabResetPulse 0.36s var(--apple-spring);
+}
+
+@keyframes tabResetPulse {
+  0% { transform: scale(0.92); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .tab-pill:hover {
-  opacity: 0.94;
+  opacity: 0.96;
   color: var(--ink);
   transform: translateY(-1px);
 }
 
 .tab-pill:active {
-  transform: scale(0.96);
+  transform: scale(0.95);
+  transition-duration: 0.1s;
+  transition-timing-function: var(--apple-press);
 }
 
 .tab-pill.active {
   opacity: 1;
   color: var(--ink);
-  background: var(--glass-tint-active);
-  border-color: rgba(218, 192, 255, 0.74);
-  box-shadow:
-    0 6px 20px -4px rgba(0, 0, 0, 0.44),
-    0 0 0 1px rgba(196, 158, 255, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .tab-pill.active .tab-title {
   font-weight: 600;
-}
-
-body.theme-light:not(.on-newtab) .tab-pill.active {
-  border-color: rgba(124, 77, 255, 0.48);
-  box-shadow:
-    0 6px 18px -5px rgba(24, 16, 64, 0.18),
-    0 0 0 1px rgba(124, 77, 255, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.96);
 }
 
 .tab-favicon {
@@ -971,15 +1068,23 @@ body.on-newtab #newtab-view {
   cursor: pointer;
   color: rgba(246, 242, 255, 0.92);
   text-decoration: none;
+  animation: tileCascade 0.48s var(--apple-spring) calc(var(--stagger-i, 0) * 32ms) both;
+}
+
+@keyframes tileCascade {
+  from { opacity: 0; transform: translateY(14px) scale(0.88); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .shortcut-tile:hover {
-  transform: translateY(-3px) scale(1.045);
-  border-color: rgba(214, 186, 255, 0.58);
+  transform: translateY(-4px) scale(1.055);
+  border-color: rgba(214, 186, 255, 0.62);
 }
 
 .shortcut-tile:active {
-  transform: scale(0.94);
+  transform: scale(0.92);
+  transition-duration: 0.1s;
+  transition-timing-function: var(--apple-press);
 }
 
 .shortcut-ico-wrap {

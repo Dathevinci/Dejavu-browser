@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>dejavu</title>
+  <!--DEJAVU_BOOT-->
   <link rel="stylesheet" href="https://dejavu.local/styles.css">
 </head>
-<body class="theme-dark on-newtab">
+<body class="theme-dark on-newtab app-booting">
   <!-- Living Fluid Optical Canvas (New Tab) -->
   <canvas id="newtab-canvas"></canvas>
 
@@ -25,7 +26,9 @@
       </button>
 
       <div id="tabs-area">
-        <div id="tabs-strip" role="tablist"></div>
+        <div id="tabs-strip" role="tablist">
+          <div id="active-tab-glide" aria-hidden="true"></div>
+        </div>
         <button id="btn-new-tab" class="glass-pill circle-btn" data-liquid-glass data-lg-bezel="10" data-lg-scale="15" data-lg-dispersion="1.0" title="New Tab (Ctrl+T)">
           <svg viewBox="0 0 18 18" fill="none"><path d="M9 4v10M4 9h10" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
         </button>

@@ -35,11 +35,18 @@
       position: fixed; inset: 0; z-index: 2;
       display: flex; width: 100%; height: 100%;
       border-radius: 14px;
-      animation: ovPop 0.22s cubic-bezier(0.22, 1.18, 0.36, 1);
+      animation: ovPop 0.34s var(--apple-spring);
     }
     @keyframes ovPop {
-      from { opacity: 0; transform: scale(0.96); }
-      to { opacity: 1; transform: scale(1); }
+      from { opacity: 0; transform: translateY(-6px) scale(0.94); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(18px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    #prof-view-editor:not(.hidden) {
+      animation: slideInRight 0.34s var(--apple-fluid);
     }
 
     /* Shield, Find, Download, Update Boxes */
@@ -60,24 +67,25 @@
       display: flex; flex-direction: column; justify-content: center; gap: 8px;
     }
 
-    /* Update Toast */
+    /* Update Toast (generous breathing room, zero clipped buttons!) */
     .upd-box {
-      width: 100%; height: 100%; padding: 13px 15px;
-      display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+      width: 100%; height: 100%; padding: 15px 17px 14px;
+      display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
     }
-    .upd-top { display: flex; align-items: center; gap: 10px; }
-    .upd-top img { width: 26px; height: 26px; object-fit: contain; filter: drop-shadow(0 0 8px rgba(176,124,255,0.6)); }
-    .upd-title { font-size: 13px; font-weight: 600; }
-    .upd-sub { font-size: 11px; color: var(--ink-muted); margin-top: 1px; }
-    .upd-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+    .upd-top { display: flex; align-items: center; gap: 11px; }
+    .upd-top img { width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(176,124,255,0.65)); }
+    .upd-title { font-size: 13.5px; font-weight: 600; line-height: 1.25; }
+    .upd-sub { font-size: 11.2px; color: var(--ink-muted); margin-top: 2px; line-height: 1.25; }
+    .upd-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
     .pill-btn {
-      height: 28px; padding: 0 13px; border-radius: 999px;
+      height: 30px; padding: 0 14px; border-radius: 999px;
       border: 1px solid var(--glass-border); background: transparent;
-      color: var(--ink); font-family: inherit; font-size: 11.5px; font-weight: 600;
-      cursor: pointer; transition: transform 0.2s cubic-bezier(0.22,1.2,0.36,1), background 0.18s ease;
+      color: var(--ink); font-family: inherit; font-size: 11.8px; font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.36s var(--apple-spring), background 0.18s ease, filter 0.18s ease;
     }
-    .pill-btn:hover { background: var(--glass-hover-bg); }
-    .pill-btn:active { transform: scale(0.94); }
+    .pill-btn:hover { background: var(--glass-hover-bg); transform: translateY(-1px); }
+    .pill-btn:active { transform: scale(0.93); transition-duration: 0.09s; }
     .pill-btn.primary {
       background: linear-gradient(135deg, #8b5cf6, #a855f7);
       border-color: rgba(226, 202, 255, 0.58);

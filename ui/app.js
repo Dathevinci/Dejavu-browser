@@ -24,6 +24,7 @@
   const btnShield = document.getElementById('btn-shield');
   const shieldCount = document.getElementById('shield-count');
   const tabsStrip = document.getElementById('tabs-strip');
+  const activeTabGlide = document.getElementById('active-tab-glide');
   const btnNewTab = document.getElementById('btn-new-tab');
   const btnHistory = document.getElementById('btn-history');
   const btnProfile = document.getElementById('btn-profile');
@@ -73,16 +74,46 @@
   window.LiquidGlass.init();
   window.DejavuNewTabCanvas.init(newtabCanvas);
 
+  const bootData = window.__DEJAVU_BOOT__ || {};
   let state = {
     activeTabId: -1,
     tabs: [],
-    shortcuts: [],
-    globalAdBlockEnabled: true,
+    shortcuts: bootData.shortcuts || [],
+    favorites: bootData.favorites || [],
+    activeProfile: bootData.activeProfile || null,
+    wallpaper: bootData.wallpaper || 'live:obsidian-prism',
+    hasCustomWallpaper: !!bootData.hasCustomWallpaper,
+    globalAdBlockEnabled: bootData.globalAdBlockEnabled !== false,
     activeForSite: true,
-    totalBlocked: 0
+    totalBlocked: bootData.totalBlocked || 0
   };
   let currentPalette = null;
   let lastActiveId = -1;
+
+  // Reveal entire app together in ONE unified Apple spring motion ONLY after BOTH:
+  // (1) the user's real wallpaper has decoded, AND (2) the initial tab bar is populated!
+  let bootWallpaperReady = false;
+  let bootTabsReady = false;
+  let bootRevealed = false;
+  function tryRevealApp() {
+    if (bootRevealed || !bootWallpaperReady || !bootTabsReady) return;
+    bootRevealed = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        body.classList.remove('app-booting');
+      });
+    });
+  }
+  window.DejavuNewTabCanvas.whenReady(() => {
+    bootWallpaperReady = true;
+    tryRevealApp();
+  });
+  setTimeout(() => {
+    if (!bootRevealed) {
+      bootRevealed = true;
+      body.classList.remove('app-booting');
+    }
+  }, 550);
 
   // =========================================================================
   // Native Win32 Frameless Window Drag & Controls
@@ -261,6 +292,7 @@
       const tile = document.createElement('button');
       tile.type = 'button';
       tile.className = 'shortcut-tile';
+      tile.style.setProperty('--stagger-i', String(index));
       tile.setAttribute('data-liquid-glass', '');
       tile.setAttribute('data-lg-bezel', '16');
       tile.setAttribute('data-lg-scale', '22');
@@ -307,6 +339,7 @@
       const addTile = document.createElement('button');
       addTile.type = 'button';
       addTile.className = 'shortcut-tile shortcut-add';
+      addTile.style.setProperty('--stagger-i', String((list || []).length));
       addTile.setAttribute('data-liquid-glass', '');
       addTile.setAttribute('data-lg-bezel', '16');
       addTile.setAttribute('data-lg-scale', '20');
@@ -446,6 +479,40 @@
   // =========================================================================
   const tabEls = new Map();
 
+  function updateActiveTabGlide(activeId) {
+    if (!activeTabGlide) return;
+    const activeEl = tabEls.get(activeId);
+    if (!activeEl || !activeEl.isConnected) {
+      activeTabGlide.style.opacity = '0';
+      return;
+    }
+    const left = activeEl.offsetLeft;
+    const width = activeEl.offsetWidth;
+    if (width > 10) {
+      activeTabGlide.style.transform = `translate3d(${left}px, 0, 0)`;
+      activeTabGlide.style.width = `${width}px`;
+      activeTabGlide.style.opacity = '1';
+    }
+  }
+
+  window.addEventListener('resize', () => {
+    requestAnimationFrame(() => updateActiveTabGlide(state.activeTabId));
+  });
+
+  function requestCloseTab(tabId, el) {
+    if ((state.tabs || []).length <= 1) {
+      // Closing the last tab resets it to a fresh New Tab — NEVER hide it with .closing!
+      el.classList.remove('closing');
+      el.classList.remove('reset-pulse');
+      void el.offsetWidth;
+      el.classList.add('reset-pulse');
+      send({ type: 'closeTab', id: tabId });
+      return;
+    }
+    el.classList.add('closing');
+    setTimeout(() => send({ type: 'closeTab', id: tabId }), 180);
+  }
+
   function syncTabs(tabs, activeId) {
     const alive = new Set(tabs.map((t) => t.id));
     for (const [id, el] of tabEls.entries()) {
@@ -476,8 +543,7 @@
         `;
         el.addEventListener('click', (e) => {
           if (e.target.closest('.tab-close')) {
-            el.classList.add('closing');
-            setTimeout(() => send({ type: 'closeTab', id: tab.id }), 90);
+            requestCloseTab(tab.id, el);
             return;
           }
           send({ type: 'activateTab', id: tab.id });
@@ -485,13 +551,15 @@
         el.addEventListener('auxclick', (e) => {
           if (e.button === 1) {
             e.preventDefault();
-            el.classList.add('closing');
-            setTimeout(() => send({ type: 'closeTab', id: tab.id }), 90);
+            requestCloseTab(tab.id, el);
           }
         });
         tabsStrip.appendChild(el);
         tabEls.set(tab.id, el);
       }
+
+      // Always ensure surviving/reused tabs are visible and never stuck in .closing
+      el.classList.remove('closing');
 
       const wasActive = el.classList.contains('active');
       const nowActive = tab.id === activeId;
@@ -516,6 +584,7 @@
 
     requestAnimationFrame(() => {
       tabsStrip.classList.toggle('scrollable', tabsStrip.scrollWidth > tabsStrip.clientWidth + 4);
+      updateActiveTabGlide(activeId);
     });
   }
 
@@ -600,6 +669,10 @@
   function applyState(next) {
     state = next;
     syncTabs(next.tabs || [], next.activeTabId);
+    if (!bootTabsReady && next.tabs && next.tabs.length > 0) {
+      bootTabsReady = true;
+      tryRevealApp();
+    }
     renderShortcuts(next.shortcuts || []);
     renderFavoritesBar(next.favorites || []);
     updateStatText(next.globalAdBlockEnabled, next.totalBlocked);
@@ -706,5 +779,15 @@
         omniboxInput.select();
       }
     });
+  }
+
+  // Hydrate boot state synchronously BEFORE first paint (zero flash of 0 ads / missing avatar / default shortcuts!)
+  if (bootData.shortcuts) renderShortcuts(bootData.shortcuts);
+  if (bootData.favorites) renderFavoritesBar(bootData.favorites);
+  updateStatText(state.globalAdBlockEnabled, state.totalBlocked);
+  if (bootData.activeProfile && window.DejavuAvatars) {
+    lastAvatarRendered = `${bootData.activeProfile.avatar}_${bootData.activeProfile.name}`;
+    profileAvatarSlot.innerHTML = window.DejavuAvatars.renderHtml(bootData.activeProfile.avatar, 26);
+    btnProfile.title = `${bootData.activeProfile.name} · Profiles & Updates`;
   }
 })();

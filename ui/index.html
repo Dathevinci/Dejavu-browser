@@ -17,57 +17,41 @@
     <div class="top-backdrop-sheen"></div>
   </div>
 
-  <!-- Spacious, Zero-Clutter 2-Row Liquid Glass Chrome -->
+  <!-- macOS Safari-Inspired Unified 2-Row Butterfly Liquid Glass Chrome (88px base / 122px with Favorites) -->
   <header id="chrome-header">
-    <!-- Row 1: Dedicated Liquid Glass Tab Bar + Window Controls -->
-    <div id="tabbar" class="chrome-row tabbar-row">
-      <button id="btn-home" class="glass-pill brand-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10" title="dejavu Home (New Tab)">
-        <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
-      </button>
-
-      <div id="tabs-area">
-        <div id="tabs-strip" role="tablist">
-          <div id="active-tab-glide" aria-hidden="true"></div>
-        </div>
-        <button id="btn-new-tab" class="glass-pill circle-btn" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10" title="New Tab (Ctrl+T)">
-          <svg viewBox="0 0 18 18" fill="none"><path d="M9 4v10M4 9h10" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
-        </button>
-        <div id="drag-spacer" class="drag-spacer"></div>
-      </div>
-
-      <div class="glass-pill win-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10">
-        <button id="win-min" class="win-btn" title="Minimize">
-          <svg viewBox="0 0 14 14" fill="none"><path d="M3 7h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-        </button>
-        <button id="win-max" class="win-btn" title="Maximize">
-          <svg viewBox="0 0 14 14" fill="none"><rect x="3.2" y="3.2" width="7.6" height="7.6" rx="1.6" stroke="currentColor" stroke-width="1.35"/></svg>
-        </button>
-        <button id="win-close" class="win-btn win-close" title="Close">
-          <svg viewBox="0 0 14 14" fill="none"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Row 2: Clean Navigation, Spacious Centered Omnibox, VPN, History & Butterfly Profile -->
+    <!-- Row 1: Unified Safari Toolbar (44px) -->
     <div id="toolbar" class="chrome-row toolbar-row">
-      <div class="glass-pill nav-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="11">
-        <button id="btn-back" class="icon-btn" title="Back (Alt+Left)" disabled>
-          <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4.5L7 10l5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <!-- Left: Butterfly Home + Compact Safari Back/Forward Pill -->
+      <div class="toolbar-left">
+        <button id="btn-home" class="glass-pill brand-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10" title="dejavu Start Page">
+          <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
         </button>
-        <button id="btn-forward" class="icon-btn" title="Forward (Alt+Right)" disabled>
-          <svg viewBox="0 0 20 20" fill="none"><path d="M7.5 4.5L13 10l-5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <button id="btn-reload" class="icon-btn" title="Reload (Ctrl+R)">
-          <svg class="icon-reload" viewBox="0 0 20 20" fill="none"><path d="M15.8 10a5.8 5.8 0 1 1-1.5-3.9M15.8 4.2v3.2h-3.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <svg class="icon-stop" viewBox="0 0 20 20" fill="none"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        </button>
+
+        <div class="glass-pill nav-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10">
+          <button id="btn-back" class="icon-btn" title="Back (Alt+Left)" disabled>
+            <svg viewBox="0 0 20 20" fill="none"><path d="M12.4 4.8L7.2 10l5.2 5.2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <span class="pill-sep" aria-hidden="true"></span>
+          <button id="btn-forward" class="icon-btn" title="Forward (Alt+Right)" disabled>
+            <svg viewBox="0 0 20 20" fill="none"><path d="M7.6 4.8L12.8 10l-5.2 5.2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
       </div>
 
-      <div id="omnibox-pill" class="glass-pill omnibox-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="11" data-lg-dome="0.015">
-        <span id="omnibox-icon" class="omnibox-icon" aria-hidden="true">
-          <svg class="ico-lock" viewBox="0 0 16 16" fill="none"><rect x="3.5" y="7" width="9" height="6.5" rx="1.8" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          <svg class="ico-search" viewBox="0 0 16 16" fill="none"><circle cx="7.2" cy="7.2" r="4.4" stroke="currentColor" stroke-width="1.45"/><path d="M10.8 10.8L13.6 13.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <!-- Center: Iconic Safari Smart Search Field (Centered Domain + Lock when idle, Smoked Obsidian Left-Align when editing) -->
+      <div id="omnibox-pill" class="glass-pill omnibox-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10" data-lg-dome="0.012">
+        <span class="omnibox-edit-ico" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="7.2" cy="7.2" r="4.3" stroke="currentColor" stroke-width="1.45"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </span>
+
+        <div id="omnibox-display" class="omnibox-display" aria-hidden="true">
+          <span id="omnibox-icon" class="omnibox-icon">
+            <svg class="ico-lock" viewBox="0 0 16 16" fill="none"><rect x="3.6" y="7.1" width="8.8" height="6.3" rx="1.8" stroke="currentColor" stroke-width="1.45"/><path d="M5.6 7.1V5.3a2.4 2.4 0 0 1 4.8 0v1.8" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>
+            <svg class="ico-search" viewBox="0 0 16 16" fill="none"><circle cx="7.2" cy="7.2" r="4.2" stroke="currentColor" stroke-width="1.4"/><path d="M10.6 10.6L13.4 13.4" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>
+          </span>
+          <span id="omnibox-domain" class="omnibox-domain is-placeholder">Search or enter website</span>
+        </div>
+
         <input
           id="omnibox-input"
           type="text"
@@ -76,42 +60,79 @@
           placeholder="Search or enter website"
           aria-label="Address bar"
         >
-        <button id="btn-fav-star" class="fav-star-btn hidden" title="Pin to top bar favorites (Ctrl+D)">
-          <svg viewBox="0 0 18 18" fill="none"><path d="M9 2.3l2.1 4.2 4.6.7-3.3 3.2.8 4.6L9 12.8 4.8 15l.8-4.6L2.3 7.2l4.6-.7L9 2.3z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg>
-        </button>
-        <button id="btn-shield" class="shield-chip active" title="dejavu Ad Blocker">
-          <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.8L3 3.8v3.9c0 3.2 2.1 5.6 5 6.6 2.9-1 5-3.4 5-6.6V3.8L8 1.8z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path class="shield-check" d="M5.8 8.1l1.5 1.5 3-3.2" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span id="shield-count"></span>
-        </button>
+
+        <div class="omnibox-actions">
+          <button id="btn-shield" class="shield-chip active" title="dejavu Ad Blocker">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.8L3 3.8v3.9c0 3.2 2.1 5.6 5 6.6 2.9-1 5-3.4 5-6.6V3.8L8 1.8z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path class="shield-check" d="M5.8 8.1l1.5 1.5 3-3.2" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span id="shield-count"></span>
+          </button>
+          <button id="btn-fav-star" class="fav-star-btn hidden" title="Pin to top bar favorites (Ctrl+D)">
+            <svg viewBox="0 0 18 18" fill="none"><path d="M9 2.4l2.05 4.15 4.55.66-3.3 3.22.78 4.55L9 12.82 4.92 14.98l.78-4.55-3.3-3.22 4.55-.66L9 2.4z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg>
+          </button>
+          <button id="btn-reload" class="omnibox-reload-btn hidden" title="Reload (Ctrl+R)">
+            <svg class="icon-reload" viewBox="0 0 18 18" fill="none"><path d="M14.1 9a5.1 5.1 0 1 1-1.35-3.45M14.1 3.9v2.85h-2.85" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg class="icon-stop" viewBox="0 0 18 18" fill="none"><path d="M5.2 5.2l7.6 7.6M12.8 5.2l-7.6 7.6" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
         <div id="load-progress" class="load-progress"></div>
       </div>
 
-      <div class="glass-pill util-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="11">
-        <button id="btn-vpn" class="vpn-trigger" title="dejavu VPN (Multi-Country Encrypted Tunnel)">
-          <svg class="vpn-ico" viewBox="0 0 18 18" fill="none">
-            <circle cx="9" cy="9" r="6.2" stroke="currentColor" stroke-width="1.45"/>
-            <ellipse cx="9" cy="9" rx="2.9" ry="6.2" stroke="currentColor" stroke-width="1.35"/>
-            <path d="M3.1 7.2h11.8M3.1 10.8h11.8" stroke="currentColor" stroke-width="1.3"/>
-          </svg>
-          <span id="vpn-chip-code" class="vpn-chip-code hidden"></span>
-        </button>
-        <button id="btn-history" class="icon-btn" title="History (Ctrl+H)">
-          <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M9 5.8V9.2l2.4 1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <button id="btn-profile" class="profile-trigger" title="Profiles &amp; Updates">
-          <span id="profile-avatar-slot"></span>
-          <span id="profile-update-dot" class="update-dot hidden"></span>
+      <!-- Right: Sleek Utility Pill (Butterfly VPN, History, Profile) + Window Controls Pill -->
+      <div class="toolbar-right">
+        <div class="glass-pill util-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10">
+          <button id="btn-vpn" class="vpn-trigger" title="dejavu VPN (Multi-Country Encrypted Tunnel)">
+            <svg class="vpn-ico" viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="6.1" stroke="currentColor" stroke-width="1.35"/>
+              <ellipse cx="9" cy="9" rx="2.8" ry="6.1" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M3.2 7.3h11.6M3.2 10.7h11.6" stroke="currentColor" stroke-width="1.15" opacity="0.72"/>
+              <path class="vpn-bf-accent" d="M9 9c-.8-1.5-2.5-2-2.9-.9-.3.9.6 1.5 1.5 1.4-.7.6-.9 1.6-.2 1.9.7.2 1.3-.7 1.6-1.5.3.8.9 1.7 1.6 1.5.7-.3.5-1.3-.2-1.9.9.1 1.8-.5 1.5-1.4-.4-1.1-2.1-.6-2.9.9z" fill="currentColor" opacity="0.9"/>
+            </svg>
+            <span id="vpn-chip-code" class="vpn-chip-code hidden"></span>
+          </button>
+          <button id="btn-history" class="icon-btn" title="History (Ctrl+H)">
+            <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="5.9" stroke="currentColor" stroke-width="1.45"/><path d="M9 5.9V9.2l2.3 1.5" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button id="btn-profile" class="profile-trigger" title="Profiles &amp; Updates">
+            <span id="profile-avatar-slot"></span>
+            <span id="profile-update-dot" class="update-dot hidden"></span>
+          </button>
+        </div>
+
+        <div class="glass-pill win-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10">
+          <button id="win-min" class="win-btn" title="Minimize">
+            <svg viewBox="0 0 14 14" fill="none"><path d="M3.2 7h7.6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+          </button>
+          <button id="win-max" class="win-btn" title="Maximize">
+            <svg viewBox="0 0 14 14" fill="none"><rect x="3.3" y="3.3" width="7.4" height="7.4" rx="1.6" stroke="currentColor" stroke-width="1.3"/></svg>
+          </button>
+          <button id="win-close" class="win-btn win-close" title="Close">
+            <svg viewBox="0 0 14 14" fill="none"><path d="M3.6 3.6l6.8 6.8M10.4 3.6l-6.8 6.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Safari Separate Full-Width Tab Bar (38px) -->
+    <div id="tabbar" class="chrome-row tabbar-row">
+      <div id="tabs-area">
+        <div id="tabs-strip" role="tablist">
+          <div id="active-tab-glide" aria-hidden="true"></div>
+        </div>
+        <div id="drag-spacer" class="drag-spacer"></div>
+        <button id="btn-new-tab" class="glass-pill circle-btn" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10" title="New Tab (Ctrl+T)">
+          <svg viewBox="0 0 18 18" fill="none"><path d="M9 4.2v9.6M4.2 9h9.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- Row 3: Optional Slim Floating Liquid Glass Favorites Ribbon -->
+    <!-- Row 3: Optional Slim Floating Liquid Glass Favorites Ribbon (34px when active) -->
     <nav id="favbar" class="favbar hidden" aria-label="Favorite websites">
       <div id="favbar-list" class="favbar-list"></div>
     </nav>
   </header>
 
-  <!-- New Tab Living Liquid Glass Experience -->
+  <!-- Safari Start Page — Butterfly Edition -->
   <main id="viewport">
     <section id="newtab-view">
       <div class="newtab-center">
@@ -123,46 +144,57 @@
         </div>
 
         <div class="hero-search-wrap anim-rise-2">
-          <form id="newtab-search-form" class="glass-pill hero-search" data-liquid-glass data-lg-bezel="22" data-lg-scale="30" data-lg-dispersion="1.28" data-lg-dome="0.06">
+          <form id="newtab-search-form" class="glass-pill hero-search" data-liquid-glass data-lg-bezel="22" data-lg-scale="28" data-lg-dispersion="1.22" data-lg-dome="0.045">
             <svg class="hero-search-ico" viewBox="0 0 20 20" fill="none">
-              <circle cx="9" cy="9" r="5.6" stroke="currentColor" stroke-width="1.6"/>
-              <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.55"/>
+              <path d="M13.4 13.4L16.8 16.8" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/>
             </svg>
             <input
               id="newtab-search-input"
               type="text"
               spellcheck="false"
               autocomplete="off"
-              placeholder="Search the web or type a link..."
+              placeholder="Search or enter website name"
               aria-label="Search the web"
             >
             <button type="submit" class="hero-go-btn" title="Go">
-              <svg viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 4.5L14.5 9 10 13.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 18 18" fill="none"><path d="M4.2 9h9.6M9.8 4.6L14.2 9l-4.4 4.4" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </form>
-          <div id="newtab-suggest" class="glass-card hero-suggest hidden" data-liquid-glass data-lg-bezel="18" data-lg-scale="24" data-lg-dispersion="1.15"></div>
+          <div id="newtab-suggest" class="glass-card hero-suggest hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="16" data-lg-scale="20"></div>
         </div>
 
-        <div id="shortcuts-grid" class="shortcuts-grid anim-rise-3"></div>
+        <div class="favorites-section anim-rise-3">
+          <div class="favorites-heading">Favorites</div>
+          <div id="shortcuts-grid" class="shortcuts-grid"></div>
+        </div>
       </div>
 
+      <!-- Safari-Style Bottom Privacy Report Pill + Butterfly Wallpapers Trigger -->
       <div class="newtab-bottom-bar">
-        <div id="newtab-stat" class="glass-pill newtab-stat" data-liquid-glass data-lg-bezel="12" data-lg-scale="18" data-lg-dispersion="1.05">
-          <span class="stat-dot" id="stat-dot"></span>
-          <span id="newtab-stat-text">Ad blocker active · 0 ads blocked</span>
+        <div id="newtab-stat" class="glass-pill privacy-report-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="12" data-lg-scale="16">
+          <button type="button" id="newtab-shield-chip" class="privacy-seg" title="Open Ad Blocker Settings">
+            <span class="stat-dot" id="stat-dot"></span>
+            <span id="newtab-stat-text">Ad blocker active · 0 blocked</span>
+          </button>
+          <span class="privacy-sep" aria-hidden="true"></span>
+          <button type="button" id="newtab-vpn-chip" class="privacy-seg vpn-seg" title="Open dejavu VPN Control Center">
+            <span class="vpn-status-dot" id="newtab-vpn-dot"></span>
+            <span id="newtab-vpn-text">VPN: Off</span>
+          </button>
         </div>
 
-        <button id="btn-wallpaper-store" class="glass-pill wallpaper-trigger" data-liquid-glass data-lg-bezel="12" data-lg-scale="18" data-lg-dispersion="1.08" title="Butterfly Wallpapers">
+        <button id="btn-wallpaper-store" class="glass-pill wallpaper-trigger" data-liquid-glass data-lg-fast="1" data-lg-bezel="12" data-lg-scale="16" title="Butterfly Wallpapers">
           <svg viewBox="0 0 18 18" fill="none" width="15" height="15">
             <path d="M9 9C7.4 5.4 3.5 4.2 2.7 6.8c-.6 2 1.2 3.5 3.4 3.3C4.4 11.4 3.9 13.7 5.6 14.3 7.2 14.9 8.6 12.6 9 10.6c.4 2 1.8 4.3 3.4 3.7 1.7-.6 1.2-2.9-.5-4.2 2.2.2 4-1.3 3.4-3.3C14.5 4.2 10.6 5.4 9 9z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/>
           </svg>
-          <span>Wallpapers</span>
+          <span>Butterfly Wallpapers</span>
         </button>
       </div>
     </section>
 
     <!-- Liquid Glass Butterfly Wallpaper Store Modal -->
-    <div id="wallpaper-store" class="glass-card wallpaper-store hidden" data-liquid-glass data-lg-bezel="24" data-lg-scale="30" data-lg-dispersion="1.22" data-lg-dome="0.04">
+    <div id="wallpaper-store" class="glass-card wallpaper-store hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="20" data-lg-scale="24" data-lg-dome="0.03">
       <div class="store-head">
         <div class="store-brand">
           <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
@@ -187,8 +219,8 @@
     </div>
 
     <!-- Add Quick Site Modal -->
-    <div id="shortcut-modal" class="glass-card shortcut-modal hidden" data-liquid-glass data-lg-bezel="22" data-lg-scale="26" data-lg-dispersion="1.15">
-      <div class="modal-title">Add Quick Site</div>
+    <div id="shortcut-modal" class="glass-card shortcut-modal hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="18" data-lg-scale="22">
+      <div class="modal-title">Add Favorite Site</div>
       <input id="sc-name" class="modal-input" type="text" placeholder="Name (e.g. Spotify)" autocomplete="off">
       <input id="sc-url" class="modal-input" type="text" placeholder="Website (e.g. open.spotify.com)" autocomplete="off">
       <div class="modal-actions">

@@ -1,13 +1,14 @@
 /* ==========================================================================
-   dejavu — Pure Physics-Based Liquid Glass Design System
-   ZERO Gaussian blur. Every surface uses Snell's Law SVG refraction,
-   Cauchy RGB chromatic dispersion, and Schlick Fresnel specular caustics.
+   dejavu — macOS Safari-Inspired Butterfly Liquid Glass Design System (v2.6)
+   ZERO CSS Gaussian filtering. Every glass surface uses real Snell's Law SVG
+   refraction, Cauchy RGB dispersion, and Schlick Fresnel specular caustics.
    ========================================================================== */
 
 :root {
   --topbar-h: 88px;
   --favbar-h: 0px;
   --chrome-h: 88px;
+
   /* Authentic Apple damped harmonic spring curves (GPU compositor only = zero lag) */
   --apple-spring: linear(
     0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.45 9.4%, 0.723 13.9%,
@@ -22,81 +23,81 @@
 
   /* Calm, Eye-Pleasing Smoked Obsidian Liquid Glass tokens */
   --ink: rgba(246, 244, 255, 0.96);
-  --ink-muted: rgba(212, 206, 236, 0.66);
-  --ink-subtle: rgba(196, 188, 226, 0.42);
+  --ink-muted: rgba(212, 206, 236, 0.68);
+  --ink-subtle: rgba(196, 188, 226, 0.44);
 
   --glass-tint: linear-gradient(
     165deg,
-    rgba(28, 24, 44, 0.62) 0%,
-    rgba(18, 15, 31, 0.68) 54%,
-    rgba(12, 10, 22, 0.74) 100%
+    rgba(27, 23, 44, 0.64) 0%,
+    rgba(17, 14, 30, 0.70) 54%,
+    rgba(11, 9, 21, 0.76) 100%
   );
   --glass-tint-strong: radial-gradient(
     ellipse 92% 88% at 50% 50%,
-    rgba(13, 11, 24, 0.94) 0%,
-    rgba(17, 14, 32, 0.88) 78%,
-    rgba(30, 25, 52, 0.48) 100%
+    rgba(12, 10, 23, 0.95) 0%,
+    rgba(16, 13, 30, 0.90) 78%,
+    rgba(28, 23, 50, 0.52) 100%
   );
   --glass-tint-active: linear-gradient(
     160deg,
-    rgba(42, 34, 68, 0.76) 0%,
-    rgba(24, 20, 42, 0.80) 58%,
-    rgba(17, 14, 32, 0.84) 100%
+    rgba(42, 34, 68, 0.78) 0%,
+    rgba(24, 20, 42, 0.82) 58%,
+    rgba(17, 14, 32, 0.86) 100%
   );
-  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.13);
   --glass-shadow:
-    0 8px 24px -6px rgba(0, 0, 0, 0.48),
-    0 2px 6px rgba(0, 0, 0, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 8px 22px -6px rgba(0, 0, 0, 0.46),
+    0 2px 5px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
     inset 0 -1px 0 rgba(178, 138, 255, 0.10);
   --glass-hover-bg: rgba(255, 255, 255, 0.09);
   --accent: #b688ff;
   --accent-bright: #d4b8ff;
-  --accent-glow: rgba(176, 124, 255, 0.30);
+  --accent-glow: rgba(176, 124, 255, 0.28);
   --shield-on: #9e7cff;
   --shield-green: #5eead4;
   --danger: #ff6b8b;
-  --spec-opacity: 0.62;
-  --caustic-spot: rgba(220, 204, 255, 0.11);
+  --spec-opacity: 0.52;
+  --caustic-spot: rgba(214, 196, 255, 0.09);
 }
 
 /* Adaptive Light Polarity when browsing bright light webpages */
 body.theme-light:not(.on-newtab) {
   --ink: rgba(16, 14, 26, 0.94);
   --ink-muted: rgba(34, 30, 52, 0.62);
-  --ink-subtle: rgba(44, 38, 66, 0.40);
+  --ink-subtle: rgba(44, 38, 66, 0.42);
 
   --glass-tint: linear-gradient(
     165deg,
-    rgba(255, 255, 255, 0.78) 0%,
-    rgba(247, 245, 253, 0.72) 55%,
-    rgba(238, 234, 248, 0.76) 100%
+    rgba(255, 255, 255, 0.82) 0%,
+    rgba(247, 245, 253, 0.76) 55%,
+    rgba(239, 236, 249, 0.80) 100%
   );
   --glass-tint-strong: radial-gradient(
     ellipse 92% 88% at 50% 50%,
-    rgba(253, 252, 255, 0.96) 0%,
-    rgba(247, 245, 253, 0.92) 78%,
-    rgba(255, 255, 255, 0.56) 100%
+    rgba(253, 252, 255, 0.97) 0%,
+    rgba(247, 245, 253, 0.93) 78%,
+    rgba(255, 255, 255, 0.60) 100%
   );
   --glass-tint-active: linear-gradient(
     160deg,
-    rgba(255, 255, 255, 0.94) 0%,
-    rgba(242, 237, 255, 0.88) 100%
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(243, 238, 255, 0.90) 100%
   );
-  --glass-border: rgba(24, 18, 52, 0.13);
+  --glass-border: rgba(24, 18, 52, 0.12);
   --glass-shadow:
-    0 8px 22px -8px rgba(18, 12, 42, 0.14),
-    0 2px 5px rgba(18, 12, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    inset 0 -1px 0 rgba(120, 96, 210, 0.10);
-  --glass-hover-bg: rgba(24, 18, 52, 0.06);
+    0 6px 18px -6px rgba(18, 12, 42, 0.12),
+    0 1px 4px rgba(18, 12, 42, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 0 rgba(120, 96, 210, 0.09);
+  --glass-hover-bg: rgba(24, 18, 52, 0.065);
   --accent: #7c4dff;
   --accent-bright: #6435e8;
-  --accent-glow: rgba(124, 77, 255, 0.20);
+  --accent-glow: rgba(124, 77, 255, 0.18);
   --shield-on: #7c4dff;
   --shield-green: #0d9488;
-  --spec-opacity: 0.55;
-  --caustic-spot: rgba(255, 255, 255, 0.28);
+  --spec-opacity: 0.46;
+  --caustic-spot: rgba(255, 255, 255, 0.24);
 }
 
 * {
@@ -119,8 +120,7 @@ html, body {
 
 /* ==========================================================================
    Core REAL Liquid Glass Optical Surface Class
-   Applied immediately to [data-liquid-glass] & .glass-pill so buttons NEVER
-   flash default browser white before JS mounts!
+   Applied immediately so pills NEVER flash unstyled white before JS mounts.
    ========================================================================== */
 [data-liquid-glass],
 .glass-pill,
@@ -135,10 +135,10 @@ html, body {
   box-shadow: var(--glass-shadow);
   isolation: isolate;
   transition:
-    transform 0.44s var(--apple-spring),
-    background 0.24s var(--apple-fluid),
-    border-color 0.24s var(--apple-fluid),
-    opacity 0.24s var(--apple-fluid);
+    transform 0.42s var(--apple-spring),
+    background 0.22s var(--apple-fluid),
+    border-color 0.22s var(--apple-fluid),
+    opacity 0.22s var(--apple-fluid);
 }
 
 button.glass-pill:active,
@@ -218,7 +218,7 @@ body.app-booting #newtab-canvas {
 }
 
 /* ==========================================================================
-   Full-Bleed Canvases & Top Meniscus Optical Mirror
+   Full-Bleed Canvases & Top Meniscus Optical Light-Guide
    ========================================================================== */
 #newtab-canvas {
   position: fixed;
@@ -268,37 +268,40 @@ body.theme-light:not(.on-newtab) #top-backdrop-wrap {
   display: block;
 }
 
-/* Subtle bottom hair-thin liquid glass meniscus edge separating chrome & live site */
+/* Whisper-thin bottom meniscus edge separating chrome cleanly from webpage */
 .top-backdrop-sheen {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.01) 70%,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.00) 68%,
     rgba(0, 0, 0, 0.14) 100%
   );
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 body.theme-light:not(.on-newtab) .top-backdrop-sheen {
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.26) 0%,
-    rgba(255, 255, 255, 0.06) 80%,
-    rgba(0, 0, 0, 0.05) 100%
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0.04) 80%,
+    rgba(0, 0, 0, 0.04) 100%
   );
   border-bottom: 1px solid rgba(20, 16, 40, 0.09);
 }
 
 /* ==========================================================================
-   Spacious 2-Row Floating Liquid Glass Chrome (Zero Tab Clutter, Zero Clipping!)
+   Safari-Inspired Unified 2-Row Butterfly Liquid Glass Chrome
+   Exact total height: 2px top + 44px Row 1 + 38px Row 2 + 4px bottom = 88px
+   With favorites ribbon (+34px): 122px exact match with BrowserForm.cs!
    ========================================================================== */
 #chrome-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
+  padding-top: 2px;
   z-index: 40;
   display: flex;
   flex-direction: column;
@@ -311,30 +314,52 @@ body.is-fullscreen #top-backdrop-wrap {
 
 .chrome-row {
   width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 0 10px;
 }
 
-.tabbar-row {
-  height: 42px;
-  padding-top: 6px;
-  padding-bottom: 2px;
-}
-
+/* Row 1: Unified Safari Toolbar (44px) */
 .toolbar-row {
   height: 44px;
-  padding-top: 2px;
-  padding-bottom: 6px;
-  justify-content: space-between;
+  padding: 4px 10px 2px;
+  display: grid;
+  grid-template-columns: minmax(112px, 1fr) minmax(260px, 536px) minmax(232px, 1fr);
+  align-items: center;
+  gap: 10px;
 }
 
+.toolbar-left {
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.toolbar-right {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+/* Row 2: Safari Separate Full-Width Tab Bar (38px + 4px bottom breathing room) */
+.tabbar-row {
+  height: 38px;
+  padding: 2px 10px 2px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Butterfly Home Pill */
 .brand-pill {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  background: radial-gradient(circle at 42% 38%, rgba(36, 26, 62, 0.86), rgba(12, 10, 22, 0.90));
+  background: radial-gradient(circle at 42% 38%, rgba(40, 28, 68, 0.88), rgba(12, 10, 22, 0.92));
+  border-color: rgba(196, 158, 255, 0.24);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -342,16 +367,22 @@ body.is-fullscreen #top-backdrop-wrap {
   flex-shrink: 0;
 }
 
+body.theme-light:not(.on-newtab) .brand-pill {
+  background: radial-gradient(circle at 42% 38%, rgba(255, 255, 255, 0.96), rgba(238, 232, 254, 0.92));
+  border-color: rgba(124, 77, 255, 0.22);
+}
+
 .brand-pill img {
-  width: 22px;
-  height: 22px;
+  width: 21px;
+  height: 21px;
   object-fit: contain;
-  filter: drop-shadow(0 0 6px rgba(190, 148, 255, 0.78));
+  filter: drop-shadow(0 0 6px rgba(188, 146, 255, 0.72));
   transition: transform 0.28s var(--spring);
 }
 
 .brand-pill:hover {
   transform: scale(1.06);
+  border-color: rgba(206, 170, 255, 0.48);
 }
 
 .brand-pill:hover img {
@@ -362,27 +393,28 @@ body.is-fullscreen #top-backdrop-wrap {
   transform: scale(0.92);
 }
 
-/* Left Nav Capsule */
+/* Compact Safari Back/Forward Capsule */
 .nav-pill {
-  height: 36px;
-  padding: 3px 5px;
+  height: 34px;
+  padding: 2px 4px;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   flex-shrink: 0;
 }
 
 .pill-sep {
   width: 1px;
-  height: 16px;
-  margin: 0 3px;
+  height: 14px;
+  margin: 0 1px;
   background: var(--glass-border);
-  opacity: 0.65;
+  opacity: 0.7;
+  flex-shrink: 0;
 }
 
 .icon-btn {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   border: none;
   background: transparent;
@@ -391,12 +423,12 @@ body.is-fullscreen #top-backdrop-wrap {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.18s ease, transform 0.22s cubic-bezier(0.22, 1.25, 0.36, 1), opacity 0.18s ease;
+  transition: background 0.16s ease, transform 0.22s var(--apple-spring), opacity 0.16s ease, color 0.16s ease;
 }
 
 .icon-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
 
 .icon-btn.sm {
@@ -418,72 +450,128 @@ body.is-fullscreen #top-backdrop-wrap {
 }
 
 .icon-btn:disabled {
-  opacity: 0.3;
+  opacity: 0.30;
   cursor: default;
 }
 
-.brand-btn {
-  width: 32px;
-  height: 32px;
-  padding: 3px;
-}
-
-.brand-btn img {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 8px rgba(176, 124, 255, 0.55));
-  transition: transform 0.28s cubic-bezier(0.22, 1.25, 0.36, 1);
-}
-
-.brand-btn:hover img {
-  transform: scale(1.1) rotate(-4deg);
-}
-
-#btn-reload .icon-stop { display: none; }
-#btn-reload.loading .icon-reload { display: none; }
-#btn-reload.loading .icon-stop { display: block; }
-
-/* Center Spacious Omnibox + Favorite Star + Ad-Shield Capsule */
+/* ==========================================================================
+   Iconic Safari Smart Search Field (#omnibox-pill)
+   - Idle on webpage: centered domain text + green lock icon right beside it!
+   - Focused/editing: smoothly left-aligned, serene smoked obsidian, 0 glare!
+   - Reload/Stop, Favorite Star & Ad-Shield neatly tucked on right inside pill!
+   ========================================================================== */
 .omnibox-pill {
-  height: 36px;
-  flex: 1 1 560px;
-  max-width: 720px;
-  min-width: 240px;
-  padding: 0 4px 0 13px;
+  width: 100%;
+  height: 34px;
+  justify-self: center;
+  padding: 0 4px 0 12px;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 0;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(16, 14, 28, 0.76) 0%, rgba(12, 11, 22, 0.82) 100%);
-  --spec-opacity: 0.42;
+  cursor: text;
+  background: linear-gradient(180deg, rgba(16, 14, 28, 0.78) 0%, rgba(12, 10, 22, 0.84) 100%);
+  --spec-opacity: 0.34;
   transition:
     background 0.2s var(--apple-fluid),
     border-color 0.2s var(--apple-fluid),
     box-shadow 0.22s var(--apple-fluid),
-    transform 0.28s var(--spring);
+    transform 0.26s var(--apple-fluid);
 }
 
 body.theme-light:not(.on-newtab) .omnibox-pill {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(246, 244, 252, 0.90) 100%);
-  --spec-opacity: 0.36;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(246, 244, 253, 0.92) 100%);
+  --spec-opacity: 0.28;
 }
 
-.omnibox-pill:focus-within {
-  transform: scale(1.005);
-  background: rgba(11, 10, 21, 0.94);
-  border-color: rgba(188, 148, 255, 0.62);
-  --spec-opacity: 0.24;
+.omnibox-pill:hover:not(:focus-within):not(.is-editing) {
+  border-color: rgba(212, 188, 255, 0.24);
+  background: linear-gradient(180deg, rgba(21, 18, 36, 0.84) 0%, rgba(15, 13, 27, 0.88) 100%);
+}
+
+body.theme-light:not(.on-newtab) .omnibox-pill:hover:not(:focus-within):not(.is-editing) {
+  border-color: rgba(124, 77, 255, 0.24);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.omnibox-pill:focus-within,
+.omnibox-pill.is-editing {
+  background: rgba(10, 9, 20, 0.96);
+  border-color: rgba(186, 144, 255, 0.58);
+  --spec-opacity: 0.16;
   box-shadow:
-    0 10px 28px -8px rgba(0, 0, 0, 0.56),
-    0 0 0 2px rgba(176, 124, 255, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    0 10px 26px -8px rgba(0, 0, 0, 0.58),
+    0 0 0 2px rgba(176, 124, 255, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
 
-body.theme-light:not(.on-newtab) .omnibox-pill:focus-within {
-  background: rgba(255, 255, 255, 0.96);
-  border-color: rgba(124, 77, 255, 0.52);
-  --spec-opacity: 0.22;
+body.theme-light:not(.on-newtab) .omnibox-pill:focus-within,
+body.theme-light:not(.on-newtab) .omnibox-pill.is-editing {
+  background: rgba(255, 255, 255, 0.97);
+  border-color: rgba(124, 77, 255, 0.48);
+  --spec-opacity: 0.14;
+  box-shadow:
+    0 8px 22px -8px rgba(24, 16, 64, 0.16),
+    0 0 0 2px rgba(124, 77, 255, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+}
+
+/* Suppress pointer caustic spot over text while typing (100% zero glare!) */
+.omnibox-pill:focus-within::after,
+.omnibox-pill.is-editing::after,
+.hero-search:focus-within::after {
+  opacity: 0 !important;
+}
+
+/* Left search icon shown cleanly only during editing */
+.omnibox-edit-ico {
+  width: 0;
+  margin-right: 0;
+  opacity: 0;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-muted);
+  flex-shrink: 0;
+  transition: width 0.18s var(--apple-fluid), margin-right 0.18s var(--apple-fluid), opacity 0.16s ease;
+}
+
+.omnibox-edit-ico svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.omnibox-pill:focus-within .omnibox-edit-ico,
+.omnibox-pill.is-editing .omnibox-edit-ico {
+  width: 15px;
+  margin-right: 7px;
+  opacity: 0.76;
+}
+
+/* Centered Safari Domain + Green Lock Overlay (shown when unfocused) */
+.omnibox-display {
+  position: absolute !important;
+  inset: 0;
+  padding: 0 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  pointer-events: none;
+  z-index: 2 !important;
+  transition: opacity 0.16s ease, transform 0.2s var(--apple-fluid);
+}
+
+body.on-newtab .omnibox-display {
+  padding: 0 48px;
+}
+
+.omnibox-pill:focus-within .omnibox-display,
+.omnibox-pill.is-editing .omnibox-display {
+  opacity: 0;
+  transform: translateX(-8px);
 }
 
 .omnibox-icon {
@@ -495,14 +583,31 @@ body.theme-light:not(.on-newtab) .omnibox-pill:focus-within {
 }
 
 .omnibox-icon svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 
 .omnibox-icon .ico-lock { display: none; }
 .omnibox-icon.secure .ico-lock { display: block; color: var(--shield-green); }
 .omnibox-icon.secure .ico-search { display: none; }
 
+.omnibox-domain {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.004em;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.omnibox-domain.is-placeholder {
+  color: var(--ink-muted);
+  font-weight: 430;
+}
+
+/* Actual editable address input (razor-clear left-aligned text on focus) */
 #omnibox-input {
   flex: 1;
   min-width: 0;
@@ -510,55 +615,84 @@ body.theme-light:not(.on-newtab) .omnibox-pill:focus-within {
   border: none;
   outline: none;
   background: transparent;
-  color: var(--ink);
+  color: transparent;
+  caret-color: transparent;
+  text-align: center;
   font-family: inherit;
   font-size: 13px;
-  font-weight: 450;
-  letter-spacing: 0.01em;
+  font-weight: 460;
+  letter-spacing: 0.005em;
   user-select: text;
+  padding-right: 6px;
 }
 
 #omnibox-input::placeholder {
+  color: transparent;
+}
+
+.omnibox-pill:focus-within #omnibox-input,
+.omnibox-pill.is-editing #omnibox-input {
+  color: var(--ink);
+  caret-color: var(--accent-bright);
+  text-align: left;
+}
+
+.omnibox-pill:focus-within #omnibox-input::placeholder,
+.omnibox-pill.is-editing #omnibox-input::placeholder {
   color: var(--ink-muted);
 }
 
 #omnibox-input::selection,
 #newtab-search-input::selection {
-  background: rgba(176, 124, 255, 0.42);
+  background: rgba(176, 124, 255, 0.38);
   color: #ffffff;
+}
+
+body.theme-light:not(.on-newtab) #omnibox-input::selection {
+  background: rgba(124, 77, 255, 0.24);
+  color: #100e1a;
+}
+
+/* Right-side tucked actions inside Safari Smart Search Field */
+.omnibox-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  z-index: 3 !important;
 }
 
 /* Embedded Ad-Blocker Shield Chip */
 .shield-chip {
-  height: 28px;
-  padding: 0 9px 0 7px;
+  height: 24px;
+  padding: 0 7px 0 6px;
   border-radius: 999px;
-  border: 1px solid rgba(182, 140, 255, 0.34);
-  background: rgba(158, 114, 255, 0.16);
+  border: 1px solid rgba(182, 140, 255, 0.30);
+  background: rgba(158, 114, 255, 0.14);
   color: var(--accent-bright);
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   font-family: inherit;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.22s cubic-bezier(0.22, 1.2, 0.36, 1);
+  transition: all 0.2s var(--apple-fluid);
 }
 
 .shield-chip svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 
 .shield-chip:hover {
-  background: rgba(166, 122, 255, 0.28);
+  background: rgba(166, 122, 255, 0.26);
   transform: scale(1.04);
 }
 
 .shield-chip:active {
-  transform: scale(0.94);
+  transform: scale(0.93);
 }
 
 .shield-chip.paused {
@@ -572,14 +706,48 @@ body.theme-light:not(.on-newtab) .omnibox-pill:focus-within {
 }
 
 .shield-chip.pulse {
-  box-shadow: 0 0 14px rgba(176, 124, 255, 0.55);
+  box-shadow: 0 0 12px rgba(176, 124, 255, 0.50);
 }
 
-/* Hairline liquid prism progress shimmer */
+/* Safari Tucked Reload/Stop Button inside Smart Search Field */
+.omnibox-reload-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.22s var(--apple-spring);
+}
+
+.omnibox-reload-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.omnibox-reload-btn:hover {
+  background: var(--glass-hover-bg);
+  color: var(--ink);
+}
+
+.omnibox-reload-btn:active {
+  transform: scale(0.88);
+}
+
+#btn-reload .icon-stop { display: none; }
+#btn-reload.loading .icon-reload { display: none; }
+#btn-reload.loading .icon-stop { display: block; color: var(--accent-bright); }
+
+/* Hairline liquid prism progress shimmer at bottom of Smart Search Field */
 .load-progress {
   position: absolute !important;
-  left: 16px;
-  right: 16px;
+  left: 14px;
+  right: 14px;
   bottom: 0;
   height: 2px;
   border-radius: 2px;
@@ -604,12 +772,12 @@ body.theme-light:not(.on-newtab) .omnibox-pill:focus-within {
 }
 
 /* ==========================================================================
-   Dedicated Spacious Liquid Glass Tabs Area (Crystal-Clear Active Focus!)
+   Row 2: Safari Separate Full-Width Tab Bar (Balanced Flex Tabs + Glide Pill)
    ========================================================================== */
 #tabs-area {
   flex: 1;
   min-width: 0;
-  height: 34px;
+  height: 32px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -618,119 +786,150 @@ body.theme-light:not(.on-newtab) .omnibox-pill:focus-within {
 
 #tabs-strip {
   position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 32px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  max-width: calc(100% - 76px);
+  gap: 5px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
-  padding: 1px 4px;
+  padding: 1px 2px;
   scroll-behavior: smooth;
 }
 
-/* Apple-style GPU sliding active tab liquid aura */
-#active-tab-glide {
-  position: absolute;
-  top: 1px;
-  left: 0;
-  height: 31px;
-  width: 0;
-  border-radius: 999px;
-  background: linear-gradient(160deg, rgba(40, 34, 66, 0.86) 0%, rgba(22, 18, 38, 0.90) 100%);
-  border: 1px solid rgba(192, 162, 255, 0.44);
-  box-shadow:
-    0 5px 16px -4px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0;
-  will-change: transform, width;
-  transition:
-    transform 0.42s var(--apple-spring),
-    width 0.36s var(--apple-fluid),
-    opacity 0.22s ease;
-}
-
-body.theme-light:not(.on-newtab) #active-tab-glide {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96) 0%, rgba(244, 240, 255, 0.92) 100%);
-  border-color: rgba(124, 77, 255, 0.32);
-  box-shadow:
-    0 4px 14px -5px rgba(24, 16, 64, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.96);
-}
-
 #tabs-strip.scrollable {
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 12px, #000 calc(100% - 14px), transparent 100%);
-  mask-image: linear-gradient(90deg, transparent 0%, #000 12px, #000 calc(100% - 14px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 10px, #000 calc(100% - 12px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 10px, #000 calc(100% - 12px), transparent 100%);
 }
 
 #tabs-strip::-webkit-scrollbar {
   display: none;
 }
 
+/* Apple-style GPU sliding active tab liquid pill with subtle amethyst butterfly iridescence */
+#active-tab-glide {
+  position: absolute;
+  top: 1px;
+  left: 0;
+  height: 30px;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    160deg,
+    rgba(46, 36, 78, 0.86) 0%,
+    rgba(24, 19, 44, 0.90) 56%,
+    rgba(29, 22, 52, 0.88) 100%
+  );
+  border: 1px solid rgba(196, 158, 255, 0.42);
+  box-shadow:
+    0 4px 14px -4px rgba(0, 0, 0, 0.44),
+    0 0 12px -4px rgba(176, 124, 255, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(128, 214, 255, 0.16);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  will-change: transform, width;
+  transition:
+    transform 0.40s var(--apple-spring),
+    width 0.34s var(--apple-fluid),
+    opacity 0.20s ease;
+}
+
+body.theme-light:not(.on-newtab) #active-tab-glide {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97) 0%, rgba(244, 239, 255, 0.94) 100%);
+  border-color: rgba(124, 77, 255, 0.28);
+  box-shadow:
+    0 4px 12px -4px rgba(24, 16, 64, 0.12),
+    0 0 10px -4px rgba(124, 77, 255, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    inset 0 -1px 0 rgba(124, 77, 255, 0.10);
+}
+
+/* Safari Balanced Flex Tabs */
 .tab-pill {
   position: relative;
   z-index: 1;
-  height: 31px;
-  min-width: 126px;
-  max-width: 212px;
-  width: 182px;
-  flex: 0 0 auto;
-  padding: 0 8px 0 11px;
+  height: 30px;
+  flex: 1 1 140px;
+  min-width: 112px;
+  max-width: 248px;
+  padding: 0 26px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
   cursor: pointer;
   color: var(--ink-muted);
-  opacity: 0.76;
-  animation: tabBloom 0.42s var(--apple-spring);
+  background: rgba(255, 255, 255, 0.038);
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  box-shadow: none;
+  --spec-opacity: 0.14;
+  opacity: 0.84;
+  animation: tabBloom 0.36s var(--apple-spring);
+}
+
+body.theme-light:not(.on-newtab) .tab-pill {
+  background: rgba(24, 18, 52, 0.045);
+  border-color: rgba(24, 18, 52, 0.07);
+  --spec-opacity: 0.10;
 }
 
 @keyframes tabBloom {
-  from { opacity: 0; transform: scale(0.84) translateX(-10px); }
-  to { opacity: 0.76; transform: scale(1) translateX(0); }
+  from { opacity: 0; transform: scale(0.88) translateX(-8px); }
+  to { opacity: 0.84; transform: scale(1) translateX(0); }
 }
 
 .tab-pill.closing {
   opacity: 0 !important;
+  flex: 0 0 0 !important;
   min-width: 0 !important;
+  max-width: 0 !important;
   width: 0 !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
-  margin-left: -6px !important;
+  margin-left: -5px !important;
   border-width: 0 !important;
   overflow: hidden !important;
-  transform: scale(0.76);
+  transform: scale(0.78);
   pointer-events: none;
   transition:
-    width 0.24s var(--apple-fluid),
-    min-width 0.24s var(--apple-fluid),
-    padding 0.24s var(--apple-fluid),
-    margin 0.24s var(--apple-fluid),
-    opacity 0.18s ease,
-    transform 0.24s var(--apple-fluid) !important;
+    flex-basis 0.22s var(--apple-fluid),
+    width 0.22s var(--apple-fluid),
+    min-width 0.22s var(--apple-fluid),
+    max-width 0.22s var(--apple-fluid),
+    padding 0.22s var(--apple-fluid),
+    margin 0.22s var(--apple-fluid),
+    opacity 0.16s ease,
+    transform 0.22s var(--apple-fluid) !important;
 }
 
 .tab-pill.reset-pulse {
-  animation: tabResetPulse 0.36s var(--apple-spring);
+  animation: tabResetPulse 0.34s var(--apple-spring);
 }
 
 @keyframes tabResetPulse {
-  0% { transform: scale(0.92); opacity: 0.6; }
+  0% { transform: scale(0.94); opacity: 0.65; }
   100% { transform: scale(1); opacity: 1; }
 }
 
-.tab-pill:hover {
-  opacity: 0.96;
+.tab-pill:hover:not(.active) {
+  opacity: 0.98;
   color: var(--ink);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.085);
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+body.theme-light:not(.on-newtab) .tab-pill:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(24, 18, 52, 0.11);
 }
 
 .tab-pill:active {
-  transform: scale(0.95);
-  transition-duration: 0.1s;
+  transform: scale(0.97);
+  transition-duration: 0.09s;
   transition-timing-function: var(--apple-press);
 }
 
@@ -740,25 +939,36 @@ body.theme-light:not(.on-newtab) #active-tab-glide {
   background: transparent;
   border-color: transparent;
   box-shadow: none;
+  --spec-opacity: 0;
 }
 
 .tab-pill.active .tab-title {
-  font-weight: 600;
+  font-weight: 590;
+}
+
+.tab-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  pointer-events: none;
 }
 
 .tab-favicon {
-  width: 15px;
-  height: 15px;
-  border-radius: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3.5px;
   flex-shrink: 0;
   object-fit: contain;
 }
 
 .tab-spinner {
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  border: 1.8px solid rgba(196, 158, 255, 0.26);
+  border: 1.7px solid rgba(196, 158, 255, 0.26);
   border-top-color: var(--accent-bright);
   animation: spin 0.72s linear infinite;
   flex-shrink: 0;
@@ -769,18 +979,23 @@ body.theme-light:not(.on-newtab) #active-tab-glide {
 }
 
 .tab-title {
-  flex: 1;
   min-width: 0;
-  font-size: 12.2px;
+  font-size: 12px;
   font-weight: 500;
+  letter-spacing: -0.002em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* Hover-only Safari Close Button (never shifts centered title!) */
 .tab-close {
-  width: 18px;
-  height: 18px;
+  position: absolute !important;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 17px;
+  height: 17px;
   border-radius: 50%;
   border: none;
   background: transparent;
@@ -790,13 +1005,14 @@ body.theme-light:not(.on-newtab) #active-tab-glide {
   justify-content: center;
   cursor: pointer;
   opacity: 0;
-  flex-shrink: 0;
-  transition: opacity 0.16s ease, background 0.16s ease, color 0.16s ease;
+  pointer-events: none;
+  z-index: 4 !important;
+  transition: opacity 0.14s ease, background 0.14s ease, color 0.14s ease;
 }
 
-.tab-pill:hover .tab-close,
-.tab-pill.active .tab-close {
+.tab-pill:hover .tab-close {
   opacity: 0.78;
+  pointer-events: auto;
 }
 
 .tab-close:hover {
@@ -806,18 +1022,19 @@ body.theme-light:not(.on-newtab) #active-tab-glide {
 }
 
 .tab-close svg {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
 }
 
+/* Clean '+' New Tab Button at Right End of Tab Bar */
 .circle-btn {
-  width: 31px;
-  height: 31px;
+  width: 30px;
+  height: 30px;
   padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--ink);
+  color: var(--ink-muted);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -828,7 +1045,9 @@ body.theme-light:not(.on-newtab) #active-tab-glide {
 }
 
 .circle-btn:hover {
-  transform: scale(1.07);
+  color: var(--ink);
+  transform: scale(1.06);
+  border-color: rgba(206, 170, 255, 0.36);
 }
 
 .circle-btn:active {
@@ -836,14 +1055,14 @@ body.theme-light:not(.on-newtab) #active-tab-glide {
 }
 
 .drag-spacer {
-  flex: 1;
-  min-width: 36px;
+  flex: 0 0 0;
+  min-width: 0;
   height: 100%;
 }
 
-/* Window Controls Capsule */
+/* Window Controls Capsule (Row 1 Right) */
 .win-pill {
-  height: 32px;
+  height: 34px;
   padding: 2px 4px;
   display: flex;
   align-items: center;
@@ -862,12 +1081,12 @@ body.theme-light:not(.on-newtab) #active-tab-glide {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
 }
 
 .win-btn svg {
-  width: 12px;
-  height: 12px;
+  width: 11.5px;
+  height: 11.5px;
 }
 
 .win-btn:hover {
@@ -876,7 +1095,7 @@ body.theme-light:not(.on-newtab) #active-tab-glide {
 }
 
 .win-btn.win-close:hover {
-  background: rgba(255, 86, 118, 0.78);
+  background: rgba(255, 86, 118, 0.80);
   color: #ffffff;
 }
 
@@ -898,34 +1117,8 @@ body.is-fullscreen #viewport {
   top: 0;
 }
 
-#webviews-container {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-}
-
-body.on-newtab #webviews-container {
-  pointer-events: none;
-  visibility: hidden;
-}
-
-webview.tab-webview {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: #ffffff;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-webview.tab-webview.active {
-  visibility: visible;
-  pointer-events: auto;
-}
-
 /* ==========================================================================
-   New Tab Living Liquid Glass Experience
+   Safari Start Page — Butterfly Edition
    ========================================================================== */
 #newtab-view {
   position: absolute;
@@ -935,11 +1128,11 @@ webview.tab-webview.active {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px 24px 72px;
+  padding: 18px 24px 74px;
   opacity: 0;
   pointer-events: none;
   transform: scale(0.985);
-  transition: opacity 0.28s ease, transform 0.34s cubic-bezier(0.22, 1.12, 0.36, 1);
+  transition: opacity 0.28s ease, transform 0.34s var(--apple-fluid);
 }
 
 body.on-newtab #newtab-view {
@@ -954,19 +1147,21 @@ body.on-newtab #newtab-view {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 28px;
+  gap: 24px;
 }
 
 .hero-brand {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .hero-logo-wrap {
-  width: 112px;
-  height: 112px;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(176, 124, 255, 0.16) 0%, rgba(176, 124, 255, 0.04) 48%, transparent 72%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -975,43 +1170,53 @@ body.on-newtab #newtab-view {
 
 @keyframes butterflyFloat {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-7px) rotate(1.5deg); }
+  50% { transform: translateY(-6px) rotate(1.3deg); }
 }
 
 #newtab-logo {
-  width: 104px;
-  height: 104px;
+  width: 94px;
+  height: 94px;
   object-fit: contain;
-  filter: drop-shadow(0 0 26px rgba(170, 114, 255, 0.52));
+  filter: drop-shadow(0 0 22px rgba(170, 114, 255, 0.50));
 }
 
 .hero-title {
-  font-size: 38px;
+  font-size: 36px;
   font-weight: 300;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.15em;
   text-transform: lowercase;
   color: rgba(248, 244, 255, 0.96);
-  text-shadow: 0 2px 24px rgba(168, 114, 255, 0.38);
+  text-shadow: 0 2px 22px rgba(168, 114, 255, 0.34);
 }
 
-/* Liquid Glass Hero Search Capsule */
+/* Liquid Glass Hero Smart Search Pill */
+.hero-search-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  z-index: 25;
+}
+
 .hero-search {
   width: 100%;
-  max-width: 560px;
-  height: 54px;
-  padding: 0 8px 0 20px;
+  height: 52px;
+  padding: 0 7px 0 19px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
+  background: linear-gradient(180deg, rgba(19, 16, 34, 0.78) 0%, rgba(12, 10, 23, 0.86) 100%);
+  --spec-opacity: 0.42;
 }
 
 .hero-search:focus-within {
-  transform: scale(1.015);
-  border-color: rgba(210, 178, 255, 0.65);
+  transform: scale(1.012);
+  background: rgba(11, 9, 22, 0.94);
+  border-color: rgba(204, 168, 255, 0.60);
+  --spec-opacity: 0.22;
   box-shadow:
-    0 18px 46px -8px rgba(0, 0, 0, 0.6),
-    0 0 0 2px rgba(176, 124, 255, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    0 18px 44px -10px rgba(0, 0, 0, 0.62),
+    0 0 0 2px rgba(176, 124, 255, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 .hero-search-ico {
@@ -1028,39 +1233,41 @@ body.on-newtab #newtab-view {
   border: none;
   outline: none;
   background: transparent;
-  color: #ffffff;
+  color: #f8f6ff;
+  caret-color: var(--accent-bright);
   font-family: inherit;
-  font-size: 15.5px;
-  font-weight: 400;
+  font-size: 15px;
+  font-weight: 420;
   user-select: text;
 }
 
 #newtab-search-input::placeholder {
-  color: rgba(224, 214, 255, 0.52);
+  color: rgba(220, 210, 250, 0.52);
 }
 
 .hero-go-btn {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(176, 124, 255, 0.24);
+  border: 1px solid rgba(214, 186, 255, 0.28);
+  background: linear-gradient(135deg, rgba(164, 114, 255, 0.34), rgba(124, 77, 255, 0.26));
   color: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.2s ease, transform 0.24s cubic-bezier(0.22, 1.25, 0.36, 1);
+  transition: background 0.2s ease, transform 0.26s var(--apple-spring), border-color 0.2s ease;
 }
 
 .hero-go-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
 
 .hero-go-btn:hover {
-  background: rgba(182, 132, 255, 0.42);
+  background: linear-gradient(135deg, rgba(178, 128, 255, 0.52), rgba(138, 92, 255, 0.42));
+  border-color: rgba(228, 206, 255, 0.52);
   transform: scale(1.06);
 }
 
@@ -1068,7 +1275,23 @@ body.on-newtab #newtab-view {
   transform: scale(0.92);
 }
 
-/* Quick-Dial Liquid Glass Squircle Tiles */
+/* Safari Start Page Favorites Section + Soft Amethyst Butterfly-Wing Hover Gleam */
+.favorites-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+}
+
+.favorites-heading {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: rgba(224, 214, 250, 0.54);
+}
+
 .shortcuts-grid {
   display: flex;
   flex-wrap: wrap;
@@ -1078,19 +1301,22 @@ body.on-newtab #newtab-view {
 }
 
 .shortcut-tile {
-  width: 78px;
-  height: 82px;
+  width: 80px;
+  height: 84px;
   border-radius: 22px;
-  padding: 10px 6px 8px;
+  padding: 11px 6px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 7px;
   cursor: pointer;
-  color: rgba(246, 242, 255, 0.92);
+  color: rgba(246, 242, 255, 0.94);
+  background: linear-gradient(160deg, rgba(28, 23, 48, 0.66) 0%, rgba(16, 13, 30, 0.74) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  --spec-opacity: 0.44;
   text-decoration: none;
-  animation: tileCascade 0.48s var(--apple-spring) calc(var(--stagger-i, 0) * 32ms) both;
+  animation: tileCascade 0.46s var(--apple-spring) calc(var(--stagger-i, 0) * 30ms) both;
 }
 
 @keyframes tileCascade {
@@ -1100,7 +1326,18 @@ body.on-newtab #newtab-view {
 
 .shortcut-tile:hover {
   transform: translateY(-4px) scale(1.055);
-  border-color: rgba(214, 186, 255, 0.62);
+  background: linear-gradient(
+    145deg,
+    rgba(64, 44, 114, 0.76) 0%,
+    rgba(30, 22, 58, 0.80) 54%,
+    rgba(24, 34, 62, 0.78) 100%
+  );
+  border-color: rgba(208, 174, 255, 0.58);
+  box-shadow:
+    0 14px 28px -8px rgba(0, 0, 0, 0.54),
+    0 0 20px -6px rgba(176, 124, 255, 0.36),
+    inset 0 1px 0 rgba(236, 218, 255, 0.32),
+    inset 0 -1px 0 rgba(125, 211, 252, 0.22);
 }
 
 .shortcut-tile:active {
@@ -1110,10 +1347,11 @@ body.on-newtab #newtab-view {
 }
 
 .shortcut-ico-wrap {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1121,6 +1359,13 @@ body.on-newtab #newtab-view {
   font-size: 14px;
   font-weight: 600;
   color: var(--accent-bright);
+  transition: transform 0.28s var(--apple-spring), background 0.2s ease, border-color 0.2s ease;
+}
+
+.shortcut-tile:hover .shortcut-ico-wrap {
+  transform: scale(1.06);
+  background: rgba(196, 158, 255, 0.16);
+  border-color: rgba(214, 186, 255, 0.32);
 }
 
 .shortcut-ico-wrap img {
@@ -1132,11 +1377,11 @@ body.on-newtab #newtab-view {
 .shortcut-name {
   font-size: 11px;
   font-weight: 500;
-  max-width: 66px;
+  max-width: 68px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  opacity: 0.88;
+  opacity: 0.90;
 }
 
 .shortcut-remove {
@@ -1147,8 +1392,8 @@ body.on-newtab #newtab-view {
   height: 18px;
   border-radius: 50%;
   border: none;
-  background: rgba(10, 8, 18, 0.72);
-  color: rgba(255, 255, 255, 0.85);
+  background: rgba(10, 8, 18, 0.78);
+  color: rgba(255, 255, 255, 0.88);
   font-size: 11px;
   line-height: 1;
   display: flex;
@@ -1165,7 +1410,7 @@ body.on-newtab #newtab-view {
 }
 
 .shortcut-remove:hover {
-  background: rgba(255, 86, 118, 0.85);
+  background: rgba(255, 86, 118, 0.86);
 }
 
 .shortcut-add {
@@ -1176,52 +1421,62 @@ body.on-newtab #newtab-view {
   opacity: 1;
 }
 
-/* Quiet Bottom Bar: Ad-Blocker Status Pill + Butterfly Wallpaper Store Trigger */
+/* Safari-Style Bottom Privacy Report Pill + Butterfly Wallpapers Trigger */
 .newtab-bottom-bar {
   position: absolute;
-  bottom: 22px;
+  bottom: 20px;
   left: 24px;
   right: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   pointer-events: none;
 }
 
-.newtab-stat {
-  height: 34px;
-  padding: 0 16px;
+.privacy-report-pill {
+  height: 36px;
+  padding: 3px 5px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: rgba(235, 226, 255, 0.88);
+  gap: 2px;
   pointer-events: auto;
+  background: linear-gradient(165deg, rgba(22, 18, 38, 0.74) 0%, rgba(13, 11, 25, 0.82) 100%);
+  --spec-opacity: 0.36;
 }
 
-.wallpaper-trigger {
-  position: absolute !important;
-  right: 0;
-  height: 34px;
-  padding: 0 14px;
+.privacy-seg {
+  height: 28px;
+  padding: 0 11px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(238, 232, 255, 0.90);
+  font-family: inherit;
+  font-size: 11.8px;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: rgba(242, 234, 255, 0.92);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
   cursor: pointer;
-  pointer-events: auto;
+  white-space: nowrap;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.22s var(--apple-spring);
 }
 
-.wallpaper-trigger:hover {
-  transform: translateY(-2px) scale(1.04);
-  border-color: rgba(214, 186, 255, 0.62);
+.privacy-seg:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
 }
 
-.wallpaper-trigger:active {
-  transform: scale(0.95);
+.privacy-seg:active {
+  transform: scale(0.96);
+}
+
+.privacy-sep {
+  width: 1px;
+  height: 15px;
+  background: rgba(255, 255, 255, 0.14);
+  flex-shrink: 0;
 }
 
 .stat-dot {
@@ -1229,7 +1484,75 @@ body.on-newtab #newtab-view {
   height: 7px;
   border-radius: 50%;
   background: var(--shield-green);
-  box-shadow: 0 0 10px var(--shield-green);
+  box-shadow: 0 0 9px var(--shield-green);
+  flex-shrink: 0;
+}
+
+.vpn-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(204, 196, 236, 0.42);
+  flex-shrink: 0;
+  transition: background 0.22s ease, box-shadow 0.22s ease;
+}
+
+.privacy-seg.vpn-seg.connected {
+  color: #82ffec;
+  background: rgba(45, 212, 191, 0.14);
+}
+
+.privacy-seg.vpn-seg.connected .vpn-status-dot {
+  background: #5eead4;
+  box-shadow: 0 0 9px #5eead4;
+}
+
+.privacy-seg.vpn-seg.connecting {
+  color: var(--accent-bright);
+  background: rgba(176, 124, 255, 0.16);
+}
+
+.privacy-seg.vpn-seg.connecting .vpn-status-dot {
+  background: var(--accent-bright);
+  box-shadow: 0 0 9px var(--accent-bright);
+}
+
+.wallpaper-trigger {
+  position: absolute !important;
+  right: 0;
+  height: 36px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(242, 234, 255, 0.92);
+  font-family: inherit;
+  font-size: 11.8px;
+  font-weight: 500;
+  cursor: pointer;
+  pointer-events: auto;
+  background: linear-gradient(165deg, rgba(24, 19, 42, 0.74) 0%, rgba(14, 11, 26, 0.82) 100%);
+  --spec-opacity: 0.36;
+}
+
+.wallpaper-trigger:hover {
+  transform: translateY(-2px) scale(1.035);
+  border-color: rgba(214, 186, 255, 0.56);
+  color: #ffffff;
+}
+
+.wallpaper-trigger:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 920px) {
+  .newtab-bottom-bar {
+    justify-content: space-between;
+  }
+  .wallpaper-trigger {
+    position: relative !important;
+    right: auto;
+  }
 }
 
 /* ==========================================================================
@@ -1247,7 +1570,7 @@ body.on-newtab #newtab-view {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  animation: storeIn 0.24s cubic-bezier(0.22, 1.18, 0.36, 1);
+  animation: storeIn 0.24s var(--apple-fluid);
 }
 
 @keyframes storeIn {
@@ -1373,7 +1696,7 @@ body.on-newtab #newtab-view {
   text-align: left;
   color: var(--ink);
   font-family: inherit;
-  transition: transform 0.24s cubic-bezier(0.22, 1.2, 0.36, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.24s var(--apple-spring), border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .wp-card:hover {
@@ -1412,8 +1735,8 @@ body.on-newtab #newtab-view {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.03em;
-  background: rgba(10, 8, 20, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(10, 8, 20, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.20);
   color: rgba(244, 236, 255, 0.94);
 }
 
@@ -1454,28 +1777,10 @@ body.on-newtab #newtab-view {
 }
 
 /* ==========================================================================
-   Floating Liquid Glass Overlays (refract directly over live websites!)
+   Shared Overlay & Modal Primitives (used by both shell & overlay.html)
    ========================================================================== */
 .hidden {
   display: none !important;
-}
-
-/* Ad-Shield Popover */
-.shield-popover {
-  position: fixed;
-  top: calc(var(--topbar-h) + 8px);
-  width: 288px;
-  padding: 16px;
-  z-index: 120;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  animation: popIn 0.24s cubic-bezier(0.22, 1.18, 0.36, 1);
-}
-
-@keyframes popIn {
-  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .popover-head {
@@ -1509,13 +1814,13 @@ body.on-newtab #newtab-view {
 }
 
 .engine-badge {
-  font-size: 11px;
+  font-size: 10.8px;
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 999px;
-  background: rgba(158, 114, 255, 0.22);
+  background: rgba(158, 114, 255, 0.20);
   color: var(--accent-bright);
-  border: 1px solid rgba(190, 154, 255, 0.35);
+  border: 1px solid rgba(190, 154, 255, 0.34);
 }
 
 .popover-row {
@@ -1538,7 +1843,7 @@ body.on-newtab #newtab-view {
 }
 
 .row-sub {
-  font-size: 11.5px;
+  font-size: 11.4px;
   color: var(--ink-muted);
   margin-top: 2px;
 }
@@ -1556,12 +1861,12 @@ body.on-newtab #newtab-view {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  transition: background 0.24s ease, border-color 0.24s ease;
+  transition: background 0.22s ease, border-color 0.22s ease;
 }
 
 .liquid-switch.on {
   background: linear-gradient(135deg, #8b5cf6, #a855f7);
-  border-color: rgba(224, 198, 255, 0.65);
+  border-color: rgba(224, 198, 255, 0.62);
 }
 
 .switch-knob {
@@ -1571,17 +1876,33 @@ body.on-newtab #newtab-view {
   background: #ffffff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.34);
   transform: translateX(0);
-  transition: transform 0.28s cubic-bezier(0.22, 1.25, 0.36, 1);
+  transition: transform 0.28s var(--apple-spring);
 }
 
 .liquid-switch.on .switch-knob {
   transform: translateX(19px);
 }
 
+/* Compact Switch Variant (for Auto-connect footer toggle) */
+.liquid-switch.sm {
+  width: 34px;
+  height: 20px;
+  padding: 2px;
+}
+
+.liquid-switch.sm .switch-knob {
+  width: 14px;
+  height: 14px;
+}
+
+.liquid-switch.sm.on .switch-knob {
+  transform: translateX(14px);
+}
+
 .popover-divider {
   height: 1px;
   background: var(--glass-border);
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
 .popover-search-row {
@@ -1610,7 +1931,7 @@ body.on-newtab #newtab-view {
   font-size: 11.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
 }
 
 .seg-btn:hover {
@@ -1620,7 +1941,7 @@ body.on-newtab #newtab-view {
 .seg-btn.active {
   background: rgba(176, 124, 255, 0.34);
   color: var(--ink);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
 }
 
 /* Add Shortcut Modal */
@@ -1685,7 +2006,7 @@ body.on-newtab #newtab-view {
 
 .modal-btn.primary {
   background: linear-gradient(135deg, #8b5cf6, #a855f7);
-  border-color: rgba(224, 198, 255, 0.6);
+  border-color: rgba(224, 198, 255, 0.60);
   color: #ffffff;
 }
 
@@ -1693,70 +2014,7 @@ body.on-newtab #newtab-view {
   transform: scale(0.95);
 }
 
-/* Find-in-Page Liquid Glass Pill */
-.find-bar {
-  position: fixed;
-  top: calc(var(--topbar-h) + 12px);
-  right: 16px;
-  height: 40px;
-  padding: 0 6px 0 14px;
-  z-index: 110;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--glass-tint-strong);
-  animation: popIn 0.2s cubic-bezier(0.22, 1.18, 0.36, 1);
-}
-
-#find-input {
-  width: 170px;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: var(--ink);
-  font-family: inherit;
-  font-size: 13px;
-  user-select: text;
-}
-
-.find-count {
-  font-size: 11.5px;
-  color: var(--ink-muted);
-  padding: 0 6px;
-  white-space: nowrap;
-}
-
-/* Hover Link Preview Pill */
-.link-preview {
-  position: fixed;
-  left: 12px;
-  bottom: 12px;
-  max-width: 440px;
-  padding: 6px 14px;
-  z-index: 100;
-  font-size: 11.5px;
-  color: var(--ink);
-  background: var(--glass-tint-strong);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  pointer-events: none;
-}
-
-/* Download Progress Toast */
-.download-toast {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  width: 280px;
-  padding: 13px 15px;
-  z-index: 115;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  animation: popIn 0.24s cubic-bezier(0.22, 1.18, 0.36, 1);
-}
-
+/* Download Toast Shared Styles */
 .dl-head {
   display: flex;
   align-items: center;
@@ -1820,69 +2078,22 @@ body.on-newtab #newtab-view {
   background: rgba(176, 124, 255, 0.38);
 }
 
-/* Custom Liquid Glass Context Menu */
-.context-menu {
-  position: fixed;
-  min-width: 196px;
-  padding: 6px;
-  z-index: 160;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  animation: popIn 0.16s cubic-bezier(0.22, 1.18, 0.36, 1);
-}
-
-.ctx-item {
-  width: 100%;
-  height: 32px;
-  padding: 0 12px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--ink);
-  font-family: inherit;
-  font-size: 12.5px;
-  text-align: left;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: background 0.14s ease;
-}
-
-.ctx-item:hover:not(:disabled) {
-  background: var(--glass-hover-bg);
-}
-
-.ctx-item:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.ctx-sep {
-  height: 1px;
-  margin: 4px 8px;
-  background: var(--glass-border);
-  opacity: 0.45;
-}
-
-
 /* ==========================================================================
-   v2.1 Fluid Animations, Favorites Bar, History & Butterfly Profiles
+   Fluid Entrance Animations, Favorite Star, Utility Pill & Favorites Ribbon
    ========================================================================== */
 @keyframes riseSpring {
   from { opacity: 0; transform: translateY(14px) scale(0.97); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-body.on-newtab .anim-rise-1 { animation: riseSpring 0.44s var(--spring-soft) both; }
-body.on-newtab .anim-rise-2 { animation: riseSpring 0.52s var(--spring-soft) 0.05s both; }
-body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1s both; }
+body.on-newtab .anim-rise-1 { animation: riseSpring 0.42s var(--spring-soft) both; }
+body.on-newtab .anim-rise-2 { animation: riseSpring 0.50s var(--spring-soft) 0.05s both; }
+body.on-newtab .anim-rise-3 { animation: riseSpring 0.56s var(--spring-soft) 0.10s both; }
 
-/* Favorite Star inside Omnibox */
+/* Favorite Star inside Safari Smart Search Field */
 .fav-star-btn {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 999px;
   border: none;
   background: transparent;
@@ -1892,18 +2103,18 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: color 0.2s ease, background 0.18s ease, transform 0.28s var(--spring);
+  transition: color 0.18s ease, background 0.16s ease, transform 0.26s var(--spring);
 }
 
 .fav-star-btn svg {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
 }
 
 .fav-star-btn:hover {
   color: var(--ink);
   background: var(--glass-hover-bg);
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .fav-star-btn:active {
@@ -1912,7 +2123,7 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1
 
 .fav-star-btn.starred {
   color: #facc15;
-  animation: starBurst 0.42s var(--spring);
+  animation: starBurst 0.40s var(--spring);
 }
 
 .fav-star-btn.starred svg path {
@@ -1921,24 +2132,24 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1
 
 @keyframes starBurst {
   0% { transform: scale(0.75) rotate(-18deg); }
-  55% { transform: scale(1.26) rotate(8deg); }
+  55% { transform: scale(1.24) rotate(8deg); }
   100% { transform: scale(1) rotate(0deg); }
 }
 
-/* History + Butterfly Profile Utility Capsule */
+/* Sleek Utility Capsule (VPN, History, Butterfly Profile) */
 .util-pill {
-  height: 36px;
-  padding: 3px 4px;
+  height: 34px;
+  padding: 2px 4px;
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   flex-shrink: 0;
 }
 
 .profile-trigger {
   position: relative;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   border: none;
   background: transparent;
@@ -1947,11 +2158,11 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.26s var(--spring);
+  transition: transform 0.24s var(--spring);
 }
 
 .profile-trigger:hover {
-  transform: scale(1.1);
+  transform: scale(1.09);
 }
 
 .profile-trigger:active {
@@ -1960,8 +2171,8 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1
 
 .update-dot {
   position: absolute;
-  top: 1px;
-  right: 1px;
+  top: 0;
+  right: 0;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -1983,17 +2194,17 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1
   justify-content: center;
   border-radius: 50%;
   border: 1.4px solid rgba(255, 255, 255, 0.28);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 12px rgba(0, 0, 0, 0.36);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34), 0 4px 12px rgba(0, 0, 0, 0.34);
   overflow: hidden;
   flex-shrink: 0;
 }
 
-/* Slim Floating Liquid Glass Favorites Ribbon (Row 3 inside #chrome-header) */
+/* Slim Floating Liquid Glass Favorites Ribbon (Row 3 inside #chrome-header, exactly 34px) */
 .favbar {
   position: relative;
   width: 100%;
   height: 34px;
-  padding: 0 12px 6px;
+  padding: 0 10px 6px;
   z-index: 38;
   display: flex;
   align-items: center;
@@ -2029,7 +2240,7 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1
   gap: 6px;
   color: var(--ink);
   font-family: inherit;
-  font-size: 11.6px;
+  font-size: 11.5px;
   font-weight: 500;
   cursor: pointer;
   flex-shrink: 0;
@@ -2038,7 +2249,7 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1
 
 .fav-chip:hover {
   transform: translateY(-1px) scale(1.03);
-  border-color: rgba(214, 186, 255, 0.58);
+  border-color: rgba(214, 186, 255, 0.56);
 }
 
 .fav-chip:active {
@@ -2088,12 +2299,12 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1
 }
 
 /* ==========================================================================
-   Top-Bar VPN Trigger Pill (Zero extra clutter — lives inside .util-pill)
+   Top-Bar Butterfly-Globe VPN Trigger Pill (inside .util-pill)
    ========================================================================== */
 .vpn-trigger {
   height: 28px;
   min-width: 28px;
-  padding: 0 7px;
+  padding: 0 6px;
   border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
@@ -2104,15 +2315,15 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1
   gap: 5px;
   cursor: pointer;
   font-family: inherit;
-  font-size: 10.6px;
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.04em;
   transition:
-    background 0.22s var(--apple-fluid),
-    color 0.22s var(--apple-fluid),
-    border-color 0.22s var(--apple-fluid),
-    transform 0.36s var(--apple-spring),
-    box-shadow 0.28s var(--apple-fluid);
+    background 0.20s var(--apple-fluid),
+    color 0.20s var(--apple-fluid),
+    border-color 0.20s var(--apple-fluid),
+    transform 0.34s var(--apple-spring),
+    box-shadow 0.26s var(--apple-fluid);
 }
 
 .vpn-trigger:hover {
@@ -2132,24 +2343,25 @@ body.on-newtab .anim-rise-3 { animation: riseSpring 0.58s var(--spring-soft) 0.1
 }
 
 .vpn-trigger.connected {
-  padding: 0 9px 0 7px;
+  padding: 0 8px 0 6px;
   color: #6fffe9;
-  background: linear-gradient(135deg, rgba(45, 212, 191, 0.24), rgba(56, 189, 248, 0.18));
-  border-color: rgba(94, 234, 212, 0.56);
-  box-shadow: 0 0 14px rgba(94, 234, 212, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.24), rgba(154, 114, 255, 0.16));
+  border-color: rgba(94, 234, 212, 0.54);
+  box-shadow: 0 0 12px rgba(94, 234, 212, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 body.theme-light:not(.on-newtab) .vpn-trigger.connected {
   color: #0f766e;
   background: rgba(20, 184, 166, 0.16);
-  border-color: rgba(13, 148, 136, 0.44);
+  border-color: rgba(13, 148, 136, 0.42);
+  box-shadow: none;
 }
 
 .vpn-trigger.connecting {
-  padding: 0 9px 0 7px;
+  padding: 0 8px 0 6px;
   color: var(--accent-bright);
   background: rgba(176, 124, 255, 0.22);
-  border-color: rgba(196, 156, 255, 0.52);
+  border-color: rgba(196, 156, 255, 0.50);
   animation: vpnPulse 1.4s ease-in-out infinite;
 }
 
@@ -2167,23 +2379,11 @@ body.theme-light:not(.on-newtab) .vpn-trigger.connected {
 }
 
 /* ==========================================================================
-   New Tab Hero Search Autocomplete Dropdown (Real Liquid Glass, 0 Blur!)
+   New Tab Hero Search Autocomplete Dropdown (Crisp 5-Row, Zero Scrollbars)
    ========================================================================== */
-.hero-search-wrap {
-  position: relative;
-  width: 100%;
-  max-width: 600px;
-  z-index: 25;
-}
-
-.hero-search-wrap .hero-search {
-  width: 100%;
-  max-width: none;
-}
-
 .hero-suggest {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 9px);
   left: 0;
   right: 0;
   padding: 7px;
@@ -2192,15 +2392,17 @@ body.theme-light:not(.on-newtab) .vpn-trigger.connected {
   background: radial-gradient(
     ellipse 94% 90% at 50% 50%,
     rgba(11, 9, 22, 0.96) 0%,
-    rgba(15, 12, 30, 0.92) 80%,
-    rgba(30, 24, 54, 0.56) 100%
+    rgba(15, 12, 30, 0.93) 80%,
+    rgba(28, 22, 52, 0.62) 100%
   );
+  border: 1px solid rgba(196, 158, 255, 0.22);
+  --spec-opacity: 0.28;
   display: flex;
   flex-direction: column;
   gap: 2px;
   z-index: 40;
   transform-origin: top center;
-  animation: suggestBloom 0.28s var(--apple-spring);
+  animation: suggestBloom 0.26s var(--apple-spring);
 }
 
 .hero-suggest.hidden {
@@ -2228,12 +2430,12 @@ body.theme-light:not(.on-newtab) .vpn-trigger.connected {
   border-radius: 12px;
   cursor: pointer;
   color: var(--ink);
-  transition: background 0.16s var(--apple-fluid), transform 0.22s var(--apple-spring);
+  transition: background 0.16s var(--apple-fluid), transform 0.20s var(--apple-spring);
 }
 
 .nt-sug-row:hover,
 .nt-sug-row.selected {
-  background: rgba(182, 136, 255, 0.2);
+  background: rgba(182, 136, 255, 0.20);
 }
 
 .nt-sug-row.selected {
@@ -2272,7 +2474,7 @@ body.theme-light:not(.on-newtab) .vpn-trigger.connected {
 }
 
 .nt-sug-title {
-  font-size: 13.5px;
+  font-size: 13.4px;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -2280,7 +2482,7 @@ body.theme-light:not(.on-newtab) .vpn-trigger.connected {
 }
 
 .nt-sug-sub {
-  font-size: 11.5px;
+  font-size: 11.4px;
   color: var(--ink-muted);
   white-space: nowrap;
   overflow: hidden;

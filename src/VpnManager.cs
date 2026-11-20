@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -17,6 +18,7 @@ namespace DejavuBrowser
         public string code { get; set; }
         public string name { get; set; }
         public string region { get; set; }
+        public bool fast { get; set; }
     }
 
     public class VpnStatusSnapshot
@@ -32,6 +34,11 @@ namespace DejavuBrowser
         public string exitCountryCode { get; set; }
         public int latencyMs { get; set; }
         public bool coreInstalled { get; set; }
+        public long bytesSent { get; set; }
+        public long bytesReceived { get; set; }
+        public int connectedSeconds { get; set; }
+        public bool autoConnect { get; set; }
+        public string protocol { get; set; }
         public List<VpnCountryOption> countries { get; set; }
     }
 
@@ -45,30 +52,32 @@ namespace DejavuBrowser
         private const string FallbackBundleUrl =
             "https://dist.torproject.org/torbrowser/16.0.1/tor-expert-bundle-windows-x86_64-16.0.1.tar.gz";
 
+        private const string ProtocolLabel = "3-Hop Encrypted · Remote DNS";
+
         private static readonly List<VpnCountryOption> CountryCatalog = new List<VpnCountryOption>
         {
-            new VpnCountryOption { code = "AUTO", name = "Fastest Location", region = "Optimal Global" },
-            new VpnCountryOption { code = "US", name = "United States", region = "North America" },
-            new VpnCountryOption { code = "GB", name = "United Kingdom", region = "Europe" },
-            new VpnCountryOption { code = "DE", name = "Germany", region = "Europe" },
-            new VpnCountryOption { code = "NL", name = "Netherlands", region = "Europe" },
-            new VpnCountryOption { code = "FR", name = "France", region = "Europe" },
-            new VpnCountryOption { code = "CA", name = "Canada", region = "North America" },
-            new VpnCountryOption { code = "CH", name = "Switzerland", region = "Europe" },
-            new VpnCountryOption { code = "SE", name = "Sweden", region = "Europe" },
-            new VpnCountryOption { code = "SG", name = "Singapore", region = "Asia-Pacific" },
-            new VpnCountryOption { code = "JP", name = "Japan", region = "Asia-Pacific" },
-            new VpnCountryOption { code = "AU", name = "Australia", region = "Asia-Pacific" },
-            new VpnCountryOption { code = "IT", name = "Italy", region = "Europe" },
-            new VpnCountryOption { code = "ES", name = "Spain", region = "Europe" },
-            new VpnCountryOption { code = "IN", name = "India", region = "Asia-Pacific" },
-            new VpnCountryOption { code = "KR", name = "South Korea", region = "Asia-Pacific" },
-            new VpnCountryOption { code = "NO", name = "Norway", region = "Europe" },
-            new VpnCountryOption { code = "AT", name = "Austria", region = "Europe" },
-            new VpnCountryOption { code = "FI", name = "Finland", region = "Europe" },
-            new VpnCountryOption { code = "PL", name = "Poland", region = "Europe" },
-            new VpnCountryOption { code = "RO", name = "Romania", region = "Europe" },
-            new VpnCountryOption { code = "HK", name = "Hong Kong", region = "Asia-Pacific" }
+            new VpnCountryOption { code = "AUTO", name = "Fastest Location", region = "Optimal Global", fast = true },
+            new VpnCountryOption { code = "US", name = "United States", region = "North America", fast = true },
+            new VpnCountryOption { code = "GB", name = "United Kingdom", region = "Europe", fast = true },
+            new VpnCountryOption { code = "DE", name = "Germany", region = "Europe", fast = true },
+            new VpnCountryOption { code = "NL", name = "Netherlands", region = "Europe", fast = true },
+            new VpnCountryOption { code = "FR", name = "France", region = "Europe", fast = true },
+            new VpnCountryOption { code = "CA", name = "Canada", region = "North America", fast = false },
+            new VpnCountryOption { code = "CH", name = "Switzerland", region = "Europe", fast = true },
+            new VpnCountryOption { code = "SE", name = "Sweden", region = "Europe", fast = true },
+            new VpnCountryOption { code = "SG", name = "Singapore", region = "Asia-Pacific", fast = true },
+            new VpnCountryOption { code = "JP", name = "Japan", region = "Asia-Pacific", fast = false },
+            new VpnCountryOption { code = "AU", name = "Australia", region = "Asia-Pacific", fast = false },
+            new VpnCountryOption { code = "IT", name = "Italy", region = "Europe", fast = true },
+            new VpnCountryOption { code = "ES", name = "Spain", region = "Europe", fast = false },
+            new VpnCountryOption { code = "IN", name = "India", region = "Asia-Pacific", fast = false },
+            new VpnCountryOption { code = "KR", name = "South Korea", region = "Asia-Pacific", fast = false },
+            new VpnCountryOption { code = "NO", name = "Norway", region = "Europe", fast = true },
+            new VpnCountryOption { code = "AT", name = "Austria", region = "Europe", fast = true },
+            new VpnCountryOption { code = "FI", name = "Finland", region = "Europe", fast = true },
+            new VpnCountryOption { code = "PL", name = "Poland", region = "Europe", fast = true },
+            new VpnCountryOption { code = "RO", name = "Romania", region = "Europe", fast = true },
+            new VpnCountryOption { code = "HK", name = "Hong Kong", region = "Asia-Pacific", fast = false }
         };
 
         private readonly LocalProxyBridge _bridge;
@@ -97,6 +106,8 @@ namespace DejavuBrowser
         private string _exitCountry = "";
         private string _exitCountryCode = "";
         private int _latencyMs;
+        private DateTime _connectedUtc = DateTime.MinValue;
+        private bool _autoConnect;
         private bool _disposed;
 
         public event Action<VpnStatusSnapshot> StateChanged;
@@ -121,10 +132,31 @@ namespace DejavuBrowser
             get { lock (_sync) { return _state == "connected" ? _socksPort : 0; } }
         }
 
+        public bool AutoConnect
+        {
+            get { lock (_sync) { return _autoConnect; } }
+            set
+            {
+                bool changed;
+                lock (_sync)
+                {
+                    changed = (_autoConnect != value);
+                    _autoConnect = value;
+                }
+                if (changed) NotifyStateChanged();
+            }
+        }
+
         public VpnManager(LocalProxyBridge bridge, string initialCountryCode)
+            : this(bridge, initialCountryCode, false)
+        {
+        }
+
+        public VpnManager(LocalProxyBridge bridge, string initialCountryCode, bool autoConnect)
         {
             _bridge = bridge;
             _countryCode = NormalizeCountryCode(initialCountryCode);
+            _autoConnect = autoConnect;
 
             _vpnRootDir = Path.Combine(SettingsStore.AppDataDir, "vpn");
             _torBinDir = Path.Combine(_vpnRootDir, "core");
@@ -149,6 +181,13 @@ namespace DejavuBrowser
         {
             lock (_sync)
             {
+                bool isConn = (_state == "connected");
+                int connSec = (isConn && _connectedUtc != DateTime.MinValue)
+                    ? Math.Max(0, (int)(DateTime.UtcNow - _connectedUtc).TotalSeconds)
+                    : 0;
+                long sent = (isConn && _bridge != null) ? _bridge.VpnBytesSent : 0;
+                long recv = (isConn && _bridge != null) ? _bridge.VpnBytesReceived : 0;
+
                 return new VpnStatusSnapshot
                 {
                     state = _state,
@@ -162,6 +201,11 @@ namespace DejavuBrowser
                     exitCountryCode = _exitCountryCode,
                     latencyMs = _latencyMs,
                     coreInstalled = IsCoreInstalled(),
+                    bytesSent = sent,
+                    bytesReceived = recv,
+                    connectedSeconds = connSec,
+                    autoConnect = _autoConnect,
+                    protocol = ProtocolLabel,
                     countries = CountryCatalog
                 };
             }
@@ -194,6 +238,39 @@ namespace DejavuBrowser
             return "Fastest Location";
         }
 
+        public static bool IsFastCountry(string code)
+        {
+            string norm = NormalizeCountryCode(code);
+            for (int i = 0; i < CountryCatalog.Count; i++)
+            {
+                if (CountryCatalog[i].code == norm) return CountryCatalog[i].fast;
+            }
+            return false;
+        }
+
+        private static string ResolveCountryDisplayName(string twoLetterCode)
+        {
+            if (string.IsNullOrWhiteSpace(twoLetterCode)) return "";
+            string upper = twoLetterCode.Trim().ToUpperInvariant();
+            if (upper == "UK") upper = "GB";
+            for (int i = 0; i < CountryCatalog.Count; i++)
+            {
+                if (CountryCatalog[i].code == upper) return CountryCatalog[i].name;
+            }
+            try
+            {
+                RegionInfo ri = new RegionInfo(upper);
+                if (!string.IsNullOrEmpty(ri.EnglishName)) return ri.EnglishName;
+            }
+            catch { }
+            return upper;
+        }
+
+        private string GetCurrentExitIp()
+        {
+            lock (_sync) { return _exitIp ?? ""; }
+        }
+
         private void UpdateStatus(string state, string statusText, int progress, bool clearExit)
         {
             lock (_sync)
@@ -201,6 +278,17 @@ namespace DejavuBrowser
                 _state = state;
                 _statusText = statusText;
                 _progress = Math.Max(0, Math.Min(100, progress));
+                if (state == "connected")
+                {
+                    if (_connectedUtc == DateTime.MinValue)
+                    {
+                        _connectedUtc = DateTime.UtcNow;
+                    }
+                }
+                else if (state == "disconnected" || state == "error")
+                {
+                    _connectedUtc = DateTime.MinValue;
+                }
                 if (clearExit)
                 {
                     _exitIp = "";
@@ -277,6 +365,8 @@ namespace DejavuBrowser
                 }
 
                 // 2. Launch Tor silently on loopback ports
+                lock (_sync) { _connectedUtc = DateTime.MinValue; }
+                _bridge.ResetVpnCounters();
                 UpdateStatus("connecting", "Starting encrypted tunnel for " + GetCountryName(target) + "...", 12, true);
                 _bridge.SetVpnKillSwitchEngaged();
 
@@ -297,7 +387,10 @@ namespace DejavuBrowser
                 rc.AppendLine("GeoIPFile " + _geoIpPath);
                 if (File.Exists(_geoIp6Path)) rc.AppendLine("GeoIPv6File " + _geoIp6Path);
                 rc.AppendLine("AvoidDiskWrites 1");
-                rc.AppendLine("CircuitBuildTimeout 15");
+                rc.AppendLine("NumEntryGuards 2");
+                rc.AppendLine("KeepalivePeriod 60");
+                rc.AppendLine("NewCircuitPeriod 30");
+                rc.AppendLine("CircuitBuildTimeout 12");
                 rc.AppendLine("LearnCircuitBuildTimeout 0");
                 if (target != "AUTO")
                 {
@@ -373,14 +466,24 @@ namespace DejavuBrowser
                 _bridge.SetSocks5Tunnel(_socksPort);
                 UpdateStatus("connecting", "Verifying " + GetCountryName(target) + " exit IP...", 95, false);
 
-                bool verified = await VerifyExitNodeAsync(target, token).ConfigureAwait(false);
+                bool verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
                 if (token.IsCancellationRequested) return;
+
+                if (!verified)
+                {
+                    // Smart retry: close stuck circuits + SIGNAL NEWNYM and retry cleanly once
+                    UpdateStatus("connecting", "Retrying " + GetCountryName(target) + " exit route...", 96, false);
+                    await SendControlFlushCircuitsAsync(token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                    _bridge.SetSocks5Tunnel(_socksPort);
+                    await Task.Delay(IsFastCountry(target) ? 450 : 750, token).ConfigureAwait(false);
+                    verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                }
 
                 if (verified)
                 {
-                    string cityLabel = string.IsNullOrEmpty(_exitCity)
-                        ? _exitCountry
-                        : (_exitCity + ", " + _exitCountry);
+                    string cityLabel = FormatExitLabel();
                     UpdateStatus("connected", "Protected · " + cityLabel, 100, false);
                 }
                 else
@@ -415,6 +518,118 @@ namespace DejavuBrowser
             }
         }
 
+        /// <summary>
+        /// Acquires a brand-new encrypted exit IP inside the SAME selected country in ~2s
+        /// by closing built circuits, issuing SIGNAL NEWNYM, resetting bridge sockets, and re-verifying exit IP.
+        /// </summary>
+        public async Task RotateIdentityAsync()
+        {
+            if (!IsTorRunning() || _socksPort <= 0 || _controlPort <= 0)
+            {
+                await ConnectAsync(SelectedCountryCode).ConfigureAwait(false);
+                return;
+            }
+
+            string target;
+            string previousIp;
+            lock (_sync)
+            {
+                target = _countryCode;
+                previousIp = _exitIp ?? "";
+            }
+
+            CancellationToken token = BeginNewOperation();
+
+            try
+            {
+                UpdateStatus("connecting", "Rotating IP in " + GetCountryName(target) + "...", 70, true);
+
+                bool flushed = await SendControlFlushCircuitsAsync(token).ConfigureAwait(false);
+                if (token.IsCancellationRequested) return;
+
+                if (!flushed)
+                {
+                    StopTorProcess();
+                    await ConnectAsync(target).ConfigureAwait(false);
+                    return;
+                }
+
+                // Tear down live browser keep-alive sockets so browser immediately routes over the new IP
+                _bridge.SetSocks5Tunnel(_socksPort);
+                UpdateStatus("connecting", "Verifying new " + GetCountryName(target) + " exit IP...", 88, false);
+
+                await Task.Delay(350, token).ConfigureAwait(false);
+                bool verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
+                if (token.IsCancellationRequested) return;
+
+                // If Tor randomly re-selected the exact same exit IP, flush circuits once more for a distinct IP
+                if (verified && !string.IsNullOrEmpty(previousIp) &&
+                    string.Equals(GetCurrentExitIp(), previousIp, StringComparison.OrdinalIgnoreCase))
+                {
+                    UpdateStatus("connecting", "Selecting fresh " + GetCountryName(target) + " exit node...", 92, false);
+                    await SendControlFlushCircuitsAsync(token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                    _bridge.SetSocks5Tunnel(_socksPort);
+                    await Task.Delay(450, token).ConfigureAwait(false);
+                    verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                }
+
+                if (!verified)
+                {
+                    UpdateStatus("connecting", "Retrying new IP in " + GetCountryName(target) + "...", 93, false);
+                    await SendControlFlushCircuitsAsync(token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                    _bridge.SetSocks5Tunnel(_socksPort);
+                    await Task.Delay(IsFastCountry(target) ? 450 : 750, token).ConfigureAwait(false);
+                    verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                }
+
+                if (verified)
+                {
+                    string cityLabel = FormatExitLabel();
+                    UpdateStatus("connected", "Protected · " + cityLabel, 100, false);
+                }
+                else
+                {
+                    bool basicOk = await TestBasicTunnelConnectivityAsync(token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                    if (basicOk)
+                    {
+                        lock (_sync)
+                        {
+                            _exitIp = "Encrypted";
+                            _exitCountry = GetCountryName(target);
+                            _exitCountryCode = target;
+                        }
+                        UpdateStatus("connected", "Protected · " + GetCountryName(target), 100, false);
+                    }
+                    else
+                    {
+                        UpdateStatus("error", GetCountryName(target) + " exit busy — try again or pick another country", 0, true);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus("error", "IP rotation error: " + ex.Message, 0, true);
+            }
+        }
+
+        private string FormatExitLabel()
+        {
+            lock (_sync)
+            {
+                return string.IsNullOrEmpty(_exitCity)
+                    ? _exitCountry
+                    : (_exitCity + ", " + _exitCountry);
+            }
+        }
+
         private async Task SwitchRunningCountryAsync(string target, CancellationToken token)
         {
             UpdateStatus("connecting", "Switching tunnel to " + GetCountryName(target) + "...", 62, true);
@@ -432,17 +647,28 @@ namespace DejavuBrowser
 
             // Cut stale keep-alive sockets so browser immediately routes through new country
             _bridge.SetSocks5Tunnel(_socksPort);
-            UpdateStatus("connecting", "Verifying " + GetCountryName(target) + " exit IP...", 86, false);
+            UpdateStatus("connecting", "Verifying " + GetCountryName(target) + " exit IP...", 84, false);
 
-            await Task.Delay(500, token).ConfigureAwait(false);
-            bool verified = await VerifyExitNodeAsync(target, token).ConfigureAwait(false);
+            await Task.Delay(400, token).ConfigureAwait(false);
+            bool verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
             if (token.IsCancellationRequested) return;
+
+            if (!verified)
+            {
+                // Smart retry (critical for low-exit countries like JP, CA, AU, IN, KR, ES):
+                // close stuck circuits + SIGNAL NEWNYM and retry cleanly once before reporting busy.
+                UpdateStatus("connecting", "Retrying " + GetCountryName(target) + " exit route...", 91, false);
+                await SendControlFlushCircuitsAsync(token).ConfigureAwait(false);
+                if (token.IsCancellationRequested) return;
+                _bridge.SetSocks5Tunnel(_socksPort);
+                await Task.Delay(IsFastCountry(target) ? 450 : 750, token).ConfigureAwait(false);
+                verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
+                if (token.IsCancellationRequested) return;
+            }
 
             if (verified)
             {
-                string cityLabel = string.IsNullOrEmpty(_exitCity)
-                    ? _exitCountry
-                    : (_exitCity + ", " + _exitCountry);
+                string cityLabel = FormatExitLabel();
                 UpdateStatus("connected", "Protected · " + cityLabel, 100, false);
             }
             else
@@ -466,7 +692,17 @@ namespace DejavuBrowser
             }
         }
 
-        private async Task<bool> SendControlCountrySwitchAsync(string target, CancellationToken token)
+        private Task<bool> SendControlCountrySwitchAsync(string target, CancellationToken token)
+        {
+            return SendControlCommandAsync(target, token);
+        }
+
+        private Task<bool> SendControlFlushCircuitsAsync(CancellationToken token)
+        {
+            return SendControlCommandAsync(null, token);
+        }
+
+        private async Task<bool> SendControlCommandAsync(string targetOrNull, CancellationToken token)
         {
             try
             {
@@ -475,8 +711,16 @@ namespace DejavuBrowser
                 string hexCookie = BitConverter.ToString(cookieBytes).Replace("-", "");
 
                 using (TcpClient ctl = new TcpClient())
+                using (token.Register(() => { try { ctl.Close(); } catch { } }))
                 {
-                    await ctl.ConnectAsync(IPAddress.Loopback, _controlPort).ConfigureAwait(false);
+                    Task connectTask = ctl.ConnectAsync(IPAddress.Loopback, _controlPort);
+                    Task delayTask = Task.Delay(5000, token);
+                    if (await Task.WhenAny(connectTask, delayTask).ConfigureAwait(false) != connectTask)
+                    {
+                        return false;
+                    }
+                    await connectTask.ConfigureAwait(false);
+
                     NetworkStream ns = ctl.GetStream();
                     using (StreamReader sr = new StreamReader(ns, Encoding.ASCII))
                     using (StreamWriter sw = new StreamWriter(ns, Encoding.ASCII))
@@ -487,25 +731,31 @@ namespace DejavuBrowser
                         string authResp = await sr.ReadLineAsync().ConfigureAwait(false);
                         if (authResp == null || !authResp.StartsWith("250")) return false;
 
-                        if (target == "AUTO")
+                        if (targetOrNull != null)
                         {
-                            await sw.WriteAsync("RESETCONF ExitNodes StrictNodes\r\n").ConfigureAwait(false);
+                            if (targetOrNull == "AUTO")
+                            {
+                                await sw.WriteAsync("RESETCONF ExitNodes StrictNodes\r\n").ConfigureAwait(false);
+                            }
+                            else
+                            {
+                                await sw.WriteAsync("SETCONF ExitNodes={" + targetOrNull.ToLowerInvariant() + "} StrictNodes=1\r\n").ConfigureAwait(false);
+                            }
+                            string confResp = await sr.ReadLineAsync().ConfigureAwait(false);
+                            if (confResp == null || !confResp.StartsWith("250")) return false;
                         }
-                        else
-                        {
-                            await sw.WriteAsync("SETCONF ExitNodes={" + target.ToLowerInvariant() + "} StrictNodes=1\r\n").ConfigureAwait(false);
-                        }
-                        string confResp = await sr.ReadLineAsync().ConfigureAwait(false);
-                        if (confResp == null || !confResp.StartsWith("250")) return false;
 
-                        // Close existing circuits so next request immediately builds a circuit in the new country!
+                        // Mark existing circuits dirty + flush Tor DNS cache, then actively close all circuits
+                        await sw.WriteAsync("SIGNAL NEWNYM\r\n").ConfigureAwait(false);
+                        await sr.ReadLineAsync().ConfigureAwait(false);
+
                         await sw.WriteAsync("GETINFO circuit-status\r\n").ConfigureAwait(false);
                         List<string> circIds = new List<string>();
                         while (true)
                         {
                             string ln = await sr.ReadLineAsync().ConfigureAwait(false);
                             if (ln == null || ln.StartsWith("250 OK") || ln.StartsWith("5")) break;
-                            if (ln == "." || ln.StartsWith("250+")) continue;
+                            if (ln == "." || ln.StartsWith("250+") || ln.StartsWith("250-")) continue;
                             string[] parts = ln.Split(' ');
                             if (parts.Length >= 2)
                             {
@@ -520,8 +770,6 @@ namespace DejavuBrowser
                             await sr.ReadLineAsync().ConfigureAwait(false);
                         }
 
-                        await sw.WriteAsync("SIGNAL NEWNYM\r\n").ConfigureAwait(false);
-                        await sr.ReadLineAsync().ConfigureAwait(false);
                         return true;
                     }
                 }
@@ -532,31 +780,49 @@ namespace DejavuBrowser
             }
         }
 
-        private async Task<bool> VerifyExitNodeAsync(string targetCountry, CancellationToken token)
+        private Task<bool> VerifyExitNodeAsync(string targetCountry, CancellationToken token)
         {
-            for (int attempt = 0; attempt < 2; attempt++)
+            return VerifyExitNodeAsync(targetCountry, 2, token);
+        }
+
+        private async Task<bool> VerifyExitNodeAsync(string targetCountry, int maxAttempts, CancellationToken token)
+        {
+            int attempts = Math.Max(1, maxAttempts);
+            for (int attempt = 0; attempt < attempts; attempt++)
             {
                 if (token.IsCancellationRequested) return false;
                 Stopwatch sw = Stopwatch.StartNew();
 
-                // Primary: ipwho.is (fast JSON with ip, city, country, country_code)
-                string body = await LocalProxyBridge.HttpsGetViaSocks5Async(_socksPort, "ipwho.is", "/", 12000, token).ConfigureAwait(false);
-                if (TryParseGeoJson(body, (int)sw.ElapsedMilliseconds))
+                // Primary: ipinfo.io/json (fast, reliable, zero Tor rate-limiting)
+                string body = await LocalProxyBridge.HttpsGetViaSocks5Async(_socksPort, "ipinfo.io", "/json", 12000, token).ConfigureAwait(false);
+                if (TryParseGeoJson(body, (int)sw.ElapsedMilliseconds, targetCountry))
                 {
                     return true;
                 }
 
-                // Fallback: ipinfo.io/json
+                if (token.IsCancellationRequested) return false;
+
+                // Secondary: ipwho.is
                 sw.Restart();
-                body = await LocalProxyBridge.HttpsGetViaSocks5Async(_socksPort, "ipinfo.io", "/json", 12000, token).ConfigureAwait(false);
-                if (TryParseGeoJson(body, (int)sw.ElapsedMilliseconds))
+                body = await LocalProxyBridge.HttpsGetViaSocks5Async(_socksPort, "ipwho.is", "/", 10000, token).ConfigureAwait(false);
+                if (TryParseGeoJson(body, (int)sw.ElapsedMilliseconds, targetCountry))
                 {
                     return true;
                 }
 
-                if (attempt == 0 && !token.IsCancellationRequested)
+                if (token.IsCancellationRequested) return false;
+
+                // Tertiary fallback: api.ipify.org/?format=json
+                sw.Restart();
+                body = await LocalProxyBridge.HttpsGetViaSocks5Async(_socksPort, "api.ipify.org", "/?format=json", 9000, token).ConfigureAwait(false);
+                if (TryParseGeoJson(body, (int)sw.ElapsedMilliseconds, targetCountry))
                 {
-                    await Task.Delay(1200, token).ConfigureAwait(false);
+                    return true;
+                }
+
+                if (attempt + 1 < attempts && !token.IsCancellationRequested)
+                {
+                    await Task.Delay(1000, token).ConfigureAwait(false);
                 }
             }
             return false;
@@ -573,7 +839,7 @@ namespace DejavuBrowser
             return false;
         }
 
-        private bool TryParseGeoJson(string jsonText, int latencyMs)
+        private bool TryParseGeoJson(string jsonText, int latencyMs, string targetCountry)
         {
             if (string.IsNullOrWhiteSpace(jsonText)) return false;
             try
@@ -582,37 +848,44 @@ namespace DejavuBrowser
                 if (brace > 0) jsonText = jsonText.Substring(brace);
                 Dictionary<string, object> d = _json.Deserialize<Dictionary<string, object>>(jsonText);
                 if (d == null || !d.ContainsKey("ip")) return false;
-                string ip = Convert.ToString(d["ip"]);
+                if (d.ContainsKey("success") && d["success"] is bool && !(bool)d["success"]) return false;
+
+                string ip = Convert.ToString(d["ip"]).Trim();
                 if (string.IsNullOrWhiteSpace(ip)) return false;
+                IPAddress parsedIp;
+                if (!IPAddress.TryParse(ip, out parsedIp)) return false;
 
                 string city = d.ContainsKey("city") ? Convert.ToString(d["city"]) : "";
                 string cc = "";
                 string country = "";
                 if (d.ContainsKey("country_code"))
                 {
-                    cc = Convert.ToString(d["country_code"]).ToUpperInvariant();
-                    country = d.ContainsKey("country") ? Convert.ToString(d["country"]) : GetCountryName(cc);
+                    cc = Convert.ToString(d["country_code"]).Trim().ToUpperInvariant();
+                    string rawCountry = d.ContainsKey("country") ? Convert.ToString(d["country"]).Trim() : "";
+                    country = string.IsNullOrEmpty(rawCountry) ? ResolveCountryDisplayName(cc) : rawCountry;
                 }
                 else if (d.ContainsKey("country"))
                 {
-                    string rawC = Convert.ToString(d["country"]).ToUpperInvariant();
-                    if (rawC.Length == 2)
+                    string rawC = Convert.ToString(d["country"]).Trim();
+                    string upperC = rawC.ToUpperInvariant();
+                    if (upperC.Length == 2)
                     {
-                        cc = rawC;
-                        country = GetCountryName(cc);
+                        cc = upperC;
+                        country = ResolveCountryDisplayName(cc);
                     }
                     else
                     {
-                        country = Convert.ToString(d["country"]);
+                        country = rawC;
                     }
                 }
 
+                string fallbackCode = string.IsNullOrEmpty(targetCountry) ? _countryCode : targetCountry;
                 lock (_sync)
                 {
                     _exitIp = ip;
                     _exitCity = city ?? "";
-                    _exitCountry = string.IsNullOrEmpty(country) ? GetCountryName(_countryCode) : country;
-                    _exitCountryCode = string.IsNullOrEmpty(cc) ? _countryCode : cc;
+                    _exitCountry = string.IsNullOrEmpty(country) ? GetCountryName(fallbackCode) : country;
+                    _exitCountryCode = string.IsNullOrEmpty(cc) ? fallbackCode : cc;
                     _latencyMs = Math.Max(1, latencyMs);
                 }
                 return true;
@@ -631,7 +904,7 @@ namespace DejavuBrowser
             try
             {
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(bundleUrl);
-                req.UserAgent = "dejavu-browser/2.4";
+                req.UserAgent = "dejavu-browser/2.6";
                 req.Timeout = 30000;
                 req.ReadWriteTimeout = 30000;
 
@@ -703,7 +976,7 @@ namespace DejavuBrowser
             {
                 using (WebClient wc = new WebClient())
                 {
-                    wc.Headers.Add("User-Agent", "dejavu-browser/2.4");
+                    wc.Headers.Add("User-Agent", "dejavu-browser/2.6");
                     string indexHtml = await wc.DownloadStringTaskAsync("https://dist.torproject.org/torbrowser/").ConfigureAwait(false);
                     MatchCollection matches = Regex.Matches(indexHtml, @"href=""(\d+\.\d+(?:\.\d+)?)/""");
                     List<string> dirs = new List<string>();
@@ -728,6 +1001,7 @@ namespace DejavuBrowser
         {
             CancelCurrentOperation();
             _bridge.SetDirectMode();
+            _bridge.ResetVpnCounters();
             StopTorProcess();
             UpdateStatus("disconnected", "Disconnected · Direct connection", 0, true);
         }

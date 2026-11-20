@@ -8,24 +8,25 @@
   <style>
     html, body {
       width: 100%; height: 100%; overflow: hidden;
-      background: #0b0916;
+      background: #0a0814;
     }
     body.theme-light {
       background: #f5f4fa;
       --ink: rgba(16, 14, 26, 0.94);
-      --ink-muted: rgba(28, 24, 46, 0.62);
-      --ink-subtle: rgba(34, 30, 56, 0.38);
+      --ink-muted: rgba(30, 26, 48, 0.64);
+      --ink-subtle: rgba(38, 34, 60, 0.42);
       --glass-tint-strong: radial-gradient(
-        ellipse 90% 86% at 50% 50%,
-        rgba(253, 251, 255, 0.95) 0%,
-        rgba(247, 244, 255, 0.88) 76%,
-        rgba(255, 255, 255, 0.32) 100%
+        ellipse 92% 88% at 50% 50%,
+        rgba(253, 252, 255, 0.96) 0%,
+        rgba(247, 245, 254, 0.91) 76%,
+        rgba(255, 255, 255, 0.56) 100%
       );
-      --glass-border: rgba(255, 255, 255, 0.82);
-      --glass-hover-bg: rgba(24, 18, 52, 0.08);
+      --glass-border: rgba(24, 18, 52, 0.13);
+      --glass-hover-bg: rgba(24, 18, 52, 0.065);
       --accent: #7c4dff;
       --accent-bright: #6435e8;
       --shield-green: #0d9488;
+      --spec-opacity: 0.34;
     }
     #backdrop-img {
       position: fixed; inset: 0; width: 100%; height: 100%;
@@ -38,25 +39,25 @@
       position: fixed; inset: 0; z-index: 2;
       display: flex; width: 100%; height: 100%;
       border-radius: 14px;
-      --spec-opacity: 0.46;
-      animation: ovPop 0.28s var(--apple-spring);
+      --spec-opacity: 0.38;
+      animation: ovPop 0.24s var(--apple-spring);
     }
     @keyframes ovPop {
-      from { opacity: 0; transform: translateY(-6px) scale(0.94); }
+      from { opacity: 0; transform: translateY(-5px) scale(0.955); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
     @keyframes slideInRight {
-      from { opacity: 0; transform: translateX(18px); }
+      from { opacity: 0; transform: translateX(16px); }
       to { opacity: 1; transform: translateX(0); }
     }
     #prof-view-editor:not(.hidden) {
-      animation: slideInRight 0.34s var(--apple-fluid);
+      animation: slideInRight 0.30s var(--apple-fluid);
     }
 
     /* Shield, Find, Download, Update Boxes */
     .shield-box {
-      width: 100%; height: 100%; padding: 16px;
-      display: flex; flex-direction: column; justify-content: space-between; gap: 12px;
+      width: 100%; height: 100%; padding: 15px 16px;
+      display: flex; flex-direction: column; justify-content: space-between; gap: 11px;
     }
     .find-box {
       width: 100%; height: 100%; padding: 0 8px 0 14px;
@@ -66,6 +67,7 @@
       flex: 1; min-width: 0; border: none; outline: none;
       background: transparent; color: var(--ink); font-family: inherit; font-size: 13px; user-select: text;
     }
+    .find-box input::placeholder { color: var(--ink-muted); }
     .dl-box {
       width: 100%; height: 100%; padding: 13px 15px;
       display: flex; flex-direction: column; justify-content: center; gap: 8px;
@@ -73,45 +75,49 @@
 
     /* Update Toast (generous breathing room, zero clipped buttons!) */
     .upd-box {
-      width: 100%; height: 100%; padding: 15px 17px 14px;
+      width: 100%; height: 100%; padding: 14px 16px;
       display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
     }
     .upd-top { display: flex; align-items: center; gap: 11px; }
-    .upd-top img { width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(176,124,255,0.65)); }
+    .upd-top img { width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(176,124,255,0.62)); }
     .upd-title { font-size: 13.5px; font-weight: 600; line-height: 1.25; }
     .upd-sub { font-size: 11.2px; color: var(--ink-muted); margin-top: 2px; line-height: 1.25; }
     .upd-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
     .pill-btn {
-      height: 30px; padding: 0 14px; border-radius: 999px;
+      height: 29px; padding: 0 13px; border-radius: 999px;
       border: 1px solid var(--glass-border); background: transparent;
-      color: var(--ink); font-family: inherit; font-size: 11.8px; font-weight: 600;
+      color: var(--ink); font-family: inherit; font-size: 11.6px; font-weight: 600;
       cursor: pointer;
-      transition: transform 0.36s var(--apple-spring), background 0.18s ease, filter 0.18s ease;
+      transition: transform 0.34s var(--apple-spring), background 0.16s ease, filter 0.16s ease, border-color 0.16s ease;
     }
     .pill-btn:hover { background: var(--glass-hover-bg); transform: translateY(-1px); }
     .pill-btn:active { transform: scale(0.93); transition-duration: 0.09s; }
     .pill-btn.primary {
       background: linear-gradient(135deg, #8b5cf6, #a855f7);
-      border-color: rgba(226, 202, 255, 0.58);
+      border-color: rgba(226, 202, 255, 0.56);
       color: #ffffff;
-      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.36);
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.34);
     }
     .pill-btn.primary:hover { filter: brightness(1.08); }
 
-    /* Shared Panel Layout (Profiles & History) */
+    /* Shared Panel Layout (Profiles, History, VPN) */
     .panel-box {
-      width: 100%; height: 100%; padding: 16px;
-      display: flex; flex-direction: column; gap: 12px;
+      width: 100%; height: 100%; padding: 14px 15px 12px;
+      display: flex; flex-direction: column; gap: 10px;
       overflow: hidden;
     }
     .panel-head {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
       flex-shrink: 0;
     }
-    .panel-title { font-size: 14.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .panel-title {
+      font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; gap: 7px;
+      letter-spacing: -0.005em;
+    }
     .panel-scroll {
       flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
-      display: flex; flex-direction: column; gap: 8px;
+      display: flex; flex-direction: column; gap: 5px;
       padding-right: 3px;
       scrollbar-width: thin;
       scrollbar-color: rgba(186, 152, 255, 0.34) transparent;
@@ -119,27 +125,34 @@
 
     /* Profile Hub */
     .active-profile-card {
-      padding: 14px; border-radius: 18px;
+      padding: 13px; border-radius: 16px;
       background: rgba(176, 124, 255, 0.12);
-      border: 1px solid rgba(196, 158, 255, 0.34);
-      display: flex; align-items: center; gap: 13px;
+      border: 1px solid rgba(196, 158, 255, 0.30);
+      display: flex; align-items: center; gap: 12px;
       flex-shrink: 0;
     }
+    body.theme-light .active-profile-card {
+      background: rgba(124, 77, 255, 0.08);
+      border-color: rgba(124, 77, 255, 0.22);
+    }
     .active-prof-meta { flex: 1; min-width: 0; }
-    .active-prof-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .active-prof-sub { font-size: 11.2px; color: var(--ink-muted); margin-top: 2px; }
+    .active-prof-name { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .active-prof-sub { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
 
     .section-label {
-      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+      font-size: 10.6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
       color: var(--ink-muted); padding: 2px 4px 0;
     }
     .prof-row {
       display: flex; align-items: center; gap: 10px;
-      padding: 8px 10px; border-radius: 14px;
+      padding: 8px 10px; border-radius: 13px;
       border: 1px solid transparent;
       background: rgba(128, 118, 168, 0.09);
       cursor: pointer;
-      transition: background 0.18s ease, transform 0.2s cubic-bezier(0.22,1.2,0.36,1), border-color 0.18s ease;
+      transition: background 0.16s ease, transform 0.20s var(--apple-spring), border-color 0.16s ease;
+    }
+    body.theme-light .prof-row {
+      background: rgba(24, 18, 52, 0.045);
     }
     .prof-row:hover {
       background: var(--glass-hover-bg);
@@ -154,26 +167,25 @@
       cursor: pointer; transition: background 0.15s ease, color 0.15s ease;
     }
     .mini-act:hover { background: var(--glass-hover-bg); color: var(--ink); }
-    .mini-act.del:hover { background: rgba(255, 86, 118, 0.24); color: #ff6b8b; }
+    .mini-act.del:hover { background: rgba(255, 86, 118, 0.22); color: #ff6b8b; }
 
     .prof-footer {
       flex-shrink: 0;
-      padding-top: 10px;
+      padding-top: 9px;
       border-top: 1px solid var(--glass-border);
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
     }
     .ver-info { font-size: 11px; color: var(--ink-muted); }
 
     /* Profile Editor + 16 Butterfly Avatars Grid */
-    .editor-preview {
-      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-    }
+    .editor-preview { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
     .editor-input {
-      flex: 1; height: 38px; padding: 0 13px; border-radius: 13px;
+      flex: 1; height: 36px; padding: 0 13px; border-radius: 12px;
       border: 1px solid var(--glass-border);
       background: rgba(128, 120, 168, 0.12);
-      color: var(--ink); font-family: inherit; font-size: 13.5px; outline: none; user-select: text;
+      color: var(--ink); font-family: inherit; font-size: 13px; outline: none; user-select: text;
     }
+    body.theme-light .editor-input { background: rgba(24, 18, 52, 0.05); }
     .editor-input:focus { border-color: var(--accent); }
 
     .avatar-grid {
@@ -187,8 +199,9 @@
       display: flex; flex-direction: column; align-items: center; gap: 5px;
       cursor: pointer; color: var(--ink-muted); font-family: inherit;
       min-width: 0; overflow: hidden;
-      transition: transform 0.22s cubic-bezier(0.22,1.2,0.36,1), border-color 0.18s ease, background 0.18s ease;
+      transition: transform 0.20s var(--apple-spring), border-color 0.16s ease, background 0.16s ease;
     }
+    body.theme-light .av-choice { background: rgba(24, 18, 52, 0.04); }
     .av-choice:hover {
       transform: translateY(-2px) scale(1.04);
       background: var(--glass-hover-bg);
@@ -198,33 +211,37 @@
       border-color: var(--accent);
       background: rgba(176, 124, 255, 0.22);
       color: var(--ink);
-      box-shadow: 0 0 0 1.5px rgba(176, 124, 255, 0.4);
+      box-shadow: 0 0 0 1.5px rgba(176, 124, 255, 0.36);
     }
     .av-choice-label {
-      width: 100%;
-      padding: 0 2px;
+      width: 100%; padding: 0 2px;
       font-size: 9.2px; font-weight: 500; text-align: center;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    /* History Panel */
+    /* History & VPN Search Inputs */
     .hist-search {
-      width: 100%; height: 36px; padding: 0 13px; border-radius: 999px;
+      width: 100%; height: 34px; padding: 0 13px; border-radius: 999px;
       border: 1px solid var(--glass-border);
       background: rgba(128, 120, 168, 0.12);
-      color: var(--ink); font-family: inherit; font-size: 12.8px; outline: none; user-select: text;
+      color: var(--ink); font-family: inherit; font-size: 12.4px; outline: none; user-select: text;
       flex-shrink: 0;
+      transition: border-color 0.18s ease, background 0.18s ease;
     }
-    .hist-search:focus { border-color: var(--accent); }
+    .hist-search::placeholder { color: var(--ink-muted); }
+    .hist-search:focus { border-color: var(--accent); background: rgba(128, 120, 168, 0.16); }
+    body.theme-light .hist-search { background: rgba(24, 18, 52, 0.05); }
+    body.theme-light .hist-search:focus { background: rgba(255, 255, 255, 0.90); }
+
     .hist-group-title {
-      font-size: 10.8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+      font-size: 10.6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
       color: var(--ink-muted); padding: 6px 4px 2px;
     }
     .hist-row {
       display: flex; align-items: center; gap: 9px;
-      padding: 7px 9px; border-radius: 12px;
+      padding: 7px 9px; border-radius: 11px;
       cursor: pointer;
-      transition: background 0.15s ease, transform 0.18s ease;
+      transition: background 0.15s ease, transform 0.16s ease;
     }
     .hist-row:hover {
       background: var(--glass-hover-bg);
@@ -232,193 +249,338 @@
     }
     .hist-ico { width: 16px; height: 16px; border-radius: 4px; object-fit: contain; flex-shrink: 0; }
     .hist-meta { flex: 1; min-width: 0; }
-    .hist-title { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .hist-url { font-size: 10.8px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
-    .hist-time { font-size: 10.5px; color: var(--ink-subtle); flex-shrink: 0; }
+    .hist-title { font-size: 12.4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hist-url { font-size: 10.6px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .hist-time { font-size: 10.4px; color: var(--ink-subtle); flex-shrink: 0; }
     .hist-row-acts { display: none; align-items: center; gap: 2px; flex-shrink: 0; }
     .hist-row:hover .hist-time { display: none; }
     .hist-row:hover .hist-row-acts { display: flex; }
     .empty-msg {
-      padding: 48px 16px; text-align: center; color: var(--ink-muted); font-size: 12.5px;
+      padding: 42px 16px; text-align: center; color: var(--ink-muted); font-size: 12.4px;
     }
 
-    /* Mode 7: dejavu VPN Control Center */
+    /* =========================================================================
+       Mode 7: Safari Butterfly VPN Control Center (fits 384x536 cleanly!)
+       ========================================================================= */
+    .vpn-panel-box {
+      padding: 13px 14px 11px;
+      gap: 8px;
+    }
+    .vpn-title-ico {
+      width: 17px; height: 17px;
+      color: var(--accent-bright);
+      flex-shrink: 0;
+    }
     .vpn-hero {
-      padding: 13px 14px;
-      border-radius: 16px;
-      border: 1px solid var(--glass-border);
-      background: linear-gradient(145deg, rgba(140, 120, 210, 0.14), rgba(20, 18, 38, 0.45));
+      padding: 11px 12px;
+      border-radius: 15px;
+      border: 1px solid rgba(196, 164, 255, 0.18);
+      background: linear-gradient(150deg, rgba(136, 104, 226, 0.14), rgba(18, 15, 34, 0.56));
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
-      transition: border-color 0.28s ease, background 0.28s ease, box-shadow 0.28s ease;
+      transition: border-color 0.24s ease, background 0.24s ease, box-shadow 0.24s ease;
+    }
+    body.theme-light .vpn-hero {
+      border-color: rgba(24, 18, 52, 0.11);
+      background: linear-gradient(150deg, rgba(255, 255, 255, 0.90), rgba(242, 238, 254, 0.86));
     }
     .vpn-hero.connected {
-      border-color: rgba(94, 234, 212, 0.52);
-      background: linear-gradient(145deg, rgba(45, 212, 191, 0.18), rgba(56, 189, 248, 0.1) 55%, rgba(16, 20, 34, 0.46));
-      box-shadow: 0 8px 24px -10px rgba(45, 212, 191, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+      border-color: rgba(94, 234, 212, 0.48);
+      background: linear-gradient(150deg, rgba(45, 212, 191, 0.16), rgba(138, 102, 235, 0.10) 58%, rgba(14, 18, 32, 0.54));
+      box-shadow: 0 8px 22px -10px rgba(45, 212, 191, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.20);
+    }
+    body.theme-light .vpn-hero.connected {
+      border-color: rgba(13, 148, 136, 0.36);
+      background: linear-gradient(150deg, rgba(226, 252, 246, 0.92), rgba(238, 244, 255, 0.90));
+      box-shadow: 0 6px 18px -8px rgba(13, 148, 136, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.92);
     }
     .vpn-hero.connecting {
-      border-color: rgba(182, 136, 255, 0.56);
-      background: linear-gradient(145deg, rgba(168, 122, 255, 0.22), rgba(24, 18, 44, 0.48));
+      border-color: rgba(182, 136, 255, 0.52);
+      background: linear-gradient(150deg, rgba(168, 122, 255, 0.20), rgba(22, 16, 42, 0.54));
+    }
+    body.theme-light .vpn-hero.connecting {
+      border-color: rgba(124, 77, 255, 0.38);
+      background: linear-gradient(150deg, rgba(240, 233, 255, 0.94), rgba(248, 245, 255, 0.92));
     }
     .vpn-hero.error {
-      border-color: rgba(255, 118, 146, 0.52);
-      background: linear-gradient(145deg, rgba(255, 107, 139, 0.16), rgba(28, 14, 26, 0.48));
+      border-color: rgba(255, 118, 146, 0.50);
+      background: linear-gradient(150deg, rgba(255, 107, 139, 0.16), rgba(28, 14, 26, 0.52));
     }
+    body.theme-light .vpn-hero.error {
+      border-color: rgba(225, 29, 72, 0.34);
+      background: linear-gradient(150deg, rgba(255, 236, 240, 0.94), rgba(255, 246, 248, 0.92));
+    }
+
     .vpn-hero-top {
       display: flex;
       align-items: center;
-      gap: 11px;
+      gap: 10px;
     }
     .vpn-orb {
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       border: 1px solid var(--glass-border);
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.07);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       color: var(--ink-muted);
       flex-shrink: 0;
-      transition: all 0.28s ease;
+      transition: all 0.24s ease;
     }
+    body.theme-light .vpn-orb { background: rgba(24, 18, 52, 0.05); }
     .vpn-hero.connected .vpn-orb {
       color: #6fffe9;
-      border-color: rgba(94, 234, 212, 0.62);
-      background: rgba(45, 212, 191, 0.2);
-      box-shadow: 0 0 16px rgba(94, 234, 212, 0.36);
+      border-color: rgba(94, 234, 212, 0.60);
+      background: rgba(45, 212, 191, 0.18);
+      box-shadow: 0 0 14px rgba(94, 234, 212, 0.34);
+    }
+    body.theme-light .vpn-hero.connected .vpn-orb {
+      color: #0f766e;
+      border-color: rgba(13, 148, 136, 0.44);
+      background: rgba(20, 184, 166, 0.16);
+      box-shadow: 0 0 12px rgba(20, 184, 166, 0.18);
     }
     .vpn-hero.connecting .vpn-orb {
       color: var(--accent-bright);
-      border-color: rgba(196, 156, 255, 0.6);
-      background: rgba(176, 124, 255, 0.22);
+      border-color: rgba(196, 156, 255, 0.56);
+      background: rgba(176, 124, 255, 0.20);
     }
-    .vpn-hero-info {
-      flex: 1;
-      min-width: 0;
-    }
+    .vpn-hero-info { flex: 1; min-width: 0; }
     .vpn-hero-title {
-      font-size: 13.8px;
-      font-weight: 600;
-      color: var(--ink);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 13.4px; font-weight: 600; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .vpn-hero-sub {
-      font-size: 11.4px;
-      color: var(--ink-muted);
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 11px; color: var(--ink-muted); margin-top: 1px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+
+    /* Verified IP Strip + 1-Click "New IP" Pill */
     .vpn-ip-strip {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding: 6px 10px;
+      padding: 6px 8px 6px 10px;
       border-radius: 10px;
-      background: rgba(8, 12, 22, 0.42);
+      background: rgba(8, 11, 22, 0.48);
       border: 1px solid rgba(94, 234, 212, 0.24);
-      font-size: 11.2px;
+    }
+    body.theme-light .vpn-ip-strip {
+      background: rgba(13, 148, 136, 0.08);
+      border-color: rgba(13, 148, 136, 0.22);
+    }
+    .vpn-ip-meta {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; gap: 1px;
     }
     .vpn-ip-val {
       font-family: 'Cascadia Mono', 'Consolas', monospace;
+      font-variant-numeric: tabular-nums;
       color: #82ffec;
       font-weight: 600;
       font-size: 11.4px;
+      line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    body.theme-light .vpn-ip-val { color: #0f766e; }
     .vpn-ip-loc {
+      font-size: 10.4px;
       color: var(--ink-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    .vpn-rotate-btn {
+      height: 25px;
+      padding: 0 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(94, 234, 212, 0.42);
+      background: rgba(45, 212, 191, 0.16);
+      color: #82ffec;
+      font-family: inherit;
+      font-size: 10.6px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.16s ease, transform 0.24s var(--apple-spring), border-color 0.16s ease;
+    }
+    .vpn-rotate-btn svg { width: 11.5px; height: 11.5px; flex-shrink: 0; }
+    .vpn-rotate-btn:hover {
+      background: rgba(45, 212, 191, 0.28);
+      border-color: rgba(130, 255, 236, 0.68);
+      transform: translateY(-1px);
+    }
+    .vpn-rotate-btn:active { transform: scale(0.93); }
+    .vpn-rotate-btn.rotating svg { animation: spin 0.7s linear infinite; }
+    body.theme-light .vpn-rotate-btn {
+      color: #0f766e;
+      background: rgba(20, 184, 166, 0.15);
+      border-color: rgba(13, 148, 136, 0.36);
+    }
+    body.theme-light .vpn-rotate-btn:hover {
+      background: rgba(20, 184, 166, 0.24);
+    }
+
+    /* Compact Live Telemetry Row (Session Timer + Encrypted Data) */
+    .vpn-telemetry-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 5px 9px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 10.8px;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-muted);
+    }
+    body.theme-light .vpn-telemetry-row {
+      background: rgba(24, 18, 52, 0.045);
+      border-color: rgba(24, 18, 52, 0.08);
+    }
+    .vpn-telem-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .vpn-telem-item strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
     .vpn-prog-track {
       height: 4px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.10);
       overflow: hidden;
     }
+    body.theme-light .vpn-prog-track { background: rgba(24, 18, 52, 0.09); }
     .vpn-prog-fill {
       height: 100%;
       width: 0%;
       border-radius: 999px;
       background: linear-gradient(90deg, #a778ff, #6fffe9);
-      transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: width 0.30s var(--apple-fluid);
     }
     .vpn-badge-live {
-      font-size: 10.6px;
+      font-size: 10.4px;
       font-weight: 600;
-      padding: 3px 9px;
+      padding: 2.5px 8px;
       border-radius: 999px;
       border: 1px solid var(--glass-border);
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.07);
       color: var(--ink-muted);
     }
+    body.theme-light .vpn-badge-live { background: rgba(24, 18, 52, 0.05); }
     .vpn-badge-live.connected {
       color: #6fffe9;
       background: rgba(45, 212, 191, 0.18);
-      border-color: rgba(94, 234, 212, 0.5);
+      border-color: rgba(94, 234, 212, 0.48);
+    }
+    body.theme-light .vpn-badge-live.connected {
+      color: #0f766e;
+      background: rgba(20, 184, 166, 0.16);
+      border-color: rgba(13, 148, 136, 0.36);
     }
     .vpn-badge-live.connecting {
       color: var(--accent-bright);
-      background: rgba(176, 124, 255, 0.2);
-      border-color: rgba(196, 156, 255, 0.5);
+      background: rgba(176, 124, 255, 0.20);
+      border-color: rgba(196, 156, 255, 0.46);
     }
+
+    /* Country List Rows + Crisp Green Speed Dot */
     .vpn-country-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 7px 10px;
-      border-radius: 12px;
+      gap: 9px;
+      padding: 6px 9px;
+      border-radius: 11px;
       border: 1px solid transparent;
       cursor: pointer;
-      transition: background 0.16s ease, border-color 0.16s ease, transform 0.22s cubic-bezier(0.22, 1.15, 0.36, 1);
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.20s var(--apple-spring);
     }
     .vpn-country-row:hover {
       background: var(--glass-hover-bg);
       transform: translateX(2px);
     }
     .vpn-country-row.selected {
-      background: rgba(176, 124, 255, 0.18);
-      border-color: rgba(196, 156, 255, 0.42);
+      background: rgba(176, 124, 255, 0.16);
+      border-color: rgba(196, 156, 255, 0.38);
     }
     .vpn-country-row.active-conn {
-      background: rgba(45, 212, 191, 0.16);
-      border-color: rgba(94, 234, 212, 0.48);
+      background: rgba(45, 212, 191, 0.15);
+      border-color: rgba(94, 234, 212, 0.44);
+    }
+    body.theme-light .vpn-country-row.selected {
+      background: rgba(124, 77, 255, 0.10);
+      border-color: rgba(124, 77, 255, 0.26);
+    }
+    body.theme-light .vpn-country-row.active-conn {
+      background: rgba(20, 184, 166, 0.12);
+      border-color: rgba(13, 148, 136, 0.34);
     }
     .vpn-cc-pill {
       width: 32px;
-      height: 22px;
-      border-radius: 7px;
-      font-size: 10.5px;
+      height: 21px;
+      border-radius: 6.5px;
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.04em;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       color: var(--ink);
-      background: rgba(176, 124, 255, 0.18);
-      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(176, 124, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       flex-shrink: 0;
     }
+    body.theme-light .vpn-cc-pill {
+      background: rgba(124, 77, 255, 0.10);
+      border-color: rgba(124, 77, 255, 0.18);
+    }
     .vpn-country-row.active-conn .vpn-cc-pill {
-      background: rgba(45, 212, 191, 0.24);
-      border-color: rgba(94, 234, 212, 0.55);
+      background: rgba(45, 212, 191, 0.22);
+      border-color: rgba(94, 234, 212, 0.50);
       color: #82ffec;
     }
+    body.theme-light .vpn-country-row.active-conn .vpn-cc-pill {
+      background: rgba(20, 184, 166, 0.16);
+      border-color: rgba(13, 148, 136, 0.36);
+      color: #0f766e;
+    }
     .vpn-c-meta { flex: 1; min-width: 0; }
-    .vpn-c-name { font-size: 12.8px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vpn-c-reg { font-size: 10.6px; color: var(--ink-muted); }
+    .vpn-c-name { font-size: 12.4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vpn-c-reg { font-size: 10.3px; color: var(--ink-muted); }
+    .vpn-c-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .vpn-fast-dot {
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 6px rgba(52, 211, 153, 0.65);
+      flex-shrink: 0;
+    }
+    body.theme-light .vpn-fast-dot {
+      background: #10b981;
+      box-shadow: 0 0 5px rgba(16, 185, 129, 0.40);
+    }
     .vpn-c-check {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
       display: inline-flex;
       align-items: center;
@@ -426,13 +588,39 @@
       color: #6fffe9;
       flex-shrink: 0;
     }
+    body.theme-light .vpn-c-check { color: #0d9488; }
+
+    /* VPN Footer: Auto-connect on startup + protocol strip */
+    .vpn-footer {
+      flex-shrink: 0;
+      padding-top: 7px;
+      border-top: 1px solid rgba(255, 255, 255, 0.09);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    body.theme-light .vpn-footer {
+      border-top-color: rgba(24, 18, 52, 0.10);
+    }
+    .vpn-auto-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 2px;
+    }
+    .vpn-auto-label {
+      font-size: 11.4px;
+      font-weight: 500;
+      color: var(--ink);
+    }
     .vpn-foot-note {
-      font-size: 10.5px;
+      font-size: 10.2px;
       color: var(--ink-muted);
       text-align: center;
-      padding-top: 6px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* Mode 8: Floating Omnibox Autocomplete Suggestions */
@@ -454,7 +642,7 @@
       border-radius: 12px;
       cursor: pointer;
       color: var(--ink);
-      transition: background 0.14s ease, transform 0.18s cubic-bezier(0.22, 1.15, 0.36, 1);
+      transition: background 0.14s ease, transform 0.18s var(--apple-spring);
       flex-shrink: 0;
     }
     .sug-row:hover,
@@ -462,11 +650,12 @@
       background: rgba(182, 136, 255, 0.22);
     }
     .sug-row.selected {
-      box-shadow: inset 0 0 0 1px rgba(212, 184, 255, 0.38);
+      box-shadow: inset 0 0 0 1px rgba(212, 184, 255, 0.36);
     }
     body.theme-light .sug-row:hover,
     body.theme-light .sug-row.selected {
-      background: rgba(124, 77, 255, 0.14);
+      background: rgba(124, 77, 255, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(124, 77, 255, 0.24);
     }
     .sug-ico {
       width: 18px;
@@ -481,6 +670,9 @@
     .sug-ico.is-fav { color: #ffd66b; }
     .sug-ico.is-url, .sug-ico.is-site { color: #72e0ff; }
     .sug-ico.is-hist { color: #c7a6ff; }
+    body.theme-light .sug-ico.is-fav { color: #d97706; }
+    body.theme-light .sug-ico.is-url, body.theme-light .sug-ico.is-site { color: #0284c7; }
+    body.theme-light .sug-ico.is-hist { color: #7c4dff; }
     .sug-text {
       flex: 1;
       min-width: 0;
@@ -512,13 +704,17 @@
       background: rgba(255, 255, 255, 0.06);
       flex-shrink: 0;
     }
+    body.theme-light .sug-badge {
+      background: rgba(24, 18, 52, 0.06);
+      color: var(--ink-muted);
+    }
   </style>
 </head>
 <body class="theme-dark">
   <img id="backdrop-img" alt="" style="display:none;">
 
   <!-- Mode 1: Ad-Shield Popover -->
-  <div id="mode-shield" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="16" data-lg-dome="0.03">
+  <div id="mode-shield" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.025">
     <div class="shield-box">
       <div class="popover-head">
         <div class="popover-title-row">
@@ -558,7 +754,7 @@
   </div>
 
   <!-- Mode 2: Find-in-Page Pill -->
-  <div id="mode-find" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="14" data-lg-scale="20" data-lg-dispersion="1.08">
+  <div id="mode-find" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="12" data-lg-scale="14" data-lg-dome="0.02">
     <div class="find-box">
       <input id="find-q" type="text" placeholder="Find on page..." spellcheck="false" autocomplete="off">
       <button id="f-prev" class="icon-btn sm" title="Previous">
@@ -574,7 +770,7 @@
   </div>
 
   <!-- Mode 3: Download Progress Toast -->
-  <div id="mode-download" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="16" data-lg-scale="22" data-lg-dispersion="1.12">
+  <div id="mode-download" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.025">
     <div class="dl-box">
       <div class="dl-head">
         <span id="dl-name" class="dl-name">Download</span>
@@ -594,7 +790,7 @@
   </div>
 
   <!-- Mode 4: Butterfly Profile Hub + 16-Avatar Editor + Auto-Updater -->
-  <div id="mode-profiles" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="16" data-lg-dome="0.03">
+  <div id="mode-profiles" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.025">
     <!-- List View -->
     <div id="prof-view-list" class="panel-box">
       <div class="panel-head">
@@ -608,7 +804,7 @@
       <div id="other-prof-list" class="panel-scroll"></div>
 
       <div class="prof-footer">
-        <div id="prof-ver-text" class="ver-info">dejavu v2.1.0</div>
+        <div id="prof-ver-text" class="ver-info">dejavu v2.6.0</div>
         <button id="btn-update-action" class="pill-btn">Check updates</button>
       </div>
     </div>
@@ -638,7 +834,7 @@
   </div>
 
   <!-- Mode 5: Browsing History Panel -->
-  <div id="mode-history" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="16" data-lg-dome="0.03">
+  <div id="mode-history" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.025">
     <div class="panel-box">
       <div class="panel-head">
         <div class="panel-title">
@@ -658,7 +854,7 @@
   </div>
 
   <!-- Mode 6: Automatic Update Ready Floating Toast -->
-  <div id="mode-update" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-bezel="16" data-lg-scale="22" data-lg-dispersion="1.15">
+  <div id="mode-update" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.025">
     <div class="upd-box">
       <div class="upd-top">
         <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
@@ -674,11 +870,14 @@
     </div>
   </div>
 
-  <!-- Mode 7: Multi-Country Encrypted VPN Control Center -->
-  <div id="mode-vpn" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="16" data-lg-dome="0.03">
-    <div class="panel-box">
+  <!-- Mode 7: Safari Butterfly VPN Control Center -->
+  <div id="mode-vpn" class="overlay-shell glass-card hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="15" data-lg-dome="0.025">
+    <div class="panel-box vpn-panel-box">
       <div class="panel-head">
         <div class="panel-title">
+          <svg class="vpn-title-ico" viewBox="0 0 18 18" fill="none">
+            <path d="M9 9C7.4 5.4 3.5 4.2 2.7 6.8c-.6 2 1.2 3.5 3.4 3.3C4.4 11.4 3.9 13.7 5.6 14.3 7.2 14.9 8.6 12.6 9 10.6c.4 2 1.8 4.3 3.4 3.7 1.7-.6 1.2-2.9-.5-4.2 2.2.2 4-1.3 3.4-3.3C14.5 4.2 10.6 5.4 9 9z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/>
+          </svg>
           <span>dejavu VPN</span>
           <span id="vpn-state-badge" class="vpn-badge-live">Off</span>
         </div>
@@ -690,10 +889,10 @@
       <div id="vpn-hero-card" class="vpn-hero">
         <div class="vpn-hero-top">
           <div class="vpn-orb">
-            <svg viewBox="0 0 20 20" fill="none" width="20" height="20">
-              <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
-              <ellipse cx="10" cy="10" rx="3.2" ry="7" stroke="currentColor" stroke-width="1.4"/>
-              <path d="M3.4 7.8h13.2M3.4 12.2h13.2" stroke="currentColor" stroke-width="1.35"/>
+            <svg viewBox="0 0 20 20" fill="none" width="19" height="19">
+              <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.45"/>
+              <ellipse cx="10" cy="10" rx="3.2" ry="7" stroke="currentColor" stroke-width="1.3"/>
+              <path d="M3.4 7.8h13.2M3.4 12.2h13.2" stroke="currentColor" stroke-width="1.25" opacity="0.78"/>
             </svg>
           </div>
           <div class="vpn-hero-info">
@@ -704,8 +903,24 @@
         </div>
 
         <div id="vpn-ip-strip" class="vpn-ip-strip hidden">
-          <span id="vpn-ip-val" class="vpn-ip-val"></span>
-          <span id="vpn-ip-loc" class="vpn-ip-loc"></span>
+          <div class="vpn-ip-meta">
+            <span id="vpn-ip-val" class="vpn-ip-val"></span>
+            <span id="vpn-ip-loc" class="vpn-ip-loc"></span>
+          </div>
+          <button id="btn-vpn-rotate" class="vpn-rotate-btn" type="button" title="Get a fresh encrypted exit IP in this country">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M13.2 8a5.2 5.2 0 1 1-1.35-3.5M13.2 2.8v2.9h-2.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span id="vpn-rotate-label">New IP</span>
+          </button>
+        </div>
+
+        <div id="vpn-telemetry-row" class="vpn-telemetry-row hidden">
+          <span class="vpn-telem-item" title="Active encrypted session duration">
+            <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><circle cx="7" cy="7" r="5.2" stroke="currentColor" stroke-width="1.3"/><path d="M7 4.2V7.2l2 1.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <strong id="vpn-timer">00:00</strong>
+          </span>
+          <span class="vpn-telem-item" title="Encrypted traffic through VPN tunnel">
+            <span id="vpn-traffic">↓ 0 B · ↑ 0 B</span>
+          </span>
         </div>
 
         <div id="vpn-prog-wrap" class="vpn-prog-track hidden">
@@ -713,10 +928,16 @@
         </div>
       </div>
 
-      <input id="vpn-search-input" class="hist-search" type="text" placeholder="Search 22 major countries..." spellcheck="false" autocomplete="off">
+      <input id="vpn-search-input" class="hist-search" type="text" placeholder="Search 22 locations..." spellcheck="false" autocomplete="off">
       <div id="vpn-country-list" class="panel-scroll"></div>
 
-      <div class="vpn-foot-note">Browser-only 3-hop encrypted tunnel · Remote DNS &amp; WebRTC shield</div>
+      <div class="vpn-footer">
+        <div class="vpn-auto-row">
+          <span class="vpn-auto-label">Auto-connect on startup</span>
+          <button id="btn-vpn-autoconnect" class="liquid-switch sm" role="switch" title="Automatically connect VPN when dejavu starts"><span class="switch-knob"></span></button>
+        </div>
+        <div id="vpn-protocol-note" class="vpn-foot-note">3-Hop Encrypted · Remote DNS &amp; WebRTC shield</div>
+      </div>
     </div>
   </div>
 
@@ -797,7 +1018,7 @@
     const avatarPickerGrid = document.getElementById('avatar-picker-grid');
 
     let latestProfileData = null;
-    let editingProfileId = null; // null = create new, string = edit existing
+    let editingProfileId = null;
     let selectedAvatarId = 'blue-morpho';
 
     function openProfileEditor(profileOrNull) {
@@ -877,7 +1098,7 @@
 
       if (active) {
         activeProfCard.innerHTML = `
-          ${window.DejavuAvatars.renderHtml(active.avatar, 50)}
+          ${window.DejavuAvatars.renderHtml(active.avatar, 48)}
           <div class="active-prof-meta">
             <div class="active-prof-name"></div>
             <div class="active-prof-sub">Active profile · Isolated data</div>
@@ -931,7 +1152,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '2.1.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '2.6.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -1031,11 +1252,21 @@
     }
 
     function formatBytes(b) {
-      if (!b) return '0 B';
+      const n = Number(b || 0);
+      if (n <= 0) return '0 B';
       const u = ['B', 'KB', 'MB', 'GB'];
-      let i = 0, v = b;
+      let i = 0, v = n;
       while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
       return `${v.toFixed(i > 1 ? 1 : 0)} ${u[i]}`;
+    }
+
+    function formatDuration(sec) {
+      const s = Math.max(0, Math.floor(Number(sec || 0)));
+      const hrs = Math.floor(s / 3600);
+      const mins = Math.floor((s % 3600) / 60);
+      const rem = s % 60;
+      const pad = (x) => (x < 10 ? '0' + x : String(x));
+      return hrs > 0 ? `${hrs}:${pad(mins)}:${pad(rem)}` : `${pad(mins)}:${pad(rem)}`;
     }
 
     window.chrome.webview.addEventListener('message', (ev) => {
@@ -1133,7 +1364,7 @@
     });
 
     // =========================================================================
-    // Mode 7: Multi-Country VPN Panel Logic
+    // Mode 7: Safari Butterfly VPN Control Center Logic
     // =========================================================================
     function escapeHtml(s) {
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -1147,15 +1378,47 @@
     const vpnIpStrip = document.getElementById('vpn-ip-strip');
     const vpnIpVal = document.getElementById('vpn-ip-val');
     const vpnIpLoc = document.getElementById('vpn-ip-loc');
+    const btnVpnRotate = document.getElementById('btn-vpn-rotate');
+    const vpnRotateLabel = document.getElementById('vpn-rotate-label');
+    const vpnTelemetryRow = document.getElementById('vpn-telemetry-row');
+    const vpnTimer = document.getElementById('vpn-timer');
+    const vpnTraffic = document.getElementById('vpn-traffic');
     const vpnProgWrap = document.getElementById('vpn-prog-wrap');
     const vpnProgFill = document.getElementById('vpn-prog-fill');
     const vpnSearchInput = document.getElementById('vpn-search-input');
     const vpnCountryList = document.getElementById('vpn-country-list');
+    const btnVpnAutoConnect = document.getElementById('btn-vpn-autoconnect');
+    const vpnProtocolNote = document.getElementById('vpn-protocol-note');
+
     let lastVpnSnap = null;
     let lastVpnListSig = '';
+    let lastObservedExitIp = '';
+    let wasBusyWhileRotating = false;
+    let rotateFeedbackTimer = null;
 
     document.getElementById('btn-vpn-close').addEventListener('click', () => send({ type: 'closePanel' }));
     btnVpnToggle.addEventListener('click', () => send({ type: 'toggleVpn' }));
+
+    btnVpnRotate.addEventListener('click', () => {
+      if (btnVpnRotate.classList.contains('rotating')) return;
+      btnVpnRotate.classList.add('rotating');
+      wasBusyWhileRotating = false;
+      vpnRotateLabel.textContent = 'Rotating…';
+      send({ type: 'rotateVpnIp' });
+      if (rotateFeedbackTimer) clearTimeout(rotateFeedbackTimer);
+      rotateFeedbackTimer = setTimeout(() => {
+        btnVpnRotate.classList.remove('rotating');
+        wasBusyWhileRotating = false;
+        vpnRotateLabel.textContent = 'New IP';
+      }, 6000);
+    });
+
+    btnVpnAutoConnect.addEventListener('click', () => {
+      const nextEnabled = !btnVpnAutoConnect.classList.contains('on');
+      btnVpnAutoConnect.classList.toggle('on', nextEnabled);
+      send({ type: 'setVpnAutoConnect', enabled: nextEnabled });
+    });
+
     vpnSearchInput.addEventListener('input', () => {
       lastVpnListSig = '';
       if (lastVpnSnap) renderVpnCountries(lastVpnSnap);
@@ -1175,13 +1438,35 @@
       vpnHeroCountry.textContent = v.countryName || 'Fastest Location';
       vpnHeroStatus.textContent = v.statusText || 'Disconnected · Direct connection';
 
-      if (isConn && v.exitIp) {
+      // Clear rotating visual once new IP lands or rotation cycle finishes
+      if (isBusy && btnVpnRotate.classList.contains('rotating')) {
+        wasBusyWhileRotating = true;
+      }
+      if (isConn && btnVpnRotate.classList.contains('rotating') && (wasBusyWhileRotating || (v.exitIp && v.exitIp !== lastObservedExitIp))) {
+        btnVpnRotate.classList.remove('rotating');
+        wasBusyWhileRotating = false;
+        vpnRotateLabel.textContent = 'New IP';
+        if (rotateFeedbackTimer) { clearTimeout(rotateFeedbackTimer); rotateFeedbackTimer = null; }
+      }
+      if (!isConn && !isBusy && btnVpnRotate.classList.contains('rotating')) {
+        btnVpnRotate.classList.remove('rotating');
+        wasBusyWhileRotating = false;
+        vpnRotateLabel.textContent = 'New IP';
+      }
+      if (v.exitIp) lastObservedExitIp = v.exitIp;
+
+      if (isConn) {
         vpnIpStrip.classList.remove('hidden');
-        vpnIpVal.textContent = v.exitIp;
+        vpnIpVal.textContent = v.exitIp || 'Verifying IP…';
         const loc = [v.exitCity, v.exitCountry].filter(Boolean).join(', ');
         vpnIpLoc.textContent = (loc || v.countryName || '') + (v.latencyMs ? ` · ${v.latencyMs}ms` : '');
+
+        vpnTelemetryRow.classList.remove('hidden');
+        vpnTimer.textContent = formatDuration(v.connectedSeconds);
+        vpnTraffic.textContent = `↓ ${formatBytes(v.bytesReceived)} · ↑ ${formatBytes(v.bytesSent)}`;
       } else {
         vpnIpStrip.classList.add('hidden');
+        vpnTelemetryRow.classList.add('hidden');
       }
 
       if (isBusy) {
@@ -1189,6 +1474,15 @@
         vpnProgFill.style.width = `${Math.max(8, Math.min(100, v.progress || 10))}%`;
       } else {
         vpnProgWrap.classList.add('hidden');
+      }
+
+      if (typeof v.autoConnect === 'boolean') {
+        btnVpnAutoConnect.classList.toggle('on', v.autoConnect);
+      }
+      if (v.protocol) {
+        vpnProtocolNote.textContent = `${v.protocol} · WebRTC shield`;
+      } else {
+        vpnProtocolNote.textContent = '3-Hop Encrypted · Remote DNS & WebRTC shield';
       }
 
       renderVpnCountries(v);
@@ -1199,7 +1493,8 @@
       const list = Array.isArray(v.countries) ? v.countries : [];
       const curCode = (v.countryCode || 'AUTO').toUpperCase();
       const isConn = v.state === 'connected';
-      const sig = `${q}|${curCode}|${isConn ? 1 : 0}|${list.length}`;
+      const fastCount = list.reduce((acc, c) => acc + (c && c.fast ? 1 : 0), 0);
+      const sig = `${q}|${curCode}|${isConn ? 1 : 0}|${list.length}|${fastCount}`;
       if (sig === lastVpnListSig) return;
       lastVpnListSig = sig;
 
@@ -1209,7 +1504,7 @@
         : list;
 
       if (filtered.length === 0) {
-        vpnCountryList.innerHTML = '<div class="empty-msg">No matching countries</div>';
+        vpnCountryList.innerHTML = '<div class="empty-msg">No matching locations</div>';
         return;
       }
 
@@ -1218,13 +1513,20 @@
         const row = document.createElement('div');
         row.className = 'vpn-country-row' + (isSel ? (isConn ? ' active-conn' : ' selected') : '');
         const ccLabel = c.code === 'AUTO' ? 'AUTO' : (c.code === 'GB' ? 'UK' : c.code);
+        const fastDot = c.fast ? '<span class="vpn-fast-dot" title="Fast high-capacity location"></span>' : '';
+        const checkSvg = isSel
+          ? '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3.5 8.5l3 3 6-6.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+          : '';
         row.innerHTML = `
           <span class="vpn-cc-pill">${ccLabel}</span>
           <div class="vpn-c-meta">
             <div class="vpn-c-name">${escapeHtml(c.name)}</div>
             <div class="vpn-c-reg">${escapeHtml(c.region || '')}</div>
           </div>
-          <span class="vpn-c-check">${isSel ? '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3.5 8.5l3 3 6-6.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</span>
+          <span class="vpn-c-right">
+            ${fastDot}
+            <span class="vpn-c-check">${checkSvg}</span>
+          </span>
         `;
         row.addEventListener('click', () => send({ type: 'selectVpnCountry', code: c.code }));
         vpnCountryList.appendChild(row);

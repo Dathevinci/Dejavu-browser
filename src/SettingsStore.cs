@@ -21,6 +21,7 @@ namespace DejavuBrowser
         public string wallpaper { get; set; }
         public string customWallpaperPath { get; set; }
         public string vpnCountry { get; set; }
+        public bool vpnAutoConnect { get; set; }
 
         public DejavuSettings()
         {
@@ -31,6 +32,7 @@ namespace DejavuBrowser
             wallpaper = "live:obsidian-prism";
             customWallpaperPath = "";
             vpnCountry = "AUTO";
+            vpnAutoConnect = false;
             shortcuts = new List<ShortcutItem>
             {
                 new ShortcutItem { name = "YouTube", url = "https://www.youtube.com" },

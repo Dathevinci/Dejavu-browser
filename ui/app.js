@@ -12,6 +12,7 @@
   const chromeHeader = document.getElementById('chrome-header');
   const tabbar = document.getElementById('tabbar');
   const toolbar = document.getElementById('toolbar');
+  const tabsArea = document.getElementById('tabs-area');
   const dragSpacer = document.getElementById('drag-spacer');
   const btnHome = document.getElementById('btn-home');
   const btnBack = document.getElementById('btn-back');
@@ -20,6 +21,7 @@
   const omniboxPill = document.getElementById('omnibox-pill');
   const omniboxInput = document.getElementById('omnibox-input');
   const omniboxIcon = document.getElementById('omnibox-icon');
+  const omniboxDomain = document.getElementById('omnibox-domain');
   const loadProgress = document.getElementById('load-progress');
   const btnFavStar = document.getElementById('btn-fav-star');
   const btnShield = document.getElementById('btn-shield');
@@ -41,8 +43,11 @@
   const newtabSearchInput = document.getElementById('newtab-search-input');
   const newtabSuggest = document.getElementById('newtab-suggest');
   const shortcutsGrid = document.getElementById('shortcuts-grid');
+  const newtabShieldChip = document.getElementById('newtab-shield-chip');
   const newtabStatText = document.getElementById('newtab-stat-text');
   const statDot = document.getElementById('stat-dot');
+  const newtabVpnChip = document.getElementById('newtab-vpn-chip');
+  const newtabVpnText = document.getElementById('newtab-vpn-text');
 
   const shortcutModal = document.getElementById('shortcut-modal');
   const scName = document.getElementById('sc-name');
@@ -120,14 +125,21 @@
   }, 550);
 
   // =========================================================================
-  // Native Win32 Frameless Window Drag & Controls
+  // Native Win32 Frameless Window Drag, Resize & Controls
   // =========================================================================
   document.getElementById('win-min').addEventListener('click', () => send({ type: 'windowMin' }));
   document.getElementById('win-max').addEventListener('click', () => send({ type: 'windowMax' }));
   document.getElementById('win-close').addEventListener('click', () => send({ type: 'windowClose' }));
 
   function isDraggableTarget(el) {
-    return el === chromeHeader || el === tabbar || el === toolbar || el === dragSpacer || el.id === 'tabs-area';
+    return (
+      el === chromeHeader ||
+      el === tabbar ||
+      el === toolbar ||
+      el === dragSpacer ||
+      el === tabsArea ||
+      el === tabsStrip
+    );
   }
 
   function detectResizeEdge(e) {
@@ -184,7 +196,7 @@
   });
 
   // =========================================================================
-  // Site-Adaptive Top-Bar Optical Light-Guide (Zero Text Ghosting!)
+  // Site-Adaptive Top-Bar Optical Light-Guide (Zero Text Glare!)
   // =========================================================================
   function getChromeHeight() {
     return body.classList.contains('has-favorites') ? 122 : 88;
@@ -210,9 +222,9 @@
 
     // Keep dark sites rich, cohesive & soothing (never washed-out milky grey!)
     if (!isLight) {
-      br = Math.min(br, 26);
-      bg = Math.min(bg, 24);
-      bb = Math.min(bb, 36);
+      br = Math.min(br, 24);
+      bg = Math.min(bg, 22);
+      bb = Math.min(bb, 34);
     }
 
     const baseGrad = topBackdropCtx.createLinearGradient(0, 0, 0, h);
@@ -220,7 +232,7 @@
       baseGrad.addColorStop(0, `rgb(${Math.min(255, br + 4)}, ${Math.min(255, bg + 4)}, ${Math.min(255, bb + 6)})`);
       baseGrad.addColorStop(1, `rgb(${br}, ${bg}, ${bb})`);
     } else {
-      baseGrad.addColorStop(0, `rgb(${Math.max(9, br + 4)}, ${Math.max(8, bg + 3)}, ${Math.max(16, bb + 8)})`);
+      baseGrad.addColorStop(0, `rgb(${Math.max(9, br + 3)}, ${Math.max(8, bg + 2)}, ${Math.max(15, bb + 6)})`);
       baseGrad.addColorStop(1, `rgb(${Math.max(8, br)}, ${Math.max(8, bg)}, ${Math.max(13, bb)})`);
     }
     topBackdropCtx.fillStyle = baseGrad;
@@ -231,12 +243,12 @@
       isLight ? [96, 172, 238] : [76, 162, 228]
     ];
 
-    // Whisper-soft ambient site color aura along top edge only — ZERO harsh ribbons cutting across URL text!
+    // Whisper-soft ambient site color aura along top edge only — ZERO harsh glare across URL text!
     const aura = topBackdropCtx.createRadialGradient(w * 0.25, 0, 10, w * 0.35, 0, w * 0.72);
     const c0 = zones[0];
     const c1 = zones[zones.length - 1];
-    aura.addColorStop(0, `rgba(${c0[0]}, ${c0[1]}, ${c0[2]}, ${isLight ? 0.08 : 0.13})`);
-    aura.addColorStop(0.55, `rgba(${c1[0]}, ${c1[1]}, ${c1[2]}, ${isLight ? 0.05 : 0.08})`);
+    aura.addColorStop(0, `rgba(${c0[0]}, ${c0[1]}, ${c0[2]}, ${isLight ? 0.07 : 0.11})`);
+    aura.addColorStop(0.55, `rgba(${c1[0]}, ${c1[1]}, ${c1[2]}, ${isLight ? 0.04 : 0.07})`);
     aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
     topBackdropCtx.fillStyle = aura;
     topBackdropCtx.fillRect(0, 0, w, h);
@@ -257,15 +269,21 @@
 
   btnFavStar.addEventListener('click', () => send({ type: 'toggleFavorite' }));
 
-  btnShield.addEventListener('click', () => {
+  function openShieldPopover() {
     const r = btnShield.getBoundingClientRect();
     send({ type: 'openShield', anchorRight: Math.round(r.right) });
-  });
+  }
 
-  btnVpn.addEventListener('click', () => {
+  function openVpnPopover() {
     const r = btnVpn.getBoundingClientRect();
     send({ type: 'openVpn', anchorRight: Math.round(r.right + 78) });
-  });
+  }
+
+  btnShield.addEventListener('click', openShieldPopover);
+  btnVpn.addEventListener('click', openVpnPopover);
+
+  if (newtabShieldChip) newtabShieldChip.addEventListener('click', openShieldPopover);
+  if (newtabVpnChip) newtabVpnChip.addEventListener('click', openVpnPopover);
 
   btnHistory.addEventListener('click', () => {
     const r = btnHistory.getBoundingClientRect();
@@ -282,11 +300,36 @@
   }, { passive: true });
 
   // =========================================================================
-  // Smart Omnibox & New Tab Autocomplete Suggestions
+  // Safari Smart Search Field & New Tab Autocomplete Suggestions
   // =========================================================================
   let pendingOmniboxValue = null;
   let ntSuggestItems = [];
   let ntSuggestIdx = -1;
+
+  function extractCleanDomain(url, fallback) {
+    if (!url || url === 'dejavu://newtab') return '';
+    try {
+      const u = new URL(url);
+      if (u.protocol === 'http:' || u.protocol === 'https:') {
+        return u.host.replace(/^www\./i, '');
+      }
+      return fallback || url;
+    } catch {
+      return fallback || url;
+    }
+  }
+
+  function syncOmniboxDisplay(active) {
+    if (!omniboxDomain) return;
+    if (active && !active.isNewTab) {
+      const domain = extractCleanDomain(active.url, active.displayUrl);
+      omniboxDomain.textContent = domain || active.displayUrl || '';
+      omniboxDomain.classList.remove('is-placeholder');
+    } else {
+      omniboxDomain.textContent = 'Search or enter website';
+      omniboxDomain.classList.add('is-placeholder');
+    }
+  }
 
   function escapeSugHtml(s) {
     return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -366,8 +409,16 @@
     rows.forEach((r, i) => r.classList.toggle('selected', i === ntSuggestIdx));
   }
 
+  omniboxPill.addEventListener('click', (e) => {
+    if (e.target.closest('button')) return;
+    if (document.activeElement !== omniboxInput) {
+      omniboxInput.focus();
+    }
+  });
+
   omniboxInput.addEventListener('focus', () => {
     pendingOmniboxValue = null;
+    omniboxPill.classList.add('is-editing');
     const active = state.tabs.find((t) => t.id === state.activeTabId);
     if (active && !active.isNewTab) {
       omniboxInput.value = active.url || '';
@@ -377,14 +428,17 @@
 
   omniboxInput.addEventListener('input', () => {
     pendingOmniboxValue = null;
+    omniboxPill.classList.add('is-editing');
     requestOmniboxSuggest();
   });
 
   omniboxInput.addEventListener('blur', () => {
     pendingOmniboxValue = null;
+    omniboxPill.classList.remove('is-editing');
     send({ type: 'suggestClose' });
     const active = state.tabs.find((t) => t.id === state.activeTabId);
     omniboxInput.value = (active && !active.isNewTab) ? (active.displayUrl || '') : '';
+    syncOmniboxDisplay(active);
   });
 
   omniboxInput.addEventListener('keydown', (e) => {
@@ -464,7 +518,7 @@
   }, { passive: true });
 
   // =========================================================================
-  // Shortcuts Grid on New Tab
+  // Safari Start Page Favorites Grid
   // =========================================================================
   let lastShortcutsSig = '';
 
@@ -488,7 +542,7 @@
       tile.setAttribute('data-lg-bezel', '16');
       tile.setAttribute('data-lg-scale', '22');
       tile.setAttribute('data-lg-dispersion', '1.14');
-      tile.setAttribute('data-lg-dome', '0.07');
+      tile.setAttribute('data-lg-dome', '0.06');
       tile.title = sc.url;
 
       const icoWrap = document.createElement('div');
@@ -535,7 +589,7 @@
       addTile.setAttribute('data-lg-bezel', '16');
       addTile.setAttribute('data-lg-scale', '20');
       addTile.setAttribute('data-lg-dispersion', '1.08');
-      addTile.title = 'Add quick site';
+      addTile.title = 'Add favorite site';
       addTile.innerHTML = `
         <div class="shortcut-ico-wrap">
           <svg viewBox="0 0 18 18" width="18" height="18" fill="none"><path d="M9 4v10M4 9h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -666,7 +720,7 @@
   });
 
   // =========================================================================
-  // Render Tabs & Synchronize State From Native Host
+  // Safari Balanced Flex Tabs & GPU Active Tab Liquid Glide
   // =========================================================================
   const tabEls = new Map();
 
@@ -689,6 +743,16 @@
   window.addEventListener('resize', () => {
     requestAnimationFrame(() => updateActiveTabGlide(state.activeTabId));
   });
+
+  if (typeof ResizeObserver !== 'undefined') {
+    const tabResizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        tabsStrip.classList.toggle('scrollable', tabsStrip.scrollWidth > tabsStrip.clientWidth + 4);
+        updateActiveTabGlide(state.activeTabId);
+      });
+    });
+    tabResizeObserver.observe(tabsStrip);
+  }
 
   function requestCloseTab(tabId, el) {
     if ((state.tabs || []).length <= 1) {
@@ -722,12 +786,14 @@
         el.setAttribute('role', 'tab');
         el.setAttribute('data-liquid-glass', '');
         el.setAttribute('data-lg-fast', '1');
-        el.setAttribute('data-lg-bezel', '11');
-        el.setAttribute('data-lg-scale', '15');
+        el.setAttribute('data-lg-bezel', '9');
+        el.setAttribute('data-lg-scale', '12');
         el.innerHTML = `
-          <span class="tab-spinner hidden"></span>
-          <img class="tab-favicon" alt="" draggable="false">
-          <span class="tab-title"></span>
+          <span class="tab-content">
+            <span class="tab-spinner hidden"></span>
+            <img class="tab-favicon" alt="" draggable="false">
+            <span class="tab-title"></span>
+          </span>
           <button class="tab-close" title="Close tab (Ctrl+W)" aria-label="Close tab">
             <svg viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           </button>
@@ -785,9 +851,33 @@
       statDot.style.background = 'rgba(255,255,255,0.35)';
       statDot.style.boxShadow = 'none';
     } else {
-      newtabStatText.textContent = `Ad blocker active · ${Number(total || 0).toLocaleString()} ads blocked`;
+      newtabStatText.textContent = `Ad blocker active · ${Number(total || 0).toLocaleString()} blocked`;
       statDot.style.background = '';
       statDot.style.boxShadow = '';
+    }
+  }
+
+  function updateNewtabVpnChip(vpn) {
+    if (!newtabVpnChip || !newtabVpnText) return;
+    if (!vpn) {
+      newtabVpnChip.classList.remove('connected', 'connecting');
+      newtabVpnText.textContent = 'VPN: Off';
+      return;
+    }
+    const vst = vpn.state || 'disconnected';
+    const isConn = vst === 'connected';
+    const isBusy = vst === 'connecting' || vst === 'downloading';
+    newtabVpnChip.classList.toggle('connected', isConn);
+    newtabVpnChip.classList.toggle('connecting', isBusy);
+    if (isConn) {
+      const rawCode = (vpn.exitCountryCode || vpn.countryCode || 'AUTO').toUpperCase();
+      const codeDisp = rawCode === 'GB' ? 'UK' : (rawCode === 'AUTO' ? 'Auto' : rawCode);
+      const locLabel = vpn.exitCountry || vpn.countryName || codeDisp;
+      newtabVpnText.textContent = `VPN: Protected (${locLabel})`;
+    } else if (isBusy) {
+      newtabVpnText.textContent = `VPN: Connecting…`;
+    } else {
+      newtabVpnText.textContent = 'VPN: Off';
     }
   }
 
@@ -816,7 +906,7 @@
       chip.setAttribute('data-liquid-glass', '');
       chip.setAttribute('data-lg-fast', '1');
       chip.setAttribute('data-lg-bezel', '9');
-      chip.setAttribute('data-lg-scale', '13');
+      chip.setAttribute('data-lg-scale', '12');
       chip.title = fav.url;
 
       const host = extractHost(fav.url);
@@ -867,12 +957,13 @@
     renderShortcuts(next.shortcuts || []);
     renderFavoritesBar(next.favorites || []);
     updateStatText(next.globalAdBlockEnabled, next.totalBlocked);
+    updateNewtabVpnChip(next.vpn);
 
     if (next.activeProfile && window.DejavuAvatars) {
       const avKey = `${next.activeProfile.avatar}_${next.activeProfile.name}`;
       if (avKey !== lastAvatarRendered) {
         lastAvatarRendered = avKey;
-        profileAvatarSlot.innerHTML = window.DejavuAvatars.renderHtml(next.activeProfile.avatar, 26);
+        profileAvatarSlot.innerHTML = window.DejavuAvatars.renderHtml(next.activeProfile.avatar, 24);
         btnProfile.title = `${next.activeProfile.name} · Profiles & Updates`;
       }
     }
@@ -891,6 +982,10 @@
     btnFavStar.classList.toggle('hidden', onNewTab);
     btnFavStar.classList.toggle('starred', !!next.isCurrentFavorite);
     btnFavStar.title = next.isCurrentFavorite ? 'Remove from top bar favorites (Ctrl+D)' : 'Pin to top bar favorites (Ctrl+D)';
+
+    btnReload.classList.toggle('hidden', onNewTab);
+    btnReload.classList.toggle('loading', !!(active && active.loading));
+    btnReload.title = (active && active.loading) ? 'Stop loading' : 'Reload (Ctrl+R)';
 
     if (onNewTab) {
       body.classList.add('on-newtab', 'theme-dark');
@@ -915,7 +1010,6 @@
 
     btnBack.disabled = !active || active.isNewTab || !active.canGoBack;
     btnForward.disabled = !active || active.isNewTab || !active.canGoForward;
-    btnReload.classList.toggle('loading', !!(active && active.loading));
 
     if (active && active.loading) {
       loadProgress.classList.add('active');
@@ -929,6 +1023,7 @@
     }
 
     omniboxIcon.classList.toggle('secure', !!(active && !active.isNewTab && /^https:\/\//i.test(active.url || '')));
+    syncOmniboxDisplay(active);
     if (document.activeElement !== omniboxInput) {
       omniboxInput.value = (active && !active.isNewTab) ? (active.displayUrl || '') : '';
     }
@@ -992,6 +1087,7 @@
         omniboxInput.focus();
         omniboxInput.select();
       } else if (msg.type === 'suggestFill') {
+        omniboxPill.classList.add('is-editing');
         omniboxInput.value = msg.fill || '';
         pendingOmniboxValue = msg.value || msg.fill || null;
       } else if (msg.type === 'newtabSuggestions') {
@@ -1000,13 +1096,13 @@
     });
   }
 
-  // Hydrate boot state synchronously BEFORE first paint (zero flash of 0 ads / missing avatar / default shortcuts!)
+  // Hydrate boot state synchronously BEFORE first paint (zero flash!)
   if (bootData.shortcuts) renderShortcuts(bootData.shortcuts);
   if (bootData.favorites) renderFavoritesBar(bootData.favorites);
   updateStatText(state.globalAdBlockEnabled, state.totalBlocked);
   if (bootData.activeProfile && window.DejavuAvatars) {
     lastAvatarRendered = `${bootData.activeProfile.avatar}_${bootData.activeProfile.name}`;
-    profileAvatarSlot.innerHTML = window.DejavuAvatars.renderHtml(bootData.activeProfile.avatar, 26);
+    profileAvatarSlot.innerHTML = window.DejavuAvatars.renderHtml(bootData.activeProfile.avatar, 24);
     btnProfile.title = `${bootData.activeProfile.name} · Profiles & Updates`;
   }
 })();

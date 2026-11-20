@@ -80,6 +80,7 @@ namespace DejavuBrowser
         private OverlayPopup _hudPopup;       // Non-stealing or explicit close: Find, Download, Update
         private OverlayPopup _suggestPopup;   // Never-activating Omnibox Suggestions dropdown (floats over webpages!)
         private System.Windows.Forms.Timer _downloadHideTimer;
+        private System.Windows.Forms.Timer _vpnTelemetryTimer;
         private string _activePopoverMode = "";
         private string _activeHudMode = "";
         private string _lastHiddenPopoverMode = "";
@@ -100,6 +101,7 @@ namespace DejavuBrowser
         private int _popoverBackdropSeq;
 
         private readonly List<BrowserTab> _tabs = new List<BrowserTab>();
+        private readonly Stack<string> _closedTabUrls = new Stack<string>();
         private int _activeTabId = -1;
         private int _nextTabId = 1;
 
@@ -135,7 +137,7 @@ namespace DejavuBrowser
             _updater.StatusChanged += OnUpdaterStatusChanged;
 
             _proxyBridge = new LocalProxyBridge();
-            _vpn = new VpnManager(_proxyBridge, _settings.vpnCountry);
+            _vpn = new VpnManager(_proxyBridge, _settings.vpnCountry, _settings.vpnAutoConnect);
             _vpn.StateChanged += OnVpnStateChanged;
 
             Text = "dejavu";
@@ -164,6 +166,19 @@ namespace DejavuBrowser
                 }
             };
 
+            _vpnTelemetryTimer = new System.Windows.Forms.Timer();
+            _vpnTelemetryTimer.Interval = 1000;
+            _vpnTelemetryTimer.Tick += (s, e) =>
+            {
+                if (IsDisposed || _popoverPopup == null || !_popoverPopup.IsPopupOpen ||
+                    _activePopoverMode != "vpn" || _vpn == null || !_vpn.IsConnected)
+                {
+                    _vpnTelemetryTimer.Stop();
+                    return;
+                }
+                SendVpnPanelState(null);
+            };
+
             Load += OnFormLoad;
             Resize += (s, e) =>
             {
@@ -184,6 +199,16 @@ namespace DejavuBrowser
             };
             FormClosing += (s, e) =>
             {
+                if (_vpnTelemetryTimer != null)
+                {
+                    _vpnTelemetryTimer.Stop();
+                    _vpnTelemetryTimer.Dispose();
+                }
+                if (_downloadHideTimer != null)
+                {
+                    _downloadHideTimer.Stop();
+                    _downloadHideTimer.Dispose();
+                }
                 _adBlocker.FlushStats();
                 if (_vpn != null) _vpn.Dispose();
                 if (_proxyBridge != null) _proxyBridge.Dispose();
@@ -224,7 +249,27 @@ namespace DejavuBrowser
         private void HidePopover(bool keepOwnerForeground)
         {
             _activePopoverMode = "";
+            SyncVpnTelemetryTimer();
             if (_popoverPopup != null) _popoverPopup.HidePopup(keepOwnerForeground);
+        }
+
+        private void SyncVpnTelemetryTimer()
+        {
+            if (_vpnTelemetryTimer == null) return;
+            bool shouldRun = !IsDisposed &&
+                _popoverPopup != null &&
+                _popoverPopup.IsPopupOpen &&
+                _activePopoverMode == "vpn" &&
+                _vpn != null &&
+                _vpn.IsConnected;
+            if (shouldRun)
+            {
+                if (!_vpnTelemetryTimer.Enabled) _vpnTelemetryTimer.Start();
+            }
+            else
+            {
+                if (_vpnTelemetryTimer.Enabled) _vpnTelemetryTimer.Stop();
+            }
         }
 
         private void HideHud()
@@ -418,6 +463,11 @@ namespace DejavuBrowser
                 string startUrl = string.IsNullOrEmpty(_initialUrl) ? null : ResolveInputToUrl(_initialUrl);
                 CreateTab(startUrl, true);
 
+                if (_settings.vpnAutoConnect)
+                {
+                    StartVpnAutoConnectAsync();
+                }
+
                 // Silent background auto-update check 4 seconds after launch
                 StartBackgroundUpdateCheckAsync();
             }
@@ -429,6 +479,18 @@ namespace DejavuBrowser
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
+        }
+
+        private async void StartVpnAutoConnectAsync()
+        {
+            try
+            {
+                if (!IsDisposed && _vpn != null && _settings != null && _settings.vpnAutoConnect && !_vpn.IsBusyOrConnected)
+                {
+                    await _vpn.ConnectAsync(_settings.vpnCountry);
+                }
+            }
+            catch { }
         }
 
         private async void StartBackgroundUpdateCheckAsync()
@@ -476,6 +538,7 @@ namespace DejavuBrowser
                     {
                         SendVpnPanelState(null);
                     }
+                    SyncVpnTelemetryTimer();
                 }));
             }
             catch { }
@@ -524,6 +587,7 @@ namespace DejavuBrowser
                         _lastPopoverHiddenUtc = DateTime.UtcNow;
                         _activePopoverMode = "";
                     }
+                    SyncVpnTelemetryTimer();
                 };
                 await _popoverPopup.InitializeAsync(_shellEnv, HandleVirtualResource);
 
@@ -695,9 +759,11 @@ namespace DejavuBrowser
                 }
             }
             _tabs.Clear();
+            _closedTabUrls.Clear();
             _activeTabId = -1;
 
             _settings = _profiles.LoadActiveSettings();
+            if (_vpn != null) _vpn.AutoConnect = _settings.vpnAutoConnect;
             _adBlocker.SwitchProfileSettings(_settings, _profiles.ActiveSettingsPath);
             _activeProfileEnv = await GetOrCreateProfileEnvAsync(_profiles.ActiveProfile.id);
 
@@ -784,6 +850,42 @@ namespace DejavuBrowser
             }
         }
 
+        private void RecordClosedTabUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url) ||
+                string.Equals(url, "dejavu://newtab", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(url, "about:blank", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            if (_closedTabUrls.Count >= 25)
+            {
+                string[] existing = _closedTabUrls.ToArray();
+                _closedTabUrls.Clear();
+                int keep = Math.Min(existing.Length, 24);
+                for (int i = keep - 1; i >= 0; i--)
+                {
+                    _closedTabUrls.Push(existing[i]);
+                }
+            }
+            _closedTabUrls.Push(url);
+        }
+
+        private void ReopenLastClosedTab()
+        {
+            while (_closedTabUrls.Count > 0)
+            {
+                string url = _closedTabUrls.Pop();
+                if (!string.IsNullOrEmpty(url) &&
+                    !string.Equals(url, "dejavu://newtab", StringComparison.OrdinalIgnoreCase))
+                {
+                    CreateTab(url, true);
+                    return;
+                }
+            }
+        }
+
         private void CloseTab(int tabId)
         {
             int idx = -1;
@@ -794,6 +896,10 @@ namespace DejavuBrowser
             if (idx < 0) return;
 
             BrowserTab tab = _tabs[idx];
+            if (!tab.IsNewTab)
+            {
+                RecordClosedTabUrl(tab.Url);
+            }
 
             if (_tabs.Count == 1)
             {
@@ -1363,6 +1469,7 @@ namespace DejavuBrowser
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), _json.Serialize(payload), true);
+            SyncVpnTelemetryTimer();
             if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "shield");
         }
 
@@ -1392,6 +1499,7 @@ namespace DejavuBrowser
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildProfilesPayloadJson(cached ?? ""), true);
+            SyncVpnTelemetryTimer();
             if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "profiles");
         }
 
@@ -1447,6 +1555,7 @@ namespace DejavuBrowser
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildHistoryPayloadJson(cached ?? ""), true);
+            SyncVpnTelemetryTimer();
             if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "history");
         }
 
@@ -1476,6 +1585,7 @@ namespace DejavuBrowser
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildVpnPayloadJson(cached ?? ""), true);
+            SyncVpnTelemetryTimer();
             if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "vpn");
         }
 
@@ -1683,10 +1793,10 @@ namespace DejavuBrowser
             {
                 { "mode", "history" },
                 { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
-                { "backdrop", backdrop ?? "" },
                 { "profileName", _profiles.ActiveProfile.name },
                 { "items", slice }
             };
+            if (backdrop != null) payload["backdrop"] = backdrop;
             return _json.Serialize(payload);
         }
 
@@ -1821,11 +1931,14 @@ namespace DejavuBrowser
 
             if (key == Keys.F11) { SetHtmlFullscreen(!_isHtmlFullscreen); return true; }
             if (key == Keys.F5) { ReloadActiveTab(); return true; }
+            if (!ctrl && !alt && !shift && key == Keys.F6) { FocusShellOmnibox(); return true; }
+            if (alt && !ctrl && key == Keys.D) { FocusShellOmnibox(); return true; }
             if (alt && key == Keys.Left) { GoBackActiveTab(); return true; }
             if (alt && key == Keys.Right) { GoForwardActiveTab(); return true; }
 
             if (ctrl && !alt)
             {
+                if (shift && key == Keys.T) { ReopenLastClosedTab(); return true; }
                 if (key == Keys.T) { CreateTab(null, true); return true; }
                 if (key == Keys.W) { CloseTab(_activeTabId); return true; }
                 if (key == Keys.L) { FocusShellOmnibox(); return true; }
@@ -1834,6 +1947,23 @@ namespace DejavuBrowser
                 if (key == Keys.H) { ShowHistoryPopoverAt((int)(ClientSize.Width / DpiScale) - 110); return true; }
                 if (key == Keys.D) { ToggleFavoriteActiveTab(); return true; }
                 if (shift && key == Keys.M) { ShowProfilesPopoverAt((int)(ClientSize.Width / DpiScale) - 108); return true; }
+                if (!shift && ((key >= Keys.D1 && key <= Keys.D8) || (key >= Keys.NumPad1 && key <= Keys.NumPad8)))
+                {
+                    int tabIndex = (key >= Keys.NumPad1) ? (key - Keys.NumPad1) : (key - Keys.D1);
+                    if (tabIndex >= 0 && tabIndex < _tabs.Count)
+                    {
+                        ActivateTab(_tabs[tabIndex].Id);
+                    }
+                    return true;
+                }
+                if (!shift && (key == Keys.D9 || key == Keys.NumPad9))
+                {
+                    if (_tabs.Count > 0)
+                    {
+                        ActivateTab(_tabs[_tabs.Count - 1].Id);
+                    }
+                    return true;
+                }
                 if (key == Keys.Tab)
                 {
                     if (_tabs.Count > 1)
@@ -1974,6 +2104,9 @@ namespace DejavuBrowser
                         break;
                     case "closeTab":
                         CloseTab(Convert.ToInt32(msg["id"]));
+                        break;
+                    case "reopenClosedTab":
+                        ReopenLastClosedTab();
                         break;
                     case "home":
                         GoHomeActiveTab();
@@ -2172,6 +2305,19 @@ namespace DejavuBrowser
                 else if (type == "disconnectVpn")
                 {
                     _vpn.Disconnect();
+                }
+                else if (type == "rotateVpnIp")
+                {
+                    await _vpn.RotateIdentityAsync();
+                }
+                else if (type == "setVpnAutoConnect")
+                {
+                    bool enabled = msg.ContainsKey("enabled") && Convert.ToBoolean(msg["enabled"]);
+                    _settings.vpnAutoConnect = enabled;
+                    _profiles.SaveActiveSettings(_settings);
+                    _vpn.AutoConnect = enabled;
+                    PushFullStateToShell();
+                    SendVpnPanelState(null);
                 }
                 else if (type == "pickSuggestion")
                 {

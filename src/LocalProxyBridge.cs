@@ -26,6 +26,8 @@ namespace DejavuBrowser
 
         private volatile bool _vpnEnabled;
         private volatile int _socksPort;
+        private long _vpnBytesSent;
+        private long _vpnBytesReceived;
         private bool _disposed;
 
         public int ListenPort { get; private set; }
@@ -33,6 +35,22 @@ namespace DejavuBrowser
         public bool VpnEnabled
         {
             get { return _vpnEnabled; }
+        }
+
+        public long VpnBytesSent
+        {
+            get { return Interlocked.Read(ref _vpnBytesSent); }
+        }
+
+        public long VpnBytesReceived
+        {
+            get { return Interlocked.Read(ref _vpnBytesReceived); }
+        }
+
+        public void ResetVpnCounters()
+        {
+            Interlocked.Exchange(ref _vpnBytesSent, 0);
+            Interlocked.Exchange(ref _vpnBytesReceived, 0);
         }
 
         public LocalProxyBridge()
@@ -165,6 +183,14 @@ namespace DejavuBrowser
                             return;
                         }
 
+                        if (!useVpn && _vpnEnabled)
+                        {
+                            try { upstream.Close(); } catch { }
+                            upstream = null;
+                            await WriteAsciiAsync(clientStream, "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\n\r\n").ConfigureAwait(false);
+                            return;
+                        }
+
                         trackedAsVpn = true;
                         TrackVpnSocket(upstream, client);
 
@@ -174,9 +200,10 @@ namespace DejavuBrowser
                         if (leftoverLen > 0)
                         {
                             await upStream.WriteAsync(headerBuf, bodyStart, leftoverLen, token).ConfigureAwait(false);
+                            if (useVpn) Interlocked.Add(ref _vpnBytesSent, leftoverLen);
                         }
 
-                        await RelayBidirectionalAsync(client, clientStream, upstream, upStream, token).ConfigureAwait(false);
+                        await RelayBidirectionalAsync(client, clientStream, upstream, upStream, useVpn, token).ConfigureAwait(false);
                     }
                     else
                     {
@@ -204,6 +231,14 @@ namespace DejavuBrowser
                         if (upstream == null)
                         {
                             await WriteAsciiAsync(clientStream, "HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n").ConfigureAwait(false);
+                            return;
+                        }
+
+                        if (!useVpn && _vpnEnabled)
+                        {
+                            try { upstream.Close(); } catch { }
+                            upstream = null;
+                            await WriteAsciiAsync(clientStream, "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\n\r\n").ConfigureAwait(false);
                             return;
                         }
 
@@ -235,12 +270,14 @@ namespace DejavuBrowser
                         byte[] rewritten = Encoding.ASCII.GetBytes(sb.ToString());
                         NetworkStream upStream = upstream.GetStream();
                         await upStream.WriteAsync(rewritten, 0, rewritten.Length, token).ConfigureAwait(false);
+                        if (useVpn) Interlocked.Add(ref _vpnBytesSent, rewritten.Length);
                         if (leftoverLen > 0)
                         {
                             await upStream.WriteAsync(headerBuf, bodyStart, leftoverLen, token).ConfigureAwait(false);
+                            if (useVpn) Interlocked.Add(ref _vpnBytesSent, leftoverLen);
                         }
 
-                        await RelayBidirectionalAsync(client, clientStream, upstream, upStream, token).ConfigureAwait(false);
+                        await RelayBidirectionalAsync(client, clientStream, upstream, upStream, useVpn, token).ConfigureAwait(false);
                     }
                 }
             }
@@ -418,8 +455,9 @@ namespace DejavuBrowser
 
                     string req = "GET " + path + " HTTP/1.1\r\n" +
                                  "Host: " + host + "\r\n" +
-                                 "User-Agent: dejavu-vpn/2.4\r\n" +
+                                 "User-Agent: dejavu-vpn/2.6\r\n" +
                                  "Accept: application/json\r\n" +
+                                 "Accept-Encoding: identity\r\n" +
                                  "Connection: close\r\n\r\n";
                     byte[] reqBytes = Encoding.ASCII.GetBytes(req);
                     await ssl.WriteAsync(reqBytes, 0, reqBytes.Length, token).ConfigureAwait(false);
@@ -439,10 +477,16 @@ namespace DejavuBrowser
                         int sep = FindHeaderEnd(raw, raw.Length);
                         if (sep < 0) return null;
                         string headers = Encoding.ASCII.GetString(raw, 0, sep);
-                        string body = Encoding.UTF8.GetString(raw, sep + 4, raw.Length - (sep + 4));
+                        int bodyOffset = sep + 4;
+                        string body;
                         if (headers.IndexOf("Transfer-Encoding: chunked", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            body = DecodeChunkedBody(body);
+                            byte[] decoded = DecodeChunkedBytes(raw, bodyOffset);
+                            body = Encoding.UTF8.GetString(decoded);
+                        }
+                        else
+                        {
+                            body = Encoding.UTF8.GetString(raw, bodyOffset, raw.Length - bodyOffset);
                         }
                         return body.Trim();
                     }
@@ -454,38 +498,49 @@ namespace DejavuBrowser
             }
         }
 
-        private static string DecodeChunkedBody(string input)
+        private static byte[] DecodeChunkedBytes(byte[] raw, int startOffset)
         {
-            StringBuilder sb = new StringBuilder();
-            int pos = 0;
-            while (pos < input.Length)
+            using (MemoryStream outMs = new MemoryStream())
             {
-                int crlf = input.IndexOf("\r\n", pos, StringComparison.Ordinal);
-                if (crlf < 0) break;
-                string sizeHex = input.Substring(pos, crlf - pos).Trim();
-                int semi = sizeHex.IndexOf(';');
-                if (semi >= 0) sizeHex = sizeHex.Substring(0, semi);
-                int chunkLen;
-                if (!int.TryParse(sizeHex, System.Globalization.NumberStyles.HexNumber, null, out chunkLen) || chunkLen <= 0)
+                int pos = startOffset;
+                while (pos < raw.Length)
                 {
-                    break;
+                    int crlf = FindCrlf(raw, pos, raw.Length);
+                    if (crlf < 0) break;
+                    string sizeHex = Encoding.ASCII.GetString(raw, pos, crlf - pos).Trim();
+                    int semi = sizeHex.IndexOf(';');
+                    if (semi >= 0) sizeHex = sizeHex.Substring(0, semi);
+                    int chunkLen;
+                    if (!int.TryParse(sizeHex, System.Globalization.NumberStyles.HexNumber, null, out chunkLen) || chunkLen <= 0)
+                    {
+                        break;
+                    }
+                    pos = crlf + 2;
+                    if (pos + chunkLen > raw.Length) chunkLen = raw.Length - pos;
+                    if (chunkLen > 0) outMs.Write(raw, pos, chunkLen);
+                    pos += chunkLen + 2;
                 }
-                pos = crlf + 2;
-                if (pos + chunkLen > input.Length) chunkLen = input.Length - pos;
-                sb.Append(input, pos, chunkLen);
-                pos += chunkLen + 2;
+                return outMs.ToArray();
             }
-            return sb.ToString();
         }
 
-        private static async Task RelayBidirectionalAsync(TcpClient a, NetworkStream aStream, TcpClient b, NetworkStream bStream, CancellationToken token)
+        private static int FindCrlf(byte[] buf, int start, int len)
         {
-            Task t1 = PumpHalfAsync(aStream, bStream, b, token);
-            Task t2 = PumpHalfAsync(bStream, aStream, a, token);
+            for (int i = start; i <= len - 2; i++)
+            {
+                if (buf[i] == 13 && buf[i + 1] == 10) return i;
+            }
+            return -1;
+        }
+
+        private async Task RelayBidirectionalAsync(TcpClient a, NetworkStream aStream, TcpClient b, NetworkStream bStream, bool countVpnTraffic, CancellationToken token)
+        {
+            Task t1 = PumpHalfAsync(aStream, bStream, b, countVpnTraffic, true, token);
+            Task t2 = PumpHalfAsync(bStream, aStream, a, countVpnTraffic, false, token);
             await Task.WhenAll(t1, t2).ConfigureAwait(false);
         }
 
-        private static async Task PumpHalfAsync(NetworkStream src, NetworkStream dst, TcpClient dstClient, CancellationToken token)
+        private async Task PumpHalfAsync(NetworkStream src, NetworkStream dst, TcpClient dstClient, bool countVpnTraffic, bool isUpload, CancellationToken token)
         {
             byte[] buf = new byte[65536];
             try
@@ -495,6 +550,11 @@ namespace DejavuBrowser
                     int n = await src.ReadAsync(buf, 0, buf.Length, token).ConfigureAwait(false);
                     if (n <= 0) break;
                     await dst.WriteAsync(buf, 0, n, token).ConfigureAwait(false);
+                    if (countVpnTraffic)
+                    {
+                        if (isUpload) Interlocked.Add(ref _vpnBytesSent, n);
+                        else Interlocked.Add(ref _vpnBytesReceived, n);
+                    }
                 }
             }
             catch { }

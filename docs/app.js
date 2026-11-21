@@ -1,14 +1,14 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.2.0)
- * Brave-Grade Shields · Re-Engineered dejavu Link (Direct Wi-Fi LAN + TLS MQTT Retained E2EE)
- * Iconic Sculpted M3 Butterfly Logo · Pixel Message of the Day · Chromebook & Pixel M3
+ * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.3.0)
+ * Brave-Exact Shields Engine (270K+ Win / 100K+ Android Rules · ERR_BLOCKED_BY_CLIENT · Ad-Iframe & Popunder Blocking · YouTube Skip & ima3.js)
+ * Re-Engineered dejavu Link (Direct Wi-Fi LAN + TLS MQTT Retained E2EE) · Iconic Sculpted M3 Butterfly Logo · Pixel MOTD
  * Smooth Native Windows 11 Framing · Fluid Gliding M3 Pill Indicators · 6 Harmonized HCT Seeds
  * Interactive Chrome MV3 Extensions + Draggable Tabs + M3 Right-Click Context Menu
  * 52x32 Spring Switches · 4K->MP3 Video Demo · 16-Wallpaper Harmonizer
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v5.2.0';
+  const FALLBACK_VERSION = 'v5.3.0';
   const root = document.documentElement;
   const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let themeShiftTimer = null;
@@ -248,7 +248,7 @@
     });
   }
 
-  // 2. Clean 5-View Dual-Device Browser Showcase (v5.2.0 Brave Shields + Direct LAN/MQTT Link + Pixel MOTD)
+  // 2. Clean 5-View Dual-Device Browser Showcase (v5.3.0 Brave-Exact Shields + Direct LAN/MQTT Link + Pixel MOTD)
   const VIEW_META = {
     start:      { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
     sync:       { url: 'dejavu://link · Direct LAN + TLS MQTT E2EE (alex@gmail.com)', title: 'Direct LAN + MQTT · Pixel Online' },
@@ -448,7 +448,7 @@
   pxMotdBtn?.addEventListener('click', cyclePixelMotd);
 
   document.getElementById('dk-shield-pill')?.addEventListener('click', () => {
-    showSnackbar('Brave-Grade Shields ON · YouTube JSON-prune, URL cleaning, fingerprint farbling & cookie notices');
+    showSnackbar('Brave-Exact Shields ON · 270K+ rules, ERR_BLOCKED_BY_CLIENT, ad-iframe & popunder blocking, YouTube skip & farbling');
   });
 
   // 2b. Interactive Material Design 3 Right-Click Context Menu inside Hero Browser Mockup
@@ -685,7 +685,7 @@
     });
   }
 
-  // 2e. Interactive Chrome Extensions Manager Showcase (v5.2.0)
+  // 2e. Interactive Chrome Extensions Manager Showcase (v5.3.0)
   const DEMO_EXTS = {
     ublock:     { label: 'uB', name: 'uBlock Origin Lite',    enabled: true,  pinned: true },
     darkreader: { label: 'DR', name: 'Dark Reader',           enabled: true,  pinned: true },
@@ -1106,14 +1106,14 @@
         const lbl = sw.dataset.syncPref === 'clipboard' ? 'Shared Clipboard & History' : 'Live Tabs & Bookmarks';
         showSnackbar(`${lbl} real-time sync ${next ? 'enabled' : 'paused'}`);
       } else if (sw.dataset.bentoPref === 'shields') {
-        showSnackbar(next ? 'Brave Shields set to Aggressive · Ads, trackers, farbling & cookie notices blocked' : 'Brave Shields set to Standard protection');
+        showSnackbar(next ? 'Brave-Exact Shields Aggressive · 270K+ Brave/EasyList/uBlock/OISD rules, ad-iframe, popunder & Fanboy cookies blocked' : 'Brave-Exact Shields set to Standard protection');
       } else if (sw.dataset.bentoPref === 'link') {
         showSnackbar(next ? 'dejavu Link active · Direct Wi-Fi LAN + TLS MQTT Retained E2EE' : 'dejavu Link sync paused');
       }
     });
   });
 
-  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.2.0)
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.3.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

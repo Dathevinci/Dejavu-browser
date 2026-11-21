@@ -1,5 +1,5 @@
 /**
- * dejavu v5.2.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * dejavu v5.3.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
  * Zero-Glitch 120Hz Tab Strip, Diff-Guarded Shell DOM, Lightweight tabDelta IPC,
  * Iconic Sculpted M3 Butterfly Logo, Pixel Message of the Day, Brave-Grade Shields,
  * Real-Time dejavu Link Hub, Chrome Extensions Manager, 10-Category Settings & 8x Turbo Downloader.
@@ -525,7 +525,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.2.0 — 16 HD + 1 Live = 17 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.3.0 — 16 HD + 1 Live = 17 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 12 Sculptural / Architectural Material Design 3 HD Wallpapers
@@ -757,7 +757,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.2.0',
+    appVersion: bootData.appVersion || '5.3.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -1884,7 +1884,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.2.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.3.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2162,7 +2162,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.2.0';
+    const ver = state.appVersion || '5.3.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;

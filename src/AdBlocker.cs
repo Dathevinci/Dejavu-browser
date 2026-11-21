@@ -11,15 +11,38 @@ namespace DejavuBrowser
 {
     internal sealed class AdBlocker
     {
+        private const byte FLAG_THIRD_PARTY = 0x01;
+        private const byte FLAG_SCRIPT = 0x02;
+        private const byte FLAG_IMAGE = 0x04;
+        private const byte FLAG_SUBDOCUMENT = 0x08;
+        private const byte FLAG_XHR = 0x10;
+        private const byte FLAG_IMPORTANT = 0x20;
+        private const byte FLAG_RESOURCE_MASK = 0x1E;
+
+        private struct HostPathRule
+        {
+            public string PathToken;
+            public byte Flags;
+
+            public HostPathRule(string pathToken, byte flags)
+            {
+                PathToken = pathToken;
+                Flags = flags;
+            }
+        }
+
         private readonly object _lock = new object();
         private HashSet<string> _domains;
         private HashSet<string> _aggressiveDomains;
         private HashSet<string> _cookieCmpDomains;
         private HashSet<string> _exceptionDomains;
+        private Dictionary<string, List<HostPathRule>> _hostPathRules;
+        private int _hostPathRuleCount;
         private List<string> _thirdPartyUrlPatterns;
         private List<string> _anyUrlPatterns;
         private List<string> _aggressiveUrlPatterns;
         private Dictionary<string, string> _siteCosmetics;
+        private List<string> _genericCosmetics;
         private readonly HashSet<string> _pausedHosts;
 
         private bool _globalEnabled;
@@ -33,15 +56,59 @@ namespace DejavuBrowser
         private string _settingsPath;
         private DateTime _lastSave = DateTime.MinValue;
 
-        // 1x1 transparent GIF for clean zero-error ad image replacement
-        private static readonly byte[] TransparentGif = Convert.FromBase64String(
-            "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+        public const string EmptyCdpBlockedUrlsJson = "{\"urls\":[]}";
 
-        // Harmless no-op JS shim so anti-adblock scripts checking googletag / adsbygoogle don't trigger walls
-        private static readonly byte[] NoopJsBytes = Encoding.UTF8.GetBytes(
-            "/* dejavu shield */ (function(){try{window.canRunAds=true;window.isAdBlockActive=false;window.adsbygoogle=window.adsbygoogle||[];window.adsbygoogle.loaded=true;if(!window.adsbygoogle.push)window.adsbygoogle.push=function(){};window.googletag=window.googletag||{apiReady:true,cmd:[],pubads:function(){return{addEventListener:function(){},refresh:function(){},setTargeting:function(){},collapseEmptyDivs:function(){},enableSingleRequest:function(){},getSlots:function(){return[];}};},defineSlot:function(){return{addService:function(){return this;},setTargeting:function(){return this;},defineSizeMapping:function(){return this;}};},defineOutOfPageSlot:function(){return{addService:function(){return this;},setTargeting:function(){return this;}};},sizeMapping:function(){return{addSize:function(){return this;},build:function(){return[];}};},enableServices:function(){},display:function(){}};}catch(e){}})();");
+        // Clean empty HTML for blocked ad <iframe> documents so they collapse invisibly without error pages
+        private static readonly byte[] EmptyIframeHtmlBytes = Encoding.UTF8.GetBytes(
+            "<!doctype html><html><head><style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}</style></head><body></body></html>");
 
-        // EXACT safe hostnames that must NEVER be blocked (no blanket *.reddit.com or *.twitter.com!)
+        // Authentic Brave / uBlock Origin google-ima.js surrogate (served ONLY for imasdk.googleapis.com/.../ima3.js so video players never hang!)
+        private static readonly byte[] GoogleImaSurrogateBytes = Encoding.UTF8.GetBytes(
+            "/* dejavu brave google-ima surrogate */ (function(){" +
+            "var g=window.google=window.google||{};" +
+            "if(g.ima&&g.ima.__dvSurrogate)return;" +
+            "var noop=function(){};" +
+            "var AdEventType={AD_BREAK_READY:'adBreakReady',AD_BUFFERING:'adBuffering',AD_CAN_PLAY:'adCanPlay',AD_METADATA:'adMetadata',AD_PROGRESS:'adProgress',ALL_ADS_COMPLETED:'allAdsCompleted',CLICK:'click',COMPLETE:'complete',CONTENT_PAUSE_REQUESTED:'contentPauseRequested',CONTENT_RESUME_REQUESTED:'contentResumeRequested',DURATION_CHANGE:'durationChange',FIRST_QUARTILE:'firstQuartile',IMPRESSION:'impression',INTERACTION:'interaction',LINEAR_CHANGED:'linearChanged',LOADED:'loaded',LOG:'log',MIDPOINT:'midpoint',PAUSED:'paused',RESUMED:'resumed',SKIPPABLE_STATE_CHANGED:'skippableStateChanged',SKIPPED:'skipped',STARTED:'started',THIRD_QUARTILE:'thirdQuartile',USER_CLOSE:'userClose',VIDEO_CLICKED:'videoClicked',VIDEO_ICON_CLICKED:'videoIconClicked',VIEWABLE_IMPRESSION:'viewable_impression',VOLUME_CHANGED:'volumeChanged',VOLUME_MUTED:'volumeMuted'};" +
+            "var AdErrorEventType={AD_ERROR:'adError'};" +
+            "var AdsManagerLoadedEventType={ADS_MANAGER_LOADED:'adsManagerLoaded'};" +
+            "function EventTarget(){this._l={};}" +
+            "EventTarget.prototype.addEventListener=function(t,fn){if(!t||typeof fn!=='function')return;if(!this._l[t])this._l[t]=[];this._l[t].push(fn);};" +
+            "EventTarget.prototype.removeEventListener=function(t,fn){if(!this._l[t])return;this._l[t]=this._l[t].filter(function(x){return x!==fn;});};" +
+            "EventTarget.prototype._emit=function(t,ev){var list=this._l[t];if(!list)return;for(var i=0;i<list.length;i++){try{list[i](ev);}catch(e){}}};" +
+            "function AdError(msg){this._m=msg||'Blocked by dejavu Shields';}" +
+            "AdError.prototype={getErrorCode:function(){return 1009;},getInnerError:function(){return null;},getMessage:function(){return this._m;},getType:function(){return 'adLoadError';},getVastErrorCode:function(){return 1009;},toString:function(){return this._m;}};" +
+            "function AdEvent(type){this.type=type;}" +
+            "AdEvent.Type=AdEventType;" +
+            "AdEvent.prototype={getAd:function(){return null;},getAdData:function(){return {};}};" +
+            "function AdErrorEvent(err){this.type=AdErrorEventType.AD_ERROR;this._e=err||new AdError();}" +
+            "AdErrorEvent.Type=AdErrorEventType;" +
+            "AdErrorEvent.prototype={getError:function(){return this._e;},getUserRequestContext:function(){return null;}};" +
+            "function AdsManager(){EventTarget.call(this);this._v=1;}" +
+            "AdsManager.prototype=Object.create(EventTarget.prototype);" +
+            "AdsManager.prototype.init=noop;" +
+            "AdsManager.prototype.start=function(){var self=this;setTimeout(function(){self._emit(AdEventType.CONTENT_RESUME_REQUESTED,new AdEvent(AdEventType.CONTENT_RESUME_REQUESTED));self._emit(AdEventType.ALL_ADS_COMPLETED,new AdEvent(AdEventType.ALL_ADS_COMPLETED));},0);};" +
+            "AdsManager.prototype.stop=noop;AdsManager.prototype.destroy=noop;AdsManager.prototype.resize=noop;AdsManager.prototype.pause=noop;AdsManager.prototype.resume=noop;AdsManager.prototype.skip=noop;AdsManager.prototype.collapse=noop;AdsManager.prototype.expand=noop;AdsManager.prototype.discardAdBreak=noop;AdsManager.prototype.updateAdsRenderingSettings=noop;" +
+            "AdsManager.prototype.setVolume=function(v){this._v=v;};AdsManager.prototype.getVolume=function(){return this._v;};AdsManager.prototype.getRemainingTime=function(){return 0;};AdsManager.prototype.getCuePoints=function(){return [];};AdsManager.prototype.isCustomClickTrackingUsed=function(){return false;};AdsManager.prototype.isCustomPlaybackUsed=function(){return false;};" +
+            "function AdsManagerLoadedEvent(mgr){this.type=AdsManagerLoadedEventType.ADS_MANAGER_LOADED;this._mgr=mgr;}" +
+            "AdsManagerLoadedEvent.Type=AdsManagerLoadedEventType;" +
+            "AdsManagerLoadedEvent.prototype={getAdsManager:function(){return this._mgr;},getUserRequestContext:function(){return null;}};" +
+            "function ImaSdkSettings(){this._loc='en';}" +
+            "ImaSdkSettings.CompanionBackfillMode={ALWAYS:'always',ON_MASTER_AD:'on_master_ad'};" +
+            "ImaSdkSettings.VpaidMode={DISABLED:0,ENABLED:1,INSECURE:2};" +
+            "ImaSdkSettings.prototype={getLocale:function(){return this._loc;},setLocale:function(l){this._loc=l;},setVpaidMode:noop,setVpaidAllowed:noop,setAutoPlayAdBreaks:noop,setNumRedirects:noop,setDisableCustomPlaybackForIOS10Plus:noop,setSessionId:noop,setPlayerType:noop,setPlayerVersion:noop,setPpid:noop,setCompanionBackfill:noop,setCookiesEnabled:noop,setFeatureFlags:noop};" +
+            "function AdDisplayContainer(){}" +
+            "AdDisplayContainer.prototype={initialize:noop,destroy:noop};" +
+            "function AdsRequest(){this.adTagUrl='';this.linearAdSlotWidth=0;this.linearAdSlotHeight=0;this.nonLinearAdSlotWidth=0;this.nonLinearAdSlotHeight=0;this.forceNonLinearFullSlot=false;}" +
+            "AdsRequest.prototype={setAdWillAutoPlay:noop,setAdWillPlayMuted:noop,setContinuousPlayback:noop};" +
+            "function AdsRenderingSettings(){this.restoreCustomPlaybackStateOnAdBreakComplete=true;this.enablePreloading=false;}" +
+            "function AdsLoader(){EventTarget.call(this);this._s=new ImaSdkSettings();}" +
+            "AdsLoader.prototype=Object.create(EventTarget.prototype);" +
+            "AdsLoader.prototype.requestAds=function(){var self=this;var mgr=new AdsManager();setTimeout(function(){self._emit(AdsManagerLoadedEventType.ADS_MANAGER_LOADED,new AdsManagerLoadedEvent(mgr));},0);};" +
+            "AdsLoader.prototype.contentComplete=noop;AdsLoader.prototype.destroy=noop;AdsLoader.prototype.getSettings=function(){return this._s;};" +
+            "g.ima={__dvSurrogate:true,VERSION:'3.600.0',AdDisplayContainer:AdDisplayContainer,AdsLoader:AdsLoader,AdsManager:AdsManager,AdsManagerLoadedEvent:AdsManagerLoadedEvent,AdsRenderingSettings:AdsRenderingSettings,AdsRequest:AdsRequest,AdEvent:AdEvent,AdError:AdError,AdErrorEvent:AdErrorEvent,ImaSdkSettings:ImaSdkSettings,settings:new ImaSdkSettings(),ViewMode:{NORMAL:'normal',FULLSCREEN:'fullscreen'},UiElements:{AD_ATTRIBUTION:'adAttribution',COUNTDOWN:'countdown'},OmidAccessMode:{FULL:'full',DOMAIN:'domain',LIMITED:'limited'}};" +
+            "})();");
+
+        // EXACT safe hostnames that must NEVER be blocked as whole domains (targeted CoreHostPathRules still filter ad endpoints safely!)
         private static readonly HashSet<string> ExactSafeHosts = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "www.youtube.com",
@@ -182,7 +249,7 @@ namespace DejavuBrowser
             "paypal.com"
         };
 
-        // Safe media/CDN suffixes required for core video & site rendering (never ad hosts)
+        // Safe media/CDN suffixes required for core video & site rendering (never blocked as whole domains)
         private static readonly string[] SafeMediaSuffixes = new string[]
         {
             "googlevideo.com",
@@ -217,20 +284,18 @@ namespace DejavuBrowser
             "clicktrack.", "admanager.", "adtag.", "adnetwork.", "adtech."
         };
 
-        // Built-in millisecond-0 Brave-Grade curated ad, tracker, telemetry, crypto-miner, popunder & exchange domains (540+)
-        private static readonly string[] CoreAdDomains = new string[]
+        // High-hit Root Ad/Tracker Domains fed directly into Chromium C++ Network.setBlockedURLs
+        // CRITICAL: NEVER include imasdk.googleapis.com (so WebResourceRequested serves Brave google-ima.js surrogate!)
+        // CRITICAL: NEVER include any protected auth/Google/YouTube playback/CDN root domain!
+        private static readonly string[] CdpCoreRootDomains = new string[]
         {
-            // Google / DoubleClick / YouTube Ads
+            // Google Ads & Analytics (NEVER google.com / youtube.com / gstatic.com / googleapis.com!)
             "doubleclick.net", "googlesyndication.com", "googleadservices.com", "adservice.google.com",
-            "pagead2.googlesyndication.com", "tpc.googlesyndication.com", "google-analytics.com",
-            "ssl.google-analytics.com", "www.google-analytics.com", "googletagmanager.com",
-            "googletagservices.com", "fundingchoicesmessages.google.com", "imasdk.googleapis.com",
-            "adtrafficquality.google", "2mdn.net", "g.doubleclick.net", "ad.doubleclick.net",
-            "stats.g.doubleclick.net", "cm.g.doubleclick.net", "ade.googlesyndication.com",
-            "partner.googleadservices.com", "www.googleadservices.com", "ads.youtube.com",
-            "s0.2mdn.net", "afs.googlesyndication.com", "pagead2.googleadservices.com",
+            "google-analytics.com", "analytics.google.com", "click.googleanalytics.com",
+            "googletagmanager.com", "googletagservices.com", "2mdn.net", "adtrafficquality.google",
+            "fundingchoicesmessages.google.com", "ads.youtube.com",
 
-            // Major Programmatic Ad Exchanges & SSPs / DSPs
+            // Major Programmatic Exchanges, SSPs & DSPs
             "adnxs.com", "adsrvr.org", "advertising.com", "amazon-adsystem.com", "criteo.com",
             "criteo.net", "outbrain.com", "taboola.com", "pubmatic.com", "rubiconproject.com",
             "openx.net", "casalemedia.com", "indexww.com", "smartadserver.com", "yieldmo.com",
@@ -238,10 +303,152 @@ namespace DejavuBrowser
             "doubleverify.com", "adsafeprotected.com", "quantserve.com", "scorecardresearch.com",
             "adform.net", "bidswitch.net", "rlcdn.com", "krxd.net", "bluekai.com", "demdex.net",
             "omtrdc.net", "adroll.com", "flashtalking.com", "serving-sys.com", "sizmek.com",
-            "innovid.com", "spotxchange.com", "spotx.tv", "springserve.com", "teads.tv",
-            "connatix.com", "primis.tech", "vidazoo.com", "aniview.com", "anyclip.com",
-            "kargo.com", "gumgum.com", "nativo.com", "undertone.com", "raptive.com",
-            "adthrive.com", "mediavine.com", "ezoic.net", "ezodn.com", "freestar.com",
+            "innovid.com", "spotxchange.com", "springserve.com", "teads.tv", "teads.com",
+            "kargo.com", "gumgum.com", "nativo.com", "raptive.com", "adthrive.com",
+            "mediavine.com", "ezoic.net", "buysellads.com", "carbonads.com", "carbonads.net",
+            "revcontent.com", "mgid.com", "zemanta.com", "plista.com", "adblade.com",
+            "fastclick.net", "skimresources.com", "viglink.com", "adskeeper.com", "adskeeper.co.uk",
+
+            // Analytics, Heatmaps, Session Replay & Error Trackers
+            "hotjar.com", "clarity.ms", "sentry.io", "sentry-cdn.com", "getsentry.com",
+            "bugsnag.com", "mixpanel.com", "amplitude.com", "segment.io", "segment.com",
+            "newrelic.com", "nr-data.net", "fullstory.com", "mouseflow.com", "luckyorange.com",
+            "luckyorange.net", "crazyegg.com", "freshmarketer.com", "chartbeat.com",
+            "chartbeat.net", "optimizely.com", "vwo.com", "statcounter.com", "histats.com",
+            "getclicky.com", "heapanalytics.com", "logrocket.io", "browser-intake-datadoghq.com",
+            "pendo.io", "rollbar.com", "raygun.io", "onesignal.com",
+
+            // Social Trackers, Pixels & Mix Ad Networks
+            "ads-twitter.com", "ads.twitter.com", "ads-api.twitter.com", "analytics.twitter.com",
+            "ads.tiktok.com", "ads-api.tiktok.com", "analytics.tiktok.com", "ads-sg.tiktok.com",
+            "analytics-sg.tiktok.com", "business-api.tiktok.com", "log.byteoversea.com",
+            "ads.linkedin.com", "analytics.pointdrive.linkedin.com", "snap.licdn.com",
+            "ads.reddit.com", "events.reddit.com", "events.redditmedia.com", "alb.reddit.com",
+            "w3-reporting.reddit.com", "error-tracking.reddit.com",
+            "ads.pinterest.com", "ct.pinterest.com", "log.pinterest.com", "trk.pinterest.com",
+            "pixel.facebook.com", "an.facebook.com", "bat.bing.com", "stats.wp.com", "pixel.wp.com",
+            "ads.yahoo.com", "analytics.yahoo.com", "geo.yahoo.com", "udc.yahoo.com", "udcm.yahoo.com",
+            "analytics.query.yahoo.com", "partnerads.ysm.yahoo.com", "log.fc.yahoo.com",
+            "gemini.yahoo.com", "adtech.yahooinc.com",
+            "mc.yandex.ru", "mc.yandex.com", "an.yandex.ru", "an.yandex.com",
+            "extmaps-api.yandex.net", "appmetrica.yandex.ru", "adfstat.yandex.ru",
+            "metrika.yandex.ru", "offerwall.yandex.net", "adfox.yandex.ru",
+
+            // Mobile Ad SDKs & Attribution
+            "branch.io", "appsflyer.com", "adjust.com", "adcolony.com",
+            "unityads.unity3d.com", "applovin.com", "vungle.com", "inmobi.com",
+
+            // Popunders, Malvertising & Cryptominers
+            "popads.net", "popcash.net", "propellerads.com", "exoclick.com", "exosrv.com",
+            "realsrv.com", "juicyads.com", "trafficjunky.net", "trafficstars.com",
+            "adsterra.com", "admaven.com", "hilltopads.com", "hilltopads.net", "monetag.com",
+            "clickadu.com", "galaksion.com", "coinhive.com", "coin-hive.com", "coinimp.com",
+            "crypto-loot.com",
+
+            // OEM / Device Telemetry & Cloud Ad Buckets
+            "samsungads.com", "smetrics.samsung.com", "nmetrics.samsung.com",
+            "ad.xiaomi.com", "data.mistat.xiaomi.com", "sdkconfig.ad.xiaomi.com", "tracking.miui.com"
+        };
+
+        // Exact single-host patterns for Chromium Network.setBlockedURLs (no subdomain wildcard needed)
+        private static readonly string[] CdpCoreExactHosts = new string[]
+        {
+            "adtago.s3.amazonaws.com",
+            "analyticsengine.s3.amazonaws.com",
+            "analytics.s3.amazonaws.com",
+            "advice-ads.s3.amazonaws.com",
+            "d2wy8f7a9ursnm.cloudfront.net",
+            "logs.netflix.com",
+            "iot-eu-logser.realme.com",
+            "iot-logser.realme.com",
+            "bdapi-ads.realmemobile.com",
+            "bdapi-in-ads.realmemobile.com",
+            "data.mistat.india.xiaomi.com",
+            "data.mistat.rus.xiaomi.com",
+            "sdkconfig.ad.intl.xiaomi.com",
+            "tracking.rus.miui.com",
+            "adsfs.oppomobile.com",
+            "adx.ads.oppomobile.com",
+            "ck.ads.oppomobile.com",
+            "data.ads.oppomobile.com",
+            "metrics.data.hicloud.com",
+            "metrics2.data.hicloud.com",
+            "grs.hicloud.com",
+            "logservice.hicloud.com",
+            "logservice1.hicloud.com",
+            "logbak.hicloud.com",
+            "click.oneplus.cn",
+            "open.oneplus.net",
+            "samsung-com.112.2o7.net",
+            "analytics-api.samsunghealthcn.com",
+            "iadsdk.apple.com",
+            "metrics.icloud.com",
+            "metrics.mzstatic.com",
+            "api-adservices.apple.com",
+            "books-analytics-events.apple.com",
+            "weather-analytics-events.apple.com",
+            "notes-analytics-events.apple.com"
+        };
+
+        // High-precision URL path patterns for Chromium C++ Network.setBlockedURLs
+        private static readonly string[] CdpCoreUrlPatterns = new string[]
+        {
+            "*://*/pagead/*",
+            "*://*/pagead.js*",
+            "*://*/ads.js*",
+            "*://*/ads/ads.js*",
+            "*://*/widget/ads.js*",
+            "*://*/ads/js/*",
+            "*://*/adserver/*",
+            "*://*/adservice/*",
+            "*://*/api/stats/ads*",
+            "*://*/youtubei/v1/player/ad_break*",
+            "*://*/ptracking*",
+            "*://*/get_midroll_info*",
+            "*://*/banners/*_ads_*",
+            "*://*/banners/*advertising*",
+            "*://*/adsbygoogle.js*",
+            "*://*/gpt/pubads*",
+            "*://*/pubads_impl*",
+            "*://*/popunder*",
+            "*://*.googlevideo.com/*&oad=*",
+            "*://*.googlevideo.com/*?oad=*",
+            "*://*.googlevideo.com/*&ctier=L*",
+            "*://*.googlevideo.com/*adformat=*"
+        };
+
+        // Built-in millisecond-0 Brave-Grade curated ad, tracker, telemetry, crypto-miner, popunder & exchange domains (650+)
+        private static readonly string[] CoreAdDomains = new string[]
+        {
+            // Google / DoubleClick / YouTube Ads
+            "doubleclick.net", "googlesyndication.com", "googleadservices.com", "adservice.google.com",
+            "pagead2.googlesyndication.com", "tpc.googlesyndication.com", "google-analytics.com",
+            "ssl.google-analytics.com", "www.google-analytics.com", "analytics.google.com",
+            "click.googleanalytics.com", "googletagmanager.com", "googletagservices.com",
+            "fundingchoicesmessages.google.com", "imasdk.googleapis.com", "adtrafficquality.google",
+            "2mdn.net", "g.doubleclick.net", "ad.doubleclick.net", "static.doubleclick.net",
+            "m.doubleclick.net", "mediavisor.doubleclick.net", "stats.g.doubleclick.net",
+            "cm.g.doubleclick.net", "ade.googlesyndication.com", "partner.googleadservices.com",
+            "www.googleadservices.com", "ads.youtube.com", "s0.2mdn.net", "afs.googlesyndication.com",
+            "pagead2.googleadservices.com",
+
+            // Amazon S3 / CloudFront Ad & Tracker Buckets
+            "adtago.s3.amazonaws.com", "analyticsengine.s3.amazonaws.com",
+            "analytics.s3.amazonaws.com", "advice-ads.s3.amazonaws.com",
+            "d2wy8f7a9ursnm.cloudfront.net",
+
+            // Major Programmatic Ad Exchanges & SSPs / DSPs
+            "adnxs.com", "adsrvr.org", "advertising.com", "amazon-adsystem.com", "criteo.com",
+            "criteo.net", "outbrain.com", "taboola.com", "pubmatic.com", "rubiconproject.com",
+            "openx.net", "casalemedia.com", "indexww.com", "smartadserver.com", "yieldmo.com",
+            "sharethrough.com", "33across.com", "triplelift.com", "media.net", "static.media.net",
+            "moatads.com", "doubleverify.com", "adsafeprotected.com", "quantserve.com",
+            "scorecardresearch.com", "adform.net", "bidswitch.net", "rlcdn.com", "krxd.net",
+            "bluekai.com", "demdex.net", "omtrdc.net", "adroll.com", "flashtalking.com",
+            "serving-sys.com", "sizmek.com", "innovid.com", "spotxchange.com", "spotx.tv",
+            "springserve.com", "teads.tv", "connatix.com", "primis.tech", "vidazoo.com",
+            "aniview.com", "anyclip.com", "kargo.com", "gumgum.com", "nativo.com", "undertone.com",
+            "raptive.com", "adthrive.com", "mediavine.com", "ezoic.net", "ezodn.com", "freestar.com",
             "playwire.com", "snigelweb.com", "venatusmedia.com", "nitro-ads.com", "vdo.ai",
             "buysellads.com", "carbonads.com", "ethicalads.io", "a-ads.com", "coinzilla.com",
             "bitmedia.io", "liadm.com", "id5-sync.com", "crwdcntrl.net", "exelator.com",
@@ -249,28 +456,30 @@ namespace DejavuBrowser
             "rfihub.com", "contextweb.com", "lijit.com", "sovrn.com", "sonobi.com",
             "spotim.market", "dianomi.com", "plista.com", "ligatus.com", "zedo.com",
             "yieldlab.net", "adition.com", "smartclip.net", "ads.yahoo.com", "gemini.yahoo.com",
-            "adtech.de", "adtechus.com", "adlightning.com", "confiant-integrations.net",
-            "permutive.com", "liveintent.com", "narrativ.com", "skimresources.com", "viglink.com",
-            "magnite.com", "xandr.com", "adnexus.net", "appnexus.com", "rubicon.com",
-            "pubgalaxy.com", "adpushup.com", "proper.io", "monetizer101.com", "bidr.io",
-            "bidtellect.com", "bnmla.com", "bttrack.com", "burstnet.com", "chango.com",
-            "chitika.net", "clickbooth.com", "clicksor.com", "connexity.net", "conversantmedia.com",
-            "dotomi.com", "emxdgt.com", "exponential.com", "tribalfusion.com", "fastclick.net",
-            "federatedmedia.net", "flurry.com", "fwmrm.net", "genieessp.jp", "getintent.com",
-            "groundtruth.com", "improvedigital.com", "infonline.de", "infolinks.com", "intentiq.com",
-            "ipredictive.com", "justpremium.com", "ladsp.com", "lkqd.net", "loopme.me",
-            "m6r.eu", "marinsm.com", "media6degrees.com", "mediaplex.com", "mediav.com",
-            "mookie1.com", "mxptint.net", "myvisualiq.net", "nexac.com", "nexage.com",
-            "ntv.io", "ojrq.net", "omnitagjs.com", "onetag-sys.com", "owneriq.net",
-            "pippio.com", "pixel.rubiconproject.com", "playground.xyz", "pro-market.net",
-            "pub.network", "quantcount.com", "r1-cdn.net", "revjet.com", "richaudience.com",
-            "rtbhouse.com", "rtk.io", "runative-syndicate.com", "rutarget.ru", "s-onetag.com",
-            "saambaa.com", "seedtag.com", "serverbid.com", "simpli.fi", "sitescout.com",
-            "smartadserver.de", "smilewanted.com", "stackadapt.com", "steelhousemedia.com",
-            "stickyadstv.com", "stroeerdigitalgroup.de", "sumo.com", "sumome.com",
-            "sync.search.spotxchange.com", "tappx.com", "theadex.com", "thebrighttag.com",
-            "tremorhub.com", "truoptik.com", "unruly.co", "unrulymedia.com", "vdx.tv",
-            "verve.com", "vibrantmedia.com", "videoamp.com", "videologygroup.com",
+            "analytics.yahoo.com", "geo.yahoo.com", "udc.yahoo.com", "udcm.yahoo.com",
+            "analytics.query.yahoo.com", "partnerads.ysm.yahoo.com", "log.fc.yahoo.com",
+            "adtech.yahooinc.com", "adtech.de", "adtechus.com", "adlightning.com",
+            "confiant-integrations.net", "permutive.com", "liveintent.com", "narrativ.com",
+            "skimresources.com", "viglink.com", "magnite.com", "xandr.com", "adnexus.net",
+            "appnexus.com", "rubicon.com", "pubgalaxy.com", "adpushup.com", "proper.io",
+            "monetizer101.com", "bidr.io", "bidtellect.com", "bnmla.com", "bttrack.com",
+            "burstnet.com", "chango.com", "chitika.net", "clickbooth.com", "clicksor.com",
+            "connexity.net", "conversantmedia.com", "dotomi.com", "emxdgt.com", "exponential.com",
+            "tribalfusion.com", "fastclick.net", "federatedmedia.net", "flurry.com", "fwmrm.net",
+            "genieessp.jp", "getintent.com", "groundtruth.com", "improvedigital.com",
+            "infonline.de", "infolinks.com", "intentiq.com", "ipredictive.com", "justpremium.com",
+            "ladsp.com", "lkqd.net", "loopme.me", "m6r.eu", "marinsm.com", "media6degrees.com",
+            "mediaplex.com", "mediav.com", "mookie1.com", "mxptint.net", "myvisualiq.net",
+            "nexac.com", "nexage.com", "ntv.io", "ojrq.net", "omnitagjs.com", "onetag-sys.com",
+            "owneriq.net", "pippio.com", "pixel.rubiconproject.com", "playground.xyz",
+            "pro-market.net", "pub.network", "quantcount.com", "r1-cdn.net", "revjet.com",
+            "richaudience.com", "rtbhouse.com", "rtk.io", "runative-syndicate.com", "rutarget.ru",
+            "s-onetag.com", "saambaa.com", "seedtag.com", "serverbid.com", "simpli.fi",
+            "sitescout.com", "smartadserver.de", "smilewanted.com", "stackadapt.com",
+            "steelhousemedia.com", "stickyadstv.com", "stroeerdigitalgroup.de", "sumo.com",
+            "sumome.com", "sync.search.spotxchange.com", "tappx.com", "theadex.com",
+            "thebrighttag.com", "tremorhub.com", "truoptik.com", "unruly.co", "unrulymedia.com",
+            "vdx.tv", "verve.com", "vibrantmedia.com", "videoamp.com", "videologygroup.com",
             "vidoomy.com", "vi.ai", "w55c.net", "weborama.fr", "webspectator.com",
             "yieldoptimizer.com", "zemanta.com", "revcontent.com", "mgid.com", "pubfuture.com",
             "adskeeper.com", "adskeeper.co.uk", "bidgear.com", "dtscout.com", "acscdn.com",
@@ -355,7 +564,7 @@ namespace DejavuBrowser
             "the-ozone-project.com", "theadx.com", "tidaltv.com", "tiqcdn.com", "tkqlhce.com",
             "tlx.3lift.com", "tmogul.com", "tns-counter.ru", "top100.rambler.ru", "trackcmp.net",
             "tradedoubler.com", "tradelab.fr", "trading-desk.net", "trafficfactory.biz",
-            "trafficforce.com", "trafficHaus.com", "traffichunt.com", "trafficshop.com",
+            "trafficforce.com", "traffichaus.com", "traffichunt.com", "trafficshop.com",
             "trbo.com", "treasuredata.com", "triggertag.gorillanation.com", "triplelift.net",
             "truste.com", "trustx.org", "tubemogul.com", "turn.net", "tvpixel.com", "tvsquared.com",
             "twyn.com", "ubembed.com", "udmserve.net", "uimserv.net", "undertone.net",
@@ -374,31 +583,52 @@ namespace DejavuBrowser
 
             // Analytics, Session Replay, Error/RUM Telemetry & Heatmaps
             "hotjar.com", "static.hotjar.com", "script.hotjar.com", "vars.hotjar.com",
-            "fullstory.com", "mouseflow.com", "luckyorange.com", "clarity.ms", "logrocket.io",
+            "adm.hotjar.com", "identify.hotjar.com", "insights.hotjar.com", "surveys.hotjar.com",
+            "careers.hotjar.com", "fullstory.com", "mouseflow.com", "luckyorange.com",
+            "luckyorange.net", "freshmarketer.com", "clarity.ms", "logrocket.io",
             "cdn.lr-ingest.io", "crazyegg.com", "contentsquare.net", "glassboxdigital.io",
             "mixpanel.com", "amplitude.com", "segment.io", "segment.com", "heapanalytics.com",
             "chartbeat.com", "chartbeat.net", "newrelic.com", "nr-data.net", "bam.nr-data.net",
-            "bugsnag.com", "sessions.bugsnag.com", "notify.bugsnag.com", "d2wy8f7a9ursnm.cloudfront.net",
-            "sentry.io", "sentry-cdn.com", "browser.sentry-cdn.com", "js.sentry-cdn.com",
-            "ingest.sentry.io", "ingest.us.sentry.io", "rollbar.com", "raygun.io",
-            "browser-intake-datadoghq.com", "rum.browser-intake-datadoghq.com", "pendo.io",
-            "optimizely.com", "vwo.com", "dev.visualwebsiteoptimizer.com", "abtasty.com",
-            "mc.yandex.ru", "mc.yandex.com", "an.yandex.ru", "an.yandex.com",
+            "bugsnag.com", "sessions.bugsnag.com", "notify.bugsnag.com", "api.bugsnag.com",
+            "app.bugsnag.com", "sentry.io", "sentry-cdn.com", "browser.sentry-cdn.com",
+            "js.sentry-cdn.com", "getsentry.com", "app.getsentry.com", "ingest.sentry.io",
+            "ingest.us.sentry.io", "rollbar.com", "raygun.io", "browser-intake-datadoghq.com",
+            "rum.browser-intake-datadoghq.com", "pendo.io", "optimizely.com", "vwo.com",
+            "dev.visualwebsiteoptimizer.com", "abtasty.com", "mc.yandex.ru", "mc.yandex.com",
+            "an.yandex.ru", "an.yandex.com", "extmaps-api.yandex.net", "appmetrica.yandex.ru",
+            "adfstat.yandex.ru", "metrika.yandex.ru", "offerwall.yandex.net", "adfox.yandex.ru",
+            "logs.netflix.com",
 
             // Social Trackers & Pixels
-            "ads.twitter.com", "ads-api.twitter.com", "analytics.twitter.com",
-            "analytics.tiktok.com", "ads.tiktok.com", "business-api.tiktok.com",
-            "ads.linkedin.com", "px.ads.linkedin.com", "snap.licdn.com",
-            "ads.reddit.com", "events.redditmedia.com", "alb.reddit.com",
-            "ads.pinterest.com", "ct.pinterest.com", "trk.pinterest.com",
-            "bat.bing.com", "an.facebook.com", "pixel.facebook.com",
-            "tr.snapchat.com", "sc-static.net", "tr.line.me", "pixel.wp.com",
+            "ads.twitter.com", "ads-twitter.com", "static.ads-twitter.com", "ads-api.twitter.com",
+            "analytics.twitter.com", "analytics.tiktok.com", "ads.tiktok.com", "ads-api.tiktok.com",
+            "ads-sg.tiktok.com", "analytics-sg.tiktok.com", "business-api.tiktok.com",
+            "log.byteoversea.com", "ads.linkedin.com", "px.ads.linkedin.com",
+            "analytics.pointdrive.linkedin.com", "snap.licdn.com", "ads.reddit.com",
+            "events.reddit.com", "events.redditmedia.com", "alb.reddit.com",
+            "w3-reporting.reddit.com", "error-tracking.reddit.com", "ads.pinterest.com",
+            "ct.pinterest.com", "log.pinterest.com", "trk.pinterest.com", "bat.bing.com",
+            "an.facebook.com", "pixel.facebook.com", "tr.snapchat.com", "sc-static.net",
+            "tr.line.me", "pixel.wp.com", "stats.wp.com",
 
-            // Mobile Ad SDKs & Attribution
+            // Mobile Ad SDKs, Attribution & OEM Telemetry
             "branch.io", "appsflyer.com", "adjust.com", "adcolony.com", "admob.com",
             "unityads.unity3d.com", "applovin.com", "vungle.com", "inmobi.com",
             "smaato.net", "tapjoy.com", "chartboost.com", "ironsrc.com", "fyber.com",
             "startappservice.com", "pangle-global.com", "digitalturbine.com", "airpush.com",
+            "iot-eu-logser.realme.com", "iot-logser.realme.com", "bdapi-ads.realmemobile.com",
+            "bdapi-in-ads.realmemobile.com", "ad.xiaomi.com", "api.ad.xiaomi.com",
+            "data.mistat.xiaomi.com", "data.mistat.india.xiaomi.com", "data.mistat.rus.xiaomi.com",
+            "sdkconfig.ad.xiaomi.com", "sdkconfig.ad.intl.xiaomi.com", "tracking.miui.com",
+            "tracking.rus.miui.com", "adsfs.oppomobile.com", "adx.ads.oppomobile.com",
+            "ck.ads.oppomobile.com", "data.ads.oppomobile.com", "metrics.data.hicloud.com",
+            "metrics2.data.hicloud.com", "grs.hicloud.com", "logservice.hicloud.com",
+            "logservice1.hicloud.com", "logbak.hicloud.com", "click.oneplus.cn", "open.oneplus.net",
+            "samsungads.com", "smetrics.samsung.com", "nmetrics.samsung.com",
+            "samsung-com.112.2o7.net", "analytics-api.samsunghealthcn.com", "iadsdk.apple.com",
+            "metrics.icloud.com", "metrics.mzstatic.com", "api-adservices.apple.com",
+            "books-analytics-events.apple.com", "weather-analytics-events.apple.com",
+            "notes-analytics-events.apple.com",
 
             // Popunders, Malvertising & Push-Notification Spam
             "popads.net", "popcash.net", "propellerads.com", "exoclick.com", "exosrv.com",
@@ -494,7 +724,12 @@ namespace DejavuBrowser
         private static readonly string[] CoreAnyUrlSnippets = new string[]
         {
             "/pagead/",
+            "/pagead.js",
+            "/ads.js",
+            "/ads/ads.js",
+            "/widget/ads.js",
             "/api/stats/ads",
+            "/youtubei/v1/player/ad_break",
             "/ptracking",
             "/get_midroll_info",
             "/gpt/pubads",
@@ -545,7 +780,6 @@ namespace DejavuBrowser
 
         private static readonly string[] CoreThirdPartyUrlSnippets = new string[]
         {
-            "/ads.js",
             "/ad.js",
             "/ads.min.js",
             "/adblock",
@@ -595,6 +829,36 @@ namespace DejavuBrowser
             "onetrust"
         };
 
+        // Popunder / click-hijack / ad-redirect tokens blocked even on user clicks (never matches OAuth/login!)
+        private static readonly string[] SpamPopupUrlTokens = new string[]
+        {
+            "/afu.php",
+            "zoneid=",
+            "clickid=",
+            "bannerid=",
+            "adurl=",
+            "popunder",
+            "/pop.php",
+            "/go.php?",
+            "track.ad",
+            "/out.php",
+            "out.php?",
+            "/click.php?",
+            "popcash",
+            "popads",
+            "exoclick",
+            "propellerads",
+            "adsterra",
+            "monetag",
+            "hilltopads",
+            "clickadu",
+            "juicyads",
+            "trafficjunky",
+            "/redirect/ad",
+            "ad_click",
+            "clicktrack"
+        };
+
         // Brave-Grade URL tracking query parameters to strip cleanly on navigation
         private static readonly HashSet<string> TrackingQueryParams = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -614,7 +878,23 @@ namespace DejavuBrowser
             "/passkey", "/fido", "/verify", "/confirm", "/reset-password"
         };
 
+        // Safe tokens required for downloaded generic cosmetic selectors (prevents accidental site breakage)
+        private static readonly string[] GenericCosmeticSafeTokens = new string[]
+        {
+            "adsbygoogle", "div-gpt-ad", "google_ads", "doubleclick", "googlesyndication",
+            "taboola", "outbrain", "revcontent", "mgid", "criteo", "adnxs", "pubads",
+            "prebid", "adsbox", "adbox", "ad-box", "ad_box", "textads", "banner-ad",
+            "banner_ad", "ad-unit", "ad_unit", "ad-slot", "ad_slot", "ad-zone", "ad_zone",
+            "ad-space", "ad_space", "ad-banner", "ad_banner", "ad-container", "ad_container",
+            "ad-wrapper", "ad_wrapper", "ad-holder", "ad_holder", "ad-block", "ad_block",
+            "ad-leaderboard", "ad-sidebar", "ad-sticky", "ad-footer", "ad-header",
+            "advert", "sponsor", "promoted", "native-ad", "native_ad", "afs_ads",
+            "yandex_rtb", "dfp-ad", "gpt-ad", "carbonads", "bsap_", "mgbox", "adblade",
+            "adsterra", "exoclick", "popunder", "data-ad-", "data-ads"
+        };
+
         public event Action<long> TotalBlockedChanged;
+        public event Action ListsUpdated;
 
         public AdBlocker(DejavuSettings settings, string settingsPath)
         {
@@ -632,10 +912,66 @@ namespace DejavuBrowser
             _aggressiveDomains = new HashSet<string>(AggressiveExtraDomains, StringComparer.OrdinalIgnoreCase);
             _cookieCmpDomains = new HashSet<string>(CoreCookieCmpDomains, StringComparer.OrdinalIgnoreCase);
             _exceptionDomains = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            _hostPathRules = BuildCoreHostPathRules(out _hostPathRuleCount);
             _anyUrlPatterns = new List<string>(CoreAnyUrlSnippets);
             _thirdPartyUrlPatterns = new List<string>(CoreThirdPartyUrlSnippets);
             _aggressiveUrlPatterns = new List<string>(AggressiveExtraUrlSnippets);
             _siteCosmetics = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            _genericCosmetics = new List<string>();
+        }
+
+        private static Dictionary<string, List<HostPathRule>> BuildCoreHostPathRules(out int count)
+        {
+            Dictionary<string, List<HostPathRule>> map = new Dictionary<string, List<HostPathRule>>(StringComparer.OrdinalIgnoreCase);
+            count = 0;
+            AddHostPathRule(map, "youtube.com", "/youtubei/v1/player/ad_break", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "youtube.com", "/api/stats/ads", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "youtube.com", "/pagead/", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "youtube.com", "/ptracking", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "youtube.com", "/get_midroll_info", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "youtube.com", "/youtubei/v1/log_event", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "facebook.com", "/tr/", FLAG_THIRD_PARTY, ref count);
+            AddHostPathRule(map, "facebook.com", "/tr?", FLAG_THIRD_PARTY, ref count);
+            AddHostPathRule(map, "google.com", "/pagead/", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "google.com", "/ads/measurement/", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "reddit.com", "/api/v1/ad_events", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "twitter.com", "/i/api/1.1/jot/", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "x.com", "/i/api/1.1/jot/", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "linkedin.com", "/li/track", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "linkedin.com", "/px/li_sync", FLAG_THIRD_PARTY, ref count);
+            AddHostPathRule(map, "bing.com", "/action/0?", FLAG_THIRD_PARTY, ref count);
+            AddHostPathRule(map, "yandex.ru", "/metrika/", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "yandex.ru", "/clck/", FLAG_THIRD_PARTY, ref count);
+            AddHostPathRule(map, "yahoo.com", "/beacon", FLAG_THIRD_PARTY, ref count);
+            AddHostPathRule(map, "amazon.com", "/aax2/", FLAG_IMPORTANT, ref count);
+            AddHostPathRule(map, "amazon.com", "/gp/sponsored", FLAG_IMPORTANT, ref count);
+            return map;
+        }
+
+        private static void AddHostPathRule(
+            Dictionary<string, List<HostPathRule>> map,
+            string host,
+            string pathToken,
+            byte flags,
+            ref int count)
+        {
+            if (string.IsNullOrEmpty(host)) return;
+            List<HostPathRule> list;
+            if (!map.TryGetValue(host, out list))
+            {
+                list = new List<HostPathRule>();
+                map[host] = list;
+            }
+            if (list.Count >= 40) return;
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i].Flags == flags && string.Equals(list[i].PathToken, pathToken, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+            }
+            list.Add(new HostPathRule(pathToken, flags));
+            count++;
         }
 
         public void SwitchProfileSettings(DejavuSettings settings, string settingsPath)
@@ -687,9 +1023,118 @@ namespace DejavuBrowser
         public bool BlockCookieNotices { get { return _blockCookieNotices; } }
         public bool StripTrackingParams { get { return _stripTrackingParams; } }
         public long TotalBlocked { get { return Interlocked.Read(ref _totalBlocked); } }
-        public int DomainRuleCount { get { lock (_lock) { return _domains.Count + _cookieCmpDomains.Count + (IsAggressive ? _aggressiveDomains.Count : 0); } } }
+        public int DomainRuleCount
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _domains.Count + _hostPathRuleCount + _cookieCmpDomains.Count + (IsAggressive ? _aggressiveDomains.Count : 0);
+                }
+            }
+        }
         public int SiteCosmeticCount { get { lock (_lock) { return _siteCosmetics.Count; } } }
         public bool ListsReady { get { return _listsReady; } }
+
+        public List<string> GetGenericCosmeticSelectors()
+        {
+            lock (_lock)
+            {
+                return new List<string>(_genericCosmetics);
+            }
+        }
+
+        /// <summary>
+        /// Builds the Chromium DevTools Protocol Network.setBlockedURLs payload for active tabs.
+        /// Produces literal net::ERR_BLOCKED_BY_CLIENT inside Chromium's C++ network stack!
+        /// NEVER includes imasdk.googleapis.com or any protected auth/media host.
+        /// </summary>
+        public string BuildCdpBlockedUrlsJson()
+        {
+            bool agg = IsAggressive;
+            bool cookies = _blockCookieNotices || agg;
+            HashSet<string> patterns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            List<string> ordered = new List<string>(420);
+
+            for (int i = 0; i < CdpCoreRootDomains.Length; i++)
+            {
+                string d = CdpCoreRootDomains[i];
+                if (string.IsNullOrEmpty(d) || IsProtectedDomain(d) ||
+                    string.Equals(d, "imasdk.googleapis.com", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+                string p1 = "*://" + d + "/*";
+                string p2 = "*://*." + d + "/*";
+                if (patterns.Add(p1)) ordered.Add(p1);
+                if (patterns.Add(p2)) ordered.Add(p2);
+            }
+
+            for (int i = 0; i < CdpCoreExactHosts.Length; i++)
+            {
+                string h = CdpCoreExactHosts[i];
+                if (string.IsNullOrEmpty(h) || IsProtectedDomain(h)) continue;
+                string p = "*://" + h + "/*";
+                if (patterns.Add(p)) ordered.Add(p);
+            }
+
+            if (cookies)
+            {
+                for (int i = 0; i < CoreCookieCmpDomains.Length; i++)
+                {
+                    string c = CoreCookieCmpDomains[i];
+                    if (string.IsNullOrEmpty(c) || IsProtectedDomain(c)) continue;
+                    string p = "*://" + c + "/*";
+                    if (patterns.Add(p)) ordered.Add(p);
+                }
+            }
+
+            if (agg)
+            {
+                for (int i = 0; i < AggressiveExtraDomains.Length; i++)
+                {
+                    string a = AggressiveExtraDomains[i];
+                    if (string.IsNullOrEmpty(a) || IsProtectedDomain(a)) continue;
+                    string p1 = "*://" + a + "/*";
+                    string p2 = "*://*." + a + "/*";
+                    if (patterns.Add(p1)) ordered.Add(p1);
+                    if (patterns.Add(p2)) ordered.Add(p2);
+                }
+            }
+
+            for (int i = 0; i < CdpCoreUrlPatterns.Length; i++)
+            {
+                string pat = CdpCoreUrlPatterns[i];
+                if (patterns.Add(pat)) ordered.Add(pat);
+            }
+
+            StringBuilder sb = new StringBuilder(ordered.Count * 36);
+            sb.Append("{\"urls\":[");
+            for (int i = 0; i < ordered.Count; i++)
+            {
+                if (i > 0) sb.Append(',');
+                sb.Append('"');
+                sb.Append(EscapeJsString(ordered[i]));
+                sb.Append('"');
+            }
+            sb.Append("]}");
+            return sb.ToString();
+        }
+
+        public bool ShouldApplyCdpShieldsForUrl(string url)
+        {
+            if (!_globalEnabled) return false;
+            if (string.IsNullOrEmpty(url)) return true;
+            if (url.StartsWith("dejavu://", StringComparison.OrdinalIgnoreCase) ||
+                url.StartsWith("about:", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+            string host = ExtractHost(url);
+            if (string.IsNullOrEmpty(host)) return true;
+            if (IsPausedForHost(host) || IsProtectedAuthPage(host)) return false;
+            return true;
+        }
 
         public void SetShieldLevel(string level)
         {
@@ -730,15 +1175,17 @@ namespace DejavuBrowser
         {
             get
             {
-                string d = Path.Combine(SettingsStore.AppDataDir, "filters-v3");
+                string d = Path.Combine(SettingsStore.AppDataDir, "filters-v4");
                 Directory.CreateDirectory(d);
                 return d;
             }
         }
 
         private string DomainsCachePath { get { return Path.Combine(CacheDir, "domains.txt"); } }
+        private string HostPathsCachePath { get { return Path.Combine(CacheDir, "hostpaths.txt"); } }
         private string ExceptionsCachePath { get { return Path.Combine(CacheDir, "exceptions.txt"); } }
         private string CosmeticsCachePath { get { return Path.Combine(CacheDir, "cosmetics.txt"); } }
+        private string GenericCosmeticsCachePath { get { return Path.Combine(CacheDir, "generic_cosmetics.txt"); } }
 
         public void InitializeAsync()
         {
@@ -754,6 +1201,8 @@ namespace DejavuBrowser
                         if (_domains.Count > 10000)
                         {
                             _listsReady = true;
+                            Action onUpdated = ListsUpdated;
+                            if (onUpdated != null) onUpdated();
                             if ((DateTime.UtcNow - written).TotalHours < 24.0)
                             {
                                 needRefresh = false;
@@ -774,7 +1223,10 @@ namespace DejavuBrowser
         {
             HashSet<string> doms = new HashSet<string>(CoreAdDomains, StringComparer.OrdinalIgnoreCase);
             HashSet<string> excs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            int hpCount;
+            Dictionary<string, List<HostPathRule>> hpRules = BuildCoreHostPathRules(out hpCount);
             Dictionary<string, string> cos = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            List<string> genCos = new List<string>();
 
             if (File.Exists(DomainsCachePath))
             {
@@ -783,7 +1235,27 @@ namespace DejavuBrowser
                     string line;
                     while ((line = sr.ReadLine()) != null)
                     {
-                        if (line.Length > 3) doms.Add(line);
+                        if (line.Length > 3 && !IsProtectedDomain(line)) doms.Add(line);
+                    }
+                }
+            }
+
+            if (File.Exists(HostPathsCachePath))
+            {
+                using (StreamReader sr = new StreamReader(HostPathsCachePath, Encoding.UTF8))
+                {
+                    string line;
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        string[] parts = line.Split('\t');
+                        if (parts.Length >= 3)
+                        {
+                            byte fl;
+                            if (byte.TryParse(parts[2], out fl))
+                            {
+                                AddHostPathRule(hpRules, parts[0], parts[1], fl, ref hpCount);
+                            }
+                        }
                     }
                 }
             }
@@ -818,11 +1290,30 @@ namespace DejavuBrowser
                 }
             }
 
+            if (File.Exists(GenericCosmeticsCachePath))
+            {
+                using (StreamReader sr = new StreamReader(GenericCosmeticsCachePath, Encoding.UTF8))
+                {
+                    string line;
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        string t = line.Trim();
+                        if (t.Length >= 4 && genCos.Count < 350) genCos.Add(t);
+                    }
+                }
+            }
+
+            HashSet<string> coreSet = new HashSet<string>(CoreAdDomains, StringComparer.OrdinalIgnoreCase);
+            excs.ExceptWith(coreSet);
+
             lock (_lock)
             {
                 _domains = doms;
+                _hostPathRules = hpRules;
+                _hostPathRuleCount = hpCount;
                 _exceptionDomains = excs;
                 _siteCosmetics = cos;
+                _genericCosmetics = genCos;
             }
         }
 
@@ -834,7 +1325,13 @@ namespace DejavuBrowser
 
                 HashSet<string> freshDomains = new HashSet<string>(CoreAdDomains, StringComparer.OrdinalIgnoreCase);
                 HashSet<string> freshExceptions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                int freshHpCount;
+                Dictionary<string, List<HostPathRule>> freshHostPaths = BuildCoreHostPathRules(out freshHpCount);
                 Dictionary<string, List<string>> siteSelectors = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+                HashSet<string> siteCosmeticExcs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                List<string> genericSelectors = new List<string>();
+                HashSet<string> genericSeen = new HashSet<string>(StringComparer.Ordinal);
+                HashSet<string> genericCosmeticExcs = new HashSet<string>(StringComparer.Ordinal);
 
                 // 1. Plain domain lists: OISD Big (~200k zero-breakage domains) + Peter Lowe
                 string[] plainLists = new string[]
@@ -843,9 +1340,9 @@ namespace DejavuBrowser
                     "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=plain&showintro=0&mimetype=plaintext"
                 };
 
-                foreach (string url in plainLists)
+                for (int p = 0; p < plainLists.Length; p++)
                 {
-                    string body = DownloadStringSafe(url);
+                    string body = DownloadStringSafe(plainLists[p]);
                     if (string.IsNullOrEmpty(body)) continue;
                     using (StringReader sr = new StringReader(body))
                     {
@@ -854,7 +1351,7 @@ namespace DejavuBrowser
                         {
                             string t = line.Trim();
                             if (t.Length < 4 || t[0] == '#' || t[0] == '!') continue;
-                            if (t.StartsWith("*.")) t = t.Substring(2);
+                            if (t.StartsWith("*.", StringComparison.Ordinal)) t = t.Substring(2);
                             int sp = t.IndexOf(' ');
                             if (sp > 0) t = t.Substring(sp + 1).Trim();
                             if (IsValidDomainToken(t) && !IsProtectedDomain(t))
@@ -865,20 +1362,37 @@ namespace DejavuBrowser
                     }
                 }
 
-                // 2. Adblock Plus / uBlock lists: EasyList + EasyPrivacy + uBlock Filters + Annoyances
+                // 2. Official Brave + EasyList + EasyPrivacy + uBlock Origin Filter Lists
                 string[] abpLists = new string[]
                 {
                     "https://easylist.to/easylist/easylist.txt",
                     "https://easylist.to/easylist/easyprivacy.txt",
                     "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/filters.txt",
-                    "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/annoyances-others.txt"
+                    "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/quick-fixes.txt",
+                    "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/privacy.txt",
+                    "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/badware.txt",
+                    "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/resource-abuse.txt",
+                    "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/annoyances-cookies.txt",
+                    "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-specific.txt",
+                    "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-disconnect.txt",
+                    "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-unbreak.txt"
                 };
 
-                foreach (string url in abpLists)
+                for (int a = 0; a < abpLists.Length; a++)
                 {
-                    string body = DownloadStringSafe(url);
+                    string body = DownloadStringSafe(abpLists[a]);
                     if (string.IsNullOrEmpty(body)) continue;
-                    ParseAbpList(body, freshDomains, freshExceptions, siteSelectors);
+                    ParseAbpList(
+                        body,
+                        freshDomains,
+                        freshExceptions,
+                        freshHostPaths,
+                        ref freshHpCount,
+                        siteSelectors,
+                        siteCosmeticExcs,
+                        genericSelectors,
+                        genericSeen,
+                        genericCosmeticExcs);
                 }
 
                 // Remove ONLY safe unrestricted exception domains; NEVER allow exceptions to override CoreAdDomains!
@@ -889,20 +1403,38 @@ namespace DejavuBrowser
                     freshDomains.Remove(ex);
                 }
 
-                // Compile per-host cosmetic CSS strings (capped cleanly per host for zero jank)
+                // Filter out generic cosmetic exceptions
+                List<string> finalGenerics = new List<string>();
+                for (int i = 0; i < genericSelectors.Count; i++)
+                {
+                    string sel = genericSelectors[i];
+                    if (!genericCosmeticExcs.Contains(sel))
+                    {
+                        finalGenerics.Add(sel);
+                        if (finalGenerics.Count >= 350) break;
+                    }
+                }
+
+                // Compile per-host cosmetic CSS strings (honoring #@# exceptions, capped cleanly per host for zero jank)
                 Dictionary<string, string> compiledCosmetics = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 foreach (KeyValuePair<string, List<string>> kv in siteSelectors)
                 {
                     if (kv.Value.Count == 0) continue;
-                    int limit = Math.Min(kv.Value.Count, 85);
                     StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < limit; i++)
+                    int added = 0;
+                    for (int i = 0; i < kv.Value.Count && added < 90; i++)
                     {
-                        if (i > 0) sb.Append(',');
-                        sb.Append(kv.Value[i]);
+                        string sel = kv.Value[i];
+                        if (siteCosmeticExcs.Contains(kv.Key + "\t" + sel)) continue;
+                        if (added > 0) sb.Append(',');
+                        sb.Append(sel);
+                        added++;
                     }
-                    sb.Append("{display:none!important;visibility:hidden!important;}");
-                    compiledCosmetics[kv.Key] = sb.ToString();
+                    if (added > 0)
+                    {
+                        sb.Append("{display:none!important;visibility:hidden!important;}");
+                        compiledCosmetics[kv.Key] = sb.ToString();
+                    }
                 }
 
                 if (freshDomains.Count > CoreAdDomains.Length)
@@ -910,13 +1442,32 @@ namespace DejavuBrowser
                     lock (_lock)
                     {
                         _domains = freshDomains;
+                        _hostPathRules = freshHostPaths;
+                        _hostPathRuleCount = freshHpCount;
                         _exceptionDomains = freshExceptions;
                         _siteCosmetics = compiledCosmetics;
+                        _genericCosmetics = finalGenerics;
                         _listsReady = true;
                     }
 
                     File.WriteAllLines(DomainsCachePath, freshDomains, Encoding.UTF8);
                     File.WriteAllLines(ExceptionsCachePath, freshExceptions, Encoding.UTF8);
+                    File.WriteAllLines(GenericCosmeticsCachePath, finalGenerics, Encoding.UTF8);
+                    using (StreamWriter swHp = new StreamWriter(HostPathsCachePath, false, Encoding.UTF8))
+                    {
+                        foreach (KeyValuePair<string, List<HostPathRule>> kv in freshHostPaths)
+                        {
+                            List<HostPathRule> list = kv.Value;
+                            for (int i = 0; i < list.Count; i++)
+                            {
+                                swHp.Write(kv.Key);
+                                swHp.Write('\t');
+                                swHp.Write(list[i].PathToken ?? "");
+                                swHp.Write('\t');
+                                swHp.WriteLine(list[i].Flags.ToString());
+                            }
+                        }
+                    }
                     using (StreamWriter sw = new StreamWriter(CosmeticsCachePath, false, Encoding.UTF8))
                     {
                         foreach (KeyValuePair<string, string> kv in compiledCosmetics)
@@ -926,16 +1477,124 @@ namespace DejavuBrowser
                             sw.WriteLine(kv.Value);
                         }
                     }
+
+                    Action onUpdated = ListsUpdated;
+                    if (onUpdated != null) onUpdated();
                 }
             }
             catch { }
+        }
+
+        private static bool ParseAbpOptions(string optStr, out byte flags, out bool unsupported)
+        {
+            flags = 0;
+            unsupported = false;
+            if (string.IsNullOrEmpty(optStr)) return true;
+
+            string[] parts = optStr.Split(',');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                string opt = parts[i].Trim().ToLowerInvariant();
+                if (opt.Length == 0) continue;
+
+                if (opt.StartsWith("domain=", StringComparison.Ordinal) ||
+                    opt.StartsWith("csp=", StringComparison.Ordinal) ||
+                    opt.StartsWith("redirect=", StringComparison.Ordinal) ||
+                    opt.StartsWith("redirect-rule=", StringComparison.Ordinal) ||
+                    opt.StartsWith("removeparam=", StringComparison.Ordinal) ||
+                    opt.StartsWith("replace=", StringComparison.Ordinal) ||
+                    opt == "badfilter" || opt == "popup" || opt == "popunder" ||
+                    opt == "first-party" || opt == "1p" || opt == "~third-party" || opt == "~3p")
+                {
+                    unsupported = true;
+                    return false;
+                }
+                else if (opt == "third-party" || opt == "3p")
+                {
+                    flags |= FLAG_THIRD_PARTY;
+                }
+                else if (opt == "script")
+                {
+                    flags |= FLAG_SCRIPT;
+                }
+                else if (opt == "image")
+                {
+                    flags |= FLAG_IMAGE;
+                }
+                else if (opt == "subdocument" || opt == "frame")
+                {
+                    flags |= FLAG_SUBDOCUMENT;
+                }
+                else if (opt == "xmlhttprequest" || opt == "xhr" || opt == "fetch")
+                {
+                    flags |= FLAG_XHR;
+                }
+                else if (opt == "important")
+                {
+                    flags |= FLAG_IMPORTANT;
+                }
+                else if (opt == "document" || opt == "doc")
+                {
+                    // Skip document-only blocking unless combined with important
+                    if (optStr.IndexOf("important", StringComparison.OrdinalIgnoreCase) < 0)
+                    {
+                        unsupported = true;
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private static bool IsSafeGenericCosmeticSelector(string sel)
+        {
+            if (string.IsNullOrEmpty(sel) || sel.Length < 4 || sel.Length > 90) return false;
+            char c0 = sel[0];
+            bool startsOk = (c0 == '.' || c0 == '#' || c0 == '[' ||
+                             sel.StartsWith("div[", StringComparison.OrdinalIgnoreCase) ||
+                             sel.StartsWith("ins.", StringComparison.OrdinalIgnoreCase) ||
+                             sel.StartsWith("iframe[", StringComparison.OrdinalIgnoreCase) ||
+                             sel.StartsWith("aside.", StringComparison.OrdinalIgnoreCase) ||
+                             sel.StartsWith("section.", StringComparison.OrdinalIgnoreCase));
+            if (!startsOk) return false;
+
+            if (sel.IndexOf(":has-text", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                sel.IndexOf(":xpath", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                sel.IndexOf(":upward", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                sel.IndexOf(":style", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                sel.IndexOf(":remove", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                sel.IndexOf(":matches-", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                sel.IndexOf(":min-text", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                sel.IndexOf(":others", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                sel.IndexOf(":watch-attr", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                sel.IndexOf('^') >= 0 || sel.IndexOf('{') >= 0 || sel.IndexOf('}') >= 0 ||
+                sel.IndexOf('\'') >= 0 || sel.IndexOf('\\') >= 0)
+            {
+                return false;
+            }
+
+            string low = sel.ToLowerInvariant();
+            for (int i = 0; i < GenericCosmeticSafeTokens.Length; i++)
+            {
+                if (low.IndexOf(GenericCosmeticSafeTokens[i], StringComparison.Ordinal) >= 0)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static void ParseAbpList(
             string body,
             HashSet<string> domains,
             HashSet<string> exceptions,
-            Dictionary<string, List<string>> siteSelectors)
+            Dictionary<string, List<HostPathRule>> hostPathRules,
+            ref int hostPathCount,
+            Dictionary<string, List<string>> siteSelectors,
+            HashSet<string> siteCosmeticExcs,
+            List<string> genericSelectors,
+            HashSet<string> genericSeen,
+            HashSet<string> genericCosmeticExcs)
         {
             using (StringReader sr = new StringReader(body))
             {
@@ -944,8 +1603,33 @@ namespace DejavuBrowser
                 {
                     if (line.Length < 4) continue;
                     char c0 = line[0];
-                    if (c0 == '!' || c0 == '[' || c0 == '#') continue;
+                    if (c0 == '!' || c0 == '[') continue;
 
+                    // Generic cosmetic rule: ##selector (hashIdx == 0)
+                    if (c0 == '#')
+                    {
+                        if (line.StartsWith("##", StringComparison.Ordinal) &&
+                            !line.StartsWith("##+js", StringComparison.Ordinal) &&
+                            !line.StartsWith("##^", StringComparison.Ordinal))
+                        {
+                            if (genericSelectors.Count < 450)
+                            {
+                                string sel = line.Substring(2).Trim();
+                                if (IsSafeGenericCosmeticSelector(sel) && genericSeen.Add(sel))
+                                {
+                                    genericSelectors.Add(sel);
+                                }
+                            }
+                        }
+                        else if (line.StartsWith("#@#", StringComparison.Ordinal))
+                        {
+                            string sel = line.Substring(3).Trim();
+                            if (sel.Length >= 2) genericCosmeticExcs.Add(sel);
+                        }
+                        continue;
+                    }
+
+                    // Exception rule: @@||domain^
                     if (line.StartsWith("@@||", StringComparison.Ordinal))
                     {
                         if (line.EndsWith("^", StringComparison.Ordinal) && line.IndexOf('$') < 0 && line.IndexOf('/') < 0 && line.IndexOf('*') < 0)
@@ -956,28 +1640,106 @@ namespace DejavuBrowser
                         continue;
                     }
 
+                    // Network rule: ||domain^ or ||domain/path$options
                     if (line.StartsWith("||", StringComparison.Ordinal))
                     {
-                        int caret = line.IndexOf('^', 2);
-                        if (caret > 4)
+                        string patternPart = line.Substring(2);
+                        string optPart = "";
+                        int dollarIdx = patternPart.IndexOf('$');
+                        if (dollarIdx > 0)
                         {
-                            string dom = line.Substring(2, caret - 2);
-                            if (dom.IndexOf('/') < 0 && dom.IndexOf('*') < 0 && IsValidDomainToken(dom))
+                            optPart = patternPart.Substring(dollarIdx + 1);
+                            patternPart = patternPart.Substring(0, dollarIdx);
+                        }
+
+                        byte flags;
+                        bool unsupported;
+                        if (!ParseAbpOptions(optPart, out flags, out unsupported) || unsupported)
+                        {
+                            continue;
+                        }
+
+                        int slashIdx = patternPart.IndexOf('/');
+                        int caretIdx = patternPart.IndexOf('^');
+
+                        // Case A: Pure domain rule (||domain.com^ or ||domain.com^$options)
+                        if (slashIdx < 0 && caretIdx > 3)
+                        {
+                            string dom = patternPart.Substring(0, caretIdx);
+                            if (dom.IndexOf('*') < 0 && IsValidDomainToken(dom) && !IsProtectedDomain(dom))
                             {
-                                string tail = (caret + 1 < line.Length) ? line.Substring(caret + 1) : "";
-                                bool skip = tail.Contains("domain=") || tail.Contains("badfilter") ||
-                                            tail.Contains("csp=") || (tail.Contains("important") == false && tail.Contains("document"));
-                                if (!skip && !IsProtectedDomain(dom))
+                                bool hasRestrictions = ((flags & (FLAG_THIRD_PARTY | FLAG_RESOURCE_MASK)) != 0);
+                                if (!hasRestrictions)
                                 {
                                     domains.Add(dom);
+                                }
+                                else if (hostPathCount < 25000)
+                                {
+                                    AddHostPathRule(hostPathRules, dom, "", flags, ref hostPathCount);
+                                }
+                            }
+                            continue;
+                        }
+
+                        // Case B: Domain + Path rule (||domain.com/path/pattern[$options])
+                        if (slashIdx > 3 && hostPathCount < 25000)
+                        {
+                            string dom = patternPart.Substring(0, slashIdx);
+                            if (dom.IndexOf('*') < 0 && dom.IndexOf('^') < 0 && IsValidDomainToken(dom) && !IsProtectedDomain(dom))
+                            {
+                                string rawPath = patternPart.Substring(slashIdx);
+                                // Strip trailing ^ separator and extract clean literal path token
+                                if (rawPath.EndsWith("^", StringComparison.Ordinal))
+                                {
+                                    rawPath = rawPath.Substring(0, rawPath.Length - 1);
+                                }
+                                string cleanToken = rawPath;
+                                int wild = cleanToken.IndexOf('*');
+                                if (wild >= 0)
+                                {
+                                    string[] segs = cleanToken.Split('*');
+                                    cleanToken = "";
+                                    for (int s = 0; s < segs.Length; s++)
+                                    {
+                                        string seg = segs[s].Replace("^", "");
+                                        if (seg.Length > cleanToken.Length) cleanToken = seg;
+                                    }
+                                }
+                                else
+                                {
+                                    cleanToken = cleanToken.Replace("^", "");
+                                }
+
+                                if (cleanToken.Length >= 5 && cleanToken.Length <= 120)
+                                {
+                                    AddHostPathRule(hostPathRules, dom, cleanToken.ToLowerInvariant(), flags, ref hostPathCount);
                                 }
                             }
                         }
                         continue;
                     }
 
+                    // Site-specific cosmetic exception: domain#@#selector
+                    int excHashIdx = line.IndexOf("#@#", StringComparison.Ordinal);
+                    if (excHashIdx > 2)
+                    {
+                        string sel = line.Substring(excHashIdx + 3).Trim();
+                        string hostPart = line.Substring(0, excHashIdx);
+                        string[] hosts = hostPart.Split(',');
+                        for (int i = 0; i < hosts.Length; i++)
+                        {
+                            string h = hosts[i].Trim().ToLowerInvariant();
+                            if (h.Length >= 4 && h[0] != '~' && h.IndexOf('.') > 0)
+                            {
+                                siteCosmeticExcs.Add(h + "\t" + sel);
+                            }
+                        }
+                        continue;
+                    }
+
+                    // Site-specific cosmetic rule: domain##selector
                     int hashIdx = line.IndexOf("##", StringComparison.Ordinal);
-                    if (hashIdx > 2 && line.IndexOf("#@#", StringComparison.Ordinal) < 0 &&
+                    if (hashIdx > 2 &&
                         line.IndexOf("#?#", StringComparison.Ordinal) < 0 &&
                         line.IndexOf("##+js", StringComparison.Ordinal) < 0)
                     {
@@ -1020,7 +1782,7 @@ namespace DejavuBrowser
                 using (WebClient wc = new WebClient())
                 {
                     wc.Encoding = Encoding.UTF8;
-                    wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) dejavu/5.2.0");
+                    wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) dejavu/5.3.0");
                     return wc.DownloadString(url);
                 }
             }
@@ -1119,6 +1881,53 @@ namespace DejavuBrowser
                 string parent = host.Substring(idx + 1);
                 if (set.Contains(parent)) return true;
                 idx = host.IndexOf('.', idx + 1);
+            }
+            return false;
+        }
+
+        private static bool ContextMatchesFlags(byte flags, CoreWebView2WebResourceContext context)
+        {
+            byte resMask = (byte)(flags & FLAG_RESOURCE_MASK);
+            if (resMask == 0) return true;
+            if (context == CoreWebView2WebResourceContext.All) return true;
+            if ((resMask & FLAG_SCRIPT) != 0 && context == CoreWebView2WebResourceContext.Script) return true;
+            if ((resMask & FLAG_IMAGE) != 0 && context == CoreWebView2WebResourceContext.Image) return true;
+            if ((resMask & FLAG_SUBDOCUMENT) != 0 && context == CoreWebView2WebResourceContext.Document) return true;
+            if ((resMask & FLAG_XHR) != 0 &&
+                (context == CoreWebView2WebResourceContext.XmlHttpRequest ||
+                 context == CoreWebView2WebResourceContext.Fetch))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private bool MatchesHostPathRules(string reqHost, string lowerUrl, bool sameSite, CoreWebView2WebResourceContext context)
+        {
+            Dictionary<string, List<HostPathRule>> map = _hostPathRules;
+            if (map == null || map.Count == 0 || string.IsNullOrEmpty(reqHost)) return false;
+
+            string cur = reqHost;
+            while (!string.IsNullOrEmpty(cur))
+            {
+                List<HostPathRule> list;
+                if (map.TryGetValue(cur, out list))
+                {
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        HostPathRule r = list[i];
+                        if ((r.Flags & FLAG_THIRD_PARTY) != 0 && sameSite) continue;
+                        if (!ContextMatchesFlags(r.Flags, context)) continue;
+                        if (string.IsNullOrEmpty(r.PathToken) ||
+                            lowerUrl.IndexOf(r.PathToken, StringComparison.Ordinal) >= 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                int dot = cur.IndexOf('.');
+                if (dot < 0 || dot >= cur.Length - 1) break;
+                cur = cur.Substring(dot + 1);
             }
             return false;
         }
@@ -1283,9 +2092,13 @@ namespace DejavuBrowser
         {
             if (!_globalEnabled || string.IsNullOrEmpty(url)) return false;
             string host = ExtractHost(url);
-            if (IsProtectedDomain(host)) return false;
+            if (string.IsNullOrEmpty(host) || IsProtectedDomain(host) || IsProtectedAuthPage(host)) return false;
             if (MatchesSetWithParents(_domains, host) || HasAdSubdomainPrefix(host)) return true;
             string lower = url.ToLowerInvariant();
+            for (int i = 0; i < SpamPopupUrlTokens.Length; i++)
+            {
+                if (lower.IndexOf(SpamPopupUrlTokens[i], StringComparison.Ordinal) >= 0) return true;
+            }
             for (int i = 0; i < _anyUrlPatterns.Count; i++)
             {
                 if (lower.IndexOf(_anyUrlPatterns[i], StringComparison.Ordinal) >= 0) return true;
@@ -1294,6 +2107,15 @@ namespace DejavuBrowser
         }
 
         public bool ShouldBlockRequest(string requestUrl, string pageUrl, bool isMainDocument)
+        {
+            return ShouldBlockRequest(requestUrl, pageUrl, isMainDocument, CoreWebView2WebResourceContext.All);
+        }
+
+        public bool ShouldBlockRequest(
+            string requestUrl,
+            string pageUrl,
+            bool isMainDocument,
+            CoreWebView2WebResourceContext context)
         {
             if (!_globalEnabled || isMainDocument || string.IsNullOrEmpty(requestUrl)) return false;
             if (!requestUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
@@ -1311,18 +2133,28 @@ namespace DejavuBrowser
             string reqHost = ExtractHost(requestUrl);
             if (string.IsNullOrEmpty(reqHost)) return false;
 
-            // Never break real video streaming chunks
+            string lowerUrl = requestUrl.ToLowerInvariant();
+
+            // YouTube googlevideo.com: ONLY block explicit ad segments (&oad=, ?oad=, &ctier=L, adformat=); NEVER block normal video streams!
             if (reqHost.EndsWith("googlevideo.com", StringComparison.OrdinalIgnoreCase))
             {
+                if (lowerUrl.IndexOf("/videoplayback", StringComparison.Ordinal) >= 0 &&
+                    (lowerUrl.IndexOf("&oad=", StringComparison.Ordinal) >= 0 ||
+                     lowerUrl.IndexOf("?oad=", StringComparison.Ordinal) >= 0 ||
+                     lowerUrl.IndexOf("&ctier=l", StringComparison.Ordinal) >= 0 ||
+                     lowerUrl.IndexOf("adformat=", StringComparison.Ordinal) >= 0))
+                {
+                    return true;
+                }
                 return false;
             }
 
-            string lowerUrl = requestUrl.ToLowerInvariant();
-
-            // YouTube explicit ad-tracking endpoints (safe to block on www.youtube.com without breaking videos)
-            if (pageHost.IndexOf("youtube.com", StringComparison.OrdinalIgnoreCase) >= 0)
+            // YouTube explicit ad-tracking & ad-break endpoints (safe to block on youtube.com without breaking videos)
+            if (pageHost.IndexOf("youtube.com", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                reqHost.IndexOf("youtube.com", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                if (lowerUrl.IndexOf("/api/stats/ads", StringComparison.Ordinal) >= 0 ||
+                if (lowerUrl.IndexOf("/youtubei/v1/player/ad_break", StringComparison.Ordinal) >= 0 ||
+                    lowerUrl.IndexOf("/api/stats/ads", StringComparison.Ordinal) >= 0 ||
                     lowerUrl.IndexOf("/pagead/", StringComparison.Ordinal) >= 0 ||
                     lowerUrl.IndexOf("/ptracking", StringComparison.Ordinal) >= 0 ||
                     lowerUrl.IndexOf("/get_midroll_info", StringComparison.Ordinal) >= 0 ||
@@ -1332,21 +2164,25 @@ namespace DejavuBrowser
                 }
             }
 
-            // Protect exact auth/media/payment/captcha hosts (allows ads.reddit.com etc. to be blocked!)
+            bool aggressive = IsAggressive;
+            bool sameSite = !string.IsNullOrEmpty(pageHost) &&
+                            string.Equals(GetBaseDomain(reqHost), GetBaseDomain(pageHost), StringComparison.OrdinalIgnoreCase);
+
+            // Protect auth/media/payment/captcha hosts from domain blocking (except targeted CoreHostPathRules on non-auth sites!)
             if (IsProtectedDomain(reqHost))
             {
+                if (!IsProtectedAuthPage(reqHost) && MatchesHostPathRules(reqHost, lowerUrl, sameSite, context))
+                {
+                    return true;
+                }
                 return false;
             }
 
-            // Check explicit EasyList/uBlock exception domains
+            // Check explicit EasyList/uBlock exception domains (CoreAdDomains are already excluded from _exceptionDomains)
             if (_exceptionDomains.Contains(reqHost))
             {
                 return false;
             }
-
-            bool aggressive = IsAggressive;
-            bool sameSite = !string.IsNullOrEmpty(pageHost) &&
-                            string.Equals(GetBaseDomain(reqHost), GetBaseDomain(pageHost), StringComparison.OrdinalIgnoreCase);
 
             // 0. Cookie Consent / CMP scripts when BlockCookieNotices is enabled (or Aggressive)
             if ((_blockCookieNotices || aggressive) && !sameSite && MatchesSetWithParents(_cookieCmpDomains, reqHost))
@@ -1360,7 +2196,7 @@ namespace DejavuBrowser
                 return true;
             }
 
-            // 2. Curated 540+ & OISD Big / EasyList / EasyPrivacy / uBlock / Peter Lowe domain match
+            // 2. Curated 650+ & OISD Big / EasyList / EasyPrivacy / uBlock / Brave / Peter Lowe domain match
             if (MatchesSetWithParents(_domains, reqHost))
             {
                 if (!string.Equals(reqHost, pageHost, StringComparison.OrdinalIgnoreCase))
@@ -1369,13 +2205,19 @@ namespace DejavuBrowser
                 }
             }
 
-            // 3. Aggressive Mode extra domains (3p social widgets, CNAME/bounce trackers, extra telemetry)
+            // 3. Domain + Path + Resource-Type / $third-party ABP rules (O(1) host lookup!)
+            if (MatchesHostPathRules(reqHost, lowerUrl, sameSite, context))
+            {
+                return true;
+            }
+
+            // 4. Aggressive Mode extra domains (3p social widgets, CNAME/bounce trackers, extra telemetry)
             if (aggressive && !sameSite && MatchesSetWithParents(_aggressiveDomains, reqHost))
             {
                 return true;
             }
 
-            // 4. Universal ad URL path snippets (works even for first-party proxied ads like site.com/pagead/ or /adserver/)
+            // 5. Universal ad URL path snippets (works even for first-party proxied ads like /ads.js, /pagead.js, /pagead/, /adserver/)
             for (int i = 0; i < _anyUrlPatterns.Count; i++)
             {
                 if (lowerUrl.IndexOf(_anyUrlPatterns[i], StringComparison.Ordinal) >= 0)
@@ -1384,7 +2226,7 @@ namespace DejavuBrowser
                 }
             }
 
-            // 5. Third-party ad/tracker script & beacon URL patterns
+            // 6. Third-party ad/tracker script & beacon URL patterns
             if (!sameSite)
             {
                 for (int i = 0; i < _thirdPartyUrlPatterns.Count; i++)
@@ -1396,7 +2238,7 @@ namespace DejavuBrowser
                 }
             }
 
-            // 6. Aggressive Mode extra URL patterns (1st/3rd-party telemetry & fingerprinting scripts)
+            // 7. Aggressive Mode extra URL patterns (1st/3rd-party telemetry & fingerprinting scripts)
             if (aggressive)
             {
                 for (int i = 0; i < _aggressiveUrlPatterns.Count; i++)
@@ -1416,22 +2258,29 @@ namespace DejavuBrowser
             CoreWebView2WebResourceContext context,
             string requestUrl)
         {
+            // Serve authentic Brave google-ima.js surrogate ONLY for imasdk.googleapis.com / ima3.js video player scripts
             if (context == CoreWebView2WebResourceContext.Script && !string.IsNullOrEmpty(requestUrl))
             {
                 string low = requestUrl.ToLowerInvariant();
-                if (low.Contains("gpt.js") || low.Contains("ima3.js") || low.Contains("adsbygoogle.js"))
+                if (low.IndexOf("ima3.js", StringComparison.Ordinal) >= 0 ||
+                    low.IndexOf("imasdk.googleapis.com", StringComparison.Ordinal) >= 0)
                 {
                     return env.CreateWebResourceResponse(
-                        new MemoryStream(NoopJsBytes), 200, "OK",
-                        "Content-Type: application/javascript; charset=utf-8\r\nAccess-Control-Allow-Origin: *");
+                        new MemoryStream(GoogleImaSurrogateBytes), 200, "OK",
+                        "Content-Type: application/javascript; charset=utf-8\r\nAccess-Control-Allow-Origin: *\r\nCache-Control: no-store");
                 }
             }
-            if (context == CoreWebView2WebResourceContext.Image)
+
+            // Blocked ad <iframe> documents receive clean empty transparent HTML so they collapse invisibly
+            if (context == CoreWebView2WebResourceContext.Document)
             {
                 return env.CreateWebResourceResponse(
-                    new MemoryStream(TransparentGif), 200, "OK",
-                    "Content-Type: image/gif\r\nCache-Control: no-store");
+                    new MemoryStream(EmptyIframeHtmlBytes), 200, "OK",
+                    "Content-Type: text/html; charset=utf-8\r\nCache-Control: no-store");
             }
+
+            // All other blocked resources (Scripts, Images, XHR, Fetch, Media, etc.) fail cleanly with 403
+            // (NO 200 OK TransparentGif or NoopJs for adsbygoogle.js, so real adblock tests & onerror handlers register 100% blocked!)
             return env.CreateWebResourceResponse(null, 403, "Blocked by dejavu Shields", "Cache-Control: no-store\r\n");
         }
 
@@ -1485,23 +2334,78 @@ namespace DejavuBrowser
 
         public static string GetDocumentStartScript()
         {
-            return BuildBraveShieldScript(false, true, true);
+            return BuildBraveShieldScript(true, false, true, true, null, null);
+        }
+
+        public static string BuildBraveShieldScript(bool aggressive, bool blockFp, bool blockCookies)
+        {
+            return BuildBraveShieldScript(true, aggressive, blockFp, blockCookies, null, null);
+        }
+
+        private static string EscapeJsString(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            StringBuilder sb = new StringBuilder(s.Length + 8);
+            for (int i = 0; i < s.Length; i++)
+            {
+                char ch = s[i];
+                if (ch == '\\') sb.Append("\\\\");
+                else if (ch == '"') sb.Append("\\\"");
+                else if (ch == '\r') sb.Append("\\r");
+                else if (ch == '\n') sb.Append("\\n");
+                else if (ch == '\t') sb.Append("\\t");
+                else if (ch == '<') sb.Append("\\u003c");
+                else sb.Append(ch);
+            }
+            return sb.ToString();
+        }
+
+        private static string BuildJsStringArray(IList<string> items, int maxItems)
+        {
+            if (items == null || items.Count == 0) return "[]";
+            int limit = Math.Min(items.Count, maxItems);
+            StringBuilder sb = new StringBuilder(limit * 24);
+            sb.Append('[');
+            int emitted = 0;
+            for (int i = 0; i < limit; i++)
+            {
+                string item = items[i];
+                if (string.IsNullOrEmpty(item)) continue;
+                if (emitted > 0) sb.Append(',');
+                sb.Append('"');
+                sb.Append(EscapeJsString(item));
+                sb.Append('"');
+                emitted++;
+            }
+            sb.Append(']');
+            return sb.ToString();
         }
 
         /// <summary>
-        /// Brave-Grade Injected Document-Start Scriptlet Engine:
-        /// - YouTube Ad JSON-Prune (JSON.parse, Response.prototype.json, ytInitialPlayerResponse) & MutationObserver Auto-Skip (ZERO setInterval!)
-        /// - Brave Fingerprinting Farbling (Canvas 2D ±1 sparse pixel noise, WebGL vendor/renderer normalization, AudioBuffer subtle farble, sendBeacon tracker blocking)
-        /// - Fanboy Cookie Consent & GDPR Annoyance Blocker + scroll-lock recovery
-        /// - Anti-Adblock Bait Defusal (adsbygoogle, googletag, canRunAds, isAdBlockActive, blockAdBlock)
-        /// - Safe Auth/Passkey/Captcha/Payment exemption (NEVER breaks Google/Passkeys/WebAuthn/window.open OAuth!)
+        /// Brave-Grade Injected Document-Start Scriptlet Engine (v5.3.0):
+        /// - Dynamic live config embedded at document_start (globalEnabled, pausedHosts, aggressive, blockFp, blockCookies, genericCosmetics)
+        /// - Network-parity fetch / XMLHttpRequest / sendBeacon Guard (rejects blocked trackers with TypeError("Failed to fetch"))
+        /// - Deep Modern YouTube Ad Neutralization (ytInitialPlayerResponse, ytInitialData, JSON.parse, Response.json/text, XHR responseText + event-driven <video> instant skip — ZERO setInterval!)
+        /// - Brave Fingerprinting Farbling (Canvas 2D +-1 sparse noise, WebGL vendor/renderer normalization, AudioBuffer subtle farble)
+        /// - EasyList/Brave Generic + Site Cosmetic Ad Hiding & Fanboy Cookie Banner Blocker + scroll-lock recovery
+        /// - Anti-Adblock Bait Defusal & Invisible Clickjack Overlay Neutralizer
+        /// - 100% Safe Auth/Passkey/Captcha/Payment exemption (NEVER breaks Google/Passkeys/WebAuthn/window.open OAuth!)
         /// </summary>
-        public static string BuildBraveShieldScript(bool aggressive, bool blockFp, bool blockCookies)
+        public static string BuildBraveShieldScript(
+            bool globalEnabled,
+            bool aggressive,
+            bool blockFp,
+            bool blockCookies,
+            IList<string> pausedHosts,
+            IList<string> genericCosmetics)
         {
             string initFlags =
+                "var INIT_ENABLED=" + (globalEnabled ? "true" : "false") + ";" +
                 "var INIT_AGG=" + (aggressive ? "true" : "false") + ";" +
                 "var INIT_FP=" + (blockFp ? "true" : "false") + ";" +
-                "var INIT_COOKIES=" + (blockCookies ? "true" : "false") + ";";
+                "var INIT_COOKIES=" + (blockCookies ? "true" : "false") + ";" +
+                "var INIT_PAUSED=" + BuildJsStringArray(pausedHosts, 200) + ";" +
+                "var EXTRA_GENERIC_COSMETICS=" + BuildJsStringArray(genericCosmetics, 350) + ";";
 
             return "(function(){\n" +
                    initFlags + "\n" +
@@ -1514,14 +2418,30 @@ namespace DejavuBrowser
   var SAFE_AUTH_RE = /(^|\.)(accounts\.google\.com|login\.microsoftonline\.com|login\.live\.com|appleid\.apple\.com|idmsa\.apple\.com|auth0\.com|okta\.com|clerk\.accounts\.dev|clerk\.dev|duosecurity\.com|webauthn\.io|passkeys\.io|passkeys\.dev|challenges\.cloudflare\.com|hcaptcha\.com|recaptcha\.net|stripe\.com|paypal\.com|dejavu\.local)$/;
   var isSafeAuth = SAFE_AUTH_RE.test(host);
 
+  var pausedSet = Object.create(null);
+  for (var pi = 0; pi < INIT_PAUSED.length; pi++) {
+    pausedSet[String(INIT_PAUSED[pi]).toLowerCase()] = true;
+  }
+
   var cfg = window.__dejavuShieldCfg || {};
+  if (typeof cfg.enabled !== 'boolean') cfg.enabled = INIT_ENABLED;
   if (typeof cfg.aggressive !== 'boolean') cfg.aggressive = INIT_AGG;
   if (typeof cfg.blockFp !== 'boolean') cfg.blockFp = INIT_FP;
   if (typeof cfg.blockCookies !== 'boolean') cfg.blockCookies = INIT_COOKIES;
   window.__dejavuShieldCfg = cfg;
 
+  function isHostPaused(h) {
+    if (!h) return false;
+    return !!pausedSet[h];
+  }
+
   function isPaused() {
-    return !!window.__dejavuAdblockPaused || isSafeAuth;
+    if (isSafeAuth) return true;
+    if (!cfg.enabled) return true;
+    if (typeof window.__dejavuAdblockPaused === 'boolean') {
+      return window.__dejavuAdblockPaused;
+    }
+    return isHostPaused(host);
   }
 
   var fpReported = 0;
@@ -1541,6 +2461,99 @@ namespace DejavuBrowser
         return;
       }
       window.chrome.webview.postMessage({ __dejavuShieldReport: true, kind: kind, delta: delta });
+    } catch (e) {}
+  }
+
+  // 0. Document-Start Network-Parity fetch / XMLHttpRequest / sendBeacon Guard
+  // Gives literal ERR_BLOCKED_BY_CLIENT parity (fetch rejects with TypeError) for any long-tail ad/tracker request
+  var SAFE_REQ_HOST_RE = /(^|\.)(accounts\.google\.com|gstatic\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|oauth2\.googleapis\.com|identitytoolkit\.googleapis\.com|securetoken\.googleapis\.com|ytimg\.com|ggpht\.com|googleusercontent\.com|stripe\.com|paypal\.com|paypalobjects\.com|recaptcha\.net|hcaptcha\.com|challenges\.cloudflare\.com|auth0\.com|okta\.com|github\.com|githubusercontent\.com|dejavu\.local)$/;
+  var BLOCK_HOST_RE = /(^|\.)(doubleclick\.net|googlesyndication\.com|googleadservices\.com|adservice\.google\.com|google-analytics\.com|analytics\.google\.com|click\.googleanalytics\.com|googletagmanager\.com|googletagservices\.com|2mdn\.net|adtrafficquality\.google|fundingchoicesmessages\.google\.com|ads\.youtube\.com|adnxs\.com|adsrvr\.org|advertising\.com|amazon-adsystem\.com|criteo\.(com|net)|outbrain\.com|taboola\.com|pubmatic\.com|rubiconproject\.com|openx\.net|casalemedia\.com|indexww\.com|smartadserver\.com|yieldmo\.com|sharethrough\.com|33across\.com|triplelift\.com|media\.net|moatads\.com|doubleverify\.com|adsafeprotected\.com|quantserve\.com|scorecardresearch\.com|adform\.net|bidswitch\.net|rlcdn\.com|krxd\.net|bluekai\.com|demdex\.net|omtrdc\.net|adroll\.com|flashtalking\.com|serving-sys\.com|sizmek\.com|innovid\.com|spotxchange\.com|springserve\.com|teads\.(tv|com)|kargo\.com|gumgum\.com|nativo\.com|raptive\.com|adthrive\.com|mediavine\.com|ezoic\.net|buysellads\.com|carbonads\.(com|net)|revcontent\.com|mgid\.com|zemanta\.com|plista\.com|adblade\.com|fastclick\.net|skimresources\.com|viglink\.com|hotjar\.com|clarity\.ms|sentry\.io|sentry-cdn\.com|getsentry\.com|bugsnag\.com|mixpanel\.com|amplitude\.com|segment\.(io|com)|newrelic\.com|nr-data\.net|fullstory\.com|mouseflow\.com|luckyorange\.(com|net)|crazyegg\.com|freshmarketer\.com|chartbeat\.(com|net)|optimizely\.com|vwo\.com|statcounter\.com|histats\.com|getclicky\.com|heapanalytics\.com|logrocket\.io|browser-intake-datadoghq\.com|pendo\.io|rollbar\.com|raygun\.io|onesignal\.com|ads-twitter\.com|ads\.twitter\.com|ads-api\.twitter\.com|analytics\.twitter\.com|ads\.tiktok\.com|ads-api\.tiktok\.com|analytics\.tiktok\.com|ads-sg\.tiktok\.com|analytics-sg\.tiktok\.com|business-api\.tiktok\.com|log\.byteoversea\.com|ads\.linkedin\.com|analytics\.pointdrive\.linkedin\.com|snap\.licdn\.com|ads\.reddit\.com|events\.reddit\.com|events\.redditmedia\.com|alb\.reddit\.com|w3-reporting\.reddit\.com|error-tracking\.reddit\.com|ads\.pinterest\.com|ct\.pinterest\.com|log\.pinterest\.com|trk\.pinterest\.com|pixel\.facebook\.com|an\.facebook\.com|bat\.bing\.com|stats\.wp\.com|pixel\.wp\.com|ads\.yahoo\.com|analytics\.yahoo\.com|geo\.yahoo\.com|udc\.yahoo\.com|udcm\.yahoo\.com|analytics\.query\.yahoo\.com|partnerads\.ysm\.yahoo\.com|log\.fc\.yahoo\.com|gemini\.yahoo\.com|adtech\.yahooinc\.com|mc\.yandex\.(ru|com)|an\.yandex\.(ru|com)|extmaps-api\.yandex\.net|appmetrica\.yandex\.ru|adfstat\.yandex\.ru|metrika\.yandex\.ru|offerwall\.yandex\.net|adfox\.yandex\.ru|branch\.io|appsflyer\.com|adjust\.com|adcolony\.com|unityads\.unity3d\.com|applovin\.com|vungle\.com|inmobi\.com|popads\.net|popcash\.net|propellerads\.com|exoclick\.com|exosrv\.com|realsrv\.com|juicyads\.com|trafficjunky\.net|trafficstars\.com|adsterra\.com|admaven\.com|hilltopads\.(com|net)|monetag\.com|clickadu\.com|galaksion\.com|coinhive\.com|coin-hive\.com|coinimp\.com|crypto-loot\.com|adtago\.s3\.amazonaws\.com|analyticsengine\.s3\.amazonaws\.com|analytics\.s3\.amazonaws\.com|advice-ads\.s3\.amazonaws\.com|d2wy8f7a9ursnm\.cloudfront\.net|logs\.netflix\.com|iot-eu-logser\.realme\.com|iot-logser\.realme\.com|bdapi-ads\.realmemobile\.com|bdapi-in-ads\.realmemobile\.com|ad\.xiaomi\.com|data\.mistat\.(india\.|rus\.)?xiaomi\.com|sdkconfig\.ad\.(intl\.)?xiaomi\.com|tracking\.(rus\.)?miui\.com|adsfs\.oppomobile\.com|adx\.ads\.oppomobile\.com|ck\.ads\.oppomobile\.com|data\.ads\.oppomobile\.com|metrics2?\.data\.hicloud\.com|grs\.hicloud\.com|logservice1?\.hicloud\.com|logbak\.hicloud\.com|click\.oneplus\.cn|open\.oneplus\.net|samsungads\.com|[sn]metrics\.samsung\.com|samsung-com\.112\.2o7\.net|analytics-api\.samsunghealthcn\.com|iadsdk\.apple\.com|metrics\.icloud\.com|metrics\.mzstatic\.com|api-adservices\.apple\.com|(books|weather|notes)-analytics-events\.apple\.com)$/;
+  var BLOCK_SUB_RE = /^(ads|ad|adservice|adserver|ads-api|adclick|adtrack|analytics|telemetry|metrics|pixel|px|beacon|tracker|tracking|pagead|pagead2|pubads|securepubads|prebid)\./;
+  var BLOCK_PATH_RE = /(\/pagead\/|\/pagead\.js|\/ads\.js(\?|$)|\/ad\.js(\?|$)|\/ads\/js\/|\/adserver\/|\/adservice\/|\/api\/stats\/ads|\/youtubei\/v1\/player\/ad_break|\/ptracking|\/get_midroll_info|\/g\/collect(\?|$)|\/j\/collect(\?|$)|\/r\/collect(\?|$)|\/banners\/[^/?#]*(_ads_|advertising|banner)|\/popunder)/i;
+
+  function shouldBlockJsNetUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return false;
+    if (isPaused()) return false;
+    try {
+      var u = new URL(rawUrl, location.href);
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+      var h = (u.hostname || '').toLowerCase();
+      if (!h) return false;
+      if (/(^|\.)googlevideo\.com$/.test(h)) {
+        var pq = (u.pathname + u.search).toLowerCase();
+        return pq.indexOf('/videoplayback') >= 0 && (pq.indexOf('&oad=') >= 0 || pq.indexOf('?oad=') >= 0 || pq.indexOf('&ctier=l') >= 0 || pq.indexOf('adformat=') >= 0);
+      }
+      if (SAFE_REQ_HOST_RE.test(h)) return false;
+      if (BLOCK_HOST_RE.test(h)) return true;
+      if (h !== host && BLOCK_SUB_RE.test(h)) return true;
+      var pathQ = u.pathname + u.search;
+      if (BLOCK_PATH_RE.test(pathQ)) return true;
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  if (!isSafeAuth) {
+    try {
+      if (typeof window.fetch === 'function') {
+        var origFetch = window.fetch;
+        window.fetch = function(input, init) {
+          try {
+            var reqUrl = (typeof input === 'string') ? input : (input && typeof input.url === 'string' ? input.url : '');
+            if (reqUrl && shouldBlockJsNetUrl(reqUrl)) {
+              reportShield('network', 1);
+              return Promise.reject(new TypeError('Failed to fetch'));
+            }
+          } catch (e) {}
+          return origFetch.apply(this, arguments);
+        };
+      }
+    } catch (e) {}
+
+    try {
+      if (typeof XMLHttpRequest !== 'undefined' && XMLHttpRequest.prototype) {
+        var origXhrOpen = XMLHttpRequest.prototype.open;
+        var origXhrSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function(method, url) {
+          this.__dvUrl = (typeof url === 'string') ? url : String(url || '');
+          this.__dvBlocked = shouldBlockJsNetUrl(this.__dvUrl);
+          return origXhrOpen.apply(this, arguments);
+        };
+        XMLHttpRequest.prototype.send = function() {
+          if (this.__dvBlocked) {
+            var self = this;
+            reportShield('network', 1);
+            setTimeout(function() {
+              try {
+                Object.defineProperty(self, 'readyState', { configurable: true, value: 4 });
+                Object.defineProperty(self, 'status', { configurable: true, value: 0 });
+                Object.defineProperty(self, 'responseText', { configurable: true, value: '' });
+                Object.defineProperty(self, 'response', { configurable: true, value: '' });
+                if (typeof self.onreadystatechange === 'function') self.onreadystatechange();
+                if (typeof self.onerror === 'function') self.onerror(new ProgressEvent('error'));
+                self.dispatchEvent(new ProgressEvent('error'));
+                self.dispatchEvent(new ProgressEvent('loadend'));
+              } catch (e) {}
+            }, 0);
+            return;
+          }
+          return origXhrSend.apply(this, arguments);
+        };
+      }
+    } catch (e) {}
+
+    try {
+      if (navigator && typeof navigator.sendBeacon === 'function') {
+        var origBeacon = navigator.sendBeacon.bind(navigator);
+        navigator.sendBeacon = function(url, data) {
+          if (typeof url === 'string' && shouldBlockJsNetUrl(url)) {
+            reportShield('network', 1);
+            return true;
+          }
+          return origBeacon(url, data);
+        };
+      }
     } catch (e) {}
   }
 
@@ -1589,7 +2602,7 @@ namespace DejavuBrowser
     } catch (e) {}
   }
 
-  // 2. Brave Fingerprinting Farbling (Canvas 2D, WebGL, AudioBuffer, sendBeacon)
+  // 2. Brave Fingerprinting Farbling (Canvas 2D, WebGL, AudioBuffer)
   if (!isPaused() && cfg.blockFp) {
     try {
       var seedKey = '__dv_fp_seed';
@@ -1685,61 +2698,157 @@ namespace DejavuBrowser
           return arr;
         };
       }
-
-      if (navigator && typeof navigator.sendBeacon === 'function') {
-        var origBeacon = navigator.sendBeacon.bind(navigator);
-        var BEACON_BLOCK_RE = /(doubleclick\.net|googlesyndication\.com|google-analytics\.com|googletagmanager\.com|hotjar\.com|fullstory\.com|clarity\.ms|mixpanel\.com|amplitude\.com|segment\.(io|com)|sentry\.io|nr-data\.net|datadoghq\.com|scorecardresearch\.com|quantserve\.com|criteo\.|taboola\.|outbrain\.|\/collect\?|\/g\/collect|\/beacon|\/telemetry|\/pixel\.gif|\/tr\/\?id=)/i;
-        navigator.sendBeacon = function(url, data) {
-          if (!isPaused() && cfg.blockFp && typeof url === 'string' && BEACON_BLOCK_RE.test(url)) {
-            reportShield('fp', 1);
-            return true;
-          }
-          return origBeacon(url, data);
-        };
-      }
     } catch (e) {}
   }
 
-  // 3. YouTube Ad JSON-Prune (JSON.parse, Response.prototype.json, ytInitialPlayerResponse)
+  // 3. Deep Modern YouTube Ad Neutralization (ytInitialPlayerResponse, ytInitialData, JSON.parse, Response.json/text, XHR responseText)
   var isYouTube = /(^|\.)youtube\.com$/.test(host);
   if (isYouTube && !isPaused()) {
     try {
-      function pruneYtObj(o) {
+      var YT_AD_ITEM_KEYS = [
+        'adSlotRenderer', 'promotedSparklesWebRenderer', 'promotedSparklesTextSearchRenderer',
+        'inFeedAdLayoutRenderer', 'statementBannerRenderer', 'mastheadAdRenderer',
+        'bannerPromoRenderer', 'displayAdRenderer', 'actionCompanionAdRenderer',
+        'compactPromotedVideoRenderer', 'promotedVideoRenderer'
+      ];
+
+      function isYtAdItem(item) {
+        if (!item || typeof item !== 'object') return false;
+        for (var k = 0; k < YT_AD_ITEM_KEYS.length; k++) {
+          if (item[YT_AD_ITEM_KEYS[k]]) return true;
+        }
+        if (item.richItemRenderer && item.richItemRenderer.content && isYtAdItem(item.richItemRenderer.content)) return true;
+        if (item.itemSectionRenderer && item.itemSectionRenderer.contents && Array.isArray(item.itemSectionRenderer.contents) &&
+            item.itemSectionRenderer.contents.length === 1 && isYtAdItem(item.itemSectionRenderer.contents[0])) {
+          return true;
+        }
+        return false;
+      }
+
+      function pruneYtObj(o, depth) {
         if (!o || typeof o !== 'object') return false;
+        var d = depth || 0;
+        if (d > 8) return false;
         var pruned = false;
+
+        if (Array.isArray(o)) {
+          for (var ai = o.length - 1; ai >= 0; ai--) {
+            var it = o[ai];
+            if (isYtAdItem(it)) {
+              o.splice(ai, 1);
+              pruned = true;
+            } else if (d < 6 && it && typeof it === 'object') {
+              if (pruneYtObj(it, d + 1)) pruned = true;
+            }
+          }
+          return pruned;
+        }
+
         if (o.adPlacements && o.adPlacements.length) { o.adPlacements = []; pruned = true; }
         if (o.playerAds && o.playerAds.length) { o.playerAds = []; pruned = true; }
         if (o.adSlots && o.adSlots.length) { o.adSlots = []; pruned = true; }
         if (o.adBreakHeartbeatParams) { delete o.adBreakHeartbeatParams; pruned = true; }
-        if (o.playerResponse && typeof o.playerResponse === 'object') {
-          if (pruneYtObj(o.playerResponse)) pruned = true;
+        if (o.adBreakParams) { delete o.adBreakParams; pruned = true; }
+        if (o.masthead) { delete o.masthead; pruned = true; }
+        if (o.auxiliaryUi && o.auxiliaryUi.messageRenderers) {
+          if (o.auxiliaryUi.messageRenderers.bkaEnforcementMessageViewModel) {
+            delete o.auxiliaryUi.messageRenderers.bkaEnforcementMessageViewModel;
+            pruned = true;
+          }
+          if (o.auxiliaryUi.messageRenderers.enforcementMessageViewModel) {
+            delete o.auxiliaryUi.messageRenderers.enforcementMessageViewModel;
+            pruned = true;
+          }
+        }
+        for (var ak = 0; ak < YT_AD_ITEM_KEYS.length; ak++) {
+          if (o[YT_AD_ITEM_KEYS[ak]]) {
+            delete o[YT_AD_ITEM_KEYS[ak]];
+            pruned = true;
+          }
+        }
+        var walkKeys = ['playerResponse', 'response', 'contents', 'twoColumnBrowseResultsRenderer', 'twoColumnWatchNextResults', 'richGridRenderer', 'sectionListRenderer', 'itemSectionRenderer', 'secondaryResults', 'results', 'tabs', 'tabRenderer', 'content', 'header', 'onResponseReceivedEndpoints', 'onResponseReceivedActions', 'appendContinuationItemsAction', 'continuationItems'];
+        for (var wk = 0; wk < walkKeys.length; wk++) {
+          var child = o[walkKeys[wk]];
+          if (child && typeof child === 'object') {
+            if (pruneYtObj(child, d + 1)) pruned = true;
+          }
         }
         return pruned;
       }
+
+      var YT_TEXT_HINT_RE = /(adPlacements|playerAds|adSlots|adBreakParams|adBreakHeartbeatParams|bkaEnforcementMessageViewModel|adSlotRenderer|promotedSparklesWebRenderer|inFeedAdLayoutRenderer|mastheadAdRenderer|statementBannerRenderer)/;
 
       var origJsonParse = JSON.parse;
       JSON.parse = function() {
         var res = origJsonParse.apply(this, arguments);
         if (!isPaused() && res && typeof res === 'object') {
-          if (pruneYtObj(res)) reportShield('cosmetic', 1);
+          if (pruneYtObj(res, 0)) reportShield('cosmetic', 1);
         }
         return res;
       };
 
-      if (typeof Response !== 'undefined' && Response.prototype && Response.prototype.json) {
-        var origRespJson = Response.prototype.json;
-        Response.prototype.json = function() {
-          return origRespJson.apply(this, arguments).then(function(data) {
-            if (!isPaused() && data && typeof data === 'object') {
-              if (pruneYtObj(data)) reportShield('cosmetic', 1);
+      if (typeof Response !== 'undefined' && Response.prototype) {
+        if (Response.prototype.json) {
+          var origRespJson = Response.prototype.json;
+          Response.prototype.json = function() {
+            return origRespJson.apply(this, arguments).then(function(data) {
+              if (!isPaused() && data && typeof data === 'object') {
+                if (pruneYtObj(data, 0)) reportShield('cosmetic', 1);
+              }
+              return data;
+            });
+          };
+        }
+        if (Response.prototype.text) {
+          var origRespText = Response.prototype.text;
+          Response.prototype.text = function() {
+            var rUrl = this.url || '';
+            var isYtApi = rUrl.indexOf('/youtubei/v1/player') >= 0 || rUrl.indexOf('/youtubei/v1/next') >= 0 || rUrl.indexOf('/youtubei/v1/browse') >= 0;
+            return origRespText.apply(this, arguments).then(function(txt) {
+              if (!isPaused() && isYtApi && typeof txt === 'string' && txt.length > 2 && YT_TEXT_HINT_RE.test(txt)) {
+                try {
+                  var parsed = origJsonParse(txt);
+                  if (pruneYtObj(parsed, 0)) {
+                    reportShield('cosmetic', 1);
+                    return JSON.stringify(parsed);
+                  }
+                } catch (e) {}
+              }
+              return txt;
+            });
+          };
+        }
+      }
+
+      if (typeof XMLHttpRequest !== 'undefined' && XMLHttpRequest.prototype) {
+        var xhrDescText = Object.getOwnPropertyDescriptor(XMLHttpRequest.prototype, 'responseText');
+        if (xhrDescText && xhrDescText.get) {
+          Object.defineProperty(XMLHttpRequest.prototype, 'responseText', {
+            configurable: true,
+            get: function() {
+              var txt = xhrDescText.get.call(this);
+              try {
+                var u = this.__dvUrl || this.responseURL || '';
+                if (!isPaused() && typeof txt === 'string' && txt.length > 2 &&
+                    (u.indexOf('/youtubei/v1/player') >= 0 || u.indexOf('/youtubei/v1/next') >= 0 || u.indexOf('/youtubei/v1/browse') >= 0) &&
+                    YT_TEXT_HINT_RE.test(txt)) {
+                  if (this.__dvPrunedTxt) return this.__dvPrunedTxt;
+                  var parsed = origJsonParse(txt);
+                  if (pruneYtObj(parsed, 0)) {
+                    reportShield('cosmetic', 1);
+                    this.__dvPrunedTxt = JSON.stringify(parsed);
+                    return this.__dvPrunedTxt;
+                  }
+                }
+              } catch (e) {}
+              return txt;
             }
-            return data;
           });
-        };
+        }
       }
 
       var _ytPr = window.ytInitialPlayerResponse;
-      if (_ytPr && typeof _ytPr === 'object') pruneYtObj(_ytPr);
+      if (_ytPr && typeof _ytPr === 'object') pruneYtObj(_ytPr, 0);
       try {
         Object.defineProperty(window, 'ytInitialPlayerResponse', {
           configurable: true,
@@ -1747,16 +2856,32 @@ namespace DejavuBrowser
           get: function() { return _ytPr; },
           set: function(val) {
             if (!isPaused() && val && typeof val === 'object') {
-              if (pruneYtObj(val)) reportShield('cosmetic', 1);
+              if (pruneYtObj(val, 0)) reportShield('cosmetic', 1);
             }
             _ytPr = val;
+          }
+        });
+      } catch (e) {}
+
+      var _ytData = window.ytInitialData;
+      if (_ytData && typeof _ytData === 'object') pruneYtObj(_ytData, 0);
+      try {
+        Object.defineProperty(window, 'ytInitialData', {
+          configurable: true,
+          enumerable: true,
+          get: function() { return _ytData; },
+          set: function(val) {
+            if (!isPaused() && val && typeof val === 'object') {
+              if (pruneYtObj(val, 0)) reportShield('cosmetic', 1);
+            }
+            _ytData = val;
           }
         });
       } catch (e) {}
     } catch (e) {}
   }
 
-  // 4. Cosmetic Ad Hiding + YouTube CSS + Fanboy Cookie Banner CSS
+  // 4. Cosmetic Ad Hiding (Built-in + EasyList/Brave Generic Selectors + YouTube CSS + Fanboy Cookie Banner CSS)
   var COSMETIC_SELECTORS = [
     'ins.adsbygoogle',
     'iframe[id^=""google_ads_iframe""]',
@@ -1767,12 +2892,32 @@ namespace DejavuBrowser
     'iframe[src*=""criteo.""]',
     'iframe[src*=""taboola.""]',
     'iframe[src*=""outbrain.""]',
+    'iframe[src*=""exoclick.""]',
+    'iframe[src*=""adsterra.""]',
+    'iframe[src*=""propellerads.""]',
+    'img[src*=""advertising_ads""]',
+    'img[src*=""/banners/""][src*=""ads""]',
+    'object[data*=""advertising_ads""]',
+    'embed[src*=""advertising_ads""]',
     '[id^=""div-gpt-ad""]',
     '[id^=""google_ads_""]',
+    '[id^=""yandex_rtb_""]',
     '[data-ad-slot]',
     '[data-ad-unit]',
+    '[data-ads]',
     '[data-google-query-id]',
     '.adsbygoogle',
+    '.adsbox',
+    '.adbox',
+    '.ADBox',
+    '.AdBox',
+    '.textads',
+    '.banner-ads',
+    '.banner_ads',
+    '.ad-unit',
+    '.afs_ads',
+    '.ad-zone',
+    '.ad-space',
     '.ad-container',
     '.ad-slot',
     '.ad-wrapper',
@@ -1812,6 +2957,7 @@ namespace DejavuBrowser
     'ytd-in-feed-ad-layout-renderer',
     'ytd-statement-banner-renderer',
     'ytd-masthead-ad-v3-renderer',
+    'ytd-rich-item-renderer:has(ytd-ad-slot-renderer)',
     'ytd-engagement-panel-section-list-renderer[target-id=""engagement-panel-ads""]',
     '#masthead-ad',
     '#player-ads',
@@ -1819,6 +2965,7 @@ namespace DejavuBrowser
     '.ytp-ad-overlay-container',
     '.ytp-ad-text-overlay',
     '.ytp-ad-image-overlay',
+    '.ytp-ad-player-overlay',
     '.ytp-featured-product',
     'tp-yt-paper-dialog:has(ytd-enforcement-message-view-model)'
   ].join(',') + ' { display: none !important; }';
@@ -1852,7 +2999,10 @@ namespace DejavuBrowser
 
   function buildCosmeticCss() {
     var list = cfg.aggressive ? COSMETIC_SELECTORS.concat(AGG_SELECTORS) : COSMETIC_SELECTORS;
-    var css = list.join(',') + ' { display: none !important; visibility: hidden !important; height: 0 !important; min-height: 0 !important; overflow: hidden !important; }';
+    var css = list.join(',') + ' { display: none !important; visibility: hidden !important; height: 0 !important; min-height: 0 !important; max-height: 0 !important; overflow: hidden !important; }';
+    if (EXTRA_GENERIC_COSMETICS && EXTRA_GENERIC_COSMETICS.length > 0) {
+      css += '\n' + EXTRA_GENERIC_COSMETICS.join(',') + ' { display: none !important; visibility: hidden !important; }';
+    }
     if (isYouTube) css += '\n' + YT_CSS;
     return css;
   }
@@ -1919,6 +3069,7 @@ namespace DejavuBrowser
   window.__dejavuUpdateShieldCfg = function(next) {
     try {
       if (next && typeof next === 'object') {
+        if (typeof next.enabled === 'boolean') cfg.enabled = next.enabled;
         if (typeof next.paused === 'boolean') window.__dejavuAdblockPaused = next.paused;
         if (typeof next.aggressive === 'boolean') cfg.aggressive = next.aggressive;
         if (typeof next.blockFp === 'boolean') cfg.blockFp = next.blockFp;
@@ -1936,17 +3087,24 @@ namespace DejavuBrowser
     countHiddenCosmeticsOnce();
   }, { once: true });
 
-  // 5. Event-Driven MutationObserver YouTube In-Stream Ad Skipper (ZERO setInterval!)
+  // 5. Event-Driven <video> + MutationObserver YouTube In-Stream Ad Skipper (ZERO setInterval!)
   if (isTop && isYouTube) {
     var mutedByShield = false;
     var savedVol = 1;
     var ytPending = false;
-    function checkYtPlayer() {
-      ytPending = false;
+
+    function handleYtAdState() {
       if (isPaused()) return;
       try {
         var player = document.getElementById('movie_player');
-        var video = document.querySelector('#movie_player video.html5-main-video');
+        var video = document.querySelector('#movie_player video.html5-main-video') || document.querySelector('#movie_player video');
+        if (video && !video.__dvYtWired) {
+          video.__dvYtWired = true;
+          video.addEventListener('loadedmetadata', handleYtAdState, false);
+          video.addEventListener('durationchange', handleYtAdState, false);
+          video.addEventListener('playing', handleYtAdState, false);
+          video.addEventListener('timeupdate', handleYtAdState, false);
+        }
         if (player && (player.classList.contains('ad-showing') || player.classList.contains('ad-interrupting'))) {
           if (video) {
             if (!video.muted && !mutedByShield) {
@@ -1954,12 +3112,15 @@ namespace DejavuBrowser
               savedVol = video.volume;
               video.muted = true;
             }
-            if (isFinite(video.duration) && video.duration > 0 && video.currentTime < video.duration - 0.1) {
+            if (isFinite(video.duration) && video.duration > 0 && video.currentTime < video.duration - 0.05) {
               try { video.currentTime = video.duration; } catch (e) {}
             }
             try { video.playbackRate = 16; } catch (e) {}
           }
-          var skips = ['.ytp-skip-ad-button', '.ytp-ad-skip-button', '.ytp-ad-skip-button-modern', '.ytp-ad-overlay-close-button'];
+          if (typeof player.skipAd === 'function') {
+            try { player.skipAd(); reportShield('cosmetic', 1); } catch (e) {}
+          }
+          var skips = ['.ytp-skip-ad-button', '.ytp-ad-skip-button', '.ytp-ad-skip-button-modern', '.ytp-ad-overlay-close-button', '.ytp-skip-ad-button__text'];
           for (var i = 0; i < skips.length; i++) {
             var b = document.querySelector(skips[i]);
             if (b) { try { b.click(); reportShield('cosmetic', 1); } catch (e) {} }
@@ -1971,8 +3132,15 @@ namespace DejavuBrowser
           if (video.playbackRate > 4) video.playbackRate = 1;
         }
         var dismiss = document.querySelector('ytd-enforcement-message-view-model #dismiss-button button');
-        if (dismiss) { try { dismiss.click(); } catch (e) {} }
+        if (dismiss) {
+          try { dismiss.click(); if (video && video.paused) video.play(); } catch (e) {}
+        }
       } catch (e) {}
+    }
+
+    function checkYtPlayer() {
+      ytPending = false;
+      handleYtAdState();
     }
 
     function startYtObserver() {
@@ -1981,10 +3149,10 @@ namespace DejavuBrowser
       var mo = new MutationObserver(function() {
         if (ytPending || isPaused()) return;
         ytPending = true;
-        setTimeout(checkYtPlayer, 120);
+        setTimeout(checkYtPlayer, 80);
       });
       mo.observe(target, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
-      checkYtPlayer();
+      handleYtAdState();
     }
 
     if (document.readyState === 'loading') {

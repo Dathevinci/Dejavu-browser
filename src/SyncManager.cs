@@ -281,7 +281,7 @@ namespace DejavuBrowser
         }
 
         /// <summary>
-        /// v5.2.0 Cross-Platform Google Account Auto-Sync Key Derivation (100% identical in C# .NET 4.8 and Android Java):
+        /// v5.3.0 Cross-Platform Google Account Auto-Sync Key Derivation (100% identical in C# .NET 4.8 and Android Java):
         ///   normEmail = (email ?? "").Trim().ToLowerInvariant()
         ///   normPass  = (passphrase ?? "").Trim()
         ///   seedStr   = "dejavu-google-link-v2:" + normEmail + ":" + normPass
@@ -2344,7 +2344,7 @@ namespace DejavuBrowser
 
                         byte[] allBytes = ms.ToArray();
                         string reqHead = headerEnd > 0 ? Encoding.ASCII.GetString(allBytes, 0, headerEnd) : "";
-                        string respJson = "{\"ok\":true,\"app\":\"dejavu\",\"version\":\"5.2.0\"}";
+                        string respJson = "{\"ok\":true,\"app\":\"dejavu\",\"version\":\"5.3.0\"}";
                         if (reqHead.StartsWith("POST /sync", StringComparison.OrdinalIgnoreCase) && headerEnd > 0 && contentLen > 0)
                         {
                             int actual = Math.Min(contentLen, allBytes.Length - headerEnd);

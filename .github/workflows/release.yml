@@ -117,19 +117,22 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — Brave-Grade Shields, Real-Time dejavu Link & Iconic Sculpted Pixel M3
+          ### dejavu __TAG__ — Brave-Exact Shields Engine, Real-Time dejavu Link & Iconic Sculpted Pixel M3
 
-          - **Brave-Grade Shields (Windows & Android)** — Standard & Aggressive blocking modes, surgical YouTube JSON-prune ad neutralization, automatic URL tracking parameter cleaning (`utm_*`, `fbclid`, `gclid`), Brave-style fingerprinting farbling (keeping WebAuthn Passkeys & OAuth popups 100% intact), automatic cookie notice blocking, and dedicated per-site Material Design 3 Shields panels (Windows popover & Android bottom sheet).
-          - **Re-Engineered `dejavu Link` Real-Time Sync** — Completely rebuilt for instant, zero-rate-limit delivery across PC & Android: **Direct Wi-Fi LAN auto-discovery (UDP `17655`)** paired with **TLS MQTT Retained E2EE cloud sync** (`AES-256-CBC + HMAC-SHA256`, zero HTTP 429 limits) for **Shared Clipboard**, **Live Open Tabs ("Continue on Phone / PC")**, **Bookmarks**, **Reading List**, and **History** — zero QR needed with Google sign-in, plus optional Manual Code / QR fallback.
-          - **Iconic Sculpted M3 Butterfly Logo, Pixel Message of the Day & Chromebook/Pixel M3 Polish** — Graceful new sculpted Material Design 3 Butterfly emblem across Windows (`dejavu.ico`, Start Page, chrome), Android (Adaptive + Android 13+ Material You Themed Icon, Start Page), and web; calm daily **Pixel Message of the Day** on Windows & Android Start Pages; clutter-free Pixel/Chromebook A-to-Z M3 surfaces with 6-category Pixel drill-in Settings and monochrome M3 menus.
-          - **Smooth Native Windows 11 Framing** — Native Win32 `WM_NCCALCSIZE` + signed `WM_NCHITTEST` borderless framing delivering crisp 8-edge live resize (`4px` normal / `0px` maximized), silky minimize/maximize/restore, and full multi-monitor Windows 11 Snap Layouts.
+          - **Brave-Exact Shields Engine (Windows & Android)** — Re-engineered for true Brave Browser parity across both platforms:
+            - **Native Chromium `ERR_BLOCKED_BY_CLIENT` + Ad-Iframe Cancellation** — Network-level `ERR_BLOCKED_BY_CLIENT` blocking (`Network.setBlockedURLs` + `WebResourceRequested`) paired with `FrameNavigationStarting` cancellation of third-party ad `<iframe>` sub-documents, live per-site Shields pause/resume, and dedicated Material Design 3 Shields panels (Windows popover & Android bottom sheet).
+            - **Official Brave Lists + EasyList + EasyPrivacy + uBlock Filters/Quick-Fixes + OISD** — **`270K+` rules on Windows** (domain, host+path, resource-type/`$third-party`, and generic/per-domain cosmetics) and **`100K+` cached rules + `document_start` scriptlets on Android**.
+            - **Deep YouTube JSON-Prune + Instant Video-Event Ad Skipping + Brave `ima3.js` Surrogates** — Strips ad payloads across `ytInitialPlayerResponse`, `ytInitialData`, `JSON.parse`, `Response.prototype.json/text`, and XHR; attaches event-driven `<video>` ad-skip listeners (zero polling) for millisecond pre-roll/mid-roll skipping; and neutralizes video ad SDKs with Brave `ima3.js` surrogates while keeping playback and 4K/MP3 downloads intact.
+            - **Popunder & Click-Hijack Blocking, URL Cleaning, Farbling & Fanboy Cookie Notices** — Blocks spam popunders and click-hijacks (preserving OAuth/login/payment popups 100%), strips URL tracking parameters (`utm_*`, `fbclid`, `gclid`), applies Brave fingerprinting farbling (keeping WebAuthn Passkeys intact), and auto-blocks Fanboy cookie notices.
+          - **Re-Engineered `dejavu Link` Real-Time Sync** — Instant, zero-rate-limit delivery across PC & Android via **Direct Wi-Fi LAN auto-discovery (UDP `17655`)** + **TLS MQTT Retained E2EE cloud sync** (`AES-256-CBC + HMAC-SHA256`) for **Shared Clipboard**, **Live Open Tabs ("Continue on Phone / PC")**, **Bookmarks**, **Reading List**, and **History** — zero QR needed with Google sign-in, plus optional Manual Code / QR fallback.
+          - **Iconic Sculpted M3 Butterfly Logo, Pixel Message of the Day & Smooth Windows 11 Framing** — Sculpted Material Design 3 Butterfly across Windows (`dejavu.ico`, Start Page, chrome), Android (Adaptive + Android 13+ Material You Themed Icon, Start Page), and web; calm daily **Pixel Message of the Day**; 6-category Pixel drill-in Settings; and native Win32 8-edge live resize (`4px` normal / `0px` maximized), silky minimize/maximize/restore, and Windows 11 multi-monitor Snap Layouts.
           - **Flagship Performance & Ecosystem** — Zero-Lag 120Hz keyed anti-glitch tab engine, zero-flash dark WebViews, Windows Hello & Android Passkeys (WebAuthn) + Universal M3 OAuth Popups, Real Chrome MV3 Extensions (Windows) & Android Web Add-ons + `.user.js` Userscripts, YouTube & 1,000+ site `4K / 1080p / 720p / MP3 320k` 8× Turbo Downloader, 16 Pure M3 & 4 Butterfly M3 wallpapers, 86-country AI-ready Smart VPN + 3-Hop Tor, `<1%` idle CPU, and permanent V1+V2+V3 Android signing with `PackageInstaller.Session` in-place auto-updates.
             > **Android Upgrade Note:** Upgrading from `v4.2.0` or earlier? Uninstall dejavu once, then install `__TAG__` — **all future updates will install automatically in-place!**
 
           #### Downloads
-          - **dejavu-Setup.exe** — Windows 10/11 Guided Installer (Brave-Grade Shields, Smooth Windows 11 Framing, Real-Time Link Sync & Sculpted M3 Butterfly Icon)
+          - **dejavu-Setup.exe** — Windows 10/11 Guided Installer (Brave-Exact Shields Engine `270K+` rules, `ERR_BLOCKED_BY_CLIENT`, ad-iframe & popunder blocking, YouTube skip + `ima3.js` surrogates, Smooth Windows 11 Framing, Real-Time Link Sync & Sculpted M3 Butterfly Icon)
           - **dejavu.exe** — Windows 10/11 Portable Single-File
-          - **dejavu-mobile.apk** — Android Mobile Browser App (Brave-Grade Shields Bottom Sheet, Direct LAN + TLS MQTT E2EE Link Sync, Pixel Message of the Day, Sculpted M3 Butterfly + Themed Icon, V1+V2+V3 permanently signed, Android 8.0+)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (Brave-Exact Shields Engine `100K+` cached rules + `document_start` scriptlets, M3 Shields Bottom Sheet, Direct LAN + TLS MQTT E2EE Link Sync, Pixel Message of the Day, Sculpted M3 Butterfly + Themed Icon, V1+V2+V3 permanently signed, Android 8.0+)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
           sed -i "s/__TAG__/$TAG/g" /tmp/release_notes.md
@@ -138,5 +141,5 @@ jobs:
             release-files/dejavu-Setup.exe \
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
-            --title "dejavu $TAG — Brave-Grade Shields, Real-Time dejavu Link & Pixel Material 3" \
+            --title "dejavu $TAG — Brave-Exact Shields Engine, Real-Time Link & Pixel Material 3" \
             --notes-file /tmp/release_notes.md

@@ -937,7 +937,7 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v5.2.0 — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v5.3.0 — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
@@ -1410,7 +1410,7 @@
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
     /* =====================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.2.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.3.0)
        ===================================================================== */
     .sh-hero-card {
       background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
@@ -1452,6 +1452,14 @@
     .sh-level-hdr { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .sh-level-title { font-size: 14.5px; font-weight: 540; color: var(--ink); }
     .sh-level-hint { font-size: 12px; color: var(--muted); }
+    .sh-rules-footer {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--subtle);
+      padding: 2px 8px 4px;
+      letter-spacing: 0.005em;
+    }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
@@ -1778,7 +1786,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v5.2.0 — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v5.3.0 — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -1932,7 +1940,7 @@
               </div>
               <div style="border-top:1px solid var(--divider);padding-top:12px;display:flex;flex-direction:column;gap:10px;">
                 <div style="font-size:12.5px;color:var(--muted);">Pair locally with a PC code or QR</div>
-                <div id="m-code-box" class="code-pill">DJV-5200-M3UI</div>
+                <div id="m-code-box" class="code-pill">DJV-5300-M3UI</div>
                 <div style="display:flex;gap:8px;">
                   <button type="button" class="pill-btn primary" style="flex:1;height:40px;" onclick="call('scanQr')">Scan QR</button>
                   <button type="button" class="pill-btn" style="height:40px;" onclick="copyPairCode()">Copy code</button>
@@ -2041,7 +2049,7 @@
               <span class="m3-ico"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M10 9v4.2M10 6.5h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.2.0 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.3.0 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -2301,7 +2309,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update apk version 5.2.0 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update apk version 5.3.0 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2325,10 +2333,10 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update auto updater github releases apk version 5.2.0 about">
+              <div class="g-row set-item" data-search="software update auto updater github releases apk version 5.3.0 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.2.0</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.3.0</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
                 <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check</button>
@@ -2367,7 +2375,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.2.0
+          dejavu Mobile v5.3.0
         </div>
       </div>
     </div>
@@ -2638,7 +2646,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.2.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.3.0)
        =================================================================== -->
   <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2721,6 +2729,8 @@
             <button type="button" id="sw-sh-https" class="sw on" aria-label="HTTPS-First"></button>
           </div>
         </div>
+
+        <div id="sh-rules-footer" class="sh-rules-footer">100K+ Brave &amp; EasyList rules</div>
       </div>
     </div>
   </div>
@@ -2764,7 +2774,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.2.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.3.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -2942,7 +2952,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.2.0)
+    // Zero-mutation DOM equality-guard helpers (v5.3.0)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -3733,7 +3743,7 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.2.0)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.3.0)
     const _domSigs = {
       safeTop: '',
       safeBottom: '',
@@ -4390,13 +4400,24 @@
       setCls(document.getElementById('sw-sync-reading'), 'on', sp.readingList !== false);
       setCls(document.getElementById('sw-sync-clipboard'), 'on', sp.clipboard !== false);
       setCls(document.getElementById('sw-sync-history'), 'on', sp.history !== false);
-      setTxt(document.getElementById('m-code-box'), sync.pairingCode || 'DJV-5200-M3UI');
+      setTxt(document.getElementById('m-code-box'), sync.pairingCode || 'DJV-5300-M3UI');
     }
 
     function toggleCurrentSiteShield() {
       const sh = state.shields || {};
       const host = sh.siteHost || (state.activeUrl ? getHost(state.activeUrl) : '');
       call('toggleSiteShield', host);
+    }
+
+    function formatRulesFooter(rulesCount, listsReady) {
+      const n = Number(rulesCount || 0);
+      if (n >= 1000) {
+        return `${Math.floor(n / 1000)}K+ Brave & EasyList rules`;
+      }
+      if (n > 0) {
+        return `${n.toLocaleString()}+ Brave & EasyList rules${listsReady ? '' : ' · Syncing lists'}`;
+      }
+      return 'Brave & EasyList shields active';
     }
 
     function renderShieldsSheet() {
@@ -4412,8 +4433,10 @@
       const totBlk = Number(sh.totalBlocked != null ? sh.totalBlocked : (state.totalBlocked || 0));
       const tabCln = Number(sh.tabLinksCleaned || 0);
       const totCln = Number(sh.totalLinksCleaned || 0);
+      const rulesCnt = Number(sh.rulesCount || 0);
+      const listsRdy = !!sh.listsReady;
 
-      const sig = `${host}|${siteUp?1:0}|${level}|${fpOn?1:0}|${ckOn?1:0}|${trkOn?1:0}|${httpsOn?1:0}|${tabBlk}|${totBlk}|${tabCln}|${totCln}`;
+      const sig = `${host}|${siteUp?1:0}|${level}|${fpOn?1:0}|${ckOn?1:0}|${trkOn?1:0}|${httpsOn?1:0}|${tabBlk}|${totBlk}|${tabCln}|${totCln}|${rulesCnt}|${listsRdy?1:0}`;
       if (sig === _domSigs.shieldsSheet) {
         syncMobileGlider(document.getElementById('shields-level-seg'));
         return;
@@ -4443,6 +4466,7 @@
       setCls(document.getElementById('sw-sh-ck'), 'on', ckOn);
       setCls(document.getElementById('sw-sh-trk'), 'on', trkOn);
       setCls(document.getElementById('sw-sh-https'), 'on', httpsOn);
+      setTxt(document.getElementById('sh-rules-footer'), formatRulesFooter(rulesCnt, listsRdy));
     }
 
     function renderAvatarContent(el, prof, showGoogleDot) {
@@ -4505,7 +4529,7 @@
       setTxt(document.getElementById('set-sum-downloads'), `${ytqLbl}${state.floatingDownloadButton !== false ? ' · Floating pill' : ''}`);
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.2.0';
+      const curV = u.currentVersion || '5.3.0';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -4668,7 +4692,7 @@
         setStyle(uProgF, 'width', '100%');
       } else if (u.status === 'ready') {
         setTxt(uTitle, `v${u.latestVersion} ready`);
-        setTxt(uSub, u.signatureMismatch ? `Uninstall older build once, then install v${u.latestVersion || '5.2.0'}` : 'Tap Install to upgrade');
+        setTxt(uSub, u.signatureMismatch ? `Uninstall older build once, then install v${u.latestVersion || '5.3.0'}` : 'Tap Install to upgrade');
         setTxt(uBtn, 'Install');
         setCls(uBtn, 'primary', true);
         setDisp(uProgW, 'none');
@@ -5140,7 +5164,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.2.0 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.3.0 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -5570,7 +5594,7 @@
             const previewSync = signedIn ? {
               enabled: true, syncMode: 'google', googleEmail: 'alex@gmail.com', hasPassphrase: false,
               paired: true, connected: true, peerName: 'Windows 11 Desktop', peerPlatform: 'windows',
-              peerOnline: true, peerLastSeenMs: nowMs - 8000, pairingCode: 'DJV-5200-M3UI',
+              peerOnline: true, peerLastSeenMs: nowMs - 8000, pairingCode: 'DJV-5300-M3UI',
               relayStatus: initRelay, relayBroker: 'broker.hivemq.com', lastSyncMs: nowMs - 4000,
               latestClipboard: { id: 'clip_pc_1', text: 'https://m3.material.io/styles/color/roles — Material Design 3 tokens', fromName: 'Windows 11 Desktop', ts: nowMs - 25000 },
               prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true },
@@ -5584,7 +5608,7 @@
             } : {
               enabled: true, syncMode: 'manual', googleEmail: '', hasPassphrase: false,
               paired: false, connected: false, peerName: '', peerPlatform: 'windows',
-              peerOnline: false, peerLastSeenMs: 0, pairingCode: 'DJV-5200-M3UI',
+              peerOnline: false, peerLastSeenMs: 0, pairingCode: 'DJV-5300-M3UI',
               relayStatus: initRelay, relayBroker: 'broker.hivemq.com', lastSyncMs: 0,
               latestClipboard: null, prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true },
               remoteTabs: [], drops: []
@@ -5616,7 +5640,9 @@
                 totalBlocked: 1428,
                 totalLinksCleaned: 86,
                 httpsFirst: true,
-                rulesCount: 385,
+                rulesCount: 108420,
+                listsReady: true,
+                siteCosmeticsCount: 8420,
                 pausedCount: 0
               },
               profiles: [prof1, prof2], activeProfileId: 'default', mainProfileId: 'default', activeProfile: prof1,
@@ -5640,7 +5666,7 @@
                 { title: 'GitHub — Dathevinci/Dejavu-browser', url: 'https://github.com/Dathevinci/Dejavu-browser' }
               ],
               sync: previewSync,
-              update: { currentVersion: '5.2.0', status: 'uptodate', latestVersion: '5.2.0', available: qp.get('upd') === '1', hasDownloadedApk: false },
+              update: { currentVersion: '5.3.0', status: 'uptodate', latestVersion: '5.3.0', available: qp.get('upd') === '1', hasDownloadedApk: false },
               turboDownloads: [], pageMedia: [],
               extensions: {
                 builtins: DEFAULT_BUILTIN_EXTENSIONS.map((b) => Object.assign({}, b)),

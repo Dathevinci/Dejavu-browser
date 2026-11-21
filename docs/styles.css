@@ -1335,7 +1335,7 @@ img {
   color: var(--md-on-surface-variant);
 }
 
-/* Row 2: Decluttered v5.2.0 Chrome M3 Toolbar + Pill Omnibox with Brave Shields + Extensions Puzzle */
+/* Row 2: Decluttered v5.3.0 Chrome M3 Toolbar + Pill Omnibox with Brave-Exact Shields + Extensions Puzzle */
 .dk-toolbar {
   height: 50px;
   padding: 0 12px;
@@ -2173,7 +2173,7 @@ img {
   color: var(--md-on-primary-container);
 }
 
-/* Page 2: Real Chrome Extensions Manager Showcase (v5.2.0 Material Design 3) */
+/* Page 2: Real Chrome Extensions Manager Showcase (v5.3.0 Material Design 3) */
 .dk-ext-stage {
   min-height: 472px;
   height: 100%;
@@ -3338,7 +3338,7 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   opacity: 0.86;
 }
 
-/* Page 5: PC <-> Phone Sync (v5.2.0 Direct Wi-Fi LAN + TLS MQTT Retained E2EE) */
+/* Page 5: PC <-> Phone Sync (v5.3.0 Direct Wi-Fi LAN + TLS MQTT Retained E2EE) */
 .dk-sync-stage {
   height: 100%;
   padding: 20px 24px;
@@ -3586,7 +3586,7 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
 }
 
 /* ==========================================================================
-   COMPANION GOOGLE PIXEL PHONE MOCKUP (v5.2.0 PIXEL MATERIAL DESIGN 3 + MOTD)
+   COMPANION GOOGLE PIXEL PHONE MOCKUP (v5.3.0 PIXEL MATERIAL DESIGN 3 + MOTD)
    ========================================================================== */
 .pixel-frame {
   border-radius: 38px;

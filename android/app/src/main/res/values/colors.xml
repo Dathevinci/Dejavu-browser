@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Official Google Pixel Material Design 3 Dark Surface Container Hierarchy (v5.2.0) -->
+    <!-- Official Google Pixel Material Design 3 Dark Surface Container Hierarchy (v5.3.0) -->
     <color name="obsidian_bg">#141218</color>
     <color name="obsidian_surface">#211F26</color>
     <color name="obsidian_card">#2B2930</color>

@@ -48,6 +48,9 @@ namespace DejavuBrowser
         public int FingerprintingBlockedCount;
         public int TrackingParamsStripped;
         public string ShieldScriptId;
+        public string PendingTopNavUrl;
+        public bool CdpNetworkReady;
+        public bool CdpBlockListApplied;
         public string PendingCleanUrl;
         public int PendingCleanStripped;
         public bool IsLight;
@@ -81,6 +84,9 @@ namespace DejavuBrowser
             FingerprintingBlockedCount = 0;
             TrackingParamsStripped = 0;
             ShieldScriptId = null;
+            PendingTopNavUrl = null;
+            CdpNetworkReady = false;
+            CdpBlockListApplied = false;
             PendingCleanUrl = null;
             PendingCleanStripped = 0;
             IsLight = false;
@@ -145,6 +151,7 @@ namespace DejavuBrowser
             Profiles = new ProfileManager(profileId);
             Settings = Profiles.LoadActiveSettings();
             AdBlocker = new AdBlocker(Settings, Profiles.ActiveSettingsPath);
+            AdBlocker.ListsUpdated += OnAdBlockerListsUpdated;
             AdBlocker.InitializeAsync();
 
             Updater = new AutoUpdater();
@@ -633,6 +640,26 @@ namespace DejavuBrowser
             }
         }
 
+        private void OnAdBlockerListsUpdated()
+        {
+            if (_disposed) return;
+            for (int i = 0; i < _windows.Count; i++)
+            {
+                BrowserForm w = _windows[i];
+                if (w != null && !w.IsDisposed && w.IsHandleCreated)
+                {
+                    try
+                    {
+                        w.BeginInvoke((Action)(() =>
+                        {
+                            if (!w.IsDisposed) w.OnShieldListsUpdated();
+                        }));
+                    }
+                    catch { }
+                }
+            }
+        }
+
         public void BroadcastProfilesChanged()
         {
             BroadcastProfilesChanged(true);
@@ -886,6 +913,7 @@ namespace DejavuBrowser
         private string _activeToastTurboId = "";
         private DateTime _lastToastUpdateUtc = DateTime.MinValue;
         private string _docStartScript;
+        private string _cdpBlockedUrlsJson;
         private string _floatingMediaScript;
         private string _cwsBannerScript;
         private readonly Dictionary<int, DateTime> _pendingMediaPushDueUtc = new Dictionary<int, DateTime>();
@@ -973,6 +1001,7 @@ namespace DejavuBrowser
             _extensions = appContext.Extensions;
 
             _docStartScript = BuildActiveShieldScript();
+            _cdpBlockedUrlsJson = (_adBlocker != null) ? _adBlocker.BuildCdpBlockedUrlsJson() : AdBlocker.EmptyCdpBlockedUrlsJson;
             _floatingMediaScript = TurboDownloadManager.GetFloatingDownloadButtonScript();
             _cwsBannerScript = ExtensionManager.GetChromeWebStoreBannerScript();
             _isDefaultBrowser = DefaultBrowserRegistrar.IsDefaultBrowser();
@@ -1320,14 +1349,14 @@ namespace DejavuBrowser
                 { "vpnMode", _settings.vpnMode ?? "smart" },
                 { "vpnCountry", _settings.vpnCountry ?? "AUTO" },
 
-                // v5.2.0 Appearance & Start Page
+                // v5.3.0 Appearance & Start Page
                 { "fontSize", _settings.fontSize ?? "medium" },
                 { "fontFamily", _settings.fontFamily ?? "system" },
                 { "showHomeButton", _settings.showHomeButton },
                 { "smoothScrolling", _settings.smoothScrolling },
                 { "showMotd", _settings.showMotd },
 
-                // v5.2.0 Brave-Grade Shields & Privacy & Security
+                // v5.3.0 Brave-Grade Shields & Privacy & Security
                 { "shieldLevel", _adBlocker.ShieldLevel },
                 { "blockFingerprinting", _adBlocker.BlockFingerprinting },
                 { "blockCookieNotices", _adBlocker.BlockCookieNotices },
@@ -1345,29 +1374,29 @@ namespace DejavuBrowser
                 { "permClipboard", _settings.permClipboard ?? "ask" },
                 { "permAutoplay", _settings.permAutoplay ?? "allow" },
 
-                // v5.2.0 Search
+                // v5.3.0 Search
                 { "customSearchUrl", _settings.customSearchUrl ?? "" },
                 { "addressBarSuggestions", _settings.addressBarSuggestions },
 
-                // v5.2.0 Tabs & Performance
+                // v5.3.0 Tabs & Performance
                 { "memorySaverEnabled", _settings.memorySaverEnabled },
                 { "memorySaverMinutes", _settings.memorySaverMinutes > 0 ? _settings.memorySaverMinutes : 30 },
                 { "confirmCloseMultipleTabs", _settings.confirmCloseMultipleTabs },
                 { "tabHoverPreview", _settings.tabHoverPreview },
 
-                // v5.2.0 Downloads
+                // v5.3.0 Downloads
                 { "downloadFolder", _settings.downloadFolder ?? "" },
                 { "askDownloadLocation", _settings.askDownloadLocation },
                 { "turboThreads", _settings.turboThreads > 0 ? _settings.turboThreads : 8 },
                 { "defaultVideoQuality", _settings.defaultVideoQuality ?? "best" },
                 { "autoOpenDownloads", _settings.autoOpenDownloads },
 
-                // v5.2.0 Passwords & Autofill
+                // v5.3.0 Passwords & Autofill
                 { "savePasswords", _settings.savePasswords },
                 { "autofillAddresses", _settings.autofillAddresses },
                 { "autofillPayments", _settings.autofillPayments },
 
-                // v5.2.0 VPN & System
+                // v5.3.0 VPN & System
                 { "vpnWebRtcProtection", _settings.vpnWebRtcProtection },
                 { "hardwareAcceleration", _settings.hardwareAcceleration },
                 { "spellcheckEnabled", _settings.spellcheckEnabled },
@@ -2286,7 +2315,7 @@ namespace DejavuBrowser
         }
 
         // =====================================================================
-        // Zero-Resize Layout Engine (v5.2.0: 4px native resize rim in Normal mode; 0px Maximized/Fullscreen)
+        // Zero-Resize Layout Engine (v5.3.0: 4px native resize rim in Normal mode; 0px Maximized/Fullscreen)
         // =====================================================================
         private int GetNativeResizeRimPx()
         {
@@ -3294,6 +3323,34 @@ namespace DejavuBrowser
                 core.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
                 core.WebResourceRequested += (s, e) => OnTabWebResourceRequested(tab, envForTab, e);
 
+                // Hole #1 Fix: Block ad <iframe> sub-frame documents cleanly before they open a socket!
+                core.FrameNavigationStarting += (s, e) =>
+                {
+                    try
+                    {
+                        if (_adBlocker == null || !_adBlocker.GlobalEnabled) return;
+                        string frameUri = e.Uri;
+                        if (string.IsNullOrEmpty(frameUri)) return;
+                        if (!frameUri.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                            !frameUri.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return;
+                        }
+                        string pageUrl = !string.IsNullOrEmpty(tab.PendingTopNavUrl) ? tab.PendingTopNavUrl : tab.Url;
+                        if (_adBlocker.ShouldBlockRequest(frameUri, pageUrl, false, CoreWebView2WebResourceContext.Document))
+                        {
+                            e.Cancel = true;
+                            tab.BlockedCount++;
+                            long total = _adBlocker.RecordBlocked();
+                            if (tab.Id == _activeTabId)
+                            {
+                                PushAdCountPulse(tab.Id, tab.BlockedCount, total);
+                            }
+                        }
+                    }
+                    catch { }
+                };
+
                 tab.ShieldScriptId = await core.AddScriptToExecuteOnDocumentCreatedAsync(_docStartScript);
                 if (!string.IsNullOrEmpty(_floatingMediaScript))
                 {
@@ -3305,8 +3362,13 @@ namespace DejavuBrowser
                 }
                 core.WebMessageReceived += (s, e) => OnTabContentWebMessage(tab, e);
 
+                // Hole #2 Fix: Enable Chromium C++ Network.setBlockedURLs BEFORE the very first navigation!
+                string initialNavUrl = !string.IsNullOrEmpty(tab.PendingNavigateUrl) ? tab.PendingNavigateUrl : tab.Url;
+                await ApplyCdpBlockedUrlsForTabAsync(tab, initialNavUrl, true);
+
                 core.NavigationStarting += (s, e) =>
                 {
+                    tab.PendingTopNavUrl = e.Uri;
                     if (_settings != null && _settings.doNotTrack)
                     {
                         try { e.RequestHeaders.SetHeader("DNT", "1"); } catch { }
@@ -3322,6 +3384,7 @@ namespace DejavuBrowser
                         {
                             string upgraded = "https://" + e.Uri.Substring(7);
                             tab.UpgradedFromHttpUrl = e.Uri;
+                            tab.PendingTopNavUrl = upgraded;
                             e.Cancel = true;
                             BeginInvoke((Action)(() =>
                             {
@@ -3347,6 +3410,7 @@ namespace DejavuBrowser
                         {
                             tab.PendingCleanUrl = cleanUrl;
                             tab.PendingCleanStripped = strippedCount;
+                            tab.PendingTopNavUrl = cleanUrl;
                             _adBlocker.RecordBlockedDelta(strippedCount);
                             e.Cancel = true;
                             BeginInvoke((Action)(() =>
@@ -3382,11 +3446,13 @@ namespace DejavuBrowser
                     tab.TrackingParamsStripped = restoredStripped;
                     if (_turboDownloads != null) _turboDownloads.ClearTabMedia(tab.Id);
                     _pendingMediaPushDueUtc.Remove(tab.Id);
+                    SyncCdpBlockedUrlsForNavigation(tab, e.Uri);
                     bool paused = _adBlocker.IsPausedForHost(AdBlocker.ExtractHost(e.Uri));
                     bool floatBtnOn = (_settings == null || !_settings.hideFloatingMediaButton);
                     core.ExecuteScriptAsync(
                         "window.__dejavuAdblockPaused = " + (paused ? "true" : "false") + ";" +
-                        "if(window.__dejavuUpdateShieldCfg)window.__dejavuUpdateShieldCfg({paused:" + (paused ? "true" : "false") +
+                        "if(window.__dejavuUpdateShieldCfg)window.__dejavuUpdateShieldCfg({enabled:" + (_adBlocker.GlobalEnabled ? "true" : "false") +
+                        ",paused:" + (paused ? "true" : "false") +
                         ",aggressive:" + (_adBlocker.IsAggressive ? "true" : "false") +
                         ",blockFp:" + (_adBlocker.BlockFingerprinting ? "true" : "false") +
                         ",blockCookies:" + (_adBlocker.BlockCookieNotices ? "true" : "false") + "});" +
@@ -3561,6 +3627,29 @@ namespace DejavuBrowser
             catch { }
         }
 
+        private static bool UrlsMatchTopLevel(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return false;
+            if (string.Equals(a, b, StringComparison.OrdinalIgnoreCase)) return true;
+            string na = a;
+            string nb = b;
+            int ha = na.IndexOf('#');
+            if (ha >= 0) na = na.Substring(0, ha);
+            int hb = nb.IndexOf('#');
+            if (hb >= 0) nb = nb.Substring(0, hb);
+            if (na.EndsWith("/", StringComparison.Ordinal)) na = na.Substring(0, na.Length - 1);
+            if (nb.EndsWith("/", StringComparison.Ordinal)) nb = nb.Substring(0, nb.Length - 1);
+            return string.Equals(na, nb, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsTopLevelDocumentRequest(BrowserTab tab, string reqUri)
+        {
+            if (tab == null || string.IsNullOrEmpty(reqUri)) return false;
+            if (UrlsMatchTopLevel(reqUri, tab.PendingTopNavUrl)) return true;
+            if (UrlsMatchTopLevel(reqUri, tab.Url)) return true;
+            return false;
+        }
+
         private void OnTabWebResourceRequested(BrowserTab tab, CoreWebView2Environment env, CoreWebView2WebResourceRequestedEventArgs e)
         {
             try
@@ -3587,9 +3676,15 @@ namespace DejavuBrowser
                 }
 
                 if (!adBlockOn) return;
-                if (e.ResourceContext == CoreWebView2WebResourceContext.Document) return;
 
-                if (_adBlocker.ShouldBlockRequest(reqUri, tab.Url, false))
+                // Hole #1 Fix: ONLY skip the top-level document navigation — NEVER skip ad <iframe> Document requests!
+                if (e.ResourceContext == CoreWebView2WebResourceContext.Document && IsTopLevelDocumentRequest(tab, reqUri))
+                {
+                    return;
+                }
+
+                string pageUrl = !string.IsNullOrEmpty(tab.PendingTopNavUrl) ? tab.PendingTopNavUrl : tab.Url;
+                if (_adBlocker.ShouldBlockRequest(reqUri, pageUrl, false, e.ResourceContext))
                 {
                     e.Response = _adBlocker.CreateBlockedResponse(env, e.ResourceContext, reqUri);
                     tab.BlockedCount++;
@@ -3615,12 +3710,23 @@ namespace DejavuBrowser
                 e.Handled = true;
                 return;
             }
-            if (!isBlank && _adBlocker.IsSpamPopup(url))
+            bool isAuth = !isBlank && IsAuthPopupUrl(url);
+            // Hole #5 Fix: Block spam/popunder ad redirects EVEN on user click, while ALWAYS preserving OAuth/login/payment popups!
+            if (!isBlank && !isAuth && _adBlocker != null && _adBlocker.IsSpamPopup(url))
             {
                 e.Handled = true;
+                BrowserTab activeTab = GetActiveTab();
+                long total = _adBlocker.RecordBlocked();
+                if (activeTab != null)
+                {
+                    activeTab.BlockedCount++;
+                    if (activeTab.Id == _activeTabId)
+                    {
+                        PushAdCountPulse(activeTab.Id, activeTab.BlockedCount, total);
+                    }
+                }
                 return;
             }
-            bool isAuth = !isBlank && IsAuthPopupUrl(url);
             if (_settings != null && _settings.blockPopups && !e.IsUserInitiated && !isAuth)
             {
                 e.Handled = true;
@@ -4301,6 +4407,7 @@ namespace DejavuBrowser
                         if (delta > 50) delta = 50;
                         if (kind == "cosmetic") tab.CosmeticBlockedCount += delta;
                         else if (kind == "fp") tab.FingerprintingBlockedCount += delta;
+                        else if (kind == "network") tab.BlockedCount += delta;
                         long total = _adBlocker.RecordBlockedDelta(delta);
                         if (tab.Id == _activeTabId)
                         {
@@ -4730,15 +4837,92 @@ namespace DejavuBrowser
 
         private string BuildActiveShieldScript()
         {
+            bool enabled = (_adBlocker == null || _adBlocker.GlobalEnabled);
             bool agg = (_adBlocker != null && _adBlocker.IsAggressive);
             bool fp = (_adBlocker == null || _adBlocker.BlockFingerprinting);
             bool ck = (_adBlocker == null || _adBlocker.BlockCookieNotices);
-            return AdBlocker.BuildBraveShieldScript(agg, fp, ck);
+            List<string> paused = (_adBlocker != null) ? _adBlocker.GetPausedHosts() : null;
+            List<string> genericCosmetics = (_adBlocker != null) ? _adBlocker.GetGenericCosmeticSelectors() : null;
+            return AdBlocker.BuildBraveShieldScript(enabled, agg, fp, ck, paused, genericCosmetics);
         }
 
-        private async void RefreshShieldScriptsOnAllTabsAsync()
+        private async Task EnsureCdpNetworkEnabledAsync(BrowserTab tab, CoreWebView2 core)
+        {
+            if (tab == null || core == null || tab.CdpNetworkReady) return;
+            tab.CdpNetworkReady = true;
+            try
+            {
+                CoreWebView2DevToolsProtocolEventReceiver failReceiver = core.GetDevToolsProtocolEventReceiver("Network.loadingFailed");
+                failReceiver.DevToolsProtocolEventReceived += (s, ev) =>
+                {
+                    try
+                    {
+                        if (_adBlocker == null || !_adBlocker.GlobalEnabled) return;
+                        string json = ev.ParameterObjectAsJson;
+                        if (string.IsNullOrEmpty(json)) return;
+                        int brIdx = json.IndexOf("\"blockedReason\"", StringComparison.Ordinal);
+                        if (brIdx >= 0 && json.IndexOf("\"inspector\"", brIdx, StringComparison.Ordinal) > brIdx)
+                        {
+                            tab.BlockedCount++;
+                            long total = _adBlocker.RecordBlocked();
+                            if (tab.Id == _activeTabId)
+                            {
+                                PushAdCountPulse(tab.Id, tab.BlockedCount, total);
+                            }
+                        }
+                    }
+                    catch { }
+                };
+                await core.CallDevToolsProtocolMethodAsync("Network.enable", "{}");
+            }
+            catch
+            {
+                tab.CdpNetworkReady = false;
+            }
+        }
+
+        private async Task ApplyCdpBlockedUrlsForTabAsync(BrowserTab tab, string targetUrl, bool force)
+        {
+            if (tab == null || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed || tab.WebView.CoreWebView2 == null) return;
+            try
+            {
+                CoreWebView2 core = tab.WebView.CoreWebView2;
+                await EnsureCdpNetworkEnabledAsync(tab, core);
+                if (!tab.CdpNetworkReady) return;
+
+                bool shouldBlock = (_adBlocker != null && _adBlocker.ShouldApplyCdpShieldsForUrl(targetUrl));
+                if (!force && tab.CdpBlockListApplied == shouldBlock) return;
+
+                string payload = shouldBlock
+                    ? (!string.IsNullOrEmpty(_cdpBlockedUrlsJson) ? _cdpBlockedUrlsJson : _adBlocker.BuildCdpBlockedUrlsJson())
+                    : AdBlocker.EmptyCdpBlockedUrlsJson;
+                await core.CallDevToolsProtocolMethodAsync("Network.setBlockedURLs", payload);
+                tab.CdpBlockListApplied = shouldBlock;
+            }
+            catch { }
+        }
+
+        private async void SyncCdpBlockedUrlsForNavigation(BrowserTab tab, string targetUrl)
+        {
+            try
+            {
+                await ApplyCdpBlockedUrlsForTabAsync(tab, targetUrl, false);
+            }
+            catch { }
+        }
+
+        public void OnShieldListsUpdated()
+        {
+            RefreshShieldScriptsOnAllTabsAsync();
+            PushFullStateToShell();
+            RefreshShieldPopoverIfOpen();
+        }
+
+        private async Task RefreshShieldScriptsCoreAsync()
         {
             _docStartScript = BuildActiveShieldScript();
+            _cdpBlockedUrlsJson = (_adBlocker != null) ? _adBlocker.BuildCdpBlockedUrlsJson() : AdBlocker.EmptyCdpBlockedUrlsJson;
+            bool enabled = (_adBlocker == null || _adBlocker.GlobalEnabled);
             bool agg = (_adBlocker != null && _adBlocker.IsAggressive);
             bool fp = (_adBlocker == null || _adBlocker.BlockFingerprinting);
             bool ck = (_adBlocker == null || _adBlocker.BlockCookieNotices);
@@ -4754,9 +4938,11 @@ namespace DejavuBrowser
                         try { core.RemoveScriptToExecuteOnDocumentCreated(bt.ShieldScriptId); } catch { }
                     }
                     bt.ShieldScriptId = await core.AddScriptToExecuteOnDocumentCreatedAsync(_docStartScript);
+                    await ApplyCdpBlockedUrlsForTabAsync(bt, bt.Url, true);
                     bool paused = _adBlocker.IsPausedForHost(AdBlocker.ExtractHost(bt.Url));
-                    string js = "if(window.__dejavuUpdateShieldCfg)window.__dejavuUpdateShieldCfg({paused:" +
-                                (paused ? "true" : "false") +
+                    string js = "window.__dejavuAdblockPaused=" + (paused ? "true" : "false") + ";" +
+                                "if(window.__dejavuUpdateShieldCfg)window.__dejavuUpdateShieldCfg({enabled:" + (enabled ? "true" : "false") +
+                                ",paused:" + (paused ? "true" : "false") +
                                 ",aggressive:" + (agg ? "true" : "false") +
                                 ",blockFp:" + (fp ? "true" : "false") +
                                 ",blockCookies:" + (ck ? "true" : "false") + "});";
@@ -4764,6 +4950,33 @@ namespace DejavuBrowser
                 }
                 catch { }
             }
+        }
+
+        private async void RefreshShieldScriptsOnAllTabsAsync()
+        {
+            try
+            {
+                await RefreshShieldScriptsCoreAsync();
+            }
+            catch { }
+        }
+
+        private async void RefreshShieldsAndReloadTabAsync(BrowserTab tabToReload)
+        {
+            try
+            {
+                await RefreshShieldScriptsCoreAsync();
+                if (!IsDisposed && tabToReload != null && !tabToReload.IsNewTab && tabToReload.CoreReady &&
+                    tabToReload.WebView != null && !tabToReload.WebView.IsDisposed && tabToReload.WebView.CoreWebView2 != null)
+                {
+                    tabToReload.BlockedCount = 0;
+                    tabToReload.CosmeticBlockedCount = 0;
+                    tabToReload.FingerprintingBlockedCount = 0;
+                    tabToReload.TrackingParamsStripped = 0;
+                    try { tabToReload.WebView.CoreWebView2.Reload(); } catch { }
+                }
+            }
+            catch { }
         }
 
         private Dictionary<string, object> BuildShieldsSummary(BrowserTab tab, string host)
@@ -6189,7 +6402,7 @@ namespace DejavuBrowser
                 }
             }
 
-            // v5.2.0 Appearance & Start Page
+            // v5.3.0 Appearance & Start Page
             if (msg.ContainsKey("fontSize"))
             {
                 _settings.fontSize = SettingsStore.NormalizeFontSize(Convert.ToString(msg["fontSize"]));
@@ -6210,7 +6423,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("showMotd"))
                 _settings.showMotd = Convert.ToBoolean(msg["showMotd"]);
 
-            // v5.2.0 Brave-Grade Shields & Privacy & Security
+            // v5.3.0 Brave-Grade Shields & Privacy & Security
             bool needShieldScriptRefresh = false;
             if (msg.ContainsKey("shieldLevel"))
             {
@@ -6266,7 +6479,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("permAutoplay"))
                 _settings.permAutoplay = SettingsStore.NormalizePermission(Convert.ToString(msg["permAutoplay"]), "allow");
 
-            // v5.2.0 Search
+            // v5.3.0 Search
             if (msg.ContainsKey("customSearchUrl"))
                 _settings.customSearchUrl = (Convert.ToString(msg["customSearchUrl"]) ?? "").Trim();
             if (msg.ContainsKey("addressBarSuggestions"))
@@ -6275,7 +6488,7 @@ namespace DejavuBrowser
                 if (!_settings.addressBarSuggestions) HideSuggestPopup();
             }
 
-            // v5.2.0 Tabs & Performance
+            // v5.3.0 Tabs & Performance
             if (msg.ContainsKey("memorySaverEnabled"))
                 _settings.memorySaverEnabled = Convert.ToBoolean(msg["memorySaverEnabled"]);
             if (msg.ContainsKey("memorySaverMinutes"))
@@ -6288,7 +6501,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("tabHoverPreview"))
                 _settings.tabHoverPreview = Convert.ToBoolean(msg["tabHoverPreview"]);
 
-            // v5.2.0 Downloads
+            // v5.3.0 Downloads
             if (msg.ContainsKey("downloadFolder"))
             {
                 _settings.downloadFolder = (Convert.ToString(msg["downloadFolder"]) ?? "").Trim();
@@ -6310,7 +6523,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("autoOpenDownloads"))
                 _settings.autoOpenDownloads = Convert.ToBoolean(msg["autoOpenDownloads"]);
 
-            // v5.2.0 Passwords & Autofill
+            // v5.3.0 Passwords & Autofill
             if (msg.ContainsKey("savePasswords"))
             {
                 _settings.savePasswords = Convert.ToBoolean(msg["savePasswords"]);
@@ -6324,7 +6537,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("autofillPayments"))
                 _settings.autofillPayments = Convert.ToBoolean(msg["autofillPayments"]);
 
-            // v5.2.0 VPN & System
+            // v5.3.0 VPN & System
             if (msg.ContainsKey("vpnWebRtcProtection"))
                 _settings.vpnWebRtcProtection = Convert.ToBoolean(msg["vpnWebRtcProtection"]);
             if (msg.ContainsKey("hardwareAcceleration"))
@@ -6579,7 +6792,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.2.0 defaults", "success");
+            PushShellToast("Settings restored to v5.3.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -9034,6 +9247,7 @@ namespace DejavuBrowser
                         if (msg.ContainsKey("host"))
                         {
                             _adBlocker.ResumeSite(Convert.ToString(msg["host"]));
+                            RefreshShieldScriptsOnAllTabsAsync();
                             PushFullStateToShell();
                             PushShellToast("Ad Blocker resumed for site", "info");
                         }
@@ -9105,18 +9319,16 @@ namespace DejavuBrowser
                 {
                     _adBlocker.ToggleSite(reqHost);
                 }
+                BrowserTab reloadTarget = null;
                 if (tab != null && !tab.IsNewTab && tab.CoreReady && tab.WebView != null && !tab.WebView.IsDisposed)
                 {
                     string activeHost = AdBlocker.ExtractHost(tab.Url);
                     if (string.IsNullOrEmpty(reqHost) || string.Equals(activeHost, reqHost, StringComparison.OrdinalIgnoreCase))
                     {
-                        tab.BlockedCount = 0;
-                        tab.CosmeticBlockedCount = 0;
-                        tab.FingerprintingBlockedCount = 0;
-                        tab.TrackingParamsStripped = 0;
-                        try { tab.WebView.CoreWebView2.Reload(); } catch { }
+                        reloadTarget = tab;
                     }
                 }
+                RefreshShieldsAndReloadTabAsync(reloadTarget);
                 PushFullStateToShell();
                 RefreshShieldPopoverIfOpen();
                 return true;
@@ -9126,15 +9338,8 @@ namespace DejavuBrowser
                 bool nextVal = msg.ContainsKey("enabled") ? Convert.ToBoolean(msg["enabled"]) : !_adBlocker.GlobalEnabled;
                 _adBlocker.SetGlobalEnabled(nextVal);
                 BrowserTab tab = GetActiveTab();
-                if (tab != null && !tab.IsNewTab && tab.CoreReady && tab.WebView != null && !tab.WebView.IsDisposed)
-                {
-                    tab.BlockedCount = 0;
-                    tab.CosmeticBlockedCount = 0;
-                    tab.FingerprintingBlockedCount = 0;
-                    tab.TrackingParamsStripped = 0;
-                    try { tab.WebView.CoreWebView2.Reload(); } catch { }
-                }
-                RefreshShieldScriptsOnAllTabsAsync();
+                BrowserTab reloadTarget = (tab != null && !tab.IsNewTab && tab.CoreReady && tab.WebView != null && !tab.WebView.IsDisposed) ? tab : null;
+                RefreshShieldsAndReloadTabAsync(reloadTarget);
                 PushFullStateToShell();
                 RefreshShieldPopoverIfOpen();
                 return true;

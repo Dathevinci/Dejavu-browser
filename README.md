@@ -9,8 +9,15 @@ An A-to-Z **Apple MacBook macOS Safari (Sequoia / Tahoe)** inspired native Windo
 Visit the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or grab the latest release directly from **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
 - **`dejavu-Setup.exe`** — Butterfly-themed Liquid Glass setup wizard (adds Desktop & Start Menu shortcuts, registers in Windows Installed Apps, no admin required).
 - **`dejavu.exe`** — Standalone portable single-file executable (double-click to run directly).
+- **`dejavu-mobile.apk`** — Native Android Mobile Browser (Android 8.0+) with thumb-friendly Samsung Internet × Safari Liquid Glass bottom bar, built-in Ad Blocker, 6 HD wallpapers, QR scanner, Share-to-PC, and real-time E2EE PC ↔ Phone sync!
 
-## Features (v3.0.0)
+## Features (v3.1.0)
+
+- **dejavu Link — Real-Time Cross-Device PC ↔ Android Mobile Sync (`AES-256-CBC + HMAC-SHA256`)**:
+  - Pair Windows PC and Android Mobile in seconds via **scannable QR code** or short code (`DJV-XXXX-XXXX`) — works over **both local Wi-Fi LAN and mobile 4G/5G** with zero accounts required.
+  - **Send Tabs Between PC & Phone**: 1-click from toolbar, Share Sheet, right-click Tab Context Menu, or the thumb bar on Android.
+  - **Share Links & Text Notes**: Drop any URL, note, address, or snippet between PC and Mobile with instant arrival banners & 1-tap Copy/Open (plus Android system **Share → dejavu** from YouTube, Chrome, WhatsApp, or any app!).
+  - **Synced Open Tabs, Bookmarks & Reading List**: View your Phone's open tabs on PC and your PC's open tabs on Phone, with two-way Bookmark & Reading List sync.
 
 - **Authentic macOS Safari Options & Customization Window (`Ctrl+,` or Toolbar Gear)**:
   - **6 Dedicated Safari Panes**: **General** (5 Search Engines: Google, DuckDuckGo, Brave, Bing, Perplexity; Startup Restore Previous Tabs; New Tab Start Page vs custom Homepage; Favorites Bar toggle), **Appearance** (Auto / Dark / Light Polarity; 6 Butterfly Accent Colors: Amethyst, Sapphire, Aurora, Rose, Gold, Arctic; Show Full Website Address; Compact Tab Bar; Always Show Tab Close Buttons; Default Page Zoom `80%–150%`; Wallpaper Dimming & Reduced Motion), **Start Page** (6 section visibility toggles including Greeting Badge & Center Search Bar), **Wallpapers** (all 26 HD & Live themes + custom upload), **Privacy & VPN** (100/100 Ad Blocker, Paused Sites manager, VPN auto-connect, Clear History & Clear Cookies/Cache), and **Tabs & Shortcuts**.

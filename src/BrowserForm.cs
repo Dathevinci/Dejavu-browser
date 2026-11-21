@@ -81,6 +81,7 @@ namespace DejavuBrowser
         private readonly AutoUpdater _updater;
         private readonly LocalProxyBridge _proxyBridge;
         private readonly VpnManager _vpn;
+        private readonly SyncManager _sync;
         private readonly SuggestEngine _suggest = new SuggestEngine();
         private readonly string _initialUrl;
         private readonly int _debugPort;
@@ -165,6 +166,12 @@ namespace DejavuBrowser
             _vpn = new VpnManager(_proxyBridge, _settings.vpnCountry, _settings.vpnAutoConnect);
             _vpn.StateChanged += OnVpnStateChanged;
 
+            _sync = new SyncManager(_profiles.GetProfileDataDir(_profiles.ActiveProfile.id));
+            _sync.StateChanged += OnSyncStateChanged;
+            _sync.IncomingDrop += OnSyncIncomingDrop;
+            _sync.RemoteBookmarksReceived += OnSyncRemoteBookmarks;
+            _sync.RemoteReadingReceived += OnSyncRemoteReading;
+
             Text = "dejavu";
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.CenterScreen;
@@ -185,7 +192,7 @@ namespace DejavuBrowser
             _downloadHideTimer.Tick += (s, e) =>
             {
                 _downloadHideTimer.Stop();
-                if (_hudPopup != null && _activeHudMode == "download")
+                if (_hudPopup != null && (_activeHudMode == "download" || _activeHudMode == "synctoast"))
                 {
                     _activeHudMode = "";
                     _hudPopup.HidePopup(false);
@@ -259,6 +266,7 @@ namespace DejavuBrowser
                     _downloadHideTimer.Dispose();
                 }
                 _adBlocker.FlushStats();
+                if (_sync != null) _sync.Dispose();
                 if (_vpn != null) _vpn.Dispose();
                 if (_proxyBridge != null) _proxyBridge.Dispose();
                 if (_popoverPopup != null) _popoverPopup.Close();
@@ -403,7 +411,7 @@ namespace DejavuBrowser
             Rectangle r;
             if (_activeHudMode == "find") r = GetFindClientRect();
             else if (_activeHudMode == "download") r = GetDownloadClientRect();
-            else if (_activeHudMode == "update") r = GetUpdateClientRect();
+            else if (_activeHudMode == "update" || _activeHudMode == "synctoast") r = GetUpdateClientRect();
             else return;
             Point sp = PointToScreen(new Point(r.X, r.Y));
             _hudPopup.Bounds = new Rectangle(sp.X, sp.Y, r.Width, r.Height);
@@ -882,6 +890,7 @@ namespace DejavuBrowser
 
             _settings = _profiles.LoadActiveSettings();
             if (_vpn != null) _vpn.AutoConnect = _settings.vpnAutoConnect;
+            if (_sync != null) _sync.LoadProfile(_profiles.GetProfileDataDir(_profiles.ActiveProfile.id));
             _adBlocker.SwitchProfileSettings(_settings, _profiles.ActiveSettingsPath);
             _activeProfileEnv = await GetOrCreateProfileEnvAsync(_profiles.ActiveProfile.id);
 
@@ -1790,6 +1799,221 @@ namespace DejavuBrowser
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildHistoryPayloadJson(cached ?? ""), true);
             SyncVpnTelemetryTimer();
             if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "history");
+        }
+
+        private void ShowSyncPopoverAt(int anchorRightCss)
+        {
+            if (_popoverPopup == null || _sync == null) return;
+            if (_popoverPopup.IsPopupOpen && _activePopoverMode == "sync")
+            {
+                HidePopover();
+                return;
+            }
+            if (ShouldSkipToggleReopen("sync")) return;
+
+            HideSuggestPopup();
+            _activePopoverMode = "sync";
+            float sc = DpiScale;
+            int popW = (int)Math.Round(412 * sc);
+            int popH = (int)Math.Round(566 * sc);
+            int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
+            int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
+            int y = (int)Math.Round(50 * sc);
+
+            Rectangle clientRect = new Rectangle(x, y, popW, popH);
+            BrowserTab tab = GetActiveTab();
+            bool captureShell = (tab == null || tab.IsNewTab);
+            bool isLight = GetEffectiveIsLight(tab, captureShell);
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, isLight);
+
+            Point screenPt = PointToScreen(new Point(x, y));
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildSyncPayloadJson(cached ?? ""), true);
+            SyncVpnTelemetryTimer();
+            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "sync");
+            _sync.SendPingAsync();
+            PublishOpenTabsToSync();
+        }
+
+        private string BuildSyncPayloadJson(string backdrop)
+        {
+            BrowserTab tab = GetActiveTab();
+            bool captureShell = (tab == null || tab.IsNewTab);
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "sync" },
+                { "isLight", GetEffectiveIsLight(tab, captureShell) },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
+                { "sync", _sync != null ? _sync.GetSnapshot() : new Dictionary<string, object>() },
+                { "activeTabUrl", (tab != null && !tab.IsNewTab) ? (tab.Url ?? "") : "" },
+                { "activeTabTitle", (tab != null && !tab.IsNewTab) ? (tab.Title ?? "") : "" }
+            };
+            if (backdrop != null) payload["backdrop"] = backdrop;
+            return _json.Serialize(payload);
+        }
+
+        private void SendSyncPanelState(string backdrop)
+        {
+            if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "sync")
+            {
+                _popoverPopup.UpdateState(BuildSyncPayloadJson(backdrop));
+            }
+        }
+
+        private void PublishOpenTabsToSync()
+        {
+            if (_sync == null) return;
+            List<RemoteTabItem> list = new List<RemoteTabItem>();
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab bt = _tabs[i];
+                if (bt != null && !bt.IsNewTab && !string.IsNullOrEmpty(bt.Url))
+                {
+                    list.Add(new RemoteTabItem { title = bt.Title ?? bt.Url, url = bt.Url });
+                }
+            }
+            _sync.PublishTabsSnapshotAsync(list);
+        }
+
+        private void SyncAllCollectionsToMobile()
+        {
+            if (_sync == null) return;
+            PublishOpenTabsToSync();
+            List<RemoteTabItem> favs = new List<RemoteTabItem>();
+            if (_profiles.Favorites != null)
+            {
+                for (int i = 0; i < _profiles.Favorites.Count; i++)
+                {
+                    favs.Add(new RemoteTabItem { title = _profiles.Favorites[i].title, url = _profiles.Favorites[i].url });
+                }
+            }
+            _sync.PublishCollectionSyncAsync("bookmarks", favs);
+
+            List<RemoteTabItem> reads = new List<RemoteTabItem>();
+            if (_profiles.ReadingList != null)
+            {
+                for (int i = 0; i < _profiles.ReadingList.Count; i++)
+                {
+                    reads.Add(new RemoteTabItem { title = _profiles.ReadingList[i].title, url = _profiles.ReadingList[i].url });
+                }
+            }
+            _sync.PublishCollectionSyncAsync("reading", reads);
+        }
+
+        private void SendTabToMobile(int tabId)
+        {
+            if (_sync == null) return;
+            BrowserTab t = FindTab(tabId);
+            if (t == null || t.IsNewTab || string.IsNullOrEmpty(t.Url)) return;
+            _sync.SendDropAsync("tab", string.IsNullOrEmpty(t.Title) ? FormatDisplayUrl(t.Url) : t.Title, t.Url, "");
+            PublishOpenTabsToSync();
+        }
+
+        private void OnSyncStateChanged()
+        {
+            if (IsDisposed || !IsHandleCreated) return;
+            try
+            {
+                BeginInvoke((Action)(() =>
+                {
+                    if (IsDisposed) return;
+                    PushFullStateToShell();
+                    SendSyncPanelState(null);
+                }));
+            }
+            catch { }
+        }
+
+        private void OnSyncIncomingDrop(SyncDropItem item)
+        {
+            if (IsDisposed || !IsHandleCreated || item == null) return;
+            try
+            {
+                BeginInvoke((Action)(() =>
+                {
+                    if (IsDisposed) return;
+                    ShowIncomingSyncHud(item);
+                }));
+            }
+            catch { }
+        }
+
+        private void OnSyncRemoteBookmarks(List<RemoteTabItem> incoming)
+        {
+            if (IsDisposed || !IsHandleCreated || incoming == null || incoming.Count == 0) return;
+            try
+            {
+                BeginInvoke((Action)(() =>
+                {
+                    if (IsDisposed) return;
+                    bool hadBar = HasFavoritesBar;
+                    bool added = false;
+                    for (int i = 0; i < incoming.Count; i++)
+                    {
+                        string u = incoming[i].url;
+                        if (string.IsNullOrWhiteSpace(u) || _profiles.IsFavorite(u)) continue;
+                        _profiles.ToggleFavorite(u, incoming[i].title, "");
+                        added = true;
+                    }
+                    if (added)
+                    {
+                        if (hadBar != HasFavoritesBar) LayoutViews();
+                        PushFullStateToShell();
+                        RefreshSidebarIfOpen();
+                    }
+                }));
+            }
+            catch { }
+        }
+
+        private void OnSyncRemoteReading(List<RemoteTabItem> incoming)
+        {
+            if (IsDisposed || !IsHandleCreated || incoming == null || incoming.Count == 0) return;
+            try
+            {
+                BeginInvoke((Action)(() =>
+                {
+                    if (IsDisposed) return;
+                    bool added = false;
+                    for (int i = 0; i < incoming.Count; i++)
+                    {
+                        string u = incoming[i].url;
+                        if (string.IsNullOrWhiteSpace(u) || _profiles.IsInReadingList(u)) continue;
+                        _profiles.ToggleReadingList(u, incoming[i].title, "");
+                        added = true;
+                    }
+                    if (added)
+                    {
+                        PushFullStateToShell();
+                        RefreshSidebarIfOpen();
+                    }
+                }));
+            }
+            catch { }
+        }
+
+        private void ShowIncomingSyncHud(SyncDropItem item)
+        {
+            if (_hudPopup == null || item == null) return;
+            if (_activeHudMode == "find") return;
+            _activeHudMode = "synctoast";
+            Rectangle r = GetUpdateClientRect();
+            BrowserTab tab = GetActiveTab();
+            bool captureShell = (tab == null || tab.IsNewTab);
+            bool isLight = GetEffectiveIsLight(tab, captureShell);
+            string cached = TryCropCachedBackdrop(r, captureShell, tab != null ? tab.Id : -1, isLight);
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "synctoast" },
+                { "isLight", isLight },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
+                { "backdrop", cached ?? "" },
+                { "drop", item }
+            };
+            Point sp = PointToScreen(new Point(r.X, r.Y));
+            _hudPopup.ShowAt(new Rectangle(sp.X, sp.Y, r.Width, r.Height), _json.Serialize(payload), false);
+            if (cached == null) StreamBackdropToPopupAsync(_hudPopup, r, "synctoast");
+            _downloadHideTimer.Stop();
+            _downloadHideTimer.Start();
         }
 
         private void ShowVpnPopoverAt(int anchorRightCss)
@@ -2783,7 +3007,7 @@ namespace DejavuBrowser
             _activePopoverMode = "share";
             float sc = DpiScale;
             int popW = (int)Math.Round(268 * sc);
-            int popH = (int)Math.Round(332 * sc);
+            int popH = (int)Math.Round(368 * sc);
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
@@ -2866,8 +3090,8 @@ namespace DejavuBrowser
             HideSuggestPopup();
             _activePopoverMode = "tabmenu";
             float sc = DpiScale;
-            int popW = (int)Math.Round(208 * sc);
-            int popH = (int)Math.Round(190 * sc);
+            int popW = (int)Math.Round(216 * sc);
+            int popH = (int)Math.Round(226 * sc);
             int x = Math.Max((int)(8 * sc), Math.Min(ClientSize.Width - popW - (int)(8 * sc), (int)Math.Round(xCss * sc)));
             int y = Math.Max((int)(46 * sc), Math.Min(ClientSize.Height - popH - (int)(8 * sc), (int)Math.Round(yCss * sc)));
 
@@ -3048,6 +3272,12 @@ namespace DejavuBrowser
                         break;
                     case "openVpn":
                         ShowVpnPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1100);
+                        break;
+                    case "openSync":
+                        ShowSyncPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1100);
+                        break;
+                    case "sendTabToMobile":
+                        SendTabToMobile(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
                         break;
                     case "openSidebar":
                         ShowSidebarPopover();
@@ -3450,8 +3680,96 @@ namespace DejavuBrowser
                     if (act == "pin") PinOrUnpinTab(tid);
                     else if (act == "mute") ToggleMuteTab(tid);
                     else if (act == "duplicate") DuplicateTab(tid);
+                    else if (act == "sendMobile") SendTabToMobile(tid);
                     else if (act == "closeOthers") CloseOtherTabs(tid);
                     else if (act == "close") CloseTab(tid);
+                }
+                else if (type == "shareSendMobile")
+                {
+                    HidePopover();
+                    SendTabToMobile(_activeTabId);
+                }
+                else if (type == "syncSendCurrentTab")
+                {
+                    SendTabToMobile(_activeTabId);
+                    SendSyncPanelState(null);
+                }
+                else if (type == "syncSendDrop")
+                {
+                    if (_sync != null)
+                    {
+                        string raw = msg.ContainsKey("text") ? Convert.ToString(msg["text"]).Trim() : "";
+                        if (!string.IsNullOrEmpty(raw))
+                        {
+                            bool isUrl = raw.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                                         raw.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                                         (raw.IndexOf(' ') < 0 && raw.IndexOf('.') > 0 && raw.Length < 240);
+                            if (isUrl)
+                            {
+                                string resolved = ResolveInputToUrl(raw);
+                                _sync.SendDropAsync("link", FormatDisplayUrl(resolved), resolved, "");
+                            }
+                            else
+                            {
+                                _sync.SendDropAsync("text", "Text from PC", "", raw);
+                            }
+                            SendSyncPanelState(null);
+                        }
+                    }
+                }
+                else if (type == "syncNow")
+                {
+                    if (_sync != null)
+                    {
+                        _sync.SendPingAsync();
+                        SyncAllCollectionsToMobile();
+                        SendSyncPanelState(null);
+                    }
+                }
+                else if (type == "syncSetCode")
+                {
+                    if (_sync != null && msg.ContainsKey("code"))
+                    {
+                        _sync.SetPairingCode(Convert.ToString(msg["code"]));
+                        SyncAllCollectionsToMobile();
+                        SendSyncPanelState(null);
+                    }
+                }
+                else if (type == "syncRegenCode")
+                {
+                    if (_sync != null)
+                    {
+                        _sync.RegeneratePairingCode();
+                        SendSyncPanelState(null);
+                    }
+                }
+                else if (type == "syncClearDrops")
+                {
+                    if (_sync != null) { _sync.ClearDrops(); SendSyncPanelState(null); }
+                }
+                else if (type == "syncDeleteDrop")
+                {
+                    if (_sync != null && msg.ContainsKey("id")) { _sync.DeleteDrop(Convert.ToString(msg["id"])); SendSyncPanelState(null); }
+                }
+                else if (type == "syncOpenUrl")
+                {
+                    string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : "";
+                    HidePopover();
+                    if (_activeHudMode == "synctoast") HideHud();
+                    if (!string.IsNullOrEmpty(u)) CreateTab(ResolveInputToUrl(u), true);
+                }
+                else if (type == "syncCopyText")
+                {
+                    string txt = msg.ContainsKey("text") ? Convert.ToString(msg["text"]) : "";
+                    if (!string.IsNullOrEmpty(txt))
+                    {
+                        try { Clipboard.SetText(txt); } catch { }
+                    }
+                    if (_activeHudMode == "synctoast") HideHud();
+                }
+                else if (type == "syncDismissToast")
+                {
+                    if (_activeHudMode == "synctoast") HideHud();
                 }
                 else if (type == "findQuery")
                 {
@@ -3617,6 +3935,7 @@ namespace DejavuBrowser
                 { "activeForSite", _adBlocker.IsActiveForHost(host) },
                 { "totalBlocked", _adBlocker.TotalBlocked },
                 { "vpn", _vpn.GetSnapshot() },
+                { "sync", _sync != null ? _sync.GetSnapshot() : null },
                 { "wallpaper", _settings.wallpaper ?? "live:obsidian-prism" },
                 { "hasCustomWallpaper", !string.IsNullOrEmpty(_settings.customWallpaperPath) && File.Exists(_settings.customWallpaperPath) },
                 { "baseRgb", active != null ? active.BaseRgb : new int[] { 11, 9, 20 } },

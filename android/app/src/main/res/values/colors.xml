@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="obsidian_bg">#07060D</color>
+    <color name="obsidian_surface">#120F22</color>
+    <color name="obsidian_card">#1A1530</color>
+    <color name="amethyst">#B688FF</color>
+    <color name="amethyst_bright">#D4B8FF</color>
+    <color name="emerald_mint">#5EEAD4</color>
+    <color name="ink_primary">#F6F4FF</color>
+    <color name="ink_muted">#B8B0D4</color>
+</resources>

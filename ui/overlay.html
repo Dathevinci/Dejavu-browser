@@ -1028,6 +1028,109 @@
     .dls-name { font-size: 12.2px; font-weight: 560; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .dls-sub { font-size: 10.6px; color: var(--ink-muted); }
     .dls-acts { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+    /* =========================================================================
+       Mode 13 & 14: dejavu Link (PC <-> Android Mobile Sync + Incoming Toast)
+       ========================================================================= */
+    .sync-status-pill {
+      padding: 2px 9px; border-radius: 999px;
+      font-size: 10.6px; font-weight: 600;
+      border: 1px solid var(--glass-border);
+      background: rgba(128, 120, 168, 0.14);
+      color: var(--ink-muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 152px;
+    }
+    .sync-status-pill.connected {
+      border-color: rgba(94, 234, 212, 0.45);
+      background: rgba(20, 184, 166, 0.16);
+      color: #5eead4;
+    }
+    body.theme-light .sync-status-pill.connected { color: #0f766e; }
+    .sync-tabs {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px;
+      padding: 3px; border-radius: 11px;
+      background: rgba(0, 0, 0, 0.24); border: 1px solid var(--glass-border);
+      flex-shrink: 0;
+    }
+    body.theme-light .sync-tabs { background: rgba(24, 18, 52, 0.06); }
+    .sync-tab {
+      height: 27px; border-radius: 8px; border: 1px solid transparent; outline: none;
+      background: transparent; color: var(--ink-muted); font-family: inherit;
+      font-size: 11.6px; font-weight: 560; cursor: pointer;
+    }
+    .sync-tab.active {
+      background: rgba(255, 255, 255, 0.13); border-color: var(--accent);
+      color: var(--ink); font-weight: 640;
+    }
+    body.theme-light .sync-tab.active { background: #ffffff; color: #120f24; }
+    .sync-quick-bar {
+      display: flex; gap: 6px; flex-shrink: 0;
+    }
+    .sync-send-tab-btn {
+      flex: 1; height: 34px; padding: 0 12px; border-radius: 11px;
+      border: 1px solid var(--accent-bright); outline: none;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.88), rgba(168, 85, 247, 0.88));
+      color: #ffffff; font-family: inherit; font-size: 12px; font-weight: 620;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      cursor: pointer;
+    }
+    .sync-send-tab-btn:disabled { opacity: 0.42; cursor: default; }
+    .sync-compose {
+      display: flex; gap: 6px; flex-shrink: 0;
+    }
+    .sync-compose input {
+      flex: 1; min-width: 0; height: 33px; padding: 0 11px; border-radius: 10px;
+      border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.24);
+      color: var(--ink); font-family: inherit; font-size: 12px; outline: none; user-select: text;
+    }
+    body.theme-light .sync-compose input { background: rgba(24, 18, 52, 0.05); }
+    .sync-compose input:focus { border-color: var(--accent); }
+    .sync-drop-card {
+      padding: 9px 11px; border-radius: 12px;
+      background: rgba(128, 120, 168, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex; flex-direction: column; gap: 5px;
+      flex-shrink: 0; contain: layout style;
+    }
+    body.theme-light .sync-drop-card { background: rgba(24, 18, 52, 0.045); border-color: rgba(24, 18, 52, 0.08); }
+    .sync-drop-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .sync-drop-from { font-size: 10.4px; font-weight: 600; color: var(--accent-bright); text-transform: uppercase; letter-spacing: 0.04em; }
+    .sync-drop-title { font-size: 12.4px; font-weight: 580; color: var(--ink); word-break: break-word; }
+    .sync-drop-body { font-size: 11.4px; color: var(--ink-muted); word-break: break-word; max-height: 54px; overflow: hidden; }
+    .sync-drop-acts { display: flex; gap: 6px; margin-top: 2px; }
+    .sync-pair-card {
+      padding: 13px; border-radius: 14px;
+      background: rgba(128, 120, 168, 0.10);
+      border: 1px solid var(--glass-border);
+      display: flex; flex-direction: column; align-items: center; gap: 9px;
+      text-align: center;
+    }
+    .sync-qr-frame {
+      padding: 9px; border-radius: 14px; background: #ffffff;
+      display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+    }
+    .sync-code-box {
+      font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+      font-size: 17px; font-weight: 700; letter-spacing: 0.11em;
+      padding: 7px 14px; border-radius: 10px;
+      background: rgba(0, 0, 0, 0.28); border: 1px solid var(--accent);
+      color: var(--ink); user-select: text;
+    }
+    body.theme-light .sync-code-box { background: rgba(124, 77, 255, 0.09); }
+    .sync-pair-sub { font-size: 11px; color: var(--ink-muted); line-height: 1.4; }
+    .sync-pair-row { display: flex; gap: 6px; width: 100%; }
+    .sync-pair-row input {
+      flex: 1; min-width: 0; height: 31px; padding: 0 10px; border-radius: 9px;
+      border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.25);
+      color: var(--ink); font-family: ui-monospace, Consolas, monospace; font-size: 12px;
+      text-transform: uppercase; outline: none; user-select: text;
+    }
+    body.theme-light .sync-pair-row input { background: rgba(24, 18, 52, 0.05); }
+    .sync-toast-box {
+      width: 100%; height: 100%; padding: 13px 15px;
+      display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+    }
   </style>
 </head>
 <body class="theme-dark">
@@ -1124,7 +1227,7 @@
       <div id="other-prof-list" class="panel-scroll"></div>
 
       <div class="prof-footer">
-        <div id="prof-ver-text" class="ver-info">dejavu v3.0.0</div>
+        <div id="prof-ver-text" class="ver-info">dejavu v3.1.0</div>
         <div style="display:flex;align-items:center;gap:6px;">
           <button id="btn-prof-settings" class="pill-btn" title="Browser Settings (Ctrl+,)">Options</button>
           <button id="btn-update-action" class="pill-btn">Check updates</button>
@@ -1368,6 +1471,10 @@
           <svg viewBox="0 0 16 16" fill="none"><rect x="5.4" y="5.4" width="7.4" height="7.4" rx="1.6" stroke="currentColor" stroke-width="1.35"/><path d="M3.2 10.4V4.6A1.4 1.4 0 0 1 4.6 3.2h5.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
           <span id="sh-copy-lbl">Copy Link</span>
         </button>
+        <button id="sh-send-mobile" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="4.8" y="2.2" width="6.4" height="11.6" rx="1.5" stroke="currentColor" stroke-width="1.35"/><circle cx="8" cy="11.6" r="0.7" fill="currentColor"/></svg>
+          <span>Send Tab to Mobile</span>
+        </button>
         <button id="sh-fav" class="share-item" type="button">
           <svg viewBox="0 0 16 16" fill="none"><path d="M8 2.2l1.8 3.6 4 .6-2.9 2.8.7 4L8 11.3l-3.6 1.9.7-4-2.9-2.8 4-.6L8 2.2z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/></svg>
           <span id="sh-fav-lbl">Add to Favorites</span>
@@ -1428,6 +1535,10 @@
         <svg viewBox="0 0 16 16" fill="none"><rect x="5.2" y="5.2" width="7.8" height="7.8" rx="1.8" stroke="currentColor" stroke-width="1.3"/><path d="M3 10.5V4.4A1.4 1.4 0 0 1 4.4 3h6.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         <span>Duplicate Tab</span>
       </button>
+      <button type="button" class="share-item" id="tm-mobile-btn" data-tm="sendMobile">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="4.8" y="2.2" width="6.4" height="11.6" rx="1.5" stroke="currentColor" stroke-width="1.35"/><circle cx="8" cy="11.6" r="0.7" fill="currentColor"/></svg>
+        <span>Send Tab to Mobile</span>
+      </button>
       <div class="share-sep"></div>
       <button type="button" class="share-item" data-tm="closeOthers">
         <svg viewBox="0 0 16 16" fill="none"><rect x="2.5" y="4" width="11" height="8" rx="1.8" stroke="currentColor" stroke-width="1.3"/><path d="M6.4 6.5l3.2 3M9.6 6.5l-3.2 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -1437,6 +1548,94 @@
         <svg viewBox="0 0 16 16" fill="none"><path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>
         <span>Close Tab</span>
       </button>
+    </div>
+  </div>
+
+  <!-- Mode 13: dejavu Link (PC <-> Android Mobile Sync Hub) -->
+  <div id="mode-sync" class="overlay-shell hidden">
+    <div class="panel-box">
+      <div class="panel-head">
+        <div class="panel-title" style="min-width:0;white-space:nowrap;">
+          <svg viewBox="0 0 18 18" width="16" height="16" fill="none" style="flex-shrink:0;">
+            <rect x="2.2" y="4" width="8.6" height="6.8" rx="1.4" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M5 13h3.2M6.6 10.8V13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            <rect x="11.2" y="5.2" width="4.6" height="8.6" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
+            <circle cx="13.5" cy="12" r="0.65" fill="currentColor"/>
+          </svg>
+          <span style="flex-shrink:0;">dejavu Link</span>
+          <span id="sync-badge" class="sync-status-pill">Ready to Pair</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
+          <button id="btn-sync-now" class="pill-btn" type="button" style="white-space:nowrap;" title="Sync Open Tabs, Favorites &amp; Reading List">Sync</button>
+          <button id="btn-sync-close" class="icon-btn sm" type="button" title="Close">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="sync-subtabs" class="sync-tabs">
+        <button type="button" class="sync-tab active" data-stab="feed">Shared Feed</button>
+        <button type="button" class="sync-tab" data-stab="tabs">Phone Tabs (<span id="sync-rtabs-count">0</span>)</button>
+        <button type="button" class="sync-tab" data-stab="pair">Pair Phone</button>
+      </div>
+
+      <!-- Subtab 1: Shared Feed (Tabs, Links, Text Drop) -->
+      <div id="sync-pane-feed" style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;">
+        <div class="sync-quick-bar">
+          <button id="btn-sync-send-tab" class="sync-send-tab-btn" type="button">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M2.5 8h10M8.8 4.2L12.6 8l-3.8 3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span id="sync-send-tab-lbl">Send Current Tab to Mobile</span>
+          </button>
+        </div>
+        <div class="sync-compose">
+          <input id="sync-drop-input" type="text" placeholder="Send link or text note to your phone..." autocomplete="off">
+          <button id="btn-sync-send-drop" class="pill-btn primary" type="button">Send</button>
+        </div>
+        <div id="sync-feed-list" class="panel-scroll"></div>
+      </div>
+
+      <!-- Subtab 2: Remote Mobile Open Tabs -->
+      <div id="sync-pane-tabs" class="hidden" style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;">
+        <div id="sync-rtabs-list" class="panel-scroll"></div>
+      </div>
+
+      <!-- Subtab 3: Pair Phone (QR Code + Pairing Code + Join Code) -->
+      <div id="sync-pane-pair" class="hidden" style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow-y:auto;">
+        <div class="sync-pair-card">
+          <div class="sync-qr-frame"><canvas id="sync-qr-canvas" width="148" height="148"></canvas></div>
+          <div id="sync-code-display" class="sync-code-box">DJV-0000-0000</div>
+          <div style="display:flex;gap:6px;">
+            <button id="btn-sync-copy-code" class="pill-btn primary" type="button">Copy Code</button>
+            <button id="btn-sync-regen" class="pill-btn" type="button">New Code</button>
+          </div>
+          <div class="sync-pair-sub">
+            Open <strong>dejavu Mobile (.apk)</strong> → tap <strong>Link PC</strong> → scan this QR or enter the code.<br>
+            End-to-end encrypted (AES-256 + HMAC) over Wi-Fi &amp; mobile data.
+          </div>
+        </div>
+        <div class="sync-pair-row">
+          <input id="sync-join-input" type="text" placeholder="Or enter phone code (DJV-XXXX-XXXX)" maxlength="20">
+          <button id="btn-sync-join" class="pill-btn" type="button">Pair</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mode 14: Incoming Phone Drop HUD Toast -->
+  <div id="mode-synctoast" class="overlay-shell hidden">
+    <div class="sync-toast-box">
+      <div class="upd-top">
+        <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
+        <div style="min-width:0;flex:1;">
+          <div id="st-title" class="upd-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Received from Phone</div>
+          <div id="st-sub" class="upd-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+      </div>
+      <div class="upd-actions">
+        <button id="st-dismiss" class="pill-btn" type="button">Dismiss</button>
+        <button id="st-copy" class="pill-btn" type="button">Copy</button>
+        <button id="st-open" class="pill-btn primary" type="button">Open Tab</button>
+      </div>
     </div>
   </div>
 
@@ -1858,7 +2057,9 @@
       sidebar: document.getElementById('mode-sidebar'),
       share: document.getElementById('mode-share'),
       downloads: document.getElementById('mode-downloads'),
-      tabmenu: document.getElementById('mode-tabmenu')
+      tabmenu: document.getElementById('mode-tabmenu'),
+      sync: document.getElementById('mode-sync'),
+      synctoast: document.getElementById('mode-synctoast')
     };
 
     // Shield bindings
@@ -2053,7 +2254,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '3.0.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '3.1.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -2269,6 +2470,10 @@
         renderDownloadsPanel(d);
       } else if (d.mode === 'tabmenu') {
         renderTabMenuPanel(d);
+      } else if (d.mode === 'sync') {
+        renderSyncPanel(d);
+      } else if (d.mode === 'synctoast') {
+        renderSyncToast(d.drop || {});
       }
     });
 
@@ -2766,6 +2971,7 @@
 
       const isNt = !!d.isNewTab;
       shCopy.disabled = isNt;
+      if (shSendMobile) shSendMobile.disabled = isNt;
       shFav.disabled = isNt;
       shReading.disabled = isNt;
       shReader.disabled = isNt;
@@ -2829,6 +3035,9 @@
     // =========================================================================
     // Mode 12: Floating Safari Tab Context Menu
     // =========================================================================
+    const shSendMobile = document.getElementById('sh-send-mobile');
+    if (shSendMobile) shSendMobile.addEventListener('click', () => send({ type: 'shareSendMobile' }));
+    const tmMobileBtn = document.getElementById('tm-mobile-btn');
     const tmPinLbl = document.getElementById('tm-pin-lbl');
     const tmMuteBtn = document.getElementById('tm-mute-btn');
     const tmMuteLbl = document.getElementById('tm-mute-lbl');
@@ -2842,7 +3051,310 @@
       tmTabId = typeof d.tabId === 'number' ? d.tabId : -1;
       tmPinLbl.textContent = d.isPinned ? 'Unpin Tab' : 'Pin Tab';
       tmMuteBtn.disabled = !!d.isNewTab;
+      if (tmMobileBtn) tmMobileBtn.disabled = !!d.isNewTab;
       tmMuteLbl.textContent = d.isMuted ? 'Unmute Tab' : 'Mute Tab';
+    }
+
+    // =========================================================================
+    // Mode 13 & 14: dejavu Link (Cross-Device PC <-> Mobile Sync + QR Encoder)
+    // =========================================================================
+    const syncBadge = document.getElementById('sync-badge');
+    const syncSubtabs = document.getElementById('sync-subtabs');
+    const syncPaneFeed = document.getElementById('sync-pane-feed');
+    const syncPaneTabs = document.getElementById('sync-pane-tabs');
+    const syncPanePair = document.getElementById('sync-pane-pair');
+    const syncRtabsCount = document.getElementById('sync-rtabs-count');
+    const btnSyncSendTab = document.getElementById('btn-sync-send-tab');
+    const syncSendTabLbl = document.getElementById('sync-send-tab-lbl');
+    const syncDropInput = document.getElementById('sync-drop-input');
+    const btnSyncSendDrop = document.getElementById('btn-sync-send-drop');
+    const syncFeedList = document.getElementById('sync-feed-list');
+    const syncRtabsList = document.getElementById('sync-rtabs-list');
+    const syncQrCanvas = document.getElementById('sync-qr-canvas');
+    const syncCodeDisplay = document.getElementById('sync-code-display');
+    const btnSyncCopyCode = document.getElementById('btn-sync-copy-code');
+    const btnSyncRegen = document.getElementById('btn-sync-regen');
+    const syncJoinInput = document.getElementById('sync-join-input');
+    const btnSyncJoin = document.getElementById('btn-sync-join');
+    let syncActiveTab = 'feed';
+    let lastQrText = '';
+    let lastSyncCode = '';
+
+    document.getElementById('btn-sync-close').addEventListener('click', () => send({ type: 'closePanel' }));
+    document.getElementById('btn-sync-now').addEventListener('click', () => send({ type: 'syncNow' }));
+    btnSyncSendTab.addEventListener('click', () => {
+      if (btnSyncSendTab.disabled) return;
+      send({ type: 'syncSendCurrentTab' });
+      syncSendTabLbl.textContent = 'Sent to Mobile!';
+      setTimeout(() => { syncSendTabLbl.textContent = 'Send Current Tab to Mobile'; }, 1300);
+    });
+    function submitSyncDrop() {
+      const txt = (syncDropInput.value || '').trim();
+      if (!txt) return;
+      syncDropInput.value = '';
+      send({ type: 'syncSendDrop', text: txt });
+    }
+    btnSyncSendDrop.addEventListener('click', submitSyncDrop);
+    syncDropInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitSyncDrop(); });
+
+    btnSyncCopyCode.addEventListener('click', () => {
+      if (!lastSyncCode) return;
+      send({ type: 'syncCopyText', text: lastSyncCode });
+      btnSyncCopyCode.textContent = 'Copied!';
+      setTimeout(() => { btnSyncCopyCode.textContent = 'Copy Code'; }, 1200);
+    });
+    btnSyncRegen.addEventListener('click', () => send({ type: 'syncRegenCode' }));
+    btnSyncJoin.addEventListener('click', () => {
+      const c = (syncJoinInput.value || '').trim();
+      if (c.length < 6) return;
+      syncJoinInput.value = '';
+      send({ type: 'syncSetCode', code: c });
+    });
+
+    function setSyncSubtab(tab) {
+      syncActiveTab = tab;
+      syncSubtabs.querySelectorAll('.sync-tab').forEach((b) => b.classList.toggle('active', b.dataset.stab === tab));
+      syncPaneFeed.classList.toggle('hidden', tab !== 'feed');
+      syncPaneTabs.classList.toggle('hidden', tab !== 'tabs');
+      syncPanePair.classList.toggle('hidden', tab !== 'pair');
+      syncPaneFeed.style.display = tab === 'feed' ? 'flex' : 'none';
+      syncPaneTabs.style.display = tab === 'tabs' ? 'flex' : 'none';
+      syncPanePair.style.display = tab === 'pair' ? 'flex' : 'none';
+    }
+    syncSubtabs.addEventListener('click', (e) => {
+      const b = e.target.closest('.sync-tab');
+      if (b) setSyncSubtab(b.dataset.stab || 'feed');
+    });
+
+    // Compact ISO/IEC 18004 QR Code (ECC Level L, Versions 1..6, Byte mode)
+    const QrEnc = (() => {
+      const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
+      for (let i = 0, v = 1; i < 255; i++) { EXP[i] = v; LOG[v] = i; v = (v << 1) ^ (v & 128 ? 0x11d : 0); }
+      for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+      function rsPoly(ec) {
+        let p = [1];
+        for (let i = 0; i < ec; i++) {
+          const n = new Array(p.length + 1).fill(0);
+          for (let j = 0; j < p.length; j++) {
+            n[j] ^= p[j];
+            n[j + 1] ^= EXP[LOG[p[j]] + i];
+          }
+          p = n;
+        }
+        return p;
+      }
+      function rsRem(data, ec) {
+        const g = rsPoly(ec), r = new Uint8Array(ec);
+        for (let i = 0; i < data.length; i++) {
+          const f = data[i] ^ r[0];
+          for (let j = 0; j < ec - 1; j++) r[j] = r[j + 1];
+          r[ec - 1] = 0;
+          if (f) for (let j = 0; j < ec; j++) r[j] ^= EXP[LOG[g[j + 1]] + LOG[f]];
+        }
+        return r;
+      }
+      // [version, size, totalDataCW, ecPerBlock, blocks, alignPos]
+      const SPECS = [
+        [1, 21, 19, 7, 1, []],
+        [2, 25, 34, 10, 1, [6, 18]],
+        [3, 29, 55, 15, 1, [6, 22]],
+        [4, 33, 80, 20, 1, [6, 26]],
+        [5, 37, 108, 26, 1, [6, 30]],
+        [6, 41, 136, 18, 2, [6, 34]]
+      ];
+      function encode(text) {
+        const bytes = Array.from(new TextEncoder().encode(text));
+        const spec = SPECS.find((s) => bytes.length <= s[2] - 2) || SPECS[SPECS.length - 1];
+        const [ver, sz, dataLen, ecLen, blocks, align] = spec;
+        const bits = [];
+        const push = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); };
+        push(4, 4); push(Math.min(bytes.length, dataLen - 2), 8);
+        for (let i = 0; i < Math.min(bytes.length, dataLen - 2); i++) push(bytes[i], 8);
+        push(0, Math.min(4, dataLen * 8 - bits.length));
+        while (bits.length % 8) bits.push(0);
+        const cw = [];
+        for (let i = 0; i < bits.length; i += 8) {
+          let b = 0; for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
+          cw.push(b);
+        }
+        for (let p = 0; cw.length < dataLen; p++) cw.push(p % 2 === 0 ? 0xec : 0x11);
+        const bSz = dataLen / blocks;
+        const dBlocks = [], eBlocks = [];
+        for (let b = 0; b < blocks; b++) {
+          const sl = cw.slice(b * bSz, (b + 1) * bSz);
+          dBlocks.push(sl); eBlocks.push(rsRem(sl, ecLen));
+        }
+        const finalCw = [];
+        for (let i = 0; i < bSz; i++) for (let b = 0; b < blocks; b++) finalCw.push(dBlocks[b][i]);
+        for (let i = 0; i < ecLen; i++) for (let b = 0; b < blocks; b++) finalCw.push(eBlocks[b][i]);
+
+        const mod = Array.from({ length: sz }, () => new Int8Array(sz));
+        const res = Array.from({ length: sz }, () => new Uint8Array(sz));
+        const set = (r, c, v, isRes) => { if (r >= 0 && c >= 0 && r < sz && c < sz) { mod[r][c] = v ? 1 : 0; if (isRes) res[r][c] = 1; } };
+        const finder = (r0, c0) => {
+          for (let dr = -1; dr <= 7; dr++) for (let dc = -1; dc <= 7; dc++) {
+            const on = dr >= 0 && dr <= 6 && dc >= 0 && dc <= 6 && (dr === 0 || dr === 6 || dc === 0 || dc === 6 || (dr >= 2 && dr <= 4 && dc >= 2 && dc <= 4));
+            set(r0 + dr, c0 + dc, on, true);
+          }
+        };
+        finder(0, 0); finder(0, sz - 7); finder(sz - 7, 0);
+        for (let i = 8; i < sz - 8; i++) { set(6, i, i % 2 === 0, true); set(i, 6, i % 2 === 0, true); }
+        for (const r of align) for (const c of align) {
+          if (res[r][c]) continue;
+          for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++)
+            set(r + dr, c + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1, true);
+        }
+        set(4 * ver + 9, 8, 1, true);
+        for (let i = 0; i < 9; i++) { if (i !== 6) { res[8][i] = 1; res[i][8] = 1; } }
+        for (let i = 0; i < 8; i++) { res[8][sz - 1 - i] = 1; res[sz - 1 - i][8] = 1; }
+
+        let bi = 0;
+        for (let col = sz - 1; col >= 1; col -= 2) {
+          if (col === 6) col--;
+          const up = ((sz - 1 - col) >> 1) % 2 === 0;
+          for (let step = 0; step < sz; step++) {
+            const row = up ? (sz - 1 - step) : step;
+            for (let k = 0; k < 2; k++) {
+              const c = col - k;
+              if (res[row][c]) continue;
+              const bit = bi < finalCw.length * 8 ? ((finalCw[bi >> 3] >> (7 - (bi & 7))) & 1) : 0;
+              bi++;
+              const masked = ((row + c) % 2 === 0) ? (bit ^ 1) : bit; // Mask 0
+              mod[row][c] = masked;
+            }
+          }
+        }
+        // Format info for ECC L (01) + Mask 0 (000) -> 0x77c4 (15 bits)
+        const fmt = 0x77c4;
+        const fpos1 = [[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8]];
+        const fpos2 = [[sz-1,8],[sz-2,8],[sz-3,8],[sz-4,8],[sz-5,8],[sz-6,8],[sz-7,8],[8,sz-8],[8,sz-7],[8,sz-6],[8,sz-5],[8,sz-4],[8,sz-3],[8,sz-2],[8,sz-1]];
+        for (let i = 0; i < 15; i++) {
+          const b = (fmt >> (14 - i)) & 1;
+          mod[fpos1[i][0]][fpos1[i][1]] = b;
+          mod[fpos2[i][0]][fpos2[i][1]] = b;
+        }
+        return { sz, mod };
+      }
+      return { encode };
+    })();
+
+    function drawQrCanvas(text) {
+      if (!syncQrCanvas || !text || text === lastQrText) return;
+      lastQrText = text;
+      const qr = QrEnc.encode(text);
+      const qctx = syncQrCanvas.getContext('2d');
+      const W = syncQrCanvas.width;
+      const quiet = 2;
+      const cell = Math.floor(W / (qr.sz + quiet * 2));
+      const pad = Math.floor((W - cell * qr.sz) / 2);
+      qctx.fillStyle = '#ffffff';
+      qctx.fillRect(0, 0, W, W);
+      qctx.fillStyle = '#120d26';
+      for (let r = 0; r < qr.sz; r++) {
+        for (let c = 0; c < qr.sz; c++) {
+          if (qr.mod[r][c]) qctx.fillRect(pad + c * cell, pad + r * cell, cell, cell);
+        }
+      }
+    }
+
+    function renderSyncPanel(d) {
+      const s = d.sync || {};
+      const connected = !!s.connected;
+      syncBadge.classList.toggle('connected', connected);
+      syncBadge.textContent = connected ? `Connected · ${s.peerName || 'Mobile'}` : 'Ready to Pair';
+
+      const hasActiveTab = !!(d.activeTabUrl && d.activeTabUrl.length > 0);
+      btnSyncSendTab.disabled = !hasActiveTab;
+      if (hasActiveTab) {
+        syncSendTabLbl.textContent = `Send "${(d.activeTabTitle || d.activeTabUrl).slice(0, 26)}" to Mobile`;
+      } else {
+        syncSendTabLbl.textContent = 'Open a website to send tab to Mobile';
+      }
+
+      lastSyncCode = s.pairingCode || 'DJV-0000-0000';
+      syncCodeDisplay.textContent = lastSyncCode;
+      if (s.qrPayload) drawQrCanvas(s.qrPayload);
+
+      const drops = Array.isArray(s.drops) ? s.drops : [];
+      syncFeedList.innerHTML = '';
+      if (!drops.length) {
+        syncFeedList.innerHTML = '<div class="empty-msg">No shared tabs, links, or text yet.<br>Pair dejavu Mobile (.apk) in <strong>Pair Phone</strong> or drop a link above!</div>';
+      } else {
+        drops.forEach((it) => {
+          const card = document.createElement('div');
+          card.className = 'sync-drop-card';
+          const badgeLbl = it.dropType === 'tab' ? 'Tab' : (it.dropType === 'text' ? 'Text' : 'Link');
+          const primaryText = it.dropType === 'text' ? (it.text || '') : (it.title || it.url || '');
+          const secondary = it.dropType === 'text' ? '' : (it.url || '');
+          card.innerHTML = `
+            <div class="sync-drop-top">
+              <span class="sync-drop-from">${escapeHtml(it.fromName || 'Device')} · ${badgeLbl}</span>
+              <button type="button" class="mini-act del" title="Remove">×</button>
+            </div>
+            <div class="sync-drop-title"></div>
+            ${secondary ? '<div class="sync-drop-body"></div>' : ''}
+            <div class="sync-drop-acts">
+              ${it.url ? '<button type="button" class="dl-act-btn s-open">Open Tab</button>' : ''}
+              <button type="button" class="dl-act-btn s-copy">Copy</button>
+            </div>
+          `;
+          card.querySelector('.sync-drop-title').textContent = primaryText;
+          if (secondary) card.querySelector('.sync-drop-body').textContent = secondary;
+          card.querySelector('.del').addEventListener('click', () => send({ type: 'syncDeleteDrop', id: it.id }));
+          const ob = card.querySelector('.s-open');
+          if (ob) ob.addEventListener('click', () => send({ type: 'syncOpenUrl', url: it.url }));
+          const cb = card.querySelector('.s-copy');
+          cb.addEventListener('click', () => {
+            send({ type: 'syncCopyText', text: it.url || it.text || it.title || '' });
+            cb.textContent = 'Copied!';
+            setTimeout(() => { cb.textContent = 'Copy'; }, 1000);
+          });
+          syncFeedList.appendChild(card);
+        });
+      }
+
+      const rtabs = Array.isArray(s.remoteTabs) ? s.remoteTabs : [];
+      syncRtabsCount.textContent = String(rtabs.length);
+      syncRtabsList.innerHTML = '';
+      if (!rtabs.length) {
+        syncRtabsList.innerHTML = '<div class="empty-msg">No open mobile tabs synced yet.<br>Open websites in <strong>dejavu Mobile</strong> and they appear here!</div>';
+      } else {
+        rtabs.forEach((rt) => {
+          const row = document.createElement('div');
+          row.className = 'hist-row';
+          row.innerHTML = `<div class="hist-meta"><div class="hist-title"></div><div class="hist-url"></div></div>`;
+          row.querySelector('.hist-title').textContent = rt.title || rt.url;
+          row.querySelector('.hist-url').textContent = rt.url;
+          row.addEventListener('click', () => send({ type: 'syncOpenUrl', url: rt.url }));
+          syncRtabsList.appendChild(row);
+        });
+      }
+      setSyncSubtab(syncActiveTab);
+    }
+
+    // Mode 14: Incoming Drop HUD Toast
+    const stTitle = document.getElementById('st-title');
+    const stSub = document.getElementById('st-sub');
+    const stDismiss = document.getElementById('st-dismiss');
+    const stCopy = document.getElementById('st-copy');
+    const stOpen = document.getElementById('st-open');
+    let latestToastDrop = null;
+    stDismiss.addEventListener('click', () => send({ type: 'syncDismissToast' }));
+    stCopy.addEventListener('click', () => {
+      if (!latestToastDrop) return;
+      send({ type: 'syncCopyText', text: latestToastDrop.url || latestToastDrop.text || latestToastDrop.title || '' });
+    });
+    stOpen.addEventListener('click', () => {
+      if (latestToastDrop && latestToastDrop.url) send({ type: 'syncOpenUrl', url: latestToastDrop.url });
+      else send({ type: 'syncDismissToast' });
+    });
+    function renderSyncToast(drop) {
+      latestToastDrop = drop || {};
+      const from = drop.fromName || 'Mobile';
+      const isText = drop.dropType === 'text' && !drop.url;
+      stTitle.textContent = isText ? `Text from ${from}` : `From ${from}: ${drop.title || 'Shared Tab'}`;
+      stSub.textContent = isText ? (drop.text || '') : (drop.url || '');
+      stOpen.classList.toggle('hidden', !drop.url);
     }
   </script>
 </body>

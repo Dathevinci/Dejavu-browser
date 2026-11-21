@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>dejavu Mobile</title>
+  <style>
+    :root {
+      --bg: #07060d;
+      --ink: #f6f4ff;
+      --muted: rgba(212, 206, 236, 0.72);
+      --subtle: rgba(196, 188, 226, 0.48);
+      --accent: #b688ff;
+      --accent-bright: #d4b8ff;
+      --accent-glow: rgba(182, 136, 255, 0.34);
+      --mint: #5eead4;
+      --card: rgba(16, 13, 31, 0.86);
+      --card-hi: rgba(26, 21, 48, 0.92);
+      --border: rgba(255, 255, 255, 0.14);
+      --font: -apple-system, BlinkMacSystemFont, 'Roboto', 'Segoe UI', sans-serif;
+    }
+    :root[data-accent="sapphire"] { --accent: #4da6ff; --accent-bright: #93ccff; --accent-glow: rgba(77,166,255,0.34); }
+    :root[data-accent="aurora"]   { --accent: #38d9a9; --accent-bright: #8ef2d3; --accent-glow: rgba(56,217,169,0.34); }
+    :root[data-accent="rose"]     { --accent: #f472b6; --accent-bright: #fbc0de; --accent-glow: rgba(244,114,182,0.34); }
+    :root[data-accent="gold"]     { --accent: #f5b942; --accent-bright: #fde19a; --accent-glow: rgba(245,185,66,0.34); }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      background: var(--bg); color: var(--ink);
+      font-family: var(--font); overflow: hidden;
+    }
+
+    /* Full-bleed HD Wallpaper Backdrop + Calm Contrast Vignette (ZERO CSS Gaussian filtering) */
+    #wp-bg {
+      position: fixed; inset: 0; z-index: 0;
+      background-size: cover; background-position: center;
+      background-color: #090714;
+      transition: background-image 0.3s ease;
+    }
+    #wp-vignette {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(180deg, rgba(7,6,14,0.42) 0%, rgba(7,6,14,0.28) 40%, rgba(7,6,14,0.72) 100%);
+    }
+
+    .screen {
+      position: fixed; inset: 0; z-index: 2;
+      overflow-y: auto; overflow-x: hidden;
+      padding: 18px 16px 26px;
+      display: flex; flex-direction: column; gap: 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screen.hidden { display: none; }
+    .screen.sheet {
+      background: linear-gradient(180deg, rgba(11,9,22,0.94) 0%, rgba(8,6,16,0.97) 100%);
+    }
+
+    /* Liquid Glass Mobile Cards (Crisp Fresnel specular rim, ZERO blur) */
+    .g-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 10px 26px -8px rgba(0,0,0,0.55);
+      padding: 14px;
+    }
+
+    .top-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .screen-title { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+    .pill-btn {
+      height: 34px; padding: 0 14px; border-radius: 999px;
+      border: 1px solid var(--border); background: rgba(255,255,255,0.08);
+      color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 600;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      cursor: pointer;
+    }
+    .pill-btn.primary {
+      background: var(--accent); border-color: var(--accent-bright);
+      color: #0d0919; box-shadow: 0 4px 16px var(--accent-glow);
+    }
+    .pill-btn.danger {
+      background: rgba(255, 107, 139, 0.16); border-color: rgba(255, 107, 139, 0.42);
+      color: #ff9cb2;
+    }
+
+    /* Start Page */
+    .hero {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 18px 0 6px; text-align: center;
+    }
+    .hero img { width: 54px; height: 54px; object-fit: contain; filter: drop-shadow(0 0 14px var(--accent-glow)); }
+    .hero h1 { margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 0.08em; }
+    .link-pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 6px 13px; border-radius: 999px;
+      background: rgba(14, 11, 28, 0.86); border: 1px solid var(--border);
+      color: var(--muted); font-size: 12px; font-weight: 560; cursor: pointer;
+    }
+    .link-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--subtle); }
+    .link-pill.on { border-color: rgba(94, 234, 212, 0.46); color: var(--mint); }
+    .link-pill.on .dot { background: var(--mint); box-shadow: 0 0 8px var(--mint); }
+
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      height: 48px; padding: 0 8px 0 16px; border-radius: 999px;
+      background: rgba(14, 11, 28, 0.90);
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 10px 28px rgba(0,0,0,0.48);
+    }
+    .search-box input {
+      flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+      color: var(--ink); font-size: 15px; font-family: inherit;
+    }
+    .search-go {
+      width: 34px; height: 34px; border-radius: 50%; border: none;
+      background: var(--accent); color: #0c0918; font-size: 16px; font-weight: 700;
+    }
+
+    .sec-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; font-weight: 650; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted); padding: 2px 4px;
+    }
+    .fav-grid {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;
+    }
+    .fav-tile {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      background: transparent; border: none; color: var(--ink); padding: 0; cursor: pointer;
+    }
+    .fav-sq {
+      width: 56px; height: 56px; border-radius: 16px;
+      background: rgba(18, 14, 34, 0.88); border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 6px 16px rgba(0,0,0,0.42);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700; color: var(--accent-bright);
+    }
+    .fav-lbl {
+      font-size: 11.5px; color: var(--ink); max-width: 72px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Tabs Grid */
+    .tabs-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+    }
+    .tab-card {
+      padding: 12px; border-radius: 16px;
+      background: var(--card-hi); border: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 6px; min-height: 92px;
+      position: relative;
+    }
+    .tab-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 8px 20px var(--accent-glow); }
+    .tab-card-title { font-size: 13.5px; font-weight: 600; padding-right: 26px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .tab-card-url { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: auto; }
+    .tab-card-x {
+      position: absolute; top: 8px; right: 8px;
+      width: 26px; height: 26px; border-radius: 50%; border: none;
+      background: rgba(255,255,255,0.10); color: var(--ink); font-size: 14px;
+    }
+
+    /* Sync Hub */
+    .cta-full {
+      width: 100%; height: 46px; border-radius: 14px;
+      border: 1px solid var(--accent-bright);
+      background: linear-gradient(135deg, #8b5cf6, #a855f7);
+      color: #ffffff; font-family: inherit; font-size: 14px; font-weight: 650;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 6px 20px var(--accent-glow);
+    }
+    .drop-compose {
+      display: flex; gap: 8px;
+    }
+    .drop-compose input {
+      flex: 1; min-width: 0; height: 44px; padding: 0 13px; border-radius: 13px;
+      border: 1px solid var(--border); background: rgba(0,0,0,0.34);
+      color: var(--ink); font-size: 14px; font-family: inherit; outline: none;
+    }
+    .drop-compose input:focus { border-color: var(--accent); }
+    .code-display {
+      font-family: ui-monospace, monospace; font-size: 18px; font-weight: 700;
+      letter-spacing: 0.12em; color: var(--accent-bright);
+      padding: 8px 14px; border-radius: 11px;
+      background: rgba(0,0,0,0.34); border: 1px solid var(--accent);
+      text-align: center;
+    }
+    .drop-item {
+      padding: 12px; border-radius: 14px;
+      background: var(--card-hi); border: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .drop-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--accent-bright); font-weight: 600; text-transform: uppercase; }
+    .drop-text { font-size: 14px; color: var(--ink); word-break: break-word; }
+    .drop-url { font-size: 11.5px; color: var(--muted); word-break: break-all; }
+    .drop-acts { display: flex; gap: 8px; margin-top: 4px; }
+
+    /* Menu Action Grid */
+    .menu-grid {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px;
+    }
+    .menu-tile {
+      padding: 13px 8px; border-radius: 15px;
+      background: var(--card-hi); border: 1px solid var(--border);
+      color: var(--ink); font-family: inherit;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 560;
+    }
+    .menu-tile.active { border-color: var(--accent); background: rgba(182,136,255,0.18); }
+    .menu-ico { font-size: 20px; }
+
+    .list-row {
+      padding: 11px 12px; border-radius: 13px;
+      background: var(--card-hi); border: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .list-title { font-size: 13.5px; font-weight: 580; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list-sub { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .wp-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+    }
+    .wp-tile {
+      border-radius: 15px; overflow: hidden; border: 1.5px solid var(--border);
+      background: var(--card-hi); padding: 0; text-align: left; color: var(--ink);
+    }
+    .wp-tile.active { border-color: var(--accent-bright); box-shadow: 0 0 0 1px var(--accent); }
+    .wp-tile img, .wp-live-thumb { width: 100%; height: 96px; object-fit: cover; display: block; }
+    .wp-tile-name { padding: 8px 10px; font-size: 12.5px; font-weight: 600; }
+
+    .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+    .seg-btn {
+      padding: 7px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: rgba(0,0,0,0.28); color: var(--muted); font-size: 12.5px; font-weight: 560;
+    }
+    .seg-btn.active { border-color: var(--accent); background: rgba(182,136,255,0.22); color: #fff; font-weight: 650; }
+    .empty { text-align: center; padding: 22px 12px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div id="wp-bg"></div>
+  <div id="wp-vignette"></div>
+
+  <!-- Screen 1: Mobile Butterfly Start Page -->
+  <section id="scr-start" class="screen">
+    <div class="hero">
+      <img src="file:///android_asset/logo-transparent.png" alt="dejavu">
+      <h1>dejavu</h1>
+      <button type="button" id="sp-link-pill" class="link-pill" onclick="call('openScreen','sync')">
+        <span class="dot"></span>
+        <span id="sp-link-txt">Connect to Windows PC</span>
+      </button>
+    </div>
+
+    <form class="search-box" onsubmit="event.preventDefault(); goStartSearch();">
+      <input id="sp-search-in" type="search" placeholder="Search or enter website name" autocomplete="off">
+      <button type="submit" class="search-go">→</button>
+    </form>
+
+    <div class="sec-hdr">
+      <span>Favorites</span>
+      <span id="sp-sync-hint" style="color:var(--accent-bright);font-size:11px;" onclick="call('openScreen','wallpapers')">Wallpapers</span>
+    </div>
+    <div id="sp-fav-grid" class="fav-grid"></div>
+
+    <!-- Latest Drop from Windows PC -->
+    <div id="sp-latest-drop-wrap" style="display:none;flex-direction:column;gap:8px;">
+      <div class="sec-hdr">
+        <span>Shared with PC</span>
+        <span style="color:var(--accent-bright);" onclick="call('openScreen','sync')">Open Hub</span>
+      </div>
+      <div id="sp-latest-drop" class="g-card"></div>
+    </div>
+
+    <!-- Privacy Report Card -->
+    <div class="g-card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div>
+        <div style="font-size:13.5px;font-weight:650;">🛡 <span id="sp-blocked">0</span> ads &amp; trackers blocked</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">Built-in Mobile Ad Blocker · dejavu v3.1</div>
+      </div>
+      <button type="button" class="pill-btn" onclick="call('openScreen','settings')">Options</button>
+    </div>
+  </section>
+
+  <!-- Screen 2: Mobile Tab Switcher + Windows PC Open Tabs -->
+  <section id="scr-tabs" class="screen sheet hidden">
+    <div class="top-row">
+      <h2 class="screen-title">Tabs</h2>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="pill-btn primary" onclick="call('openNewTab','')">+ New Tab</button>
+        <button type="button" class="pill-btn" onclick="call('closeScreen')">Done</button>
+      </div>
+    </div>
+    <div id="tabs-grid" class="tabs-grid"></div>
+
+    <div class="sec-hdr" style="margin-top:6px;">
+      <span>Open on Windows PC</span>
+      <span style="color:var(--accent-bright);" onclick="call('syncNow')">Refresh</span>
+    </div>
+    <div id="pc-tabs-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </section>
+
+  <!-- Screen 3: dejavu Link (Cross-Device Sync Hub) -->
+  <section id="scr-sync" class="screen sheet hidden">
+    <div class="top-row">
+      <h2 class="screen-title">dejavu Link</h2>
+      <div style="display:flex;gap:7px;">
+        <button type="button" class="pill-btn" onclick="call('syncNow')">Sync</button>
+        <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
+      </div>
+    </div>
+
+    <div class="g-card" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div id="sync-status-title" style="font-size:14.5px;font-weight:650;">Ready to Pair with PC</div>
+          <div id="sync-status-sub" style="font-size:11.5px;color:var(--muted);margin-top:2px;">End-to-end encrypted (AES-256) · Wi-Fi &amp; Mobile Data</div>
+        </div>
+      </div>
+
+      <button type="button" id="btn-m-send-tab" class="cta-full" onclick="call('sendCurrentTabToPc')">
+        ↗ Send Current Tab to Windows PC
+      </button>
+
+      <div class="drop-compose">
+        <input id="m-drop-input" type="text" placeholder="Send any link or text note to PC...">
+        <button type="button" class="pill-btn primary" style="height:44px;padding:0 16px;" onclick="sendMobileDrop()">Send</button>
+      </div>
+    </div>
+
+    <!-- Pair with Windows PC -->
+    <div class="g-card" style="display:flex;flex-direction:column;gap:10px;">
+      <div class="sec-hdr" style="padding:0;"><span>Connect PC &amp; Phone</span></div>
+      <div id="m-code-box" class="code-display">DJV-0000-0000</div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="pill-btn primary" style="flex:1;height:40px;" onclick="call('scanQr')">Scan PC QR Code</button>
+        <button type="button" class="pill-btn" style="height:40px;" onclick="copyPairCode()">Copy</button>
+      </div>
+      <div class="drop-compose">
+        <input id="m-pair-input" type="text" placeholder="Enter code from PC (DJV-XXXX-XXXX)" style="text-transform:uppercase;font-family:monospace;">
+        <button type="button" class="pill-btn" style="height:44px;" onclick="pairCode()">Pair</button>
+      </div>
+    </div>
+
+    <div class="sec-hdr"><span>Shared Links, Tabs &amp; Text</span></div>
+    <div id="m-drops-list" style="display:flex;flex-direction:column;gap:9px;"></div>
+  </section>
+
+  <!-- Screen 4: Samsung Internet x Safari Mobile Menu -->
+  <section id="scr-menu" class="screen sheet hidden">
+    <div class="top-row">
+      <h2 class="screen-title">Menu</h2>
+      <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
+    </div>
+
+    <div class="menu-grid">
+      <button type="button" class="menu-tile" onclick="call('sendCurrentTabToPc')"><span class="menu-ico">↗</span><span>Send to PC</span></button>
+      <button type="button" id="m-bm-tile" class="menu-tile" onclick="call('toggleBookmark')"><span class="menu-ico">★</span><span id="m-bm-lbl">Bookmark</span></button>
+      <button type="button" id="m-rl-tile" class="menu-tile" onclick="call('toggleReadingList')"><span class="menu-ico">👓</span><span id="m-rl-lbl">Read Later</span></button>
+      <button type="button" id="m-desk-tile" class="menu-tile" onclick="call('toggleDesktopMode')"><span class="menu-ico">🖥</span><span>Desktop Site</span></button>
+      <button type="button" class="menu-tile" onclick="call('openReaderMode')"><span class="menu-ico">📖</span><span>Reader View</span></button>
+      <button type="button" class="menu-tile" onclick="call('openFindInPage')"><span class="menu-ico">🔍</span><span>Find in Page</span></button>
+      <button type="button" class="menu-tile" onclick="call('shareNative')"><span class="menu-ico">⤴</span><span>Share App</span></button>
+      <button type="button" class="menu-tile" onclick="call('openScreen','wallpapers')"><span class="menu-ico">🦋</span><span>Wallpapers</span></button>
+      <button type="button" class="menu-tile" onclick="call('openScreen','settings')"><span class="menu-ico">⚙</span><span>Options</span></button>
+    </div>
+
+    <div class="seg" id="menu-subtabs">
+      <button type="button" class="seg-btn active" onclick="setMenuList('bookmarks', this)">Bookmarks</button>
+      <button type="button" class="seg-btn" onclick="setMenuList('reading', this)">Reading List</button>
+      <button type="button" class="seg-btn" onclick="setMenuList('history', this)">History</button>
+    </div>
+    <div id="menu-list-box" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </section>
+
+  <!-- Screen 5: HD Mobile Wallpapers -->
+  <section id="scr-wallpapers" class="screen sheet hidden">
+    <div class="top-row">
+      <h2 class="screen-title">HD Wallpapers</h2>
+      <button type="button" class="pill-btn primary" onclick="call('openScreen','start')">Done</button>
+    </div>
+    <div id="m-wp-grid" class="wp-grid"></div>
+  </section>
+
+  <!-- Screen 6: Mobile Safari Options -->
+  <section id="scr-settings" class="screen sheet hidden">
+    <div class="top-row">
+      <h2 class="screen-title">dejavu Options</h2>
+      <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
+    </div>
+
+    <div class="g-card" style="display:flex;flex-direction:column;gap:10px;">
+      <div class="sec-hdr" style="padding:0;"><span>Default Search Engine</span></div>
+      <div id="opt-m-engines" class="seg"></div>
+    </div>
+
+    <div class="g-card" style="display:flex;flex-direction:column;gap:10px;">
+      <div class="sec-hdr" style="padding:0;"><span>Butterfly Accent Color</span></div>
+      <div id="opt-m-accents" class="seg"></div>
+    </div>
+
+    <div class="g-card" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <div style="font-size:14px;font-weight:600;">Built-in Ad &amp; Tracker Blocker</div>
+        <div id="opt-m-ab-sub" style="font-size:12px;color:var(--muted);margin-top:2px;">Active</div>
+      </div>
+      <button type="button" id="opt-m-ab-btn" class="pill-btn primary" onclick="call('toggleAdBlock')">On</button>
+    </div>
+
+    <div class="g-card" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <div style="font-size:14px;font-weight:600;">Clear Mobile History</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Keeps your bookmarks, wallpapers &amp; PC link</div>
+      </div>
+      <button type="button" class="pill-btn danger" onclick="call('clearHistory')">Clear</button>
+    </div>
+  </section>
+
+  <script>
+    const WALLPAPERS = [
+      { id: 'wp-velvet-mirage.jpg', name: 'Velvet Mirage' },
+      { id: 'wp-prism-cascade.jpg', name: 'Prism Cascade' },
+      { id: 'wp-midnight-orchid.jpg', name: 'Midnight Orchid' },
+      { id: 'wp-phantom-lotus.jpg', name: 'Phantom Lotus' },
+      { id: 'wp-amethyst.jpg', name: 'Amethyst Glasswing' },
+      { id: 'wp-aurora.jpg', name: 'Aurora Glasswing' },
+      { id: 'obsidian', name: 'Obsidian Prism' }
+    ];
+    const ENGINES = [
+      ['google', 'Google'], ['duckduckgo', 'DuckDuckGo'], ['brave', 'Brave'], ['bing', 'Bing'], ['perplexity', 'Perplexity']
+    ];
+    const ACCENTS = [
+      ['amethyst', 'Amethyst'], ['sapphire', 'Sapphire'], ['aurora', 'Aurora'], ['rose', 'Rose'], ['gold', 'Gold']
+    ];
+
+    let state = {};
+    let menuListMode = 'bookmarks';
+
+    function call(fn, ...args) {
+      try {
+        if (window.DejavuMobile && typeof window.DejavuMobile[fn] === 'function') {
+          window.DejavuMobile[fn](...args);
+        }
+      } catch (e) {}
+    }
+    function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function goStartSearch() {
+      const inp = document.getElementById('sp-search-in');
+      const v = (inp.value || '').trim();
+      if (!v) return;
+      inp.value = '';
+      call('navigate', v);
+    }
+    function sendMobileDrop() {
+      const inp = document.getElementById('m-drop-input');
+      const v = (inp.value || '').trim();
+      if (!v) return;
+      inp.value = '';
+      call('sendDropToPc', v);
+    }
+    function pairCode() {
+      const inp = document.getElementById('m-pair-input');
+      const v = (inp.value || '').trim();
+      if (!v) return;
+      inp.value = '';
+      call('pairWithCode', v);
+    }
+    function copyPairCode() {
+      const code = (state.sync && state.sync.pairingCode) || '';
+      if (code) call('copyText', code);
+    }
+    function setMenuList(mode, btn) {
+      menuListMode = mode;
+      document.querySelectorAll('#menu-subtabs .seg-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      renderMenuList();
+    }
+
+    function renderMenuList() {
+      const box = document.getElementById('menu-list-box');
+      const arr = menuListMode === 'bookmarks' ? (state.bookmarks || []) : (menuListMode === 'reading' ? (state.readingList || []) : (state.history || []));
+      box.innerHTML = '';
+      if (!arr.length) {
+        box.innerHTML = `<div class="empty">Nothing saved in ${esc(menuListMode)} yet.</div>`;
+        return;
+      }
+      arr.forEach((it) => {
+        const row = document.createElement('div');
+        row.className = 'list-row';
+        row.innerHTML = `<div class="list-title">${esc(it.title || it.url)}</div><div class="list-sub">${esc(it.url)}</div>`;
+        row.onclick = () => call('navigate', it.url);
+        box.appendChild(row);
+      });
+    }
+
+    window.__onDejavuState = function (st) {
+      state = st || {};
+      document.documentElement.dataset.accent = state.accentColor || 'amethyst';
+
+      // Wallpaper
+      const wpBg = document.getElementById('wp-bg');
+      if (state.wallpaper && state.wallpaper !== 'obsidian') {
+        wpBg.style.backgroundImage = `url("file:///android_asset/wallpapers/${state.wallpaper}")`;
+      } else {
+        wpBg.style.backgroundImage = 'radial-gradient(circle at 28% 22%, #3a1f78 0%, #140d2a 48%, #07060d 100%)';
+      }
+
+      // Show active screen
+      const scr = state.screen || 'start';
+      ['start', 'tabs', 'sync', 'menu', 'wallpapers', 'settings'].forEach((k) => {
+        const el = document.getElementById('scr-' + k);
+        if (el) el.classList.toggle('hidden', scr !== k);
+      });
+
+      const sync = state.sync || {};
+      const connected = !!sync.connected;
+      const linkPill = document.getElementById('sp-link-pill');
+      linkPill.classList.toggle('on', connected);
+      document.getElementById('sp-link-txt').textContent = connected
+        ? `Connected to ${sync.peerName || 'Windows PC'}`
+        : `Pair with PC · ${sync.pairingCode || ''}`;
+
+      document.getElementById('sp-blocked').textContent = Number(state.totalBlocked || 0).toLocaleString();
+
+      // Start Page Favorites
+      const fg = document.getElementById('sp-fav-grid');
+      fg.innerHTML = '';
+      (state.bookmarks || []).slice(0, 8).forEach((b) => {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'fav-tile';
+        const ch = (b.title || b.url || 'D').trim().charAt(0).toUpperCase();
+        btn.innerHTML = `<div class="fav-sq">${esc(ch)}</div><div class="fav-lbl">${esc(b.title || b.url)}</div>`;
+        btn.onclick = () => call('navigate', b.url);
+        fg.appendChild(btn);
+      });
+
+      // Latest Shared Drop on Start Page
+      const drops = Array.isArray(sync.drops) ? sync.drops : [];
+      const latestWrap = document.getElementById('sp-latest-drop-wrap');
+      if (drops.length > 0) {
+        latestWrap.style.display = 'flex';
+        const d = drops[0];
+        const card = document.getElementById('sp-latest-drop');
+        card.innerHTML = `
+          <div class="drop-meta"><span>${esc(d.fromName || 'Device')} · ${esc(d.dropType || 'link')}</span></div>
+          <div class="drop-text" style="margin-top:4px;">${esc(d.dropType === 'text' ? d.text : (d.title || d.url))}</div>
+          ${d.url ? `<div class="drop-url" style="margin-top:2px;">${esc(d.url)}</div>` : ''}
+          <div class="drop-acts">
+            ${d.url ? `<button type="button" class="pill-btn primary" id="sp-d-open">Open</button>` : ''}
+            <button type="button" class="pill-btn" id="sp-d-copy">Copy</button>
+          </div>
+        `;
+        const ob = document.getElementById('sp-d-open');
+        if (ob) ob.onclick = () => call('openNewTab', d.url);
+        document.getElementById('sp-d-copy').onclick = () => call('copyText', d.url || d.text || d.title || '');
+      } else {
+        latestWrap.style.display = 'none';
+      }
+
+      // Tabs Grid + Remote PC Open Tabs
+      const tg = document.getElementById('tabs-grid');
+      tg.innerHTML = '';
+      (state.tabs || []).forEach((t) => {
+        const card = document.createElement('div');
+        card.className = 'tab-card' + (t.id === state.activeTabId ? ' active' : '');
+        card.innerHTML = `
+          <div class="tab-card-title">${esc(t.title || 'Start Page')}</div>
+          <div class="tab-card-url">${esc(t.isNewTab ? 'dejavu Start Page' : t.url)}</div>
+          <button type="button" class="tab-card-x">×</button>
+        `;
+        card.onclick = () => call('switchTab', t.id);
+        card.querySelector('.tab-card-x').onclick = (e) => { e.stopPropagation(); call('closeTabById', t.id); };
+        tg.appendChild(card);
+      });
+
+      const pcTabs = document.getElementById('pc-tabs-list');
+      const rtabs = Array.isArray(sync.remoteTabs) ? sync.remoteTabs : [];
+      pcTabs.innerHTML = '';
+      if (!rtabs.length) {
+        pcTabs.innerHTML = '<div class="empty">Pair with dejavu on Windows PC to view your open PC tabs right here.</div>';
+      } else {
+        rtabs.forEach((rt) => {
+          const row = document.createElement('div');
+          row.className = 'list-row';
+          row.innerHTML = `<div class="list-title">💻 ${esc(rt.title || rt.url)}</div><div class="list-sub">${esc(rt.url)}</div>`;
+          row.onclick = () => call('openNewTab', rt.url);
+          pcTabs.appendChild(row);
+        });
+      }
+
+      // Sync Hub
+      document.getElementById('sync-status-title').textContent = connected
+        ? `Connected to ${sync.peerName || 'Windows PC'}`
+        : 'Ready to Pair with Windows PC';
+      document.getElementById('m-code-box').textContent = sync.pairingCode || 'DJV-0000-0000';
+      const sendBtn = document.getElementById('btn-m-send-tab');
+      sendBtn.textContent = state.activeUrl
+        ? `↗ Send "${(state.activeTitle || state.activeUrl).slice(0, 26)}" to PC`
+        : '↗ Open a website to send tab to PC';
+      sendBtn.style.opacity = state.activeUrl ? '1' : '0.52';
+
+      const dl = document.getElementById('m-drops-list');
+      dl.innerHTML = '';
+      if (!drops.length) {
+        dl.innerHTML = '<div class="empty">No shared links, tabs, or text yet.<br>Scan the QR code in dejavu on PC to start syncing!</div>';
+      } else {
+        drops.forEach((it) => {
+          const card = document.createElement('div');
+          card.className = 'drop-item';
+          const isTxt = it.dropType === 'text' && !it.url;
+          card.innerHTML = `
+            <div class="drop-meta">
+              <span>${esc(it.fromName || 'Device')} · ${esc(it.dropType || 'link')}</span>
+              <span class="rm" style="color:var(--muted);padding:2px 6px;">✕</span>
+            </div>
+            <div class="drop-text">${esc(isTxt ? it.text : (it.title || it.url))}</div>
+            ${it.url ? `<div class="drop-url">${esc(it.url)}</div>` : ''}
+            <div class="drop-acts">
+              ${it.url ? '<button type="button" class="pill-btn primary o-btn">Open Tab</button>' : ''}
+              <button type="button" class="pill-btn c-btn">Copy</button>
+            </div>
+          `;
+          card.querySelector('.rm').onclick = () => call('deleteDrop', it.id);
+          const ob = card.querySelector('.o-btn');
+          if (ob) ob.onclick = () => call('openNewTab', it.url);
+          card.querySelector('.c-btn').onclick = () => call('copyText', it.url || it.text || it.title || '');
+          dl.appendChild(card);
+        });
+      }
+
+      // Menu states
+      document.getElementById('m-bm-tile').classList.toggle('active', !!state.isBookmarked);
+      document.getElementById('m-bm-lbl').textContent = state.isBookmarked ? 'Bookmarked' : 'Bookmark';
+      document.getElementById('m-rl-tile').classList.toggle('active', !!state.isInReading);
+      document.getElementById('m-desk-tile').classList.toggle('active', !!state.desktopMode);
+      renderMenuList();
+
+      // Wallpapers
+      const wg = document.getElementById('m-wp-grid');
+      wg.innerHTML = '';
+      WALLPAPERS.forEach((w) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'wp-tile' + (state.wallpaper === w.id ? ' active' : '');
+        const thumb = w.id === 'obsidian'
+          ? '<div class="wp-live-thumb" style="background:radial-gradient(circle at 30% 30%,#5b31b8,#140d2a 60%,#07060d);"></div>'
+          : `<img src="file:///android_asset/wallpapers/${w.id}" alt="${esc(w.name)}">`;
+        btn.innerHTML = `${thumb}<div class="wp-tile-name">${esc(w.name)}</div>`;
+        btn.onclick = () => call('setWallpaper', w.id);
+        wg.appendChild(btn);
+      });
+
+      // Settings
+      const engBox = document.getElementById('opt-m-engines');
+      engBox.innerHTML = '';
+      ENGINES.forEach(([id, label]) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'seg-btn' + (state.searchEngine === id ? ' active' : '');
+        b.textContent = label;
+        b.onclick = () => call('setSearchEngine', id);
+        engBox.appendChild(b);
+      });
+
+      const accBox = document.getElementById('opt-m-accents');
+      accBox.innerHTML = '';
+      ACCENTS.forEach(([id, label]) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'seg-btn' + (state.accentColor === id ? ' active' : '');
+        b.textContent = label;
+        b.onclick = () => call('setAccent', id);
+        accBox.appendChild(b);
+      });
+
+      document.getElementById('opt-m-ab-sub').textContent = state.adBlockEnabled
+        ? `Active · ${Number(state.totalBlocked || 0).toLocaleString()} blocked`
+        : 'Paused';
+      const abBtn = document.getElementById('opt-m-ab-btn');
+      abBtn.textContent = state.adBlockEnabled ? 'On' : 'Off';
+      abBtn.classList.toggle('primary', !!state.adBlockEnabled);
+    };
+  </script>
+</body>
+</html>

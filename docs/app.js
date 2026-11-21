@@ -11,7 +11,7 @@
   'use strict';
 
   const REPO_API = 'https://api.github.com/repos/Dathevinci/Dejavu-browser/releases/latest';
-  const FALLBACK_VERSION = 'v3.0.0';
+  const FALLBACK_VERSION = 'v3.1.0';
   const FALLBACK_SETUP_URL = 'https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-Setup.exe';
   const FALLBACK_PORTABLE_URL = 'https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu.exe';
 
@@ -1205,6 +1205,7 @@
 
         const setupAsset = assets.find((a) => /setup\.exe$/i.test(a.name));
         const portableAsset = assets.find((a) => /^dejavu\.exe$/i.test(a.name));
+        const androidAsset = assets.find((a) => /\.apk$/i.test(a.name));
 
         if (verBadge) verBadge.textContent = tag;
         if (releasePill) releasePill.href = htmlUrl;
@@ -1212,7 +1213,7 @@
         if (updaterVer) updaterVer.textContent = 'dejavu ' + tag + ' Ready';
 
         if (setupAsset && setupAsset.browser_download_url) {
-          const sz = formatMB(setupAsset.size) || '~5.3 MB';
+          const sz = formatMB(setupAsset.size) || '~14 MB';
           if (heroSetup) heroSetup.href = setupAsset.browser_download_url;
           if (cardSetup) cardSetup.href = setupAsset.browser_download_url;
           if (heroSetupMeta) heroSetupMeta.textContent = setupAsset.name + ' · ' + sz + ' · Guided Installer';
@@ -1220,11 +1221,19 @@
         }
 
         if (portableAsset && portableAsset.browser_download_url) {
-          const sz = formatMB(portableAsset.size) || '~3.7 MB';
+          const sz = formatMB(portableAsset.size) || '~12 MB';
           if (heroPortable) heroPortable.href = portableAsset.browser_download_url;
           if (cardPortable) cardPortable.href = portableAsset.browser_download_url;
           if (heroPortableMeta) heroPortableMeta.textContent = portableAsset.name + ' · ' + sz + ' · Zero Install';
           if (cardPortableSize) cardPortableSize.textContent = sz;
+        }
+
+        const heroAndroid = document.getElementById('hero-dl-android');
+        const heroAndroidMeta = document.getElementById('hero-android-meta');
+        if (androidAsset && androidAsset.browser_download_url) {
+          const sz = formatMB(androidAsset.size) || '~5 MB';
+          if (heroAndroid) heroAndroid.href = androidAsset.browser_download_url;
+          if (heroAndroidMeta) heroAndroidMeta.textContent = androidAsset.name + ' · ' + sz + ' · Syncs with PC';
         }
       })
       .catch(() => {

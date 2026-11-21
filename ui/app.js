@@ -43,6 +43,8 @@
   const dlDot = document.getElementById('dl-dot');
   const btnVpn = document.getElementById('btn-vpn');
   const vpnChipCode = document.getElementById('vpn-chip-code');
+  const btnSync = document.getElementById('btn-sync');
+  const syncDot = document.getElementById('sync-dot');
   const btnShare = document.getElementById('btn-share');
   const btnTabOverview = document.getElementById('btn-tab-overview');
   const btnHistory = document.getElementById('btn-history');
@@ -463,6 +465,13 @@
     const r = btnShare.getBoundingClientRect();
     send({ type: 'openShare', anchorRight: Math.round(r.right + 76) });
   });
+
+  if (btnSync) {
+    btnSync.addEventListener('click', () => {
+      const r = btnSync.getBoundingClientRect();
+      send({ type: 'openSync', anchorRight: Math.round(r.right + 128) });
+    });
+  }
 
   btnHistory.addEventListener('click', () => {
     const r = btnHistory.getBoundingClientRect();
@@ -1933,6 +1942,15 @@
     btnShield.classList.toggle('paused', !next.activeForSite);
     shieldCount.style.display = onNewTab ? 'none' : '';
     shieldCount.textContent = onNewTab ? '' : String(active.blockedCount || 0);
+
+    if (next.sync && btnSync && syncDot) {
+      const sc = !!next.sync.connected;
+      syncDot.classList.toggle('hidden', !sc);
+      btnSync.classList.toggle('sync-connected', sc);
+      btnSync.title = sc
+        ? `dejavu Link · Connected to ${next.sync.peerName || 'Mobile'} (${next.sync.pairingCode || ''})`
+        : `dejavu Link · Pair Android Mobile (${next.sync.pairingCode || ''})`;
+    }
 
     if (next.vpn) {
       const vst = next.vpn.state || 'disconnected';

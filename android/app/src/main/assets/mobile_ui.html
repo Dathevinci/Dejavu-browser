@@ -607,6 +607,43 @@
       font-size: 13px; font-weight: 500; color: var(--muted);
       letter-spacing: 0.005em;
     }
+    .sp-motd {
+      margin-top: 2px;
+      padding: 5px 13px;
+      border-radius: 999px;
+      border: none;
+      background: rgba(33, 31, 39, 0.72);
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 480;
+      line-height: 1.35;
+      max-width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: opacity 0.2s var(--md-ease-decel), transform 0.2s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized);
+    }
+    body.theme-light .sp-motd { background: rgba(255, 255, 255, 0.84); color: var(--muted); }
+    .sp-motd:active { transform: scale(0.97); }
+    .sp-motd.is-swapping { opacity: 0; transform: translateY(4px); }
+    .sp-motd-spark {
+      color: var(--accent);
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.28s var(--md-ease-spring);
+    }
+    .sp-motd.is-swapping .sp-motd-spark { transform: rotate(90deg) scale(0.84); }
+    .sp-motd-txt {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
+    }
 
     /* Pure Google Pixel 56px Search Pill */
     .sp-m3-search {
@@ -900,13 +937,26 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v5.1.0 — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v5.2.0 — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
       display: flex; flex-direction: column; gap: 14px;
       contain: layout style;
     }
+    .sync-relay-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 9px 13px; border-radius: 14px; background: var(--sheet-elev);
+      font-size: 12px; font-weight: 540; color: var(--muted);
+    }
+    .sync-relay-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .sync-relay-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+      background: var(--mint);
+    }
+    .sync-relay-dot.connecting { background: var(--accent); }
+    .sync-relay-dot.retrying { background: var(--subtle); }
+    .sync-relay-broker { font-size: 11px; color: var(--subtle); flex-shrink: 0; white-space: nowrap; }
     .sync-id-row { display: flex; align-items: center; gap: 13px; }
     .sync-av {
       width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
@@ -1359,6 +1409,50 @@
     .empty { text-align: center; padding: 26px 18px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
+    /* =====================================================================
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.2.0)
+       ===================================================================== */
+    .sh-hero-card {
+      background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
+      display: flex; align-items: center; gap: 14px;
+      contain: layout style;
+    }
+    .sh-ico-ring {
+      width: 46px; height: 46px; border-radius: 16px; flex-shrink: 0;
+      background: var(--accent-soft); color: var(--accent-bright);
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background-color 0.2s var(--md-ease-emphasized), color 0.2s var(--md-ease-emphasized);
+    }
+    body.theme-light .sh-ico-ring { color: var(--accent); }
+    .sh-ico-ring.off { background: var(--sheet-elev); color: var(--subtle); }
+    .sh-domain {
+      font-size: 16.5px; font-weight: 600; letter-spacing: -0.015em; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sh-status-txt { font-size: 12.5px; font-weight: 540; color: var(--mint); margin-top: 2px; }
+    .sh-status-txt.off { color: var(--muted); }
+    .sh-stats-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      contain: layout style;
+    }
+    .sh-stat-card {
+      background: var(--group-bg); border-radius: 20px; padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .sh-stat-num {
+      font-size: 26px; font-weight: 640; letter-spacing: -0.025em; line-height: 1.1;
+      color: var(--ink);
+    }
+    .sh-stat-lbl { font-size: 12px; font-weight: 560; color: var(--muted); }
+    .sh-stat-sub { font-size: 11px; color: var(--subtle); margin-top: 2px; }
+    .sh-level-card {
+      background: var(--group-bg); border-radius: 22px; padding: 15px 18px;
+      display: flex; flex-direction: column; gap: 11px;
+    }
+    .sh-level-hdr { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .sh-level-title { font-size: 14.5px; font-weight: 540; color: var(--ink); }
+    .sh-level-hint { font-size: 12px; color: var(--muted); }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -1404,20 +1498,23 @@
       <div id="sp-hero-logo" class="sp-logo-badge" aria-label="dejavu">
         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
-          <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
-          <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
-          <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
-          <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
-          <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
-          <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
-          <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
-          <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
-          <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
-          <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z" fill="var(--md-primary)"/>
+          <path d="M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z" fill="var(--md-primary)"/>
+          <path d="M31.2 34.4C26.2 24.4 19.6 17.4 13.2 17.0C16.2 24.8 22.8 31.8 31.2 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+          <path d="M32.8 34.4C37.8 24.4 44.4 17.4 50.8 17.0C47.8 24.8 41.2 31.8 32.8 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+          <path d="M31.2 36.6C23.0 36.4 15.2 39.2 15.0 44.8C14.8 49.0 19.4 51.6 24.6 49.6C28.6 48.0 30.8 43.2 31.2 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+          <path d="M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+          <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
         </svg>
       </div>
       <h1 class="sp-brand">dejavu</h1>
       <div id="sp-date" class="sp-date-txt"></div>
+      <button type="button" id="sp-motd" class="sp-motd" onclick="cycleMotd()" aria-label="Pixel Message of the Day">
+        <span class="sp-motd-spark" aria-hidden="true">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><path d="M8 1.4C8.9 5.0 11.0 7.1 14.6 8C11.0 8.9 8.9 11.0 8 14.6C7.1 11.0 5.0 8.9 1.4 8C5.0 7.1 7.1 5.0 8 1.4Z"/></svg>
+        </span>
+        <span id="sp-motd-txt" class="sp-motd-txt"></span>
+      </button>
     </div>
 
     <!-- Private Mode Calm Card -->
@@ -1681,7 +1778,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v5.1.0 — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v5.2.0 — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -1732,6 +1829,15 @@
               <span class="yg-google-g-pill" id="sync-g-btn-ico"></span>
               <span>Sign in with Google</span>
             </button>
+          </div>
+
+          <!-- Live E2EE Relay & LAN Transport Health Indicator -->
+          <div id="sync-relay-row" class="sync-relay-row">
+            <span class="sync-relay-left">
+              <span id="sync-relay-dot" class="sync-relay-dot"></span>
+              <span id="sync-relay-txt">E2EE Cloud · Connected</span>
+            </span>
+            <span id="sync-relay-broker" class="sync-relay-broker">TLS MQTT</span>
           </div>
         </div>
 
@@ -1826,7 +1932,7 @@
               </div>
               <div style="border-top:1px solid var(--divider);padding-top:12px;display:flex;flex-direction:column;gap:10px;">
                 <div style="font-size:12.5px;color:var(--muted);">Pair locally with a PC code or QR</div>
-                <div id="m-code-box" class="code-pill">DJV-5100-M3UI</div>
+                <div id="m-code-box" class="code-pill">DJV-5200-M3UI</div>
                 <div style="display:flex;gap:8px;">
                   <button type="button" class="pill-btn primary" style="flex:1;height:40px;" onclick="call('scanQr')">Scan QR</button>
                   <button type="button" class="pill-btn" style="height:40px;" onclick="copyPairCode()">Copy code</button>
@@ -1935,7 +2041,7 @@
               <span class="m3-ico"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M10 9v4.2M10 6.5h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.1.0 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.2.0 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -1946,7 +2052,7 @@
         <div id="set-sub-views" style="display:none;flex-direction:column;gap:16px;">
 
           <!-- SUB-VIEW 1: APPEARANCE -->
-          <div id="set-cat-appearance" class="set-section" data-cat="appearance" data-search="appearance material you theme light dark auto color seed swatch wallpaper text zoom slider desktop site address bar bottom top autohide dark websites">
+          <div id="set-cat-appearance" class="set-section" data-cat="appearance" data-search="appearance material you theme light dark auto color seed swatch wallpaper pixel message of the day motd at a glance text zoom slider desktop site address bar bottom top autohide dark websites">
             <div class="sec-hdr set-sec-hdr">
               <span>Appearance</span>
               <span class="set-match-pill"></span>
@@ -2016,6 +2122,14 @@
                 </div>
               </div>
 
+              <div class="g-row set-item" data-search="pixel message of the day motd at a glance daily quote start page greeting" onclick="call('toggleMotd')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">Pixel Message of the Day</div>
+                  <div class="g-row-sub">Daily At a Glance note on Start Page</div>
+                </div>
+                <button type="button" id="sw-motd" class="sw on" aria-label="Pixel Message of the Day"></button>
+              </div>
+
               <div class="g-row set-item" data-search="auto hide bar scroll fullscreen reading toolbar" onclick="call('toggleAutoHideBar')">
                 <div class="g-row-meta">
                   <div class="g-row-title">Auto-hide bar on scroll</div>
@@ -2026,18 +2140,54 @@
           </div>
 
           <!-- SUB-VIEW 2: PRIVACY & SECURITY -->
-          <div id="set-cat-privacy" class="set-section" data-cat="privacy" data-search="privacy security shield ad tracker blocker https first do not track dnt popups third party cookies clear browsing data history cache">
+          <div id="set-cat-privacy" class="set-section" data-cat="privacy" data-search="privacy security brave shields ad tracker blocker standard aggressive fingerprinting canvas webgl cookie notices banners tracking links utm https first do not track dnt popups third party cookies clear browsing data history cache">
             <div class="sec-hdr set-sec-hdr">
               <span>Privacy &amp; security</span>
               <span class="set-match-pill"></span>
             </div>
             <div class="g-group">
-              <div class="g-row set-item" data-search="dejavu shield ad tracker blocker privacy protection" onclick="call('toggleAdBlock')">
+              <div class="g-row set-item" data-search="dejavu brave shields ad tracker blocker privacy protection youtube" onclick="call('toggleAdBlock')">
                 <div class="g-row-meta">
-                  <div class="g-row-title">dejavu Shield</div>
+                  <div class="g-row-title">dejavu Shields</div>
                   <div id="opt-m-ab-sub" class="g-row-sub">Active · Ads &amp; trackers blocked</div>
                 </div>
-                <button type="button" id="sw-adblock" class="sw on" aria-label="dejavu Shield"></button>
+                <button type="button" id="sw-adblock" class="sw on" aria-label="dejavu Shields"></button>
+              </div>
+
+              <div class="set-block set-item" data-search="shield strength standard aggressive blocking level brave shields">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                  <span style="font-size:14.5px;font-weight:540;">Shield strength</span>
+                  <span id="opt-sh-lvl-hint" style="font-size:12px;color:var(--muted);">Balanced protection</span>
+                </div>
+                <div class="bar-seg" id="set-shield-level-seg">
+                  <span class="seg-glider is-tonal" aria-hidden="true"></span>
+                  <button type="button" id="opt-sh-std" class="active" onclick="call('setShieldLevel','standard')">Standard</button>
+                  <button type="button" id="opt-sh-aggr" onclick="call('setShieldLevel','aggressive')">Aggressive</button>
+                </div>
+              </div>
+
+              <div class="g-row set-item" data-search="block fingerprinting canvas webgl sendbeacon brave farbling" onclick="call('toggleShieldFeature','fingerprinting')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">Block fingerprinting</div>
+                  <div class="g-row-sub">Canvas, WebGL &amp; tracker beacon protection</div>
+                </div>
+                <button type="button" id="sw-fp" class="sw on" aria-label="Block fingerprinting"></button>
+              </div>
+
+              <div class="g-row set-item" data-search="block cookie notices banners gdpr consent walls fanboy" onclick="call('toggleShieldFeature','cookies')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">Block cookie notices</div>
+                  <div class="g-row-sub">Hide GDPR consent prompts &amp; restore scroll</div>
+                </div>
+                <button type="button" id="sw-ck" class="sw on" aria-label="Block cookie notices"></button>
+              </div>
+
+              <div class="g-row set-item" data-search="clean tracking links parameters utm fbclid gclid igshid si strip url" onclick="call('toggleShieldFeature','trackingParams')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">Clean tracking links</div>
+                  <div class="g-row-sub">Strip utm, fbclid, gclid &amp; si parameters</div>
+                </div>
+                <button type="button" id="sw-trk" class="sw on" aria-label="Clean tracking links"></button>
               </div>
 
               <div class="g-row set-item" data-search="https first secure encrypted upgrade connections ssl" onclick="call('toggleHttpsFirst')">
@@ -2151,7 +2301,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update apk version 5.1.0 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update apk version 5.2.0 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2175,10 +2325,10 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update auto updater github releases apk version 5.1.0 about">
+              <div class="g-row set-item" data-search="software update auto updater github releases apk version 5.2.0 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.1.0</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.2.0</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
                 <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check</button>
@@ -2217,7 +2367,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.1.0
+          dejavu Mobile v5.2.0
         </div>
       </div>
     </div>
@@ -2487,6 +2637,94 @@
     </div>
   </div>
 
+  <!-- ===================================================================
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.2.0)
+       =================================================================== -->
+  <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
+    <div class="sheet-panel" onclick="event.stopPropagation()">
+      <div class="sheet-head" data-swipe-dismiss="1">
+        <div class="sheet-grab"></div>
+        <div class="sheet-title-row">
+          <h2 class="sheet-title">dejavu Shields</h2>
+          <button type="button" class="pill-btn ghost" onclick="call('closeScreen')">Done</button>
+        </div>
+      </div>
+
+      <div class="sheet-body">
+        <!-- Domain Header & Master Site Shield Switch -->
+        <div class="sh-hero-card" onclick="toggleCurrentSiteShield()" style="cursor:pointer;">
+          <span id="sh-ico-ring" class="sh-ico-ring">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none"><path d="M12 2.8L4.6 5.8v5.6c0 4.8 3.2 8.2 7.4 9.6 4.2-1.4 7.4-4.8 7.4-9.6V5.8L12 2.8z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M8.8 12.2l2.2 2.2 4.4-4.5" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <div class="g-row-meta">
+            <div id="sh-domain" class="sh-domain">All websites</div>
+            <div id="sh-status-txt" class="sh-status-txt">Shields are UP</div>
+          </div>
+          <button type="button" id="sw-shields-master" class="sw on" aria-label="Toggle site shields"></button>
+        </div>
+
+        <!-- Compact 2-Column Live Stats -->
+        <div class="sh-stats-grid">
+          <div class="sh-stat-card">
+            <div id="sh-stat-blocked" class="sh-stat-num">0</div>
+            <div class="sh-stat-lbl">Trackers &amp; ads blocked</div>
+            <div id="sh-stat-blocked-total" class="sh-stat-sub">0 lifetime</div>
+          </div>
+          <div class="sh-stat-card">
+            <div id="sh-stat-cleaned" class="sh-stat-num">0</div>
+            <div class="sh-stat-lbl">Tracking links cleaned</div>
+            <div id="sh-stat-cleaned-total" class="sh-stat-sub">0 lifetime</div>
+          </div>
+        </div>
+
+        <!-- Gliding 2-Way Standard | Aggressive M3 Segmented Pill -->
+        <div class="sh-level-card">
+          <div class="sh-level-hdr">
+            <span class="sh-level-title">Shield strength</span>
+            <span id="sh-level-hint" class="sh-level-hint">Balanced protection</span>
+          </div>
+          <div class="bar-seg" id="shields-level-seg">
+            <span class="seg-glider is-tonal" aria-hidden="true"></span>
+            <button type="button" id="sh-lvl-std" class="active" onclick="call('setShieldLevel','standard')">Standard</button>
+            <button type="button" id="sh-lvl-aggr" onclick="call('setShieldLevel','aggressive')">Aggressive</button>
+          </div>
+        </div>
+
+        <!-- Clean 52x32 M3 Protection Switches -->
+        <div class="g-group">
+          <div class="g-row" onclick="call('toggleShieldFeature','fingerprinting')">
+            <div class="g-row-meta">
+              <div class="g-row-title">Block fingerprinting</div>
+              <div class="g-row-sub">Canvas, WebGL &amp; tracker beacon protection</div>
+            </div>
+            <button type="button" id="sw-sh-fp" class="sw on" aria-label="Block fingerprinting"></button>
+          </div>
+          <div class="g-row" onclick="call('toggleShieldFeature','cookies')">
+            <div class="g-row-meta">
+              <div class="g-row-title">Block cookie notices</div>
+              <div class="g-row-sub">Hide GDPR consent walls &amp; unlock scrolling</div>
+            </div>
+            <button type="button" id="sw-sh-ck" class="sw on" aria-label="Block cookie notices"></button>
+          </div>
+          <div class="g-row" onclick="call('toggleShieldFeature','trackingParams')">
+            <div class="g-row-meta">
+              <div class="g-row-title">Clean tracking links</div>
+              <div class="g-row-sub">Strip utm, fbclid, gclid &amp; si parameters</div>
+            </div>
+            <button type="button" id="sw-sh-trk" class="sw on" aria-label="Clean tracking links"></button>
+          </div>
+          <div class="g-row" onclick="call('toggleHttpsFirst')">
+            <div class="g-row-meta">
+              <div class="g-row-title">HTTPS-First</div>
+              <div class="g-row-sub">Upgrade insecure connections automatically</div>
+            </div>
+            <button type="button" id="sw-sh-https" class="sw on" aria-label="HTTPS-First"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Inline Add / Edit Favorite Modal -->
   <div id="add-fav-modal" class="mini-modal hidden" onclick="closeAddFav()">
     <div class="mini-modal-card" onclick="event.stopPropagation()">
@@ -2526,7 +2764,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.1.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.2.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -2592,16 +2830,13 @@
       const sz = sizePx || 32;
       return `<svg viewBox="0 0 64 64" width="${sz}" height="${sz}" fill="none" xmlns="http://www.w3.org/2000/svg">` +
         `<rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>` +
-        `<path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>` +
-        `<path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>` +
-        `<path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>` +
-        `<path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>` +
-        `<path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>` +
-        `<path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>` +
-        `<path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>` +
-        `<path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>` +
-        `<rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>` +
-        `<path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>` +
+        `<path d="M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z" fill="var(--md-primary)"/>` +
+        `<path d="M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z" fill="var(--md-primary)"/>` +
+        `<path d="M31.2 34.4C26.2 24.4 19.6 17.4 13.2 17.0C16.2 24.8 22.8 31.8 31.2 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>` +
+        `<path d="M32.8 34.4C37.8 24.4 44.4 17.4 50.8 17.0C47.8 24.8 41.2 31.8 32.8 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>` +
+        `<path d="M31.2 36.6C23.0 36.4 15.2 39.2 15.0 44.8C14.8 49.0 19.4 51.6 24.6 49.6C28.6 48.0 30.8 43.2 31.2 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>` +
+        `<path d="M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>` +
+        `<path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>` +
         `</svg>`;
     }
 
@@ -2707,7 +2942,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.1.0)
+    // Zero-mutation DOM equality-guard helpers (v5.2.0)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -2734,6 +2969,95 @@
       if (el[k] !== v) el[k] = v;
     }
 
+    // Google Pixel Message of the Day (At a Glance — 40 curated messages keyed by day-of-year + time-of-day)
+    const PIXEL_MOTD_POOL = {
+      morning: [
+        'Fresh morning, clear mind — start with one thing.',
+        'Quiet focus now makes the whole day lighter.',
+        'Small steady steps shape extraordinary weeks.',
+        'Open only what matters this morning.',
+        'Clear the noise, follow your curiosity.',
+        'Begin unhurried; finish with clarity.',
+        'A calm start carries momentum all day.',
+        'Take a deep breath — today is wide open.',
+        'Let curiosity lead before urgency does.',
+        'Build something thoughtful today.'
+      ],
+      afternoon: [
+        'Pause, breathe, and finish one meaningful tab.',
+        'Steady progress beats hurried multitasking.',
+        'Protect your attention — it is your best tool.',
+        'Keep what inspires you, close the clutter.',
+        'Deep work turns an ordinary afternoon golden.',
+        'Halfway through — refocus on what counts.',
+        'Simplicity is the fastest path forward.',
+        'One clear step now saves an hour later.',
+        'Stay curious, stay unhurried.',
+        'Every great idea begins with quiet space.'
+      ],
+      evening: [
+        'Wind down gently — you covered good ground.',
+        'Save great reads for tomorrow’s fresh eyes.',
+        'Quiet evenings make room for clear reflection.',
+        'Close finished tabs; keep what sparked joy.',
+        'Let the pace soften as the day settles.',
+        'Good craft takes patience — rest well tonight.',
+        'Trade hurried scrolling for calm discovery.',
+        'Notice one small win from today.',
+        'Breathe out the rush; enjoy the quiet.',
+        'Tomorrow starts easier with a tidy mind.'
+      ],
+      night: [
+        'Late hours belong to calm thoughts and quiet reading.',
+        'Rest is part of doing your best work.',
+        'Keep the screen soft and the mind unhurried.',
+        'One last read, then let tomorrow wait.',
+        'Stillness brings the clearest answers.',
+        'Dream big; pick it back up in the morning.',
+        'Quiet night, clear tabs, peaceful rest.',
+        'Great ideas ripen while you sleep.',
+        'Slow down — the web will still be here tomorrow.',
+        'Take care of your eyes and your calm tonight.'
+      ]
+    };
+    let motdOffset = 0;
+    let motdSwapTimer = null;
+
+    function getPixelMotdText() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), 0, 0);
+      const dayOfYear = Math.floor((now - start) / 86400000);
+      const hr = now.getHours();
+      const bucket = hr < 12 ? PIXEL_MOTD_POOL.morning
+        : (hr < 17 ? PIXEL_MOTD_POOL.afternoon
+        : (hr < 22 ? PIXEL_MOTD_POOL.evening : PIXEL_MOTD_POOL.night));
+      const idx = (dayOfYear + hr + motdOffset) % bucket.length;
+      return bucket[idx];
+    }
+
+    function updateStartMotd() {
+      const btn = document.getElementById('sp-motd');
+      const txt = document.getElementById('sp-motd-txt');
+      if (!btn || !txt) return;
+      const visible = state.showMotd !== false && !state.activePrivate;
+      setDisp(btn, visible ? 'inline-flex' : 'none');
+      if (visible) setTxt(txt, getPixelMotdText());
+    }
+
+    function cycleMotd() {
+      const btn = document.getElementById('sp-motd');
+      const txt = document.getElementById('sp-motd-txt');
+      if (!btn || !txt) return;
+      motdOffset = (motdOffset + 1) % 40;
+      if (motdSwapTimer) clearTimeout(motdSwapTimer);
+      btn.classList.add('is-swapping');
+      motdSwapTimer = setTimeout(() => {
+        setTxt(txt, getPixelMotdText());
+        btn.classList.remove('is-swapping');
+        motdSwapTimer = null;
+      }, 150);
+    }
+
     function updateClockGreeting() {
       const el = document.getElementById('sp-date');
       if (!el) return;
@@ -2742,6 +3066,7 @@
       const greet = hr < 12 ? 'Good morning' : (hr < 18 ? 'Good afternoon' : 'Good evening');
       const day = d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
       setTxt(el, `${greet} · ${day}`);
+      updateStartMotd();
     }
 
     function backdropClose(ev) {
@@ -3172,6 +3497,10 @@
             syncMobileGlider(document.getElementById('set-theme-seg'));
             syncMobileGlider(document.getElementById('set-bar-seg'));
           });
+        } else if (settingsView === 'privacy') {
+          requestAnimationFrame(() => {
+            syncMobileGlider(document.getElementById('set-shield-level-seg'));
+          });
         }
       }
       if (body && animate) body.scrollTop = 0;
@@ -3289,6 +3618,7 @@
       requestAnimationFrame(() => {
         syncMobileGlider(document.getElementById('set-theme-seg'));
         syncMobileGlider(document.getElementById('set-bar-seg'));
+        syncMobileGlider(document.getElementById('set-shield-level-seg'));
       });
     }
 
@@ -3403,7 +3733,7 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.1.0)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.2.0)
     const _domSigs = {
       safeTop: '',
       safeBottom: '',
@@ -3421,6 +3751,7 @@
       syncModePill: '',
       syncPcTabs: '',
       syncDrops: '',
+      shieldsSheet: '',
       setYg: '',
       setAccents: '',
       setWpThumb: '',
@@ -3462,6 +3793,8 @@
       syncMobileGlider(document.getElementById('tabs-mode-seg'), { isPriv: tabViewPrivate });
       syncMobileGlider(document.getElementById('set-theme-seg'));
       syncMobileGlider(document.getElementById('set-bar-seg'));
+      syncMobileGlider(document.getElementById('set-shield-level-seg'));
+      syncMobileGlider(document.getElementById('shields-level-seg'));
       syncMobileGlider(document.getElementById('dl-mode-seg'));
     }
     window.addEventListener('resize', syncAllMobileGliders, { passive: true });
@@ -3935,6 +4268,36 @@
         }
       }
 
+      // Live Relay & LAN Health Status
+      const rStat = sync.relayStatus || 'connecting';
+      const rBroker = sync.relayBroker || '';
+      const rDot = document.getElementById('sync-relay-dot');
+      const rTxt = document.getElementById('sync-relay-txt');
+      const rBrk = document.getElementById('sync-relay-broker');
+      const brokerShort = rBroker.includes('hivemq') ? 'HiveMQ TLS'
+        : (rBroker.includes('emqx') ? 'EMQX TLS' : (rBroker || 'TLS MQTT'));
+      if (rStat === 'connected_lan') {
+        setCls(rDot, 'connecting', false);
+        setCls(rDot, 'retrying', false);
+        setTxt(rTxt, 'Direct Wi-Fi LAN · Instant E2EE');
+        setTxt(rBrk, 'LAN + Cloud');
+      } else if (rStat === 'connected_cloud') {
+        setCls(rDot, 'connecting', false);
+        setCls(rDot, 'retrying', false);
+        setTxt(rTxt, 'E2EE Cloud · Connected');
+        setTxt(rBrk, brokerShort);
+      } else if (rStat === 'retrying') {
+        setCls(rDot, 'connecting', false);
+        setCls(rDot, 'retrying', true);
+        setTxt(rTxt, 'Reconnecting to E2EE relay…');
+        setTxt(rBrk, brokerShort);
+      } else {
+        setCls(rDot, 'connecting', true);
+        setCls(rDot, 'retrying', false);
+        setTxt(rTxt, 'Connecting to E2EE relay…');
+        setTxt(rBrk, brokerShort);
+      }
+
       setTxt(document.getElementById('sync-pass-status'), sync.hasPassphrase ? 'Custom E2EE passphrase active' : 'Extra E2EE sync passphrase (optional)');
       setStyle(document.getElementById('btn-m-send-tab'), 'opacity', state.activeUrl ? '1' : '0.55');
 
@@ -4027,7 +4390,59 @@
       setCls(document.getElementById('sw-sync-reading'), 'on', sp.readingList !== false);
       setCls(document.getElementById('sw-sync-clipboard'), 'on', sp.clipboard !== false);
       setCls(document.getElementById('sw-sync-history'), 'on', sp.history !== false);
-      setTxt(document.getElementById('m-code-box'), sync.pairingCode || 'DJV-5100-M3UI');
+      setTxt(document.getElementById('m-code-box'), sync.pairingCode || 'DJV-5200-M3UI');
+    }
+
+    function toggleCurrentSiteShield() {
+      const sh = state.shields || {};
+      const host = sh.siteHost || (state.activeUrl ? getHost(state.activeUrl) : '');
+      call('toggleSiteShield', host);
+    }
+
+    function renderShieldsSheet() {
+      const sh = state.shields || {};
+      const host = sh.siteHost || (state.activeUrl ? getHost(state.activeUrl) : '');
+      const siteUp = typeof sh.siteShieldUp === 'boolean' ? sh.siteShieldUp : (state.adBlockEnabled !== false);
+      const level = sh.level === 'aggressive' ? 'aggressive' : 'standard';
+      const fpOn = sh.blockFingerprinting !== false;
+      const ckOn = sh.blockCookieNotices !== false;
+      const trkOn = sh.stripTrackingParams !== false;
+      const httpsOn = typeof sh.httpsFirst === 'boolean' ? sh.httpsFirst : (state.httpsFirst !== false);
+      const tabBlk = Number(sh.tabBlocked || 0);
+      const totBlk = Number(sh.totalBlocked != null ? sh.totalBlocked : (state.totalBlocked || 0));
+      const tabCln = Number(sh.tabLinksCleaned || 0);
+      const totCln = Number(sh.totalLinksCleaned || 0);
+
+      const sig = `${host}|${siteUp?1:0}|${level}|${fpOn?1:0}|${ckOn?1:0}|${trkOn?1:0}|${httpsOn?1:0}|${tabBlk}|${totBlk}|${tabCln}|${totCln}`;
+      if (sig === _domSigs.shieldsSheet) {
+        syncMobileGlider(document.getElementById('shields-level-seg'));
+        return;
+      }
+      _domSigs.shieldsSheet = sig;
+
+      setCls(document.getElementById('sh-ico-ring'), 'off', !siteUp);
+      setTxt(document.getElementById('sh-domain'), host || 'All websites');
+      const statusEl = document.getElementById('sh-status-txt');
+      setCls(statusEl, 'off', !siteUp);
+      setTxt(statusEl, siteUp
+        ? (host ? `Shields are UP for ${host}` : 'Shields are UP')
+        : (host ? `Shields are DOWN for ${host}` : 'Shields are paused'));
+      setCls(document.getElementById('sw-shields-master'), 'on', siteUp);
+
+      setTxt(document.getElementById('sh-stat-blocked'), tabBlk.toLocaleString());
+      setTxt(document.getElementById('sh-stat-blocked-total'), `${totBlk.toLocaleString()} lifetime`);
+      setTxt(document.getElementById('sh-stat-cleaned'), tabCln.toLocaleString());
+      setTxt(document.getElementById('sh-stat-cleaned-total'), `${totCln.toLocaleString()} lifetime`);
+
+      setTxt(document.getElementById('sh-level-hint'), level === 'aggressive' ? 'Strict ad, telemetry & CMP blocking' : 'Balanced protection');
+      setCls(document.getElementById('sh-lvl-std'), 'active', level !== 'aggressive');
+      setCls(document.getElementById('sh-lvl-aggr'), 'active', level === 'aggressive');
+      syncMobileGlider(document.getElementById('shields-level-seg'));
+
+      setCls(document.getElementById('sw-sh-fp'), 'on', fpOn);
+      setCls(document.getElementById('sw-sh-ck'), 'on', ckOn);
+      setCls(document.getElementById('sw-sh-trk'), 'on', trkOn);
+      setCls(document.getElementById('sw-sh-https'), 'on', httpsOn);
     }
 
     function renderAvatarContent(el, prof, showGoogleDot) {
@@ -4071,9 +4486,11 @@
       const isTop = state.barPosition === 'top';
       setTxt(document.getElementById('set-sum-appearance'), `${modeLbl} · ${accLblTxt} · ${isTop ? 'Top bar' : 'Bottom bar'}`);
 
+      const sh = state.shields || {};
       const shieldOn = state.adBlockEnabled !== false;
+      const shLvl = sh.level === 'aggressive' ? 'Aggressive' : 'Standard';
       const httpsOn = state.httpsFirst !== false;
-      setTxt(document.getElementById('set-sum-privacy'), `${shieldOn ? 'Shield on' : 'Shield off'} · ${httpsOn ? 'HTTPS-First' : 'Standard'}`);
+      setTxt(document.getElementById('set-sum-privacy'), `${shieldOn ? ('Shields · ' + shLvl) : 'Shields off'} · ${httpsOn ? 'HTTPS-First' : 'Standard'}`);
 
       const curEng = state.searchEngine || 'google';
       const engObj = ENGINES.find((e) => e[0] === curEng) || ENGINES[0];
@@ -4088,7 +4505,7 @@
       setTxt(document.getElementById('set-sum-downloads'), `${ytqLbl}${state.floatingDownloadButton !== false ? ' · Floating pill' : ''}`);
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.1.0';
+      const curV = u.currentVersion || '5.2.0';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -4139,11 +4556,19 @@
       setCls(document.getElementById('sw-darkweb'), 'on', !!state.darkWebPages);
       setCls(document.getElementById('opt-bar-bottom'), 'active', !isTop);
       setCls(document.getElementById('opt-bar-top'), 'active', isTop);
+      setCls(document.getElementById('sw-motd'), 'on', state.showMotd !== false);
       setCls(document.getElementById('sw-autohide'), 'on', state.autoHideBar !== false);
 
-      // 4. Privacy & Security Controls
+      // 4. Privacy & Security Controls (Brave-Grade Shields)
       setCls(document.getElementById('sw-adblock'), 'on', shieldOn);
       setTxt(document.getElementById('opt-m-ab-sub'), shieldOn ? `Active · ${Number(state.totalBlocked || 0).toLocaleString()} blocked` : 'Paused');
+      const isAggr = sh.level === 'aggressive';
+      setCls(document.getElementById('opt-sh-std'), 'active', !isAggr);
+      setCls(document.getElementById('opt-sh-aggr'), 'active', isAggr);
+      setTxt(document.getElementById('opt-sh-lvl-hint'), isAggr ? 'Strict ad, telemetry & CMP blocking' : 'Balanced protection');
+      setCls(document.getElementById('sw-fp'), 'on', sh.blockFingerprinting !== false);
+      setCls(document.getElementById('sw-ck'), 'on', sh.blockCookieNotices !== false);
+      setCls(document.getElementById('sw-trk'), 'on', sh.stripTrackingParams !== false);
       setCls(document.getElementById('sw-https'), 'on', httpsOn);
       setCls(document.getElementById('sw-dnt'), 'on', state.doNotTrack !== false);
       setCls(document.getElementById('sw-popups'), 'on', state.blockPopups !== false);
@@ -4243,7 +4668,7 @@
         setStyle(uProgF, 'width', '100%');
       } else if (u.status === 'ready') {
         setTxt(uTitle, `v${u.latestVersion} ready`);
-        setTxt(uSub, u.signatureMismatch ? `Uninstall older build once, then install v${u.latestVersion || '5.1.0'}` : 'Tap Install to upgrade');
+        setTxt(uSub, u.signatureMismatch ? `Uninstall older build once, then install v${u.latestVersion || '5.2.0'}` : 'Tap Install to upgrade');
         setTxt(uBtn, 'Install');
         setCls(uBtn, 'primary', true);
         setDisp(uProgW, 'none');
@@ -4272,6 +4697,8 @@
         if (settingsView === 'appearance') {
           syncMobileGlider(document.getElementById('set-theme-seg'));
           syncMobileGlider(document.getElementById('set-bar-seg'));
+        } else if (settingsView === 'privacy') {
+          syncMobileGlider(document.getElementById('set-shield-level-seg'));
         }
       }
     }
@@ -4713,7 +5140,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.1.0 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.2.0 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -4894,7 +5321,7 @@
       }
 
       const scr = state.screen || 'start';
-      const isModal = scr === 'menu' || scr === 'sync' || scr === 'settings' || scr === 'profile' || scr === 'clear-data' || scr === 'wallpapers' || scr === 'downloads' || scr === 'extensions' || scr === 'context-menu';
+      const isModal = scr === 'menu' || scr === 'sync' || scr === 'settings' || scr === 'shields' || scr === 'profile' || scr === 'clear-data' || scr === 'wallpapers' || scr === 'downloads' || scr === 'extensions' || scr === 'context-menu';
       const showStartBehind = scr === 'start' || (isModal && !state.activeUrl);
 
       if (scr !== lastScreen) {
@@ -4923,6 +5350,7 @@
       setCls(document.getElementById('scr-menu'), 'hidden', scr !== 'menu');
       setCls(document.getElementById('scr-sync'), 'hidden', scr !== 'sync');
       setCls(document.getElementById('scr-settings'), 'hidden', scr !== 'settings');
+      setCls(document.getElementById('scr-shields'), 'hidden', scr !== 'shields');
       setCls(document.getElementById('scr-profile'), 'hidden', scr !== 'profile');
       setCls(document.getElementById('scr-clear-data'), 'hidden', scr !== 'clear-data');
       setCls(document.getElementById('scr-wallpapers'), 'hidden', scr !== 'wallpapers');
@@ -4940,6 +5368,7 @@
       if (scr === 'menu') renderMenuSheet();
       if (scr === 'sync') renderSyncSheet();
       if (scr === 'settings') renderSettingsSheet();
+      if (scr === 'shields') renderShieldsSheet();
       if (scr === 'profile') renderProfileSheet();
       if (scr === 'clear-data') renderClearDataSheet();
       if (scr === 'wallpapers') renderWallpapersSheet();
@@ -4976,8 +5405,35 @@
         else if (fn === 'toggleReadingList') st.isInReading = !st.isInReading;
         else if (fn === 'setPageZoom') st.pageZoom = Math.max(80, Math.min(150, Number(args[0] || 100)));
         else if (fn === 'toggleDesktopSiteDefault') st.desktopSiteDefault = !st.desktopSiteDefault;
-        else if (fn === 'toggleAdBlock') st.adBlockEnabled = !st.adBlockEnabled;
-        else if (fn === 'toggleHttpsFirst') st.httpsFirst = !st.httpsFirst;
+        else if (fn === 'toggleAdBlock') {
+          st.adBlockEnabled = !st.adBlockEnabled;
+          st.shields = Object.assign({}, st.shields || {}, { enabled: st.adBlockEnabled, siteShieldUp: st.adBlockEnabled && !(st.shields && st.shields.sitePaused) });
+        }
+        else if (fn === 'toggleSiteShield') {
+          const cur = Object.assign({}, st.shields || {});
+          const nextUp = !cur.siteShieldUp;
+          cur.siteShieldUp = nextUp;
+          cur.sitePaused = !nextUp;
+          if (nextUp) { st.adBlockEnabled = true; cur.enabled = true; }
+          st.shields = cur;
+        }
+        else if (fn === 'setShieldLevel') {
+          const cur = Object.assign({}, st.shields || {});
+          cur.level = args[0] === 'aggressive' ? 'aggressive' : 'standard';
+          st.shields = cur;
+        }
+        else if (fn === 'toggleShieldFeature') {
+          const cur = Object.assign({}, st.shields || {});
+          if (args[0] === 'fingerprinting') cur.blockFingerprinting = !(cur.blockFingerprinting !== false);
+          else if (args[0] === 'cookies') cur.blockCookieNotices = !(cur.blockCookieNotices !== false);
+          else if (args[0] === 'trackingParams') cur.stripTrackingParams = !(cur.stripTrackingParams !== false);
+          st.shields = cur;
+        }
+        else if (fn === 'toggleMotd') st.showMotd = !(st.showMotd !== false);
+        else if (fn === 'toggleHttpsFirst') {
+          st.httpsFirst = !st.httpsFirst;
+          st.shields = Object.assign({}, st.shields || {}, { httpsFirst: st.httpsFirst });
+        }
         else if (fn === 'toggleDoNotTrack') st.doNotTrack = !st.doNotTrack;
         else if (fn === 'toggleBlockPopups') st.blockPopups = !st.blockPopups;
         else if (fn === 'toggleBlockThirdPartyCookies') st.blockThirdPartyCookies = !st.blockThirdPartyCookies;
@@ -5078,9 +5534,12 @@
         }
         else if (fn === 'resetSettings') {
           st.themeMode = 'dark'; st.effectiveTheme = 'dark'; st.accentColor = 'amethyst'; st.pageZoom = 100;
+          st.showMotd = true;
           st.desktopSiteDefault = false; st.httpsFirst = true; st.doNotTrack = true; st.blockPopups = true;
           st.blockThirdPartyCookies = false; st.searchEngine = 'google'; st.pullToRefresh = true;
           st.openLinksInBackground = false; st.defaultYoutubeQuality = 'auto'; st.floatingDownloadButton = true;
+          st.adBlockEnabled = true;
+          st.shields = Object.assign({}, st.shields || {}, { enabled: true, siteShieldUp: true, sitePaused: false, level: 'standard', blockFingerprinting: true, blockCookieNotices: true, stripTrackingParams: true, httpsFirst: true });
         }
         window.__onDejavuState(st);
       };
@@ -5096,7 +5555,8 @@
             const initScreen = qp.get('screen') || 'start';
             const initCat = qp.get('cat') || '';
             const signedIn = qp.has('signedin') ? (qp.get('signedin') === '1') : (initScreen === 'sync');
-            const isWeb = qp.get('web') === '1' || initScreen === 'sync';
+            const isWeb = qp.get('web') === '1' || initScreen === 'sync' || initScreen === 'shields';
+            const initRelay = qp.get('relay') || 'connected_cloud';
             const nowMs = Date.now();
             const prof1 = {
               id: 'default', name: 'Personal', accentColor: initSeed, isMainProfile: true,
@@ -5110,7 +5570,8 @@
             const previewSync = signedIn ? {
               enabled: true, syncMode: 'google', googleEmail: 'alex@gmail.com', hasPassphrase: false,
               paired: true, connected: true, peerName: 'Windows 11 Desktop', peerPlatform: 'windows',
-              peerOnline: true, peerLastSeenMs: nowMs - 8000, pairingCode: 'DJV-5100-M3UI',
+              peerOnline: true, peerLastSeenMs: nowMs - 8000, pairingCode: 'DJV-5200-M3UI',
+              relayStatus: initRelay, relayBroker: 'broker.hivemq.com', lastSyncMs: nowMs - 4000,
               latestClipboard: { id: 'clip_pc_1', text: 'https://m3.material.io/styles/color/roles — Material Design 3 tokens', fromName: 'Windows 11 Desktop', ts: nowMs - 25000 },
               prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true },
               remoteTabs: [
@@ -5123,22 +5584,41 @@
             } : {
               enabled: true, syncMode: 'manual', googleEmail: '', hasPassphrase: false,
               paired: false, connected: false, peerName: '', peerPlatform: 'windows',
-              peerOnline: false, peerLastSeenMs: 0, pairingCode: 'DJV-5100-M3UI',
+              peerOnline: false, peerLastSeenMs: 0, pairingCode: 'DJV-5200-M3UI',
+              relayStatus: initRelay, relayBroker: 'broker.hivemq.com', lastSyncMs: 0,
               latestClipboard: null, prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true },
               remoteTabs: [], drops: []
             };
             window.__onDejavuState({
               screen: initScreen, activeTabId: 1,
-              activeUrl: isWeb ? 'https://m3.material.io/styles/color/roles' : '',
-              activeTitle: isWeb ? 'Material Design 3 — Color & Surface Tokens' : 'Start Page',
+              activeUrl: isWeb ? (initScreen === 'shields' ? 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' : 'https://m3.material.io/styles/color/roles') : '',
+              activeTitle: isWeb ? (initScreen === 'shields' ? 'YouTube' : 'Material Design 3 — Color & Surface Tokens') : 'Start Page',
               isBookmarked: qp.get('bm') === '1', desktopMode: qp.get('desk') === '1',
               searchEngine: 'google', wallpaper: initWp, accentColor: initSeed,
               themeMode: initMode, effectiveTheme: initMode === 'light' ? 'light' : 'dark',
+              showMotd: true,
               barPosition: 'bottom', autoHideBar: true, darkWebPages: false, pageZoom: 100,
               desktopSiteDefault: false, httpsFirst: true, doNotTrack: true, blockPopups: true,
               blockThirdPartyCookies: false, pullToRefresh: true, openLinksInBackground: false,
               defaultYoutubeQuality: 'auto', floatingDownloadButton: true, adBlockEnabled: true,
-              totalBlocked: 248, isDefaultBrowser: qp.get('defaultBrowser') === '1',
+              totalBlocked: 1428, isDefaultBrowser: qp.get('defaultBrowser') === '1',
+              shields: {
+                enabled: true,
+                siteHost: isWeb ? (initScreen === 'shields' ? 'youtube.com' : 'm3.material.io') : '',
+                siteShieldUp: true,
+                sitePaused: false,
+                level: qp.get('level') === 'aggressive' ? 'aggressive' : 'standard',
+                blockFingerprinting: true,
+                blockCookieNotices: true,
+                stripTrackingParams: true,
+                tabBlocked: 24,
+                tabLinksCleaned: 3,
+                totalBlocked: 1428,
+                totalLinksCleaned: 86,
+                httpsFirst: true,
+                rulesCount: 385,
+                pausedCount: 0
+              },
               profiles: [prof1, prof2], activeProfileId: 'default', mainProfileId: 'default', activeProfile: prof1,
               safeTop: 28, safeBottom: 24, sysBottom: 16,
               tabs: [
@@ -5160,7 +5640,7 @@
                 { title: 'GitHub — Dathevinci/Dejavu-browser', url: 'https://github.com/Dathevinci/Dejavu-browser' }
               ],
               sync: previewSync,
-              update: { currentVersion: '5.1.0', status: 'uptodate', latestVersion: '5.1.0', available: qp.get('upd') === '1', hasDownloadedApk: false },
+              update: { currentVersion: '5.2.0', status: 'uptodate', latestVersion: '5.2.0', available: qp.get('upd') === '1', hasDownloadedApk: false },
               turboDownloads: [], pageMedia: [],
               extensions: {
                 builtins: DEFAULT_BUILTIN_EXTENSIONS.map((b) => Object.assign({}, b)),

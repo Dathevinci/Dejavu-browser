@@ -266,6 +266,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         boolean loading = false;
         boolean desktopMode = false;
         int blockedCount = 0;
+        int trackingParamsStripped = 0;
         String thumbDataUrl = "";
         ObservableWebView webView;
     }
@@ -292,6 +293,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private String wallpaper = "wp-m3-amethyst.jpg";
     private String accentColor = "amethyst";
     private String themeMode = "dark"; // "dark" | "light" | "auto"
+    private boolean showMotd = true; // Google Pixel Message of the Day
     private String barPosition = "bottom"; // "bottom" (Safari/Samsung) | "top" (Chrome)
     private boolean autoHideBar = true;
     private boolean darkWebPages = false;
@@ -461,6 +463,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             prefs.getLong("totalBlocked", 0),
             prefs.getBoolean("adBlockEnabled", true)
         );
+        adBlocker.setShieldLevel(prefs.getString("shieldLevel", MobileAdBlocker.LEVEL_STANDARD));
+        adBlocker.setBlockFingerprinting(prefs.getBoolean("blockFingerprinting", true));
+        adBlocker.setBlockCookieNotices(prefs.getBoolean("blockCookieNotices", true));
+        adBlocker.setStripTrackingParams(prefs.getBoolean("stripTrackingParams", true));
+        adBlocker.setTotalTrackingStripped(prefs.getLong("totalTrackingStripped", 0L));
+        adBlocker.loadPausedHostsJson(prefs.getString("pausedShieldHosts", "[]"));
         syncManager = new SyncManager(this, this);
         activateGoogleAutoSyncIfSignedIn(false);
         autoUpdater = new MobileAutoUpdater(this, this);
@@ -1137,19 +1145,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 showKeyboard(urlInput);
                 return;
             }
-            int prevBlocked = t.blockedCount;
-            adBlocker.setEnabled(!adBlocker.isEnabled());
-            saveLocalCollections();
-            if (t.webView != null) {
-                t.blockedCount = 0;
-                t.webView.reload();
+            if ("shields".equals(activeUiScreen)) {
+                closeOverlayScreen();
+            } else {
+                openUiScreen("shields");
             }
-            updateChromeUi();
-            pushStateToUi();
-            String shieldMsg = adBlocker.isEnabled()
-                ? "dejavu Shield Active"
-                : (prevBlocked > 0 ? ("dejavu Shield Paused (" + prevBlocked + " blocked on page)") : "dejavu Shield Paused");
-            Toast.makeText(this, shieldMsg, Toast.LENGTH_SHORT).show();
         });
 
         btnReload.setOnClickListener(v -> {
@@ -1694,6 +1694,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         tab.url = url;
         tab.title = formatHost(url);
         tab.blockedCount = 0;
+        tab.trackingParamsStripped = 0;
         ensureTabWebView(tab);
         activeUiScreen = "none";
         uiWebView.setVisibility(View.GONE);
@@ -1729,6 +1730,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private void loadTabUrl(MobileTab tab, String rawUrl) {
         if (tab == null || tab.webView == null || rawUrl == null || rawUrl.isEmpty()) return;
         String target = maybeUpgradeHttps(rawUrl);
+        if (adBlocker != null && adBlocker.isStripTrackingParams()) {
+            MobileAdBlocker.StripResult sr = adBlocker.stripTrackingParameters(target);
+            if (sr.strippedCount > 0 && sr.url != null && !sr.url.isEmpty()) {
+                target = sr.url;
+                tab.trackingParamsStripped += sr.strippedCount;
+            }
+        }
         tab.url = target;
         if (doNotTrack && (target.startsWith("http://") || target.startsWith("https://"))) {
             Map<String, String> headers = new HashMap<>();
@@ -1863,6 +1871,14 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     loadTabUrl(tab, upgraded);
                     return true;
                 }
+                if (request.isForMainFrame() && adBlocker != null && adBlocker.isStripTrackingParams()) {
+                    MobileAdBlocker.StripResult sr = adBlocker.stripTrackingParameters(reqUrl);
+                    if (sr.strippedCount > 0 && sr.url != null && !sr.url.equals(reqUrl)) {
+                        tab.trackingParamsStripped += sr.strippedCount;
+                        loadTabUrl(tab, sr.url);
+                        return true;
+                    }
+                }
                 if (doNotTrack && request.isForMainFrame() && !request.isRedirect() && request.hasGesture()
                     && (reqUrl.startsWith("http://") || reqUrl.startsWith("https://"))) {
                     Map<String, String> reqHdrs = request.getRequestHeaders();
@@ -1877,10 +1893,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 String reqUrl = request.getUrl() != null ? request.getUrl().toString() : "";
-                if (!request.isForMainFrame() && adBlocker.shouldBlock(reqUrl)) {
+                if (!request.isForMainFrame() && adBlocker.shouldBlock(reqUrl, tab.url)) {
                     tab.blockedCount++;
                     mainHandler.post(() -> {
-                        if (tab.id == activeTabId) updateChromeUi();
+                        if (tab.id == activeTabId) {
+                            updateChromeUi();
+                            if ("shields".equals(activeUiScreen)) pushStateToUi();
+                        }
                     });
                     return adBlocker.emptyResponse();
                 }
@@ -1905,10 +1924,14 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 tab.loading = true;
                 tab.url = url;
+                tab.blockedCount = 0;
                 if (downloadManager != null) downloadManager.clearTabMedia(tab.id);
                 if (tab.webView != null) {
                     tab.webView.innerScrollAtTop = true;
                     tab.webView.touchStartedAtTop = true;
+                }
+                if (adBlocker != null && adBlocker.isSiteShieldUp(url)) {
+                    view.evaluateJavascript(adBlocker.getBraveShieldScript(), null);
                 }
                 if (tab.id == activeTabId) {
                     setChromeCollapsed(false);
@@ -1922,8 +1945,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 tab.loading = false;
                 tab.url = url;
                 if (view.getTitle() != null && !view.getTitle().isEmpty()) tab.title = view.getTitle();
-                if (adBlocker.isEnabled()) {
-                    view.evaluateJavascript(MobileAdBlocker.getCosmeticScript(), null);
+                if (adBlocker != null && adBlocker.isSiteShieldUp(url)) {
+                    view.evaluateJavascript(adBlocker.getBraveShieldScript(), null);
                 }
                 if (floatingDownloadButton) {
                     view.evaluateJavascript(MobileDownloadManager.getFloatingDownloadButtonScript(), null);
@@ -2553,7 +2576,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.1.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.2.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -2774,6 +2797,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
     private boolean isModalSheetScreen(String scr) {
         return "menu".equals(scr) || "sync".equals(scr) || "settings".equals(scr)
+            || "shields".equals(scr)
             || "wallpapers".equals(scr) || "downloads".equals(scr)
             || "extensions".equals(scr)
             || "profile".equals(scr) || "clear-data".equals(scr)
@@ -2922,6 +2946,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             updatingUrlText = false;
         }
 
+        boolean siteShieldUp = adBlocker != null && adBlocker.isSiteShieldUp(t != null ? t.url : "");
         if (btnShieldIco != null) {
             if (isPriv && !onWeb) {
                 btnShieldIco.setImageResource(R.drawable.ic_private);
@@ -2929,19 +2954,19 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             } else if (!onWeb || urlInput.hasFocus()) {
                 btnShieldIco.setImageResource(R.drawable.ic_search);
                 btnShieldIco.setColorFilter(p.onSurfaceVariant);
-            } else if (adBlocker.isEnabled() && t.blockedCount > 0) {
+            } else if (siteShieldUp && (t.blockedCount > 0 || t.trackingParamsStripped > 0)) {
                 btnShieldIco.setImageResource(R.drawable.ic_shield);
                 btnShieldIco.setColorFilter(p.primary);
             } else if (t.url != null && t.url.startsWith("https://")) {
-                btnShieldIco.setImageResource(R.drawable.ic_lock);
-                btnShieldIco.setColorFilter(adBlocker.isEnabled() ? p.primary : p.onSurfaceVariant);
+                btnShieldIco.setImageResource(R.drawable.ic_shield);
+                btnShieldIco.setColorFilter(siteShieldUp ? p.primary : p.onSurfaceVariant);
             } else {
                 btnShieldIco.setImageResource(R.drawable.ic_shield);
-                btnShieldIco.setColorFilter(adBlocker.isEnabled() ? p.primary : p.onSurfaceVariant);
+                btnShieldIco.setColorFilter(siteShieldUp ? p.primary : p.onSurfaceVariant);
             }
         }
 
-        btnShieldWrap.setAlpha((!onWeb || adBlocker.isEnabled()) ? 1.0f : 0.45f);
+        btnShieldWrap.setAlpha((!onWeb || siteShieldUp) ? 1.0f : 0.45f);
         // Keep URL pill clutter-free: never display numeric tracker badge digits inside url_pill_box
         if (btnShieldCount != null) {
             btnShieldCount.setVisibility(View.GONE);
@@ -3047,6 +3072,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("accentColor", accentColor);
                 st.put("themeMode", themeMode);
                 st.put("effectiveTheme", isEffectiveLightTheme() ? "light" : "dark");
+                st.put("showMotd", showMotd);
                 st.put("barPosition", barPosition);
                 st.put("autoHideBar", autoHideBar);
                 st.put("darkWebPages", darkWebPages);
@@ -3071,7 +3097,27 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 pushSafeInsetsToUi(st);
 
                 MobileTab active = getActiveTab();
-                st.put("activeUrl", (active != null && !active.isNewTab) ? active.url : "");
+                String activePageUrl = (active != null && !active.isNewTab) ? active.url : "";
+                String activeSiteHost = MobileAdBlocker.normalizeHost(activePageUrl);
+                JSONObject shieldsObj = new JSONObject();
+                shieldsObj.put("enabled", adBlocker.isEnabled());
+                shieldsObj.put("siteHost", activeSiteHost);
+                shieldsObj.put("siteShieldUp", adBlocker.isSiteShieldUp(activePageUrl));
+                shieldsObj.put("sitePaused", !activeSiteHost.isEmpty() && adBlocker.isHostPaused(activeSiteHost));
+                shieldsObj.put("level", adBlocker.getShieldLevel());
+                shieldsObj.put("blockFingerprinting", adBlocker.isBlockFingerprinting());
+                shieldsObj.put("blockCookieNotices", adBlocker.isBlockCookieNotices());
+                shieldsObj.put("stripTrackingParams", adBlocker.isStripTrackingParams());
+                shieldsObj.put("tabBlocked", active != null ? active.blockedCount : 0);
+                shieldsObj.put("tabLinksCleaned", active != null ? active.trackingParamsStripped : 0);
+                shieldsObj.put("totalBlocked", adBlocker.getTotalBlocked());
+                shieldsObj.put("totalLinksCleaned", adBlocker.getTotalTrackingStripped());
+                shieldsObj.put("httpsFirst", httpsFirst);
+                shieldsObj.put("rulesCount", adBlocker.getRulesCount());
+                shieldsObj.put("pausedCount", adBlocker.getPausedHosts().size());
+                st.put("shields", shieldsObj);
+
+                st.put("activeUrl", activePageUrl);
                 st.put("activeTitle", (active != null && !active.isNewTab) ? active.title : (active != null && active.isPrivate ? "Private Tab" : "Start Page"));
                 st.put("activePrivate", active != null && active.isPrivate);
                 st.put("desktopMode", active != null && active.desktopMode);
@@ -3114,7 +3160,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         });
     }
 
-    private void publishOpenTabsToPc() {
+    private JSONArray collectOpenTabsArray() {
         JSONArray arr = new JSONArray();
         for (MobileTab t : tabs) {
             if (!t.isNewTab && !t.isPrivate && t.url != null && !t.url.isEmpty()) {
@@ -3126,15 +3172,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 } catch (Exception ignored) { }
             }
         }
-        syncManager.publishTabs(arr);
+        return arr;
+    }
+
+    private void publishOpenTabsToPc() {
+        syncManager.publishTabs(collectOpenTabsArray());
     }
 
     private void syncAllCollectionsToPc() {
-        syncManager.sendPing();
-        publishOpenTabsToPc();
-        syncManager.publishCollection("bookmarks", bookmarks);
-        syncManager.publishCollection("reading", readingList);
-        syncManager.publishCollection("history", history);
+        syncManager.publishFullSnapshot(collectOpenTabsArray(), bookmarks, readingList, history);
     }
 
     private void injectReaderMode() {
@@ -3300,6 +3346,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         accentColor = normalizeAccent(prefs.getString("accentColor", "amethyst"));
         String tm = prefs.getString("themeMode", "dark");
         themeMode = ("light".equals(tm) || "auto".equals(tm)) ? tm : "dark";
+        showMotd = prefs.getBoolean("showMotd", true);
         barPosition = "top".equals(prefs.getString("barPosition", "bottom")) ? "top" : "bottom";
         autoHideBar = prefs.getBoolean("autoHideBar", true);
         darkWebPages = prefs.getBoolean("darkWebPages", false);
@@ -3367,6 +3414,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putString("wallpaper", wallpaper)
             .putString("accentColor", accentColor)
             .putString("themeMode", themeMode)
+            .putBoolean("showMotd", showMotd)
             .putString("barPosition", barPosition)
             .putBoolean("autoHideBar", autoHideBar)
             .putBoolean("darkWebPages", darkWebPages)
@@ -3391,6 +3439,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putString("mainProfileId", mainProfileId)
             .putBoolean("adBlockEnabled", adBlocker != null && adBlocker.isEnabled())
             .putLong("totalBlocked", adBlocker != null ? adBlocker.getTotalBlocked() : 0)
+            .putString("shieldLevel", adBlocker != null ? adBlocker.getShieldLevel() : MobileAdBlocker.LEVEL_STANDARD)
+            .putBoolean("blockFingerprinting", adBlocker == null || adBlocker.isBlockFingerprinting())
+            .putBoolean("blockCookieNotices", adBlocker == null || adBlocker.isBlockCookieNotices())
+            .putBoolean("stripTrackingParams", adBlocker == null || adBlocker.isStripTrackingParams())
+            .putLong("totalTrackingStripped", adBlocker != null ? adBlocker.getTotalTrackingStripped() : 0L)
+            .putString("pausedShieldHosts", adBlocker != null ? adBlocker.exportPausedHostsJson() : "[]")
             .putString("bookmarks", bookmarks.toString())
             .putString("readingList", readingList.toString())
             .putString("history", history.toString())
@@ -4370,6 +4424,85 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
 
         @JavascriptInterface
+        public void toggleSiteShield(final String rawHost) {
+            mainHandler.post(() -> {
+                if (adBlocker == null) return;
+                MobileTab t = getActiveTab();
+                String host = MobileAdBlocker.normalizeHost(
+                    (rawHost != null && !rawHost.trim().isEmpty())
+                        ? rawHost
+                        : (t != null && !t.isNewTab ? t.url : "")
+                );
+                if (host.isEmpty()) {
+                    adBlocker.setEnabled(!adBlocker.isEnabled());
+                } else {
+                    if (!adBlocker.isEnabled()) {
+                        adBlocker.setEnabled(true);
+                        if (adBlocker.isHostPaused(host)) {
+                            adBlocker.toggleHostPaused(host);
+                        }
+                    } else {
+                        adBlocker.toggleHostPaused(host);
+                    }
+                }
+                saveLocalCollections();
+                if (t != null && !t.isNewTab && t.webView != null) {
+                    t.blockedCount = 0;
+                    t.webView.reload();
+                }
+                updateChromeUi();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void setShieldLevel(final String level) {
+            mainHandler.post(() -> {
+                if (adBlocker == null) return;
+                adBlocker.setShieldLevel(level);
+                saveLocalCollections();
+                MobileTab t = getActiveTab();
+                if (t != null && !t.isNewTab && t.webView != null && adBlocker.isSiteShieldUp(t.url)) {
+                    t.webView.evaluateJavascript(adBlocker.getBraveShieldScript(), null);
+                }
+                updateChromeUi();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleShieldFeature(final String feature) {
+            mainHandler.post(() -> {
+                if (adBlocker == null || feature == null) return;
+                if ("fingerprinting".equals(feature)) {
+                    adBlocker.setBlockFingerprinting(!adBlocker.isBlockFingerprinting());
+                } else if ("cookies".equals(feature)) {
+                    adBlocker.setBlockCookieNotices(!adBlocker.isBlockCookieNotices());
+                } else if ("trackingParams".equals(feature)) {
+                    adBlocker.setStripTrackingParams(!adBlocker.isStripTrackingParams());
+                } else {
+                    return;
+                }
+                saveLocalCollections();
+                MobileTab t = getActiveTab();
+                if (t != null && !t.isNewTab && t.webView != null && adBlocker.isSiteShieldUp(t.url)) {
+                    t.webView.evaluateJavascript(adBlocker.getBraveShieldScript(), null);
+                }
+                updateChromeUi();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleMotd() {
+            mainHandler.post(() -> {
+                showMotd = !showMotd;
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
         public void toggleHttpsFirst() {
             mainHandler.post(() -> {
                 httpsFirst = !httpsFirst;
@@ -4843,6 +4976,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         public void resetSettings() {
             mainHandler.post(() -> {
                 themeMode = "dark";
+                showMotd = true;
                 accentColor = "amethyst";
                 wallpaper = "wp-m3-amethyst.jpg";
                 barPosition = "bottom";
@@ -4859,7 +4993,14 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 blockThirdPartyCookies = false;
                 defaultYoutubeQuality = "auto";
                 floatingDownloadButton = true;
-                if (adBlocker != null) adBlocker.setEnabled(true);
+                if (adBlocker != null) {
+                    adBlocker.setEnabled(true);
+                    adBlocker.setShieldLevel(MobileAdBlocker.LEVEL_STANDARD);
+                    adBlocker.setBlockFingerprinting(true);
+                    adBlocker.setBlockCookieNotices(true);
+                    adBlocker.setStripTrackingParams(true);
+                    adBlocker.clearPausedHosts();
+                }
                 for (MobileTab t : tabs) {
                     t.desktopMode = false;
                 }

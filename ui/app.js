@@ -1,8 +1,8 @@
 /**
- * dejavu v5.1.0 Native Shell Controller — Authentic Google Material Design 3 Expressive
+ * dejavu v5.2.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
  * Zero-Glitch 120Hz Tab Strip, Diff-Guarded Shell DOM, Lightweight tabDelta IPC,
- * Dynamic M3 Butterfly Logo, Pixel Home, Google Auto-Sync dejavu Link Hub,
- * Real Chrome Extensions Manager, 10-Category Settings, M3 Context Menus & 8x Turbo Downloader.
+ * Iconic Sculpted M3 Butterfly Logo, Pixel Message of the Day, Brave-Grade Shields,
+ * Real-Time dejavu Link Hub, Chrome Extensions Manager, 10-Category Settings & 8x Turbo Downloader.
  */
 (function () {
   const send = (msg) => {
@@ -11,20 +11,16 @@
     } catch {}
   };
 
-  // Canonical Dynamic-Color Material Design 3 Geometric Origami Butterfly SVG (zero raster halftone PNGs!)
-  const DEJAVU_M3_LOGO_SVG = `<svg class="djv-m3-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+  // Canonical Sculpted Material Design 3 Butterfly SVG (pure matte squircle, zero harsh border)
+  const DEJAVU_M3_LOGO_SVG = `<svg class="djv-m3-logo" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
-    <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
-    <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
-    <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
-    <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
-    <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
-    <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
-    <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
-    <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
-    <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
-    <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
-    <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z" fill="var(--md-primary)"/>
+    <path d="M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z" fill="var(--md-primary)"/>
+    <path d="M31.2 34.4C26.2 24.4 19.6 17.4 13.2 17.0C16.2 24.8 22.8 31.8 31.2 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+    <path d="M32.8 34.4C37.8 24.4 44.4 17.4 50.8 17.0C47.8 24.8 41.2 31.8 32.8 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+    <path d="M31.2 36.6C23.0 36.4 15.2 39.2 15.0 44.8C14.8 49.0 19.4 51.6 24.6 49.6C28.6 48.0 30.8 43.2 31.2 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+    <path d="M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+    <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
   </svg>`;
 
   function makeM3LogoSpan(sz, cls) {
@@ -122,6 +118,10 @@
   const spBadgeGreeting = document.getElementById('sp-badge-greeting');
   const spBadgeName = document.getElementById('sp-badge-name');
   const spGoogleCta = document.getElementById('sp-google-cta');
+  const ntMotdWrap = document.getElementById('nt-motd-wrap');
+  const ntMotdBtn = document.getElementById('nt-motd-btn');
+  const ntMotdDate = document.getElementById('nt-motd-date');
+  const ntMotdText = document.getElementById('nt-motd-text');
   const startpageStatusPill = document.getElementById('startpage-status-pill');
   const spStatusLock = document.getElementById('sp-status-lock');
   const startpageStatusText = document.getElementById('startpage-status-text');
@@ -185,6 +185,7 @@
   const prefFrequent = document.getElementById('pref-frequent');
   const prefPrivacy = document.getElementById('pref-privacy');
   const prefReading = document.getElementById('pref-reading');
+  const prefMotd = document.getElementById('pref-motd');
 
   // Left Navigation Rail
   const railHome = document.getElementById('rail-home');
@@ -265,11 +266,16 @@
   const optSpPrivacy = document.getElementById('opt-sp-privacy');
   const optSpReading = document.getElementById('opt-sp-reading');
   const optSpGreeting = document.getElementById('opt-sp-greeting');
+  const optSpMotd = document.getElementById('opt-sp-motd');
   const optSpSearch = document.getElementById('opt-sp-search');
 
   // Category 3: Privacy & Security
   const optGlobalAdblock = document.getElementById('opt-global-adblock');
   const optAdblockStats = document.getElementById('opt-adblock-stats');
+  const optShieldLevel = document.getElementById('opt-shield-level');
+  const optShieldFp = document.getElementById('opt-shield-fp');
+  const optShieldCookies = document.getElementById('opt-shield-cookies');
+  const optShieldParams = document.getElementById('opt-shield-params');
   const optPausedHostsList = document.getElementById('opt-paused-hosts-list');
   const rowClearBrowsingData = document.getElementById('row-clear-browsing-data');
   const btnOpenClearData = document.getElementById('btn-open-clear-data');
@@ -466,6 +472,9 @@
   // Full-Viewport Material Design 3 dejavu Link Hub
   const linkOverlay = document.getElementById('link-overlay');
   const linkHeaderStatus = document.getElementById('link-header-status');
+  const linkRelayPill = document.getElementById('link-relay-pill');
+  const linkRelayText = document.getElementById('link-relay-text');
+  const linkRelaySub = document.getElementById('link-relay-sub');
   const btnLinkSyncNow = document.getElementById('btn-link-sync-now');
   const btnLinkDone = document.getElementById('btn-link-done');
   const linkGoogleActiveBox = document.getElementById('link-google-active-box');
@@ -516,7 +525,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.1.0 — 16 HD + 1 Live = 17 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.2.0 — 16 HD + 1 Live = 17 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 12 Sculptural / Architectural Material Design 3 HD Wallpapers
@@ -654,10 +663,15 @@
       reduceWallpaperMotion: false,
       wallpaperDim: 'balanced',
       hideGreetingBadge: false,
+      showMotd: true,
       hideStartPageSearch: false,
       favoritesBarHidden: false,
       hideNavRail: false,
       hideFloatingMediaButton: false,
+      shieldLevel: 'standard',
+      blockFingerprinting: true,
+      blockCookieNotices: true,
+      stripTrackingParams: true,
       doNotTrack: true,
       httpsFirst: false,
       blockThirdPartyCookies: true,
@@ -743,7 +757,9 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.1.0',
+    appVersion: bootData.appVersion || '5.2.0',
+    settings: bootData.settings || null,
+    shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
     canReopenClosedTab: !!bootData.canReopenClosedTab,
     updateStatus: bootData.updateStatus || '',
@@ -814,24 +830,20 @@
   }
 
   function detectResizeEdge(e) {
-    const pad = 5;
+    if (state.isMaximized || body.classList.contains('is-maximized') || body.classList.contains('is-fullscreen')) {
+      return '';
+    }
+    // Left, right, and bottom edges are owned natively by BrowserForm's 4px Win32 resize rim;
+    // the shell cleanly owns the flush top edge and top corners (top, topleft, topright).
+    const topPad = 5;
+    const cornerPad = 12;
     const x = e.clientX;
     const y = e.clientY;
     const w = window.innerWidth;
-    const h = window.innerHeight;
-    const top = y <= pad;
-    const left = x <= pad;
-    const right = x >= w - pad;
-    const bottom = (body.classList.contains('on-newtab') || body.classList.contains('tab-overview-open')) && y >= h - pad;
-    if (top && left) return 'topleft';
-    if (top && right) return 'topright';
-    if (bottom && left) return 'bottomleft';
-    if (bottom && right) return 'bottomright';
-    if (top) return 'top';
-    if (bottom) return 'bottom';
-    if (left) return 'left';
-    if (right) return 'right';
-    return '';
+    if (y > topPad) return '';
+    if (x <= cornerPad) return 'topleft';
+    if (x >= w - cornerPad) return 'topright';
+    return 'top';
   }
 
   const edgeCursors = {
@@ -900,7 +912,7 @@
   function openShieldPopover(e) {
     if (e) e.stopPropagation();
     const r = btnShield.getBoundingClientRect();
-    const anchor = (r && r.width > 0) ? Math.round(r.left + 296) : 520;
+    const anchor = (r && r.width > 0) ? Math.round(r.left + 344) : 560;
     send({ type: 'openShield', anchorRight: anchor });
   }
 
@@ -979,6 +991,140 @@
     if (hr < 18) return 'Good afternoon';
     return 'Good evening';
   }
+
+  // =========================================================================
+  // Google Pixel "Message of the Day" (At a Glance · 40 Calm Daily Notes)
+  // =========================================================================
+  const PIXEL_MOTD_BUCKETS = {
+    morning: [
+      'A calm start sets the rhythm for the whole day.',
+      'Start with one clear focus — the rest will fall into place.',
+      'Fresh tabs, clear mind, steady momentum.',
+      'Small intentional steps build remarkable days.',
+      'Let curiosity lead the first hour of your morning.',
+      'Make space for deep work before the noise arrives.',
+      'Today is a clean canvas — sketch something worthwhile.',
+      'One thoughtful decision this morning saves ten later.',
+      'Breathe in the quiet, then build something you are proud of.',
+      'Great work begins with unhurried attention.'
+    ],
+    afternoon: [
+      'Steady progress beats hurried perfection every time.',
+      'Pause for a breath, unclench your shoulders, keep flowing.',
+      'Halfway through the day — protect what matters most.',
+      'Clarity grows when you close the tabs you no longer need.',
+      'Stay curious; the best ideas often arrive mid-stride.',
+      'A short stretch and a sip of water sharpen every thought.',
+      'Focus on the next meaningful step, not the whole staircase.',
+      'Simplicity is the quietest form of speed.',
+      'Keep the signal high and the distractions whisper-quiet.',
+      'Progress you can barely notice today compounds by Friday.'
+    ],
+    evening: [
+      'Unwind gently — you did more today than you think.',
+      'Let the evening be slower than the afternoon.',
+      'Wrap up one loose thread and leave the rest for tomorrow.',
+      'Good ideas love a calm evening and an uncluttered screen.',
+      'Reflect on one small win from today before moving on.',
+      'Trade urgency for curiosity as the light softens.',
+      'A peaceful evening prepares tomorrow’s clarity.',
+      'Slow reading and quiet browsing pair well after dusk.',
+      'Close what is finished; bookmark what inspires you.',
+      'Rest is part of the craft, not a break from it.'
+    ],
+    night: [
+      'Quiet hours are kind to thoughtful work and gentle rest.',
+      'Keep the light soft and the pace unhurried tonight.',
+      'Save that spark for morning — sleep connects the dots.',
+      'Late-night calm is best spent on what genuinely intrigues you.',
+      'Let the noise of the day settle completely.',
+      'One last page, then give your mind the rest it earned.',
+      'Stillness at night clears the path for tomorrow.',
+      'Your best thinking starts with a rested mind.',
+      'Breathe easy — tomorrow will meet you right where you are.',
+      'Dark surfaces, gentle focus, peaceful night.'
+    ]
+  };
+  const PIXEL_MOTD_ALL = PIXEL_MOTD_BUCKETS.morning
+    .concat(PIXEL_MOTD_BUCKETS.afternoon, PIXEL_MOTD_BUCKETS.evening, PIXEL_MOTD_BUCKETS.night);
+
+  let motdClickOffset = 0;
+  let motdCycleTimer = null;
+  let lastMotdRenderKey = '';
+
+  function getMotdBucketName(hour) {
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 18) return 'afternoon';
+    if (hour >= 18 && hour < 22) return 'evening';
+    return 'night';
+  }
+
+  function getDayOfYear(d) {
+    const start = new Date(d.getFullYear(), 0, 0);
+    return Math.floor((d - start) / 86400000);
+  }
+
+  function isMotdEnabled() {
+    if (state.settings && typeof state.settings.showMotd === 'boolean') return state.settings.showMotd;
+    if (state.browserOptions && typeof state.browserOptions.showMotd === 'boolean') return state.browserOptions.showMotd;
+    return true;
+  }
+
+  function resolvePixelMotd(offset) {
+    const now = new Date();
+    const doy = getDayOfYear(now);
+    const bucket = getMotdBucketName(now.getHours());
+    const dateStr = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    let text;
+    if (!offset) {
+      const list = PIXEL_MOTD_BUCKETS[bucket] || PIXEL_MOTD_BUCKETS.morning;
+      text = list[doy % list.length];
+    } else {
+      const bucketBase = bucket === 'morning' ? 0 : (bucket === 'afternoon' ? 10 : (bucket === 'evening' ? 20 : 30));
+      const baseIdx = bucketBase + (doy % 10);
+      text = PIXEL_MOTD_ALL[(baseIdx + offset) % PIXEL_MOTD_ALL.length];
+    }
+    return { dateStr, text };
+  }
+
+  function syncMotdDisplay(force) {
+    const enabled = isMotdEnabled();
+    const { dateStr, text } = resolvePixelMotd(motdClickOffset);
+    const key = `${enabled ? 1 : 0}|${dateStr}|${text}`;
+    if (!force && key === lastMotdRenderKey) return;
+    lastMotdRenderKey = key;
+    if (ntMotdWrap) ntMotdWrap.classList.toggle('hidden', !enabled);
+    if (ntMotdDate && ntMotdDate.textContent !== dateStr) ntMotdDate.textContent = dateStr;
+    if (ntMotdText && ntMotdText.textContent !== text) ntMotdText.textContent = text;
+    setSwitchState(prefMotd, enabled);
+    setSwitchState(optSpMotd, enabled);
+  }
+
+  function toggleMotdSetting() {
+    const nextEnabled = !isMotdEnabled();
+    state.settings = Object.assign({}, state.settings || {}, { showMotd: nextEnabled });
+    state.browserOptions = Object.assign({}, state.browserOptions || {}, { showMotd: nextEnabled });
+    syncMotdDisplay(true);
+    send({ type: 'toggleMotd', enabled: nextEnabled });
+  }
+
+  if (ntMotdBtn) {
+    ntMotdBtn.addEventListener('click', () => {
+      motdClickOffset = (motdClickOffset + 1) % PIXEL_MOTD_ALL.length;
+      if (motdCycleTimer) clearTimeout(motdCycleTimer);
+      ntMotdBtn.classList.add('is-cycling');
+      motdCycleTimer = setTimeout(() => {
+        motdCycleTimer = null;
+        syncMotdDisplay(true);
+        requestAnimationFrame(() => {
+          ntMotdBtn.classList.remove('is-cycling');
+        });
+      }, 150);
+    });
+  }
+  if (prefMotd) prefMotd.addEventListener('click', toggleMotdSetting);
+  if (optSpMotd) optSpMotd.addEventListener('click', toggleMotdSetting);
+  syncMotdDisplay(true);
 
   let lastSpBadgeKey = '';
   let lastSpGreeting = '';
@@ -1731,14 +1877,14 @@
   const SETTINGS_PANE_META = {
     you: { title: 'You and Google', sub: 'Manage your Google Account, Main Profile, and simultaneous Chrome-style profile windows' },
     appearance: { title: 'Appearance & Material You', sub: 'Theme mode, Dynamic Color seeds, 17 Pure M3 wallpapers, typography, zoom & chrome' },
-    privacy: { title: 'Privacy & Security', sub: 'dejavu Shield 100/100 Ad Blocker, Clear Browsing Data, tracking defense & site permissions' },
+    privacy: { title: 'Privacy & Security', sub: 'Brave-Grade Shields, fingerprinting defense, cookie notice blocking, Clear Browsing Data & permissions' },
     search: { title: 'Search Engine', sub: 'Choose your default search provider, custom search template & address bar suggestions' },
     tabs: { title: 'Tabs & On Startup', sub: 'Startup session restore, Homepage, Memory Saver inactivity timer & keyboard shortcuts' },
     downloads: { title: 'Downloads', sub: 'Save folder, Turbo multi-thread accelerator connections & default video / MP3 quality' },
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.1.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.2.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -1970,7 +2116,12 @@
       !!o.reduceWallpaperMotion,
       o.showHomeButton !== false,
       !!o.hideGreetingBadge,
+      o.showMotd !== false,
       !!o.hideStartPageSearch,
+      o.shieldLevel || 'standard',
+      o.blockFingerprinting !== false,
+      o.blockCookieNotices !== false,
+      o.stripTrackingParams !== false,
       o.appearanceMode || 'auto',
       o.wallpaperDim || 'balanced',
       !!state.isPrivateWindow
@@ -1988,6 +2139,7 @@
       if (spPrivateChip) spPrivateChip.classList.toggle('hidden', !state.isPrivateWindow);
       if (startpageProfileBadge) startpageProfileBadge.classList.toggle('hidden', !!o.hideGreetingBadge || !!state.isPrivateWindow);
       if (heroSearchWrap) heroSearchWrap.classList.toggle('hidden', !!o.hideStartPageSearch);
+      syncMotdDisplay();
       if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
         window.DejavuNewTabCanvas.setOptions({
           reduceMotion: !!o.reduceWallpaperMotion,
@@ -2009,7 +2161,8 @@
   function syncSettingsUi() {
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
-    const ver = state.appVersion || '5.1.0';
+    const sh = state.shields || {};
+    const ver = state.appVersion || '5.2.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -2047,13 +2200,20 @@
     setSwitchState(optSpPrivacy, !sp.hidePrivacyReport);
     setSwitchState(optSpReading, !sp.hideReadingList);
     setSwitchState(optSpGreeting, !o.hideGreetingBadge);
+    setSwitchState(optSpMotd, isMotdEnabled());
     setSwitchState(optSpSearch, !o.hideStartPageSearch);
 
-    // Category 3: Privacy & Security
+    // Category 3: Privacy & Security (Brave-Grade Shields)
     setSwitchState(optGlobalAdblock, state.globalAdBlockEnabled !== false);
+    const shieldLvl = (sh.level || o.shieldLevel || 'standard').toLowerCase() === 'aggressive' ? 'aggressive' : 'standard';
+    setSegmentedVal(optShieldLevel, shieldLvl);
+    setSwitchState(optShieldFp, typeof sh.blockFingerprinting === 'boolean' ? sh.blockFingerprinting : (o.blockFingerprinting !== false));
+    setSwitchState(optShieldCookies, typeof sh.blockCookieNotices === 'boolean' ? sh.blockCookieNotices : (o.blockCookieNotices !== false));
+    setSwitchState(optShieldParams, typeof sh.stripTrackingParams === 'boolean' ? sh.stripTrackingParams : (o.stripTrackingParams !== false));
     if (optAdblockStats) {
       const cnt = Number(state.totalBlocked || 0).toLocaleString();
-      optAdblockStats.textContent = `${cnt} ads & trackers blocked across your browsing`;
+      const lvlTxt = shieldLvl === 'aggressive' ? 'Aggressive' : 'Standard';
+      optAdblockStats.textContent = `${cnt} ads & trackers blocked · ${lvlTxt} Shields active`;
     }
     if (optPausedHostsList) {
       const hosts = Array.isArray(state.pausedHosts) ? state.pausedHosts : [];
@@ -2378,8 +2538,33 @@
   bindBoolSwitch(optSpGreeting, 'hideGreetingBadge', true);
   bindBoolSwitch(optSpSearch, 'hideStartPageSearch', true);
 
-  // Category 3 bindings
+  // Category 3 bindings (Brave-Grade Shields & Privacy)
   bindBoolSwitch(optGlobalAdblock, 'globalAdBlockEnabled', false);
+  if (optShieldLevel) {
+    optShieldLevel.addEventListener('click', (e) => {
+      const btn = e.target.closest('.opt-seg-btn');
+      if (!btn || !btn.dataset.val) return;
+      const level = btn.dataset.val === 'aggressive' ? 'aggressive' : 'standard';
+      state.shields = Object.assign({}, state.shields || {}, { level });
+      state.browserOptions = Object.assign({}, state.browserOptions || {}, { shieldLevel: level });
+      setSegmentedVal(optShieldLevel, level);
+      syncSettingsUi();
+      send({ type: 'setShieldLevel', level });
+    });
+  }
+  function bindShieldFeatureSwitch(el, feature, optKey) {
+    if (!el) return;
+    el.addEventListener('click', () => {
+      const next = !el.classList.contains('on');
+      setSwitchState(el, next);
+      state.shields = Object.assign({}, state.shields || {}, { [optKey]: next });
+      state.browserOptions = Object.assign({}, state.browserOptions || {}, { [optKey]: next });
+      send({ type: 'toggleShieldFeature', feature, enabled: next });
+    });
+  }
+  bindShieldFeatureSwitch(optShieldFp, 'fingerprinting', 'blockFingerprinting');
+  bindShieldFeatureSwitch(optShieldCookies, 'cookies', 'blockCookieNotices');
+  bindShieldFeatureSwitch(optShieldParams, 'trackingParams', 'stripTrackingParams');
   bindBoolSwitch(optSafeBrowsing, 'safeBrowsing', false);
   bindBoolSwitch(optHttpsFirst, 'httpsFirst', false);
   bindBoolSwitch(optDoNotTrack, 'doNotTrack', false);
@@ -4187,22 +4372,51 @@
     }
   }
 
+  function describeRelayStatus(s) {
+    const rs = String((s && s.relayStatus) || '').toLowerCase();
+    const broker = String((s && s.relayBroker) || '').trim();
+    if (rs === 'connected_lan') {
+      return { cls: 'is-lan', label: 'Direct Wi-Fi LAN', title: 'Direct Wi-Fi LAN E2EE (<5ms)' };
+    }
+    if (rs === 'connected_cloud') {
+      return {
+        cls: 'is-cloud',
+        label: 'E2EE Cloud · Connected',
+        title: broker ? `Connected via TLS MQTT (${broker})` : 'Connected via TLS MQTT Cloud Relay'
+      };
+    }
+    if (rs === 'retrying') {
+      return {
+        cls: 'is-retrying',
+        label: 'Reconnecting…',
+        title: (s && s.lastError) ? `Retrying relay (${s.lastError})` : 'Reconnecting encrypted relay…'
+      };
+    }
+    if (rs === 'connecting') {
+      return { cls: 'is-connecting', label: 'Connecting…', title: broker ? `Connecting to ${broker}…` : 'Connecting encrypted relay…' };
+    }
+    return { cls: '', label: '', title: '' };
+  }
+
   let lastLinkChipSig = '';
   function updateNewtabLinkChip(sync) {
     if (!newtabLinkChip || !newtabLinkText) return;
     const s = sync || {};
-    const sig = `${s.syncMode || ''}|${s.googleEmail || ''}|${s.paired ? 1 : 0}|${s.connected ? 1 : 0}|${s.peerOnline ? 1 : 0}|${s.peerName || ''}`;
+    const sig = `${s.syncMode || ''}|${s.googleEmail || ''}|${s.paired ? 1 : 0}|${s.connected ? 1 : 0}|${s.peerOnline ? 1 : 0}|${s.peerName || ''}|${s.relayStatus || ''}`;
     if (sig === lastLinkChipSig) return;
     lastLinkChipSig = sig;
     const isGoogle = s.syncMode === 'google' && !!s.googleEmail;
     const isPaired = !!(s.paired || s.connected || isGoogle);
+    const relay = describeRelayStatus(s);
     newtabLinkChip.classList.toggle('synced', isPaired);
     if (isGoogle) {
-      newtabLinkText.textContent = s.peerOnline ? 'Link · Phone Online' : 'Link · Google Sync';
-      newtabLinkChip.title = `dejavu Link · Auto-Synced via ${s.googleEmail}`;
+      newtabLinkText.textContent = s.peerOnline
+        ? (relay.cls === 'is-lan' ? 'Link · Wi-Fi LAN' : 'Link · Phone Online')
+        : (relay.cls === 'is-cloud' ? 'Link · E2EE Cloud' : 'Link · Google Sync');
+      newtabLinkChip.title = `dejavu Link · Auto-Synced via ${s.googleEmail}${relay.label ? ' (' + relay.label + ')' : ''}`;
     } else if (s.connected) {
       newtabLinkText.textContent = `Link · ${s.peerName || 'Paired'}`;
-      newtabLinkChip.title = `dejavu Link · Connected to ${s.peerName || 'Phone'}`;
+      newtabLinkChip.title = `dejavu Link · Connected to ${s.peerName || 'Phone'}${relay.label ? ' (' + relay.label + ')' : ''}`;
     } else {
       newtabLinkText.textContent = 'dejavu Link';
       newtabLinkChip.title = 'Open dejavu Link Hub (Google Auto-Sync PC ↔ Phone)';
@@ -4613,6 +4827,26 @@
     const prevVideoProbeStatus = state.videoProbeStatus;
     const prevVideoProbeLoading = state.videoProbeLoading;
     state = Object.assign({}, state, next);
+    if (next.browserOptions && typeof next.browserOptions.showMotd === 'boolean' && (!next.settings || typeof next.settings.showMotd !== 'boolean')) {
+      if (state.settings) state.settings = Object.assign({}, state.settings, { showMotd: next.browserOptions.showMotd });
+    } else if (next.settings && typeof next.settings.showMotd === 'boolean') {
+      state.browserOptions = Object.assign({}, state.browserOptions || {}, { showMotd: next.settings.showMotd });
+    }
+    if (next.shields && typeof next.shields === 'object') {
+      const shPatch = {};
+      if (typeof next.shields.level === 'string') shPatch.shieldLevel = next.shields.level;
+      if (typeof next.shields.blockFingerprinting === 'boolean') shPatch.blockFingerprinting = next.shields.blockFingerprinting;
+      if (typeof next.shields.blockCookieNotices === 'boolean') shPatch.blockCookieNotices = next.shields.blockCookieNotices;
+      if (typeof next.shields.stripTrackingParams === 'boolean') shPatch.stripTrackingParams = next.shields.stripTrackingParams;
+      state.browserOptions = Object.assign({}, state.browserOptions || {}, shPatch);
+    } else if (next.browserOptions && state.shields) {
+      state.shields = Object.assign({}, state.shields, {
+        level: next.browserOptions.shieldLevel || state.shields.level,
+        blockFingerprinting: typeof next.browserOptions.blockFingerprinting === 'boolean' ? next.browserOptions.blockFingerprinting : state.shields.blockFingerprinting,
+        blockCookieNotices: typeof next.browserOptions.blockCookieNotices === 'boolean' ? next.browserOptions.blockCookieNotices : state.shields.blockCookieNotices,
+        stripTrackingParams: typeof next.browserOptions.stripTrackingParams === 'boolean' ? next.browserOptions.stripTrackingParams : state.shields.stripTrackingParams
+      });
+    }
     state.wallpaper = normalizeWallpaperId(next.wallpaper);
     if (typeof next.videoFormats === 'undefined' && Array.isArray(prevVideoFormats) && prevVideoFormats.length && (!next.activeTabUrl || next.activeTabUrl === prevVideoProbeUrl)) {
       state.videoFormats = prevVideoFormats;
@@ -4634,6 +4868,7 @@
 
     const prefs = next.startPagePrefs || {};
     applyStartPagePrefs(prefs);
+    syncMotdDisplay();
     renderShortcuts(next.shortcuts || []);
     renderFrequentlyVisited(next.frequentlyVisited || [], prefs.hideFrequentlyVisited);
     renderReadingListSection(next.readingList || [], prefs.hideReadingList);
@@ -5864,7 +6099,9 @@
     const isGoogleMode = s.syncMode === 'google' && !!s.googleEmail;
     const profileGoogleEmail = (ap.isGoogleSignedIn && ap.googleEmail) ? ap.googleEmail : '';
 
-    // Header Status Pill
+    // Header Status Pill + Live Relay Health Badge
+    const relayInfo = describeRelayStatus(s);
+    const hasLinkTransport = isGoogleMode || !!s.connected || !!s.paired;
     if (linkHeaderStatus) {
       linkHeaderStatus.classList.remove('primary', 'tertiary');
       if (isGoogleMode) {
@@ -5875,6 +6112,24 @@
         linkHeaderStatus.classList.add('primary');
       } else {
         linkHeaderStatus.textContent = 'Sign in to Sync';
+      }
+    }
+    if (linkRelayPill && linkRelayText) {
+      linkRelayPill.classList.remove('is-lan', 'is-cloud', 'is-connecting', 'is-retrying');
+      const showRelay = hasLinkTransport && !!relayInfo.label;
+      linkRelayPill.classList.toggle('hidden', !showRelay);
+      if (showRelay) {
+        if (relayInfo.cls) linkRelayPill.classList.add(relayInfo.cls);
+        linkRelayText.textContent = relayInfo.label;
+        linkRelayPill.title = relayInfo.title;
+      }
+    }
+    if (linkRelaySub) {
+      const lastSyncStr = s.lastSyncMs ? ` · Synced ${formatLinkRelativeTime(s.lastSyncMs)}` : '';
+      if (relayInfo.label) {
+        linkRelaySub.textContent = `${relayInfo.label}${s.relayBroker && relayInfo.cls === 'is-cloud' ? ' (' + s.relayBroker + ')' : ''}${lastSyncStr}`;
+      } else {
+        linkRelaySub.textContent = `AES-256 E2EE over Direct Wi-Fi LAN & TLS Cloud Relay${lastSyncStr}`;
       }
     }
 

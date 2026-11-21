@@ -62,7 +62,7 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * AntDM-Style 8-Thread Accelerated Turbo Download Manager + Native YouTube InnerTube
  * Multi-Client Quality/Audio Resolver + Android MediaMuxer + HLS .m3u8 Assembler
- * for dejavu Mobile v5.1.0.
+ * for dejavu Mobile v5.2.0.
  */
 public class MobileDownloadManager {
     public interface Listener {

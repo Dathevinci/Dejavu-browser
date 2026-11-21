@@ -17,13 +17,18 @@ namespace DejavuBrowser
         {
             try
             {
-                ServicePointManager.SecurityProtocol =
+                ServicePointManager.SecurityProtocol |=
                     SecurityProtocolType.Tls12 | (SecurityProtocolType)12288;
                 ServicePointManager.DefaultConnectionLimit = 64;
             }
             catch
             {
-                try { ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12; } catch { }
+                try
+                {
+                    ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+                    ServicePointManager.DefaultConnectionLimit = 32;
+                }
+                catch { }
             }
 
             string initialUrl = null;
@@ -297,7 +302,7 @@ namespace DejavuBrowser
                         {
                             if (NativeWin32.IsIconic(hwnd))
                             {
-                                NativeWin32.ShowWindow(hwnd, NativeWin32.SW_RESTORE);
+                                NativeWin32.SendMessage(hwnd, NativeWin32.WM_SYSCOMMAND, (IntPtr)NativeWin32.SC_RESTORE, IntPtr.Zero);
                             }
                             else
                             {

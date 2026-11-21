@@ -1335,7 +1335,7 @@ img {
   color: var(--md-on-surface-variant);
 }
 
-/* Row 2: Decluttered v5.1.0 Chrome M3 Toolbar + Pill Omnibox + Extensions Puzzle */
+/* Row 2: Decluttered v5.2.0 Chrome M3 Toolbar + Pill Omnibox with Brave Shields + Extensions Puzzle */
 .dk-toolbar {
   height: 50px;
   padding: 0 12px;
@@ -1401,6 +1401,7 @@ img {
   height: 24px;
   padding: 0 9px;
   border-radius: 999px;
+  border: none;
   background: var(--md-primary-container);
   color: var(--md-on-primary-container);
   font-size: 11px;
@@ -1409,6 +1410,11 @@ img {
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+  transition: transform 0.16s var(--md-ease-emphasized), background-color 0.16s var(--md-ease-emphasized);
+}
+
+.dk-shield-pill:hover {
+  transform: scale(1.03);
 }
 
 .dk-url-text {
@@ -1972,19 +1978,19 @@ img {
   z-index: 2;
   min-height: 472px;
   height: 100%;
-  padding: 28px 32px;
+  padding: 24px 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 15px;
 }
 
 .dk-sp-lockup {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
 }
 
 .dk-sp-butterfly {
@@ -2011,6 +2017,34 @@ img {
   color: var(--md-on-surface-variant);
   font-size: 11px;
   font-weight: 600;
+}
+
+.dk-sp-motd {
+  margin-top: 2px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.005em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  text-align: center;
+  transition: background-color 0.18s var(--md-ease-emphasized), color 0.18s var(--md-ease-emphasized), opacity 0.16s var(--md-ease-emphasized);
+}
+
+.dk-sp-motd:hover {
+  background: var(--md-surface-container);
+  color: var(--md-on-surface);
+}
+
+.dk-sp-motd svg {
+  flex-shrink: 0;
 }
 
 .dk-sp-search {
@@ -2139,7 +2173,7 @@ img {
   color: var(--md-on-primary-container);
 }
 
-/* Page 2: Real Chrome Extensions Manager Showcase (v5.1.0 Material Design 3) */
+/* Page 2: Real Chrome Extensions Manager Showcase (v5.2.0 Material Design 3) */
 .dk-ext-stage {
   min-height: 472px;
   height: 100%;
@@ -3304,7 +3338,7 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   opacity: 0.86;
 }
 
-/* Page 5: PC <-> Phone Sync (v5.1.0 Zero-QR Google Account Auto-Sync & Shared Clipboard) */
+/* Page 5: PC <-> Phone Sync (v5.2.0 Direct Wi-Fi LAN + TLS MQTT Retained E2EE) */
 .dk-sync-stage {
   height: 100%;
   padding: 20px 24px;
@@ -3552,7 +3586,7 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
 }
 
 /* ==========================================================================
-   COMPANION GOOGLE PIXEL PHONE MOCKUP (v5.1.0 CLEAN ANDROID MATERIAL DESIGN 3)
+   COMPANION GOOGLE PIXEL PHONE MOCKUP (v5.2.0 PIXEL MATERIAL DESIGN 3 + MOTD)
    ========================================================================== */
 .pixel-frame {
   border-radius: 38px;
@@ -3646,10 +3680,10 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   position: relative;
   z-index: 2;
   flex: 1;
-  padding: 30px 15px 14px;
+  padding: 28px 15px 14px;
   display: flex;
   flex-direction: column;
-  gap: 17px;
+  gap: 13px;
 }
 
 .px-top {
@@ -3688,11 +3722,11 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
 }
 
 .px-hero {
-  margin-top: 10px;
+  margin-top: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .px-hero span {
@@ -3700,6 +3734,26 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   font-size: 20px;
   font-weight: 600;
   letter-spacing: 0.06em;
+  color: var(--md-on-surface);
+}
+
+.px-motd {
+  margin-top: 1px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  font-size: 9.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  max-width: 214px;
+  transition: background-color 0.18s var(--md-ease-emphasized), color 0.18s var(--md-ease-emphasized);
+}
+
+.px-motd:hover {
+  background: var(--md-surface-container);
   color: var(--md-on-surface);
 }
 

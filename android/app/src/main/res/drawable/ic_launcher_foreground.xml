@@ -11,48 +11,35 @@
         android:scaleY="1.08"
         android:translateX="22"
         android:translateY="22">
-        <!-- Upper Left Wing + Highlight Facet -->
+        <!-- Iconic Sculpted Material Design 3 Butterfly (v5.2.0) -->
+        <!-- Sweeping Upper Wings -->
         <path
             android:fillColor="#D0BCFF"
-            android:pathData="M30.5,31.6L15.2,15.2C13,12.9 9.2,14.7 9.9,18L12.8,30.4C13.5,33.2 16,35.2 18.9,35.2H30.5V31.6Z" />
-        <path
-            android:fillAlpha="0.88"
-            android:fillColor="#EADDFF"
-            android:pathData="M30.5,31.6L15.2,15.2C13.9,13.8 11.9,13.9 10.8,15L25.2,31.6H30.5Z" />
-        <!-- Upper Right Wing + Highlight Facet -->
+            android:pathData="M31.4,33.8C29.0,23.4 20.6,12.6 13.0,13.8C8.6,14.5 7.8,20.8 10.8,27.6C13.6,33.8 21.4,36.6 31.4,35.4Z" />
         <path
             android:fillColor="#D0BCFF"
-            android:pathData="M33.5,31.6L48.8,15.2C51,12.9 54.8,14.7 54.1,18L51.2,30.4C50.5,33.2 48,35.2 45.1,35.2H33.5V31.6Z" />
+            android:pathData="M32.6,33.8C35.0,23.4 43.4,12.6 51.0,13.8C55.4,14.5 56.2,20.8 53.2,27.6C50.4,33.8 42.6,36.6 32.6,35.4Z" />
+        <!-- Folded Inner Ribbon Highlights -->
         <path
-            android:fillAlpha="0.88"
+            android:fillAlpha="0.34"
             android:fillColor="#EADDFF"
-            android:pathData="M33.5,31.6L48.8,15.2C50.1,13.8 52.1,13.9 53.2,15L38.8,31.6H33.5Z" />
-        <!-- Lower Left Wing + Inner Facet -->
+            android:pathData="M31.2,34.4C26.2,24.4 19.6,17.4 13.2,17.0C16.2,24.8 22.8,31.8 31.2,34.4Z" />
         <path
-            android:fillAlpha="0.74"
+            android:fillAlpha="0.34"
             android:fillColor="#EADDFF"
-            android:pathData="M30.5,36.8H18.4C15.8,36.8 14.1,39.4 15.2,41.8L18.5,48.8C19.8,51.4 23.4,51.8 25.2,49.5L30.5,42.7V36.8Z" />
+            android:pathData="M32.8,34.4C37.8,24.4 44.4,17.4 50.8,17.0C47.8,24.8 41.2,31.8 32.8,34.4Z" />
+        <!-- Graceful Lower Wings -->
         <path
-            android:fillAlpha="0.68"
-            android:fillColor="#D0BCFF"
-            android:pathData="M30.5,36.8H22.2L30.5,42.7V36.8Z" />
-        <!-- Lower Right Wing + Inner Facet -->
-        <path
-            android:fillAlpha="0.74"
+            android:fillAlpha="0.76"
             android:fillColor="#EADDFF"
-            android:pathData="M33.5,36.8H45.6C48.2,36.8 49.9,39.4 48.8,41.8L45.5,48.8C44.2,51.4 40.6,51.8 38.8,49.5L33.5,42.7V36.8Z" />
+            android:pathData="M31.2,36.6C23.0,36.4 15.2,39.2 15.0,44.8C14.8,49.0 19.4,51.6 24.6,49.6C28.6,48.0 30.8,43.2 31.2,36.6Z" />
         <path
-            android:fillAlpha="0.68"
-            android:fillColor="#D0BCFF"
-            android:pathData="M33.5,36.8H41.8L33.5,42.7V36.8Z" />
-        <!-- Center Body & Antennae -->
-        <path
+            android:fillAlpha="0.76"
             android:fillColor="#EADDFF"
-            android:pathData="M32,23.4C33.105,23.4 34,24.295 34,25.4V43.8C34,44.905 33.105,45.8 32,45.8C30.895,45.8 30,44.905 30,43.8V25.4C30,24.295 30.895,23.4 32,23.4Z" />
+            android:pathData="M32.8,36.6C41.0,36.4 48.8,39.2 49.0,44.8C49.2,49.0 44.6,51.6 39.4,49.6C35.4,48.0 33.2,43.2 32.8,36.6Z" />
+        <!-- Sculpted Tapered Luminous Core -->
         <path
-            android:pathData="M30.8,24.2C29.4,21 27.6,18.8 25.8,17.8M33.2,24.2C34.6,21 36.4,18.8 38.2,17.8"
-            android:strokeColor="#EADDFF"
-            android:strokeLineCap="round"
-            android:strokeWidth="2.1" />
+            android:fillColor="#F6EDFF"
+            android:pathData="M32,19.5C33.5,23.6 34.1,27.8 33.8,33.4C33.5,39.0 32.9,45.2 32,47.6C31.1,45.2 30.5,39.0 30.2,33.4C29.9,27.8 30.5,23.6 32,19.5Z" />
     </group>
 </vector>

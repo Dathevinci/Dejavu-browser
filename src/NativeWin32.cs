@@ -5,13 +5,19 @@ namespace DejavuBrowser
 {
     internal static class NativeWin32
     {
+        public const int WM_SIZE = 0x0005;
         public const int WM_ACTIVATE = 0x0006;
         public const int WM_MOUSEACTIVATE = 0x0021;
+        public const int WM_WINDOWPOSCHANGED = 0x0047;
         public const int WM_NCHITTEST = 0x0084;
         public const int WM_NCCALCSIZE = 0x0083;
         public const int WM_NCLBUTTONDOWN = 0x00A1;
         public const int WM_GETMINMAXINFO = 0x0024;
         public const int WM_SYSCOMMAND = 0x0112;
+        public const int WM_ENTERSIZEMOVE = 0x0231;
+        public const int WM_EXITSIZEMOVE = 0x0232;
+
+        public const uint MONITOR_DEFAULTTONEAREST = 2;
 
         public const int WA_INACTIVE = 0;
         public const int MA_NOACTIVATE = 3;
@@ -25,6 +31,9 @@ namespace DejavuBrowser
         public const int WS_EX_NOACTIVATE = 0x08000000;
 
         public const int SC_SIZE = 0xF000;
+        public const int SC_MINIMIZE = 0xF020;
+        public const int SC_MAXIMIZE = 0xF030;
+        public const int SC_RESTORE = 0xF120;
         public const int WMSZ_LEFT = 1;
         public const int WMSZ_RIGHT = 2;
         public const int WMSZ_TOP = 3;
@@ -128,6 +137,9 @@ namespace DejavuBrowser
         public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll")]
+        public static extern bool PostMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
         public static extern bool SetProcessDPIAware();
 
         [DllImport("user32.dll")]
@@ -146,6 +158,9 @@ namespace DejavuBrowser
         public static extern bool IsIconic(IntPtr hWnd);
 
         [DllImport("user32.dll")]
+        public static extern bool IsZoomed(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
         public static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
@@ -156,6 +171,9 @@ namespace DejavuBrowser
 
         [DllImport("user32.dll")]
         public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        [DllImport("user32.dll")]
+        public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
         [DllImport("user32.dll")]
         public static extern bool IsChild(IntPtr hWndParent, IntPtr hWnd);

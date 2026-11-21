@@ -1,5 +1,5 @@
 /* ==========================================================================
-   dejavu v5.1.0 — Authentic Google Material Design 3 Expressive (Pixel + Chrome M3)
+   dejavu v5.2.0 — Authentic Chromebook × Pixel Material Design 3 Expressive
    Pure HCT Tonal Surface Hierarchy · Official M3 Motion · State Layers
    Zero Compositing Overhead · Strictly Zero CSS Filter Softening
    ========================================================================== */
@@ -91,8 +91,8 @@
   --accent-bright: var(--md-on-primary-container);
   --shield-green: var(--md-tertiary);
   --danger: var(--md-error);
-  --md-chrome-strip-bg: var(--md-surface);
-  --md-chrome-bar-bg: var(--md-surface-container);
+  --md-chrome-strip-bg: var(--md-surface-container);
+  --md-chrome-bar-bg: var(--md-surface);
 }
 
 /* ==========================================================================
@@ -248,7 +248,7 @@ body.force-light {
   --accent-bright: var(--md-primary);
   --shield-green: var(--md-tertiary);
   --danger: var(--md-error);
-  --md-chrome-strip-bg: var(--md-surface-container-high);
+  --md-chrome-strip-bg: var(--md-surface-container);
   --md-chrome-bar-bg: var(--md-surface-container-lowest);
 }
 
@@ -359,8 +359,8 @@ body.is-private.force-light {
   --md-on-secondary-container: #e3e4f4;
   --md-inverse-surface: #e6e6f2;
   --md-inverse-on-surface: #1d1e29;
-  --md-chrome-strip-bg: var(--md-surface);
-  --md-chrome-bar-bg: var(--md-surface-container);
+  --md-chrome-strip-bg: var(--md-surface-container);
+  --md-chrome-bar-bg: var(--md-surface);
 }
 
 /* Single-Owner Toolbar/Rail Deduplication: hide rail-owned toolbar buttons whenever Left Nav Rail is visible */
@@ -702,12 +702,12 @@ body.tab-overview-open #tabbar.tabbar-row {
 }
 
 .tab-pill:hover:not(.active)::before {
-  background: color-mix(in srgb, var(--md-surface-container-high) 76%, transparent);
+  background: var(--md-state-hover);
 }
 
 body.theme-light .tab-pill:hover:not(.active)::before,
 body.force-light .tab-pill:hover:not(.active)::before {
-  background: color-mix(in srgb, var(--md-chrome-bar-bg) 68%, transparent);
+  background: var(--md-state-hover);
 }
 
 .tab-pill:active:not(.active)::before {
@@ -715,7 +715,7 @@ body.force-light .tab-pill:hover:not(.active)::before {
   transform: scale(0.97);
 }
 
-/* Chrome M3 Active Tab seamlessly merged into Toolbar surface with soft curved bottom skirts */
+/* ChromeOS M3 Active Tab seamlessly merged into Toolbar surface with soft curved bottom skirts */
 .tab-pill.active {
   background: var(--md-chrome-bar-bg);
   color: var(--md-on-surface);
@@ -727,20 +727,20 @@ body.force-light .tab-pill:hover:not(.active)::before {
   content: '';
   position: absolute;
   bottom: 0;
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   pointer-events: none;
   opacity: 1;
 }
 
 .tab-pill.active::before {
-  left: -9px;
-  background: radial-gradient(circle at 0 0, transparent 8.5px, var(--md-chrome-bar-bg) 9px);
+  left: -10px;
+  background: radial-gradient(circle at 0 0, transparent 9.5px, var(--md-chrome-bar-bg) 10px);
 }
 
 .tab-pill.active::after {
-  right: -9px;
-  background: radial-gradient(circle at 100% 0, transparent 8.5px, var(--md-chrome-bar-bg) 9px);
+  right: -10px;
+  background: radial-gradient(circle at 100% 0, transparent 9.5px, var(--md-chrome-bar-bg) 10px);
 }
 
 .tab-pill.active .tab-title {
@@ -1039,17 +1039,17 @@ body.compact-tabs .tab-pill { font-size: 11.5px; }
   height: 100%;
 }
 
-/* Clean M3 / Windows 11 Window Controls */
+/* Chromebook-Grade Material Design 3 Window Controls (36x28px rounded pill targets) */
 .win-pill {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   padding: 0 2px 4px 4px;
   flex-shrink: 0;
 }
 
 .win-btn {
-  width: 32px;
+  width: 36px;
   height: 28px;
   border-radius: var(--md-shape-full);
   border: none;
@@ -1059,16 +1059,17 @@ body.compact-tabs .tab-pill { font-size: 11.5px; }
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color var(--md-dur-short) var(--md-ease-standard), color var(--md-dur-short) var(--md-ease-standard), transform var(--md-dur-short) var(--md-ease-standard);
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
 }
 
-.win-btn svg { width: 12px; height: 12px; }
+.win-btn svg { width: 12.5px; height: 12.5px; }
 .win-btn .ico-restore { display: none; }
 body.is-maximized .win-btn .ico-max { display: none; }
 body.is-maximized .win-btn .ico-restore { display: block; }
-.win-btn:hover { background: var(--md-surface-container-high); color: var(--md-on-surface); }
-.win-btn:active { transform: scale(0.90); }
-.win-btn.win-close:hover { background: #ba1a1a; color: #ffffff; }
+.win-btn:hover { background: var(--md-state-hover); color: var(--md-on-surface); }
+.win-btn:active { background: var(--md-state-pressed); transform: scale(0.92); }
+.win-btn.win-close:hover { background: var(--md-error-container); color: var(--md-on-error-container); }
+.win-btn.win-close:active { background: var(--md-error); color: var(--md-on-error); transform: scale(0.92); }
 
 /* ==========================================================================
    Row 2: Navigation Toolbar + Google Chrome M3 Pill Omnibox + Profile Pill (48px)
@@ -1132,7 +1133,7 @@ body.is-maximized .win-btn .ico-restore { display: block; }
   .history-toolbar-btn { display: none; }
 }
 
-/* Google Chrome Material Design 3 Pill Address / Search Bar */
+/* Google ChromeOS Material Design 3 Solid Tonal Pill Omnibox (2px Primary Focus Ring) */
 #omnibox-pill.omnibox-pill {
   position: relative;
   flex: 1 1 260px;
@@ -1142,8 +1143,8 @@ body.is-maximized .win-btn .ico-restore { display: block; }
   height: 36px;
   padding: 0 7px;
   border-radius: var(--md-shape-full);
-  background: var(--md-surface-container-highest);
-  border: 1.5px solid transparent;
+  background: var(--md-surface-container-high);
+  border: 2px solid transparent;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -1154,16 +1155,16 @@ body.is-maximized .win-btn .ico-restore { display: block; }
 
 body.theme-light #omnibox-pill.omnibox-pill,
 body.force-light #omnibox-pill.omnibox-pill {
-  background: var(--md-surface-container);
+  background: var(--md-surface-container-high);
 }
 
 #omnibox-pill.omnibox-pill:hover:not(.is-editing):not(:focus-within) {
-  background: color-mix(in srgb, var(--md-surface-container-highest) 90%, var(--md-on-surface) 7%);
+  background: var(--md-surface-container-highest);
 }
 
 body.theme-light #omnibox-pill.omnibox-pill:hover:not(.is-editing):not(:focus-within),
 body.force-light #omnibox-pill.omnibox-pill:hover:not(.is-editing):not(:focus-within) {
-  background: var(--md-surface-container-high);
+  background: var(--md-surface-container-highest);
 }
 
 #omnibox-pill.omnibox-pill:focus-within,
@@ -1778,10 +1779,10 @@ body.is-fullscreen #m3-nav-rail {
   transition: color var(--md-dur-short) ease;
 }
 
-/* Official Android 15 Material Design 3 Navigation Rail Capsule Pill Indicator */
+/* Official ChromeOS / Android 15 Material Design 3 Navigation Rail 40x32px Active Pill Indicator */
 .m3-rail-pill {
   position: relative;
-  width: 48px;
+  width: 40px;
   height: 32px;
   border-radius: var(--md-shape-full);
   display: inline-flex;
@@ -1797,9 +1798,9 @@ body.is-fullscreen #m3-nav-rail {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--md-secondary-container);
+  background: var(--md-primary-container);
   opacity: 0;
-  transform: scaleX(0.45);
+  transform: scaleX(0.42);
   transform-origin: center;
   pointer-events: none;
   z-index: 0;
@@ -1814,8 +1815,8 @@ body.is-fullscreen #m3-nav-rail {
 .m3-rail-item:hover { color: var(--md-on-surface); }
 .m3-rail-item:hover:not(.active) .m3-rail-pill { background: var(--md-state-hover); }
 .m3-rail-item:focus-visible .m3-rail-pill { outline: 2px solid var(--md-primary); outline-offset: 1px; }
-.m3-rail-item:active .m3-rail-pill { transform: scale(0.95); }
-.m3-rail-item.active .m3-rail-pill { color: var(--md-on-secondary-container); }
+.m3-rail-item:active .m3-rail-pill { background: var(--md-state-pressed); transform: scale(0.94); }
+.m3-rail-item.active .m3-rail-pill { color: var(--md-on-primary-container); }
 .m3-rail-item.active .m3-rail-pill::before { opacity: 1; transform: scaleX(1); }
 .m3-rail-item.active svg { stroke-width: 1.85; }
 .m3-rail-item.is-accent .m3-rail-pill { color: var(--md-on-tertiary-container); }
@@ -1916,9 +1917,10 @@ body.on-newtab:not(.tab-overview-open):not(.settings-open):not(.dl-manager-open)
 }
 
 .hero-logo-wrap {
-  width: 68px;
-  height: 68px;
+  width: 64px;
+  height: 64px;
   border-radius: 19px;
+  border: none;
   background: transparent;
   overflow: hidden;
   box-shadow: var(--md-elev-2);
@@ -1934,8 +1936,8 @@ body.on-newtab:not(.tab-overview-open):not(.settings-open):not(.dl-manager-open)
 }
 
 #newtab-logo {
-  width: 73px;
-  height: 73px;
+  width: 68.3px;
+  height: 68.3px;
   flex-shrink: 0;
   display: block;
 }
@@ -2014,6 +2016,108 @@ body.force-light .sp-profile-badge {
 .sp-badge-greeting { color: var(--md-on-surface-variant); }
 .sp-badge-dot { width: 3px; height: 3px; border-radius: var(--md-shape-full); background: var(--md-outline); flex-shrink: 0; }
 .sp-badge-name { font-weight: 600; max-width: 132px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Google Pixel "Message of the Day" (At a Glance — Calm Tonal Pill, 200ms GPU Cycle) */
+.nt-motd-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.nt-motd-pill {
+  max-width: min(600px, 92vw);
+  min-height: 32px;
+  padding: 5px 15px 5px 11px;
+  border-radius: var(--md-shape-full);
+  border: 1px solid color-mix(in srgb, var(--md-outline-variant) 28%, transparent);
+  background: color-mix(in srgb, var(--md-surface-container) 92%, transparent);
+  color: var(--md-on-surface);
+  font-family: inherit;
+  font-size: 12.6px;
+  font-weight: 400;
+  line-height: 1.38;
+  letter-spacing: 0.004em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: var(--md-elev-1);
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
+}
+
+body.theme-light .nt-motd-pill,
+body.force-light .nt-motd-pill {
+  background: var(--md-surface-container-lowest);
+  border-color: color-mix(in srgb, var(--md-outline-variant) 48%, transparent);
+}
+
+.nt-motd-pill:hover {
+  background: var(--md-surface-container-high);
+  border-color: color-mix(in srgb, var(--md-primary) 34%, transparent);
+}
+
+body.theme-light .nt-motd-pill:hover,
+body.force-light .nt-motd-pill:hover {
+  background: var(--md-surface-container-low);
+}
+
+.nt-motd-pill:active {
+  transform: scale(0.985);
+}
+
+.nt-motd-pill:focus-visible {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 2px;
+}
+
+.nt-motd-spark {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--md-primary);
+  flex-shrink: 0;
+  transition: transform 240ms var(--md-ease-emphasized-decel);
+}
+
+.nt-motd-pill:hover .nt-motd-spark {
+  transform: rotate(22deg) scale(1.08);
+}
+
+.nt-motd-pill.is-cycling .nt-motd-spark {
+  transform: rotate(90deg) scale(0.88);
+}
+
+.nt-motd-date {
+  font-size: 11.8px;
+  font-weight: 600;
+  color: var(--md-on-surface-variant);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nt-motd-sep {
+  color: var(--md-outline);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.nt-motd-text {
+  color: var(--md-on-surface);
+  font-weight: 500;
+  text-align: left;
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 200ms var(--md-ease-emphasized), transform 200ms var(--md-ease-emphasized-decel);
+}
+
+.nt-motd-pill.is-cycling .nt-motd-text {
+  opacity: 0;
+  transform: translate3d(0, 4px, 0);
+}
 
 /* Google Pixel / M3 Expressive Contained Search Bar (56dp, solid tonal pill, zero harsh neon border) */
 .hero-search-wrap { position: relative; width: 100%; max-width: 640px; z-index: 25; }
@@ -4653,7 +4757,7 @@ body.theme-light .dlm-video-card, body.force-light .dlm-video-card { background:
 }
 
 /* ==========================================================================
-   Full-Viewport Chrome-Grade Material Design 3 Extensions Manager (v5.1.0)
+   Full-Viewport Chrome-Grade Material Design 3 Extensions Manager (v5.2.0)
    28px Expressive Workspace · 2-Col M3 Cards · Details View · Chrome Import
    ========================================================================== */
 .ext-manager-overlay { z-index: 176; }
@@ -5200,10 +5304,67 @@ body.force-light .ext-details-hero {
 }
 
 /* ==========================================================================
-   Full-Viewport Material Design 3 dejavu Link Hub (v5.1.0)
+   Full-Viewport Material Design 3 dejavu Link Hub (v5.2.0)
    Single-Scroll · Zero Sub-Tabs · Google Auto-Sync · Pure Tonal Elevation
    ========================================================================== */
 .link-hub-overlay { z-index: 175; }
+
+/* Real-Time Encrypted Sync Relay Health Pill */
+.link-relay-pill {
+  height: 26px;
+  padding: 0 11px 0 9px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-high);
+  border: 1px solid color-mix(in srgb, var(--md-outline-variant) 42%, transparent);
+  color: var(--md-on-surface-variant);
+  font-size: 11.2px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.link-relay-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-outline);
+  flex-shrink: 0;
+}
+
+.link-relay-pill.is-lan,
+.link-relay-pill.is-cloud {
+  background: var(--md-tertiary-container);
+  border-color: transparent;
+  color: var(--md-on-tertiary-container);
+}
+
+.link-relay-pill.is-lan .link-relay-dot,
+.link-relay-pill.is-cloud .link-relay-dot {
+  background: var(--md-tertiary);
+}
+
+.link-relay-pill.is-connecting {
+  background: var(--md-primary-container);
+  border-color: transparent;
+  color: var(--md-on-primary-container);
+}
+
+.link-relay-pill.is-connecting .link-relay-dot {
+  background: var(--md-primary);
+}
+
+.link-relay-pill.is-retrying {
+  background: var(--md-error-container);
+  border-color: transparent;
+  color: var(--md-on-error-container);
+}
+
+.link-relay-pill.is-retrying .link-relay-dot {
+  background: var(--md-error);
+}
 
 .m3-link-workspace {
   width: min(1040px, calc(100% - 40px));

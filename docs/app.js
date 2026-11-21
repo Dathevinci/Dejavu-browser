@@ -1,14 +1,14 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.1.0)
- * Clean Android Material Design 3 Overhaul · Fluid Gliding M3 Pill Indicators · 6 Harmonized HCT Seeds
- * Zero-Lag 120Hz Tab Engine & Anti-Glitch Architecture · Dynamic M3 Butterfly Logo
- * Zero-QR Google Account Auto-Sync (dejavu Link) + Shared Clipboard + Passkeys Showcase
+ * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.2.0)
+ * Brave-Grade Shields · Re-Engineered dejavu Link (Direct Wi-Fi LAN + TLS MQTT Retained E2EE)
+ * Iconic Sculpted M3 Butterfly Logo · Pixel Message of the Day · Chromebook & Pixel M3
+ * Smooth Native Windows 11 Framing · Fluid Gliding M3 Pill Indicators · 6 Harmonized HCT Seeds
  * Interactive Chrome MV3 Extensions + Draggable Tabs + M3 Right-Click Context Menu
  * 52x32 Spring Switches · 4K->MP3 Video Demo · 16-Wallpaper Harmonizer
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v5.1.0';
+  const FALLBACK_VERSION = 'v5.2.0';
   const root = document.documentElement;
   const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let themeShiftTimer = null;
@@ -248,10 +248,10 @@
     });
   }
 
-  // 2. Clean 5-View Dual-Device Browser Showcase (v5.1.0 Clean Android M3 + 120Hz + Gliding Pill + GPU Cross-Fade)
+  // 2. Clean 5-View Dual-Device Browser Showcase (v5.2.0 Brave Shields + Direct LAN/MQTT Link + Pixel MOTD)
   const VIEW_META = {
     start:      { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
-    sync:       { url: 'dejavu://link · Auto-Synced via Google (alex@gmail.com)', title: 'Google Auto-Sync · Pixel Online' },
+    sync:       { url: 'dejavu://link · Direct LAN + TLS MQTT E2EE (alex@gmail.com)', title: 'Direct LAN + MQTT · Pixel Online' },
     extensions: { url: 'dejavu://extensions · Chrome MV3 Manager', title: 'Chrome Extensions · 3 Active' },
     video:      { url: 'youtube.com/watch?v=material-you-4k', title: 'Material You 4K Film' },
     vpn:        { url: 'gemini.google.com/app', title: 'Google Gemini · Smart VPN' }
@@ -423,6 +423,33 @@
       showSnackbar('Single Settings entry anchored in Left Rail · Ctrl+, (Zero duplicates)');
     });
   }
+
+  // Calm Pixel Message of the Day (Synced across Desktop & Android Start Page mockups)
+  const PIXEL_MOTD_QUOTES = [
+    'Quiet tools make room for clearer thinking.',
+    'Start calm, stay private, move at your own pace.',
+    'Less noise on screen leaves more space for good ideas.',
+    'Every tab stays light so your focus stays effortless.',
+    'Privacy built in quietly — nothing to tweak, nothing in your way.'
+  ];
+  let motdIdx = 0;
+  const dkMotdBtn = document.getElementById('dk-sp-motd');
+  const dkMotdText = document.getElementById('dk-sp-motd-text');
+  const pxMotdBtn = document.getElementById('px-sp-motd');
+
+  function cyclePixelMotd() {
+    motdIdx = (motdIdx + 1) % PIXEL_MOTD_QUOTES.length;
+    const nextQuote = PIXEL_MOTD_QUOTES[motdIdx];
+    if (dkMotdText) dkMotdText.textContent = nextQuote;
+    if (pxMotdBtn) pxMotdBtn.textContent = nextQuote;
+  }
+
+  dkMotdBtn?.addEventListener('click', cyclePixelMotd);
+  pxMotdBtn?.addEventListener('click', cyclePixelMotd);
+
+  document.getElementById('dk-shield-pill')?.addEventListener('click', () => {
+    showSnackbar('Brave-Grade Shields ON · YouTube JSON-prune, URL cleaning, fingerprint farbling & cookie notices');
+  });
 
   // 2b. Interactive Material Design 3 Right-Click Context Menu inside Hero Browser Mockup
   const dkViewport = document.getElementById('dk-viewport');
@@ -658,7 +685,7 @@
     });
   }
 
-  // 2e. Interactive Chrome Extensions Manager Showcase (v5.1.0)
+  // 2e. Interactive Chrome Extensions Manager Showcase (v5.2.0)
   const DEMO_EXTS = {
     ublock:     { label: 'uB', name: 'uBlock Origin Lite',    enabled: true,  pinned: true },
     darkreader: { label: 'DR', name: 'Dark Reader',           enabled: true,  pinned: true },
@@ -970,11 +997,11 @@
     const actEl = document.getElementById('px-toast-act');
     if (!toast || !titleEl) return;
     if (mode === 'clipboard') {
-      if (eyebrowEl) eyebrowEl.textContent = 'Shared Clipboard · Google E2EE';
+      if (eyebrowEl) eyebrowEl.textContent = 'Shared Clipboard · Direct LAN / E2EE';
       titleEl.textContent = 'Copied text beamed from Windows PC';
       if (actEl) actEl.textContent = 'Copy';
     } else {
-      if (eyebrowEl) eyebrowEl.textContent = 'From Windows PC · Google E2EE';
+      if (eyebrowEl) eyebrowEl.textContent = 'From Windows PC · Direct LAN / E2EE';
       titleEl.textContent = VIEW_META[activeView].title;
       if (actEl) actEl.textContent = 'Open Tab';
     }
@@ -984,11 +1011,11 @@
   }
   document.getElementById('demo-send-phone')?.addEventListener('click', () => {
     beamToPixel('tab');
-    showSnackbar('Beamed active tab to Pixel 9 Pro · Auto-Synced via Google');
+    showSnackbar('Beamed active tab to Pixel 9 Pro · Direct LAN + TLS MQTT E2EE');
   });
   document.getElementById('demo-send-clipboard')?.addEventListener('click', () => {
     beamToPixel('clipboard');
-    showSnackbar('Beamed Shared Clipboard to Pixel 9 Pro · AES-256 E2EE');
+    showSnackbar('Beamed Shared Clipboard to Pixel 9 Pro · Direct LAN + AES-256 E2EE');
   });
   document.getElementById('demo-copy-clip')?.addEventListener('click', () => {
     const clipTxt = document.getElementById('demo-clip-preview')?.textContent || '';
@@ -1077,12 +1104,16 @@
         showSnackbar(`${DEMO_EXTS[id].name} ${next ? 'enabled' : 'disabled'}`);
       } else if (sw.dataset.syncPref) {
         const lbl = sw.dataset.syncPref === 'clipboard' ? 'Shared Clipboard & History' : 'Live Tabs & Bookmarks';
-        showSnackbar(`${lbl} auto-sync ${next ? 'enabled' : 'paused'}`);
+        showSnackbar(`${lbl} real-time sync ${next ? 'enabled' : 'paused'}`);
+      } else if (sw.dataset.bentoPref === 'shields') {
+        showSnackbar(next ? 'Brave Shields set to Aggressive · Ads, trackers, farbling & cookie notices blocked' : 'Brave Shields set to Standard protection');
+      } else if (sw.dataset.bentoPref === 'link') {
+        showSnackbar(next ? 'dejavu Link active · Direct Wi-Fi LAN + TLS MQTT Retained E2EE' : 'dejavu Link sync paused');
       }
     });
   });
 
-  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.1.0)
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.2.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

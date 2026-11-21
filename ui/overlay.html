@@ -263,15 +263,341 @@
       color: var(--md-on-primary);
     }
 
-    /* Shield, Find, Download & Update Boxes */
+    /* Brave × Google Pixel Material Design 3 Shields Popover (348x456) */
     .shield-box {
       width: 100%;
       height: 100%;
-      padding: 16px;
+      padding: 13px 14px 11px;
       display: flex;
       flex-direction: column;
+      gap: 9px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .shield-box::-webkit-scrollbar { width: 4px; }
+    .shield-box::-webkit-scrollbar-thumb { background: var(--md-outline-variant); border-radius: var(--md-shape-full); }
+
+    .sh-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .sh-emblem {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized);
+    }
+
+    .sh-emblem.is-down {
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface-variant);
+    }
+
+    .sh-emblem svg { width: 19px; height: 19px; }
+
+    .sh-head-meta { flex: 1; min-width: 0; }
+    .sh-host {
+      font-size: 13.8px;
+      font-weight: 700;
+      color: var(--md-on-surface);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+
+    .sh-status-line {
+      font-size: 11.2px;
+      font-weight: 600;
+      color: var(--md-tertiary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .sh-status-line.is-down { color: var(--md-error); }
+
+    .sh-hero-card {
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: var(--md-surface-container);
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 34%, transparent);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    body.theme-light .sh-hero-card {
+      background: var(--md-surface-container-low);
+    }
+
+    .sh-hero-top {
+      display: flex;
+      align-items: baseline;
       justify-content: space-between;
-      gap: 11px;
+      gap: 8px;
+    }
+
+    .sh-hero-left {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .sh-hero-num {
+      font-size: 25px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      color: var(--md-primary);
+    }
+
+    .sh-hero-card.is-down .sh-hero-num {
+      color: var(--md-on-surface-variant);
+    }
+
+    .sh-hero-lbl {
+      font-size: 11.6px;
+      font-weight: 600;
+      color: var(--md-on-surface-variant);
+      white-space: nowrap;
+    }
+
+    .sh-total-pill {
+      height: 21px;
+      padding: 0 8px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+      font-size: 10.4px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .sh-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .sh-stat-cell {
+      height: 29px;
+      padding: 0 9px;
+      border-radius: 10px;
+      background: var(--md-surface-container-low);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    body.theme-light .sh-stat-cell {
+      background: var(--md-surface-container-lowest);
+    }
+
+    .sh-stat-k {
+      font-size: 10.8px;
+      font-weight: 500;
+      color: var(--md-on-surface-variant);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sh-stat-v {
+      font-size: 11.6px;
+      font-weight: 700;
+      color: var(--md-on-surface);
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+
+    /* Smooth Gliding 2-Way Shield Strength Segmented Pill */
+    .sh-seg-track {
+      position: relative;
+      height: 34px;
+      padding: 3px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-surface-container);
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 42%, transparent);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      flex-shrink: 0;
+    }
+
+    body.theme-light .sh-seg-track {
+      background: var(--md-surface-container-low);
+    }
+
+    .sh-seg-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: calc(50% - 3px);
+      height: 26px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-primary-container);
+      box-shadow: var(--md-elev-1);
+      pointer-events: none;
+      transform: translate3d(0, 0, 0);
+      transition: transform 220ms var(--md-ease-emphasized);
+    }
+
+    .sh-seg-track.is-aggressive .sh-seg-thumb {
+      transform: translate3d(100%, 0, 0);
+    }
+
+    .sh-seg-btn {
+      position: relative;
+      z-index: 1;
+      height: 26px;
+      border: none;
+      border-radius: var(--md-shape-full);
+      background: transparent;
+      color: var(--md-on-surface-variant);
+      font-family: inherit;
+      font-size: 11.8px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: color var(--md-dur-short) var(--md-ease-emphasized);
+    }
+
+    .sh-seg-btn.active {
+      color: var(--md-on-primary-container);
+    }
+
+    .sh-seg-btn svg {
+      width: 0;
+      height: 13px;
+      margin-right: -5px;
+      opacity: 0;
+      overflow: hidden;
+      transform: scale(0.6);
+      transition: width 160ms var(--md-ease-emphasized), margin-right 160ms var(--md-ease-emphasized), opacity 150ms var(--md-ease-emphasized), transform 180ms var(--md-ease-spring);
+    }
+
+    .sh-seg-btn.active svg {
+      width: 13px;
+      margin-right: 0;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .sh-toggles-card {
+      border-radius: 16px;
+      background: var(--md-surface-container);
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 34%, transparent);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    body.theme-light .sh-toggles-card {
+      background: var(--md-surface-container-low);
+    }
+
+    .sh-toggles-card.is-muted {
+      opacity: 0.56;
+    }
+
+    .sh-toggle-row {
+      min-height: 41px;
+      padding: 4px 11px 4px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid color-mix(in srgb, var(--md-outline-variant) 34%, transparent);
+    }
+
+    .sh-toggle-row:last-child { border-bottom: none; }
+
+    .sh-toggle-lbl {
+      font-size: 12.2px;
+      font-weight: 500;
+      color: var(--md-on-surface);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sh-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 2px;
+      margin-top: auto;
+      flex-shrink: 0;
+    }
+
+    .sh-rules-lbl {
+      font-size: 10.6px;
+      font-weight: 500;
+      color: var(--md-on-surface-variant);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sh-settings-link {
+      border: none;
+      background: transparent;
+      color: var(--md-primary);
+      font-family: inherit;
+      font-size: 11.4px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: var(--md-shape-full);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color var(--md-dur-short) ease;
+    }
+
+    .sh-settings-link:hover {
+      background: var(--md-state-primary-hover);
+    }
+
+    .sync-relay-tag {
+      height: 19px;
+      padding: 0 7px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface-variant);
+      font-size: 9.8px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .sync-relay-tag.is-live {
+      background: var(--md-tertiary-container);
+      color: var(--md-on-tertiary-container);
     }
 
     .find-box {
@@ -1956,42 +2282,85 @@
   </style>
 </head>
 <body class="theme-dark">
-  <!-- Mode 1: Ad Blocker Popover -->
+  <!-- Mode 1: Brave-Grade Material Design 3 Shields Popover (348x456) -->
   <div id="mode-shield" class="overlay-shell hidden">
     <div class="shield-box">
-      <div class="popover-head">
-        <div class="popover-title-row">
-          <span id="pop-dot" class="popover-shield-dot"></span>
-          <span class="popover-title">Ad Blocker</span>
+      <div class="sh-head">
+        <span id="sh-emblem" class="sh-emblem" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path d="M10 2.3L3.8 4.8v4.8c0 3.9 2.6 6.9 6.2 8.1 3.6-1.2 6.2-4.2 6.2-8.1V4.8L10 2.3z" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/>
+            <path id="sh-emblem-check" d="M7.3 10.1l1.9 1.9 3.6-3.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div class="sh-head-meta">
+          <div id="sh-host" class="sh-host">dejavu Shields</div>
+          <div id="sh-status-line" class="sh-status-line">Shields are UP</div>
         </div>
-        <span id="pop-badge" class="engine-badge">Active</span>
+        <button type="button" id="btn-shield-master" class="liquid-switch m3-switch on" role="switch" aria-checked="true" title="Toggle Brave-Grade Shields"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
       </div>
 
-      <div id="pop-site-row" class="popover-row">
-        <div class="popover-row-text">
-          <div id="pop-host" class="row-label">This site</div>
-          <div id="pop-site-sub" class="row-sub">0 blocked on this page</div>
+      <div id="sh-hero-card" class="sh-hero-card">
+        <div class="sh-hero-top">
+          <div class="sh-hero-left">
+            <span id="sh-hero-count" class="sh-hero-num">0</span>
+            <span class="sh-hero-lbl">Trackers &amp; ads blocked</span>
+          </div>
+          <span id="sh-total-pill" class="sh-total-pill">0 total</span>
         </div>
-        <button id="btn-site-toggle" class="liquid-switch m3-switch on" role="switch"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        <div class="sh-stats-grid">
+          <div class="sh-stat-cell">
+            <span class="sh-stat-k">Ads &amp; Trackers</span>
+            <span id="sh-stat-ads" class="sh-stat-v">0</span>
+          </div>
+          <div class="sh-stat-cell">
+            <span class="sh-stat-k">Cosmetic Hidden</span>
+            <span id="sh-stat-cosmetic" class="sh-stat-v">0</span>
+          </div>
+          <div class="sh-stat-cell">
+            <span class="sh-stat-k">Fingerprinting</span>
+            <span id="sh-stat-fp" class="sh-stat-v">0</span>
+          </div>
+          <div class="sh-stat-cell">
+            <span class="sh-stat-k">Links Cleaned</span>
+            <span id="sh-stat-params" class="sh-stat-v">0</span>
+          </div>
+        </div>
       </div>
 
-      <div class="popover-row">
-        <div class="popover-row-text">
-          <div class="row-label">Block ads everywhere</div>
-          <div id="pop-total-sub" class="row-sub">0 total blocked</div>
-        </div>
-        <button id="btn-global-toggle" class="liquid-switch m3-switch on" role="switch"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+      <div id="sh-level-seg" class="sh-seg-track" role="radiogroup" aria-label="Shield Strength">
+        <span class="sh-seg-thumb" aria-hidden="true"></span>
+        <button type="button" class="sh-seg-btn active" data-level="standard" role="radio" aria-checked="true">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Standard</span>
+        </button>
+        <button type="button" class="sh-seg-btn" data-level="aggressive" role="radio" aria-checked="false">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Aggressive</span>
+        </button>
       </div>
 
-      <div class="popover-divider"></div>
-
-      <div class="popover-search-row">
-        <span class="row-sub">Search with</span>
-        <div class="engine-segmented" id="seg-engines">
-          <button data-engine="google" class="seg-btn active">Google</button>
-          <button data-engine="duckduckgo" class="seg-btn">DuckDuckGo</button>
-          <button data-engine="brave" class="seg-btn">Brave</button>
+      <div id="sh-toggles-card" class="sh-toggles-card">
+        <div class="sh-toggle-row">
+          <span class="sh-toggle-lbl">Block Fingerprinting</span>
+          <button type="button" id="sw-sh-fp" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
         </div>
+        <div class="sh-toggle-row">
+          <span class="sh-toggle-lbl">Block Cookie Notices</span>
+          <button type="button" id="sw-sh-cookies" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        </div>
+        <div class="sh-toggle-row">
+          <span class="sh-toggle-lbl">Clean Tracking Links</span>
+          <button type="button" id="sw-sh-params" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        </div>
+        <div class="sh-toggle-row">
+          <span class="sh-toggle-lbl">HTTPS-First Upgrade</span>
+          <button type="button" id="sw-sh-https" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        </div>
+      </div>
+
+      <div class="sh-foot">
+        <span id="sh-rules-lbl" class="sh-rules-lbl">500+ filter rules · Brave Engine</span>
+        <button type="button" id="btn-sh-settings" class="sh-settings-link">Privacy settings</button>
       </div>
     </div>
   </div>
@@ -2064,7 +2433,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v5.1.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v5.2.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -2117,19 +2486,15 @@
   <div id="mode-update" class="overlay-shell hidden">
     <div class="upd-box">
       <div class="upd-top">
-        <svg class="djv-m3-logo" viewBox="0 0 64 64" width="32" height="32" fill="none" aria-hidden="true">
+        <svg class="djv-m3-logo" viewBox="0 0 64 64" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
-          <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
-          <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
-          <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
-          <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
-          <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
-          <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
-          <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
-          <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
-          <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
-          <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
-          <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z" fill="var(--md-primary)"/>
+          <path d="M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z" fill="var(--md-primary)"/>
+          <path d="M31.2 34.4C26.2 24.4 19.6 17.4 13.2 17.0C16.2 24.8 22.8 31.8 31.2 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+          <path d="M32.8 34.4C37.8 24.4 44.4 17.4 50.8 17.0C47.8 24.8 41.2 31.8 32.8 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+          <path d="M31.2 36.6C23.0 36.4 15.2 39.2 15.0 44.8C14.8 49.0 19.4 51.6 24.6 49.6C28.6 48.0 30.8 43.2 31.2 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+          <path d="M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+          <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
         </svg>
         <div>
           <div id="upd-title" class="upd-title">dejavu update ready</div>
@@ -2305,19 +2670,15 @@
         <div class="share-ico-wrap">
           <img id="share-fav" class="hidden" alt="" draggable="false">
           <span id="share-fav-svg" class="ov-m3-ico-svg" aria-hidden="true">
-            <svg class="djv-m3-logo" viewBox="0 0 64 64" width="22" height="22" fill="none">
+            <svg class="djv-m3-logo" viewBox="0 0 64 64" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
-              <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
-              <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
-              <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
-              <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
-              <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
-              <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
-              <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
-              <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
-              <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
-              <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
-              <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z" fill="var(--md-primary)"/>
+              <path d="M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z" fill="var(--md-primary)"/>
+              <path d="M31.2 34.4C26.2 24.4 19.6 17.4 13.2 17.0C16.2 24.8 22.8 31.8 31.2 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+              <path d="M32.8 34.4C37.8 24.4 44.4 17.4 50.8 17.0C47.8 24.8 41.2 31.8 32.8 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+              <path d="M31.2 36.6C23.0 36.4 15.2 39.2 15.0 44.8C14.8 49.0 19.4 51.6 24.6 49.6C28.6 48.0 30.8 43.2 31.2 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+              <path d="M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+              <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
             </svg>
           </span>
         </div>
@@ -2477,19 +2838,15 @@
   <div id="mode-synctoast" class="overlay-shell hidden">
     <div class="sync-toast-box">
       <div class="upd-top">
-        <svg class="djv-m3-logo" viewBox="0 0 64 64" width="32" height="32" fill="none" aria-hidden="true">
+        <svg class="djv-m3-logo" viewBox="0 0 64 64" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
-          <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
-          <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
-          <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
-          <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
-          <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
-          <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
-          <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
-          <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
-          <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
-          <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
-          <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z" fill="var(--md-primary)"/>
+          <path d="M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z" fill="var(--md-primary)"/>
+          <path d="M31.2 34.4C26.2 24.4 19.6 17.4 13.2 17.0C16.2 24.8 22.8 31.8 31.2 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+          <path d="M32.8 34.4C37.8 24.4 44.4 17.4 50.8 17.0C47.8 24.8 41.2 31.8 32.8 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+          <path d="M31.2 36.6C23.0 36.4 15.2 39.2 15.0 44.8C14.8 49.0 19.4 51.6 24.6 49.6C28.6 48.0 30.8 43.2 31.2 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+          <path d="M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+          <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
         </svg>
         <div style="min-width:0;flex:1;">
           <div id="st-title" class="upd-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Received from Phone</div>
@@ -2570,7 +2927,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v5.1.0</span>
+        <span id="mn-version-lbl">dejavu v5.2.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -2615,20 +2972,16 @@
   <script>
     const send = (msg) => { try { window.chrome.webview.postMessage(msg); } catch {} };
 
-    // Dynamic-Color Material Design 3 Geometric Origami Butterfly SVG (zero raster PNGs!)
-    const DEJAVU_M3_LOGO_SVG = `<svg class="djv-m3-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+    // Iconic Sculpted Material Design 3 Butterfly SVG (zero raster PNGs!)
+    const DEJAVU_M3_LOGO_SVG = `<svg class="djv-m3-logo" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
-      <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
-      <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
-      <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
-      <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
-      <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
-      <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
-      <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
-      <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
-      <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
-      <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
-      <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+      <path d="M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z" fill="var(--md-primary)"/>
+      <path d="M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z" fill="var(--md-primary)"/>
+      <path d="M31.2 34.4C26.2 24.4 19.6 17.4 13.2 17.0C16.2 24.8 22.8 31.8 31.2 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+      <path d="M32.8 34.4C37.8 24.4 44.4 17.4 50.8 17.0C47.8 24.8 41.2 31.8 32.8 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+      <path d="M31.2 36.6C23.0 36.4 15.2 39.2 15.0 44.8C14.8 49.0 19.4 51.6 24.6 49.6C28.6 48.0 30.8 43.2 31.2 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+      <path d="M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+      <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
     </svg>`;
 
     function makeM3LogoSpan(sz, cls) {
@@ -2684,25 +3037,193 @@
       extensions: document.getElementById('mode-extensions')
     };
 
-    // Shield bindings
-    const popDot = document.getElementById('pop-dot');
-    const popBadge = document.getElementById('pop-badge');
-    const popSiteRow = document.getElementById('pop-site-row');
-    const popHost = document.getElementById('pop-host');
-    const popSiteSub = document.getElementById('pop-site-sub');
-    const popTotalSub = document.getElementById('pop-total-sub');
-    const btnSiteToggle = document.getElementById('btn-site-toggle');
-    const btnGlobalToggle = document.getElementById('btn-global-toggle');
-    const segEngines = document.getElementById('seg-engines');
+    // Brave-Grade Material Design 3 Shields Popover Bindings
+    const shEmblem = document.getElementById('sh-emblem');
+    const shEmblemCheck = document.getElementById('sh-emblem-check');
+    const shHost = document.getElementById('sh-host');
+    const shStatusLine = document.getElementById('sh-status-line');
+    const btnShieldMaster = document.getElementById('btn-shield-master');
+    const shHeroCard = document.getElementById('sh-hero-card');
+    const shHeroCount = document.getElementById('sh-hero-count');
+    const shTotalPill = document.getElementById('sh-total-pill');
+    const shStatAds = document.getElementById('sh-stat-ads');
+    const shStatCosmetic = document.getElementById('sh-stat-cosmetic');
+    const shStatFp = document.getElementById('sh-stat-fp');
+    const shStatParams = document.getElementById('sh-stat-params');
+    const shLevelSeg = document.getElementById('sh-level-seg');
+    const shTogglesCard = document.getElementById('sh-toggles-card');
+    const swShFp = document.getElementById('sw-sh-fp');
+    const swShCookies = document.getElementById('sw-sh-cookies');
+    const swShParams = document.getElementById('sw-sh-params');
+    const swShHttps = document.getElementById('sw-sh-https');
+    const shRulesLbl = document.getElementById('sh-rules-lbl');
+    const btnShSettings = document.getElementById('btn-sh-settings');
 
-    btnSiteToggle.addEventListener('click', () => send({ type: 'toggleSiteShield' }));
-    btnGlobalToggle.addEventListener('click', () => send({ type: 'toggleGlobalShield' }));
-    segEngines.addEventListener('click', (e) => {
-      const btn = e.target.closest('.seg-btn');
-      if (!btn) return;
-      segEngines.querySelectorAll('.seg-btn').forEach((b) => b.classList.toggle('active', b === btn));
-      send({ type: 'setSearchEngine', engine: btn.dataset.engine });
-    });
+    let latestShieldState = {
+      host: '',
+      activeForSite: true,
+      globalEnabled: true,
+      sitePaused: false,
+      shieldLevel: 'standard',
+      blockFingerprinting: true,
+      blockCookieNotices: true,
+      stripTrackingParams: true,
+      httpsFirst: false
+    };
+
+    function setOvSwitch(el, on) {
+      if (!el) return;
+      const act = !!on;
+      el.classList.toggle('on', act);
+      el.setAttribute('aria-checked', act ? 'true' : 'false');
+    }
+
+    function formatCompactCount(n) {
+      const v = Number(n || 0);
+      if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`;
+      if (v >= 10000) return `${(v / 1000).toFixed(1)}K`;
+      return v.toLocaleString();
+    }
+
+    function syncShieldLevelUi(level) {
+      const isAgg = String(level || 'standard').toLowerCase() === 'aggressive';
+      if (shLevelSeg) {
+        shLevelSeg.classList.toggle('is-aggressive', isAgg);
+        shLevelSeg.querySelectorAll('.sh-seg-btn').forEach((b) => {
+          const act = b.dataset.level === (isAgg ? 'aggressive' : 'standard');
+          b.classList.toggle('active', act);
+          b.setAttribute('aria-checked', act ? 'true' : 'false');
+        });
+      }
+    }
+
+    function renderShieldPopover(d) {
+      const host = String(d.host || '').trim();
+      const cleanHost = host.replace(/^www\./i, '');
+      const globalOn = d.globalEnabled !== false;
+      const sitePaused = !!d.sitePaused;
+      const shieldsUp = typeof d.activeForSite === 'boolean'
+        ? d.activeForSite
+        : (globalOn && (!host || !sitePaused));
+
+      const adsCount = Number(d.tabBlocked || 0);
+      const cosmeticCount = Number(d.cosmeticBlocked || 0);
+      const fpCount = Number(d.fingerprintingBlocked || 0);
+      const paramsCount = Number(d.trackingParamsStripped || 0);
+      const siteTotal = adsCount + cosmeticCount + fpCount + paramsCount;
+      const lifetimeTotal = Number(d.totalBlocked || 0);
+      const level = String(d.shieldLevel || 'standard').toLowerCase() === 'aggressive' ? 'aggressive' : 'standard';
+
+      latestShieldState = {
+        host,
+        activeForSite: shieldsUp,
+        globalEnabled: globalOn,
+        sitePaused,
+        shieldLevel: level,
+        blockFingerprinting: d.blockFingerprinting !== false,
+        blockCookieNotices: d.blockCookieNotices !== false,
+        stripTrackingParams: d.stripTrackingParams !== false,
+        httpsFirst: !!d.httpsFirst
+      };
+
+      if (shEmblem) shEmblem.classList.toggle('is-down', !shieldsUp);
+      if (shEmblemCheck) shEmblemCheck.style.opacity = shieldsUp ? '1' : '0';
+      if (shHost) shHost.textContent = cleanHost || 'dejavu Shields';
+      if (shStatusLine) {
+        shStatusLine.classList.toggle('is-down', !shieldsUp);
+        if (shieldsUp) {
+          shStatusLine.textContent = cleanHost ? `Shields are UP for ${cleanHost}` : 'Shields are UP globally';
+        } else {
+          shStatusLine.textContent = cleanHost ? `Shields are DOWN for ${cleanHost}` : 'Shields are DOWN globally';
+        }
+      }
+      setOvSwitch(btnShieldMaster, shieldsUp);
+      if (shHeroCard) shHeroCard.classList.toggle('is-down', !shieldsUp);
+      if (shTogglesCard) shTogglesCard.classList.toggle('is-muted', !shieldsUp);
+
+      const heroNum = cleanHost ? siteTotal : lifetimeTotal;
+      if (shHeroCount) shHeroCount.textContent = heroNum.toLocaleString();
+      if (shTotalPill) shTotalPill.textContent = `${formatCompactCount(lifetimeTotal)} lifetime`;
+      if (shStatAds) shStatAds.textContent = adsCount.toLocaleString();
+      if (shStatCosmetic) shStatCosmetic.textContent = cosmeticCount.toLocaleString();
+      if (shStatFp) shStatFp.textContent = fpCount.toLocaleString();
+      if (shStatParams) shStatParams.textContent = paramsCount.toLocaleString();
+
+      syncShieldLevelUi(level);
+      setOvSwitch(swShFp, latestShieldState.blockFingerprinting);
+      setOvSwitch(swShCookies, latestShieldState.blockCookieNotices);
+      setOvSwitch(swShParams, latestShieldState.stripTrackingParams);
+      setOvSwitch(swShHttps, latestShieldState.httpsFirst);
+
+      if (shRulesLbl) {
+        const rc = Number(d.rulesCount || 0);
+        shRulesLbl.textContent = rc > 0 ? `${rc.toLocaleString()}+ filter rules · Brave Engine` : '500+ filter rules · Brave Engine';
+      }
+    }
+
+    if (btnShieldMaster) {
+      btnShieldMaster.addEventListener('click', () => {
+        const nextUp = !latestShieldState.activeForSite;
+        latestShieldState.activeForSite = nextUp;
+        setOvSwitch(btnShieldMaster, nextUp);
+        if (latestShieldState.host) {
+          send({ type: 'toggleSiteShield', host: latestShieldState.host });
+        } else {
+          send({ type: 'toggleAdBlock', enabled: nextUp });
+        }
+      });
+    }
+
+    if (shLevelSeg) {
+      shLevelSeg.addEventListener('click', (e) => {
+        const btn = e.target.closest('.sh-seg-btn');
+        if (!btn || !btn.dataset.level) return;
+        const level = btn.dataset.level;
+        latestShieldState.shieldLevel = level;
+        syncShieldLevelUi(level);
+        send({ type: 'setShieldLevel', level });
+      });
+    }
+
+    if (swShFp) {
+      swShFp.addEventListener('click', () => {
+        const next = !swShFp.classList.contains('on');
+        latestShieldState.blockFingerprinting = next;
+        setOvSwitch(swShFp, next);
+        send({ type: 'toggleShieldFeature', feature: 'fingerprinting', enabled: next });
+      });
+    }
+
+    if (swShCookies) {
+      swShCookies.addEventListener('click', () => {
+        const next = !swShCookies.classList.contains('on');
+        latestShieldState.blockCookieNotices = next;
+        setOvSwitch(swShCookies, next);
+        send({ type: 'toggleShieldFeature', feature: 'cookies', enabled: next });
+      });
+    }
+
+    if (swShParams) {
+      swShParams.addEventListener('click', () => {
+        const next = !swShParams.classList.contains('on');
+        latestShieldState.stripTrackingParams = next;
+        setOvSwitch(swShParams, next);
+        send({ type: 'toggleShieldFeature', feature: 'trackingParams', enabled: next });
+      });
+    }
+
+    if (swShHttps) {
+      swShHttps.addEventListener('click', () => {
+        const next = !swShHttps.classList.contains('on');
+        latestShieldState.httpsFirst = next;
+        setOvSwitch(swShHttps, next);
+        send({ type: 'toggleHttpsOnly', enabled: next });
+      });
+    }
+
+    if (btnShSettings) {
+      btnShSettings.addEventListener('click', () => send({ type: 'openSettings', pane: 'privacy' }));
+    }
 
     // Find bindings
     const findQ = document.getElementById('find-q');
@@ -2964,7 +3485,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.1.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.2.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -3109,21 +3630,7 @@
       }
 
       if (d.mode === 'shield') {
-        popDot.classList.toggle('off', !d.activeForSite);
-        popBadge.textContent = d.activeForSite ? 'Active' : 'Paused';
-        if (d.host) {
-          popSiteRow.classList.remove('hidden');
-          popHost.textContent = d.host.replace(/^www\./, '');
-          popSiteSub.textContent = `${Number(d.tabBlocked || 0).toLocaleString()} blocked on this page`;
-          btnSiteToggle.classList.toggle('on', !d.sitePaused && d.globalEnabled);
-        } else {
-          popSiteRow.classList.add('hidden');
-        }
-        popTotalSub.textContent = `${Number(d.totalBlocked || 0).toLocaleString()} total blocked`;
-        btnGlobalToggle.classList.toggle('on', !!d.globalEnabled);
-        segEngines.querySelectorAll('.seg-btn').forEach((b) => {
-          b.classList.toggle('active', b.dataset.engine === d.searchEngine);
-        });
+        renderShieldPopover(d);
       } else if (d.mode === 'find') {
         requestAnimationFrame(() => { findQ.focus(); findQ.select(); });
       } else if (d.mode === 'download') {
@@ -3900,6 +4407,16 @@
       const rtabs = Array.isArray(s.remoteTabs) ? s.remoteTabs : [];
       const drops = Array.isArray(s.drops) ? s.drops : [];
 
+      const relayStatus = String(s.relayStatus || '').toLowerCase();
+      const relayLabel = relayStatus === 'connected_lan'
+        ? 'Direct Wi-Fi LAN'
+        : (relayStatus === 'connected_cloud'
+          ? 'E2EE Cloud · Connected'
+          : (relayStatus === 'retrying'
+            ? 'Reconnecting…'
+            : (relayStatus === 'connecting' ? 'Connecting…' : '')));
+      const relayIsLive = relayStatus === 'connected_lan' || relayStatus === 'connected_cloud';
+
       if (syncStatusCard) {
         syncStatusCard.classList.toggle('is-google', isGoogle);
         if (isGoogle) {
@@ -3910,8 +4427,9 @@
               : 'Waiting for Android phone with same Google Account');
           syncStatusCard.innerHTML = `
             <div class="sync-status-top">
-              <span class="sync-live-dot ${peerOnline ? 'online' : ''}"></span>
+              <span class="sync-live-dot ${peerOnline || relayIsLive ? 'online' : ''}"></span>
               <span class="sync-status-email"></span>
+              ${relayLabel ? `<span class="sync-relay-tag ${relayIsLive ? 'is-live' : ''}" title="${escapeHtml(s.relayBroker || '')}">${escapeHtml(relayLabel)}</span>` : ''}
             </div>
             <div class="sync-status-meta"></div>
           `;
@@ -3920,8 +4438,9 @@
         } else if (s.connected) {
           syncStatusCard.innerHTML = `
             <div class="sync-status-top">
-              <span class="sync-live-dot ${peerOnline ? 'online' : ''}"></span>
+              <span class="sync-live-dot ${peerOnline || relayIsLive ? 'online' : ''}"></span>
               <span class="sync-status-email"></span>
+              ${relayLabel ? `<span class="sync-relay-tag ${relayIsLive ? 'is-live' : ''}" title="${escapeHtml(s.relayBroker || '')}">${escapeHtml(relayLabel)}</span>` : ''}
             </div>
             <div class="sync-status-meta">Manual E2EE Link active · Sign in with Google for automatic sync</div>
           `;
@@ -4096,7 +4615,7 @@
     function renderMenuPanel(d) {
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.1.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.2.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');
@@ -4290,7 +4809,7 @@
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && (currentOverlayMode === 'extensions' || currentOverlayMode === 'sync' || currentOverlayMode === 'sidebar' || currentOverlayMode === 'menu')) {
+      if (e.key === 'Escape' && (currentOverlayMode === 'shield' || currentOverlayMode === 'extensions' || currentOverlayMode === 'sync' || currentOverlayMode === 'sidebar' || currentOverlayMode === 'menu')) {
         e.preventDefault();
         send({ type: 'closePanel' });
         return;

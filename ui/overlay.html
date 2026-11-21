@@ -1124,8 +1124,11 @@
       <div id="other-prof-list" class="panel-scroll"></div>
 
       <div class="prof-footer">
-        <div id="prof-ver-text" class="ver-info">dejavu v2.9.1</div>
-        <button id="btn-update-action" class="pill-btn">Check updates</button>
+        <div id="prof-ver-text" class="ver-info">dejavu v3.0.0</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button id="btn-prof-settings" class="pill-btn" title="Browser Settings (Ctrl+,)">Options</button>
+          <button id="btn-update-action" class="pill-btn">Check updates</button>
+        </div>
       </div>
     </div>
 
@@ -1980,6 +1983,10 @@
         send({ type: 'checkUpdate' });
       }
     });
+    const btnProfSettings = document.getElementById('btn-prof-settings');
+    if (btnProfSettings) {
+      btnProfSettings.addEventListener('click', () => send({ type: 'openSettings', pane: 'general' }));
+    }
 
     function renderProfilesHub(d) {
       latestProfileData = d;
@@ -2046,7 +2053,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '2.9.1'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '3.0.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -2176,6 +2183,9 @@
       }
 
       const wantLight = !!d.isLight;
+      if (d.accentColor) {
+        document.documentElement.dataset.accent = d.accentColor;
+      }
       const wasLight = document.body.classList.contains('theme-light');
       const themeChanged = wantLight !== wasLight || !document.body.classList.contains(wantLight ? 'theme-light' : 'theme-dark');
       if (themeChanged) {

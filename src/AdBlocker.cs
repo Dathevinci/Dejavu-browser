@@ -744,6 +744,31 @@ namespace DejavuBrowser
             return !IsPausedForHost(host);
         }
 
+        public List<string> GetPausedHosts()
+        {
+            lock (_lock)
+            {
+                List<string> list = new List<string>(_pausedHosts);
+                list.Sort(StringComparer.OrdinalIgnoreCase);
+                return list;
+            }
+        }
+
+        public void ResumeSite(string host)
+        {
+            if (string.IsNullOrEmpty(host)) return;
+            bool changed = false;
+            lock (_lock)
+            {
+                if (_pausedHosts.Remove(host))
+                {
+                    _settings.pausedHosts = new List<string>(_pausedHosts);
+                    changed = true;
+                }
+            }
+            if (changed) SaveCurrentSettings();
+        }
+
         public void ToggleSite(string host)
         {
             if (string.IsNullOrEmpty(host)) return;

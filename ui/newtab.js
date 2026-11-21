@@ -203,6 +203,9 @@
   let lastFrameTime = startTime;
 
   let currentWallpaper = (window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.wallpaper) || 'live:obsidian-prism';
+  let reduceMotion = !!(window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.browserOptions && window.__DEJAVU_BOOT__.browserOptions.reduceWallpaperMotion);
+  let dimMode = (window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.browserOptions && window.__DEJAVU_BOOT__.browserOptions.wallpaperDim) || 'balanced';
+  let frozenTime = 0;
   let artImage = null;
   let prevArtImage = null;
   let artFadeStart = 0;
@@ -437,8 +440,8 @@
     // Clamp pointer parallax strictly inside the 1.022 overscan margin so zero border gap ever shows
     const maxShiftX = Math.max(0, (dw - width) * 0.46);
     const maxShiftY = Math.max(0, (dh - height) * 0.46);
-    const shiftX = Math.max(-maxShiftX, Math.min(maxShiftX, (pointerX - 0.5) * 18));
-    const shiftY = Math.max(-maxShiftY, Math.min(maxShiftY, (pointerY - 0.5) * 12));
+    const shiftX = reduceMotion ? 0 : Math.max(-maxShiftX, Math.min(maxShiftX, (pointerX - 0.5) * 18));
+    const shiftY = reduceMotion ? 0 : Math.max(-maxShiftY, Math.min(maxShiftY, (pointerY - 0.5) * 12));
     const ox = (width - dw) * 0.5 - shiftX;
     const oy = (height - dh) * 0.5 - shiftY;
 
@@ -467,42 +470,44 @@
         drawCoverImage(artImage, 1);
       }
 
-      // Refined ambient vignette: preserves full vibrancy & micro-detail of 2K artwork
-      // while gently cradling Start Page typography, search pill, and Favorites squircles
+      // Refined ambient vignette: respects Safari Appearance Wallpaper Dimming (vivid / balanced / calm)
+      const dimMult = dimMode === 'vivid' ? 0.45 : (dimMode === 'calm' ? 1.85 : 1.0);
       const vig = ctx.createRadialGradient(
         width * 0.5, height * 0.45, Math.min(width, height) * 0.08,
         width * 0.5, height * 0.50, Math.max(width, height) * 0.76
       );
-      vig.addColorStop(0, 'rgba(6, 5, 13, 0.17)');
-      vig.addColorStop(0.42, 'rgba(6, 5, 13, 0.08)');
-      vig.addColorStop(0.72, 'rgba(5, 4, 11, 0.03)');
-      vig.addColorStop(1, 'rgba(4, 3, 10, 0.28)');
+      vig.addColorStop(0, `rgba(6, 5, 13, ${(0.17 * dimMult).toFixed(3)})`);
+      vig.addColorStop(0.42, `rgba(6, 5, 13, ${(0.08 * dimMult).toFixed(3)})`);
+      vig.addColorStop(0.72, `rgba(5, 4, 11, ${(0.03 * dimMult).toFixed(3)})`);
+      vig.addColorStop(1, `rgba(4, 3, 10, ${Math.min(0.62, 0.28 * dimMult).toFixed(3)})`);
       ctx.fillStyle = vig;
       ctx.fillRect(0, 0, width, height);
 
       // Whisper-soft top toolbar scrim so unified Safari chrome reads cleanly over bright skies
       const topScrim = ctx.createLinearGradient(0, 0, 0, Math.min(160, height * 0.22));
-      topScrim.addColorStop(0, 'rgba(5, 4, 12, 0.24)');
+      topScrim.addColorStop(0, `rgba(5, 4, 12, ${Math.min(0.48, 0.24 * dimMult).toFixed(3)})`);
       topScrim.addColorStop(1, 'rgba(5, 4, 12, 0)');
       ctx.fillStyle = topScrim;
       ctx.fillRect(0, 0, width, Math.min(160, height * 0.22));
     }
 
-    // Ultra-delicate shimmering optical stardust motes (dt-normalized for 60/120/144Hz parity)
-    const stepScale = dt * 0.72;
-    for (const n of nodes) {
-      n.x = (n.x + n.vx * stepScale + 1) % 1;
-      n.y = (n.y + n.vy * stepScale + 1) % 1;
-      const px = n.x * width;
-      const py = n.y * height;
-      const twinkle = 0.55 + 0.45 * Math.sin(t * 1.55 + n.phase);
-      ctx.fillStyle = '#efe2ff';
-      ctx.globalAlpha = n.alpha * 0.42 * twinkle;
-      ctx.beginPath();
-      ctx.arc(px, py, n.r * 0.78, 0, Math.PI * 2);
-      ctx.fill();
+    // Ultra-delicate shimmering optical stardust motes (paused when reduceMotion is active)
+    if (!reduceMotion) {
+      const stepScale = dt * 0.72;
+      for (const n of nodes) {
+        n.x = (n.x + n.vx * stepScale + 1) % 1;
+        n.y = (n.y + n.vy * stepScale + 1) % 1;
+        const px = n.x * width;
+        const py = n.y * height;
+        const twinkle = 0.55 + 0.45 * Math.sin(t * 1.55 + n.phase);
+        ctx.fillStyle = '#efe2ff';
+        ctx.globalAlpha = n.alpha * 0.42 * twinkle;
+        ctx.beginPath();
+        ctx.arc(px, py, n.r * 0.78, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
     }
-    ctx.globalAlpha = 1;
   }
 
   function drawLiveThemeMode(t, dt, theme) {
@@ -630,23 +635,37 @@
 
   function draw(now) {
     if (!running || !ctx) return;
-    const t = (now - startTime) * 0.001;
     const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTime) * 0.001));
     lastFrameTime = now;
+    if (!reduceMotion) frozenTime += dt;
+    const t = frozenTime;
 
     // Frame-rate independent smooth exponential damping for pointer parallax
     const smooth = 1 - Math.exp(-3.2 * dt);
-    pointerX += (targetX - pointerX) * smooth;
-    pointerY += (targetY - pointerY) * smooth;
+    if (reduceMotion) {
+      pointerX += (0.5 - pointerX) * smooth;
+      pointerY += (0.42 - pointerY) * smooth;
+    } else {
+      pointerX += (targetX - pointerX) * smooth;
+      pointerY += (targetY - pointerY) * smooth;
+    }
 
     if (currentWallpaper.startsWith('art:') || currentWallpaper.startsWith('custom')) {
-      drawArtworkMode(t, dt);
+      drawArtworkMode(t, reduceMotion ? 0 : dt);
     } else {
       const theme = LIVE_THEMES[currentWallpaper] || LIVE_THEMES['live:obsidian-prism'];
-      drawLiveThemeMode(t, dt, theme);
+      drawLiveThemeMode(t, reduceMotion ? 0 : dt, theme);
     }
 
     rafId = requestAnimationFrame(draw);
+  }
+
+  function setOptions(opts) {
+    if (!opts) return;
+    if (typeof opts.reduceMotion === 'boolean') reduceMotion = opts.reduceMotion;
+    if (typeof opts.dim === 'string' && (opts.dim === 'vivid' || opts.dim === 'balanced' || opts.dim === 'calm')) {
+      dimMode = opts.dim;
+    }
   }
 
   function setWallpaper(wpId) {
@@ -703,5 +722,5 @@
     }
   }
 
-  window.DejavuNewTabCanvas = { init, start, stop, resize, setWallpaper, whenReady, LIVE_THEMES };
+  window.DejavuNewTabCanvas = { init, start, stop, resize, setWallpaper, setOptions, whenReady, LIVE_THEMES };
 })();

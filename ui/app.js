@@ -105,9 +105,57 @@
   const btnWallpaperStore = document.getElementById('btn-wallpaper-store');
   const wallpaperStore = document.getElementById('wallpaper-store');
   const btnStoreClose = document.getElementById('btn-store-close');
+  const btnStoreMoreOptions = document.getElementById('btn-store-more-options');
   const btnCustomWp = document.getElementById('btn-custom-wp');
   const storeTabs = document.getElementById('store-tabs');
   const wallpaperGrid = document.getElementById('wallpaper-grid');
+  const btnSettings = document.getElementById('btn-settings');
+  const heroSearchWrap = document.querySelector('.hero-search-wrap');
+
+  const settingsOverlay = document.getElementById('settings-overlay');
+  const settingsWindow = document.getElementById('settings-window');
+  const settingsNav = document.getElementById('settings-nav');
+  const settingsPaneTitle = document.getElementById('settings-pane-title');
+  const settingsPaneSub = document.getElementById('settings-pane-sub');
+  const settingsVersionSub = document.getElementById('settings-version-sub');
+  const btnSettingsDone = document.getElementById('btn-settings-done');
+  const btnSettingsReset = document.getElementById('btn-settings-reset');
+  const settingsToast = document.getElementById('settings-toast');
+  const settingsWallpaperGrid = document.getElementById('settings-wallpaper-grid');
+  const optWpFilter = document.getElementById('opt-wp-filter');
+  const btnOptUploadWp = document.getElementById('btn-opt-upload-wp');
+  const btnSpGotoWallpapers = document.getElementById('btn-sp-goto-wallpapers');
+  const btnSpUploadWp = document.getElementById('btn-sp-upload-wp');
+  const optSearchEngine = document.getElementById('opt-search-engine');
+  const optStartup = document.getElementById('opt-startup');
+  const optNewtabMode = document.getElementById('opt-newtab-mode');
+  const optHomepageUrl = document.getElementById('opt-homepage-url');
+  const btnSaveHomepage = document.getElementById('btn-save-homepage');
+  const optShowFavbar = document.getElementById('opt-show-favbar');
+  const optAppearanceMode = document.getElementById('opt-appearance-mode');
+  const optAccentSwatches = document.getElementById('opt-accent-swatches');
+  const optFullUrl = document.getElementById('opt-full-url');
+  const optCompactTabs = document.getElementById('opt-compact-tabs');
+  const optAlwaysClose = document.getElementById('opt-always-close');
+  const optDefaultZoom = document.getElementById('opt-default-zoom');
+  const optWpDim = document.getElementById('opt-wp-dim');
+  const optReduceMotion = document.getElementById('opt-reduce-motion');
+  const optSpFavorites = document.getElementById('opt-sp-favorites');
+  const optSpFrequent = document.getElementById('opt-sp-frequent');
+  const optSpPrivacy = document.getElementById('opt-sp-privacy');
+  const optSpReading = document.getElementById('opt-sp-reading');
+  const optSpGreeting = document.getElementById('opt-sp-greeting');
+  const optSpSearch = document.getElementById('opt-sp-search');
+  const optGlobalAdblock = document.getElementById('opt-global-adblock');
+  const optAdblockStats = document.getElementById('opt-adblock-stats');
+  const optPausedHostsList = document.getElementById('opt-paused-hosts-list');
+  const optVpnAuto = document.getElementById('opt-vpn-auto');
+  const optVpnSummary = document.getElementById('opt-vpn-summary');
+  const btnOptOpenVpn = document.getElementById('btn-opt-open-vpn');
+  const btnOptClearHistory = document.getElementById('btn-opt-clear-history');
+  const btnOptClearCache = document.getElementById('btn-opt-clear-cache');
+  const optTabsCompactMirror = document.getElementById('opt-tabs-compact-mirror');
+  const optTabsCloseMirror = document.getElementById('opt-tabs-close-mirror');
 
   const prefFavorites = document.getElementById('pref-favorites');
   const prefFrequent = document.getElementById('pref-frequent');
@@ -115,6 +163,12 @@
   const prefReading = document.getElementById('pref-reading');
 
   const WALLPAPER_CATALOG = [
+    { id: 'art:wp-velvet-mirage.jpg', cat: 'art', name: 'Velvet Mirage', desc: 'Moonlit amethyst mirror lake & prismatic ripples', img: 'https://dejavu.local/wp-velvet-mirage.jpg' },
+    { id: 'art:wp-prism-cascade.jpg', cat: 'art', name: 'Prism Cascade', desc: 'Liquid-crystal silk ribbons & spectral glasswings', img: 'https://dejavu.local/wp-prism-cascade.jpg' },
+    { id: 'art:wp-midnight-orchid.jpg', cat: 'art', name: 'Midnight Orchid', desc: 'Dewy indigo night orchids & crystal butterflies', img: 'https://dejavu.local/wp-midnight-orchid.jpg' },
+    { id: 'art:wp-stardust-sanctuary.jpg', cat: 'art', name: 'Stardust Sanctuary', desc: 'Alpine peaks under Milky Way & amethyst aurora', img: 'https://dejavu.local/wp-stardust-sanctuary.jpg' },
+    { id: 'art:wp-opal-horizon.jpg', cat: 'art', name: 'Opal Horizon', desc: 'Iridescent mother-of-pearl clouds & dusk swells', img: 'https://dejavu.local/wp-opal-horizon.jpg' },
+    { id: 'art:wp-phantom-lotus.jpg', cat: 'art', name: 'Phantom Lotus', desc: 'Frosted crystal lotus on zen indigo mirror pond', img: 'https://dejavu.local/wp-phantom-lotus.jpg' },
     { id: 'art:wp-amethyst.jpg', cat: 'art', name: 'Amethyst Glasswing', desc: 'Faceted amethyst prism-glass in indigo twilight', img: 'https://dejavu.local/wp-amethyst.jpg' },
     { id: 'art:wp-aurora.jpg', cat: 'art', name: 'Aurora Glasswing', desc: 'Emerald & violet aurora over glacial mirror lake', img: 'https://dejavu.local/wp-aurora.jpg' },
     { id: 'art:wp-celestial.jpg', cat: 'art', name: 'Celestial Sapphire', desc: 'Iridescent Blue Morpho & moonlit sapphire water', img: 'https://dejavu.local/wp-celestial.jpg' },
@@ -137,6 +191,9 @@
     { id: 'live:halftone-swarm', cat: 'live', name: 'Halftone Swarm', desc: 'Dotted lavender butterfly matrix', grad: 'radial-gradient(circle at 50% 40%, #8652e6 0%, #160c2c 58%, #040308 100%)' }
   ];
   let storeFilterCat = 'all';
+  let settingsWpFilterCat = 'all';
+  let activeSettingsPane = 'general';
+  let toastTimer = null;
 
   const topBackdropCanvas = document.getElementById('optical-top-backdrop');
   const topBackdropCtx = topBackdropCanvas.getContext('2d');
@@ -163,6 +220,28 @@
       hidePrivacyReport: false,
       hideReadingList: false
     },
+    browserOptions: bootData.browserOptions || {
+      searchEngine: 'google',
+      appearanceMode: 'auto',
+      accentColor: 'amethyst',
+      showFullWebsiteAddress: false,
+      alwaysShowTabClose: false,
+      compactTabBar: false,
+      defaultZoomPercent: 100,
+      newTabMode: 'startpage',
+      homepageUrl: 'https://www.google.com',
+      startupBehavior: 'startpage',
+      reduceWallpaperMotion: false,
+      wallpaperDim: 'balanced',
+      hideGreetingBadge: false,
+      hideStartPageSearch: false,
+      favoritesBarHidden: false,
+      vpnAutoConnect: false,
+      vpnCountry: 'AUTO'
+    },
+    pausedHosts: bootData.pausedHosts || [],
+    settingsOpen: false,
+    settingsPane: 'general',
     downloadsCount: 0,
     hasActiveDownload: false,
     readerActive: false,
@@ -276,7 +355,8 @@
   // Site-Adaptive Top-Bar Optical Light-Guide (Zero Text Glare!)
   // =========================================================================
   function getChromeHeight() {
-    return body.classList.contains('has-favorites') ? 122 : 88;
+    const base = body.classList.contains('compact-tabs') ? 82 : 88;
+    return body.classList.contains('has-favorites') ? (base + 34) : base;
   }
 
   function resizeTopBackdrop() {
@@ -482,7 +562,8 @@
   function syncOmniboxDisplay(active) {
     if (!omniboxDomain) return;
     if (active && !active.isNewTab) {
-      const domain = extractCleanDomain(active.url, active.displayUrl);
+      const showFull = !!(state.browserOptions && state.browserOptions.showFullWebsiteAddress);
+      const domain = showFull ? (active.url || active.displayUrl || '') : extractCleanDomain(active.url, active.displayUrl);
       omniboxDomain.textContent = domain || active.displayUrl || '';
       omniboxDomain.classList.remove('is-placeholder');
     } else {
@@ -928,14 +1009,15 @@
   scUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') scSave.click(); });
 
   // =========================================================================
-  // Safari Start Page Customize + Butterfly Studio Modal
+  // Safari Start Page Customize + Butterfly Studio Modal + Safari Options Window
   // =========================================================================
-  function renderWallpaperGrid() {
-    wallpaperGrid.innerHTML = '';
+  function renderWallpaperCardsInto(gridEl, catFilter) {
+    if (!gridEl) return;
+    gridEl.innerHTML = '';
     const activeWp = state.wallpaper || 'live:obsidian-prism';
 
-    const items = WALLPAPER_CATALOG.filter((item) => storeFilterCat === 'all' || item.cat === storeFilterCat);
-    if (state.hasCustomWallpaper && (storeFilterCat === 'all' || storeFilterCat === 'art')) {
+    const items = WALLPAPER_CATALOG.filter((item) => catFilter === 'all' || item.cat === catFilter);
+    if (state.hasCustomWallpaper && (catFilter === 'all' || catFilter === 'art')) {
       items.unshift({
         id: activeWp.startsWith('custom') ? activeWp : 'custom',
         cat: 'art',
@@ -958,6 +1040,7 @@
         const img = document.createElement('img');
         img.src = item.img;
         img.alt = item.name;
+        img.loading = 'lazy';
         img.draggable = false;
         thumb.appendChild(img);
       } else {
@@ -971,7 +1054,7 @@
 
       const badge = document.createElement('span');
       badge.className = 'wp-badge';
-      badge.textContent = item.isCustom ? 'Custom' : (item.cat === 'live' ? 'Live 60fps' : 'Crystal Art');
+      badge.textContent = item.isCustom ? 'Custom' : (item.cat === 'live' ? 'Live 60fps' : '2K HD Art');
       thumb.appendChild(badge);
 
       const check = document.createElement('span');
@@ -991,12 +1074,273 @@
         state.wallpaper = item.id;
         window.DejavuNewTabCanvas.setWallpaper(item.id);
         renderWallpaperGrid();
+        if (state.settingsOpen && activeSettingsPane === 'wallpapers') renderSettingsWallpaperGrid();
         send({ type: 'setWallpaper', wallpaper: item.id });
       });
 
-      wallpaperGrid.appendChild(card);
+      gridEl.appendChild(card);
     });
   }
+
+  function renderWallpaperGrid() {
+    renderWallpaperCardsInto(wallpaperGrid, storeFilterCat);
+  }
+
+  function renderSettingsWallpaperGrid() {
+    renderWallpaperCardsInto(settingsWallpaperGrid, settingsWpFilterCat);
+  }
+
+  const SETTINGS_PANE_META = {
+    general: { title: 'General', sub: 'Search engine, startup tabs, homepage & toolbar behavior' },
+    appearance: { title: 'Appearance & Liquid Glass', sub: 'Theme polarity, Butterfly accent colors, tab layout & page zoom' },
+    startpage: { title: 'Start Page', sub: 'Choose which Safari sections appear on every new tab' },
+    wallpapers: { title: 'Butterfly HD Wallpapers', sub: '16 razor-sharp 2K dejavu artworks, 10 live 60fps themes & custom photos' },
+    privacy: { title: 'Privacy, Ad Blocker & VPN', sub: '100/100 ad shield, paused sites, 46-country VPN & browsing data' },
+    shortcuts: { title: 'Tabs & Keyboard Shortcuts', sub: 'Tab behavior preferences & MacBook Safari-style hotkeys' }
+  };
+
+  function showSettingsToast(text) {
+    if (!settingsToast || !text) return;
+    settingsToast.textContent = text;
+    settingsToast.classList.remove('hidden');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => settingsToast.classList.add('hidden'), 2600);
+  }
+
+  function setActiveSettingsPane(pane) {
+    const key = SETTINGS_PANE_META[pane] ? pane : 'general';
+    activeSettingsPane = key;
+    if (settingsNav) {
+      settingsNav.querySelectorAll('.settings-nav-item').forEach((b) => {
+        b.classList.toggle('active', b.dataset.pane === key);
+      });
+    }
+    document.querySelectorAll('.settings-pane').forEach((el) => {
+      el.classList.toggle('hidden', el.dataset.paneBody !== key);
+    });
+    if (settingsPaneTitle) settingsPaneTitle.textContent = SETTINGS_PANE_META[key].title;
+    if (settingsPaneSub) settingsPaneSub.textContent = SETTINGS_PANE_META[key].sub;
+    const scroller = settingsOverlay ? settingsOverlay.querySelector('.settings-scroll') : null;
+    if (scroller) scroller.scrollTop = 0;
+    if (key === 'wallpapers') renderSettingsWallpaperGrid();
+  }
+
+  function setSegmentedVal(container, val) {
+    if (!container) return;
+    const str = String(val);
+    container.querySelectorAll('.opt-seg-btn').forEach((b) => {
+      b.classList.toggle('active', String(b.dataset.val) === str);
+    });
+  }
+
+  function applyBrowserOptions(opts) {
+    const o = opts || {};
+    document.documentElement.dataset.accent = o.accentColor || 'amethyst';
+    body.classList.toggle('compact-tabs', !!o.compactTabBar);
+    body.classList.toggle('always-show-tab-close', !!o.alwaysShowTabClose);
+    if (startpageProfileBadge) {
+      startpageProfileBadge.classList.toggle('hidden', !!o.hideGreetingBadge);
+    }
+    if (heroSearchWrap) {
+      heroSearchWrap.classList.toggle('hidden', !!o.hideStartPageSearch);
+    }
+    if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
+      window.DejavuNewTabCanvas.setOptions({
+        reduceMotion: !!o.reduceWallpaperMotion,
+        dim: o.wallpaperDim || 'balanced'
+      });
+    }
+    syncSettingsUi();
+  }
+
+  function syncSettingsUi() {
+    const o = state.browserOptions || {};
+    const sp = state.startPagePrefs || {};
+    if (settingsVersionSub) {
+      settingsVersionSub.textContent = `Safari Edition · v${state.appVersion || '3.0.0'}`;
+    }
+    setSegmentedVal(optSearchEngine, o.searchEngine || state.searchEngine || 'google');
+    setSegmentedVal(optStartup, o.startupBehavior || 'startpage');
+    setSegmentedVal(optNewtabMode, o.newTabMode || 'startpage');
+    if (optHomepageUrl && document.activeElement !== optHomepageUrl) {
+      optHomepageUrl.value = o.homepageUrl || 'https://www.google.com';
+    }
+    if (optShowFavbar) optShowFavbar.classList.toggle('on', !o.favoritesBarHidden);
+
+    setSegmentedVal(optAppearanceMode, o.appearanceMode || 'auto');
+    if (optAccentSwatches) {
+      const ac = o.accentColor || 'amethyst';
+      optAccentSwatches.querySelectorAll('.accent-swatch').forEach((b) => {
+        b.classList.toggle('active', b.dataset.accentChoice === ac);
+      });
+    }
+    if (optFullUrl) optFullUrl.classList.toggle('on', !!o.showFullWebsiteAddress);
+    if (optCompactTabs) optCompactTabs.classList.toggle('on', !!o.compactTabBar);
+    if (optAlwaysClose) optAlwaysClose.classList.toggle('on', !!o.alwaysShowTabClose);
+    if (optTabsCompactMirror) optTabsCompactMirror.classList.toggle('on', !!o.compactTabBar);
+    if (optTabsCloseMirror) optTabsCloseMirror.classList.toggle('on', !!o.alwaysShowTabClose);
+    setSegmentedVal(optDefaultZoom, o.defaultZoomPercent || 100);
+    setSegmentedVal(optWpDim, o.wallpaperDim || 'balanced');
+    if (optReduceMotion) optReduceMotion.classList.toggle('on', !!o.reduceWallpaperMotion);
+
+    if (optSpFavorites) optSpFavorites.classList.toggle('on', !sp.hideFavorites);
+    if (optSpFrequent) optSpFrequent.classList.toggle('on', !sp.hideFrequentlyVisited);
+    if (optSpPrivacy) optSpPrivacy.classList.toggle('on', !sp.hidePrivacyReport);
+    if (optSpReading) optSpReading.classList.toggle('on', !sp.hideReadingList);
+    if (optSpGreeting) optSpGreeting.classList.toggle('on', !o.hideGreetingBadge);
+    if (optSpSearch) optSpSearch.classList.toggle('on', !o.hideStartPageSearch);
+
+    if (optGlobalAdblock) optGlobalAdblock.classList.toggle('on', state.globalAdBlockEnabled !== false);
+    if (optAdblockStats) {
+      const cnt = Number(state.totalBlocked || 0).toLocaleString();
+      optAdblockStats.textContent = `${cnt} ads & trackers blocked across your browsing`;
+    }
+    if (optPausedHostsList) {
+      const hosts = Array.isArray(state.pausedHosts) ? state.pausedHosts : [];
+      optPausedHostsList.innerHTML = '';
+      if (!hosts.length) {
+        const empty = document.createElement('div');
+        empty.className = 'opt-paused-empty';
+        empty.textContent = 'No paused sites — Ad Blocker is protecting every website.';
+        optPausedHostsList.appendChild(empty);
+      } else {
+        hosts.forEach((h) => {
+          const chip = document.createElement('span');
+          chip.className = 'opt-paused-chip';
+          const lbl = document.createElement('span');
+          lbl.textContent = h;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = 'Resume';
+          btn.addEventListener('click', () => send({ type: 'resumePausedHost', host: h }));
+          chip.appendChild(lbl);
+          chip.appendChild(btn);
+          optPausedHostsList.appendChild(chip);
+        });
+      }
+    }
+    if (optVpnAuto) optVpnAuto.classList.toggle('on', !!o.vpnAutoConnect);
+    if (optVpnSummary && state.vpn) {
+      const st = state.vpn.state || 'disconnected';
+      optVpnSummary.textContent = st === 'connected'
+        ? `Connected via ${state.vpn.exitCountry || state.vpn.countryName || 'VPN'} (${state.vpn.exitIp || 'Encrypted'})`
+        : 'Disconnected · 46 encrypted global locations ready';
+    }
+  }
+
+  function updateOpt(patch) {
+    state.browserOptions = Object.assign({}, state.browserOptions || {}, patch);
+    applyBrowserOptions(state.browserOptions);
+    const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
+    if (active) syncOmniboxDisplay(active);
+    send(Object.assign({ type: 'updateBrowserOptions' }, patch));
+  }
+
+  if (btnSettings) {
+    btnSettings.addEventListener('click', () => {
+      wallpaperStore.classList.add('hidden');
+      send({ type: 'toggleSettings', open: !state.settingsOpen, pane: activeSettingsPane });
+    });
+  }
+  if (btnStoreMoreOptions) {
+    btnStoreMoreOptions.addEventListener('click', () => {
+      wallpaperStore.classList.add('hidden');
+      send({ type: 'toggleSettings', open: true, pane: 'general' });
+    });
+  }
+  if (btnSettingsDone) {
+    btnSettingsDone.addEventListener('click', () => send({ type: 'toggleSettings', open: false }));
+  }
+  if (settingsOverlay) {
+    settingsOverlay.addEventListener('click', (e) => {
+      if (e.target === settingsOverlay) send({ type: 'toggleSettings', open: false });
+    });
+  }
+  if (settingsNav) {
+    settingsNav.addEventListener('click', (e) => {
+      const btn = e.target.closest('.settings-nav-item');
+      if (!btn) return;
+      setActiveSettingsPane(btn.dataset.pane || 'general');
+    });
+  }
+  if (btnSettingsReset) {
+    btnSettingsReset.addEventListener('click', () => send({ type: 'resetBrowserOptions' }));
+  }
+
+  function bindSeg(container, key, parseVal) {
+    if (!container) return;
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('.opt-seg-btn');
+      if (!btn) return;
+      const v = parseVal ? parseVal(btn.dataset.val) : btn.dataset.val;
+      updateOpt({ [key]: v });
+    });
+  }
+  bindSeg(optSearchEngine, 'searchEngine');
+  bindSeg(optStartup, 'startupBehavior');
+  bindSeg(optNewtabMode, 'newTabMode');
+  bindSeg(optAppearanceMode, 'appearanceMode');
+  bindSeg(optDefaultZoom, 'defaultZoomPercent', Number);
+  bindSeg(optWpDim, 'wallpaperDim');
+
+  if (optAccentSwatches) {
+    optAccentSwatches.addEventListener('click', (e) => {
+      const btn = e.target.closest('.accent-swatch');
+      if (!btn) return;
+      updateOpt({ accentColor: btn.dataset.accentChoice || 'amethyst' });
+    });
+  }
+  if (btnSaveHomepage && optHomepageUrl) {
+    const saveHp = () => {
+      const val = optHomepageUrl.value.trim();
+      if (!val) return;
+      updateOpt({ homepageUrl: val });
+      showSettingsToast('Homepage saved');
+    };
+    btnSaveHomepage.addEventListener('click', saveHp);
+    optHomepageUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveHp(); });
+  }
+  if (optShowFavbar) optShowFavbar.addEventListener('click', () => updateOpt({ favoritesBarHidden: optShowFavbar.classList.contains('on') }));
+  if (optFullUrl) optFullUrl.addEventListener('click', () => updateOpt({ showFullWebsiteAddress: !optFullUrl.classList.contains('on') }));
+  if (optCompactTabs) optCompactTabs.addEventListener('click', () => updateOpt({ compactTabBar: !optCompactTabs.classList.contains('on') }));
+  if (optAlwaysClose) optAlwaysClose.addEventListener('click', () => updateOpt({ alwaysShowTabClose: !optAlwaysClose.classList.contains('on') }));
+  if (optTabsCompactMirror) optTabsCompactMirror.addEventListener('click', () => updateOpt({ compactTabBar: !optTabsCompactMirror.classList.contains('on') }));
+  if (optTabsCloseMirror) optTabsCloseMirror.addEventListener('click', () => updateOpt({ alwaysShowTabClose: !optTabsCloseMirror.classList.contains('on') }));
+  if (optReduceMotion) optReduceMotion.addEventListener('click', () => updateOpt({ reduceWallpaperMotion: !optReduceMotion.classList.contains('on') }));
+
+  function toggleSpPref(key) {
+    const next = Object.assign({}, state.startPagePrefs || {});
+    next[key] = !next[key];
+    state.startPagePrefs = next;
+    applyStartPagePrefs(next);
+    syncSettingsUi();
+    send({ type: 'updateStartPagePrefs', [key]: next[key] });
+  }
+  if (optSpFavorites) optSpFavorites.addEventListener('click', () => toggleSpPref('hideFavorites'));
+  if (optSpFrequent) optSpFrequent.addEventListener('click', () => toggleSpPref('hideFrequentlyVisited'));
+  if (optSpPrivacy) optSpPrivacy.addEventListener('click', () => toggleSpPref('hidePrivacyReport'));
+  if (optSpReading) optSpReading.addEventListener('click', () => toggleSpPref('hideReadingList'));
+  if (optSpGreeting) optSpGreeting.addEventListener('click', () => updateOpt({ hideGreetingBadge: optSpGreeting.classList.contains('on') }));
+  if (optSpSearch) optSpSearch.addEventListener('click', () => updateOpt({ hideStartPageSearch: optSpSearch.classList.contains('on') }));
+
+  if (btnSpGotoWallpapers) btnSpGotoWallpapers.addEventListener('click', () => setActiveSettingsPane('wallpapers'));
+  if (btnSpUploadWp) btnSpUploadWp.addEventListener('click', () => send({ type: 'pickCustomWallpaper' }));
+  if (btnOptUploadWp) btnOptUploadWp.addEventListener('click', () => send({ type: 'pickCustomWallpaper' }));
+  if (optWpFilter) {
+    optWpFilter.addEventListener('click', (e) => {
+      const btn = e.target.closest('.opt-seg-btn');
+      if (!btn) return;
+      settingsWpFilterCat = btn.dataset.cat || 'all';
+      optWpFilter.querySelectorAll('.opt-seg-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      renderSettingsWallpaperGrid();
+    });
+  }
+
+  if (optGlobalAdblock) optGlobalAdblock.addEventListener('click', () => updateOpt({ globalAdBlockEnabled: !optGlobalAdblock.classList.contains('on') }));
+  if (optVpnAuto) optVpnAuto.addEventListener('click', () => updateOpt({ vpnAutoConnect: !optVpnAuto.classList.contains('on') }));
+  if (btnOptOpenVpn) btnOptOpenVpn.addEventListener('click', () => { send({ type: 'toggleSettings', open: false }); setTimeout(openVpnPopover, 60); });
+  if (btnOptClearHistory) btnOptClearHistory.addEventListener('click', () => send({ type: 'clearHistory' }));
+  if (btnOptClearCache) btnOptClearCache.addEventListener('click', () => send({ type: 'clearBrowsingCache' }));
 
   btnWallpaperStore.addEventListener('click', () => {
     shortcutModal.classList.add('hidden');
@@ -1037,6 +1381,8 @@
     if (e.key === 'Escape') {
       if (!tabContextMenu.classList.contains('hidden')) {
         hideTabContextMenu();
+      } else if (state.settingsOpen) {
+        send({ type: 'toggleSettings', open: false });
       } else if (!wallpaperStore.classList.contains('hidden')) {
         wallpaperStore.classList.add('hidden');
       } else if (!shortcutModal.classList.contains('hidden')) {
@@ -1482,6 +1828,23 @@
       window.DejavuNewTabCanvas.start();
     }
 
+    // Safari Options Window
+    const optOpen = !!next.settingsOpen;
+    const wasOptOpen = body.classList.contains('settings-open');
+    body.classList.toggle('settings-open', optOpen);
+    if (settingsOverlay) settingsOverlay.classList.toggle('hidden', !optOpen);
+    if (btnSettings) btnSettings.classList.toggle('is-active', optOpen);
+    applyBrowserOptions(next.browserOptions || state.browserOptions);
+    if (optOpen) {
+      if (!wasOptOpen) {
+        setActiveSettingsPane(next.settingsPane || activeSettingsPane || 'general');
+        if (settingsWindow) requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(settingsWindow));
+      } else if (activeSettingsPane === 'wallpapers') {
+        renderSettingsWallpaperGrid();
+      }
+      window.DejavuNewTabCanvas.start();
+    }
+
     if (next.activeProfile && window.DejavuAvatars) {
       const avKey = `${next.activeProfile.avatar}_${next.activeProfile.name}`;
       if (avKey !== lastAvatarRendered) {
@@ -1521,25 +1884,27 @@
     btnReload.classList.toggle('loading', !!(active && active.loading));
     btnReload.title = (active && active.loading) ? 'Stop loading' : 'Reload (Ctrl+R)';
 
+    const apMode = (next.browserOptions && next.browserOptions.appearanceMode) || 'auto';
     if (onNewTab) {
       body.classList.add('on-newtab', 'theme-dark');
       body.classList.remove('theme-light');
       window.DejavuNewTabCanvas.start();
-      if (ovOpen) hideStartPageStatus();
-      if (!ovOpen && lastActiveId !== next.activeTabId) {
+      if (ovOpen || optOpen) hideStartPageStatus();
+      if (!ovOpen && !optOpen && lastActiveId !== next.activeTabId) {
         newtabSearchInput.value = '';
         setTimeout(() => newtabSearchInput.focus(), 40);
       }
     } else {
       hideStartPageStatus();
       body.classList.remove('on-newtab');
-      if (!ovOpen) window.DejavuNewTabCanvas.stop();
-      body.classList.toggle('theme-light', !ovOpen && !!active.isLight);
-      body.classList.toggle('theme-dark', ovOpen || !active.isLight);
+      if (!ovOpen && !optOpen) window.DejavuNewTabCanvas.stop();
+      const effLight = (apMode === 'light') ? true : (apMode === 'dark' ? false : !!active.isLight);
+      body.classList.toggle('theme-light', !ovOpen && !optOpen && effLight);
+      body.classList.toggle('theme-dark', ovOpen || optOpen || !effLight);
       drawTopLightGuide({
         baseRgb: next.baseRgb,
         accents: next.accents,
-        isLight: !!active.isLight
+        isLight: effLight
       });
     }
     lastActiveId = next.activeTabId;
@@ -1601,14 +1966,18 @@
 
       if (msg.type === 'state') {
         applyState(msg);
+      } else if (msg.type === 'settingsToast') {
+        showSettingsToast(msg.text || '');
       } else if (msg.type === 'palette') {
-        if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open')) {
-          body.classList.toggle('theme-light', !!msg.isLight);
-          body.classList.toggle('theme-dark', !msg.isLight);
+        if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open') && !body.classList.contains('settings-open')) {
+          const apMode = (state.browserOptions && state.browserOptions.appearanceMode) || 'auto';
+          const effLight = (apMode === 'light') ? true : (apMode === 'dark' ? false : !!msg.isLight);
+          body.classList.toggle('theme-light', effLight);
+          body.classList.toggle('theme-dark', !effLight);
           drawTopLightGuide({
             baseRgb: msg.baseRgb,
             accents: msg.accents,
-            isLight: !!msg.isLight
+            isLight: effLight
           });
         }
       } else if (msg.type === 'adBlocked') {
@@ -1634,6 +2003,7 @@
 
   // Hydrate boot state synchronously BEFORE first paint (zero flash!)
   applyStartPagePrefs(state.startPagePrefs);
+  applyBrowserOptions(state.browserOptions);
   if (bootData.shortcuts) renderShortcuts(bootData.shortcuts);
   if (bootData.frequentlyVisited) renderFrequentlyVisited(bootData.frequentlyVisited, state.startPagePrefs.hideFrequentlyVisited);
   if (bootData.readingList) renderReadingListSection(bootData.readingList, state.startPagePrefs.hideReadingList);

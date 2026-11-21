@@ -22,6 +22,42 @@
      ======================================================================== */
   const WALLPAPERS = [
     {
+      id: 'velvet-mirage',
+      file: 'assets/wallpapers/wp-velvet-mirage.jpg',
+      name: 'Velvet Mirage',
+      desc: 'Surreal midnight-amethyst mirror-glass lake under a violet crescent moon with prismatic butterfly ripples'
+    },
+    {
+      id: 'prism-cascade',
+      file: 'assets/wallpapers/wp-prism-cascade.jpg',
+      name: 'Prism Cascade',
+      desc: 'Apple-grade flowing liquid-crystal silk ribbons refracting spectral rainbow caustics with glasswing butterflies'
+    },
+    {
+      id: 'midnight-orchid',
+      file: 'assets/wallpapers/wp-midnight-orchid.jpg',
+      name: 'Midnight Orchid',
+      desc: 'Dewy deep-indigo night orchids framing faceted crystal-amethyst butterflies in moody twilight bokeh'
+    },
+    {
+      id: 'stardust-sanctuary',
+      file: 'assets/wallpapers/wp-stardust-sanctuary.jpg',
+      name: 'Stardust Sanctuary',
+      desc: 'Nocturnal alpine silhouettes beneath a Milky Way arch, violet-teal aurora mist & pearl-violet butterflies'
+    },
+    {
+      id: 'opal-horizon',
+      file: 'assets/wallpapers/wp-opal-horizon.jpg',
+      name: 'Opal Horizon',
+      desc: 'Iridescent mother-of-pearl dusk clouds and soft moonlight shafts over obsidian swells with opal butterflies'
+    },
+    {
+      id: 'phantom-lotus',
+      file: 'assets/wallpapers/wp-phantom-lotus.jpg',
+      name: 'Phantom Lotus',
+      desc: 'Zen nocturnal water-garden with a frosted-amethyst crystal lotus, concentric silver ripples & glass butterflies'
+    },
+    {
       id: 'amethyst',
       file: 'assets/wallpapers/wp-amethyst.jpg',
       name: 'Amethyst Glasswing',

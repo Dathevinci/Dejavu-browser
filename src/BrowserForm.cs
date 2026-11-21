@@ -123,6 +123,8 @@ namespace DejavuBrowser
         private readonly List<DownloadEntry> _downloads = new List<DownloadEntry>();
         private string _activeTabGroupId = "default";
         private bool _tabOverviewOpen;
+        private bool _settingsOpen;
+        private string _settingsPane = "general";
         private bool _favoritesBarHidden;
         private FormWindowState _lastWindowState = FormWindowState.Normal;
         private int _activeTabId = -1;
@@ -176,6 +178,7 @@ namespace DejavuBrowser
             _shellView = new WebView2();
             _shellView.DefaultBackgroundColor = Color.FromArgb(7, 6, 13);
             Controls.Add(_shellView);
+            _favoritesBarHidden = _settings.favoritesBarHidden;
 
             _downloadHideTimer = new System.Windows.Forms.Timer();
             _downloadHideTimer.Interval = 9000;
@@ -227,6 +230,24 @@ namespace DejavuBrowser
             };
             FormClosing += (s, e) =>
             {
+                try
+                {
+                    List<string> sessionUrls = new List<string>();
+                    for (int i = 0; i < _tabs.Count; i++)
+                    {
+                        BrowserTab bt = _tabs[i];
+                        if (bt != null && !bt.IsNewTab && !string.IsNullOrEmpty(bt.Url) &&
+                            (bt.Url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                             bt.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            sessionUrls.Add(bt.Url);
+                            if (sessionUrls.Count >= 16) break;
+                        }
+                    }
+                    _settings.lastSessionUrls = sessionUrls;
+                    _profiles.SaveActiveSettings(_settings);
+                }
+                catch { }
                 if (_vpnTelemetryTimer != null)
                 {
                     _vpnTelemetryTimer.Stop();
@@ -253,7 +274,45 @@ namespace DejavuBrowser
 
         private int ChromeCssHeight
         {
-            get { return BASE_CHROME_HEIGHT + (HasFavoritesBar ? BASE_FAVBAR_HEIGHT : 0); }
+            get
+            {
+                int baseH = (_settings != null && _settings.compactTabBar) ? 82 : BASE_CHROME_HEIGHT;
+                return baseH + (HasFavoritesBar ? BASE_FAVBAR_HEIGHT : 0);
+            }
+        }
+
+        private bool GetEffectiveIsLight(BrowserTab tab, bool isShellSurface)
+        {
+            string mode = (_settings != null && !string.IsNullOrEmpty(_settings.appearanceMode))
+                ? _settings.appearanceMode
+                : "auto";
+            if (mode == "light") return true;
+            if (mode == "dark") return false;
+            return !isShellSurface && tab != null && !tab.IsNewTab && tab.IsLight;
+        }
+
+        private Dictionary<string, object> BuildBrowserOptionsPayload()
+        {
+            return new Dictionary<string, object>
+            {
+                { "searchEngine", _settings.searchEngine ?? "google" },
+                { "appearanceMode", _settings.appearanceMode ?? "auto" },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
+                { "showFullWebsiteAddress", _settings.showFullWebsiteAddress },
+                { "alwaysShowTabClose", _settings.alwaysShowTabClose },
+                { "compactTabBar", _settings.compactTabBar },
+                { "defaultZoomPercent", _settings.defaultZoomPercent > 0 ? _settings.defaultZoomPercent : 100 },
+                { "newTabMode", _settings.newTabMode ?? "startpage" },
+                { "homepageUrl", _settings.homepageUrl ?? "https://www.google.com" },
+                { "startupBehavior", _settings.startupBehavior ?? "startpage" },
+                { "reduceWallpaperMotion", _settings.reduceWallpaperMotion },
+                { "wallpaperDim", _settings.wallpaperDim ?? "balanced" },
+                { "hideGreetingBadge", _settings.hideGreetingBadge },
+                { "hideStartPageSearch", _settings.hideStartPageSearch },
+                { "favoritesBarHidden", _favoritesBarHidden },
+                { "vpnAutoConnect", _settings.vpnAutoConnect },
+                { "vpnCountry", _settings.vpnCountry ?? "AUTO" }
+            };
         }
 
         private float DpiScale
@@ -489,7 +548,20 @@ namespace DejavuBrowser
                 InitializeOverlaysAsync();
 
                 string startUrl = string.IsNullOrEmpty(_initialUrl) ? null : ResolveInputToUrl(_initialUrl);
-                CreateTab(startUrl, true);
+                if (string.IsNullOrEmpty(startUrl) &&
+                    _settings.startupBehavior == "restore" &&
+                    _settings.lastSessionUrls != null &&
+                    _settings.lastSessionUrls.Count > 0)
+                {
+                    for (int i = 0; i < _settings.lastSessionUrls.Count; i++)
+                    {
+                        CreateTab(_settings.lastSessionUrls[i], i == _settings.lastSessionUrls.Count - 1);
+                    }
+                }
+                else
+                {
+                    CreateTab(startUrl, true);
+                }
 
                 if (_settings.vpnAutoConnect)
                 {
@@ -686,6 +758,8 @@ namespace DejavuBrowser
                         { "readingList", _profiles.ReadingList },
                         { "frequentlyVisited", _profiles.GetFrequentlyVisited(6) },
                         { "startPagePrefs", bootStartPagePrefs },
+                        { "browserOptions", BuildBrowserOptionsPayload() },
+                        { "pausedHosts", _adBlocker.GetPausedHosts() },
                         { "tabGroups", _profiles.TabGroups },
                         { "activeTabGroupId", _activeTabGroupId },
                         { "globalAdBlockEnabled", _adBlocker.GlobalEnabled },
@@ -737,7 +811,7 @@ namespace DejavuBrowser
 
             _shellView.Visible = true;
 
-            if (_tabOverviewOpen || active == null || active.IsNewTab)
+            if (_tabOverviewOpen || _settingsOpen || active == null || active.IsNewTab)
             {
                 _shellView.Bounds = new Rectangle(0, 0, w, h);
                 _shellView.BringToFront();
@@ -865,9 +939,20 @@ namespace DejavuBrowser
             if (activate)
             {
                 _tabOverviewOpen = false;
+                _settingsOpen = false;
                 ActivateTab(tab.Id);
             }
             else PushFullStateToShell();
+        }
+
+        private void CreateDefaultNewTab(bool activate)
+        {
+            string url = null;
+            if (_settings != null && _settings.newTabMode == "homepage" && !string.IsNullOrWhiteSpace(_settings.homepageUrl))
+            {
+                url = ResolveInputToUrl(_settings.homepageUrl);
+            }
+            CreateTab(url, activate);
         }
 
         private void ActivateTab(int tabId)
@@ -883,6 +968,7 @@ namespace DejavuBrowser
             _activeTabId = tabId;
             _activeTabGroupId = tab.GroupId;
             _tabOverviewOpen = false;
+            _settingsOpen = false;
 
             HidePopover();
             HideSuggestPopup();
@@ -1033,6 +1119,7 @@ namespace DejavuBrowser
 
         private void GoHomeActiveTab()
         {
+            _settingsOpen = false;
             BrowserTab tab = GetActiveTab();
             if (tab == null) return;
             tab.IsNewTab = true;
@@ -1053,6 +1140,7 @@ namespace DejavuBrowser
         {
             string url = ResolveInputToUrl(rawInput);
             if (string.IsNullOrEmpty(url)) return;
+            _settingsOpen = false;
             HidePopover();
             HideSuggestPopup();
 
@@ -1102,6 +1190,11 @@ namespace DejavuBrowser
 
                 CoreWebView2 core = wv.CoreWebView2;
                 tab.CoreReady = true;
+                double defZoom = (_settings != null && _settings.defaultZoomPercent >= 50 && _settings.defaultZoomPercent <= 200)
+                    ? (_settings.defaultZoomPercent / 100.0)
+                    : 1.0;
+                tab.ZoomFactor = defZoom;
+                try { wv.ZoomFactor = defZoom; } catch { }
 
                 core.Settings.IsStatusBarEnabled = true;
                 core.Settings.AreDefaultContextMenusEnabled = true;
@@ -1584,7 +1677,7 @@ namespace DejavuBrowser
             int y = (int)Math.Round(50 * sc);
 
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
-            bool isLight = !captureShell && tab.IsLight;
+            bool isLight = GetEffectiveIsLight(tab, captureShell);
             string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, isLight);
 
             string host = (tab != null && !tab.IsNewTab) ? AdBlocker.ExtractHost(tab.Url) : "";
@@ -1594,6 +1687,7 @@ namespace DejavuBrowser
             {
                 { "mode", "shield" },
                 { "isLight", isLight },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "backdrop", cached ?? "" },
                 { "host", host },
                 { "tabBlocked", tab != null ? tab.BlockedCount : 0 },
@@ -1648,7 +1742,8 @@ namespace DejavuBrowser
             var payload = new Dictionary<string, object>
             {
                 { "mode", "profiles" },
-                { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
+                { "isLight", GetEffectiveIsLight(tab, tab == null || tab.IsNewTab) },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "activeProfileId", _profiles.ActiveProfile.id },
                 { "profiles", _profiles.Manifest.profiles },
                 { "appVersion", AutoUpdater.CurrentVersion },
@@ -1734,7 +1829,8 @@ namespace DejavuBrowser
             var payload = new Dictionary<string, object>
             {
                 { "mode", "vpn" },
-                { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
+                { "isLight", GetEffectiveIsLight(tab, tab == null || tab.IsNewTab) },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "vpn", snap }
             };
             if (backdrop != null) payload["backdrop"] = backdrop;
@@ -1945,7 +2041,8 @@ namespace DejavuBrowser
             var payload = new Dictionary<string, object>
             {
                 { "mode", "history" },
-                { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
+                { "isLight", GetEffectiveIsLight(tab, tab == null || tab.IsNewTab) },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "profileName", _profiles.ActiveProfile.name },
                 { "items", slice }
             };
@@ -2098,7 +2195,8 @@ namespace DejavuBrowser
                 if (shift && key == Keys.R) { ToggleReaderModeActiveTabAsync(); return true; }
                 if (shift && (key == Keys.O || key == Keys.OemPipe)) { ToggleTabOverviewAsync(!_tabOverviewOpen); return true; }
                 if (shift && key == Keys.D) { ToggleReadingListActiveTab(); return true; }
-                if (key == Keys.T) { CreateTab(null, true); return true; }
+                if (!shift && key == Keys.Oemcomma) { SetSettingsOpen(!_settingsOpen, _settingsPane); return true; }
+                if (key == Keys.T) { CreateDefaultNewTab(true); return true; }
                 if (key == Keys.W || (!shift && key == Keys.F4)) { CloseTab(_activeTabId); return true; }
                 if (!shift && key == Keys.N) { OpenProfileInNewWindow(_profiles.ActiveProfile.id); return true; }
                 if (!shift && key == Keys.J) { ShowDownloadsPopoverAt((int)(ClientSize.Width / DpiScale) - 180); return true; }
@@ -2155,8 +2253,231 @@ namespace DejavuBrowser
                 return;
             }
             _favoritesBarHidden = !_favoritesBarHidden;
+            _settings.favoritesBarHidden = _favoritesBarHidden;
+            _profiles.SaveActiveSettings(_settings);
             LayoutViews();
             PushFullStateToShell();
+        }
+
+        private void SetSettingsOpen(bool open, string pane)
+        {
+            if (!string.IsNullOrEmpty(pane)) _settingsPane = pane;
+            _settingsOpen = open;
+            if (open)
+            {
+                _tabOverviewOpen = false;
+                HidePopover();
+                HideSuggestPopup();
+                if (_activeHudMode == "find") HideHud();
+            }
+            LayoutViews();
+            PushFullStateToShell();
+        }
+
+        private void PushSettingsToast(string message)
+        {
+            if (!_shellReady || _shellView == null || _shellView.CoreWebView2 == null) return;
+            var msg = new Dictionary<string, object>
+            {
+                { "type", "settingsToast" },
+                { "text", message }
+            };
+            try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(msg)); } catch { }
+        }
+
+        private void UpdateBrowserOptions(Dictionary<string, object> msg)
+        {
+            bool needLayout = false;
+            bool needZoomApply = false;
+
+            if (msg.ContainsKey("searchEngine"))
+            {
+                string eng = Convert.ToString(msg["searchEngine"]);
+                if (eng == "google" || eng == "duckduckgo" || eng == "brave" || eng == "bing" || eng == "perplexity")
+                {
+                    _settings.searchEngine = eng;
+                }
+            }
+            if (msg.ContainsKey("appearanceMode"))
+            {
+                string am = Convert.ToString(msg["appearanceMode"]);
+                if (am == "auto" || am == "dark" || am == "light")
+                {
+                    _settings.appearanceMode = am;
+                }
+            }
+            if (msg.ContainsKey("accentColor"))
+            {
+                string ac = Convert.ToString(msg["accentColor"]);
+                if (ac == "amethyst" || ac == "sapphire" || ac == "aurora" || ac == "rose" || ac == "gold" || ac == "silver")
+                {
+                    _settings.accentColor = ac;
+                }
+            }
+            if (msg.ContainsKey("showFullWebsiteAddress"))
+                _settings.showFullWebsiteAddress = Convert.ToBoolean(msg["showFullWebsiteAddress"]);
+            if (msg.ContainsKey("alwaysShowTabClose"))
+                _settings.alwaysShowTabClose = Convert.ToBoolean(msg["alwaysShowTabClose"]);
+            if (msg.ContainsKey("compactTabBar"))
+            {
+                bool nextCompact = Convert.ToBoolean(msg["compactTabBar"]);
+                if (_settings.compactTabBar != nextCompact)
+                {
+                    _settings.compactTabBar = nextCompact;
+                    needLayout = true;
+                }
+            }
+            if (msg.ContainsKey("defaultZoomPercent"))
+            {
+                int z = Convert.ToInt32(msg["defaultZoomPercent"]);
+                if (z >= 50 && z <= 200 && _settings.defaultZoomPercent != z)
+                {
+                    _settings.defaultZoomPercent = z;
+                    needZoomApply = true;
+                }
+            }
+            if (msg.ContainsKey("newTabMode"))
+            {
+                string nt = Convert.ToString(msg["newTabMode"]);
+                if (nt == "startpage" || nt == "homepage") _settings.newTabMode = nt;
+            }
+            if (msg.ContainsKey("homepageUrl"))
+            {
+                string hp = Convert.ToString(msg["homepageUrl"]).Trim();
+                if (!string.IsNullOrEmpty(hp)) _settings.homepageUrl = hp;
+            }
+            if (msg.ContainsKey("startupBehavior"))
+            {
+                string sb = Convert.ToString(msg["startupBehavior"]);
+                if (sb == "startpage" || sb == "restore") _settings.startupBehavior = sb;
+            }
+            if (msg.ContainsKey("reduceWallpaperMotion"))
+                _settings.reduceWallpaperMotion = Convert.ToBoolean(msg["reduceWallpaperMotion"]);
+            if (msg.ContainsKey("wallpaperDim"))
+            {
+                string wd = Convert.ToString(msg["wallpaperDim"]);
+                if (wd == "vivid" || wd == "balanced" || wd == "calm") _settings.wallpaperDim = wd;
+            }
+            if (msg.ContainsKey("hideGreetingBadge"))
+                _settings.hideGreetingBadge = Convert.ToBoolean(msg["hideGreetingBadge"]);
+            if (msg.ContainsKey("hideStartPageSearch"))
+                _settings.hideStartPageSearch = Convert.ToBoolean(msg["hideStartPageSearch"]);
+            if (msg.ContainsKey("favoritesBarHidden"))
+            {
+                bool nextHide = Convert.ToBoolean(msg["favoritesBarHidden"]);
+                if (_favoritesBarHidden != nextHide)
+                {
+                    _favoritesBarHidden = nextHide;
+                    _settings.favoritesBarHidden = nextHide;
+                    needLayout = true;
+                }
+            }
+            if (msg.ContainsKey("globalAdBlockEnabled"))
+            {
+                bool g = Convert.ToBoolean(msg["globalAdBlockEnabled"]);
+                if (_adBlocker.GlobalEnabled != g) _adBlocker.SetGlobalEnabled(g);
+            }
+            if (msg.ContainsKey("vpnAutoConnect"))
+            {
+                _settings.vpnAutoConnect = Convert.ToBoolean(msg["vpnAutoConnect"]);
+            }
+            if (msg.ContainsKey("vpnCountry"))
+            {
+                string cc = Convert.ToString(msg["vpnCountry"]);
+                if (!string.IsNullOrEmpty(cc))
+                {
+                    _settings.vpnCountry = cc;
+                    if (_vpn != null) _vpn.SetCountryPreferenceOnly(cc);
+                }
+            }
+
+            _profiles.SaveActiveSettings(_settings);
+
+            if (needZoomApply)
+            {
+                double zf = _settings.defaultZoomPercent / 100.0;
+                for (int i = 0; i < _tabs.Count; i++)
+                {
+                    BrowserTab bt = _tabs[i];
+                    bt.ZoomFactor = zf;
+                    if (bt.WebView != null && bt.CoreReady)
+                    {
+                        try { bt.WebView.ZoomFactor = zf; } catch { }
+                    }
+                }
+            }
+
+            if (needLayout) LayoutViews();
+            PushFullStateToShell();
+        }
+
+        private async void ClearWebViewBrowsingDataAsync()
+        {
+            try
+            {
+                CoreWebView2 core = null;
+                for (int i = 0; i < _tabs.Count; i++)
+                {
+                    if (_tabs[i].CoreReady && _tabs[i].WebView != null && _tabs[i].WebView.CoreWebView2 != null)
+                    {
+                        core = _tabs[i].WebView.CoreWebView2;
+                        break;
+                    }
+                }
+                if (core == null && _shellView != null && _shellView.CoreWebView2 != null)
+                {
+                    core = _shellView.CoreWebView2;
+                }
+                if (core != null && core.Profile != null)
+                {
+                    await core.Profile.ClearBrowsingDataAsync(
+                        CoreWebView2BrowsingDataKinds.Cookies |
+                        CoreWebView2BrowsingDataKinds.DiskCache |
+                        CoreWebView2BrowsingDataKinds.CacheStorage);
+                }
+                PushSettingsToast("Cookies & site cache cleared");
+            }
+            catch
+            {
+                PushSettingsToast("Cleared cached site data");
+            }
+        }
+
+        private void ResetBrowserOptions()
+        {
+            _settings.searchEngine = "google";
+            _settings.appearanceMode = "auto";
+            _settings.accentColor = "amethyst";
+            _settings.showFullWebsiteAddress = false;
+            _settings.alwaysShowTabClose = false;
+            _settings.compactTabBar = false;
+            _settings.defaultZoomPercent = 100;
+            _settings.newTabMode = "startpage";
+            _settings.homepageUrl = "https://www.google.com";
+            _settings.startupBehavior = "startpage";
+            _settings.reduceWallpaperMotion = false;
+            _settings.wallpaperDim = "balanced";
+            _settings.hideFavorites = false;
+            _settings.hideFrequentlyVisited = false;
+            _settings.hidePrivacyReport = false;
+            _settings.hideReadingList = false;
+            _settings.hideGreetingBadge = false;
+            _settings.hideStartPageSearch = false;
+            _settings.favoritesBarHidden = false;
+            _favoritesBarHidden = false;
+            _profiles.SaveActiveSettings(_settings);
+
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                _tabs[i].ZoomFactor = 1.0;
+                if (_tabs[i].WebView != null && _tabs[i].CoreReady)
+                {
+                    try { _tabs[i].WebView.ZoomFactor = 1.0; } catch { }
+                }
+            }
+            LayoutViews();
+            PushFullStateToShell();
+            PushSettingsToast("Safari options restored to defaults");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -2692,7 +3013,8 @@ namespace DejavuBrowser
                         break;
                     case "newTab":
                         string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : null;
-                        CreateTab(string.IsNullOrEmpty(u) ? null : ResolveInputToUrl(u), true);
+                        if (string.IsNullOrEmpty(u)) CreateDefaultNewTab(true);
+                        else CreateTab(ResolveInputToUrl(u), true);
                         break;
                     case "activateTab":
                         ActivateTab(Convert.ToInt32(msg["id"]));
@@ -2814,6 +3136,33 @@ namespace DejavuBrowser
                     case "pickCustomWallpaper":
                         PickCustomWallpaper();
                         break;
+                    case "toggleSettings":
+                        bool wantSettings = msg.ContainsKey("open") ? Convert.ToBoolean(msg["open"]) : !_settingsOpen;
+                        string reqPane = msg.ContainsKey("pane") ? Convert.ToString(msg["pane"]) : null;
+                        SetSettingsOpen(wantSettings, reqPane);
+                        break;
+                    case "updateBrowserOptions":
+                        UpdateBrowserOptions(msg);
+                        break;
+                    case "resumePausedHost":
+                        if (msg.ContainsKey("host"))
+                        {
+                            _adBlocker.ResumeSite(Convert.ToString(msg["host"]));
+                            PushFullStateToShell();
+                            PushSettingsToast("Ad Blocker resumed for site");
+                        }
+                        break;
+                    case "clearHistory":
+                        _profiles.ClearHistory();
+                        PushFullStateToShell();
+                        PushSettingsToast("Browsing history cleared");
+                        break;
+                    case "clearBrowsingCache":
+                        ClearWebViewBrowsingDataAsync();
+                        break;
+                    case "resetBrowserOptions":
+                        ResetBrowserOptions();
+                        break;
                 }
             }
             catch { }
@@ -2854,12 +3203,18 @@ namespace DejavuBrowser
                 else if (type == "setSearchEngine")
                 {
                     string eng = Convert.ToString(msg["engine"]);
-                    if (eng == "google" || eng == "duckduckgo" || eng == "brave")
+                    if (eng == "google" || eng == "duckduckgo" || eng == "brave" || eng == "bing" || eng == "perplexity")
                     {
                         _settings.searchEngine = eng;
                         _profiles.SaveActiveSettings(_settings);
                         PushFullStateToShell();
                     }
+                }
+                else if (type == "openSettings")
+                {
+                    HidePopover();
+                    string pane = msg.ContainsKey("pane") ? Convert.ToString(msg["pane"]) : "general";
+                    SetSettingsOpen(true, pane);
                 }
                 else if (type == "switchProfile")
                 {
@@ -3235,6 +3590,10 @@ namespace DejavuBrowser
                 { "activeTabId", _activeTabId },
                 { "tabs", tabList },
                 { "tabOverviewOpen", _tabOverviewOpen },
+                { "settingsOpen", _settingsOpen },
+                { "settingsPane", _settingsPane },
+                { "browserOptions", BuildBrowserOptionsPayload() },
+                { "pausedHosts", _adBlocker.GetPausedHosts() },
                 { "activeTabGroupId", _activeTabGroupId },
                 { "activeTabGroupName", activeGroupName },
                 { "tabGroups", _profiles.TabGroups },
@@ -3316,6 +3675,8 @@ namespace DejavuBrowser
             string q = Uri.EscapeDataString(s);
             if (_settings.searchEngine == "duckduckgo") return "https://duckduckgo.com/?q=" + q;
             if (_settings.searchEngine == "brave") return "https://search.brave.com/search?q=" + q;
+            if (_settings.searchEngine == "bing") return "https://www.bing.com/search?q=" + q;
+            if (_settings.searchEngine == "perplexity") return "https://www.perplexity.ai/search?q=" + q;
             return "https://www.google.com/search?q=" + q;
         }
 

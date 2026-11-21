@@ -232,7 +232,8 @@ body.app-booting #newtab-canvas {
 }
 
 body.on-newtab #newtab-canvas,
-body.tab-overview-open #newtab-canvas {
+body.tab-overview-open #newtab-canvas,
+body.settings-open #newtab-canvas {
   opacity: 1;
 }
 
@@ -256,7 +257,8 @@ body.has-favorites {
 }
 
 body.on-newtab #top-backdrop-wrap,
-body.tab-overview-open #top-backdrop-wrap {
+body.tab-overview-open #top-backdrop-wrap,
+body.settings-open #top-backdrop-wrap {
   opacity: 0;
 }
 
@@ -1511,7 +1513,7 @@ body.is-fullscreen #viewport {
   transition: opacity 0.28s var(--apple-fluid), transform 0.34s var(--apple-fluid);
 }
 
-body.on-newtab:not(.tab-overview-open) #newtab-view {
+body.on-newtab:not(.tab-overview-open):not(.settings-open) #newtab-view {
   opacity: 1;
   pointer-events: auto;
   transform: scale(1);
@@ -3651,4 +3653,688 @@ body.theme-light:not(.on-newtab):not(.tab-overview-open) .vpn-trigger.connected 
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
+}
+
+/* ==========================================================================
+   dejavu v3.0 — Butterfly Accent Color System (Shell + All Popovers)
+   ========================================================================== */
+:root[data-accent="sapphire"] {
+  --accent: #4da6ff;
+  --accent-bright: #93ccff;
+  --accent-glow: rgba(77, 166, 255, 0.30);
+  --shield-on: #4da6ff;
+  --caustic-spot: rgba(130, 200, 255, 0.10);
+}
+:root[data-accent="aurora"] {
+  --accent: #38d9a9;
+  --accent-bright: #8ef2d3;
+  --accent-glow: rgba(56, 217, 169, 0.28);
+  --shield-on: #20c997;
+  --caustic-spot: rgba(120, 245, 210, 0.10);
+}
+:root[data-accent="rose"] {
+  --accent: #f472b6;
+  --accent-bright: #fbc0de;
+  --accent-glow: rgba(244, 114, 182, 0.28);
+  --shield-on: #ec4899;
+  --caustic-spot: rgba(255, 182, 222, 0.10);
+}
+:root[data-accent="gold"] {
+  --accent: #f5b942;
+  --accent-bright: #fde19a;
+  --accent-glow: rgba(245, 185, 66, 0.28);
+  --shield-on: #eab308;
+  --caustic-spot: rgba(255, 224, 146, 0.10);
+}
+:root[data-accent="silver"] {
+  --accent: #b4c2d8;
+  --accent-bright: #e2eaf6;
+  --accent-glow: rgba(180, 194, 216, 0.28);
+  --shield-on: #94a3b8;
+  --caustic-spot: rgba(220, 232, 248, 0.10);
+}
+
+/* Sync active Liquid Glass accent tint for switches, shield, search submit & active glide */
+:root[data-accent]:not([data-accent="amethyst"]) .liquid-switch.on {
+  background: var(--accent);
+  border-color: var(--accent-bright);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+:root[data-accent]:not([data-accent="amethyst"]) .shield-chip.active,
+:root[data-accent]:not([data-accent="amethyst"]) .omnibox-reader-btn.active,
+:root[data-accent]:not([data-accent="amethyst"]) .icon-btn.is-active {
+  border-color: var(--accent);
+  color: var(--accent-bright);
+}
+:root[data-accent]:not([data-accent="amethyst"]) .hero-go {
+  background: var(--accent);
+  border-color: var(--accent-bright);
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+:root[data-accent]:not([data-accent="amethyst"]) .load-progress {
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-bright));
+}
+
+/* Compact Tab Bar Mode (32px strip -> 82px chrome) */
+body.compact-tabs {
+  --topbar-h: 82px;
+  --chrome-h: calc(82px + var(--favbar-h));
+}
+body.compact-tabs .tabbar-row {
+  height: 32px;
+  padding-top: 1px;
+  padding-bottom: 3px;
+}
+body.compact-tabs #tabs-strip {
+  height: 28px;
+}
+body.compact-tabs .tab-pill {
+  height: 24px;
+  font-size: 11.4px;
+}
+body.compact-tabs #active-tab-glide {
+  height: 24px;
+}
+body.compact-tabs #btn-new-tab {
+  width: 26px;
+  height: 26px;
+}
+
+/* Always Show Tab Close Buttons Option */
+body.always-show-tab-close .tab-pill .tab-close {
+  opacity: 0.72;
+  transform: translateY(-50%) scale(1);
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   Authentic macOS Safari Options & Customization Modal (#settings-overlay)
+   ZERO CSS Gaussian filtering — real Snell's Law Liquid Glass surface!
+   ========================================================================== */
+.settings-overlay {
+  position: fixed;
+  inset: var(--chrome-h) 0 0 0;
+  z-index: 175;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: radial-gradient(ellipse 85% 85% at 50% 45%, rgba(6, 5, 14, 0.34), rgba(4, 3, 10, 0.62));
+  animation: settingsFadeIn 0.20s var(--apple-fluid);
+}
+
+.settings-overlay.hidden {
+  display: none;
+}
+
+@keyframes settingsFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.settings-window {
+  width: min(860px, calc(100vw - 36px));
+  height: min(600px, calc(100vh - var(--chrome-h) - 36px));
+  border-radius: 22px;
+  display: grid;
+  grid-template-columns: 214px minmax(0, 1fr);
+  overflow: hidden;
+  background: radial-gradient(ellipse 96% 92% at 50% 44%, rgba(13, 11, 25, 0.96) 0%, rgba(16, 13, 30, 0.93) 74%, rgba(28, 22, 52, 0.74) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 28px 68px -14px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  animation: settingsWinIn 0.28s var(--apple-spring);
+}
+
+@keyframes settingsWinIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.965); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 720px) {
+  .settings-window {
+    grid-template-columns: 168px minmax(0, 1fr);
+  }
+}
+
+.settings-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 12px 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.018) 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+  min-height: 0;
+}
+
+.settings-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 6px 8px;
+}
+
+.settings-brand img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px var(--accent-glow));
+}
+
+.settings-brand-title {
+  font-size: 13.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.settings-brand-sub {
+  font-size: 10.6px;
+  color: var(--ink-muted);
+  margin-top: 1px;
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.settings-nav-item {
+  width: 100%;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  outline: none;
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: 12.6px;
+  font-weight: 520;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.settings-nav-item svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.settings-nav-item:hover {
+  background: rgba(255, 255, 255, 0.075);
+  color: var(--ink);
+}
+
+.settings-nav-item.active {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 4px 12px -4px rgba(0, 0, 0, 0.35);
+}
+
+.settings-nav-item.active svg {
+  color: var(--accent-bright);
+  opacity: 1;
+}
+
+.settings-nav-pill {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10.2px;
+  font-weight: 650;
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--accent-bright);
+}
+
+.settings-sidebar-foot {
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-ghost-btn {
+  width: 100%;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  outline: none;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: 11.8px;
+  font-weight: 540;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.settings-ghost-btn:hover {
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--ink);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.settings-main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 18px 22px 16px;
+}
+
+.settings-main-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  flex-shrink: 0;
+}
+
+.settings-pane-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 660;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.settings-pane-sub {
+  margin: 2px 0 0;
+  font-size: 11.8px;
+  color: var(--ink-muted);
+}
+
+.settings-done-btn {
+  height: 30px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-bright);
+  outline: none;
+  background: var(--accent);
+  color: #0d0a19;
+  font-family: inherit;
+  font-size: 12.2px;
+  font-weight: 660;
+  cursor: pointer;
+  box-shadow: 0 4px 14px var(--accent-glow);
+  transition: filter 0.16s ease, transform 0.20s var(--apple-spring);
+}
+
+.settings-done-btn:hover {
+  filter: brightness(1.08);
+}
+
+.settings-done-btn:active {
+  transform: scale(0.95);
+}
+
+.settings-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px 4px 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.settings-scroll::-webkit-scrollbar-thumb {
+  background: rgba(206, 178, 255, 0.28);
+  border-radius: 999px;
+}
+
+.settings-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-pane.hidden {
+  display: none;
+}
+
+.opt-group {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.042);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.opt-group-label {
+  padding: 9px 14px 6px;
+  font-size: 10.6px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent-bright);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.opt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.opt-row:last-child {
+  border-bottom: none;
+}
+
+.opt-row.stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+}
+
+.opt-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.opt-title {
+  font-size: 13px;
+  font-weight: 560;
+  color: var(--ink);
+}
+
+.opt-desc {
+  font-size: 11.2px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.opt-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  flex-wrap: wrap;
+}
+
+.opt-seg.compact {
+  flex-shrink: 0;
+}
+
+.opt-seg-btn {
+  height: 27px;
+  padding: 0 11px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  outline: none;
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: 11.6px;
+  font-weight: 540;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.opt-seg-btn:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.opt-seg-btn.active {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--accent);
+  color: #ffffff;
+  font-weight: 620;
+  box-shadow: 0 2px 10px -2px var(--accent-glow);
+}
+
+.opt-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.opt-text-input {
+  width: 210px;
+  height: 31px;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(0, 0, 0, 0.30);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  user-select: text;
+}
+
+.opt-text-input:focus {
+  border-color: var(--accent);
+}
+
+.opt-mini-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 11.8px;
+  font-weight: 580;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.opt-mini-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.opt-mini-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent-bright);
+  color: #0e0a1a;
+  font-weight: 650;
+}
+
+.opt-mini-btn.danger {
+  border-color: rgba(255, 107, 139, 0.36);
+  background: rgba(255, 107, 139, 0.14);
+  color: #ff9cb2;
+}
+
+.opt-mini-btn.danger:hover {
+  background: rgba(255, 107, 139, 0.26);
+  color: #ffffff;
+}
+
+/* 6 Butterfly Accent Swatches */
+.accent-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+}
+
+@media (max-width: 740px) {
+  .accent-swatches {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.accent-swatch {
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  outline: none;
+  background: rgba(0, 0, 0, 0.24);
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: 11.4px;
+  font-weight: 550;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+
+.accent-swatch .sw-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--sw);
+  box-shadow: 0 0 8px var(--sw);
+  flex-shrink: 0;
+}
+
+.accent-swatch:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+}
+
+.accent-swatch.active {
+  border-color: var(--accent-bright);
+  background: rgba(255, 255, 255, 0.13);
+  color: #ffffff;
+  font-weight: 630;
+}
+
+/* Embedded 26-Theme Wallpaper Gallery inside Options */
+.opt-wp-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.settings-wp-grid {
+  max-height: none;
+  overflow: visible;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Paused Sites List in Privacy Pane */
+.opt-paused-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.opt-paused-empty {
+  font-size: 11.6px;
+  color: var(--ink-subtle);
+  padding: 4px 0;
+}
+
+.opt-paused-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px 5px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  font-size: 11.6px;
+  color: var(--ink);
+}
+
+.opt-paused-chip button {
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--accent-bright);
+  font-family: inherit;
+  font-size: 10.6px;
+  font-weight: 620;
+  cursor: pointer;
+}
+
+.opt-paused-chip button:hover {
+  background: var(--accent);
+  color: #0e0a1a;
+}
+
+/* MacBook / Windows Keyboard Shortcuts Reference Grid */
+.shortcuts-ref-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.kbd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 13px;
+  background: rgba(16, 13, 29, 0.88);
+  font-size: 11.8px;
+  color: var(--ink-muted);
+}
+
+.kbd-row kbd {
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 10.8px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.settings-toast {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(16, 13, 30, 0.96);
+  border: 1px solid var(--accent);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 560;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.52), 0 0 14px var(--accent-glow);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.settings-toast.hidden {
+  display: none;
 }

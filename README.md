@@ -1,6 +1,6 @@
 # dejavu
 
-An A-to-Z **Apple MacBook macOS Safari (Sequoia / Tahoe)** inspired native Windows browser built with **real physics-based Liquid Glass** (strictly zero Gaussian blur), a **built-in 100/100 Ad Blocker**, a **46-country encrypted VPN**, and **20 high-resolution Butterfly Studio wallpapers** — powered natively by Windows' Chromium WebView2 engine (**no Electron, no Node.js**).
+An A-to-Z **Apple MacBook macOS Safari (Sequoia / Tahoe)** inspired native Windows browser built with **real physics-based Liquid Glass** (strictly zero Gaussian blur), a **dedicated Safari Options & Customization suite (`Ctrl+,`)**, a **built-in 100/100 Ad Blocker**, a **46-country encrypted VPN**, and **26 high-resolution Butterfly Studio wallpapers** — powered natively by Windows' Chromium WebView2 engine (**no Electron, no Node.js**).
 
 🌐 **Official Website:** **[dathevinci.github.io/Dejavu-browser](https://dathevinci.github.io/Dejavu-browser/)**
 
@@ -10,7 +10,10 @@ Visit the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** o
 - **`dejavu-Setup.exe`** — Butterfly-themed Liquid Glass setup wizard (adds Desktop & Start Menu shortcuts, registers in Windows Installed Apps, no admin required).
 - **`dejavu.exe`** — Standalone portable single-file executable (double-click to run directly).
 
-## Features (v2.9.0)
+## Features (v3.0.0)
+
+- **Authentic macOS Safari Options & Customization Window (`Ctrl+,` or Toolbar Gear)**:
+  - **6 Dedicated Safari Panes**: **General** (5 Search Engines: Google, DuckDuckGo, Brave, Bing, Perplexity; Startup Restore Previous Tabs; New Tab Start Page vs custom Homepage; Favorites Bar toggle), **Appearance** (Auto / Dark / Light Polarity; 6 Butterfly Accent Colors: Amethyst, Sapphire, Aurora, Rose, Gold, Arctic; Show Full Website Address; Compact Tab Bar; Always Show Tab Close Buttons; Default Page Zoom `80%–150%`; Wallpaper Dimming & Reduced Motion), **Start Page** (6 section visibility toggles including Greeting Badge & Center Search Bar), **Wallpapers** (all 26 HD & Live themes + custom upload), **Privacy & VPN** (100/100 Ad Blocker, Paused Sites manager, VPN auto-connect, Clear History & Clear Cookies/Cache), and **Tabs & Shortcuts**.
 
 - **MacBook macOS Safari (Sequoia / Tahoe) Fidelity — Butterfly Amethyst Liquid Glass Edition**:
   - **Unified Safari Tahoe Toolbar & Smart Search Field**: Sculpted recessed optical glass capsule with dead-center HTTPS lock + clean domain when idle, glare-free smoked obsidian (dark) / pure porcelain (light) bloom on focus with grouped autocomplete (`Top Hit`, `Bookmarks & History`, `Search Suggestions`), tucked Privacy Shield, Reader View (`Ctrl+Shift+R` / `Ctrl+Alt+R`), Zoom pill, Favorite Star, Reload/Stop, and MacBook-inspired amber/emerald/rose window control polish.
@@ -23,7 +26,7 @@ Visit the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** o
 - **Real 120fps Liquid Glass Optics (Zero Gaussian Blur)**: Exact SDF rounded-rectangle geometry, Snell's Law refraction ($n = 1.52$), Cauchy RGB chromatic dispersion, Schlick Fresnel specular rims, pre-baked 0ms-scroll Snell's Law popover backdrops, Apple damped spring curves, and automatic dark/light site polarity.
 - **Built-in 46-Country Encrypted VPN**: Browser-scoped 3-hop encrypted tunnel across North America, Europe, Asia-Pacific, South America, and Middle East & Africa with region filters, 1-click **New IP** rotation, fail-closed kill-switch, remote DNS, WebRTC shield, live telemetry, and optional auto-connect on startup.
 - **Built-in Native 100/100 Ad Blocker**: **279,000+** network filter domains + **8,400+** per-site cosmetic rules + YouTube/Reddit/X ad neutralization, ON by default.
-- **20 High-Resolution Butterfly Studio Wallpapers**: 10 museum-grade 2K (`2560×1440`) Butterfly artworks + 10 live 60/120Hz interactive butterfly & caustic motion themes + custom photo upload.
+- **26 High-Resolution Butterfly Studio Wallpapers**: 16 museum-grade 2K (`2560×1440`) dejavu Butterfly artworks (including *Velvet Mirage*, *Prism Cascade*, *Midnight Orchid*, *Stardust Sanctuary*, *Opal Horizon*, and *Phantom Lotus*) + 10 live 60/120Hz interactive butterfly & caustic motion themes + custom photo upload.
 - **Chrome-Style Isolated Profiles & 16 Butterfly Avatars**: Fully isolated cookies, logins, Tab Groups, Reading List, favorites, history & wallpapers per profile, plus silent background auto-updates.
 
 ## Build from Source (Windows 10 / 11)
@@ -39,6 +42,7 @@ powershell -ExecutionPolicy Bypass -File .\build-setup.ps1
 
 | Shortcut | Action |
 |---|---|
+| `Ctrl+,` | Open macOS Safari Options & Customization |
 | `Ctrl+T` / `Ctrl+W` / `Ctrl+Shift+T` | New Tab / Close Tab / Reopen Closed Tab |
 | `Ctrl+1..8` / `Ctrl+9` / `Ctrl+Tab` | Jump to Tab 1–8 / Last Tab / Next Tab |
 | `Ctrl+L` / `Alt+D` / `F6` | Focus Smart Search Field |

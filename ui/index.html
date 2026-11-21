@@ -146,6 +146,13 @@
             <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="5.9" stroke="currentColor" stroke-width="1.45"/><path d="M9 5.9V9.2l2.3 1.5" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
 
+          <button id="btn-settings" class="icon-btn settings-toolbar-btn" title="Safari Options &amp; Customization (Ctrl+,)">
+            <svg viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="2.35" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M9 2.6v1.5M9 13.9v1.5M2.6 9h1.5M13.9 9h1.5M4.45 4.45l1.08 1.08M12.47 12.47l1.08 1.08M13.55 4.45l-1.08 1.08M5.53 12.47l-1.08 1.08" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </button>
+
           <button id="btn-profile" class="profile-trigger" title="Profiles &amp; Updates">
             <span id="profile-avatar-slot"></span>
             <span id="profile-update-dot" class="update-dot hidden"></span>
@@ -361,15 +368,16 @@
           <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
           <div>
             <div class="store-title">Customize Start Page</div>
-            <div class="store-sub">Safari sections &amp; 20 Butterfly Studio themes</div>
+            <div class="store-sub">Safari sections &amp; 26 Butterfly Studio HD themes</div>
           </div>
         </div>
         <div class="store-controls">
           <div class="store-tabs" id="store-tabs">
-            <button class="store-tab active" data-cat="all">All</button>
-            <button class="store-tab" data-cat="art">Crystal Art</button>
-            <button class="store-tab" data-cat="live">Live Motion</button>
+            <button class="store-tab active" data-cat="all">All (26)</button>
+            <button class="store-tab" data-cat="art">HD Art (16)</button>
+            <button class="store-tab" data-cat="live">Live (10)</button>
           </div>
+          <button id="btn-store-more-options" class="store-upload-btn" title="Open Full Safari Options (Ctrl+,)">Options…</button>
           <button id="btn-custom-wp" class="store-upload-btn" title="Use your own image">+ Custom</button>
           <button id="btn-store-close" class="icon-btn sm" title="Close">
             <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -399,6 +407,403 @@
 
       <div id="wallpaper-grid" class="wallpaper-grid"></div>
     </div>
+
+    <!-- Authentic macOS Safari Options & Customization Window (Ctrl+,) -->
+    <section id="settings-overlay" class="settings-overlay hidden" aria-label="Safari Options">
+      <div id="settings-window" class="glass-card settings-window" data-liquid-glass data-lg-fast="1" data-lg-bezel="20" data-lg-scale="24" data-lg-dome="0.025">
+        <!-- Left macOS Sidebar Navigation -->
+        <aside class="settings-sidebar">
+          <div class="settings-brand">
+            <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
+            <div>
+              <div class="settings-brand-title">dejavu Options</div>
+              <div id="settings-version-sub" class="settings-brand-sub">Safari Edition · v3.0.0</div>
+            </div>
+          </div>
+
+          <nav id="settings-nav" class="settings-nav" role="tablist">
+            <button type="button" class="settings-nav-item active" data-pane="general" role="tab">
+              <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M9 2.6v1.5M9 13.9v1.5M2.6 9h1.5M13.9 9h1.5M4.5 4.5l1.1 1.1M12.4 12.4l1.1 1.1M13.5 4.5l-1.1 1.1M5.6 12.4l-1.1 1.1" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+              <span>General</span>
+            </button>
+            <button type="button" class="settings-nav-item" data-pane="appearance" role="tab">
+              <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M9 3a6 6 0 0 1 0 12V3z" fill="currentColor" opacity="0.45"/></svg>
+              <span>Appearance</span>
+            </button>
+            <button type="button" class="settings-nav-item" data-pane="startpage" role="tab">
+              <svg viewBox="0 0 18 18" fill="none"><rect x="3" y="3.5" width="12" height="11" rx="2.4" stroke="currentColor" stroke-width="1.4"/><path d="M3 7h12M7.2 7v7.5" stroke="currentColor" stroke-width="1.3"/></svg>
+              <span>Start Page</span>
+            </button>
+            <button type="button" class="settings-nav-item" data-pane="wallpapers" role="tab">
+              <svg viewBox="0 0 18 18" fill="none"><rect x="2.8" y="3.6" width="12.4" height="10.8" rx="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="6.7" cy="7.3" r="1.15" fill="currentColor"/><path d="M3.4 12.7l3.2-3.1 2.4 2.2 2.2-2.2 3.3 3.1" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Wallpapers</span>
+              <span class="settings-nav-pill">26</span>
+            </button>
+            <button type="button" class="settings-nav-item" data-pane="privacy" role="tab">
+              <svg viewBox="0 0 18 18" fill="none"><path d="M9 2.4L3.6 4.6v4.3c0 3.5 2.3 6.2 5.4 7.3 3.1-1.1 5.4-3.8 5.4-7.3V4.6L9 2.4z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6.6 9.1l1.7 1.7 3.3-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Privacy &amp; VPN</span>
+            </button>
+            <button type="button" class="settings-nav-item" data-pane="shortcuts" role="tab">
+              <svg viewBox="0 0 18 18" fill="none"><rect x="2.5" y="4.5" width="13" height="9" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M5.2 7.6h1.2M8.4 7.6h1.2M11.6 7.6h1.2M6 10.6h6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+              <span>Tabs &amp; Shortcuts</span>
+            </button>
+          </nav>
+
+          <div class="settings-sidebar-foot">
+            <button type="button" id="btn-settings-reset" class="settings-ghost-btn">Reset Defaults</button>
+          </div>
+        </aside>
+
+        <!-- Right Pane Content -->
+        <div class="settings-main">
+          <div class="settings-main-head">
+            <div>
+              <h2 id="settings-pane-title" class="settings-pane-title">General</h2>
+              <p id="settings-pane-sub" class="settings-pane-sub">Search engine, startup tabs, homepage &amp; toolbar behavior</p>
+            </div>
+            <button type="button" id="btn-settings-done" class="settings-done-btn" title="Close Options (Esc)">Done</button>
+          </div>
+
+          <div class="settings-scroll">
+            <!-- Pane 1: General -->
+            <div class="settings-pane" data-pane-body="general">
+              <div class="opt-group">
+                <div class="opt-group-label">Search</div>
+                <div class="opt-row stacked">
+                  <div class="opt-meta">
+                    <div class="opt-title">Default Search Engine</div>
+                    <div class="opt-desc">Used by the Smart Search Field and Start Page search bar</div>
+                  </div>
+                  <div class="opt-seg" id="opt-search-engine">
+                    <button type="button" class="opt-seg-btn active" data-val="google">Google</button>
+                    <button type="button" class="opt-seg-btn" data-val="duckduckgo">DuckDuckGo</button>
+                    <button type="button" class="opt-seg-btn" data-val="brave">Brave</button>
+                    <button type="button" class="opt-seg-btn" data-val="bing">Bing</button>
+                    <button type="button" class="opt-seg-btn" data-val="perplexity">Perplexity</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="opt-group">
+                <div class="opt-group-label">Startup &amp; New Tabs</div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">dejavu opens with</div>
+                    <div class="opt-desc">Start fresh or restore all tabs from your previous session</div>
+                  </div>
+                  <div class="opt-seg compact" id="opt-startup">
+                    <button type="button" class="opt-seg-btn active" data-val="startpage">Start Page</button>
+                    <button type="button" class="opt-seg-btn" data-val="restore">Previous Tabs</button>
+                  </div>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">New tabs open with</div>
+                    <div class="opt-desc">Choose what opens when pressing Ctrl+T or +</div>
+                  </div>
+                  <div class="opt-seg compact" id="opt-newtab-mode">
+                    <button type="button" class="opt-seg-btn active" data-val="startpage">Start Page</button>
+                    <button type="button" class="opt-seg-btn" data-val="homepage">Homepage</button>
+                  </div>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Homepage URL</div>
+                    <div class="opt-desc">Used when New Tabs are set to open Homepage</div>
+                  </div>
+                  <div class="opt-input-wrap">
+                    <input id="opt-homepage-url" class="opt-text-input" type="text" placeholder="https://www.google.com" spellcheck="false" autocomplete="off">
+                    <button type="button" id="btn-save-homepage" class="opt-mini-btn">Save</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="opt-group">
+                <div class="opt-group-label">Toolbar &amp; Favorites</div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Show Favorites Bar</div>
+                    <div class="opt-desc">Display pinned bookmarks directly below the tab strip (Ctrl+Shift+B)</div>
+                  </div>
+                  <button type="button" id="opt-show-favbar" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pane 2: Appearance & Liquid Glass -->
+            <div class="settings-pane hidden" data-pane-body="appearance">
+              <div class="opt-group">
+                <div class="opt-group-label">Theme &amp; Butterfly Accent</div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Appearance Polarity</div>
+                    <div class="opt-desc">Auto adapts chrome &amp; popovers to each website's brightness</div>
+                  </div>
+                  <div class="opt-seg compact" id="opt-appearance-mode">
+                    <button type="button" class="opt-seg-btn active" data-val="auto">Auto</button>
+                    <button type="button" class="opt-seg-btn" data-val="dark">Dark</button>
+                    <button type="button" class="opt-seg-btn" data-val="light">Light</button>
+                  </div>
+                </div>
+                <div class="opt-row stacked">
+                  <div class="opt-meta">
+                    <div class="opt-title">Butterfly Accent Color</div>
+                    <div class="opt-desc">Colors switches, active tab rims, focus glows, and privacy badges</div>
+                  </div>
+                  <div class="accent-swatches" id="opt-accent-swatches">
+                    <button type="button" class="accent-swatch active" data-accent-choice="amethyst"><span class="sw-dot" style="--sw:#b07cff"></span><span>Amethyst</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="sapphire"><span class="sw-dot" style="--sw:#4da6ff"></span><span>Sapphire</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="aurora"><span class="sw-dot" style="--sw:#38d9a9"></span><span>Aurora</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="rose"><span class="sw-dot" style="--sw:#f472b6"></span><span>Rose</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="gold"><span class="sw-dot" style="--sw:#f5b942"></span><span>Gold</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="silver"><span class="sw-dot" style="--sw:#b4c2d8"></span><span>Arctic</span></button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="opt-group">
+                <div class="opt-group-label">Safari Smart Search &amp; Tabs</div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Show full website address</div>
+                    <div class="opt-desc">Display the full URL instead of the clean Safari domain in the Smart Search Field</div>
+                  </div>
+                  <button type="button" id="opt-full-url" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Compact Tab Bar</div>
+                    <div class="opt-desc">Sleeker 32px tab strip for extra vertical webpage space</div>
+                  </div>
+                  <button type="button" id="opt-compact-tabs" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Always show tab close buttons</div>
+                    <div class="opt-desc">Keep × visible on inactive tabs instead of revealing on hover</div>
+                  </div>
+                  <button type="button" id="opt-always-close" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
+                </div>
+                <div class="opt-row stacked">
+                  <div class="opt-meta">
+                    <div class="opt-title">Default Page Zoom</div>
+                    <div class="opt-desc">Automatically scales webpages when loaded</div>
+                  </div>
+                  <div class="opt-seg" id="opt-default-zoom">
+                    <button type="button" class="opt-seg-btn" data-val="80">80%</button>
+                    <button type="button" class="opt-seg-btn" data-val="90">90%</button>
+                    <button type="button" class="opt-seg-btn active" data-val="100">100%</button>
+                    <button type="button" class="opt-seg-btn" data-val="110">110%</button>
+                    <button type="button" class="opt-seg-btn" data-val="125">125%</button>
+                    <button type="button" class="opt-seg-btn" data-val="150">150%</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="opt-group">
+                <div class="opt-group-label">Wallpaper Contrast &amp; Motion</div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Wallpaper Dimming</div>
+                    <div class="opt-desc">Tune vignette contrast behind Start Page icons &amp; typography</div>
+                  </div>
+                  <div class="opt-seg compact" id="opt-wp-dim">
+                    <button type="button" class="opt-seg-btn" data-val="vivid">Vivid</button>
+                    <button type="button" class="opt-seg-btn active" data-val="balanced">Balanced</button>
+                    <button type="button" class="opt-seg-btn" data-val="calm">Calm</button>
+                  </div>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Reduce Wallpaper Motion &amp; Parallax</div>
+                    <div class="opt-desc">Keeps wallpapers calm &amp; stationary for focus or battery savings</div>
+                  </div>
+                  <button type="button" id="opt-reduce-motion" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pane 3: Start Page Sections -->
+            <div class="settings-pane hidden" data-pane-body="startpage">
+              <div class="opt-group">
+                <div class="opt-group-label">Visible Start Page Sections</div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Favorites Grid</div>
+                    <div class="opt-desc">Quick-access squircle tiles on your Start Page</div>
+                  </div>
+                  <button type="button" id="opt-sp-favorites" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Frequently Visited</div>
+                    <div class="opt-desc">Auto-populated sites you visit most often</div>
+                  </div>
+                  <button type="button" id="opt-sp-frequent" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Privacy Report Card</div>
+                    <div class="opt-desc">Shows live blocked trackers &amp; quick VPN status chip</div>
+                  </div>
+                  <button type="button" id="opt-sp-privacy" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Reading List Shelf</div>
+                    <div class="opt-desc">Saved articles waiting to read later</div>
+                  </div>
+                  <button type="button" id="opt-sp-reading" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Profile Greeting Badge</div>
+                    <div class="opt-desc">Shows time-of-day greeting &amp; active Butterfly profile pill</div>
+                  </div>
+                  <button type="button" id="opt-sp-greeting" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Center Start Page Search Bar</div>
+                    <div class="opt-desc">Turn off for an ultra-minimal Safari look using only the top Smart Search Field</div>
+                  </div>
+                  <button type="button" id="opt-sp-search" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
+                </div>
+              </div>
+
+              <div class="opt-group">
+                <div class="opt-group-label">Background Artwork</div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Butterfly HD Wallpaper Studio</div>
+                    <div class="opt-desc">Browse 16 crisp 2K dejavu artworks, 10 live 60fps themes, or upload your own</div>
+                  </div>
+                  <div style="display:flex;gap:8px;flex-shrink:0;">
+                    <button type="button" id="btn-sp-goto-wallpapers" class="opt-mini-btn primary">Browse 26 Themes</button>
+                    <button type="button" id="btn-sp-upload-wp" class="opt-mini-btn">+ Upload</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pane 4: Embedded 26-Theme HD Wallpaper Gallery -->
+            <div class="settings-pane hidden" data-pane-body="wallpapers">
+              <div class="opt-wp-toolbar">
+                <div class="opt-seg compact" id="opt-wp-filter">
+                  <button type="button" class="opt-seg-btn active" data-cat="all">All (26)</button>
+                  <button type="button" class="opt-seg-btn" data-cat="art">2K HD Art (16)</button>
+                  <button type="button" class="opt-seg-btn" data-cat="live">Live 60fps (10)</button>
+                </div>
+                <button type="button" id="btn-opt-upload-wp" class="opt-mini-btn primary">+ Custom Photo</button>
+              </div>
+              <div id="settings-wallpaper-grid" class="wallpaper-grid settings-wp-grid"></div>
+            </div>
+
+            <!-- Pane 5: Privacy, Ad Blocker & VPN -->
+            <div class="settings-pane hidden" data-pane-body="privacy">
+              <div class="opt-group">
+                <div class="opt-group-label">100/100 Built-in Ad &amp; Tracker Blocker</div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Block ads &amp; trackers everywhere</div>
+                    <div id="opt-adblock-stats" class="opt-desc">Actively blocking network ads, banners &amp; YouTube ad scripts</div>
+                  </div>
+                  <button type="button" id="opt-global-adblock" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
+                </div>
+                <div class="opt-row stacked">
+                  <div class="opt-meta">
+                    <div class="opt-title">Paused Websites</div>
+                    <div class="opt-desc">Sites where you manually paused the Ad Blocker</div>
+                  </div>
+                  <div id="opt-paused-hosts-list" class="opt-paused-list"></div>
+                </div>
+              </div>
+
+              <div class="opt-group">
+                <div class="opt-group-label">dejavu Encrypted VPN (46 Countries)</div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Auto-connect VPN on startup</div>
+                    <div class="opt-desc">Automatically establish a 3-hop encrypted tunnel when dejavu launches</div>
+                  </div>
+                  <button type="button" id="opt-vpn-auto" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Switch VPN Country &amp; Live Status</div>
+                    <div id="opt-vpn-summary" class="opt-desc">Choose from 46 global regions with zero-lag scrolling</div>
+                  </div>
+                  <button type="button" id="btn-opt-open-vpn" class="opt-mini-btn">Open VPN</button>
+                </div>
+              </div>
+
+              <div class="opt-group">
+                <div class="opt-group-label">Clear Browsing Data</div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Browsing History</div>
+                    <div class="opt-desc">Clears visited URLs &amp; Frequently Visited (keeps your favorites &amp; wallpapers)</div>
+                  </div>
+                  <button type="button" id="btn-opt-clear-history" class="opt-mini-btn danger">Clear History</button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Cookies &amp; Site Cache</div>
+                    <div class="opt-desc">Clears website cookies and disk cache without touching your dejavu settings</div>
+                  </div>
+                  <button type="button" id="btn-opt-clear-cache" class="opt-mini-btn danger">Clear Cache</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pane 6: Tabs & Keyboard Shortcuts -->
+            <div class="settings-pane hidden" data-pane-body="shortcuts">
+              <div class="opt-group">
+                <div class="opt-group-label">Tab Preferences</div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Compact Tab Bar</div>
+                    <div class="opt-desc">Use a tighter 32px Safari-style tab bar</div>
+                  </div>
+                  <button type="button" id="opt-tabs-compact-mirror" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Always show tab close buttons</div>
+                    <div class="opt-desc">Keep × visible on every tab without hovering</div>
+                  </div>
+                  <button type="button" id="opt-tabs-close-mirror" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
+                </div>
+              </div>
+
+              <div class="opt-group">
+                <div class="opt-group-label">MacBook Safari-Style Keyboard Shortcuts</div>
+                <div class="shortcuts-ref-grid">
+                  <div class="kbd-row"><span>Safari Options</span><kbd>Ctrl + ,</kbd></div>
+                  <div class="kbd-row"><span>New Tab</span><kbd>Ctrl + T</kbd></div>
+                  <div class="kbd-row"><span>Close Tab</span><kbd>Ctrl + W</kbd></div>
+                  <div class="kbd-row"><span>Reopen Closed Tab</span><kbd>Ctrl + Shift + T</kbd></div>
+                  <div class="kbd-row"><span>Tab Overview Grid</span><kbd>Ctrl + Shift + O</kbd></div>
+                  <div class="kbd-row"><span>Show / Hide Sidebar</span><kbd>Ctrl + Shift + L</kbd></div>
+                  <div class="kbd-row"><span>Toggle Favorites Bar</span><kbd>Ctrl + Shift + B</kbd></div>
+                  <div class="kbd-row"><span>Safari Reader Mode</span><kbd>Ctrl + Shift + R</kbd></div>
+                  <div class="kbd-row"><span>Focus Smart Search</span><kbd>Ctrl + L</kbd></div>
+                  <div class="kbd-row"><span>Mute / Unmute Tab</span><kbd>Ctrl + M</kbd></div>
+                  <div class="kbd-row"><span>Bookmark / Pin Favorite</span><kbd>Ctrl + D</kbd></div>
+                  <div class="kbd-row"><span>Add to Reading List</span><kbd>Ctrl + Shift + D</kbd></div>
+                  <div class="kbd-row"><span>History</span><kbd>Ctrl + H</kbd></div>
+                  <div class="kbd-row"><span>Downloads</span><kbd>Ctrl + J</kbd></div>
+                  <div class="kbd-row"><span>Find on Page</span><kbd>Ctrl + F</kbd></div>
+                  <div class="kbd-row"><span>New Window</span><kbd>Ctrl + N</kbd></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="settings-toast" class="settings-toast hidden"></div>
+        </div>
+      </div>
+    </section>
 
     <!-- Add Favorite Site Modal -->
     <div id="shortcut-modal" class="glass-card shortcut-modal hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="18" data-lg-scale="22">

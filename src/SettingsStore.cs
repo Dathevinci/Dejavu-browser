@@ -27,6 +27,23 @@ namespace DejavuBrowser
         public bool hidePrivacyReport { get; set; }
         public bool hideReadingList { get; set; }
 
+        // Safari Options & Customization (v3.0.0+)
+        public string appearanceMode { get; set; }
+        public string accentColor { get; set; }
+        public bool showFullWebsiteAddress { get; set; }
+        public bool alwaysShowTabClose { get; set; }
+        public bool compactTabBar { get; set; }
+        public int defaultZoomPercent { get; set; }
+        public string newTabMode { get; set; }
+        public string homepageUrl { get; set; }
+        public string startupBehavior { get; set; }
+        public List<string> lastSessionUrls { get; set; }
+        public bool reduceWallpaperMotion { get; set; }
+        public string wallpaperDim { get; set; }
+        public bool hideGreetingBadge { get; set; }
+        public bool hideStartPageSearch { get; set; }
+        public bool favoritesBarHidden { get; set; }
+
         public DejavuSettings()
         {
             searchEngine = "google";
@@ -37,6 +54,21 @@ namespace DejavuBrowser
             customWallpaperPath = "";
             vpnCountry = "AUTO";
             vpnAutoConnect = false;
+            appearanceMode = "auto";
+            accentColor = "amethyst";
+            showFullWebsiteAddress = false;
+            alwaysShowTabClose = false;
+            compactTabBar = false;
+            defaultZoomPercent = 100;
+            newTabMode = "startpage";
+            homepageUrl = "https://www.google.com";
+            startupBehavior = "startpage";
+            lastSessionUrls = new List<string>();
+            reduceWallpaperMotion = false;
+            wallpaperDim = "balanced";
+            hideGreetingBadge = false;
+            hideStartPageSearch = false;
+            favoritesBarHidden = false;
             shortcuts = new List<ShortcutItem>
             {
                 new ShortcutItem { name = "YouTube", url = "https://www.youtube.com" },
@@ -58,9 +90,12 @@ namespace DejavuBrowser
         {
             get
             {
-                string dir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "dejavu");
+                string envDir = Environment.GetEnvironmentVariable("DEJAVU_DATA_DIR");
+                string dir = !string.IsNullOrEmpty(envDir)
+                    ? envDir
+                    : Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "dejavu");
                 Directory.CreateDirectory(dir);
                 return dir;
             }
@@ -93,6 +128,14 @@ namespace DejavuBrowser
                             if (loaded.customWallpaperPath == null) loaded.customWallpaperPath = "";
                             if (string.IsNullOrEmpty(loaded.vpnCountry)) loaded.vpnCountry = "AUTO";
                             if (loaded.pausedHosts == null) loaded.pausedHosts = new List<string>();
+                            if (string.IsNullOrEmpty(loaded.appearanceMode)) loaded.appearanceMode = "auto";
+                            if (string.IsNullOrEmpty(loaded.accentColor)) loaded.accentColor = "amethyst";
+                            if (loaded.defaultZoomPercent < 50 || loaded.defaultZoomPercent > 200) loaded.defaultZoomPercent = 100;
+                            if (string.IsNullOrEmpty(loaded.newTabMode)) loaded.newTabMode = "startpage";
+                            if (string.IsNullOrEmpty(loaded.homepageUrl)) loaded.homepageUrl = "https://www.google.com";
+                            if (string.IsNullOrEmpty(loaded.startupBehavior)) loaded.startupBehavior = "startpage";
+                            if (loaded.lastSessionUrls == null) loaded.lastSessionUrls = new List<string>();
+                            if (string.IsNullOrEmpty(loaded.wallpaperDim)) loaded.wallpaperDim = "balanced";
                             if (loaded.shortcuts == null || loaded.shortcuts.Count == 0)
                             {
                                 loaded.shortcuts = new DejavuSettings().shortcuts;

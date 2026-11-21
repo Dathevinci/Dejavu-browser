@@ -1,23 +1,29 @@
 package com.dathevinci.dejavu;
 
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
+import android.app.role.RoleManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Base64;
@@ -52,6 +58,7 @@ import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -231,6 +238,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     private static final Interpolator M3_EMPHASIZED_DECEL = new PathInterpolator(0.05f, 0.7f, 0.1f, 1.0f);
+    private static final Interpolator M3_SPRING = new PathInterpolator(0.34f, 1.56f, 0.64f, 1.0f);
 
     private static final class MobileTab {
         int id;
@@ -372,6 +380,18 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private float swipeStartX = 0f;
     private float swipeStartY = 0f;
     private boolean swipeConsumed = false;
+    private JSONObject pendingContextMenu = null;
+    private ObjectAnimator progressAnimator = null;
+
+    private final ActivityResultLauncher<Intent> defaultBrowserLauncher = registerForActivityResult(
+        new ActivityResultContracts.StartActivityForResult(),
+        result -> {
+            pushStateToUi();
+            if (isDefaultBrowser()) {
+                Toast.makeText(this, "dejavu is now your Default Browser", Toast.LENGTH_SHORT).show();
+            }
+        }
+    );
 
     private final ActivityResultLauncher<ScanOptions> qrLauncher = registerForActivityResult(
         new ScanContract(),
@@ -438,6 +458,53 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     protected void onResume() {
         super.onResume();
         if (autoUpdater != null) autoUpdater.onActivityResumed(this);
+        if (uiReady) pushStateToUi();
+    }
+
+    @SuppressWarnings("deprecation")
+    private boolean isDefaultBrowser() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                RoleManager rm = (RoleManager) getSystemService(Context.ROLE_SERVICE);
+                if (rm != null && rm.isRoleAvailable(RoleManager.ROLE_BROWSER)) {
+                    return rm.isRoleHeld(RoleManager.ROLE_BROWSER);
+                }
+            }
+            Intent probe = new Intent(Intent.ACTION_VIEW, Uri.parse("https://example.com"));
+            probe.addCategory(Intent.CATEGORY_BROWSABLE);
+            ResolveInfo ri = getPackageManager().resolveActivity(probe, PackageManager.MATCH_DEFAULT_ONLY);
+            return ri != null && ri.activityInfo != null && getPackageName().equals(ri.activityInfo.packageName);
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private void requestDefaultBrowser() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                RoleManager rm = (RoleManager) getSystemService(Context.ROLE_SERVICE);
+                if (rm != null && rm.isRoleAvailable(RoleManager.ROLE_BROWSER)) {
+                    if (rm.isRoleHeld(RoleManager.ROLE_BROWSER)) {
+                        Toast.makeText(this, "dejavu is already your Default Browser", Toast.LENGTH_SHORT).show();
+                        pushStateToUi();
+                        return;
+                    }
+                    Intent roleIntent = rm.createRequestRoleIntent(RoleManager.ROLE_BROWSER);
+                    defaultBrowserLauncher.launch(roleIntent);
+                    return;
+                }
+            }
+        } catch (Exception ignored) { }
+
+        try {
+            Intent settingsIntent = new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
+            defaultBrowserLauncher.launch(settingsIntent);
+        } catch (Exception ex) {
+            try {
+                startActivity(new Intent(Settings.ACTION_SETTINGS));
+            } catch (Exception ignored) { }
+            Toast.makeText(this, "Open Android Settings > Default apps > Browser app to select dejavu", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -959,6 +1026,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             else openUiScreen("menu");
         });
 
+        // Tactile Material Design 3 spring press feedback on Bottom App Bar controls
+        attachSpringPress(navBack, navBack, 0.92f, 1.0f);
+        attachSpringPress(navForward, navForward, 0.92f, 1.0f);
+        attachSpringPress(navSyncWrap, navSyncPill, 0.94f, 1.06f);
+        attachSpringPress(navTabsWrap, navTabsBadge, 0.90f, 1.0f);
+        attachSpringPress(navMenu, navMenu, 0.92f, 1.0f);
+        attachSpringPress(btnBeamPc, btnBeamPc, 0.90f, 1.0f);
+        attachSpringPress(btnReload, btnReload, 0.90f, 1.0f);
+
         // Find-in-page bar
         findInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -1009,6 +1085,33 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             } else {
                 autoUpdater.startDownloadOrInstall(MainActivity.this);
             }
+        });
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void attachSpringPress(View trigger, final View target, final float downScale, final float pillExpandX) {
+        if (trigger == null || target == null) return;
+        trigger.setOnTouchListener((v, ev) -> {
+            if (ev == null) return false;
+            int act = ev.getActionMasked();
+            if (act == MotionEvent.ACTION_DOWN) {
+                target.animate().cancel();
+                target.animate().scaleX(downScale).scaleY(downScale).setDuration(110)
+                    .setInterpolator(M3_EMPHASIZED_DECEL).start();
+            } else if (act == MotionEvent.ACTION_UP || act == MotionEvent.ACTION_CANCEL) {
+                target.animate().cancel();
+                if (pillExpandX > 1.0f && act == MotionEvent.ACTION_UP) {
+                    target.animate().scaleX(pillExpandX).scaleY(1.02f).setDuration(150)
+                        .setInterpolator(M3_SPRING)
+                        .withEndAction(() -> target.animate().scaleX(1f).scaleY(1f).setDuration(180)
+                            .setInterpolator(M3_EMPHASIZED_DECEL).start())
+                        .start();
+                } else {
+                    target.animate().scaleX(1f).scaleY(1f).setDuration(200)
+                        .setInterpolator(M3_SPRING).start();
+                }
+            }
+            return false;
         });
     }
 
@@ -1728,8 +1831,124 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             }
         });
 
+        wv.setOnLongClickListener(v -> handleWebViewLongPress(wv, tab));
+
         tab.webView = wv;
         webContainer.addView(wv);
+    }
+
+    @SuppressWarnings("deprecation")
+    private boolean handleWebViewLongPress(final ObservableWebView wv, final MobileTab tab) {
+        if (wv == null || tab == null || tab.isNewTab) return false;
+        final WebView.HitTestResult hit = wv.getHitTestResult();
+        if (hit == null) return false;
+        final int type = hit.getType();
+        final String extra = hit.getExtra() != null ? hit.getExtra().trim() : "";
+
+        boolean isLinkType = (type == WebView.HitTestResult.SRC_ANCHOR_TYPE
+            || type == WebView.HitTestResult.ANCHOR_TYPE);
+        boolean isImageType = (type == WebView.HitTestResult.IMAGE_TYPE);
+        boolean isImageAnchorType = (type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE);
+        boolean isEmailType = (type == WebView.HitTestResult.EMAIL_TYPE);
+        boolean isPhoneType = (type == WebView.HitTestResult.PHONE_TYPE);
+
+        if (!isLinkType && !isImageType && !isImageAnchorType && !isEmailType && !isPhoneType) {
+            return false;
+        }
+
+        if (isEmailType && !extra.isEmpty()) {
+            wv.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            String mailto = extra.startsWith("mailto:") ? extra : ("mailto:" + extra);
+            openWebContextMenuSheet(tab, "email", extra, mailto, "");
+            return true;
+        }
+        if (isPhoneType && !extra.isEmpty()) {
+            wv.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            String tel = extra.startsWith("tel:") ? extra : ("tel:" + extra);
+            openWebContextMenuSheet(tab, "phone", extra, tel, "");
+            return true;
+        }
+
+        wv.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+
+        Handler hrefHandler = new Handler(Looper.getMainLooper(), msg -> {
+            Bundle data = msg != null ? msg.getData() : null;
+            String nodeUrl = data != null ? safeTrim(data.getString("url")) : "";
+            String nodeSrc = data != null ? safeTrim(data.getString("src")) : "";
+            String nodeTitle = data != null ? safeTrim(data.getString("title")) : "";
+
+            String linkUrl = "";
+            String imageUrl = "";
+            if (isImageAnchorType) {
+                linkUrl = isNavigableUrl(nodeUrl) ? nodeUrl : "";
+                imageUrl = isNavigableUrl(nodeSrc) ? nodeSrc : (isNavigableUrl(extra) ? extra : "");
+            } else if (isImageType) {
+                imageUrl = isNavigableUrl(nodeSrc) ? nodeSrc : (isNavigableUrl(extra) ? extra : "");
+                if (isNavigableUrl(nodeUrl)) linkUrl = nodeUrl;
+            } else {
+                linkUrl = isNavigableUrl(nodeUrl) ? nodeUrl : (isNavigableUrl(extra) ? extra : "");
+                if (isNavigableUrl(nodeSrc)) imageUrl = nodeSrc;
+            }
+
+            if (linkUrl.isEmpty() && imageUrl.isEmpty()) {
+                return true;
+            }
+
+            String kind;
+            if (!linkUrl.isEmpty() && !imageUrl.isEmpty()) kind = "image-link";
+            else if (!imageUrl.isEmpty()) kind = "image";
+            else kind = "link";
+
+            String displayTitle = nodeTitle;
+            if (displayTitle.isEmpty()) {
+                if (!imageUrl.isEmpty() && kind.equals("image")) {
+                    displayTitle = guessFileLabelFromUrl(imageUrl, "Image");
+                } else {
+                    displayTitle = formatHost(!linkUrl.isEmpty() ? linkUrl : imageUrl);
+                }
+            }
+            openWebContextMenuSheet(tab, kind, displayTitle, linkUrl, imageUrl);
+            return true;
+        });
+
+        Message hrefMsg = hrefHandler.obtainMessage();
+        wv.requestFocusNodeHref(hrefMsg);
+        return true;
+    }
+
+    private static String safeTrim(String s) {
+        return s == null ? "" : s.trim();
+    }
+
+    private static boolean isNavigableUrl(String u) {
+        if (u == null || u.isEmpty()) return false;
+        String low = u.toLowerCase(Locale.US);
+        return low.startsWith("http://") || low.startsWith("https://")
+            || low.startsWith("mailto:") || low.startsWith("tel:");
+    }
+
+    private static String guessFileLabelFromUrl(String url, String fallback) {
+        try {
+            String guessed = URLUtil.guessFileName(url, null, null);
+            if (guessed != null && !guessed.trim().isEmpty()) return guessed.trim();
+        } catch (Exception ignored) { }
+        return fallback;
+    }
+
+    private void openWebContextMenuSheet(MobileTab tab, String kind, String title, String linkUrl, String imageUrl) {
+        try {
+            JSONObject ctx = new JSONObject();
+            ctx.put("source", "web");
+            ctx.put("kind", kind);
+            ctx.put("title", title != null ? title : "");
+            ctx.put("linkUrl", linkUrl != null ? linkUrl : "");
+            ctx.put("imageUrl", imageUrl != null ? imageUrl : "");
+            ctx.put("pageTitle", tab != null && tab.title != null ? tab.title : "");
+            ctx.put("pageUrl", tab != null && tab.url != null ? tab.url : "");
+            ctx.put("isPrivate", tab != null && tab.isPrivate);
+            pendingContextMenu = ctx;
+            openUiScreen("context-menu");
+        } catch (Exception ignored) { }
     }
 
     private void injectScrollTopTracker(WebView view) {
@@ -1760,8 +1979,38 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         ProgressBar other = isTop ? loadProgress : loadProgressTop;
         if (other != null) other.setVisibility(View.GONE);
         if (active != null) {
-            active.setVisibility(visible ? View.VISIBLE : View.GONE);
-            active.setProgress(progress);
+            if (progressAnimator != null) {
+                progressAnimator.cancel();
+                progressAnimator = null;
+            }
+            if (visible) {
+                if (active.getVisibility() != View.VISIBLE) {
+                    active.setAlpha(1f);
+                    active.setProgress(0);
+                    active.setVisibility(View.VISIBLE);
+                }
+                int from = Math.max(0, Math.min(100, active.getProgress()));
+                int to = Math.max(from, Math.min(100, progress));
+                progressAnimator = ObjectAnimator.ofInt(active, "progress", from, to);
+                progressAnimator.setDuration(220);
+                progressAnimator.setInterpolator(M3_EMPHASIZED_DECEL);
+                progressAnimator.start();
+            } else {
+                if (active.getVisibility() == View.VISIBLE) {
+                    progressAnimator = ObjectAnimator.ofInt(active, "progress", active.getProgress(), 100);
+                    progressAnimator.setDuration(150);
+                    progressAnimator.setInterpolator(M3_EMPHASIZED_DECEL);
+                    progressAnimator.start();
+                    active.animate().alpha(0f).setDuration(200).setStartDelay(120)
+                        .withEndAction(() -> {
+                            active.setVisibility(View.GONE);
+                            active.setAlpha(1f);
+                            active.setProgress(0);
+                        }).start();
+                } else {
+                    active.setProgress(0);
+                }
+            }
         }
     }
 
@@ -1781,7 +2030,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private boolean isModalSheetScreen(String scr) {
         return "menu".equals(scr) || "sync".equals(scr) || "settings".equals(scr)
             || "wallpapers".equals(scr) || "downloads".equals(scr)
-            || "profile".equals(scr) || "clear-data".equals(scr);
+            || "profile".equals(scr) || "clear-data".equals(scr)
+            || "context-menu".equals(scr);
     }
 
     private void updateChromeVisibility() {
@@ -1832,6 +2082,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     private void closeOverlayScreen() {
+        pendingContextMenu = null;
         MobileTab active = getActiveTab();
         if (active == null || active.isNewTab) {
             activeUiScreen = "start";
@@ -1974,6 +2225,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("floatingDownloadButton", floatingDownloadButton);
                 st.put("adBlockEnabled", adBlocker.isEnabled());
                 st.put("totalBlocked", adBlocker.getTotalBlocked());
+                st.put("isDefaultBrowser", isDefaultBrowser());
                 st.put("profiles", profiles);
                 st.put("activeProfileId", activeProfileId);
                 st.put("mainProfileId", mainProfileId);
@@ -2020,6 +2272,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (downloadManager != null) {
                     st.put("turboDownloads", downloadManager.getDownloadsSnapshot());
                     st.put("pageMedia", active != null ? downloadManager.getMediaSnapshot(active.id) : new JSONArray());
+                }
+                if ("context-menu".equals(activeUiScreen) && pendingContextMenu != null) {
+                    st.put("contextMenu", pendingContextMenu);
                 }
 
                 String js = "window.__onDejavuState && window.__onDejavuState(" + st.toString() + ");";
@@ -3180,8 +3435,142 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (url == null || url.trim().isEmpty()) return;
                 MobileTab active = getActiveTab();
                 createTab(url.trim(), false, active != null && active.isPrivate);
+                if ("context-menu".equals(activeUiScreen)) closeOverlayScreen();
                 Toast.makeText(MainActivity.this, "Opened in background tab", Toast.LENGTH_SHORT).show();
             });
+        }
+
+        @JavascriptInterface
+        public void openLinkInNewTab(final String url) {
+            mainHandler.post(() -> {
+                if (url == null || url.trim().isEmpty()) return;
+                MobileTab active = getActiveTab();
+                pendingContextMenu = null;
+                createTab(url.trim(), true, active != null && active.isPrivate);
+            });
+        }
+
+        @JavascriptInterface
+        public void downloadLinkTurbo(final String rawUrl, final String suggestedName) {
+            mainHandler.post(() -> {
+                if (rawUrl == null || rawUrl.trim().isEmpty()) return;
+                String cleanUrl = rawUrl.trim();
+                if (downloadManager != null && (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://"))) {
+                    MobileTab t = getActiveTab();
+                    String ref = (t != null && !t.isNewTab) ? t.url : "";
+                    String ua = (t != null && t.webView != null) ? t.webView.getSettings().getUserAgentString() : "";
+                    String ck = CookieManager.getInstance().getCookie(cleanUrl);
+                    String fn = downloadManager.enqueueDownload(cleanUrl, suggestedName != null ? suggestedName : "", ref, ua, ck, 8);
+                    if ("context-menu".equals(activeUiScreen)) closeOverlayScreen();
+                    Toast.makeText(MainActivity.this, "8x Turbo Download: " + fn, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Cannot download this link type", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void shareUrl(final String title, final String url) {
+            mainHandler.post(() -> {
+                if (url == null || url.trim().isEmpty()) return;
+                if ("context-menu".equals(activeUiScreen)) closeOverlayScreen();
+                Intent share = new Intent(Intent.ACTION_SEND);
+                share.setType("text/plain");
+                if (title != null && !title.trim().isEmpty()) {
+                    share.putExtra(Intent.EXTRA_SUBJECT, title.trim());
+                }
+                share.putExtra(Intent.EXTRA_TEXT, url.trim());
+                startActivity(Intent.createChooser(share, "Share link"));
+            });
+        }
+
+        @JavascriptInterface
+        public void sendLinkToPc(final String title, final String url) {
+            mainHandler.post(() -> {
+                if (url == null || url.trim().isEmpty()) return;
+                String cleanUrl = url.trim();
+                String cleanTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : formatHost(cleanUrl);
+                syncManager.sendDrop("link", cleanTitle, cleanUrl, "");
+                if ("context-menu".equals(activeUiScreen)) closeOverlayScreen();
+                Toast.makeText(MainActivity.this, "Sent link to Windows PC!", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void openExternalUri(final String uriStr) {
+            mainHandler.post(() -> {
+                if (uriStr == null || uriStr.trim().isEmpty()) return;
+                if ("context-menu".equals(activeUiScreen)) closeOverlayScreen();
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uriStr.trim()));
+                    startActivity(intent);
+                } catch (Exception ex) {
+                    Toast.makeText(MainActivity.this, "No app available to open link", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void duplicateTab(final int tabId) {
+            mainHandler.post(() -> {
+                MobileTab src = null;
+                for (MobileTab t : tabs) {
+                    if (t.id == tabId) { src = t; break; }
+                }
+                if (src == null) return;
+                String dupUrl = (!src.isNewTab && src.url != null && !src.url.startsWith("dejavu://")) ? src.url : null;
+                createTab(dupUrl, true, src.isPrivate);
+                Toast.makeText(MainActivity.this, "Tab duplicated", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void updateFavorite(final String oldUrl, final String newTitle, final String rawNewUrl) {
+            mainHandler.post(() -> {
+                String resolved = resolveInputToUrl(rawNewUrl);
+                if (resolved == null || resolved.isEmpty()) return;
+                String cleanTitle = (newTitle == null || newTitle.trim().isEmpty()) ? formatHost(resolved) : newTitle.trim();
+                JSONArray next = new JSONArray();
+                boolean updated = false;
+                for (int i = 0; i < bookmarks.length(); i++) {
+                    JSONObject o = bookmarks.optJSONObject(i);
+                    if (o == null) continue;
+                    if (!updated && oldUrl != null && oldUrl.equalsIgnoreCase(o.optString("url"))) {
+                        try {
+                            JSONObject repl = new JSONObject();
+                            repl.put("title", cleanTitle);
+                            repl.put("url", resolved);
+                            next.put(repl);
+                            updated = true;
+                        } catch (Exception ignored) { }
+                    } else {
+                        next.put(o);
+                    }
+                }
+                if (!updated) {
+                    try {
+                        JSONObject item = new JSONObject();
+                        item.put("title", cleanTitle);
+                        item.put("url", resolved);
+                        next.put(item);
+                    } catch (Exception ignored) { }
+                }
+                bookmarks = next;
+                saveLocalCollections();
+                syncManager.publishCollection("bookmarks", bookmarks);
+                pushStateToUi();
+                Toast.makeText(MainActivity.this, "Shortcut updated", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public boolean isDefaultBrowser() {
+            return MainActivity.this.isDefaultBrowser();
+        }
+
+        @JavascriptInterface
+        public void requestDefaultBrowser() {
+            mainHandler.post(MainActivity.this::requestDefaultBrowser);
         }
 
         @JavascriptInterface

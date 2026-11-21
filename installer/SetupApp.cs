@@ -368,7 +368,7 @@ namespace DejavuSetup
                     if (key != null)
                     {
                         key.SetValue("DisplayName", "dejavu");
-                        key.SetValue("DisplayVersion", "4.6.0");
+                        key.SetValue("DisplayVersion", "4.7.0");
                         key.SetValue("Publisher", "dejavu");
                         key.SetValue("DisplayIcon", iconPath);
                         key.SetValue("InstallLocation", InstallDir);
@@ -377,6 +377,9 @@ namespace DejavuSetup
                         key.SetValue("NoRepair", 1, RegistryValueKind.DWord);
                     }
                 }
+
+                // Register dejavu as a per-user Windows 10 & 11 Default Browser candidate (zero UAC prompt)
+                DejavuBrowser.DefaultBrowserRegistrar.Register(InstalledExe);
             });
             await Task.Delay(250);
 
@@ -400,6 +403,7 @@ namespace DejavuSetup
                 try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "dejavu.lnk")); } catch { }
                 try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), "dejavu.lnk")); } catch { }
                 try { Registry.CurrentUser.DeleteSubKeyTree(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\dejavu", false); } catch { }
+                try { DejavuBrowser.DefaultBrowserRegistrar.Unregister(); } catch { }
                 try { if (File.Exists(InstalledExe)) File.Delete(InstalledExe); } catch { }
                 try { string ico = Path.Combine(InstallDir, "dejavu.ico"); if (File.Exists(ico)) File.Delete(ico); } catch { }
             });

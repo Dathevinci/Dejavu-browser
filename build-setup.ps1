@@ -36,6 +36,7 @@ $args = @(
   "/resource:$root\assets\logo-transparent.png,logo-transparent.png",
   "/resource:$root\assets\dejavu.ico,dejavu.ico",
   "/resource:$root\assets\wallpapers\wp-m3-butterfly-obsidian.jpg,wp-amethyst.jpg",
+  "$root\src\DefaultBrowserRegistrar.cs",
   "$root\installer\SetupApp.cs"
 )
 

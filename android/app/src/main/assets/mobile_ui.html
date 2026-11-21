@@ -38,8 +38,11 @@
       --mint: #7bd8c6;
       --danger: #ffb4ab;
       --shadow: 0 2px 10px rgba(0, 0, 0, 0.24);
-      --m3-decel: cubic-bezier(0.05, 0.7, 0.1, 1.0);
-      --m3-std: cubic-bezier(0.2, 0, 0, 1);
+      --md-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+      --md-ease-decel: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+      --md-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --m3-decel: var(--md-ease-decel);
+      --m3-std: var(--md-ease-emphasized);
       --font: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
@@ -136,13 +139,15 @@
     .screen.hidden { display: none !important; }
     .screen.solid-canvas { background: var(--canvas-bg); }
 
-    /* Material Design 3 Modal Bottom Sheet (28dp Top Radius + Emphasized Decelerate Motion) */
+    /* Material Design 3 Modal Bottom Sheet (28dp Top Radius + Spring Emphasized Motion) */
     .sheet-backdrop {
       position: fixed; inset: 0; z-index: 20;
       background: var(--scrim);
       display: flex; flex-direction: column; justify-content: flex-end;
-      animation: fadeScrim 0.2s var(--m3-decel) both;
+      animation: fadeScrim 0.22s var(--md-ease-decel) both;
+      will-change: opacity;
     }
+    .sheet-backdrop.ctx-layer { z-index: 32; }
     .sheet-backdrop.hidden { display: none !important; }
     .sheet-panel {
       width: 100%; max-height: 88vh;
@@ -152,11 +157,33 @@
       box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.32);
       display: flex; flex-direction: column;
       overflow: hidden;
-      animation: sheetRise 0.28s var(--m3-decel) both;
+      animation: sheetSpringRise 0.32s var(--md-ease-decel) both;
       will-change: transform, opacity;
     }
+    #scr-tabs:not(.hidden), #scr-omnibox:not(.hidden) {
+      animation: screenFadeRise 0.24s var(--md-ease-decel) both;
+    }
     @keyframes fadeScrim { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes sheetRise { from { transform: translateY(36px); opacity: 0.78; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes sheetSpringRise {
+      from { transform: translateY(44px) scale(0.985); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    @keyframes screenFadeRise {
+      from { transform: translateY(14px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes modalPopIn {
+      from { transform: scale(0.92) translateY(12px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    @keyframes tabCardEnter {
+      from { transform: translateY(12px) scale(0.97); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    @keyframes pillPop {
+      from { transform: scale(0.92); opacity: 0.72; }
+      to { transform: scale(1); opacity: 1; }
+    }
 
     .sheet-head {
       flex-shrink: 0;
@@ -183,15 +210,15 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    /* Shared Material 3 Buttons & Chips */
+    /* Shared Material 3 Buttons & Chips with Tactile Spring & Tonal State-Layer */
     .icon-circle {
       width: 40px; height: 40px; border-radius: 50%;
       border: 1px solid var(--border); background: var(--card);
       color: var(--ink); display: inline-flex; align-items: center; justify-content: center;
       cursor: pointer; flex-shrink: 0;
-      transition: transform 0.16s var(--m3-decel), opacity 0.16s ease;
+      transition: transform 0.2s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized), border-color 0.16s var(--md-ease-emphasized), opacity 0.16s ease;
     }
-    .icon-circle:active { transform: scale(0.92); }
+    .icon-circle:active { transform: scale(0.92); background: var(--group-press); }
     .icon-circle.on { background: var(--accent-soft); border-color: transparent; color: var(--accent-bright); }
     .icon-circle.gold { background: rgba(245, 185, 66, 0.22); border-color: rgba(245, 185, 66, 0.56); color: #f5b942; }
 
@@ -200,14 +227,26 @@
       border: 1px solid var(--border); background: var(--group-bg);
       color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 600;
       display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      cursor: pointer; transition: transform 0.16s var(--m3-decel), opacity 0.16s ease;
+      cursor: pointer;
+      transition: transform 0.2s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized), border-color 0.16s var(--md-ease-emphasized), opacity 0.16s ease;
     }
-    .pill-btn:active, .fav-tile:active, .q-tile:active, .g-row:active, .tab-card:active, .cta-btn:active {
-      transform: scale(0.97);
+    .pill-btn:active, .fav-tile:active, .q-tile:active, .g-row:active, .tab-card:active, .cta-btn:active,
+    .sp-link-pill:active, .pc-card:active, .sp-shield-pill:active, .tabs-add-fab:active, .yt-q-pill:active, .q-chip:active {
+      transform: scale(0.96);
     }
+    .pill-btn:active { background: var(--group-press); }
     .pill-btn.primary {
       background: var(--accent); border-color: transparent;
       color: var(--accent-ink); box-shadow: none;
+    }
+    .pill-btn.primary:active { background: var(--accent); opacity: 0.9; }
+    .pill-btn.is-default {
+      background: rgba(123, 216, 198, 0.18); border-color: rgba(123, 216, 198, 0.42);
+      color: var(--mint);
+    }
+    body.theme-light .pill-btn.is-default {
+      background: #d4f4ec; border-color: rgba(0, 106, 96, 0.28);
+      color: #006a60;
     }
     .pill-btn.ghost { background: transparent; border-color: transparent; color: var(--accent); padding: 0 10px; }
     .pill-btn.danger {
@@ -245,7 +284,8 @@
       font-family: inherit; text-align: left;
       padding: 14px 16px;
       display: flex; align-items: center; gap: 13px;
-      position: relative; transition: background 0.14s var(--m3-std);
+      position: relative; cursor: pointer;
+      transition: background-color 0.16s var(--md-ease-emphasized), transform 0.2s var(--md-ease-spring);
     }
     .g-row + .g-row::before {
       content: ''; position: absolute; left: 16px; right: 16px; top: 0;
@@ -259,25 +299,28 @@
     .g-row-val { font-size: 13px; color: var(--muted); font-weight: 520; flex-shrink: 0; }
     .g-chev { color: var(--subtle); flex-shrink: 0; }
 
-    /* Authentic Google Pixel Material Design 3 Switch with Checkmark */
+    /* Authentic Google Pixel Material Design 3 52x32 Switch with Spring Bounce & Checkmark */
     .sw {
       width: 52px; height: 32px; border-radius: 99px; flex-shrink: 0;
       background: var(--input-bg); border: 2px solid var(--subtle);
-      position: relative; transition: background 0.2s var(--m3-std), border-color 0.2s var(--m3-std);
+      position: relative;
+      transition: background-color 0.22s var(--md-ease-emphasized), border-color 0.22s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring);
       cursor: pointer; padding: 0;
     }
+    .sw:active { transform: scale(0.95); }
     .sw::after {
       content: ''; position: absolute; top: 6px; left: 6px;
       width: 16px; height: 16px; border-radius: 50%;
       background: var(--subtle);
       display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 800; line-height: 1; color: var(--accent);
-      transition: transform 0.22s var(--m3-std), width 0.18s var(--m3-std), height 0.18s var(--m3-std), top 0.18s var(--m3-std), left 0.18s var(--m3-std), background 0.18s var(--m3-std);
+      font-size: 0px; font-weight: 800; line-height: 1; color: var(--accent);
+      transition: transform 0.28s var(--md-ease-spring), width 0.22s var(--md-ease-spring), height 0.22s var(--md-ease-spring), top 0.22s var(--md-ease-spring), left 0.22s var(--md-ease-spring), background-color 0.18s var(--md-ease-emphasized), font-size 0.18s var(--md-ease-spring);
     }
     .sw.on { background: var(--accent); border-color: var(--accent); }
     .sw.on::after {
       content: '✓'; top: 2px; left: 2px;
       width: 24px; height: 24px;
+      font-size: 13px;
       background: var(--accent-ink);
       transform: translateX(20px);
     }
@@ -373,6 +416,8 @@
       display: flex; flex-direction: column; align-items: center; gap: 7px;
       background: transparent; border: none; color: var(--ink);
       padding: 0; font-family: inherit; cursor: pointer;
+      transition: transform 0.2s var(--md-ease-spring);
+      -webkit-user-select: none; user-select: none;
     }
     .fav-sq {
       width: 58px; height: 58px; border-radius: 17px;
@@ -380,7 +425,9 @@
       box-shadow: inset 0 1px 0 var(--rim-top), var(--shadow);
       display: flex; align-items: center; justify-content: center;
       overflow: hidden; position: relative;
+      transition: transform 0.2s var(--md-ease-spring), border-color 0.18s var(--md-ease-emphasized), background-color 0.16s var(--md-ease-emphasized);
     }
+    .fav-tile:active .fav-sq { border-color: var(--accent); background: var(--group-press); }
     .fav-sq .site-ico { width: 34px; height: 34px; border-radius: 10px; font-size: 16px; }
     .fav-sq.add-sq {
       background: var(--card); border-style: dashed; color: var(--muted);
@@ -549,8 +596,11 @@
       background: var(--sheet-elev); border: 1.5px solid var(--border);
       display: flex; flex-direction: column;
       box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.42);
-      transition: transform 0.14s ease, border-color 0.16s ease;
+      transition: transform 0.2s var(--md-ease-spring), border-color 0.18s var(--md-ease-emphasized), box-shadow 0.2s var(--md-ease-emphasized);
+      animation: tabCardEnter 0.28s var(--md-ease-decel) both;
+      cursor: pointer; -webkit-user-select: none; user-select: none;
     }
+    .tab-card:hover { transform: translateY(-2px); }
     .tab-card.active {
       border-color: var(--accent);
       box-shadow: 0 0 0 1.5px var(--accent), 0 10px 24px var(--accent-glow);
@@ -895,13 +945,15 @@
       position: fixed; inset: 0; z-index: 40;
       background: var(--scrim); display: flex; align-items: center; justify-content: center;
       padding: 20px;
+      animation: fadeScrim 0.18s var(--md-ease-decel) both;
     }
     .mini-modal.hidden { display: none !important; }
     .mini-modal-card {
-      width: 100%; max-width: 340px; border-radius: 22px;
+      width: 100%; max-width: 340px; border-radius: 26px;
       background: var(--sheet-bg); border: 1px solid var(--border);
-      padding: 18px; display: flex; flex-direction: column; gap: 12px;
+      padding: 20px; display: flex; flex-direction: column; gap: 12px;
       box-shadow: 0 20px 48px rgba(0, 0, 0, 0.52);
+      animation: modalPopIn 0.26s var(--md-ease-spring) both;
     }
     .mini-modal-card input {
       height: 44px; padding: 0 13px; border-radius: 13px;
@@ -1293,6 +1345,94 @@
       padding: 36px 18px; text-align: center; color: var(--muted); font-size: 13.5px;
     }
     .set-search-empty.show { display: flex; }
+
+    /* =====================================================================
+       V4.7 GOOGLE PIXEL MATERIAL DESIGN 3 LONG-PRESS CONTEXT MENU SHEET
+       & FLUID M3 POLISH (Pure HCT Tonal Surfaces — Zero CSS Blur)
+       ===================================================================== */
+    .ctx-preview-card {
+      display: flex; align-items: center; gap: 13px;
+      padding: 14px 16px; border-radius: 24px;
+      background: var(--group-bg); border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow);
+    }
+    .ctx-thumb-box {
+      width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0;
+      overflow: hidden; background: var(--sheet-elev); border: 1px solid var(--border);
+      display: inline-flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .ctx-thumb-box img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .ctx-preview-meta {
+      flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px;
+    }
+    .ctx-kind-row {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ctx-kind-pill {
+      height: 20px; padding: 0 8px; border-radius: 999px;
+      background: var(--accent-soft); color: var(--accent-bright);
+      font-size: 10px; font-weight: 760; letter-spacing: 0.04em; text-transform: uppercase;
+      display: inline-flex; align-items: center;
+    }
+    body.theme-light .ctx-kind-pill { color: var(--accent); }
+    .ctx-kind-pill.mint {
+      background: rgba(123, 216, 198, 0.20); color: var(--mint);
+    }
+    body.theme-light .ctx-kind-pill.mint { background: #d4f4ec; color: #006a60; }
+    .ctx-preview-title {
+      font-size: 15px; font-weight: 700; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .ctx-preview-url {
+      font-size: 11.5px; color: var(--muted); line-height: 1.35;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; word-break: break-all;
+    }
+    .ctx-action-row {
+      width: 100%; background: transparent; border: none; color: var(--ink);
+      font-family: inherit; text-align: left;
+      padding: 13px 16px;
+      display: flex; align-items: center; gap: 13px;
+      position: relative; cursor: pointer;
+      transition: background-color 0.16s var(--md-ease-emphasized), transform 0.2s var(--md-ease-spring);
+    }
+    .ctx-action-row + .ctx-action-row::before {
+      content: ''; position: absolute; left: 62px; right: 16px; top: 0;
+      height: 1px; background: var(--divider);
+    }
+    .ctx-action-row:active { background: var(--group-press); transform: scale(0.985); }
+    .ctx-action-row.danger .g-row-title { color: var(--danger); }
+    .ctx-turbo-chip {
+      height: 22px; padding: 0 9px; border-radius: 999px; flex-shrink: 0;
+      background: var(--accent-soft); color: var(--accent-bright);
+      font-size: 10.5px; font-weight: 760;
+      display: inline-flex; align-items: center;
+    }
+    body.theme-light .ctx-turbo-chip { color: var(--accent); }
+
+    /* Tactile spring active pills for segmented controls & chips */
+    .m3-seg-3 button:active, .bar-seg button:active, .mode-seg-btn:active {
+      transform: scale(0.96);
+    }
+    .m3-seg-3 button, .bar-seg button, .mode-seg-btn {
+      transition: background-color 0.18s var(--md-ease-emphasized), color 0.18s var(--md-ease-emphasized), transform 0.2s var(--md-ease-spring);
+    }
+    .m3-seg-3 button.active, .bar-seg button.active, .mode-seg-btn.active {
+      animation: pillPop 0.24s var(--md-ease-spring) both;
+    }
+    .wp-tile:active { transform: scale(0.96); }
+    .wp-tile { transition: transform 0.22s var(--md-ease-spring), border-color 0.18s var(--md-ease-emphasized); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1919,13 +2059,22 @@
           </div>
         </div>
 
-        <!-- 6. SYNC & ABOUT v4.6.0 -->
-        <div class="set-section" data-search="sync dejavu link pc mobile software update auto updater apk version 4.6.0 about reset defaults">
+        <!-- 6. SYSTEM, SYNC & ABOUT v4.7.0 -->
+        <div class="set-section" data-search="system default browser role apps http https links sync dejavu link pc mobile software update auto updater apk version 4.7.0 about reset defaults">
           <div class="sec-hdr">
-            <span>Sync &amp; About v4.6.0</span>
+            <span>System, Sync &amp; About v4.7.0</span>
             <span class="set-match-pill"></span>
           </div>
           <div class="g-group">
+            <div id="set-row-default-browser" class="g-row set-item" data-search="default browser system apps role links http https open set default" onclick="call('requestDefaultBrowser')">
+              <span class="sq-ico ic-violet"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.2" stroke="currentColor" stroke-width="1.55"/><ellipse cx="9" cy="9" rx="2.9" ry="6.2" stroke="currentColor" stroke-width="1.4"/><path d="M3.1 7h11.8M3.1 11h11.8" stroke="currentColor" stroke-width="1.35"/></svg></span>
+              <div class="g-row-meta">
+                <div class="g-row-title">Default Browser</div>
+                <div id="opt-def-browser-sub" class="g-row-sub">Open web links in dejavu</div>
+              </div>
+              <button type="button" id="opt-def-browser-btn" class="pill-btn primary" onclick="event.stopPropagation();call('requestDefaultBrowser')">Set as Default</button>
+            </div>
+
             <button type="button" class="g-row set-item" data-search="dejavu link pc mobile sync qr pairing e2ee" onclick="call('openScreen','sync')">
               <span class="sq-ico ic-violet"><svg viewBox="0 0 18 18" fill="none"><rect x="2.2" y="3.5" width="10" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 13.5h3.4M7.2 11v2.5M11.5 9.5L16 5M16 5h-3.4M16 5v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               <div class="g-row-meta">
@@ -1935,10 +2084,10 @@
               <span class="g-chev">›</span>
             </button>
 
-            <div class="g-row set-item" data-search="software update auto updater github releases apk version 4.6.0">
+            <div class="g-row set-item" data-search="software update auto updater github releases apk version 4.7.0">
               <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 14V4M5.6 7.4L9 4l3.4 3.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.8 14.5h10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
               <div class="g-row-meta">
-                <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.6.0</div>
+                <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.7.0</div>
                 <div id="opt-upd-sub" class="g-row-sub">Permanent V1-V3 signing · Auto-checks GitHub Releases</div>
               </div>
               <button type="button" id="opt-upd-btn" class="pill-btn" onclick="handleUpdateBtn()">Check</button>
@@ -1959,7 +2108,7 @@
             </div>
 
             <div id="opt-upd-note" class="upd-signing-note">
-              Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.6.0 &mdash; all future updates will install automatically in-place!
+              Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.7.0 &mdash; all future updates will install automatically in-place!
             </div>
 
             <button type="button" class="g-row plain set-item" data-search="reset settings defaults restore factory preferences" onclick="openResetSettingsModal()">
@@ -1978,7 +2127,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:11.5px;color:var(--subtle);padding:4px 0 8px;">
-          dejavu Mobile v4.6.0 · Google Pixel Material Design 3
+          dejavu Mobile v4.7.0 · Google Pixel Material Design 3
         </div>
       </div>
     </div>
@@ -2195,10 +2344,29 @@
     </div>
   </div>
 
-  <!-- Inline Add Favorite Modal -->
+  <!-- ===================================================================
+       SHEET F: MATERIAL DESIGN 3 LONG-PRESS CONTEXT MENU BOTTOM SHEET
+       =================================================================== -->
+  <div id="scr-context-menu" class="sheet-backdrop ctx-layer hidden" onclick="ctxBackdropClose(event)">
+    <div class="sheet-panel" onclick="event.stopPropagation()">
+      <div class="sheet-head" data-swipe-dismiss="ctx">
+        <div class="sheet-grab"></div>
+        <div class="sheet-title-row">
+          <h2 id="ctx-sheet-title" class="sheet-title">Link Actions</h2>
+          <button type="button" class="pill-btn" onclick="closeContextMenu()">Close</button>
+        </div>
+      </div>
+      <div class="sheet-body">
+        <div id="ctx-preview-card" class="ctx-preview-card"></div>
+        <div id="ctx-actions-wrap" style="display:flex;flex-direction:column;gap:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inline Add / Edit Favorite Modal -->
   <div id="add-fav-modal" class="mini-modal hidden" onclick="closeAddFav()">
     <div class="mini-modal-card" onclick="event.stopPropagation()">
-      <h3 style="margin:0;font-size:17px;font-weight:700;">Pin to Favorites</h3>
+      <h3 id="fav-modal-title" style="margin:0;font-size:17px;font-weight:700;">Pin to Favorites</h3>
       <input id="fav-in-name" type="text" placeholder="Site name (e.g. Spotify)">
       <input id="fav-in-url" type="url" placeholder="Website URL (e.g. spotify.com)">
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
@@ -2213,7 +2381,7 @@
     <div class="mini-modal-card" style="border-radius:28px;padding:22px;" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:700;">Reset Settings to Defaults?</h3>
       <div style="font-size:13px;line-height:1.5;color:var(--muted);">
-        This restores Appearance, Privacy, Search, Tabs, and Downloads settings to dejavu v4.6.0 defaults. Your Favorites, Profiles, and PC Link stay safe.
+        This restores Appearance, Privacy, Search, Tabs, and Downloads settings to dejavu v4.7.0 defaults. Your Favorites, Profiles, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn" onclick="closeResetSettingsModal()">Cancel</button>
@@ -2275,6 +2443,8 @@
 
     let state = {};
     let favEditMode = false;
+    let editingFavOldUrl = null;
+    let localContextMenu = null;
     let tabViewPrivate = false;
     let menuSubView = 'main'; // 'main' | 'bookmarks' | 'reading' | 'history'
     let returnToSettings = false;
@@ -2379,11 +2549,15 @@
     function backdropClose(ev) {
       if (ev.target === ev.currentTarget) call('closeScreen');
     }
+    function ctxBackdropClose(ev) {
+      if (ev.target === ev.currentTarget) closeContextMenu();
+    }
 
     // Touch swipe-down-to-dismiss on bottom sheet grab handle header
     document.querySelectorAll('[data-swipe-dismiss]').forEach((hdr) => {
       let startY = 0;
       const panel = hdr.closest('.sheet-panel');
+      const isCtx = hdr.getAttribute('data-swipe-dismiss') === 'ctx';
       hdr.addEventListener('touchstart', (e) => {
         startY = e.touches[0].clientY;
         panel.style.transition = 'none';
@@ -2394,35 +2568,416 @@
       }, { passive: true });
       hdr.addEventListener('touchend', (e) => {
         const dy = Math.max(0, e.changedTouches[0].clientY - startY);
-        panel.style.transition = 'transform 0.24s cubic-bezier(0.05, 0.7, 0.1, 1.0)';
+        panel.style.transition = 'transform 0.26s cubic-bezier(0.05, 0.7, 0.1, 1.0)';
         if (dy > 85) {
           panel.style.transform = 'translateY(100%)';
-          setTimeout(() => { panel.style.transform = ''; call('closeScreen'); }, 170);
+          setTimeout(() => {
+            panel.style.transform = '';
+            if (isCtx) closeContextMenu();
+            else call('closeScreen');
+          }, 170);
         } else {
           panel.style.transform = '';
         }
       }, { passive: true });
     });
 
+    // Long-press helper (480ms touchstart + native contextmenu event, event-driven)
+    function attachLongPress(el, onLongPress) {
+      if (!el || typeof onLongPress !== 'function') return;
+      let lpTimer = null;
+      let startX = 0;
+      let startY = 0;
+      let triggered = false;
+      const clear = () => {
+        if (lpTimer) {
+          clearTimeout(lpTimer);
+          lpTimer = null;
+        }
+      };
+      el.addEventListener('touchstart', (e) => {
+        if (!e.touches || e.touches.length !== 1) return;
+        triggered = false;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        clear();
+        lpTimer = setTimeout(() => {
+          lpTimer = null;
+          triggered = true;
+          el.dataset.lpConsumed = '1';
+          onLongPress();
+        }, 480);
+      }, { passive: true });
+      el.addEventListener('touchmove', (e) => {
+        if (!lpTimer || !e.touches || !e.touches.length) return;
+        const dx = Math.abs(e.touches[0].clientX - startX);
+        const dy = Math.abs(e.touches[0].clientY - startY);
+        if (dx > 10 || dy > 10) clear();
+      }, { passive: true });
+      el.addEventListener('touchend', () => {
+        clear();
+        if (triggered) {
+          setTimeout(() => { delete el.dataset.lpConsumed; }, 350);
+        }
+      }, { passive: true });
+      el.addEventListener('touchcancel', clear, { passive: true });
+      el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        clear();
+        onLongPress();
+      });
+    }
+
     function toggleFavEdit() {
       favEditMode = !favEditMode;
       renderStartPage();
     }
     function openAddFav() {
+      editingFavOldUrl = null;
+      const tEl = document.getElementById('fav-modal-title');
+      if (tEl) tEl.textContent = 'Pin to Favorites';
       document.getElementById('fav-in-name').value = '';
       document.getElementById('fav-in-url').value = '';
       document.getElementById('add-fav-modal').classList.remove('hidden');
       setTimeout(() => document.getElementById('fav-in-name').focus(), 60);
     }
+    function openEditFav(fav) {
+      if (!fav || !fav.url) return;
+      editingFavOldUrl = fav.url;
+      const tEl = document.getElementById('fav-modal-title');
+      if (tEl) tEl.textContent = 'Edit Shortcut';
+      document.getElementById('fav-in-name').value = fav.title || '';
+      document.getElementById('fav-in-url').value = fav.url || '';
+      document.getElementById('add-fav-modal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('fav-in-name').focus(), 60);
+    }
     function closeAddFav() {
+      editingFavOldUrl = null;
       document.getElementById('add-fav-modal').classList.add('hidden');
     }
     function submitAddFav() {
       const name = document.getElementById('fav-in-name').value.trim();
       const url = document.getElementById('fav-in-url').value.trim();
       if (!url) return;
+      const prevUrl = editingFavOldUrl;
       closeAddFav();
-      call('addFavorite', name, url);
+      if (prevUrl) call('updateFavorite', prevUrl, name, url);
+      else call('addFavorite', name, url);
+    }
+
+    // Material Design 3 Long-Press Context Menu Sheet (Links, Images, Quick Access & Tab Cards)
+    const CTX_ICONS = {
+      newTab: '<svg viewBox="0 0 18 18" fill="none"><rect x="2.8" y="3.5" width="12.4" height="11" rx="2.4" stroke="currentColor" stroke-width="1.55"/><path d="M9 6.5v5M6.5 9h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+      bgTab: '<svg viewBox="0 0 18 18" fill="none"><rect x="2.6" y="5.4" width="9.8" height="9.4" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5.8 5.4V4.2A1.6 1.6 0 0 1 7.4 2.6h6.4a1.6 1.6 0 0 1 1.6 1.6v6.4a1.6 1.6 0 0 1-1.6 1.6h-1.4" stroke="currentColor" stroke-width="1.5"/></svg>',
+      copy: '<svg viewBox="0 0 18 18" fill="none"><rect x="6" y="6" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 12H3.5A1.5 1.5 0 0 1 2 10.5v-7A1.5 1.5 0 0 1 3.5 2h7A1.5 1.5 0 0 1 12 3.5V4" stroke="currentColor" stroke-width="1.5"/></svg>',
+      download: '<svg viewBox="0 0 18 18" fill="none"><path d="M9 3.2v8.2M5.8 8.4L9 11.6l3.2-3.2M3.6 14.4h10.8" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      share: '<svg viewBox="0 0 18 18" fill="none"><path d="M9 11.2V3.2M6.2 6L9 3.2 11.8 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.2 9.4v4.4a1.2 1.2 0 0 0 1.2 1.2h7.2a1.2 1.2 0 0 0 1.2-1.2V9.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+      pc: '<svg viewBox="0 0 18 18" fill="none"><rect x="2.2" y="3.5" width="10" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 13.5h3.4M7.2 11v2.5M11.5 9.5L16 5M16 5h-3.4M16 5v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      image: '<svg viewBox="0 0 18 18" fill="none"><rect x="2.6" y="3.5" width="12.8" height="11" rx="2.2" stroke="currentColor" stroke-width="1.5"/><circle cx="6.6" cy="7.2" r="1.2" fill="currentColor"/><path d="M3.2 12.8l3.2-3.1 2.4 2.2 2.2-2.2 3.5 3.1" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      edit: '<svg viewBox="0 0 18 18" fill="none"><path d="M3.2 14.8h3l8-8a1.4 1.4 0 0 0 0-2l-1-1a1.4 1.4 0 0 0-2 0l-8 8v3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+      trash: '<svg viewBox="0 0 18 18" fill="none"><path d="M3.5 5.2h11M7 5.2V3.8a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.4M5 5.2l.7 9a1.4 1.4 0 0 0 1.4 1.3h3.8a1.4 1.4 0 0 0 1.4-1.3l.7-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      ext: '<svg viewBox="0 0 18 18" fill="none"><path d="M7 4.2H4.2A1.4 1.4 0 0 0 2.8 5.6v8.2a1.4 1.4 0 0 0 1.4 1.4h8.2a1.4 1.4 0 0 0 1.4-1.4V11M10.5 3.2h4.3v4.3M14.6 3.4L8.4 9.6" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    };
+
+    function openLocalContextMenu(ctx) {
+      localContextMenu = ctx || null;
+      const scr = document.getElementById('scr-context-menu');
+      if (!scr || !localContextMenu) return;
+      renderContextMenuSheet(localContextMenu);
+      scr.classList.remove('hidden');
+    }
+
+    function closeContextMenu() {
+      const wasLocal = !!localContextMenu;
+      localContextMenu = null;
+      const scr = document.getElementById('scr-context-menu');
+      if (scr) scr.classList.add('hidden');
+      if (!wasLocal && state && state.screen === 'context-menu') {
+        call('closeScreen');
+      }
+    }
+
+    function buildCtxActionRow(opt) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ctx-action-row' + (opt.danger ? ' danger' : '');
+      const toneCls = opt.tone || 'ic-violet';
+      const badgeHtml = opt.badge ? `<span class="ctx-turbo-chip">${esc(opt.badge)}</span>` : '';
+      btn.innerHTML = `
+        <span class="sq-ico ${toneCls}">${opt.icon || ''}</span>
+        <span class="g-row-meta">
+          <span class="g-row-title">${esc(opt.label)}</span>
+          ${opt.sub ? `<span class="g-row-sub">${esc(opt.sub)}</span>` : ''}
+        </span>
+        ${badgeHtml}
+      `;
+      btn.onclick = () => {
+        if (typeof opt.onClick === 'function') opt.onClick();
+      };
+      return btn;
+    }
+
+    function renderContextMenuSheet(ctx) {
+      if (!ctx) return;
+      const titleEl = document.getElementById('ctx-sheet-title');
+      const prevEl = document.getElementById('ctx-preview-card');
+      const wrapEl = document.getElementById('ctx-actions-wrap');
+      if (!prevEl || !wrapEl) return;
+
+      const source = ctx.source || 'web';
+      const kind = ctx.kind || 'link';
+      const linkUrl = ctx.linkUrl || '';
+      const imageUrl = ctx.imageUrl || '';
+      const primaryUrl = linkUrl || imageUrl || '';
+      const dispTitle = ctx.title || (primaryUrl ? getHost(primaryUrl) : 'Page Item');
+
+      const sheetTitles = {
+        'image-link': 'Link & Image',
+        'image': 'Image Actions',
+        'link': 'Link Actions',
+        'email': 'Email Address',
+        'phone': 'Phone Number',
+        'shortcut': 'Quick Access',
+        'tab': 'Tab Actions'
+      };
+      if (titleEl) {
+        titleEl.textContent = source === 'shortcut' ? 'Quick Access' : (source === 'tab' ? 'Tab Actions' : (sheetTitles[kind] || 'Link Actions'));
+      }
+
+      // Rich Preview Header Card
+      const kindBadges = {
+        'image-link': '<span class="ctx-kind-pill">Link</span><span class="ctx-kind-pill mint">Image</span>',
+        'image': '<span class="ctx-kind-pill mint">Image</span>',
+        'link': '<span class="ctx-kind-pill">Link</span>',
+        'email': '<span class="ctx-kind-pill">Email</span>',
+        'phone': '<span class="ctx-kind-pill">Phone</span>',
+        'shortcut': '<span class="ctx-kind-pill">Shortcut</span>',
+        'tab': ctx.isPrivate ? '<span class="ctx-kind-pill">Private Tab</span>' : '<span class="ctx-kind-pill">Open Tab</span>'
+      };
+      let thumbHtml = '';
+      if (imageUrl) {
+        thumbHtml = `<span class="ctx-thumb-box"><img src="${esc(imageUrl)}" alt="" onerror="this.remove()"></span>`;
+      } else if (source === 'tab' && ctx.thumb) {
+        thumbHtml = `<span class="ctx-thumb-box"><img src="${ctx.thumb}" alt=""></span>`;
+      } else if (primaryUrl && /^https?:\/\//i.test(primaryUrl)) {
+        thumbHtml = `<span class="ctx-thumb-box">${getSiteIconHtml(primaryUrl, dispTitle, 34)}</span>`;
+      } else {
+        thumbHtml = `<span class="ctx-thumb-box"><span class="sq-ico ic-violet">${CTX_ICONS.ext}</span></span>`;
+      }
+
+      const subDisplay = primaryUrl || (source === 'tab' ? 'Start Page · dejavu' : '');
+      prevEl.innerHTML = `
+        ${thumbHtml}
+        <div class="ctx-preview-meta">
+          <div class="ctx-kind-row">${kindBadges[source === 'shortcut' ? 'shortcut' : (source === 'tab' ? 'tab' : kind)] || '<span class="ctx-kind-pill">Action</span>'}</div>
+          <div class="ctx-preview-title">${esc(dispTitle)}</div>
+          ${subDisplay ? `<div class="ctx-preview-url">${esc(subDisplay)}</div>` : ''}
+        </div>
+      `;
+
+      wrapEl.innerHTML = '';
+
+      const appendGroup = (headerText, rows) => {
+        if (!rows || !rows.length) return;
+        if (headerText) {
+          const h = document.createElement('div');
+          h.className = 'sec-hdr';
+          h.innerHTML = `<span>${esc(headerText)}</span>`;
+          wrapEl.appendChild(h);
+        }
+        const grp = document.createElement('div');
+        grp.className = 'g-group';
+        rows.forEach((r) => grp.appendChild(buildCtxActionRow(r)));
+        wrapEl.appendChild(grp);
+      };
+
+      if (source === 'shortcut') {
+        appendGroup('', [
+          {
+            label: 'Open in new tab',
+            sub: getHost(linkUrl),
+            icon: CTX_ICONS.newTab,
+            tone: 'ic-violet',
+            onClick: () => { closeContextMenu(); call('openLinkInNewTab', linkUrl); }
+          },
+          {
+            label: 'Open in background tab',
+            icon: CTX_ICONS.bgTab,
+            tone: 'ic-slate',
+            onClick: () => { closeContextMenu(); call('openLinkInBackground', linkUrl); }
+          },
+          {
+            label: 'Edit shortcut',
+            sub: 'Rename title or update address',
+            icon: CTX_ICONS.edit,
+            tone: 'ic-teal',
+            onClick: () => {
+              const targetFav = { title: dispTitle, url: linkUrl };
+              closeContextMenu();
+              openEditFav(targetFav);
+            }
+          },
+          {
+            label: 'Copy link address',
+            icon: CTX_ICONS.copy,
+            tone: 'ic-slate',
+            onClick: () => { closeContextMenu(); call('copyText', linkUrl); }
+          },
+          {
+            label: 'Remove',
+            sub: 'Remove from Quick Access',
+            icon: CTX_ICONS.trash,
+            tone: 'ic-rose',
+            danger: true,
+            onClick: () => { closeContextMenu(); call('removeFavorite', linkUrl); }
+          }
+        ]);
+        return;
+      }
+
+      if (source === 'tab') {
+        const rows = [
+          {
+            label: 'Duplicate tab',
+            sub: ctx.isNewTab ? 'Open another Start Page' : getHost(linkUrl),
+            icon: CTX_ICONS.newTab,
+            tone: 'ic-violet',
+            onClick: () => { closeContextMenu(); call('duplicateTab', ctx.tabId); }
+          }
+        ];
+        if (!ctx.isNewTab && linkUrl) {
+          rows.push({
+            label: 'Share link',
+            icon: CTX_ICONS.share,
+            tone: 'ic-teal',
+            onClick: () => { closeContextMenu(); call('shareUrl', dispTitle, linkUrl); }
+          });
+          rows.push({
+            label: 'Send link to PC (dejavu Link)',
+            icon: CTX_ICONS.pc,
+            tone: 'ic-violet',
+            onClick: () => { closeContextMenu(); call('sendLinkToPc', dispTitle, linkUrl); }
+          });
+        }
+        rows.push({
+          label: 'Close tab',
+          icon: CTX_ICONS.trash,
+          tone: 'ic-rose',
+          danger: true,
+          onClick: () => { closeContextMenu(); call('closeTabById', ctx.tabId); }
+        });
+        appendGroup('', rows);
+        return;
+      }
+
+      if (kind === 'email' || kind === 'phone') {
+        appendGroup('', [
+          {
+            label: kind === 'email' ? 'Send email' : 'Call number',
+            sub: dispTitle,
+            icon: CTX_ICONS.ext,
+            tone: 'ic-violet',
+            onClick: () => { closeContextMenu(); call('openExternalUri', linkUrl); }
+          },
+          {
+            label: kind === 'email' ? 'Copy email address' : 'Copy phone number',
+            icon: CTX_ICONS.copy,
+            tone: 'ic-slate',
+            onClick: () => { closeContextMenu(); call('copyText', dispTitle); }
+          },
+          {
+            label: 'Share',
+            icon: CTX_ICONS.share,
+            tone: 'ic-teal',
+            onClick: () => { closeContextMenu(); call('shareUrl', dispTitle, dispTitle); }
+          },
+          {
+            label: 'Send to PC (dejavu Link)',
+            icon: CTX_ICONS.pc,
+            tone: 'ic-violet',
+            onClick: () => { closeContextMenu(); call('sendDropToPc', dispTitle); }
+          }
+        ]);
+        return;
+      }
+
+      // Web Links (link or image-link)
+      if (linkUrl) {
+        appendGroup(imageUrl ? 'Link Actions' : '', [
+          {
+            label: 'Open in new tab',
+            icon: CTX_ICONS.newTab,
+            tone: 'ic-violet',
+            onClick: () => { closeContextMenu(); call('openLinkInNewTab', linkUrl); }
+          },
+          {
+            label: 'Open in background tab',
+            icon: CTX_ICONS.bgTab,
+            tone: 'ic-slate',
+            onClick: () => { closeContextMenu(); call('openLinkInBackground', linkUrl); }
+          },
+          {
+            label: 'Copy link address',
+            icon: CTX_ICONS.copy,
+            tone: 'ic-slate',
+            onClick: () => { closeContextMenu(); call('copyText', linkUrl); }
+          },
+          {
+            label: 'Download link (Turbo 8×)',
+            sub: '8-thread accelerated download',
+            icon: CTX_ICONS.download,
+            tone: 'ic-emerald',
+            badge: '8×',
+            onClick: () => { closeContextMenu(); call('downloadLinkTurbo', linkUrl, ''); }
+          },
+          {
+            label: 'Share link',
+            icon: CTX_ICONS.share,
+            tone: 'ic-teal',
+            onClick: () => { closeContextMenu(); call('shareUrl', dispTitle, linkUrl); }
+          },
+          {
+            label: 'Send link to PC (dejavu Link)',
+            sub: 'Beam straight to Windows PC',
+            icon: CTX_ICONS.pc,
+            tone: 'ic-violet',
+            onClick: () => { closeContextMenu(); call('sendLinkToPc', dispTitle, linkUrl); }
+          }
+        ]);
+      }
+
+      // Web Images (image or image-link)
+      if (imageUrl) {
+        appendGroup(linkUrl ? 'Image Actions' : '', [
+          {
+            label: 'Open image in new tab',
+            icon: CTX_ICONS.image,
+            tone: 'ic-violet',
+            onClick: () => { closeContextMenu(); call('openLinkInNewTab', imageUrl); }
+          },
+          {
+            label: 'Save image (Turbo 8×)',
+            sub: 'Save directly to Downloads/dejavu/',
+            icon: CTX_ICONS.download,
+            tone: 'ic-emerald',
+            badge: '8×',
+            onClick: () => { closeContextMenu(); call('downloadLinkTurbo', imageUrl, ''); }
+          },
+          {
+            label: 'Copy image address',
+            icon: CTX_ICONS.copy,
+            tone: 'ic-slate',
+            onClick: () => { closeContextMenu(); call('copyText', imageUrl); }
+          },
+          {
+            label: 'Share image URL',
+            icon: CTX_ICONS.share,
+            tone: 'ic-teal',
+            onClick: () => { closeContextMenu(); call('shareUrl', dispTitle, imageUrl); }
+          }
+        ]);
+      }
     }
 
     function copyActiveUrl() {
@@ -2690,9 +3245,22 @@
           <div class="fav-lbl">${esc(b.title || getHost(b.url))}</div>
         `;
         tile.onclick = () => {
+          if (tile.dataset.lpConsumed === '1') {
+            delete tile.dataset.lpConsumed;
+            return;
+          }
           if (favEditMode) call('removeFavorite', b.url);
           else call('navigate', b.url);
         };
+        attachLongPress(tile, () => {
+          openLocalContextMenu({
+            source: 'shortcut',
+            kind: 'shortcut',
+            title: b.title || getHost(b.url),
+            linkUrl: b.url,
+            imageUrl: ''
+          });
+        });
         fg.appendChild(tile);
       });
 
@@ -2900,8 +3468,26 @@
             </div>
             <div class="tab-card-preview">${previewHtml}</div>
           `;
-          card.onclick = () => call('switchTab', t.id);
+          card.onclick = () => {
+            if (card.dataset.lpConsumed === '1') {
+              delete card.dataset.lpConsumed;
+              return;
+            }
+            call('switchTab', t.id);
+          };
           card.querySelector('.tab-card-x').onclick = (e) => { e.stopPropagation(); call('closeTabById', t.id); };
+          attachLongPress(card, () => {
+            openLocalContextMenu({
+              source: 'tab',
+              kind: 'tab',
+              tabId: t.id,
+              title: t.title || 'Start Page',
+              linkUrl: t.isNewTab ? '' : (t.url || ''),
+              thumb: t.thumb || '',
+              isNewTab: !!t.isNewTab,
+              isPrivate: !!t.isPrivate
+            });
+          });
           tg.appendChild(card);
         });
       }
@@ -3214,7 +3800,21 @@
           : 'Downloads/dejavu/ · Multi-quality MP4 & Audio M4A';
       }
 
-      // 6. Sync & Software Update Card
+      // 6. System (Default Browser), Sync & Software Update Card
+      const isDefBrowser = !!state.isDefaultBrowser;
+      const defBtn = document.getElementById('opt-def-browser-btn');
+      const defSub = document.getElementById('opt-def-browser-sub');
+      if (defBtn) {
+        defBtn.textContent = isDefBrowser ? '✓ Default Browser' : 'Set as Default';
+        defBtn.classList.toggle('primary', !isDefBrowser);
+        defBtn.classList.toggle('is-default', isDefBrowser);
+      }
+      if (defSub) {
+        defSub.textContent = isDefBrowser
+          ? 'Active · System default browser'
+          : 'Open web links in dejavu';
+      }
+
       const sync = state.sync || {};
       const syncSub = document.getElementById('opt-sync-sub');
       if (syncSub) {
@@ -3224,7 +3824,7 @@
       }
 
       const u = state.update || {};
-      const curV = u.currentVersion || '4.6.0';
+      const curV = u.currentVersion || '4.7.0';
       const uTitle = document.getElementById('opt-upd-title');
       const uSub = document.getElementById('opt-upd-sub');
       const uBtn = document.getElementById('opt-upd-btn');
@@ -3278,7 +3878,7 @@
         } else if (u.status === 'ready') {
           uTitle.textContent = `v${u.latestVersion} Ready to Install`;
           uSub.textContent = u.signatureMismatch
-            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '4.6.0')
+            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '4.7.0')
             : 'Verified V1-V3 permanent signature · Tap Install to upgrade';
           uBtn.textContent = 'Install';
           uBtn.classList.add('primary');
@@ -3802,7 +4402,7 @@
       }
 
       const scr = state.screen || 'start';
-      const isModal = scr === 'menu' || scr === 'sync' || scr === 'settings' || scr === 'profile' || scr === 'clear-data' || scr === 'wallpapers' || scr === 'downloads';
+      const isModal = scr === 'menu' || scr === 'sync' || scr === 'settings' || scr === 'profile' || scr === 'clear-data' || scr === 'wallpapers' || scr === 'downloads' || scr === 'context-menu';
       const showStartBehind = scr === 'start' || (isModal && !state.activeUrl);
 
       if (scr !== lastScreen) {
@@ -3810,6 +4410,7 @@
         if (scr === 'tabs') tabViewPrivate = !!state.activePrivate;
         if (scr !== 'start') favEditMode = false;
         if (scr !== 'profile' && scr !== 'clear-data') returnToSettings = false;
+        if (scr !== 'context-menu') localContextMenu = null;
         lastScreen = scr;
       }
 
@@ -3827,6 +4428,11 @@
       document.getElementById('scr-wallpapers').classList.toggle('hidden', scr !== 'wallpapers');
       const scrDl = document.getElementById('scr-downloads');
       if (scrDl) scrDl.classList.toggle('hidden', scr !== 'downloads');
+      const scrCtx = document.getElementById('scr-context-menu');
+      if (scrCtx) {
+        const showCtx = (scr === 'context-menu' && !!state.contextMenu) || !!localContextMenu;
+        scrCtx.classList.toggle('hidden', !showCtx);
+      }
 
       if (showStartBehind) renderStartPage();
       if (scr === 'omnibox') renderOmnibox();
@@ -3838,6 +4444,8 @@
       if (scr === 'clear-data') renderClearDataSheet();
       if (scr === 'wallpapers') renderWallpapersSheet();
       if (scr === 'downloads') renderDownloadsSheet();
+      if (scr === 'context-menu' && state.contextMenu) renderContextMenuSheet(state.contextMenu);
+      else if (localContextMenu) renderContextMenuSheet(localContextMenu);
     };
 
     // Standalone browser preview fallback (no-op inside Android WebView where DejavuMobile bridge exists)
@@ -3888,6 +4496,27 @@
         else if (fn === 'updateActiveProfile') {
           if (st.activeProfile) { st.activeProfile.name = args[0] || st.activeProfile.name; st.activeProfile.accentColor = args[1] || st.activeProfile.accentColor; st.accentColor = st.activeProfile.accentColor; }
         }
+        else if (fn === 'requestDefaultBrowser') {
+          st.isDefaultBrowser = !st.isDefaultBrowser;
+        }
+        else if (fn === 'updateFavorite') {
+          const [oldU, newT, newU] = args;
+          st.bookmarks = (st.bookmarks || []).map((b) => b.url === oldU ? { title: newT || b.title, url: newU || b.url } : b);
+        }
+        else if (fn === 'removeFavorite') {
+          st.bookmarks = (st.bookmarks || []).filter((b) => b.url !== args[0]);
+        }
+        else if (fn === 'duplicateTab') {
+          const src = (st.tabs || []).find((t) => t.id === args[0]);
+          if (src) {
+            const copy = Object.assign({}, src, { id: Date.now() % 100000 });
+            st.tabs = [...(st.tabs || []), copy];
+            st.activeTabId = copy.id;
+          }
+        }
+        else if (fn === 'closeTabById') {
+          st.tabs = (st.tabs || []).filter((t) => t.id !== args[0]);
+        }
         else if (fn === 'resetSettings') {
           st.themeMode = 'dark'; st.effectiveTheme = 'dark'; st.accentColor = 'amethyst'; st.pageZoom = 100;
           st.desktopSiteDefault = false; st.httpsFirst = true; st.doNotTrack = true; st.blockPopups = true;
@@ -3907,6 +4536,18 @@
             const initSeed = qp.get('accent') || initMeta.seed || 'amethyst';
             const initScreen = qp.get('screen') || 'start';
             const signedIn = qp.get('signedin') === '1';
+            const isDefBrowser = qp.get('defaultBrowser') === '1';
+            const ctxKind = qp.get('ctx') || 'image-link';
+            const previewCtx = initScreen === 'context-menu' ? {
+              source: 'web',
+              kind: ctxKind,
+              title: ctxKind === 'image' ? 'Amethyst Origami · Material Design 3' : 'dejavu Browser v4.7.0 Release',
+              linkUrl: ctxKind === 'image' ? '' : 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v4.7.0',
+              imageUrl: ctxKind === 'link' ? '' : 'wallpapers/wp-m3-butterfly-obsidian.jpg',
+              pageTitle: 'dejavu — Material Design 3 Browser',
+              pageUrl: 'https://dathevinci.github.io/Dejavu-browser/',
+              isPrivate: false
+            } : null;
             const prof1 = {
               id: 'default',
               name: 'Personal',
@@ -3950,6 +4591,8 @@
               floatingDownloadButton: true,
               adBlockEnabled: true,
               totalBlocked: 248,
+              isDefaultBrowser: isDefBrowser,
+              contextMenu: previewCtx,
               profiles: [prof1, prof2],
               activeProfileId: 'default',
               mainProfileId: 'default',
@@ -3957,7 +4600,10 @@
               safeTop: 28,
               safeBottom: 24,
               sysBottom: 16,
-              tabs: [{ id: 1, title: 'Start Page', url: 'dejavu://newtab', isNewTab: true, isPrivate: false }],
+              tabs: [
+                { id: 1, title: 'Start Page', url: 'dejavu://newtab', isNewTab: true, isPrivate: false },
+                { id: 2, title: 'Material Design 3', url: 'https://m3.material.io', isNewTab: false, isPrivate: false }
+              ],
               bookmarks: [
                 { title: 'YouTube', url: 'https://m.youtube.com' },
                 { title: 'Gemini', url: 'https://gemini.google.com' },
@@ -3973,8 +4619,8 @@
                 { title: 'GitHub — Dathevinci/Dejavu-browser', url: 'https://github.com/Dathevinci/Dejavu-browser' },
                 { title: 'YouTube', url: 'https://m.youtube.com' }
               ],
-              sync: { connected: false, pairingCode: 'DJV-4600-M3UI', remoteTabs: [], drops: [] },
-              update: { currentVersion: '4.6.0', status: 'uptodate', latestVersion: '4.6.0', available: false, hasDownloadedApk: false },
+              sync: { connected: false, pairingCode: 'DJV-4700-M3UI', remoteTabs: [], drops: [] },
+              update: { currentVersion: '4.7.0', status: 'uptodate', latestVersion: '4.7.0', available: false, hasDownloadedApk: false },
               turboDownloads: [],
               pageMedia: []
             });

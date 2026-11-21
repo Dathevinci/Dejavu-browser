@@ -117,17 +117,16 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — Thorough Material Design 3 Polish, Zero-Duplicate Chrome & Navigation Rail, Live Multi-Profile Sync & Streamlined Android Pixel Settings
+          ### dejavu __TAG__ — Material Design 3 Context Menus, Fluid M3 Motion Everywhere & Native Windows + Android Default Browser
 
-          - **Zero-Duplicate Decluttered Chrome + Navigation Rail UI (Windows)** — Eliminated every duplicate icon between the Top Toolbar and Left Navigation Rail: clean Chrome Material 3 top bar (`Back / Forward / Reload`, Pill Omnibox, `VPN` pill, `Profile` pill, `3-Dot Menu`) paired with a single-instance Left Navigation Rail (`New Tab FAB`, `Start Page`, `Side Panel`, `Downloads`, `Sync`, `History`, and one bottom-anchored `Settings` gear) — plus automatic fallback when hiding the rail and zero duplicate rows across all 10 Settings categories.
-          - **Live Cross-Process Multi-Profile Sync & Google Account Polish** — Open 2+ simultaneous browser windows (`Ctrl+N`, `Ctrl+Shift+N` Private) and run separate profiles (`Personal`, `Work`) side-by-side with real-time cross-process `REFRESH_PROFILES` sync, `Ctrl+Shift+M` Profile Switcher shortcut, Material 3 Toast feedback, and stronger Google Account name/email/avatar auto-sync.
-          - **Streamlined Android Pixel Material Design 3 Settings & You & Google Card** — Deduplicated the Android Settings & Profile flows into one crisp Google Pixel Material Design 3 Account Card (`Sign in with Google` / `Create Google Account` + quick single-row profile switcher chips + `+ Add`), upgraded tonal Light & Dark surface container contrast, live Settings Search match counts & category badges, and `52x32` M3 checkmark switches.
-          - **Thorough Material Design 3 Official Website (`docs/`)** — Elevated the official website with authentic M3 HCT tonal surface elevation across all 6 Dynamic Color Seeds in both Dark and Light modes, M3 Top App Bar with active pill indicator & Dark/Light segmented pill, and an upgraded Hero Dual-Device Showcase mirroring the decluttered `__TAG__` zero-duplicate Chrome + Navigation Rail UI.
-          - **Built-In YouTube 4K/MP3 Downloader, 16 Pure M3 & Butterfly Wallpapers & Permanent V1–V3 Android Signing** — Download `4K / 1080p / 720p MP4` or `MP3 320k / M4A` natively with zero extensions, enjoy 16 curated Material Design 3 & 4 Butterfly M3 wallpapers + *Material You Live*, strictly zero CSS `blur(` or `backdrop-filter`, near-0% idle CPU, 86-country AI-ready Smart VPN + 3-Hop Tor, E2EE `dejavu Link` PC <-> Phone Sync, and permanent V1+V2+V3 Android signing with `PackageInstaller.Session` in-place auto-updates.
+          - **Material Design 3 Right-Click & Long-Press Context Menus (Windows & Android)** — Full native `CoreWebView2` Material Design 3 right-click menus on Windows (webpages, links, images, selections, inputs, media, tabs, Start Page, Quick Access & omnibox) plus Google Pixel Material Design 3 **Long-Press Context Menu Bottom Sheets** on Android (links, images, Quick Access shortcuts & Tab Switcher cards) with one-tap **Turbo 8× Download**, Share, and **Send to PC (`dejavu Link`)**.
+          - **Fluid Material Design 3 Emphasized & Spring Motion Everywhere** — Smooth GPU-composited `transform`/`opacity` animations across bottom sheets, right-click menus, `52×32` checkmark switches, segmented pills, tab cards, progress bars, and website scroll-reveal choreography — 100% `prefers-reduced-motion` safe and strictly zero CSS `blur(` or `backdrop-filter`.
+          - **Native Windows 10/11 & Android Default Browser Registration** — Complete Windows 10/11 `RegisteredApplications` + `StartMenuInternet\dejavu\Capabilities` + `DejavuHTML` ProgID registration with a dedicated Settings card, plus Android `APP_BROWSER` + MIME-typed `VIEW` intent-filters and official `RoleManager` (`ROLE_BROWSER`) Default Browser support in Android Settings.
+          - **Zero-Duplicate Chrome + Navigation Rail, Simultaneous Multi-Profile Google Windows & YouTube 4K/MP3 Downloader** — Decluttered single-instance Chrome + Left Navigation Rail, zero duplicate rows across all 10 searchable M3 Settings categories, live cross-process Multi-Profile windows (`Ctrl+N`, `Ctrl+Shift+N`, `Ctrl+Shift+M`), built-in YouTube & 1,000+ site `4K / 1080p / 720p / MP3 320k` downloader with 8× acceleration & HLS `.m3u8` assembly, 16 Pure Material 3 & 4 Butterfly M3 wallpapers, 86-country AI-ready Smart VPN + 3-Hop Tor, E2EE PC <-> Phone Sync, and permanent V1+V2+V3 Android signing with `PackageInstaller.Session` in-place auto-updates.
             > **Android Upgrade Note:** Upgrading from `v4.2.0` or earlier? Uninstall dejavu once, then install `__TAG__` — **all future updates will install automatically in-place!**
 
           #### Downloads
-          - **dejavu-Setup.exe** — Windows 10/11 Guided Installer
+          - **dejavu-Setup.exe** — Windows 10/11 Guided Installer (with Default Browser registration)
           - **dejavu.exe** — Windows 10/11 Portable Single-File
           - **dejavu-mobile.apk** — Android Mobile Browser App (V1+V2+V3 permanently signed, Android 8.0+)
           EOF
@@ -138,5 +137,5 @@ jobs:
             release-files/dejavu-Setup.exe \
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
-            --title "dejavu $TAG — Thorough Material Design 3 Polish, Zero-Duplicate UI, Live Multi-Profile Sync & Streamlined Pixel Settings" \
+            --title "dejavu $TAG — Material Design 3 Context Menus, Fluid M3 Motion & Native Default Browser" \
             --notes-file /tmp/release_notes.md

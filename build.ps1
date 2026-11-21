@@ -53,6 +53,7 @@ $args = @(
 ) + $wpResources + @(
   "$root\src\Program.cs",
   "$root\src\NativeWin32.cs",
+  "$root\src\DefaultBrowserRegistrar.cs",
   "$root\src\SettingsStore.cs",
   "$root\src\ProfileManager.cs",
   "$root\src\AutoUpdater.cs",

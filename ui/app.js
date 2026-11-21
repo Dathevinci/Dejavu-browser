@@ -1,7 +1,7 @@
 /**
- * dejavu v4.6.0 Native Shell Controller — Authentic Google Material Design 3
- * Full 10-Category Pixel/Chrome Settings, Multi-Window & Chrome-Style Profiles,
- * Google Account Sign-In Wizard, 17 Pure M3 Wallpapers & 8x Turbo Downloader.
+ * dejavu v4.7.0 Native Shell Controller — Authentic Google Material Design 3
+ * Full 10-Category Pixel/Chrome Settings, M3 Right-Click Context Menus Everywhere,
+ * Fluid M3 GPU Motion, Multi-Window Profiles, 17 Pure M3 Wallpapers & 8x Turbo Downloader.
  */
 (function () {
   const send = (msg) => {
@@ -72,6 +72,7 @@
   const spStatusLock = document.getElementById('sp-status-lock');
   const startpageStatusText = document.getElementById('startpage-status-text');
 
+  const newtabView = document.getElementById('newtab-view');
   const newtabCanvas = document.getElementById('newtab-canvas');
   const newtabSearchForm = document.getElementById('newtab-search-form');
   const newtabSearchInput = document.getElementById('newtab-search-input');
@@ -105,9 +106,10 @@
   const btnOvDone = document.getElementById('btn-ov-done');
   const overviewGrid = document.getElementById('overview-grid');
 
-  const tabContextMenu = document.getElementById('tab-context-menu');
+  const m3CtxMenu = document.getElementById('m3-ctx-menu');
 
   const shortcutModal = document.getElementById('shortcut-modal');
+  const scModalTitle = document.getElementById('sc-modal-title');
   const scName = document.getElementById('sc-name');
   const scUrl = document.getElementById('sc-url');
   const scCancel = document.getElementById('sc-cancel');
@@ -271,6 +273,10 @@
   const optSpellcheck = document.getElementById('opt-spellcheck');
   const optDevtools = document.getElementById('opt-devtools');
   const btnOptOpenDevtools = document.getElementById('btn-opt-open-devtools');
+  const defaultBrowserIco = document.getElementById('default-browser-ico');
+  const defaultBrowserTitle = document.getElementById('default-browser-title');
+  const defaultBrowserDesc = document.getElementById('default-browser-desc');
+  const defaultBrowserBadge = document.getElementById('default-browser-badge');
   const btnMakeDefaultBrowser = document.getElementById('btn-make-default-browser');
 
   // Category 10: About dejavu
@@ -375,7 +381,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v4.6.0 — 16 HD + 1 Live = 17 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v4.7.0 — 16 HD + 1 Live = 17 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 12 Sculptural / Architectural Material Design 3 HD Wallpapers
@@ -574,7 +580,9 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '4.6.0',
+    appVersion: bootData.appVersion || '4.7.0',
+    isDefaultBrowser: !!bootData.isDefaultBrowser,
+    canReopenClosedTab: !!bootData.canReopenClosedTab,
     updateStatus: bootData.updateStatus || '',
     updateReadyVersion: bootData.updateReadyVersion || '',
     downloadsCount: 0,
@@ -588,7 +596,7 @@
     totalBlocked: bootData.totalBlocked || 0
   };
   let lastActiveId = -1;
-  let ctxTargetTabId = -1;
+  let editingShortcutIndex = -1;
 
   // Unified Boot Reveal (zero flash)
   let bootWallpaperReady = false;
@@ -1135,6 +1143,17 @@
         hideStartPageStatus();
         send({ type: 'navigate', input: sc.url });
       });
+      item.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        hideStartPageStatus();
+        showLinkItemContextMenu({
+          kind: 'shortcut',
+          title: sc.name || host,
+          url: sc.url,
+          shortcutIndex: index
+        }, e.clientX, e.clientY);
+      });
       shortcutsGrid.appendChild(item);
     });
 
@@ -1149,12 +1168,7 @@
         </div>
         <span class="m3-fav-label">Add</span>
       `;
-      addItem.addEventListener('click', () => {
-        scName.value = '';
-        scUrl.value = '';
-        shortcutModal.classList.remove('hidden');
-        scName.focus();
-      });
+      addItem.addEventListener('click', () => openShortcutModal(-1));
       shortcutsGrid.appendChild(addItem);
     }
   }
@@ -1195,6 +1209,16 @@
       card.addEventListener('click', () => {
         hideStartPageStatus();
         send({ type: 'navigate', input: item.url });
+      });
+      card.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        hideStartPageStatus();
+        showLinkItemContextMenu({
+          kind: 'frequent',
+          title: item.title || host,
+          url: item.url
+        }, e.clientX, e.clientY);
       });
       frequentGrid.appendChild(card);
     });
@@ -1242,6 +1266,17 @@
         hideStartPageStatus();
         send({ type: 'navigate', input: item.url });
       });
+      card.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        hideStartPageStatus();
+        showLinkItemContextMenu({
+          kind: 'reading',
+          id: item.id,
+          title: item.title || host,
+          url: item.url
+        }, e.clientX, e.clientY);
+      });
       readingGrid.appendChild(card);
     });
   }
@@ -1276,17 +1311,44 @@
   bindStartPagePrefSwitch(prefPrivacy, 'hidePrivacyReport');
   bindStartPagePrefSwitch(prefReading, 'hideReadingList');
 
-  scCancel.addEventListener('click', () => shortcutModal.classList.add('hidden'));
+  function openShortcutModal(editIdx, preset) {
+    editingShortcutIndex = typeof editIdx === 'number' ? editIdx : -1;
+    const isEdit = editingShortcutIndex >= 0 && Array.isArray(state.shortcuts) && state.shortcuts[editingShortcutIndex];
+    const src = isEdit ? state.shortcuts[editingShortcutIndex] : (preset || null);
+    if (scModalTitle) scModalTitle.textContent = isEdit ? 'Edit Quick Access Site' : 'Add Quick Access Site';
+    if (scSave) scSave.textContent = isEdit ? 'Save' : 'Add';
+    scName.value = (src && (src.name || src.title)) || '';
+    scUrl.value = (src && src.url) || '';
+    shortcutModal.classList.remove('hidden');
+    setTimeout(() => {
+      scName.focus();
+      scName.select();
+    }, 10);
+  }
+
+  scCancel.addEventListener('click', () => {
+    editingShortcutIndex = -1;
+    shortcutModal.classList.add('hidden');
+  });
   scSave.addEventListener('click', () => {
     const rawUrl = scUrl.value.trim();
     if (!rawUrl) return;
     const url = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
     const name = scName.value.trim() || extractHost(url).split('.')[0] || 'Site';
-    const next = [...(state.shortcuts || []), { name, url }];
+    const current = Array.isArray(state.shortcuts) ? state.shortcuts.slice() : [];
+    const wasEdit = editingShortcutIndex >= 0 && editingShortcutIndex < current.length;
+    if (wasEdit) {
+      current[editingShortcutIndex] = { name, url };
+    } else {
+      current.push({ name, url });
+    }
+    editingShortcutIndex = -1;
     shortcutModal.classList.add('hidden');
-    send({ type: 'saveShortcuts', shortcuts: next });
+    send({ type: 'saveShortcuts', shortcuts: current });
+    showToast(wasEdit ? `Updated "${name}"` : `Added "${name}" to Quick Access`, 'success');
   });
   scUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') scSave.click(); });
+  scName.addEventListener('keydown', (e) => { if (e.key === 'Enter') scUrl.focus(); });
 
   // =========================================================================
   // Material Design 3 Wallpaper Gallery (17 Pure M3 Themes)
@@ -1389,7 +1451,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v4.6.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v4.7.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -1466,6 +1528,7 @@
     if (settingsScrollContainer) settingsScrollContainer.scrollTop = 0;
     if (key === 'appearance') renderSettingsWallpaperGrid();
     if (key === 'you') renderYouAndGooglePane();
+    if (key === 'system') send({ type: 'checkDefaultBrowser' });
   }
 
   function setSegmentedVal(container, val) {
@@ -1620,7 +1683,7 @@
   function syncSettingsUi() {
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
-    const ver = state.appVersion || '4.6.0';
+    const ver = state.appVersion || '4.7.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -1758,6 +1821,21 @@
     setSwitchState(optHwAccel, o.hardwareAcceleration !== false);
     setSwitchState(optSpellcheck, o.spellcheckEnabled !== false);
     setSwitchState(optDevtools, o.devToolsEnabled !== false);
+    const isDef = !!state.isDefaultBrowser;
+    if (defaultBrowserBadge) defaultBrowserBadge.classList.toggle('hidden', !isDef);
+    if (btnMakeDefaultBrowser) btnMakeDefaultBrowser.classList.toggle('hidden', isDef);
+    if (defaultBrowserTitle) {
+      defaultBrowserTitle.textContent = isDef ? 'dejavu is your default browser' : 'Make dejavu your default browser';
+    }
+    if (defaultBrowserDesc) {
+      defaultBrowserDesc.textContent = isDef
+        ? 'HTTP/HTTPS links and web pages open automatically in dejavu'
+        : 'Registers dejavu in Windows and opens Default Apps — select dejavu and click Set default';
+    }
+    if (defaultBrowserIco) {
+      defaultBrowserIco.classList.toggle('tertiary', isDef);
+      defaultBrowserIco.classList.toggle('primary', !isDef);
+    }
 
     // Category 10: About dejavu
     if (aboutWebviewVer) aboutWebviewVer.textContent = state.webviewVersion || 'Evergreen Chromium WebView2 Runtime';
@@ -2573,6 +2651,42 @@
   });
 
   document.addEventListener('keydown', (e) => {
+    if (m3CtxMenu && !m3CtxMenu.classList.contains('hidden')) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        hideM3ContextMenu();
+        return;
+      }
+      const total = shellCtxButtons.length;
+      if (total > 0) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setShellCtxFocus(shellCtxFocusIdx < 0 ? 0 : (shellCtxFocusIdx + 1) % total);
+          return;
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setShellCtxFocus(shellCtxFocusIdx < 0 ? (total - 1) : (shellCtxFocusIdx - 1 + total) % total);
+          return;
+        }
+        if (e.key === 'Home') {
+          e.preventDefault();
+          setShellCtxFocus(0);
+          return;
+        }
+        if (e.key === 'End') {
+          e.preventDefault();
+          setShellCtxFocus(total - 1);
+          return;
+        }
+        if ((e.key === 'Enter' || e.key === ' ') && shellCtxFocusIdx >= 0 && shellCtxButtons[shellCtxFocusIdx]) {
+          e.preventDefault();
+          shellCtxButtons[shellCtxFocusIdx].click();
+          return;
+        }
+      }
+    }
+
     if (e.key === 'Escape') {
       if (resetConfirmOverlay && !resetConfirmOverlay.classList.contains('hidden')) {
         closeResetConfirmModal();
@@ -2580,13 +2694,12 @@
         closeClearDataModal();
       } else if (profileSetupOverlay && !profileSetupOverlay.classList.contains('hidden')) {
         closeProfileSetupModal();
-      } else if (!tabContextMenu.classList.contains('hidden')) {
-        hideTabContextMenu();
       } else if (state.settingsOpen) {
         send({ type: 'toggleSettings', open: false });
       } else if (!wallpaperStore.classList.contains('hidden')) {
         wallpaperStore.classList.add('hidden');
       } else if (!shortcutModal.classList.contains('hidden')) {
+        editingShortcutIndex = -1;
         shortcutModal.classList.add('hidden');
       } else if (state.tabOverviewOpen) {
         send({ type: 'toggleTabOverview', open: false });
@@ -2611,6 +2724,7 @@
     filtered.forEach((tab) => {
       const card = document.createElement('div');
       card.className = 'ov-card' + (tab.id === state.activeTabId ? ' active' : '');
+      const isPinned = !!(tab.pinned || tab.isPinned);
 
       const favSrc = tab.favicon || 'https://dejavu.local/logo-transparent.png';
       const titleText = tab.isNewTab ? 'Start Page' : (tab.title || tab.displayUrl || 'Tab');
@@ -2627,7 +2741,7 @@
           </button>
           <img class="ov-card-fav" src="${escapeSugHtml(favSrc)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'">
           <span class="ov-card-title"></span>
-          ${tab.isPinned ? '<span class="ov-card-pin">Pinned</span>' : ''}
+          ${isPinned ? '<span class="ov-card-pin">Pinned</span>' : ''}
         </div>
         <div class="ov-card-preview">${previewHtml}</div>
       `;
@@ -2637,39 +2751,560 @@
         send({ type: 'closeTab', id: tab.id });
       });
       card.addEventListener('click', () => send({ type: 'activateTab', id: tab.id }));
+      card.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const latest = (state.tabs || []).find((t) => t.id === tab.id) || tab;
+        showTabContextMenu(latest, e.clientX, e.clientY);
+      });
       overviewGrid.appendChild(card);
     });
   }
 
   // =========================================================================
-  // Right-Click Tab Context Menu
+  // Unified Google Material Design 3 Browser Shell Context Menus (#m3-ctx-menu)
+  // Auto-clamped · Keyboard Nav · Zero Blur · Seamless Live-Webpage Overlay Relay
   // =========================================================================
-  function hideTabContextMenu() {
-    tabContextMenu.classList.add('hidden');
-    ctxTargetTabId = -1;
+  const SHELL_CTX_ICONS = {
+    'new-tab': '<svg viewBox="0 0 18 18" fill="none"><path d="M9 4v10M4 9h10" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>',
+    'open-tab': '<svg viewBox="0 0 18 18" fill="none"><rect x="2.6" y="3.4" width="12.8" height="11.2" rx="2.3" stroke="currentColor" stroke-width="1.5"/><path d="M9 6.6v4.8M6.6 9h4.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    'open-window': '<svg viewBox="0 0 18 18" fill="none"><rect x="2.6" y="3.4" width="12.8" height="11.2" rx="2.3" stroke="currentColor" stroke-width="1.5"/><path d="M2.8 6.8h12.4" stroke="currentColor" stroke-width="1.45"/></svg>',
+    'move-window': '<svg viewBox="0 0 18 18" fill="none"><rect x="2.6" y="4.2" width="10.4" height="9.6" rx="2" stroke="currentColor" stroke-width="1.45"/><path d="M10.2 2.8h5v5M15 3l-4.6 4.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    'private': '<svg viewBox="0 0 18 18" fill="none"><path d="M2.4 8.6h13.2M5 8.6l1.2-4a1.2 1.2 0 0 1 1.15-.85h3.3a1.2 1.2 0 0 1 1.15.85l1.2 4" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/><circle cx="6.2" cy="12.2" r="2" stroke="currentColor" stroke-width="1.4"/><circle cx="11.8" cy="12.2" r="2" stroke="currentColor" stroke-width="1.4"/></svg>',
+    'reload': '<svg viewBox="0 0 18 18" fill="none"><path d="M14.1 9a5.1 5.1 0 1 1-1.35-3.45M14.1 3.9v2.85h-2.85" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    'duplicate': '<svg viewBox="0 0 18 18" fill="none"><rect x="6" y="6" width="8.6" height="8.6" rx="2" stroke="currentColor" stroke-width="1.45"/><path d="M3.6 11.6V5.2A1.6 1.6 0 0 1 5.2 3.6h6.4" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>',
+    'pin': '<svg viewBox="0 0 18 18" fill="none"><path d="M10.8 3.2l4 4-1.5 1.5-1-.45-2.8 2.8.45 2-1.3 1.3-2.5-2.5-3 3-.8-.8 3-3-2.5-2.5 1.3-1.3 2 .45 2.8-2.8-.45-1 1.5-1.5z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/></svg>',
+    'unpin': '<svg viewBox="0 0 18 18" fill="none"><path d="M10.8 3.2l4 4-1.5 1.5-1-.45-2.8 2.8.45 2-1.3 1.3-2.5-2.5-3 3-.8-.8 3-3-2.5-2.5 1.3-1.3 2 .45 2.8-2.8-.45-1 1.5-1.5z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M3.2 3.2l11.6 11.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    'mute': '<svg viewBox="0 0 18 18" fill="none"><path d="M3.2 7h2.8l3.4-3v10l-3.4-3H3.2V7z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M12 6.8l3.2 4.4M15.2 6.8L12 11.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    'unmute': '<svg viewBox="0 0 18 18" fill="none"><path d="M3.2 7h2.8l3.4-3v10l-3.4-3H3.2V7z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M12.2 6.2a4 4 0 0 1 0 5.6M14.1 4.4a6.4 6.4 0 0 1 0 9.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    'bookmark': '<svg viewBox="0 0 18 18" fill="none"><path d="M9 2.6l2 4 4.4.65-3.2 3.1.76 4.4L9 12.65 5.04 14.75l.76-4.4-3.2-3.1L7 6.6l2-4z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg>',
+    'close': '<svg viewBox="0 0 18 18" fill="none"><path d="M4.8 4.8l8.4 8.4M13.2 4.8l-8.4 8.4" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>',
+    'close-others': '<svg viewBox="0 0 18 18" fill="none"><rect x="2.6" y="4.2" width="12.8" height="9.6" rx="2" stroke="currentColor" stroke-width="1.45"/><path d="M7.1 7.1l3.8 3.8M10.9 7.1l-3.8 3.8" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>',
+    'close-right': '<svg viewBox="0 0 18 18" fill="none"><path d="M3.2 4.2v9.6M7.2 9h7.6M11.6 5.8L14.8 9l-3.2 3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    'reopen': '<svg viewBox="0 0 18 18" fill="none"><path d="M4.5 9a5 5 0 1 0 1.4-3.5L3.6 7.8M3.6 4.2v3.6h3.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    'cut': '<svg viewBox="0 0 18 18" fill="none"><circle cx="5.2" cy="13" r="2.1" stroke="currentColor" stroke-width="1.45"/><circle cx="12.8" cy="13" r="2.1" stroke="currentColor" stroke-width="1.45"/><path d="M6.8 11.4L13 3.4M11.2 11.4L5 3.4" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>',
+    'copy': '<svg viewBox="0 0 18 18" fill="none"><rect x="6" y="6" width="8.4" height="8.4" rx="1.8" stroke="currentColor" stroke-width="1.5"/><path d="M3.6 11.8V5.2A1.6 1.6 0 0 1 5.2 3.6h6.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    'paste': '<svg viewBox="0 0 18 18" fill="none"><rect x="4" y="4.2" width="10" height="11.2" rx="2" stroke="currentColor" stroke-width="1.45"/><path d="M6.8 4.2V3.5a1.2 1.2 0 0 1 1.2-1.2h2a1.2 1.2 0 0 1 1.2 1.2v.7" stroke="currentColor" stroke-width="1.45"/></svg>',
+    'go': '<svg viewBox="0 0 18 18" fill="none"><path d="M3.6 9h10.8M10 4.8L14.4 9 10 13.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    'select-all': '<svg viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="2.4" stroke="currentColor" stroke-width="1.45" stroke-dasharray="2.4 2.2"/><rect x="6" y="6" width="6" height="6" rx="1.2" fill="currentColor" opacity="0.72"/></svg>',
+    'clear': '<svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.2" stroke="currentColor" stroke-width="1.45"/><path d="M6.6 6.6l4.8 4.8M11.4 6.6l-4.8 4.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    'wallpaper': '<svg viewBox="0 0 18 18" fill="none"><rect x="2.6" y="3.4" width="12.8" height="11.2" rx="2.4" stroke="currentColor" stroke-width="1.45"/><circle cx="6.5" cy="7" r="1.2" fill="currentColor"/><path d="M3.2 12.4l3.5-3.2 2.4 2.2 2.2-2.1 3.4 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    'customize': '<svg viewBox="0 0 18 18" fill="none"><path d="M3 5.2h12M3 9h12M3 12.8h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.72"/><circle cx="6.2" cy="5.2" r="1.7" fill="currentColor"/><circle cx="11.8" cy="9" r="1.7" fill="currentColor"/><circle cx="7.6" cy="12.8" r="1.7" fill="currentColor"/></svg>',
+    'turbo': '<svg viewBox="0 0 18 18" fill="none"><path d="M10.2 2.4L4.4 9.8h4.5l-1.1 5.8 5.8-7.4H9.1l1.1-5.8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+    'settings': '<svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.35" stroke="currentColor" stroke-width="1.45"/><path d="M9 2.6v1.5M9 13.9v1.5M2.6 9h1.5M13.9 9h1.5M4.5 4.5l1.1 1.1M12.4 12.4l1.1 1.1M13.5 4.5l-1.1 1.1M5.6 12.4l-1.1 1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    'edit': '<svg viewBox="0 0 18 18" fill="none"><path d="M12.2 3.2l2.6 2.6-8.4 8.4-3.2.6.6-3.2 8.4-8.4z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg>',
+    'trash': '<svg viewBox="0 0 18 18" fill="none"><path d="M4.2 5.4h9.6M7 5.4V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.4M5.4 5.4l.7 8.8a1.3 1.3 0 0 0 1.3 1.2h3.2a1.3 1.3 0 0 0 1.3-1.2l.7-8.8" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    'link': '<svg viewBox="0 0 18 18" fill="none"><path d="M7.6 10.4a3.3 3.3 0 0 0 4.6 0l2-2a3.3 3.3 0 0 0-4.6-4.6L8.4 5M10.4 7.6a3.3 3.3 0 0 0-4.6 0l-2 2a3.3 3.3 0 0 0 4.6 4.6l1.2-1.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    'page': '<svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.45"/><ellipse cx="9" cy="9" rx="2.7" ry="6" stroke="currentColor" stroke-width="1.25"/><path d="M3.2 9h11.6" stroke="currentColor" stroke-width="1.25"/></svg>'
+  };
+
+  let shellCtxButtons = [];
+  let shellCtxFocusIdx = -1;
+  let pendingShellOverlayHandler = null;
+
+  function copyToClipboard(text) {
+    const str = String(text || '');
+    if (!str) return;
+    send({ type: 'copyText', text: str });
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(str).catch(() => {});
+      }
+    } catch {}
+  }
+
+  function isShellFullViewport() {
+    return (
+      body.classList.contains('on-newtab') ||
+      !!state.tabOverviewOpen ||
+      !!state.settingsOpen ||
+      !!state.dlManagerOpen ||
+      body.classList.contains('modal-open')
+    );
+  }
+
+  function setShellCtxFocus(idx) {
+    shellCtxFocusIdx = idx;
+    shellCtxButtons.forEach((btn, i) => {
+      const active = (i === idx);
+      btn.classList.toggle('is-focused', active);
+      if (active) {
+        try { btn.scrollIntoView({ block: 'nearest' }); } catch {}
+      }
+    });
+  }
+
+  function hideM3ContextMenu() {
+    if (!m3CtxMenu) return;
+    m3CtxMenu.classList.add('hidden');
+    m3CtxMenu.innerHTML = '';
+    shellCtxButtons = [];
+    shellCtxFocusIdx = -1;
+  }
+
+  function openM3ContextMenu(cfg) {
+    hideM3ContextMenu();
+    if (!cfg || !Array.isArray(cfg.items) || !cfg.items.length) return;
+
+    const x = Math.round(cfg.x || 0);
+    const y = Math.round(cfg.y || 0);
+    const header = cfg.header || null;
+    const onAction = typeof cfg.onAction === 'function' ? cfg.onAction : null;
+
+    // When a live webpage WebView2 sits over #viewport, relay to floating OverlayPopup so the menu never clips!
+    if (!cfg.forceDom && !isShellFullViewport()) {
+      pendingShellOverlayHandler = onAction;
+      const relayItems = cfg.items.map((it) => {
+        if (!it || it.separator) return { separator: true };
+        return {
+          id: it.id,
+          label: it.label,
+          shortcut: it.shortcut || '',
+          icon: it.icon || 'page',
+          danger: !!it.danger,
+          disabled: !!it.disabled,
+          payload: Object.assign({ __shellMenu: true }, it.payload || {})
+        };
+      });
+      send({
+        type: 'showShellContextMenu',
+        x,
+        y,
+        header,
+        items: relayItems
+      });
+      return;
+    }
+
+    if (!m3CtxMenu) return;
+    pendingShellOverlayHandler = null;
+    m3CtxMenu.innerHTML = '';
+    shellCtxButtons = [];
+    shellCtxFocusIdx = -1;
+
+    const frag = document.createDocumentFragment();
+    if (header && (header.title || header.subtitle)) {
+      const hdr = document.createElement('div');
+      hdr.className = 'm3-ctx-header';
+      const kind = (header.kind || 'page').toLowerCase();
+      const hdrIco = SHELL_CTX_ICONS[kind] || SHELL_CTX_ICONS['page'];
+      hdr.innerHTML = `
+        <span class="m3-ctx-hdr-badge kind-${escapeSugHtml(kind)}" aria-hidden="true">${hdrIco}</span>
+        <div class="m3-ctx-hdr-copy">
+          <div class="m3-ctx-hdr-title"></div>
+          ${header.subtitle ? '<div class="m3-ctx-hdr-sub"></div>' : ''}
+        </div>
+      `;
+      hdr.querySelector('.m3-ctx-hdr-title').textContent = header.title || '';
+      const subEl = hdr.querySelector('.m3-ctx-hdr-sub');
+      if (subEl) subEl.textContent = header.subtitle || '';
+      frag.appendChild(hdr);
+    }
+
+    let prevWasSep = true;
+    cfg.items.forEach((item) => {
+      if (!item) return;
+      if (item.separator) {
+        if (prevWasSep) return;
+        const sep = document.createElement('div');
+        sep.className = 'm3-ctx-sep';
+        sep.setAttribute('role', 'separator');
+        frag.appendChild(sep);
+        prevWasSep = true;
+        return;
+      }
+      prevWasSep = false;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('role', 'menuitem');
+      btn.className = 'm3-ctx-item' + (item.danger ? ' danger' : '');
+      if (item.disabled) btn.disabled = true;
+      btn.dataset.action = item.id || '';
+
+      const ico = document.createElement('span');
+      ico.className = 'm3-ctx-ico';
+      ico.setAttribute('aria-hidden', 'true');
+      ico.innerHTML = SHELL_CTX_ICONS[item.icon] || SHELL_CTX_ICONS['page'];
+
+      const lbl = document.createElement('span');
+      lbl.className = 'm3-ctx-label';
+      lbl.textContent = item.label || '';
+
+      btn.appendChild(ico);
+      btn.appendChild(lbl);
+
+      if (item.shortcut) {
+        const kbd = document.createElement('span');
+        kbd.className = 'm3-ctx-kbd';
+        kbd.textContent = item.shortcut;
+        btn.appendChild(kbd);
+      }
+
+      btn.addEventListener('mousedown', (ev) => ev.preventDefault());
+      if (!item.disabled) {
+        const myIdx = shellCtxButtons.length;
+        shellCtxButtons.push(btn);
+        btn.addEventListener('pointerenter', () => setShellCtxFocus(myIdx));
+        btn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          hideM3ContextMenu();
+          if (onAction) onAction(item.id, item.payload || {});
+        });
+      }
+      frag.appendChild(btn);
+    });
+
+    if (frag.lastChild && frag.lastChild.classList && frag.lastChild.classList.contains('m3-ctx-sep')) {
+      frag.removeChild(frag.lastChild);
+    }
+
+    m3CtxMenu.appendChild(frag);
+    m3CtxMenu.style.visibility = 'hidden';
+    m3CtxMenu.style.left = '0px';
+    m3CtxMenu.style.top = '0px';
+    m3CtxMenu.classList.remove('hidden');
+
+    const rect = m3CtxMenu.getBoundingClientRect();
+    const pad = 10;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let left = x;
+    let top = y;
+    let ox = 'left';
+    let oy = 'top';
+
+    if (left + rect.width > vw - pad) {
+      left = Math.max(pad, x - rect.width);
+      ox = 'right';
+    }
+    if (top + rect.height > vh - pad) {
+      top = Math.max(pad, y - rect.height);
+      oy = 'bottom';
+    }
+    left = Math.max(pad, Math.min(vw - rect.width - pad, left));
+    top = Math.max(pad, Math.min(vh - rect.height - pad, top));
+
+    m3CtxMenu.style.setProperty('--ctx-ox', ox);
+    m3CtxMenu.style.setProperty('--ctx-oy', oy);
+    m3CtxMenu.style.left = `${Math.round(left)}px`;
+    m3CtxMenu.style.top = `${Math.round(top)}px`;
+    m3CtxMenu.style.visibility = '';
+    m3CtxMenu.style.animation = 'none';
+    void m3CtxMenu.offsetWidth;
+    m3CtxMenu.style.animation = '';
   }
 
   function showTabContextMenu(tab, clientX, clientY) {
-    send({ type: 'openTabMenu', id: tab.id, x: Math.round(clientX), y: Math.round(clientY) });
+    if (!tab) return;
+    const tabs = Array.isArray(state.tabs) ? state.tabs : [];
+    const idx = tabs.findIndex((t) => t.id === tab.id);
+    const isPinned = !!(tab.pinned || tab.isPinned);
+    const isMuted = !!(tab.muted || tab.isMuted);
+    const isNewTab = !!tab.isNewTab;
+    const hasOthersToClose = tabs.some((t) => t.id !== tab.id && !(t.pinned || t.isPinned));
+    const hasRightToClose = idx >= 0 && tabs.slice(idx + 1).some((t) => !(t.pinned || t.isPinned));
+    const canReopen = !!state.canReopenClosedTab;
+
+    const domain = isNewTab ? 'dejavu Start Page' : (extractCleanDomain(tab.url, tab.displayUrl) || '');
+    openM3ContextMenu({
+      x: clientX,
+      y: clientY,
+      header: {
+        title: tab.title || 'Start Page',
+        subtitle: domain,
+        kind: 'page'
+      },
+      items: [
+        { id: 'newTabRight', label: 'New tab to the right', shortcut: 'Ctrl+T', icon: 'new-tab' },
+        { id: 'reloadTab', label: 'Reload tab', shortcut: 'Ctrl+R', icon: 'reload', disabled: isNewTab },
+        { id: 'duplicateTab', label: 'Duplicate tab', icon: 'duplicate' },
+        { id: 'pinTab', label: isPinned ? 'Unpin tab' : 'Pin tab', icon: isPinned ? 'unpin' : 'pin' },
+        { id: 'muteTab', label: isMuted ? 'Unmute tab' : 'Mute tab', icon: isMuted ? 'unmute' : 'mute', disabled: isNewTab },
+        { separator: true },
+        { id: 'moveTabToNewWindow', label: 'Move tab to new window', icon: 'move-window', disabled: tabs.length <= 1 && isNewTab },
+        { id: 'bookmarkTab', label: 'Add to Bookmarks', shortcut: 'Ctrl+D', icon: 'bookmark', disabled: isNewTab },
+        { separator: true },
+        { id: 'closeTab', label: 'Close tab', shortcut: 'Ctrl+W', icon: 'close', danger: true },
+        { id: 'closeOtherTabs', label: 'Close other tabs', icon: 'close-others', disabled: !hasOthersToClose },
+        { id: 'closeTabsToRight', label: 'Close tabs to the right', icon: 'close-right', disabled: !hasRightToClose },
+        { separator: true },
+        { id: 'reopenClosedTab', label: 'Reopen closed tab', shortcut: 'Ctrl+Shift+T', icon: 'reopen', disabled: !canReopen }
+      ],
+      onAction: (act) => {
+        if (act === 'newTabRight') send({ type: 'newTab', afterTabId: tab.id });
+        else if (act === 'reloadTab') send({ type: 'reloadTab', id: tab.id });
+        else if (act === 'duplicateTab') send({ type: 'duplicateTab', id: tab.id });
+        else if (act === 'pinTab') send({ type: 'pinTab', id: tab.id });
+        else if (act === 'muteTab') send({ type: 'muteTab', id: tab.id });
+        else if (act === 'moveTabToNewWindow') send({ type: 'moveTabToNewWindow', id: tab.id });
+        else if (act === 'bookmarkTab') send({ type: 'bookmarkTab', id: tab.id });
+        else if (act === 'closeTab') requestCloseTab(tab.id, tabEls.get(tab.id));
+        else if (act === 'closeOtherTabs') send({ type: 'closeOtherTabs', id: tab.id });
+        else if (act === 'closeTabsToRight') send({ type: 'closeTabsToRight', id: tab.id });
+        else if (act === 'reopenClosedTab') send({ type: 'reopenClosedTab' });
+      }
+    });
   }
 
-  tabContextMenu.addEventListener('click', (e) => {
-    const btn = e.target.closest('.ctx-item');
-    if (!btn || ctxTargetTabId < 0) return;
-    const act = btn.dataset.act;
-    const tid = ctxTargetTabId;
-    hideTabContextMenu();
-    if (act === 'pin') send({ type: 'pinTab', id: tid });
-    else if (act === 'duplicate') send({ type: 'duplicateTab', id: tid });
-    else if (act === 'closeOthers') send({ type: 'closeOtherTabs', id: tid });
-    else if (act === 'close') send({ type: 'closeTab', id: tid });
-  });
+  function showInputContextMenu(inputEl, clientX, clientY, isOmnibox) {
+    if (!inputEl) return;
+    if (isOmnibox && document.activeElement !== omniboxInput) {
+      const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
+      omniboxPill.classList.add('is-editing');
+      omniboxInput.value = (active && !active.isNewTab) ? (active.url || '') : '';
+      omniboxInput.focus();
+      try { omniboxInput.setSelectionRange(0, omniboxInput.value.length); } catch {}
+    } else if (document.activeElement !== inputEl) {
+      inputEl.focus();
+    }
 
+    const val = inputEl.value || '';
+    const selStart = typeof inputEl.selectionStart === 'number' ? inputEl.selectionStart : 0;
+    const selEnd = typeof inputEl.selectionEnd === 'number' ? inputEl.selectionEnd : 0;
+    const hasSelection = selEnd > selStart;
+    const hasValue = val.length > 0;
+
+    openM3ContextMenu({
+      x: clientX,
+      y: clientY,
+      header: {
+        title: isOmnibox ? 'Address Bar' : 'Search Bar',
+        subtitle: hasValue ? val : 'Search or enter website',
+        kind: 'edit'
+      },
+      items: [
+        { id: 'cut', label: 'Cut', shortcut: 'Ctrl+X', icon: 'cut', disabled: !hasSelection },
+        { id: 'copy', label: 'Copy', shortcut: 'Ctrl+C', icon: 'copy', disabled: !hasValue },
+        { id: 'paste', label: 'Paste', shortcut: 'Ctrl+V', icon: 'paste' },
+        { id: 'pasteAndGo', label: 'Paste and go', icon: 'go' },
+        { separator: true },
+        { id: 'selectAll', label: 'Select all', shortcut: 'Ctrl+A', icon: 'select-all', disabled: !hasValue },
+        { id: 'clear', label: 'Clear', icon: 'clear', disabled: !hasValue }
+      ],
+      onAction: async (act) => {
+        if (act === 'cut') {
+          const slice = val.slice(selStart, selEnd);
+          if (slice) {
+            copyToClipboard(slice);
+            inputEl.focus();
+            inputEl.value = val.slice(0, selStart) + val.slice(selEnd);
+            try { inputEl.setSelectionRange(selStart, selStart); } catch {}
+            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        } else if (act === 'copy') {
+          const text = hasSelection ? val.slice(selStart, selEnd) : val;
+          if (text) {
+            copyToClipboard(text);
+            showToast('Copied to clipboard', 'success');
+          }
+        } else if (act === 'paste') {
+          inputEl.focus();
+          let pasted = '';
+          try {
+            if (navigator.clipboard && navigator.clipboard.readText) {
+              pasted = await navigator.clipboard.readText();
+            }
+          } catch {}
+          if (pasted) {
+            const cur = inputEl.value || '';
+            const s = typeof inputEl.selectionStart === 'number' ? inputEl.selectionStart : cur.length;
+            const e2 = typeof inputEl.selectionEnd === 'number' ? inputEl.selectionEnd : cur.length;
+            inputEl.value = cur.slice(0, s) + pasted + cur.slice(e2);
+            const pos = s + pasted.length;
+            try { inputEl.setSelectionRange(pos, pos); } catch {}
+            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          } else {
+            try { document.execCommand('paste'); } catch {}
+          }
+        } else if (act === 'pasteAndGo') {
+          send({ type: 'pasteAndGo' });
+          if (isOmnibox) omniboxInput.blur();
+        } else if (act === 'selectAll') {
+          inputEl.focus();
+          try { inputEl.setSelectionRange(0, inputEl.value.length); } catch {}
+        } else if (act === 'clear') {
+          inputEl.focus();
+          inputEl.value = '';
+          inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          if (isOmnibox) send({ type: 'suggestClose' });
+        }
+      }
+    });
+  }
+
+  function showStartPageContextMenu(clientX, clientY) {
+    const profName = state.isPrivateWindow
+      ? 'Private Window'
+      : ((state.activeProfile && (state.activeProfile.googleDisplayName || state.activeProfile.name)) || 'Personal');
+    openM3ContextMenu({
+      x: clientX,
+      y: clientY,
+      forceDom: true,
+      header: {
+        title: 'dejavu Start Page',
+        subtitle: profName,
+        kind: 'page'
+      },
+      items: [
+        { id: 'changeWallpaper', label: 'Change Material 3 Wallpaper', icon: 'wallpaper' },
+        { id: 'customizeStartPage', label: 'Customize Start Page', icon: 'customize' },
+        { separator: true },
+        { id: 'newWindow', label: 'New Window', shortcut: 'Ctrl+N', icon: 'open-window' },
+        { id: 'privateWindow', label: 'New Private Window', shortcut: 'Ctrl+Shift+N', icon: 'private' },
+        { separator: true },
+        { id: 'turboDownloads', label: 'Turbo Downloads', shortcut: 'Ctrl+J', icon: 'turbo' },
+        { id: 'openSettings', label: 'Open Settings', shortcut: 'Ctrl+,', icon: 'settings' }
+      ],
+      onAction: (act) => {
+        if (act === 'changeWallpaper') {
+          shortcutModal.classList.add('hidden');
+          wallpaperStore.classList.remove('hidden');
+          applyStartPagePrefs(state.startPagePrefs);
+          renderWallpaperGrid();
+        } else if (act === 'customizeStartPage') {
+          wallpaperStore.classList.add('hidden');
+          shortcutModal.classList.add('hidden');
+          send({ type: 'toggleSettings', open: true, pane: 'appearance' });
+        } else if (act === 'newWindow') {
+          send({ type: 'openNewWindow' });
+        } else if (act === 'privateWindow') {
+          send({ type: 'openPrivateWindow' });
+        } else if (act === 'turboDownloads') {
+          wallpaperStore.classList.add('hidden');
+          shortcutModal.classList.add('hidden');
+          activeDlTab = 'all';
+          send({ type: 'openDlManager', tab: 'all' });
+        } else if (act === 'openSettings') {
+          wallpaperStore.classList.add('hidden');
+          shortcutModal.classList.add('hidden');
+          send({ type: 'toggleSettings', open: true, pane: 'you' });
+        }
+      }
+    });
+  }
+
+  function showLinkItemContextMenu(target, clientX, clientY) {
+    if (!target || !target.url) return;
+    const isShortcut = target.kind === 'shortcut' && typeof target.shortcutIndex === 'number';
+    const isFavorite = target.kind === 'favorite';
+    const isReading = target.kind === 'reading';
+    const canRemove = isShortcut || isFavorite || isReading;
+    const canEdit = isShortcut || isFavorite;
+
+    const items = [
+      { id: 'openNewTab', label: 'Open in new tab', icon: 'open-tab' },
+      { id: 'openNewWindow', label: 'Open in new window', icon: 'open-window' },
+      { id: 'openPrivateWindow', label: 'Open in Private window', icon: 'private' },
+      { separator: true },
+      { id: 'copyLink', label: 'Copy link address', icon: 'copy' }
+    ];
+    if (canEdit) {
+      items.push({ id: 'editShortcut', label: 'Edit shortcut', icon: 'edit' });
+    }
+    if (canRemove) {
+      items.push({ separator: true });
+      items.push({ id: 'remove', label: 'Remove', icon: 'trash', danger: true });
+    }
+
+    openM3ContextMenu({
+      x: clientX,
+      y: clientY,
+      header: {
+        title: target.title || extractCleanDomain(target.url, target.url),
+        subtitle: extractCleanDomain(target.url, target.url),
+        kind: 'link'
+      },
+      items,
+      onAction: (act) => {
+        if (act === 'openNewTab') {
+          send({ type: 'newTab', url: target.url });
+        } else if (act === 'openNewWindow') {
+          send({ type: 'openNewWindow', url: target.url });
+        } else if (act === 'openPrivateWindow') {
+          send({ type: 'openPrivateWindow', url: target.url });
+        } else if (act === 'copyLink') {
+          copyToClipboard(target.url);
+          showToast('Link address copied', 'success');
+        } else if (act === 'editShortcut') {
+          if (isShortcut) {
+            openShortcutModal(target.shortcutIndex);
+          } else {
+            const matchIdx = (state.shortcuts || []).findIndex((s) => s && s.url === target.url);
+            openShortcutModal(matchIdx, { name: target.title, url: target.url });
+          }
+        } else if (act === 'remove') {
+          if (isShortcut) {
+            const next = (state.shortcuts || []).filter((_, i) => i !== target.shortcutIndex);
+            send({ type: 'saveShortcuts', shortcuts: next });
+            showToast(`Removed "${target.title || 'shortcut'}"`, 'info');
+          } else if (isFavorite && target.id) {
+            send({ type: 'removeFavorite', id: target.id });
+            showToast(`Removed "${target.title || 'bookmark'}"`, 'info');
+          } else if (isReading && target.id) {
+            send({ type: 'removeReadingList', id: target.id });
+            showToast('Removed from Reading List', 'info');
+          }
+        }
+      }
+    });
+  }
+
+  // Right-click bindings for Address Bar, Start Page Search & Start Page Background
+  if (omniboxPill) {
+    omniboxPill.addEventListener('contextmenu', (e) => {
+      if (e.target.closest('button')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      showInputContextMenu(omniboxInput, e.clientX, e.clientY, true);
+    });
+  }
+  if (newtabSearchInput) {
+    newtabSearchInput.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showInputContextMenu(newtabSearchInput, e.clientX, e.clientY, false);
+    });
+  }
+  if (newtabView) {
+    newtabView.addEventListener('contextmenu', (e) => {
+      if (
+        e.target.closest('.m3-fav-item') ||
+        e.target.closest('.freq-card') ||
+        e.target.closest('.reading-card') ||
+        e.target.closest('#newtab-search-input') ||
+        e.target.closest('#newtab-suggest')
+      ) {
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      showStartPageContextMenu(e.clientX, e.clientY);
+    });
+  }
+  if (m3CtxMenu) {
+    m3CtxMenu.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  // Close shell context menu cleanly on outside click, scroll, resize, or window blur
   document.addEventListener('mousedown', (e) => {
-    if (!tabContextMenu.classList.contains('hidden') && !tabContextMenu.contains(e.target)) hideTabContextMenu();
-    if (!shortcutModal.classList.contains('hidden') && !shortcutModal.contains(e.target) && !e.target.closest('.shortcut-add')) shortcutModal.classList.add('hidden');
-    if (!wallpaperStore.classList.contains('hidden') && !wallpaperStore.contains(e.target) && !btnWallpaperStore.contains(e.target)) wallpaperStore.classList.add('hidden');
+    if (m3CtxMenu && !m3CtxMenu.classList.contains('hidden') && !m3CtxMenu.contains(e.target)) {
+      hideM3ContextMenu();
+    }
+    if (!shortcutModal.classList.contains('hidden') && !shortcutModal.contains(e.target) && !e.target.closest('.shortcut-add') && !(m3CtxMenu && m3CtxMenu.contains(e.target))) {
+      editingShortcutIndex = -1;
+      shortcutModal.classList.add('hidden');
+    }
+    if (!wallpaperStore.classList.contains('hidden') && !wallpaperStore.contains(e.target) && !btnWallpaperStore.contains(e.target) && !(m3CtxMenu && m3CtxMenu.contains(e.target))) {
+      wallpaperStore.classList.add('hidden');
+    }
   });
+  window.addEventListener('resize', hideM3ContextMenu, { passive: true });
+  window.addEventListener('blur', hideM3ContextMenu);
+  document.addEventListener('scroll', (e) => {
+    if (m3CtxMenu && !m3CtxMenu.classList.contains('hidden') && e.target !== m3CtxMenu && !m3CtxMenu.contains(e.target)) {
+      hideM3ContextMenu();
+    }
+  }, { capture: true, passive: true });
 
   // =========================================================================
   // Top Tab Strip (Chrome Material Design 3 Connected Tabs)
@@ -2686,6 +3321,10 @@
 
   function requestCloseTab(tabId, el) {
     if (closingTabIds.has(tabId)) return;
+    if (!el) {
+      send({ type: 'closeTab', id: tabId });
+      return;
+    }
     if ((state.tabs || []).length <= 1) {
       el.classList.remove('closing', 'reset-pulse');
       void el.offsetWidth;
@@ -2718,13 +3357,17 @@
       const isNew = !el;
       if (!el) {
         el = document.createElement('div');
-        el.className = 'tab-pill';
+        el.className = 'tab-pill tab';
         el.setAttribute('role', 'tab');
+        el.dataset.tabId = String(tab.id);
         el.innerHTML = `
           <span class="tab-content">
             <span class="tab-spinner hidden"></span>
             <img class="tab-favicon" alt="" draggable="false">
             <span class="tab-title"></span>
+          </span>
+          <span class="tab-pin-badge" aria-hidden="true" title="Pinned Tab">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M9.8 2.8l3.4 3.4-1.3 1.3-.9-.4-2.4 2.4.4 1.7-1.1 1.1-2.1-2.1-2.4 2.4-.7-.7 2.4-2.4-2.1-2.1 1.1-1.1 1.7.4 2.4-2.4-.4-.9 1.3-1.3z" fill="currentColor"/></svg>
           </span>
           <button type="button" class="tab-audio-btn hidden" title="Mute tab (Ctrl+M)" aria-label="Toggle tab audio">
             <svg class="ico-vol-on" viewBox="0 0 16 16" fill="none"><path d="M3 6.4h2.4l3-2.6v8.4l-3-2.6H3V6.4z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M10.8 5.6a3.4 3.4 0 0 1 0 4.8M12.5 4a5.6 5.6 0 0 1 0 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -2742,7 +3385,7 @@
 
         const audioBtn = el.querySelector('.tab-audio-btn');
         audioBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); e.preventDefault(); });
-        audioBtn.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'toggleTabMute', id: tab.id }); });
+        audioBtn.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'muteTab', id: tab.id }); });
 
         el.addEventListener('click', (e) => {
           if (e.target.closest('.tab-close') || e.target.closest('.tab-audio-btn')) return;
@@ -2753,6 +3396,7 @@
         });
         el.addEventListener('contextmenu', (e) => {
           e.preventDefault();
+          e.stopPropagation();
           const latest = (state.tabs || []).find((t) => t.id === tab.id) || tab;
           showTabContextMenu(latest, e.clientX, e.clientY);
         });
@@ -2763,14 +3407,18 @@
         if (el !== desiredAt) tabsStrip.insertBefore(el, desiredAt || null);
       }
 
+      const isPinned = !!(tab.pinned || tab.isPinned);
+      const isMuted = !!(tab.muted || tab.isMuted);
+
       if (!closingTabIds.has(tab.id)) el.classList.remove('closing');
-      el.classList.toggle('pinned', !!tab.isPinned);
+      el.classList.toggle('pinned', isPinned);
+      el.classList.toggle('muted', isMuted);
 
       const wasActive = el.classList.contains('active');
       const nowActive = tab.id === activeId;
       el.classList.toggle('active', nowActive);
       el.title = showHover
-        ? (tab.isPinned ? `${tab.title || 'Pinned Tab'} (Pinned — Right-click to unpin)` : ((tab.title || 'Start Page') + (tab.displayUrl ? ` · ${tab.displayUrl}` : '')))
+        ? (isPinned ? `${tab.title || 'Pinned Tab'} (Pinned — Right-click to unpin)` : ((tab.title || 'Start Page') + (tab.displayUrl ? ` · ${tab.displayUrl}` : '')))
         : '';
 
       const spinner = el.querySelector('.tab-spinner');
@@ -2784,12 +3432,13 @@
       if (fav.getAttribute('src') !== favSrc) fav.setAttribute('src', favSrc);
       titleEl.textContent = tab.title || 'Start Page';
 
-      const showAudio = !tab.isNewTab && !tab.isPinned && (tab.isAudible || tab.isMuted);
+      const showAudio = !tab.isNewTab && (tab.isAudible || isMuted);
+      el.classList.toggle('has-audio', showAudio && !isPinned);
       audioBtn.classList.toggle('hidden', !showAudio);
-      audioBtn.classList.toggle('muted', !!tab.isMuted);
-      audioBtn.title = tab.isMuted ? 'Unmute tab (Ctrl+M)' : 'Mute tab (Ctrl+M)';
-      audioBtn.querySelector('.ico-vol-on').classList.toggle('hidden', !!tab.isMuted);
-      audioBtn.querySelector('.ico-vol-off').classList.toggle('hidden', !tab.isMuted);
+      audioBtn.classList.toggle('muted', isMuted);
+      audioBtn.title = isMuted ? 'Unmute tab (Ctrl+M)' : 'Mute tab (Ctrl+M)';
+      audioBtn.querySelector('.ico-vol-on').classList.toggle('hidden', isMuted);
+      audioBtn.querySelector('.ico-vol-off').classList.toggle('hidden', !isMuted);
 
       if ((isNew || (!wasActive && nowActive)) && nowActive) {
         requestAnimationFrame(() => {
@@ -2894,6 +3543,16 @@
       chip.addEventListener('click', () => send({ type: 'navigate', input: fav.url }));
       chip.addEventListener('auxclick', (e) => {
         if (e.button === 1) { e.preventDefault(); send({ type: 'newTab', url: fav.url }); }
+      });
+      chip.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showLinkItemContextMenu({
+          kind: 'favorite',
+          id: fav.id,
+          title: fav.title || host,
+          url: fav.url
+        }, e.clientX, e.clientY);
       });
       favbarList.appendChild(chip);
     });
@@ -3057,6 +3716,9 @@
       hideStartPageStatus();
       body.classList.remove('on-newtab');
       if (!ovOpen && !optOpen && !dlOpen && !body.classList.contains('modal-open')) window.DejavuNewTabCanvas.stop();
+    }
+    if (lastActiveId !== -1 && lastActiveId !== next.activeTabId) {
+      hideM3ContextMenu();
     }
     lastActiveId = next.activeTabId;
 
@@ -3584,6 +4246,10 @@
         pendingOmniboxValue = msg.value || msg.fill || null;
       } else if (msg.type === 'newtabSuggestions') {
         renderNewtabSuggestions(msg.items || []);
+      } else if (msg.type === 'shellContextMenuAction') {
+        const handler = pendingShellOverlayHandler;
+        pendingShellOverlayHandler = null;
+        if (handler) handler(msg.action, msg.payload || {});
       }
     });
   }

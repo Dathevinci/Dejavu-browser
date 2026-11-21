@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>dejavu — Material Design 3 Browser for Windows &amp; Android</title>
-  <meta name="description" content="A native Windows &amp; Android browser built A to Z with Google Material Design 3 — featuring a decluttered zero-duplicate Chrome + Navigation Rail UI, Chrome-style simultaneous Multi-Window &amp; live-synced Google Profiles, 10-category searchable M3 Settings, built-in YouTube &amp; 1,000+ site 4K/1080p/720p/MP3 Video Downloader, 16 Pure Material 3 &amp; Butterfly wallpapers, 86-country AI-ready VPN, 100/100 Ad Blocker, E2EE PC-to-Phone sync, and 0.85% idle CPU.">
+  <meta name="description" content="A native Windows &amp; Android browser built A to Z with Google Material Design 3 — featuring native Material Design 3 Right-Click &amp; Long-Press Context Menus, Fluid M3 Emphasized &amp; Spring Motion, Native Windows 10/11 &amp; Android Default Browser registration, zero-duplicate Chrome + Navigation Rail UI, live-synced Multi-Profile Google windows, YouTube 4K/MP3 Downloader, 16 Pure M3 &amp; Butterfly wallpapers, 86-country AI-ready VPN, and 0.85% idle CPU.">
   <meta name="theme-color" content="#141218">
 
   <link rel="icon" href="assets/dejavu.ico" sizes="any">
@@ -13,8 +13,8 @@
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="dejavu browser">
-  <meta property="og:title" content="dejavu v4.6.0 — Material Design 3 Browser for Windows &amp; Android">
-  <meta property="og:description" content="Flagship Google Material Design 3 browser with zero-duplicate Chrome + Navigation Rail UI, live-synced Multi-Profile Google Sign-In, 10-Category Searchable M3 Settings, built-in YouTube 4K/MP3 Downloader, 16 Pure Material 3 &amp; Butterfly Wallpapers, and 86-Country AI-Ready VPN.">
+  <meta property="og:title" content="dejavu v4.7.0 — Material Design 3 Browser for Windows &amp; Android">
+  <meta property="og:description" content="Flagship Google Material Design 3 browser with native M3 Right-Click &amp; Long-Press Context Menus, Fluid M3 Motion everywhere, Native Windows &amp; Android Default Browser registration, live-synced Multi-Profile Google windows, YouTube 4K/MP3 Downloader, and 16 Pure Material 3 &amp; Butterfly Wallpapers.">
   <meta property="og:url" content="https://dathevinci.github.io/Dejavu-browser/">
   <meta property="og:image" content="https://dathevinci.github.io/Dejavu-browser/assets/wallpapers/wp-m3-amethyst.jpg">
 
@@ -109,7 +109,7 @@
 
   <main>
     <!-- =================================================================
-         HERO SECTION & DECLUTTERED v4.6.0 DUAL-DEVICE BROWSER SHOWCASE
+         HERO SECTION & v4.7.0 DUAL-DEVICE BROWSER SHOWCASE
          ================================================================= -->
     <section id="overview" class="hero container">
       <div class="hero-stage">
@@ -126,9 +126,9 @@
         <div class="hero-copy">
           <a id="release-pill" class="version-chip" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest" target="_blank" rel="noopener noreferrer">
             <span class="status-dot" aria-hidden="true"></span>
-            <strong id="release-version-badge">v4.6.0</strong>
+            <strong id="release-version-badge">v4.7.0</strong>
             <span class="version-sep" aria-hidden="true">·</span>
-            <span>Material 3 &amp; Zero-Duplicate Chrome</span>
+            <span>M3 Context Menus &amp; Fluid Motion</span>
           </a>
 
           <h1 class="hero-title">
@@ -137,7 +137,7 @@
           </h1>
 
           <p class="hero-subtitle">
-            A calm native browser crafted A to Z in Google Material Design 3 — featuring a decluttered zero-duplicate Chrome &amp; Navigation Rail, live-synced simultaneous Multi-Window Google Profiles, 10-category searchable M3 Settings, a built-in YouTube 4K/MP3 downloader, 16 Pure Material 3 &amp; Butterfly wallpapers, and an 86-country AI-ready VPN.
+            A calm native browser crafted A to Z in Google Material Design 3 — now with native <strong>M3 Right-Click &amp; Long-Press Context Menus</strong>, <strong>Fluid M3 Spring Motion</strong>, <strong>Native Windows 10/11 &amp; Android Default Browser</strong> registration, zero-duplicate Chrome, simultaneous Multi-Profile Google windows, YouTube 4K/MP3 downloading, and 16 Pure M3 &amp; Butterfly wallpapers.
           </p>
 
           <div class="hero-cta-row">
@@ -198,8 +198,8 @@
         </div>
 
         <div class="dual-stage">
-          <!-- Windows Desktop Browser Frame (v4.6.0 Decluttered Zero-Duplicate Chrome + Navigation Rail) -->
-          <div class="desktop-frame">
+          <!-- Windows Desktop Browser Frame (v4.7.0 Zero-Duplicate Chrome + M3 Context Menu + Navigation Rail) -->
+          <div class="desktop-frame" id="dk-desktop-frame">
             <div class="dk-tabs-row">
               <div class="dk-logo-slot">
                 <img src="assets/logo-transparent.png" width="16" height="16" alt="">
@@ -232,7 +232,7 @@
               </div>
             </div>
 
-            <!-- Decluttered v4.6.0 Top Chrome: Back / Forward / Reload + Pill Omnibox + VPN Pill + Profile Pill + 3-Dot Menu -->
+            <!-- Decluttered v4.7.0 Top Chrome: Back / Forward / Reload + Pill Omnibox + VPN Pill + Profile Pill + 3-Dot Menu -->
             <div class="dk-toolbar">
               <div class="dk-btn-group">
                 <span class="dk-icon-btn muted" aria-hidden="true" title="Back">
@@ -304,7 +304,16 @@
                 </button>
               </aside>
 
-              <div class="dk-viewport">
+              <div class="dk-viewport" id="dk-viewport">
+                <!-- Interactive Material Design 3 Right-Click Context Menu Preview (Pure Opaque HCT, Zero Blur) -->
+                <div id="dk-ctx-menu" class="dk-ctx-menu" role="menu" aria-label="Material Design 3 Right-Click Context Menu" hidden>
+                  <div class="dk-ctx-header">
+                    <span id="dk-ctx-kind" class="dk-ctx-pill">Material 3</span>
+                    <span id="dk-ctx-target" class="dk-ctx-target">github.com/Dathevinci/Dejavu-browser</span>
+                  </div>
+                  <div id="dk-ctx-items" class="dk-ctx-items"></div>
+                </div>
+
                 <!-- Slide-Out M3 Side Panel (History, Tab Groups & Quick Settings Preview) -->
                 <aside class="dk-sidepanel" id="dk-sidepanel" aria-label="Side panel">
                   <div class="sp-head">
@@ -348,6 +357,10 @@
                     <div class="dk-sp-status">
                       <span><strong>14,820</strong> ads &amp; trackers blocked</span>
                       <span class="dk-sp-vpn-tag" id="dk-sp-vpn-tag">VPN · United States (Smart)</span>
+                      <button type="button" id="dk-try-ctx-btn" class="dk-ctx-trigger-pill" title="Right-click anywhere or click here to preview the Material 3 Context Menu">
+                        <svg viewBox="0 0 16 16" width="12" height="12" fill="none" aria-hidden="true"><rect x="2.4" y="2.4" width="11.2" height="11.2" rx="2.6" stroke="currentColor" stroke-width="1.5"/><path d="M5.2 6h5.6M5.2 8.4h4.2M5.2 10.8h5.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                        <span>Try Right-Click Menu</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -657,7 +670,7 @@
             </div>
           </div>
 
-          <!-- Companion Google Pixel Phone Mockup (Streamlined v4.6.0 M3 Layout) -->
+          <!-- Companion Google Pixel Phone Mockup (Streamlined v4.7.0 M3 Layout) -->
           <div class="pixel-frame" aria-label="dejavu Mobile on Google Pixel">
             <div class="pixel-camera" aria-hidden="true"></div>
             <div class="pixel-screen">
@@ -725,25 +738,25 @@
 
       <!-- MATERIAL 3 TONAL 4-STAT STRIP -->
       <div class="stats-strip">
-        <div class="stat-card">
-          <strong>0</strong>
-          <span>Duplicate Controls</span>
-          <small>Decluttered Chrome top bar &amp; single M3 rail</small>
+        <div class="stat-card m3-reveal" style="--reveal-idx:0">
+          <strong>M3</strong>
+          <span>Context Menus &amp; Motion</span>
+          <small>Windows right-click &amp; Android long-press sheets</small>
         </div>
-        <div class="stat-card">
+        <div class="stat-card m3-reveal" style="--reveal-idx:1">
           <strong>2+</strong>
           <span>Simultaneous Windows</span>
           <small>Live-synced Google profiles &amp; Private mode</small>
         </div>
-        <div class="stat-card">
+        <div class="stat-card m3-reveal" style="--reveal-idx:2">
           <strong>8×</strong>
           <span>4K &amp; MP3 Downloader</span>
           <small>YouTube &amp; 1,000+ sites · Zero extensions</small>
         </div>
-        <div class="stat-card">
+        <div class="stat-card m3-reveal" style="--reveal-idx:3">
           <strong>0.85%</strong>
           <span>Idle CPU · 86+ VPN</span>
-          <small>279k+ ad shield · Pure native Win32 &amp; Android</small>
+          <small>Default browser ready · 279k+ ad shield</small>
         </div>
       </div>
     </section>
@@ -753,44 +766,43 @@
          ================================================================= -->
     <section id="features" class="section container">
       <div class="section-head">
-        <span class="eyebrow">Engineered A to Z · v4.6.0</span>
+        <span class="eyebrow">Engineered A to Z · v4.7.0</span>
         <h2>Calm design. Flagship capabilities.</h2>
-        <p>Every tool you rely on daily — zero-duplicate Chrome &amp; Navigation Rail ergonomics, live-synced Multi-Window profiles, 10-category searchable M3 Settings, and built-in 4K/MP3 downloading with zero bloat.</p>
+        <p>Every interaction refined in Google Material Design 3 — native right-click &amp; long-press context menus, fluid emphasized &amp; spring motion, one-click Windows &amp; Android default browser registration, zero-duplicate Chrome ergonomics, simultaneous Multi-Profile windows, and built-in 4K/MP3 downloading.</p>
       </div>
 
       <div class="bento-grid">
-        <!-- Row 1: Span 2 + Span 1 -->
-        <article class="bento-card span-2 tone-primary">
+        <!-- Row 1: Span 2 + Span 1 (v4.7.0 Headline Upgrades) -->
+        <article class="bento-card span-2 tone-primary m3-reveal" style="--reveal-idx:0">
           <div class="bento-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-              <rect x="3" y="4.5" width="11" height="10.5" rx="2.5" stroke="currentColor" stroke-width="1.9"/>
-              <path d="M10 15v2a2.5 2.5 0 0 0 2.5 2.5h6A2.5 2.5 0 0 0 21 17V11a2.5 2.5 0 0 0-2.5-2.5H14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+              <rect x="4" y="4" width="16" height="16" rx="3.5" stroke="currentColor" stroke-width="1.9"/>
+              <path d="M8 9h8M8 12.5h5.5M8 16h8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
             </svg>
           </div>
-          <h3>True Multi-Window &amp; Live-Synced Multi-Profile Windows</h3>
-          <p>Open 2+ <strong>dejavu</strong> browser windows in the same profile (<code>Ctrl+N</code> or Private <code>Ctrl+Shift+N</code>) or run Personal and Work Google profiles side-by-side in isolated processes — with instant cross-process profile sync, isolated cookies, and per-profile Material You color seeds.</p>
+          <h3>Material Design 3 Context Menus &amp; Fluid M3 Motion Everywhere</h3>
+          <p>Native right-click menus on Windows (webpages, links, images, tabs, Start Page &amp; omnibox) and Google Pixel <strong>Long-Press Bottom Sheets</strong> on Android — paired with official M3 Emphasized &amp; Spring GPU-only transitions across every menu, switch, sheet, and dialog with strictly zero CSS blur.</p>
           <div class="bento-pills">
-            <span>Live Cross-Process Sync</span>
-            <span>Chrome-Style Profile Isolation</span>
-            <span>Private Mode (Ctrl+Shift+N)</span>
-            <span>Per-Profile Material You</span>
+            <span>Windows Right-Click Menus</span>
+            <span>Android Long-Press Sheets</span>
+            <span>Emphasized &amp; Spring Motion</span>
+            <span>Zero CSS Blur</span>
           </div>
         </article>
 
-        <article class="bento-card tone-surface">
+        <article class="bento-card tone-surface m3-reveal" style="--reveal-idx:1">
           <div class="bento-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-              <circle cx="10" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.9"/>
-              <path d="M4 19c.9-3.1 3.1-4.7 6-4.7s5.1 1.6 6 4.7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
-              <path d="M18.5 7.5v5M16 10h5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+              <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.9"/>
+              <path d="M8.5 12.2l2.3 2.3 4.8-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <h3>Pixel-Style You &amp; Google Account Studio</h3>
-          <p>Sign in with or create a Google Account as your Main Profile directly inside Windows &amp; Android with automatic photo/email sync, quick single-row profile switching, and <code>Ctrl+Shift+M</code> instant access.</p>
+          <h3>Native Windows 10/11 &amp; Android Default Browser</h3>
+          <p>Full Windows 10/11 <code>RegisteredApplications</code> + <code>StartMenuInternet</code> protocol/file registration and official Android <code>RoleManager</code> (<code>ROLE_BROWSER</code>) support — make <strong>dejavu</strong> your system default browser in a single tap.</p>
         </article>
 
         <!-- Row 2: Span 1 + Span 2 -->
-        <article class="bento-card tone-surface bento-settings-card">
+        <article class="bento-card tone-surface bento-settings-card m3-reveal" style="--reveal-idx:2">
           <div class="bento-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
               <path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h12M20 17h0" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
@@ -799,8 +811,8 @@
               <circle cx="18" cy="17" r="2" stroke="currentColor" stroke-width="1.8"/>
             </svg>
           </div>
-          <h3>Zero-Duplicate 10-Category M3 Settings</h3>
-          <p>Audited Settings (<code>Ctrl+,</code>) with <strong>Live Search &amp; category match badges</strong>, crisp <code>52×32</code> checkmark switches, Clear Browsing Data, Memory Saver, Custom Zoom &amp; Fonts, and M3 Toast confirmations.</p>
+          <h3>Zero-Duplicate Chrome &amp; 10-Category M3 Settings</h3>
+          <p>Decluttered single-instance Chrome + Left Navigation Rail paired with live-searchable 10-category Settings (<code>Ctrl+,</code>), spring-animated <code>52×32</code> checkmark switches, Default Browser status, and Memory Saver.</p>
           <div class="bento-m3-toggles" aria-label="Interactive Material 3 Settings preview">
             <div class="m3-switch-row compact">
               <span>Memory Saver</span>
@@ -821,24 +833,41 @@
           </div>
         </article>
 
-        <article class="bento-card span-2 tone-tertiary">
+        <article class="bento-card span-2 tone-secondary m3-reveal" style="--reveal-idx:3">
+          <div class="bento-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+              <rect x="3" y="4.5" width="11" height="10.5" rx="2.5" stroke="currentColor" stroke-width="1.9"/>
+              <path d="M10 15v2a2.5 2.5 0 0 0 2.5 2.5h6A2.5 2.5 0 0 0 21 17V11a2.5 2.5 0 0 0-2.5-2.5H14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>True Multi-Window &amp; Live-Synced Multi-Profile Google Studio</h3>
+          <p>Open 2+ <strong>dejavu</strong> browser windows in the same profile (<code>Ctrl+N</code> or Private <code>Ctrl+Shift+N</code>) or run Personal and Work Google profiles side-by-side in isolated processes — with instant cross-process profile sync, automatic Google photo/email detection, <code>Ctrl+Shift+M</code> switching, and per-profile Material You color seeds.</p>
+          <div class="bento-pills">
+            <span>Live Cross-Process Sync</span>
+            <span>Google Account Studio</span>
+            <span>Private Mode (Ctrl+Shift+N)</span>
+            <span>Per-Profile Material You</span>
+          </div>
+        </article>
+
+        <!-- Row 3: Span 2 + Span 1 -->
+        <article class="bento-card span-2 tone-tertiary m3-reveal" style="--reveal-idx:4">
           <div class="bento-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
               <path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M4 19.5h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
           <h3>Built-In YouTube 4K/1080p/720p &amp; MP3 Downloader</h3>
-          <p>Download 4K, 1080p HD, and 720p HD MP4 videos or extract 320 kbps MP3 audio straight from YouTube and 1,000+ sites using the floating Material 3 button — zero browser extensions needed. Combines native multi-quality extraction with 8× parallel byte-range acceleration and native HLS <code>.m3u8</code> assembly on both Windows and Android.</p>
+          <p>Download 4K, 1080p HD, and 720p HD MP4 videos or extract 320 kbps MP3 audio straight from YouTube and 1,000+ sites via the floating Material 3 button or right-click Turbo 8× menu — zero extensions needed. Native multi-quality extraction, 8× parallel byte-range acceleration, and HLS <code>.m3u8</code> assembly on both Windows and Android.</p>
           <div class="bento-pills">
             <span>4K / 1080p / 720p MP4</span>
             <span>MP3 Audio (320k)</span>
-            <span>Zero Browser Extensions</span>
-            <span>8× Threads &amp; HLS .m3u8</span>
+            <span>Right-Click Turbo 8×</span>
+            <span>HLS .m3u8 Assembly</span>
           </div>
         </article>
 
-        <!-- Row 3: Span 1 + Span 1 + Span 1 -->
-        <article class="bento-card tone-secondary">
+        <article class="bento-card tone-surface m3-reveal" style="--reveal-idx:5">
           <div class="bento-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
               <rect x="4" y="5" width="16" height="14" rx="3" stroke="currentColor" stroke-width="1.9"/>
@@ -850,7 +879,8 @@
           <p>12 sculptural Google Pixel compositions plus 4 Material Design 3 Butterfly wallpapers across Dark and Light modes — zero legacy clutter, automatic Material You seed harmony, and strictly zero CSS blur.</p>
         </article>
 
-        <article class="bento-card tone-surface">
+        <!-- Row 4: Span 2 + Span 1 -->
+        <article class="bento-card span-2 tone-surface m3-reveal" style="--reveal-idx:6">
           <div class="bento-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
               <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.9"/>
@@ -858,11 +888,17 @@
               <path d="M4 9.5h16M4 14.5h16" stroke="currentColor" stroke-width="1.5"/>
             </svg>
           </div>
-          <h3>86-Country AI-Ready VPN &amp; 100/100 Ad Shield</h3>
-          <p>Clean-IP Smart routing (verified for Google Gemini over US VPN plus Nepal, Japan, Switzerland, India &amp; 80+ more) with 1-tap 3-Hop Tor mode and 279,000+ native ad-blocking rules.</p>
+          <h3>86-Country AI-Ready Smart VPN &amp; 100/100 Ad Shield</h3>
+          <p>Clean-IP Smart routing with hot multi-node failover (verified for Google Gemini over US VPN plus Nepal, Japan, Switzerland, India &amp; 80+ more) paired with 1-tap 3-Hop Tor mode and 279,000+ native ad &amp; tracker blocking rules.</p>
+          <div class="bento-pills">
+            <span>86+ Countries</span>
+            <span>1-Tap 3-Hop Tor</span>
+            <span>279k+ Ad Rules</span>
+            <span>0.85% Idle CPU</span>
+          </div>
         </article>
 
-        <article class="bento-card tone-surface">
+        <article class="bento-card tone-surface m3-reveal" style="--reveal-idx:7">
           <div class="bento-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
               <path d="M12 3l7.5 3v5.6c0 4.9-3.2 8.4-7.5 9.9-4.3-1.5-7.5-5-7.5-9.9V6L12 3z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
@@ -870,7 +906,7 @@
             </svg>
           </div>
           <h3>E2EE PC ↔ Phone Sync &amp; Permanent V1–V3 Signing</h3>
-          <p>Pair Windows and Android in one QR scan with AES-256 encryption and zero cloud accounts. Permanent V1+V2+V3 Android release signing keeps every future update automatic in-place.</p>
+          <p>Pair Windows and Android in one QR scan with AES-256 encryption and zero cloud accounts — even send links straight from context menus. Permanent V1+V2+V3 Android release signing keeps every update automatic in-place.</p>
         </article>
       </div>
     </section>
@@ -1157,33 +1193,33 @@
     </section>
 
     <!-- =================================================================
-         CLEAN 3-CARD MATERIAL 3 DOWNLOAD SECTION (v4.6.0)
+         CLEAN 3-CARD MATERIAL 3 DOWNLOAD SECTION (v4.7.0)
          ================================================================= -->
     <section id="download" class="section container">
       <div class="dl-panel">
         <div class="section-head">
-          <span class="eyebrow" id="dl-ver-eyebrow">Latest Official Release · v4.6.0</span>
+          <span class="eyebrow" id="dl-ver-eyebrow">Latest Official Release · v4.7.0</span>
           <h2>Get dejavu on Windows &amp; Android.</h2>
-          <p>Permanently signed GitHub Releases with built-in automatic updates across desktop and mobile.</p>
+          <p>Permanently signed GitHub Releases with native Windows 10/11 &amp; Android Default Browser registration and built-in automatic updates.</p>
         </div>
 
         <div class="dl-cards">
-          <a id="card-dl-setup" class="dl-card featured" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-Setup.exe">
+          <a id="card-dl-setup" class="dl-card featured m3-reveal" style="--reveal-idx:0" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-Setup.exe">
             <span class="dl-tag">Recommended · Windows 10/11</span>
             <h3>Windows Installer</h3>
-            <p>Guided Material You installer with zero-duplicate Chrome + Navigation Rail UI, live-synced Multi-Window Google Profiles, 10-category searchable M3 Settings, YouTube 4K/MP3 downloader, and automatic updates.</p>
+            <p>Guided Material You installer with native Windows Default Browser registration, Material 3 Right-Click Context Menus, Fluid M3 Motion, zero-duplicate Chrome + Rail UI, Multi-Window Google Profiles, YouTube 4K/MP3 downloader, and auto-updates.</p>
             <div class="dl-foot">
               <span class="dl-file-meta" id="card-setup-size">dejavu-Setup.exe</span>
               <span class="m3-btn m3-btn-filled m3-btn-sm">Download</span>
             </div>
           </a>
 
-          <a id="card-dl-android" class="dl-card" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-mobile.apk">
+          <a id="card-dl-android" class="dl-card m3-reveal" style="--reveal-idx:1" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-mobile.apk">
             <span class="dl-tag">Android 8.0+ · Permanent V1–V3 Signing</span>
             <h3>Android Mobile (.apk)</h3>
-            <p>Authentic Google Pixel Material Design 3 UI, streamlined You &amp; Google Account card, searchable Settings, Samsung bottom bar, YouTube multi-quality &amp; audio downloader, 16 Pure M3 &amp; Butterfly wallpapers, and PC sync.</p>
+            <p>Authentic Google Pixel Material Design 3 UI, Long-Press M3 Context Menu Bottom Sheets, official Android Default Browser (RoleManager) support, Fluid M3 Spring Motion, YouTube downloader, 16 Pure M3 &amp; Butterfly wallpapers, and PC sync.</p>
             <div class="dl-upgrade-note">
-              Upgrading from v4.2.0 or earlier? Uninstall once before installing v4.6.0 — all future updates install automatically in-place.
+              Upgrading from v4.2.0 or earlier? Uninstall once before installing v4.7.0 — all future updates install automatically in-place.
             </div>
             <div class="dl-foot">
               <span class="dl-file-meta" id="card-android-size">dejavu-mobile.apk</span>
@@ -1191,10 +1227,10 @@
             </div>
           </a>
 
-          <a id="card-dl-portable" class="dl-card" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu.exe">
+          <a id="card-dl-portable" class="dl-card m3-reveal" style="--reveal-idx:2" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu.exe">
             <span class="dl-tag">Zero Install · Windows x64</span>
             <h3>Portable (.exe)</h3>
-            <p>Single-file native Windows executable with simultaneous Multi-Window &amp; live-synced Multi-Profile support, 4K/MP3 downloader &amp; 0.85% idle CPU — runs from any folder or USB drive.</p>
+            <p>Single-file native Windows executable with Material 3 Right-Click Context Menus, Fluid M3 Motion, simultaneous Multi-Profile Google windows, 4K/MP3 downloader &amp; 0.85% idle CPU — runs from any folder or USB drive.</p>
             <div class="dl-foot">
               <span class="dl-file-meta" id="card-portable-size">dejavu.exe</span>
               <span class="m3-btn m3-btn-outlined m3-btn-sm">Download</span>
@@ -1210,7 +1246,7 @@
       <div class="foot-brand">
         <img src="assets/logo-transparent.png" width="22" height="22" alt="">
         <strong>dejavu</strong>
-        <span>Material Design 3 Browser for Windows &amp; Android · v4.6.0</span>
+        <span>Material Design 3 Browser for Windows &amp; Android · v4.7.0</span>
       </div>
       <div class="foot-links">
         <a href="https://github.com/Dathevinci/Dejavu-browser" target="_blank" rel="noopener noreferrer">GitHub</a>

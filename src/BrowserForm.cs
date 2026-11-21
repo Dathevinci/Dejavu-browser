@@ -28,6 +28,13 @@ namespace DejavuBrowser
         public string state { get; set; }
     }
 
+    internal sealed class ClosedTabInfo
+    {
+        public string Url;
+        public string Title;
+        public string GroupId;
+    }
+
     internal sealed class BrowserTab
     {
         public int Id;
@@ -39,6 +46,7 @@ namespace DejavuBrowser
         public int BlockedCount;
         public bool IsLight;
         public bool IsPinned;
+        public bool IsMuted;
         public string GroupId;
         public bool ReaderActive;
         public string ThumbnailDataUrl;
@@ -62,6 +70,7 @@ namespace DejavuBrowser
             BlockedCount = 0;
             IsLight = false;
             IsPinned = false;
+            IsMuted = false;
             GroupId = string.IsNullOrEmpty(groupId) ? "default" : groupId;
             ReaderActive = false;
             ThumbnailDataUrl = "";
@@ -151,6 +160,7 @@ namespace DejavuBrowser
             }
 
             StartBackgroundUpdateCheckAsync();
+            try { DefaultBrowserRegistrar.RegisterOnStartup(DefaultBrowserRegistrar.GetCurrentExePath()); } catch { }
             OpenWindow(initialUrl, startPrivate, null, startGoogleSignIn, startGoogleSignUp);
             EnsurePipeServerStarted();
             NotifyOtherProfileProcessesAsync();
@@ -775,8 +785,11 @@ namespace DejavuBrowser
         private int _suggestSelectedIndex = -1;
 
         private readonly List<BrowserTab> _tabs = new List<BrowserTab>();
-        private readonly Stack<string> _closedTabUrls = new Stack<string>();
+        private readonly Stack<ClosedTabInfo> _closedTabs = new Stack<ClosedTabInfo>();
         private readonly List<DownloadEntry> _downloads = new List<DownloadEntry>();
+        private bool _isDefaultBrowser;
+        private int _contextMenuTabId = -1;
+        private bool _contextMenuIsShellRelay;
         private string _activeTabGroupId = "default";
         private bool _tabOverviewOpen;
         private bool _settingsOpen;
@@ -844,6 +857,7 @@ namespace DejavuBrowser
 
             _docStartScript = AdBlocker.GetDocumentStartScript();
             _floatingMediaScript = TurboDownloadManager.GetFloatingDownloadButtonScript();
+            _isDefaultBrowser = DefaultBrowserRegistrar.IsDefaultBrowser();
 
             Text = _isPrivateWindow ? "dejavu — Private" : ("dejavu — " + _profiles.ActiveProfile.name);
             FormBorderStyle = FormBorderStyle.None;
@@ -922,10 +936,17 @@ namespace DejavuBrowser
             Activated += (s, e) =>
             {
                 _appContext.MarkWindowActive(this);
+                bool nowDefault = DefaultBrowserRegistrar.IsDefaultBrowser();
+                bool defaultChanged = (nowDefault != _isDefaultBrowser);
+                _isDefaultBrowser = nowDefault;
                 if (_shellReady && (_settingsOpen || _activePopoverMode == "profiles"))
                 {
                     _profiles.ReloadManifest();
                     HandleProfilesRefreshed();
+                }
+                else if (defaultChanged && _shellReady)
+                {
+                    PushFullStateToShell();
                 }
             };
             Load += OnFormLoad;
@@ -1116,13 +1137,13 @@ namespace DejavuBrowser
                 { "vpnMode", _settings.vpnMode ?? "smart" },
                 { "vpnCountry", _settings.vpnCountry ?? "AUTO" },
 
-                // v4.6.0 Appearance
+                // v4.7.0 Appearance
                 { "fontSize", _settings.fontSize ?? "medium" },
                 { "fontFamily", _settings.fontFamily ?? "system" },
                 { "showHomeButton", _settings.showHomeButton },
                 { "smoothScrolling", _settings.smoothScrolling },
 
-                // v4.6.0 Privacy & Security
+                // v4.7.0 Privacy & Security
                 { "doNotTrack", _settings.doNotTrack },
                 { "httpsFirst", _settings.httpsFirst },
                 { "blockThirdPartyCookies", _settings.blockThirdPartyCookies },
@@ -1136,29 +1157,29 @@ namespace DejavuBrowser
                 { "permClipboard", _settings.permClipboard ?? "ask" },
                 { "permAutoplay", _settings.permAutoplay ?? "allow" },
 
-                // v4.6.0 Search
+                // v4.7.0 Search
                 { "customSearchUrl", _settings.customSearchUrl ?? "" },
                 { "addressBarSuggestions", _settings.addressBarSuggestions },
 
-                // v4.6.0 Tabs & Performance
+                // v4.7.0 Tabs & Performance
                 { "memorySaverEnabled", _settings.memorySaverEnabled },
                 { "memorySaverMinutes", _settings.memorySaverMinutes > 0 ? _settings.memorySaverMinutes : 30 },
                 { "confirmCloseMultipleTabs", _settings.confirmCloseMultipleTabs },
                 { "tabHoverPreview", _settings.tabHoverPreview },
 
-                // v4.6.0 Downloads
+                // v4.7.0 Downloads
                 { "downloadFolder", _settings.downloadFolder ?? "" },
                 { "askDownloadLocation", _settings.askDownloadLocation },
                 { "turboThreads", _settings.turboThreads > 0 ? _settings.turboThreads : 8 },
                 { "defaultVideoQuality", _settings.defaultVideoQuality ?? "best" },
                 { "autoOpenDownloads", _settings.autoOpenDownloads },
 
-                // v4.6.0 Passwords & Autofill
+                // v4.7.0 Passwords & Autofill
                 { "savePasswords", _settings.savePasswords },
                 { "autofillAddresses", _settings.autofillAddresses },
                 { "autofillPayments", _settings.autofillPayments },
 
-                // v4.6.0 VPN & System
+                // v4.7.0 VPN & System
                 { "vpnWebRtcProtection", _settings.vpnWebRtcProtection },
                 { "hardwareAcceleration", _settings.hardwareAcceleration },
                 { "spellcheckEnabled", _settings.spellcheckEnabled },
@@ -1197,6 +1218,7 @@ namespace DejavuBrowser
         private void HidePopover(bool keepOwnerForeground)
         {
             _activePopoverMode = "";
+            _contextMenuIsShellRelay = false;
             SyncVpnTelemetryTimer();
             if (_popoverPopup != null) _popoverPopup.HidePopup(keepOwnerForeground);
         }
@@ -1652,6 +1674,8 @@ namespace DejavuBrowser
                         { "downloadsDir", effectiveDownloadFolder },
                         { "userDataDir", _profiles.GetProfileDataDir(_profiles.ActiveProfile.id) },
                         { "appVersion", AutoUpdater.CurrentVersion },
+                        { "isDefaultBrowser", _isDefaultBrowser },
+                        { "canReopenClosedTab", _closedTabs.Count > 0 },
                         { "updateStatus", _appContext.UpdateStatusText ?? "" },
                         { "updateReadyVersion", (bootUpd != null && bootUpd.IsReady) ? bootUpd.Version : "" },
                         { "shortcuts", _settings.shortcuts },
@@ -1849,6 +1873,11 @@ namespace DejavuBrowser
 
         private void CreateTab(string initialUrl, bool activate)
         {
+            CreateTab(initialUrl, activate, -1);
+        }
+
+        private void CreateTab(string initialUrl, bool activate, int afterTabId)
+        {
             BrowserTab tab = new BrowserTab(_nextTabId++, _activeTabGroupId);
             if (!string.IsNullOrEmpty(initialUrl))
             {
@@ -1857,7 +1886,29 @@ namespace DejavuBrowser
                 tab.Title = FormatDisplayUrl(initialUrl);
                 tab.PendingNavigateUrl = initialUrl;
             }
-            _tabs.Add(tab);
+
+            if (afterTabId > 0)
+            {
+                int insertIdx = -1;
+                for (int i = 0; i < _tabs.Count; i++)
+                {
+                    if (_tabs[i].Id == afterTabId) { insertIdx = i + 1; break; }
+                }
+                if (insertIdx > 0 && insertIdx <= _tabs.Count)
+                {
+                    // Never insert an unpinned tab ahead of pinned tabs
+                    while (insertIdx < _tabs.Count && _tabs[insertIdx].IsPinned) insertIdx++;
+                    _tabs.Insert(insertIdx, tab);
+                }
+                else
+                {
+                    _tabs.Add(tab);
+                }
+            }
+            else
+            {
+                _tabs.Add(tab);
+            }
 
             if (!tab.IsNewTab)
             {
@@ -1918,7 +1969,13 @@ namespace DejavuBrowser
             PushFullStateToShell();
         }
 
-        private void RecordClosedTabUrl(string url)
+        private void RecordClosedTab(BrowserTab tab)
+        {
+            if (tab == null || tab.IsNewTab) return;
+            RecordClosedTabUrl(tab.Url, tab.Title, tab.GroupId);
+        }
+
+        private void RecordClosedTabUrl(string url, string title, string groupId)
         {
             if (string.IsNullOrEmpty(url) ||
                 string.Equals(url, "dejavu://newtab", StringComparison.OrdinalIgnoreCase) ||
@@ -1927,31 +1984,37 @@ namespace DejavuBrowser
                 return;
             }
 
-            if (_closedTabUrls.Count >= 25)
+            if (_closedTabs.Count >= 25)
             {
-                string[] existing = _closedTabUrls.ToArray();
-                _closedTabUrls.Clear();
+                ClosedTabInfo[] existing = _closedTabs.ToArray();
+                _closedTabs.Clear();
                 int keep = Math.Min(existing.Length, 24);
                 for (int i = keep - 1; i >= 0; i--)
                 {
-                    _closedTabUrls.Push(existing[i]);
+                    _closedTabs.Push(existing[i]);
                 }
             }
-            _closedTabUrls.Push(url);
+            _closedTabs.Push(new ClosedTabInfo
+            {
+                Url = url,
+                Title = title ?? "",
+                GroupId = string.IsNullOrEmpty(groupId) ? _activeTabGroupId : groupId
+            });
         }
 
         private void ReopenLastClosedTab()
         {
-            while (_closedTabUrls.Count > 0)
+            while (_closedTabs.Count > 0)
             {
-                string url = _closedTabUrls.Pop();
-                if (!string.IsNullOrEmpty(url) &&
-                    !string.Equals(url, "dejavu://newtab", StringComparison.OrdinalIgnoreCase))
+                ClosedTabInfo info = _closedTabs.Pop();
+                if (info != null && !string.IsNullOrEmpty(info.Url) &&
+                    !string.Equals(info.Url, "dejavu://newtab", StringComparison.OrdinalIgnoreCase))
                 {
-                    CreateTab(url, true);
+                    CreateTab(info.Url, true);
                     return;
                 }
             }
+            PushFullStateToShell();
         }
 
         private List<BrowserTab> GetActiveGroupTabs()
@@ -1969,6 +2032,11 @@ namespace DejavuBrowser
 
         private void CloseTab(int tabId)
         {
+            CloseTabInternal(tabId, true);
+        }
+
+        private void CloseTabInternal(int tabId, bool recordHistory)
+        {
             int idx = -1;
             for (int i = 0; i < _tabs.Count; i++)
             {
@@ -1977,9 +2045,9 @@ namespace DejavuBrowser
             if (idx < 0) return;
 
             BrowserTab tab = _tabs[idx];
-            if (!tab.IsNewTab)
+            if (recordHistory && !tab.IsNewTab)
             {
-                RecordClosedTabUrl(tab.Url);
+                RecordClosedTab(tab);
             }
 
             List<BrowserTab> groupTabs = new List<BrowserTab>();
@@ -2005,6 +2073,7 @@ namespace DejavuBrowser
                 }
                 tab.IsNewTab = true;
                 tab.IsPinned = false;
+                tab.IsMuted = false;
                 tab.ReaderActive = false;
                 tab.ThumbnailDataUrl = "";
                 tab.Url = "dejavu://newtab";
@@ -2512,6 +2581,10 @@ namespace DejavuBrowser
 
                 CoreWebView2 core = wv.CoreWebView2;
                 tab.CoreReady = true;
+                if (tab.IsMuted)
+                {
+                    try { core.IsMuted = true; } catch { }
+                }
                 double defZoom = (_settings != null && _settings.defaultZoomPercent >= 50 && _settings.defaultZoomPercent <= 200)
                     ? (_settings.defaultZoomPercent / 100.0)
                     : 1.0;
@@ -2645,7 +2718,12 @@ namespace DejavuBrowser
 
                 core.HistoryChanged += (s, e) => SchedulePushFullStateToShell();
                 core.IsDocumentPlayingAudioChanged += (s, e) => SchedulePushFullStateToShell();
-                core.IsMutedChanged += (s, e) => SchedulePushFullStateToShell();
+                core.IsMutedChanged += (s, e) =>
+                {
+                    try { tab.IsMuted = core.IsMuted; } catch { }
+                    SchedulePushFullStateToShell();
+                };
+                core.ContextMenuRequested += (s, e) => OnTabContextMenuRequested(tab, e);
                 core.ContainsFullScreenElementChanged += (s, e) => SetHtmlFullscreen(core.ContainsFullScreenElement);
                 core.NewWindowRequested += (s, e) => HandleNewWindowRequested(envForTab, e);
                 core.DownloadStarting += (s, e) => HandleDownloadStarting(tab, e);
@@ -3545,6 +3623,8 @@ namespace DejavuBrowser
                 { "openProfileIds", openProfileIds },
                 { "profiles", _profiles.Manifest.profiles },
                 { "appVersion", AutoUpdater.CurrentVersion },
+                { "isDefaultBrowser", _isDefaultBrowser },
+                { "canReopenClosedTab", _closedTabs.Count > 0 },
                 { "updateStatus", _appContext.UpdateStatusText ?? "" },
                 { "updateReadyVersion", (upd != null && upd.IsReady) ? upd.Version : "" }
             };
@@ -4190,6 +4270,7 @@ namespace DejavuBrowser
                 if (key == Keys.Oemcomma || key == Keys.T || key == Keys.W || key == Keys.F4 ||
                     key == Keys.N || key == Keys.J || key == Keys.L || key == Keys.R ||
                     key == Keys.F || key == Keys.H || key == Keys.D || key == Keys.M ||
+                    key == Keys.P || key == Keys.U || key == Keys.S ||
                     key == Keys.Tab || key == Keys.Oemplus || key == Keys.Add ||
                     key == Keys.OemMinus || key == Keys.Subtract || key == Keys.D0 || key == Keys.NumPad0 ||
                     (key >= Keys.D1 && key <= Keys.D9) || (key >= Keys.NumPad1 && key <= Keys.NumPad9))
@@ -4207,7 +4288,7 @@ namespace DejavuBrowser
             bool shift = (keyData & Keys.Shift) == Keys.Shift;
             if (key == Keys.F11 || key == Keys.F12) return true;
             if (ctrl && shift && (key == Keys.I || key == Keys.N || key == Keys.M)) return true;
-            if (ctrl && !shift && (key == Keys.N || key == Keys.Oemcomma || key == Keys.J)) return true;
+            if (ctrl && !shift && (key == Keys.N || key == Keys.Oemcomma || key == Keys.J || key == Keys.P || key == Keys.U || key == Keys.S)) return true;
             return false;
         }
 
@@ -4262,6 +4343,9 @@ namespace DejavuBrowser
                 if (!shift && key == Keys.H) { ShowHistoryPopoverAt((int)(ClientSize.Width / DpiScale) - 110); return true; }
                 if (!shift && key == Keys.D) { ToggleFavoriteActiveTab(); return true; }
                 if (!shift && key == Keys.M) { ToggleMuteTab(_activeTabId); return true; }
+                if (!shift && key == Keys.P) { PrintActiveTab(); return true; }
+                if (!shift && key == Keys.U) { ViewPageSourceActiveTab(null); return true; }
+                if (!shift && key == Keys.S) { SavePageAsActiveTab(); return true; }
                 if (!shift && ((key >= Keys.D1 && key <= Keys.D8) || (key >= Keys.NumPad1 && key <= Keys.NumPad8)))
                 {
                     List<BrowserTab> groupTabs = GetActiveGroupTabs();
@@ -4513,7 +4597,7 @@ namespace DejavuBrowser
                 }
             }
 
-            // v4.6.0 Appearance
+            // v4.7.0 Appearance
             if (msg.ContainsKey("fontSize"))
             {
                 _settings.fontSize = SettingsStore.NormalizeFontSize(Convert.ToString(msg["fontSize"]));
@@ -4532,7 +4616,7 @@ namespace DejavuBrowser
                 needTabSettingsApply = true;
             }
 
-            // v4.6.0 Privacy & Security
+            // v4.7.0 Privacy & Security
             if (msg.ContainsKey("doNotTrack"))
                 _settings.doNotTrack = Convert.ToBoolean(msg["doNotTrack"]);
             if (msg.ContainsKey("httpsFirst"))
@@ -4567,7 +4651,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("permAutoplay"))
                 _settings.permAutoplay = SettingsStore.NormalizePermission(Convert.ToString(msg["permAutoplay"]), "allow");
 
-            // v4.6.0 Search
+            // v4.7.0 Search
             if (msg.ContainsKey("customSearchUrl"))
                 _settings.customSearchUrl = (Convert.ToString(msg["customSearchUrl"]) ?? "").Trim();
             if (msg.ContainsKey("addressBarSuggestions"))
@@ -4576,7 +4660,7 @@ namespace DejavuBrowser
                 if (!_settings.addressBarSuggestions) HideSuggestPopup();
             }
 
-            // v4.6.0 Tabs & Performance
+            // v4.7.0 Tabs & Performance
             if (msg.ContainsKey("memorySaverEnabled"))
                 _settings.memorySaverEnabled = Convert.ToBoolean(msg["memorySaverEnabled"]);
             if (msg.ContainsKey("memorySaverMinutes"))
@@ -4589,7 +4673,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("tabHoverPreview"))
                 _settings.tabHoverPreview = Convert.ToBoolean(msg["tabHoverPreview"]);
 
-            // v4.6.0 Downloads
+            // v4.7.0 Downloads
             if (msg.ContainsKey("downloadFolder"))
             {
                 _settings.downloadFolder = (Convert.ToString(msg["downloadFolder"]) ?? "").Trim();
@@ -4611,7 +4695,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("autoOpenDownloads"))
                 _settings.autoOpenDownloads = Convert.ToBoolean(msg["autoOpenDownloads"]);
 
-            // v4.6.0 Passwords & Autofill
+            // v4.7.0 Passwords & Autofill
             if (msg.ContainsKey("savePasswords"))
             {
                 _settings.savePasswords = Convert.ToBoolean(msg["savePasswords"]);
@@ -4625,7 +4709,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("autofillPayments"))
                 _settings.autofillPayments = Convert.ToBoolean(msg["autofillPayments"]);
 
-            // v4.6.0 VPN & System
+            // v4.7.0 VPN & System
             if (msg.ContainsKey("vpnWebRtcProtection"))
                 _settings.vpnWebRtcProtection = Convert.ToBoolean(msg["vpnWebRtcProtection"]);
             if (msg.ContainsKey("hardwareAcceleration"))
@@ -4779,9 +4863,36 @@ namespace DejavuBrowser
         {
             try
             {
-                Process.Start(new ProcessStartInfo("ms-settings:defaultapps") { UseShellExecute = true });
+                DefaultBrowserRegistrar.Register(DefaultBrowserRegistrar.GetCurrentExePath());
             }
             catch { }
+
+            bool launched = false;
+            try
+            {
+                Process.Start(new ProcessStartInfo("ms-settings:defaultapps?registeredAppUser=dejavu") { UseShellExecute = true });
+                launched = true;
+            }
+            catch { }
+
+            if (!launched)
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo("ms-settings:defaultapps") { UseShellExecute = true });
+                }
+                catch { }
+            }
+
+            _isDefaultBrowser = DefaultBrowserRegistrar.IsDefaultBrowser();
+            PushFullStateToShell();
+            PushShellToast("Opening Windows Default Apps — click \"Set default\" for dejavu", "info");
+        }
+
+        private void CheckDefaultBrowser()
+        {
+            _isDefaultBrowser = DefaultBrowserRegistrar.IsDefaultBrowser();
+            PushFullStateToShell();
         }
 
         private void OpenUserDataFolder()
@@ -4853,12 +4964,17 @@ namespace DejavuBrowser
                 }
             }
             _appContext.BroadcastSettingsApplied();
-            PushShellToast("Settings restored to v4.6.0 defaults", "success");
+            PushShellToast("Settings restored to v4.7.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
         {
-            BrowserTab tab = GetActiveTab();
+            ToggleFavoriteTab(_activeTabId);
+        }
+
+        private void ToggleFavoriteTab(int tabId)
+        {
+            BrowserTab tab = FindTab(tabId);
             if (tab == null || tab.IsNewTab || string.IsNullOrEmpty(tab.Url)) return;
             bool hadBar = HasFavoritesBar;
             int prevCount = _profiles.Favorites != null ? _profiles.Favorites.Count : 0;
@@ -4886,7 +5002,7 @@ namespace DejavuBrowser
             BrowserTab tab = FindTab(tabId);
             if (tab == null) return;
             tab.IsPinned = !tab.IsPinned;
-            // Keep pinned tabs sorted smoothly to the left of the tab bar (just like Safari!)
+            // Keep pinned tabs sorted smoothly to the left of the tab bar
             _tabs.Sort((a, b) =>
             {
                 if (a.IsPinned == b.IsPinned) return a.Id.CompareTo(b.Id);
@@ -4900,7 +5016,7 @@ namespace DejavuBrowser
         {
             BrowserTab tab = FindTab(tabId);
             if (tab == null) return;
-            CreateTab(tab.IsNewTab ? null : tab.Url, true);
+            CreateTab(tab.IsNewTab ? null : tab.Url, true, tab.Id);
         }
 
         private void CloseOtherTabs(int keepId)
@@ -4910,8 +5026,8 @@ namespace DejavuBrowser
             for (int i = _tabs.Count - 1; i >= 0; i--)
             {
                 BrowserTab t = _tabs[i];
-                if (t.Id == keepId || t.GroupId != _activeTabGroupId || t.IsPinned) continue;
-                if (!t.IsNewTab && !string.IsNullOrEmpty(t.Url)) _closedTabUrls.Push(t.Url);
+                if (t.Id == keepId || !string.Equals(t.GroupId, _activeTabGroupId, StringComparison.OrdinalIgnoreCase) || t.IsPinned) continue;
+                RecordClosedTab(t);
                 if (t.WebView != null)
                 {
                     if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
@@ -4921,6 +5037,158 @@ namespace DejavuBrowser
                 _tabs.RemoveAt(i);
             }
             ActivateTab(keepId);
+        }
+
+        private void CloseTabsToRight(int tabId)
+        {
+            int targetIdx = -1;
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                if (_tabs[i].Id == tabId) { targetIdx = i; break; }
+            }
+            if (targetIdx < 0) return;
+
+            bool closedActive = false;
+            for (int i = _tabs.Count - 1; i > targetIdx; i--)
+            {
+                BrowserTab t = _tabs[i];
+                if (!string.Equals(t.GroupId, _activeTabGroupId, StringComparison.OrdinalIgnoreCase) || t.IsPinned) continue;
+                if (t.Id == _activeTabId) closedActive = true;
+                RecordClosedTab(t);
+                if (t.WebView != null)
+                {
+                    if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
+                    Controls.Remove(t.WebView);
+                    t.WebView.Dispose();
+                }
+                _tabs.RemoveAt(i);
+            }
+
+            if (closedActive) ActivateTab(tabId);
+            else PushFullStateToShell();
+            RefreshSidebarIfOpen();
+        }
+
+        private void MoveTabToNewWindow(int tabId)
+        {
+            BrowserTab tab = FindTab(tabId);
+            if (tab == null) return;
+            string urlToMove = tab.IsNewTab ? null : tab.Url;
+            _appContext.OpenWindow(urlToMove, _isPrivateWindow, this, false, false);
+
+            List<BrowserTab> groupTabs = GetActiveGroupTabs();
+            if (groupTabs.Count > 1)
+            {
+                CloseTabInternal(tabId, false);
+            }
+            else if (!tab.IsNewTab)
+            {
+                CloseTabInternal(tabId, false);
+            }
+            RefreshSidebarIfOpen();
+        }
+
+        private void ReloadTab(int tabId)
+        {
+            BrowserTab t = FindTab(tabId);
+            if (t == null || t.IsNewTab || !t.CoreReady || t.WebView == null || t.WebView.IsDisposed) return;
+            try
+            {
+                if (t.IsLoading) t.WebView.CoreWebView2.Stop();
+                else t.WebView.CoreWebView2.Reload();
+            }
+            catch { }
+        }
+
+        private async void SavePageAsActiveTab()
+        {
+            BrowserTab tab = GetActiveTab();
+            if (tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed || tab.WebView.CoreWebView2 == null)
+            {
+                PushShellToast("Open a webpage to save it", "info");
+                return;
+            }
+            try
+            {
+                await tab.WebView.CoreWebView2.ShowSaveAsUIAsync();
+            }
+            catch
+            {
+                PushShellToast("Unable to open Save Page dialog", "warning");
+            }
+        }
+
+        private void PrintActiveTab()
+        {
+            BrowserTab tab = GetActiveTab();
+            if (tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed || tab.WebView.CoreWebView2 == null)
+            {
+                PushShellToast("Open a webpage to print", "info");
+                return;
+            }
+            try
+            {
+                tab.WebView.CoreWebView2.ShowPrintUI();
+            }
+            catch
+            {
+                try { tab.WebView.CoreWebView2.ExecuteScriptAsync("window.print();"); } catch { }
+            }
+        }
+
+        private void ViewPageSourceActiveTab(string explicitUrl)
+        {
+            string url = !string.IsNullOrWhiteSpace(explicitUrl) ? explicitUrl.Trim() : "";
+            if (string.IsNullOrEmpty(url))
+            {
+                BrowserTab tab = GetActiveTab();
+                if (tab != null && !tab.IsNewTab) url = tab.Url ?? "";
+            }
+            if (string.IsNullOrWhiteSpace(url) || string.Equals(url, "dejavu://newtab", StringComparison.OrdinalIgnoreCase))
+            {
+                PushShellToast("Open a webpage to view its source", "info");
+                return;
+            }
+            string target = url.StartsWith("view-source:", StringComparison.OrdinalIgnoreCase)
+                ? url
+                : ("view-source:" + url);
+            CreateTab(target, true, _activeTabId);
+        }
+
+        private void PasteAndGo(string explicitText)
+        {
+            string text = !string.IsNullOrWhiteSpace(explicitText) ? explicitText.Trim() : "";
+            if (string.IsNullOrEmpty(text))
+            {
+                try
+                {
+                    if (Clipboard.ContainsText())
+                    {
+                        text = (Clipboard.GetText() ?? "").Trim();
+                    }
+                }
+                catch { }
+            }
+            if (string.IsNullOrEmpty(text))
+            {
+                PushShellToast("Clipboard is empty", "info");
+                return;
+            }
+            NavigateActiveTab(text);
+        }
+
+        private void CopyTextToClipboard(string text, string toastMessage)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            try
+            {
+                Clipboard.SetText(text);
+                if (!string.IsNullOrEmpty(toastMessage))
+                {
+                    PushShellToast(toastMessage, "success");
+                }
+            }
+            catch { }
         }
 
         private void SwitchTabGroup(string groupId)
@@ -5197,6 +5465,8 @@ namespace DejavuBrowser
                 { "isPinned", tab != null && tab.IsPinned },
                 { "zoomPercent", zoomPct },
                 { "appVersion", AutoUpdater.CurrentVersion },
+                { "isDefaultBrowser", _isDefaultBrowser },
+                { "canReopenClosedTab", _closedTabs.Count > 0 },
                 { "isPrivateWindow", _isPrivateWindow },
                 { "windowCount", _appContext.WindowCount },
                 { "activeProfile", _profiles.ActiveProfile }
@@ -5265,7 +5535,9 @@ namespace DejavuBrowser
             BrowserTab active = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || active == null || active.IsNewTab);
             bool isLight = GetEffectiveIsLight(active, captureShell);
-            bool isMuted = target.CoreReady && target.WebView != null && target.WebView.CoreWebView2.IsMuted;
+            bool isMuted = (target.CoreReady && target.WebView != null && !target.WebView.IsDisposed && target.WebView.CoreWebView2 != null)
+                ? target.WebView.CoreWebView2.IsMuted
+                : target.IsMuted;
 
             var payload = new Dictionary<string, object>
             {
@@ -5275,11 +5547,15 @@ namespace DejavuBrowser
                 { "backdrop", "" },
                 { "tabId", target.Id },
                 { "isPinned", target.IsPinned },
+                { "pinned", target.IsPinned },
                 { "isMuted", isMuted },
+                { "muted", isMuted },
+                { "canReopenClosedTab", _closedTabs.Count > 0 },
                 { "isNewTab", target.IsNewTab }
             };
 
             Point screenPt = PointToScreen(new Point(x, y));
+            _popoverPopup.UpdateSurfaceTheme(isLight);
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), _json.Serialize(payload), true);
         }
 
@@ -5333,13 +5609,887 @@ namespace DejavuBrowser
         private void ToggleMuteTab(int tabId)
         {
             BrowserTab t = FindTab(tabId);
-            if (t == null || t.IsNewTab || !t.CoreReady || t.WebView == null) return;
+            if (t == null) return;
+            bool nextMuted = !t.IsMuted;
+            if (t.CoreReady && t.WebView != null && !t.WebView.IsDisposed && t.WebView.CoreWebView2 != null)
+            {
+                try
+                {
+                    nextMuted = !t.WebView.CoreWebView2.IsMuted;
+                    t.WebView.CoreWebView2.IsMuted = nextMuted;
+                }
+                catch { }
+            }
+            t.IsMuted = nextMuted;
+            PushFullStateToShell();
+        }
+
+        // =====================================================================
+        // Material Design 3 Web Page Right-Click Context Menu & Shell Relay
+        // =====================================================================
+        private static string TruncateContextLabel(string text, int maxLen)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            string clean = text.Replace("\r", " ").Replace("\n", " ").Replace("\t", " ").Trim();
+            while (clean.IndexOf("  ", StringComparison.Ordinal) >= 0)
+            {
+                clean = clean.Replace("  ", " ");
+            }
+            if (clean.Length <= maxLen) return clean;
+            return clean.Substring(0, Math.Max(1, maxLen - 1)).TrimEnd() + "…";
+        }
+
+        private string GetSearchEngineDisplayName()
+        {
+            string eng = (_settings != null && !string.IsNullOrEmpty(_settings.searchEngine)) ? _settings.searchEngine : "google";
+            if (eng == "duckduckgo") return "DuckDuckGo";
+            if (eng == "brave") return "Brave";
+            if (eng == "bing") return "Bing";
+            if (eng == "perplexity") return "Perplexity";
+            if (eng == "ecosia") return "Ecosia";
+            if (eng == "custom") return "Web";
+            return "Google";
+        }
+
+        private string BuildSearchQueryUrl(string query)
+        {
+            string q = Uri.EscapeDataString((query ?? "").Trim());
+            if (_settings != null && _settings.searchEngine == "custom" && !string.IsNullOrWhiteSpace(_settings.customSearchUrl))
+            {
+                string tpl = _settings.customSearchUrl.Trim();
+                if (!tpl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                    !tpl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                {
+                    tpl = "https://" + tpl;
+                }
+                if (tpl.IndexOf("%s", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return tpl.Replace("%s", q).Replace("%S", q);
+                }
+                return tpl + q;
+            }
+            string eng = (_settings != null && !string.IsNullOrEmpty(_settings.searchEngine)) ? _settings.searchEngine : "google";
+            if (eng == "duckduckgo") return "https://duckduckgo.com/?q=" + q;
+            if (eng == "brave") return "https://search.brave.com/search?q=" + q;
+            if (eng == "bing") return "https://www.bing.com/search?q=" + q;
+            if (eng == "perplexity") return "https://www.perplexity.ai/search?q=" + q;
+            if (eng == "ecosia") return "https://www.ecosia.org/search?q=" + q;
+            return "https://www.google.com/search?q=" + q;
+        }
+
+        private static bool IsSelectionUrlLike(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            string s = text.Trim();
+            if (s.Length > 260 || s.IndexOf('\n') >= 0 || s.IndexOf('\r') >= 0 || s.IndexOf(' ') >= 0) return false;
+            if (s.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                s.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                s.StartsWith("localhost:", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            int dot = s.LastIndexOf('.');
+            if (dot > 0 && dot < s.Length - 2)
+            {
+                string after = s.Substring(dot + 1);
+                int slash = after.IndexOf('/');
+                string tld = slash >= 0 ? after.Substring(0, slash) : after;
+                if (tld.Length >= 2 && tld.Length <= 10)
+                {
+                    for (int i = 0; i < tld.Length; i++)
+                    {
+                        if (!char.IsLetter(tld[i])) return false;
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool HasClipboardTextSafe()
+        {
+            try { return Clipboard.ContainsText(); }
+            catch { return false; }
+        }
+
+        private static string GetStringFromDict(Dictionary<string, object> dict, string key)
+        {
+            if (dict == null || !dict.ContainsKey(key) || dict[key] == null) return "";
+            return Convert.ToString(dict[key]) ?? "";
+        }
+
+        private static void AddContextMenuItem(
+            List<Dictionary<string, object>> items,
+            string id,
+            string label,
+            string icon,
+            string shortcut,
+            bool disabled,
+            bool danger,
+            Dictionary<string, object> payload)
+        {
+            var entry = new Dictionary<string, object>
+            {
+                { "id", id },
+                { "label", label }
+            };
+            if (!string.IsNullOrEmpty(icon)) entry["icon"] = icon;
+            if (!string.IsNullOrEmpty(shortcut)) entry["shortcut"] = shortcut;
+            if (disabled) entry["disabled"] = true;
+            if (danger) entry["danger"] = true;
+            if (payload != null && payload.Count > 0) entry["payload"] = payload;
+            items.Add(entry);
+        }
+
+        private static void AddContextMenuSeparator(List<Dictionary<string, object>> items)
+        {
+            if (items == null || items.Count == 0) return;
+            Dictionary<string, object> last = items[items.Count - 1];
+            if (last != null && last.ContainsKey("separator") && Convert.ToBoolean(last["separator"])) return;
+            items.Add(new Dictionary<string, object> { { "separator", true } });
+        }
+
+        private void OnTabContextMenuRequested(BrowserTab tab, CoreWebView2ContextMenuRequestedEventArgs e)
+        {
+            if (e == null) return;
+            e.Handled = true;
+            if (tab == null || tab.WebView == null || tab.WebView.IsDisposed || _popoverPopup == null) return;
+
             try
             {
-                t.WebView.CoreWebView2.IsMuted = !t.WebView.CoreWebView2.IsMuted;
-                PushFullStateToShell();
+                CoreWebView2ContextMenuTarget target = e.ContextMenuTarget;
+                if (target == null) return;
+
+                CoreWebView2ContextMenuTargetKind kind = target.Kind;
+
+                string linkUri = "";
+                try
+                {
+                    if (target.HasLinkUri) linkUri = (target.LinkUri ?? "").Trim();
+                }
+                catch { }
+                bool hasLink = !string.IsNullOrWhiteSpace(linkUri);
+
+                string linkText = "";
+                try
+                {
+                    if (target.HasLinkText) linkText = (target.LinkText ?? "").Trim();
+                }
+                catch { }
+
+                // WebView2 SDK quirk: for <img>, <a><img></a>, and <video>/<audio>, target.HasSourceUri
+                // can report false even when target.SourceUri holds the real media URL. Guard with
+                // try/catch because accessing SourceUri on non-media targets can throw COMException.
+                string sourceUri = "";
+                if (target.HasSourceUri ||
+                    kind == CoreWebView2ContextMenuTargetKind.Image ||
+                    kind == CoreWebView2ContextMenuTargetKind.Video ||
+                    kind == CoreWebView2ContextMenuTargetKind.Audio)
+                {
+                    try { sourceUri = (target.SourceUri ?? "").Trim(); } catch { sourceUri = ""; }
+                }
+                bool hasSource = !string.IsNullOrWhiteSpace(sourceUri);
+
+                string selectionText = "";
+                try
+                {
+                    if (target.HasSelection) selectionText = (target.SelectionText ?? "").Trim();
+                }
+                catch { }
+                bool hasSelection = !string.IsNullOrWhiteSpace(selectionText);
+
+                bool isEditable = target.IsEditable;
+                string pageUri = "";
+                try { pageUri = (target.PageUri ?? "").Trim(); } catch { }
+                if (string.IsNullOrWhiteSpace(pageUri)) pageUri = tab.Url ?? "";
+
+                bool isMediaTarget = (kind == CoreWebView2ContextMenuTargetKind.Video || kind == CoreWebView2ContextMenuTargetKind.Audio);
+                bool isImageTarget = (kind == CoreWebView2ContextMenuTargetKind.Image && hasSource);
+                bool isVideoSitePage = VideoExtractorEngine.IsSupportedVideoSiteUrl(pageUri);
+                bool isVideoSiteLink = hasLink && VideoExtractorEngine.IsSupportedVideoSiteUrl(linkUri);
+
+                Dictionary<string, object> header;
+                if (hasLink)
+                {
+                    header = new Dictionary<string, object>
+                    {
+                        { "title", TruncateContextLabel(string.IsNullOrEmpty(linkText) ? FormatDisplayUrl(linkUri) : linkText, 40) },
+                        { "subtitle", TruncateContextLabel(linkUri, 52) },
+                        { "kind", "link" }
+                    };
+                }
+                else if (isMediaTarget)
+                {
+                    header = new Dictionary<string, object>
+                    {
+                        { "title", kind == CoreWebView2ContextMenuTargetKind.Audio ? "Audio" : "Video" },
+                        { "subtitle", TruncateContextLabel(hasSource ? sourceUri : pageUri, 52) },
+                        { "kind", "media" }
+                    };
+                }
+                else if (isImageTarget)
+                {
+                    header = new Dictionary<string, object>
+                    {
+                        { "title", "Image" },
+                        { "subtitle", TruncateContextLabel(sourceUri, 52) },
+                        { "kind", "image" }
+                    };
+                }
+                else if (hasSelection)
+                {
+                    header = new Dictionary<string, object>
+                    {
+                        { "title", "Selected Text" },
+                        { "subtitle", "\"" + TruncateContextLabel(selectionText, 44) + "\"" },
+                        { "kind", "selection" }
+                    };
+                }
+                else if (isEditable)
+                {
+                    header = new Dictionary<string, object>
+                    {
+                        { "title", "Text Input" },
+                        { "subtitle", TruncateContextLabel(FormatDisplayUrl(pageUri), 52) },
+                        { "kind", "editable" }
+                    };
+                }
+                else
+                {
+                    header = new Dictionary<string, object>
+                    {
+                        { "title", TruncateContextLabel(string.IsNullOrEmpty(tab.Title) ? FormatDisplayUrl(pageUri) : tab.Title, 40) },
+                        { "subtitle", TruncateContextLabel(FormatDisplayUrl(pageUri), 52) },
+                        { "kind", "page" }
+                    };
+                }
+
+                List<Dictionary<string, object>> items = new List<Dictionary<string, object>>();
+
+                // 1. Link actions
+                if (hasLink)
+                {
+                    var linkPayload = new Dictionary<string, object>
+                    {
+                        { "url", linkUri },
+                        { "title", string.IsNullOrEmpty(linkText) ? FormatDisplayUrl(linkUri) : linkText }
+                    };
+                    AddContextMenuItem(items, "openLinkNewTab", "Open link in new tab", "open-tab", "", false, false, linkPayload);
+                    AddContextMenuItem(items, "openLinkNewWindow", "Open link in new window", "open-window", "", false, false, linkPayload);
+                    AddContextMenuItem(items, "openLinkPrivate", "Open link in Private window", "private", "", false, false, linkPayload);
+                    AddContextMenuSeparator(items);
+                    AddContextMenuItem(items, "copyLinkAddress", "Copy link address", "copy", "", false, false, linkPayload);
+                    AddContextMenuItem(items, "downloadLinkTurbo", "Download link (Turbo 8×)", "turbo", "", false, false, linkPayload);
+                    AddContextMenuItem(items, "sendLinkToPhone", "Send link to Phone", "phone", "", false, false, linkPayload);
+                }
+
+                // 2. Video / Audio / YouTube actions
+                if (isMediaTarget || isVideoSitePage || isVideoSiteLink)
+                {
+                    AddContextMenuSeparator(items);
+                    string mediaDownloadUrl = isVideoSiteLink ? linkUri : (isVideoSitePage ? pageUri : (hasSource ? sourceUri : pageUri));
+                    var mediaDlPayload = new Dictionary<string, object>
+                    {
+                        { "url", mediaDownloadUrl },
+                        { "title", tab.Title ?? "" }
+                    };
+                    AddContextMenuItem(items, "downloadVideoTurbo", "Download Video / MP3 (dejavu Turbo)", "turbo", "", false, false, mediaDlPayload);
+                    if (hasSource && !sourceUri.StartsWith("blob:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var srcPayload = new Dictionary<string, object> { { "url", sourceUri } };
+                        AddContextMenuItem(items, "openMediaNewTab", "Open media in new tab", "open-tab", "", false, false, srcPayload);
+                        AddContextMenuItem(items, "copyMediaAddress", "Copy media address", "copy", "", false, false, srcPayload);
+                    }
+                }
+
+                // 3. Image actions
+                if (isImageTarget)
+                {
+                    AddContextMenuSeparator(items);
+                    var imgPayload = new Dictionary<string, object>
+                    {
+                        { "url", sourceUri },
+                        { "title", tab.Title ?? "" }
+                    };
+                    AddContextMenuItem(items, "openImageNewTab", "Open image in new tab", "image", "", false, false, imgPayload);
+                    AddContextMenuItem(items, "saveImageAs", "Save image as...", "download", "", false, false, imgPayload);
+                    AddContextMenuItem(items, "copyImage", "Copy image", "copy", "", false, false, imgPayload);
+                    AddContextMenuItem(items, "copyImageAddress", "Copy image address", "copy", "", false, false, imgPayload);
+                }
+
+                // 4. Selected Text actions
+                if (hasSelection)
+                {
+                    AddContextMenuSeparator(items);
+                    var selPayload = new Dictionary<string, object> { { "text", selectionText } };
+                    if (!isEditable)
+                    {
+                        AddContextMenuItem(items, "copy", "Copy", "copy", "Ctrl+C", false, false, selPayload);
+                    }
+                    AddContextMenuItem(
+                        items,
+                        "searchSelection",
+                        "Search " + GetSearchEngineDisplayName() + " for \"" + TruncateContextLabel(selectionText, 22) + "\"",
+                        "search",
+                        "",
+                        false,
+                        false,
+                        selPayload);
+                    if (IsSelectionUrlLike(selectionText))
+                    {
+                        AddContextMenuItem(
+                            items,
+                            "goToSelectionUrl",
+                            "Go to \"" + TruncateContextLabel(selectionText, 26) + "\"",
+                            "go",
+                            "",
+                            false,
+                            false,
+                            new Dictionary<string, object> { { "url", ResolveInputToUrl(selectionText) } });
+                    }
+                }
+
+                // 5. Editable field actions
+                if (isEditable)
+                {
+                    AddContextMenuSeparator(items);
+                    AddContextMenuItem(items, "undo", "Undo", "undo", "Ctrl+Z", false, false, null);
+                    AddContextMenuItem(items, "redo", "Redo", "redo", "Ctrl+Y", false, false, null);
+                    AddContextMenuSeparator(items);
+                    AddContextMenuItem(items, "cut", "Cut", "cut", "Ctrl+X", !hasSelection, false, hasSelection ? new Dictionary<string, object> { { "text", selectionText } } : null);
+                    AddContextMenuItem(items, "copy", "Copy", "copy", "Ctrl+C", !hasSelection, false, hasSelection ? new Dictionary<string, object> { { "text", selectionText } } : null);
+                    AddContextMenuItem(items, "paste", "Paste", "paste", "Ctrl+V", !HasClipboardTextSafe(), false, null);
+                    AddContextMenuItem(items, "selectAll", "Select all", "select-all", "Ctrl+A", false, false, null);
+                }
+
+                // 6. Page actions
+                bool isPurePageContext = !hasLink && !isImageTarget && !isEditable && !hasSelection && !isMediaTarget;
+                if (isPurePageContext)
+                {
+                    AddContextMenuSeparator(items);
+                    bool canBack = tab.CoreReady && tab.WebView != null && tab.WebView.CoreWebView2 != null && tab.WebView.CoreWebView2.CanGoBack;
+                    bool canFwd = tab.CoreReady && tab.WebView != null && tab.WebView.CoreWebView2 != null && tab.WebView.CoreWebView2.CanGoForward;
+                    bool isFav = !string.IsNullOrEmpty(pageUri) && _profiles.IsFavorite(pageUri);
+                    bool isReading = !string.IsNullOrEmpty(pageUri) && _profiles.IsInReadingList(pageUri);
+
+                    AddContextMenuItem(items, "back", "Back", "back", "Alt+←", !canBack, false, null);
+                    AddContextMenuItem(items, "forward", "Forward", "forward", "Alt+→", !canFwd, false, null);
+                    AddContextMenuItem(items, "reload", "Reload", "reload", "Ctrl+R", false, false, null);
+                    AddContextMenuSeparator(items);
+                    AddContextMenuItem(items, "savePageAs", "Save page as...", "save", "Ctrl+S", false, false, null);
+                    AddContextMenuItem(items, "printPage", "Print...", "print", "Ctrl+P", false, false, null);
+                    AddContextMenuSeparator(items);
+                    AddContextMenuItem(items, "bookmarkPage", isFav ? "Remove bookmark" : "Bookmark this page", "bookmark", "Ctrl+D", false, false, null);
+                    AddContextMenuItem(items, "addToReadingList", isReading ? "Remove from Reading List" : "Add to Reading List", "reading", "Ctrl+Shift+D", false, false, null);
+                    AddContextMenuItem(items, "toggleReader", tab.ReaderActive ? "Exit Reader View" : "Reader View", "reader", "Ctrl+Shift+R", false, false, null);
+                    AddContextMenuItem(items, "sendPageToPhone", "Send page to Phone", "phone", "", false, false, new Dictionary<string, object> { { "url", pageUri }, { "title", tab.Title ?? "" } });
+                    AddContextMenuSeparator(items);
+                    AddContextMenuItem(items, "viewPageSource", "View Page Source", "code", "Ctrl+U", false, false, new Dictionary<string, object> { { "url", pageUri } });
+                    AddContextMenuItem(items, "inspectElement", "Inspect Element", "inspect", "F12", false, false, null);
+                }
+                else
+                {
+                    AddContextMenuSeparator(items);
+                    if (hasSelection && !isEditable)
+                    {
+                        AddContextMenuItem(items, "printPage", "Print...", "print", "Ctrl+P", false, false, null);
+                    }
+                    if (!isEditable && !string.IsNullOrEmpty(pageUri))
+                    {
+                        AddContextMenuItem(items, "viewPageSource", "View Page Source", "code", "Ctrl+U", false, false, new Dictionary<string, object> { { "url", pageUri } });
+                    }
+                    AddContextMenuItem(items, "inspectElement", "Inspect Element", "inspect", "F12", false, false, null);
+                }
+
+                // Map e.Location to screen coordinates accurately
+                Point screenPt;
+                Point loc = e.Location;
+                if (loc.X > 0 || loc.Y > 0)
+                {
+                    if (tab.WebView.ClientRectangle.Contains(loc))
+                    {
+                        screenPt = tab.WebView.PointToScreen(loc);
+                    }
+                    else
+                    {
+                        screenPt = Cursor.Position;
+                    }
+                }
+                else
+                {
+                    screenPt = tab.WebView.PointToScreen(new Point(28, 28));
+                }
+
+                ShowContextMenuOverlayAt(screenPt, header, items, false, tab.Id);
             }
             catch { }
+        }
+
+        private void ShowShellContextMenu(Dictionary<string, object> msg)
+        {
+            if (_popoverPopup == null || msg == null) return;
+            try
+            {
+                float sc = DpiScale;
+                int xCss = msg.ContainsKey("x") ? Convert.ToInt32(msg["x"]) : 120;
+                int yCss = msg.ContainsKey("y") ? Convert.ToInt32(msg["y"]) : 72;
+                Point screenPt = PointToScreen(new Point((int)Math.Round(xCss * sc), (int)Math.Round(yCss * sc)));
+
+                Dictionary<string, object> header = msg.ContainsKey("header") ? (msg["header"] as Dictionary<string, object>) : null;
+                List<Dictionary<string, object>> items = new List<Dictionary<string, object>>();
+                if (msg.ContainsKey("items"))
+                {
+                    ArrayList rawItems = msg["items"] as ArrayList;
+                    if (rawItems != null)
+                    {
+                        for (int i = 0; i < rawItems.Count; i++)
+                        {
+                            Dictionary<string, object> d = rawItems[i] as Dictionary<string, object>;
+                            if (d != null) items.Add(d);
+                        }
+                    }
+                }
+                if (items.Count == 0) return;
+
+                ShowContextMenuOverlayAt(screenPt, header, items, true, _activeTabId);
+            }
+            catch { }
+        }
+
+        private void ShowContextMenuOverlayAt(
+            Point screenPt,
+            Dictionary<string, object> header,
+            List<Dictionary<string, object>> items,
+            bool isShellRelay,
+            int targetTabId)
+        {
+            if (_popoverPopup == null || items == null || items.Count == 0) return;
+
+            HideSuggestPopup();
+            _activePopoverMode = "contextmenu";
+            _contextMenuTabId = targetTabId;
+            _contextMenuIsShellRelay = isShellRelay;
+
+            float sc = DpiScale;
+            Rectangle wa = Screen.FromPoint(screenPt).WorkingArea;
+
+            int cssW = 282;
+            int cssH = 20 + (header != null ? 50 : 0);
+            for (int i = 0; i < items.Count; i++)
+            {
+                Dictionary<string, object> it = items[i];
+                bool isSep = (it != null && it.ContainsKey("separator") && Convert.ToBoolean(it["separator"]));
+                cssH += isSep ? 11 : 38;
+            }
+            int maxCssH = Math.Max(220, Math.Min(680, (int)Math.Floor((wa.Height - 24) / sc)));
+            if (cssH > maxCssH) cssH = maxCssH;
+
+            int popW = (int)Math.Ceiling(cssW * sc);
+            int popH = (int)Math.Ceiling(cssH * sc);
+
+            int x = screenPt.X;
+            int y = screenPt.Y;
+            if (x + popW > wa.Right - 8) x = screenPt.X - popW;
+            if (y + popH > wa.Bottom - 8) y = screenPt.Y - popH;
+            x = Math.Max(wa.Left + 8, Math.Min(wa.Right - popW - 8, x));
+            y = Math.Max(wa.Top + 8, Math.Min(wa.Bottom - popH - 8, y));
+
+            BrowserTab active = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || active == null || active.IsNewTab);
+            bool isLight = GetEffectiveIsLight(active, captureShell);
+            string accent = (_settings != null && !string.IsNullOrEmpty(_settings.accentColor)) ? _settings.accentColor : "amethyst";
+
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "contextmenu" },
+                { "items", items },
+                { "theme", isLight ? "light" : "dark" },
+                { "accent", accent },
+                { "accentColor", accent },
+                { "isLight", isLight },
+                { "isPrivateWindow", _isPrivateWindow }
+            };
+            if (header != null) payload["header"] = header;
+
+            _popoverPopup.UpdateSurfaceTheme(isLight);
+            _popoverPopup.ShowAt(new Rectangle(x, y, popW, popH), _json.Serialize(payload), true);
+        }
+
+        private void HandleWebContextMenuAction(string action, Dictionary<string, object> payload)
+        {
+            if (string.IsNullOrEmpty(action)) return;
+            BrowserTab tab = FindTab(_contextMenuTabId) ?? GetActiveTab();
+            CoreWebView2 core = (tab != null && !tab.IsNewTab && tab.CoreReady && tab.WebView != null && !tab.WebView.IsDisposed)
+                ? tab.WebView.CoreWebView2
+                : null;
+
+            string url = GetStringFromDict(payload, "url");
+            string text = GetStringFromDict(payload, "text");
+            string title = GetStringFromDict(payload, "title");
+
+            switch (action)
+            {
+                case "openLinkNewTab":
+                    if (!string.IsNullOrEmpty(url)) CreateTab(url, false, tab != null ? tab.Id : _activeTabId);
+                    break;
+                case "openLinkNewWindow":
+                    if (!string.IsNullOrEmpty(url)) _appContext.OpenWindow(url, false, this, false, false);
+                    break;
+                case "openLinkPrivate":
+                    if (!string.IsNullOrEmpty(url)) _appContext.OpenWindow(url, true, this, false, false);
+                    break;
+                case "copyLinkAddress":
+                    CopyTextToClipboard(url, "Link copied");
+                    break;
+                case "downloadLinkTurbo":
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        EnqueueFromTabContextAsync(tab, url, title, "");
+                        PushShellToast("Downloading with Turbo 8×...", "info");
+                    }
+                    break;
+                case "sendLinkToPhone":
+                    if (_sync != null && !string.IsNullOrEmpty(url))
+                    {
+                        _sync.SendDropAsync("link", string.IsNullOrEmpty(title) ? FormatDisplayUrl(url) : title, url, "");
+                        PushShellToast("Sent link to Phone", "success");
+                    }
+                    break;
+                case "downloadVideoTurbo":
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        if (VideoExtractorEngine.IsSupportedVideoSiteUrl(url))
+                        {
+                            EnqueueVideoDownloadFromTab(tab, url, _settings != null ? _settings.defaultVideoQuality : "best", title);
+                        }
+                        else
+                        {
+                            EnqueueFromTabContextAsync(tab, url, title, "");
+                        }
+                        PushShellToast("Downloading media with dejavu Turbo...", "info");
+                    }
+                    break;
+                case "openMediaNewTab":
+                    if (!string.IsNullOrEmpty(url)) CreateTab(url, true, tab != null ? tab.Id : _activeTabId);
+                    break;
+                case "copyMediaAddress":
+                    CopyTextToClipboard(url, "Media URL copied");
+                    break;
+                case "openImageNewTab":
+                    if (!string.IsNullOrEmpty(url)) CreateTab(url, true, tab != null ? tab.Id : _activeTabId);
+                    break;
+                case "saveImageAs":
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        if (url.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                        {
+                            SaveDataUriImage(url);
+                        }
+                        else
+                        {
+                            string suggested = "";
+                            try
+                            {
+                                Uri iu = new Uri(url);
+                                suggested = Path.GetFileName(Uri.UnescapeDataString(iu.AbsolutePath));
+                            }
+                            catch { }
+                            EnqueueFromTabContextAsync(tab, url, suggested, "");
+                            PushShellToast("Saving image via Turbo Download...", "info");
+                        }
+                    }
+                    break;
+                case "copyImage":
+                    if (!string.IsNullOrEmpty(url)) CopyImageFromUrlAsync(tab, url);
+                    break;
+                case "copyImageAddress":
+                    CopyTextToClipboard(url, "Image address copied");
+                    break;
+                case "copy":
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        CopyTextToClipboard(text, "Copied");
+                    }
+                    else if (core != null)
+                    {
+                        try { tab.WebView.Focus(); core.ExecuteScriptAsync("document.execCommand('copy');"); } catch { }
+                    }
+                    break;
+                case "searchSelection":
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        CreateTab(BuildSearchQueryUrl(text), true, tab != null ? tab.Id : _activeTabId);
+                    }
+                    break;
+                case "goToSelectionUrl":
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        CreateTab(ResolveInputToUrl(url), true, tab != null ? tab.Id : _activeTabId);
+                    }
+                    break;
+                case "undo":
+                    if (core != null)
+                    {
+                        try { tab.WebView.Focus(); core.ExecuteScriptAsync("document.execCommand('undo');"); } catch { }
+                    }
+                    break;
+                case "redo":
+                    if (core != null)
+                    {
+                        try { tab.WebView.Focus(); core.ExecuteScriptAsync("document.execCommand('redo');"); } catch { }
+                    }
+                    break;
+                case "cut":
+                    if (!string.IsNullOrEmpty(text)) CopyTextToClipboard(text, "");
+                    if (core != null)
+                    {
+                        try { tab.WebView.Focus(); core.ExecuteScriptAsync("document.execCommand('cut');"); } catch { }
+                    }
+                    break;
+                case "paste":
+                    if (core != null)
+                    {
+                        try
+                        {
+                            string clip = Clipboard.ContainsText() ? (Clipboard.GetText() ?? "") : "";
+                            tab.WebView.Focus();
+                            if (!string.IsNullOrEmpty(clip))
+                            {
+                                string jsClip = _json.Serialize(clip);
+                                core.ExecuteScriptAsync(
+                                    "(function(t){try{if(!document.execCommand('insertText',false,t)){" +
+                                    "var el=document.activeElement;if(el&&typeof el.value==='string'){" +
+                                    "var s=el.selectionStart||0,e=el.selectionEnd||0;" +
+                                    "el.value=el.value.slice(0,s)+t+el.value.slice(e);" +
+                                    "el.selectionStart=el.selectionEnd=s+t.length;" +
+                                    "el.dispatchEvent(new Event('input',{bubbles:true}));}}}catch(e){}})(" + jsClip + ");");
+                            }
+                            else
+                            {
+                                core.ExecuteScriptAsync("document.execCommand('paste');");
+                            }
+                        }
+                        catch { }
+                    }
+                    break;
+                case "selectAll":
+                    if (core != null)
+                    {
+                        try
+                        {
+                            tab.WebView.Focus();
+                            core.ExecuteScriptAsync(
+                                "(function(){var el=document.activeElement;" +
+                                "if(el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA')&&typeof el.select==='function'){el.select();}" +
+                                "else{document.execCommand('selectAll');}})();");
+                        }
+                        catch { }
+                    }
+                    break;
+                case "back":
+                    GoBackActiveTab();
+                    break;
+                case "forward":
+                    GoForwardActiveTab();
+                    break;
+                case "reload":
+                    if (tab != null) ReloadTab(tab.Id);
+                    else ReloadActiveTab();
+                    break;
+                case "savePageAs":
+                    SavePageAsActiveTab();
+                    break;
+                case "printPage":
+                    PrintActiveTab();
+                    break;
+                case "bookmarkPage":
+                    if (tab != null) ToggleFavoriteTab(tab.Id);
+                    else ToggleFavoriteActiveTab();
+                    break;
+                case "addToReadingList":
+                    ToggleReadingListActiveTab();
+                    break;
+                case "toggleReader":
+                    ToggleReaderModeActiveTabAsync();
+                    break;
+                case "sendPageToPhone":
+                    if (tab != null)
+                    {
+                        SendTabToMobile(tab.Id);
+                        PushShellToast("Sent page to Phone", "success");
+                    }
+                    break;
+                case "viewPageSource":
+                    ViewPageSourceActiveTab(url);
+                    break;
+                case "inspectElement":
+                    OpenDevToolsActiveTab();
+                    break;
+            }
+        }
+
+        private void SaveDataUriImage(string dataUri)
+        {
+            try
+            {
+                int comma = dataUri.IndexOf(',');
+                if (comma < 0) return;
+                string meta = dataUri.Substring(0, comma).ToLowerInvariant();
+                string payload = dataUri.Substring(comma + 1);
+                byte[] bytes = meta.Contains(";base64")
+                    ? Convert.FromBase64String(payload)
+                    : System.Text.Encoding.UTF8.GetBytes(Uri.UnescapeDataString(payload));
+                string ext = ".png";
+                if (meta.Contains("image/jpeg") || meta.Contains("image/jpg")) ext = ".jpg";
+                else if (meta.Contains("image/webp")) ext = ".webp";
+                else if (meta.Contains("image/gif")) ext = ".gif";
+                else if (meta.Contains("image/svg")) ext = ".svg";
+
+                string dir = (_turboDownloads != null && !string.IsNullOrEmpty(_turboDownloads.DownloadsDirectory))
+                    ? _turboDownloads.DownloadsDirectory
+                    : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+                Directory.CreateDirectory(dir);
+                string fileName = "dejavu-image-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ext;
+                string path = Path.Combine(dir, fileName);
+                File.WriteAllBytes(path, bytes);
+                _lastDownloadPath = path;
+                ShowDownloadToast(fileName, path, bytes.Length, bytes.Length, "completed");
+                PushShellToast("Saved " + fileName, "success");
+            }
+            catch
+            {
+                PushShellToast("Could not save image", "warning");
+            }
+        }
+
+        private async void CopyImageFromUrlAsync(BrowserTab sourceTab, string imageUrl)
+        {
+            try
+            {
+                byte[] rawBytes = null;
+                if (imageUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                {
+                    int comma = imageUrl.IndexOf(',');
+                    if (comma > 0 && imageUrl.Substring(0, comma).IndexOf(";base64", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        rawBytes = Convert.FromBase64String(imageUrl.Substring(comma + 1));
+                    }
+                }
+                else
+                {
+                    string referer = (sourceTab != null && !sourceTab.IsNewTab) ? (sourceTab.Url ?? "") : "";
+                    string ua = "";
+                    string cookieHeader = "";
+                    if (sourceTab != null && sourceTab.CoreReady && sourceTab.WebView != null && !sourceTab.WebView.IsDisposed && sourceTab.WebView.CoreWebView2 != null)
+                    {
+                        try { ua = sourceTab.WebView.CoreWebView2.Settings.UserAgent ?? ""; } catch { }
+                        try
+                        {
+                            var cookies = await sourceTab.WebView.CoreWebView2.CookieManager.GetCookiesAsync(imageUrl);
+                            if (cookies != null && cookies.Count > 0)
+                            {
+                                List<string> parts = new List<string>();
+                                for (int i = 0; i < cookies.Count; i++) parts.Add(cookies[i].Name + "=" + cookies[i].Value);
+                                cookieHeader = string.Join("; ", parts.ToArray());
+                            }
+                        }
+                        catch { }
+                    }
+
+                    rawBytes = await Task.Run(() =>
+                    {
+                        try
+                        {
+                            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(imageUrl);
+                            req.Timeout = 12000;
+                            req.ReadWriteTimeout = 12000;
+                            if (!string.IsNullOrEmpty(ua)) req.UserAgent = ua;
+                            if (!string.IsNullOrEmpty(referer)) req.Referer = referer;
+                            if (!string.IsNullOrEmpty(cookieHeader)) req.Headers["Cookie"] = cookieHeader;
+                            if (_proxyBridge != null && _proxyBridge.VpnEnabled && _proxyBridge.ListenPort > 0)
+                            {
+                                req.Proxy = new WebProxy("http://127.0.0.1:" + _proxyBridge.ListenPort, true);
+                            }
+                            using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
+                            using (Stream s = resp.GetResponseStream())
+                            using (MemoryStream ms = new MemoryStream())
+                            {
+                                if (s != null) s.CopyTo(ms);
+                                return ms.ToArray();
+                            }
+                        }
+                        catch
+                        {
+                            return null;
+                        }
+                    });
+                }
+
+                Bitmap copiedBitmap = null;
+                if (rawBytes != null && rawBytes.Length > 0)
+                {
+                    try
+                    {
+                        using (MemoryStream ms = new MemoryStream(rawBytes))
+                        using (Image img = Image.FromStream(ms))
+                        {
+                            copiedBitmap = new Bitmap(img);
+                        }
+                    }
+                    catch { copiedBitmap = null; }
+                }
+
+                // Fallback for WebP / AVIF / SVG: render to PNG via Chromium canvas in WebView2
+                if (copiedBitmap == null && sourceTab != null && sourceTab.CoreReady &&
+                    sourceTab.WebView != null && !sourceTab.WebView.IsDisposed && sourceTab.WebView.CoreWebView2 != null)
+                {
+                    try
+                    {
+                        string jsUrl = _json.Serialize(imageUrl);
+                        string script =
+                            "(function(u){try{var imgs=document.querySelectorAll('img');for(var i=0;i<imgs.length;i++){" +
+                            "var im=imgs[i];if((im.currentSrc===u||im.src===u)&&im.complete&&im.naturalWidth>0){" +
+                            "var c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;" +
+                            "c.getContext('2d').drawImage(im,0,0);return c.toDataURL('image/png');}}}catch(e){}return '';})(" + jsUrl + ");";
+                        string res = await sourceTab.WebView.CoreWebView2.ExecuteScriptAsync(script);
+                        if (!string.IsNullOrEmpty(res) && res != "null")
+                        {
+                            string dataUrl = _json.Deserialize<string>(res);
+                            if (!string.IsNullOrEmpty(dataUrl) && dataUrl.StartsWith("data:image/png;base64,", StringComparison.OrdinalIgnoreCase))
+                            {
+                                byte[] pngBytes = Convert.FromBase64String(dataUrl.Substring("data:image/png;base64,".Length));
+                                using (MemoryStream ms = new MemoryStream(pngBytes))
+                                using (Image img = Image.FromStream(ms))
+                                {
+                                    copiedBitmap = new Bitmap(img);
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                if (copiedBitmap != null)
+                {
+                    try
+                    {
+                        Clipboard.SetImage(copiedBitmap);
+                        PushShellToast("Image copied to clipboard", "success");
+                    }
+                    finally
+                    {
+                        copiedBitmap.Dispose();
+                    }
+                }
+                else
+                {
+                    CopyTextToClipboard(imageUrl, "Copied image address");
+                }
+            }
+            catch
+            {
+                CopyTextToClipboard(imageUrl, "Copied image address");
+            }
         }
 
         // =====================================================================
@@ -5401,9 +6551,25 @@ namespace DejavuBrowser
                         NavigateActiveTab(Convert.ToString(msg["input"]));
                         break;
                     case "newTab":
-                        string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : null;
-                        if (string.IsNullOrEmpty(u)) CreateDefaultNewTab(true);
-                        else CreateTab(ResolveInputToUrl(u), true);
+                        {
+                            string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : null;
+                            int afterTabId = msg.ContainsKey("afterTabId") ? Convert.ToInt32(msg["afterTabId"]) : -1;
+                            if (string.IsNullOrEmpty(u))
+                            {
+                                if (afterTabId > 0)
+                                {
+                                    string defUrl = (_settings != null && _settings.newTabMode == "homepage" && !string.IsNullOrWhiteSpace(_settings.homepageUrl))
+                                        ? ResolveInputToUrl(_settings.homepageUrl)
+                                        : null;
+                                    CreateTab(defUrl, true, afterTabId);
+                                }
+                                else CreateDefaultNewTab(true);
+                            }
+                            else
+                            {
+                                CreateTab(ResolveInputToUrl(u), true, afterTabId);
+                            }
+                        }
                         break;
                     case "activateTab":
                         ActivateTab(Convert.ToInt32(msg["id"]));
@@ -5413,6 +6579,20 @@ namespace DejavuBrowser
                         break;
                     case "reopenClosedTab":
                         ReopenLastClosedTab();
+                        break;
+                    case "reloadTab":
+                        ReloadTab(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
+                        break;
+                    case "bookmarkTab":
+                        ToggleFavoriteTab(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
+                        break;
+                    case "copyText":
+                        CopyTextToClipboard(
+                            msg.ContainsKey("text") ? Convert.ToString(msg["text"]) : "",
+                            msg.ContainsKey("toast") ? Convert.ToString(msg["toast"]) : "");
+                        break;
+                    case "showShellContextMenu":
+                        ShowShellContextMenu(msg);
                         break;
                     case "home":
                         GoHomeActiveTab();
@@ -5588,8 +6768,30 @@ namespace DejavuBrowser
                     case "closeOtherTabs":
                         CloseOtherTabs(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
                         break;
+                    case "closeTabsToRight":
+                        CloseTabsToRight(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
+                        break;
+                    case "moveTabToNewWindow":
+                        MoveTabToNewWindow(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
+                        break;
+                    case "muteTab":
                     case "toggleTabMute":
                         ToggleMuteTab(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
+                        break;
+                    case "savePageAs":
+                        SavePageAsActiveTab();
+                        break;
+                    case "printPage":
+                        PrintActiveTab();
+                        break;
+                    case "viewPageSource":
+                        ViewPageSourceActiveTab(msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : null);
+                        break;
+                    case "inspectElement":
+                        OpenDevToolsActiveTab();
+                        break;
+                    case "pasteAndGo":
+                        PasteAndGo(msg.ContainsKey("text") ? Convert.ToString(msg["text"]) : null);
                         break;
                     case "resetZoom":
                         ResetZoom();
@@ -5690,6 +6892,9 @@ namespace DejavuBrowser
                         break;
                     case "openDefaultBrowserSettings":
                         OpenDefaultBrowserSettings();
+                        break;
+                    case "checkDefaultBrowser":
+                        CheckDefaultBrowser();
                         break;
                     case "openUserDataFolder":
                         OpenUserDataFolder();
@@ -6080,9 +7285,36 @@ namespace DejavuBrowser
                         _popoverPopup.UpdateState(BuildHistoryPayloadJson(null));
                     }
                 }
-                else if (type == "closePanel")
+                else if (type == "closePanel" || type == "closeOverlay" || type == "closeContextMenu")
                 {
                     HidePopover();
+                }
+                else if (type == "contextMenuAction")
+                {
+                    string action = msg.ContainsKey("action") ? Convert.ToString(msg["action"]) : "";
+                    Dictionary<string, object> payload = msg.ContainsKey("payload") ? (msg["payload"] as Dictionary<string, object>) : null;
+                    bool isShellMenu = _contextMenuIsShellRelay ||
+                        (payload != null && payload.ContainsKey("__shellMenu") && Convert.ToBoolean(payload["__shellMenu"]));
+                    _contextMenuIsShellRelay = false;
+                    HidePopover();
+
+                    if (isShellMenu)
+                    {
+                        if (_shellReady && _shellView != null && !_shellView.IsDisposed && _shellView.CoreWebView2 != null)
+                        {
+                            var relay = new Dictionary<string, object>
+                            {
+                                { "type", "shellContextMenuAction" },
+                                { "action", action },
+                                { "payload", payload ?? new Dictionary<string, object>() }
+                            };
+                            try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(relay)); } catch { }
+                        }
+                    }
+                    else
+                    {
+                        HandleWebContextMenuAction(action, payload);
+                    }
                 }
                 else if (type == "toggleVpn")
                 {
@@ -6272,8 +7504,11 @@ namespace DejavuBrowser
                     if (act == "pin") PinOrUnpinTab(tid);
                     else if (act == "mute") ToggleMuteTab(tid);
                     else if (act == "duplicate") DuplicateTab(tid);
+                    else if (act == "moveNewWindow") MoveTabToNewWindow(tid);
                     else if (act == "sendMobile") SendTabToMobile(tid);
                     else if (act == "closeOthers") CloseOtherTabs(tid);
+                    else if (act == "closeRight") CloseTabsToRight(tid);
+                    else if (act == "reopenClosed") ReopenLastClosedTab();
                     else if (act == "close") CloseTab(tid);
                 }
                 else if (type == "shareSendMobile")
@@ -6487,6 +7722,9 @@ namespace DejavuBrowser
             {
                 BrowserTab t = _tabs[i];
                 if (!string.Equals(t.GroupId, _activeTabGroupId, StringComparison.OrdinalIgnoreCase)) continue;
+                bool tabMuted = (t.CoreReady && t.WebView != null && !t.WebView.IsDisposed && t.WebView.CoreWebView2 != null)
+                    ? t.WebView.CoreWebView2.IsMuted
+                    : t.IsMuted;
                 tabList.Add(new Dictionary<string, object>
                 {
                     { "id", t.Id },
@@ -6496,18 +7734,20 @@ namespace DejavuBrowser
                     { "favicon", t.Favicon ?? "" },
                     { "isNewTab", t.IsNewTab },
                     { "isPinned", t.IsPinned },
+                    { "pinned", t.IsPinned },
                     { "groupId", t.GroupId },
                     { "readerActive", t.ReaderActive },
                     { "thumbnail", _tabOverviewOpen ? (t.ThumbnailDataUrl ?? "") : "" },
                     { "loading", t.IsLoading },
                     { "blockedCount", t.BlockedCount },
                     { "isLight", t.IsLight },
-                    { "isAudible", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.IsDocumentPlayingAudio },
-                    { "isMuted", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.IsMuted },
-                    { "isSuspended", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.IsSuspended },
+                    { "isAudible", t.CoreReady && t.WebView != null && !t.WebView.IsDisposed && t.WebView.CoreWebView2 != null && t.WebView.CoreWebView2.IsDocumentPlayingAudio },
+                    { "isMuted", tabMuted },
+                    { "muted", tabMuted },
+                    { "isSuspended", t.CoreReady && t.WebView != null && !t.WebView.IsDisposed && t.WebView.CoreWebView2 != null && t.WebView.CoreWebView2.IsSuspended },
                     { "zoomPercent", (int)Math.Round(t.ZoomFactor * 100.0) },
-                    { "canGoBack", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.CanGoBack },
-                    { "canGoForward", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.CanGoForward }
+                    { "canGoBack", t.CoreReady && t.WebView != null && !t.WebView.IsDisposed && t.WebView.CoreWebView2 != null && t.WebView.CoreWebView2.CanGoBack },
+                    { "canGoForward", t.CoreReady && t.WebView != null && !t.WebView.IsDisposed && t.WebView.CoreWebView2 != null && t.WebView.CoreWebView2.CanGoForward }
                 });
             }
 
@@ -6575,6 +7815,8 @@ namespace DejavuBrowser
                 { "readerActive", active != null && active.ReaderActive },
                 { "activeProfile", _profiles.ActiveProfile },
                 { "appVersion", AutoUpdater.CurrentVersion },
+                { "isDefaultBrowser", _isDefaultBrowser },
+                { "canReopenClosedTab", _closedTabs.Count > 0 },
                 { "updateAvailable", upd != null && upd.IsReady },
                 { "updateStatus", _appContext.UpdateStatusText ?? "" },
                 { "updateReadyVersion", (upd != null && upd.IsReady) ? upd.Version : "" },
@@ -6613,7 +7855,8 @@ namespace DejavuBrowser
             string s = raw.Trim();
             if (s.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
                 s.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-                s.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+                s.StartsWith("file://", StringComparison.OrdinalIgnoreCase) ||
+                s.StartsWith("view-source:", StringComparison.OrdinalIgnoreCase))
             {
                 return s;
             }

@@ -1,12 +1,13 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Engine (v4.6.0)
+ * dejavu Official Website — Google Material Design 3 Interactive Engine (v4.7.0)
  * 6 Harmonized HCT Dynamic Color Seeds · Dark/Light Segmented Polarity · Scroll-Spy M3 Top Bar
+ * Interactive M3 Right-Click Context Menu Preview · Fluid M3 Scroll-Reveal Choreography
  * Decluttered Zero-Duplicate Chrome + Navigation Rail 5-View Dual-Device Showcase
- * Live Multi-Profile & Google Studio · 52x32 M3 Switches · 4K->MP3 Video Demo · 16-Wallpaper Harmonizer
+ * Live Multi-Profile & Google Studio · 52x32 Spring Switches · 4K->MP3 Video Demo · 16-Wallpaper Harmonizer
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v4.6.0';
+  const FALLBACK_VERSION = 'v4.7.0';
   const root = document.documentElement;
 
   const THEME_META_COLORS = {
@@ -142,7 +143,7 @@
     });
   }
 
-  // 2. Clean 5-View Dual-Device Browser Showcase (Decluttered v4.6.0 Chrome + Rail)
+  // 2. Clean 5-View Dual-Device Browser Showcase (Decluttered v4.7.0 Chrome + Rail + M3 Context Menu)
   const VIEW_META = {
     start:    { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
     profiles: { url: 'dejavu://profiles · Personal + Work Windows', title: 'Multi-Profile · 2 Windows' },
@@ -163,13 +164,20 @@
       }
     });
     document.querySelectorAll('.dk-page').forEach((page) => {
-      page.classList.toggle('hidden', page.dataset.page !== activeView);
+      const isMatch = page.dataset.page === activeView;
+      page.classList.toggle('hidden', !isMatch);
+      if (isMatch) {
+        page.style.animation = 'none';
+        void page.offsetWidth;
+        page.style.animation = '';
+      }
     });
     const urlEl = document.getElementById('dk-url-text');
     if (urlEl) urlEl.textContent = VIEW_META[activeView].url;
     const syncEl = document.getElementById('px-synced-title');
     if (syncEl) syncEl.textContent = VIEW_META[activeView].title;
     closeQualityMenu();
+    closeShowcaseContextMenu();
   }
 
   document.querySelectorAll('[data-showcase]').forEach((el) => {
@@ -223,6 +231,178 @@
       showSnackbar('Single Settings entry anchored in Left Rail · Ctrl+, (Zero duplicates)');
     });
   }
+
+  // 2b. Interactive Material Design 3 Right-Click Context Menu inside Hero Browser Mockup
+  const dkViewport = document.getElementById('dk-viewport');
+  const dkCtxMenu = document.getElementById('dk-ctx-menu');
+  const dkCtxKind = document.getElementById('dk-ctx-kind');
+  const dkCtxTarget = document.getElementById('dk-ctx-target');
+  const dkCtxItems = document.getElementById('dk-ctx-items');
+  const dkTryCtxBtn = document.getElementById('dk-try-ctx-btn');
+
+  const CTX_SVG = {
+    tab: '<svg viewBox="0 0 16 16" width="14" height="14" fill="none"><rect x="2.2" y="3" width="11.6" height="10" rx="2.2" stroke="currentColor" stroke-width="1.5"/><path d="M8 5.8v4.4M5.8 8h4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    dl: '<svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M8 2.6v7.4M5.3 7.5L8 10.2l2.7-2.7M3.2 13h9.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    copy: '<svg viewBox="0 0 16 16" width="14" height="14" fill="none"><rect x="5.4" y="5.4" width="8" height="8" rx="1.8" stroke="currentColor" stroke-width="1.45"/><path d="M3.8 10.6h-.4A1.4 1.4 0 0 1 2 9.2V3.4A1.4 1.4 0 0 1 3.4 2h5.8a1.4 1.4 0 0 1 1.4 1.4v.4" stroke="currentColor" stroke-width="1.45"/></svg>',
+    phone: '<svg viewBox="0 0 16 16" width="14" height="14" fill="none"><rect x="4.6" y="1.8" width="6.8" height="12.4" rx="1.8" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="11.8" r="0.8" fill="currentColor"/></svg>',
+    pin: '<svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M9.6 2.6l3.8 3.8-2.4 2.4-1.4-.4-2.8 2.8.4 1.8-1.2 1.2-2.2-2.2-2.4 2.4 2.4-2.4-2.2-2.2 1.2-1.2 1.8.4 2.8-2.8-.4-1.4 2.6-2.2z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/></svg>',
+    wp: '<svg viewBox="0 0 16 16" width="14" height="14" fill="none"><rect x="2.2" y="3" width="11.6" height="10" rx="2" stroke="currentColor" stroke-width="1.45"/><circle cx="5.8" cy="6.4" r="1.1" fill="currentColor"/><path d="M2.8 11.4l2.8-2.8 2.2 2 1.9-1.9 3.2 2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    code: '<svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M5.5 4.5L2.2 8l3.3 3.5M10.5 4.5L13.8 8l-3.3 3.5M9.2 3.2L6.8 12.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+
+  function closeShowcaseContextMenu() {
+    if (dkCtxMenu) dkCtxMenu.hidden = true;
+  }
+
+  function openShowcaseContextMenu(kind, targetLabel, clientX, clientY) {
+    if (!dkViewport || !dkCtxMenu || !dkCtxItems) return;
+    if (dkCtxKind) dkCtxKind.textContent = kind === 'tab' ? 'Tab Menu' : (kind === 'link' ? 'Link Menu' : 'Material 3');
+    if (dkCtxTarget) dkCtxTarget.textContent = targetLabel || 'dejavu · Start Page';
+
+    const items = kind === 'tab'
+      ? [
+          { icon: CTX_SVG.tab, label: 'Duplicate tab', kbd: 'Ctrl+K', onClick: () => showSnackbar('Duplicated tab in current window') },
+          { icon: CTX_SVG.pin, label: 'Pin tab', onClick: () => showSnackbar('Pinned tab to left strip') },
+          { icon: CTX_SVG.phone, label: 'Send tab to Pixel Phone', onClick: () => { beamToPixel(); showSnackbar('Beamed tab straight to Android Pixel'); } },
+          { sep: true },
+          { icon: CTX_SVG.tab, label: 'Move to New Window', kbd: 'Ctrl+N', onClick: () => { selectShowcase('profiles'); showSnackbar('Moved tab to side-by-side window'); } },
+          { icon: CTX_SVG.copy, label: 'Copy tab URL', onClick: () => showSnackbar('Copied tab URL to clipboard') }
+        ]
+      : [
+          { icon: CTX_SVG.tab, label: 'Open link in new tab', kbd: 'Ctrl+T', onClick: () => { selectShowcase('video'); showSnackbar('Opened in new tab'); } },
+          { icon: CTX_SVG.dl, label: 'Download with Turbo 8×', badge: '8×', onClick: () => { selectShowcase('video'); startTurboDemo(true); showSnackbar('Queued 8× Turbo Download'); } },
+          { icon: CTX_SVG.copy, label: 'Copy link address', kbd: 'Ctrl+C', onClick: () => showSnackbar('Copied link address to clipboard') },
+          { icon: CTX_SVG.phone, label: 'Send to Pixel Phone', onClick: () => { beamToPixel(); showSnackbar('Beamed link via dejavu Link E2EE'); } },
+          { sep: true },
+          { icon: CTX_SVG.wp, label: 'Change Material 3 wallpaper', onClick: () => { document.getElementById('wallpapers')?.scrollIntoView({ behavior: 'smooth' }); } },
+          { icon: CTX_SVG.code, label: 'Inspect Element', kbd: 'F12', onClick: () => showSnackbar('WebView2 DevTools Inspector ready') }
+        ];
+
+    dkCtxItems.innerHTML = '';
+    items.forEach((it) => {
+      if (it.sep) {
+        const sep = document.createElement('div');
+        sep.className = 'dk-ctx-sep';
+        sep.setAttribute('role', 'separator');
+        dkCtxItems.appendChild(sep);
+        return;
+      }
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'dk-ctx-item';
+      btn.setAttribute('role', 'menuitem');
+      const rightTag = it.badge
+        ? `<span class="dk-ctx-badge">${it.badge}</span>`
+        : (it.kbd ? `<span class="dk-ctx-kbd">${it.kbd}</span>` : '');
+      btn.innerHTML = `${it.icon || ''}<span class="dk-ctx-item-lbl">${it.label}</span>${rightTag}`;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeShowcaseContextMenu();
+        if (typeof it.onClick === 'function') it.onClick();
+      });
+      dkCtxItems.appendChild(btn);
+    });
+
+    dkCtxMenu.hidden = false;
+    dkCtxMenu.style.animation = 'none';
+    void dkCtxMenu.offsetWidth;
+    dkCtxMenu.style.animation = '';
+
+    const vpRect = dkViewport.getBoundingClientRect();
+    const menuW = Math.min(264, Math.max(210, vpRect.width - 24));
+    const menuH = dkCtxMenu.offsetHeight || 280;
+    let relX;
+    let relY;
+    if (typeof clientX === 'number' && typeof clientY === 'number') {
+      relX = clientX - vpRect.left;
+      relY = clientY - vpRect.top;
+    } else {
+      relX = Math.max(16, Math.round(vpRect.width * 0.56));
+      relY = Math.max(16, Math.round((vpRect.height - menuH) * 0.20));
+    }
+    const clampedX = Math.max(12, Math.min(relX, Math.max(12, vpRect.width - menuW - 12)));
+    const clampedY = Math.max(12, Math.min(relY, Math.max(12, vpRect.height - menuH - 12)));
+    dkCtxMenu.style.left = clampedX + 'px';
+    dkCtxMenu.style.top = clampedY + 'px';
+  }
+
+  if (dkTryCtxBtn) {
+    dkTryCtxBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (dkCtxMenu && !dkCtxMenu.hidden) {
+        closeShowcaseContextMenu();
+        return;
+      }
+      openShowcaseContextMenu('link', 'github.com/Dathevinci/Dejavu-browser');
+    });
+  }
+
+  if (dkViewport) {
+    dkViewport.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const tile = e.target.closest('.dk-qa-tile');
+      const label = tile ? `${(tile.textContent || 'Link').trim()} · Quick Access` : (VIEW_META[activeView]?.url || 'dejavu · Start Page');
+      openShowcaseContextMenu(tile ? 'link' : 'page', label, e.clientX, e.clientY);
+    });
+  }
+
+  document.querySelectorAll('.dk-tab').forEach((tab) => {
+    tab.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const vpRect = dkViewport ? dkViewport.getBoundingClientRect() : null;
+      const x = vpRect ? Math.max(vpRect.left + 16, e.clientX) : undefined;
+      const y = vpRect ? vpRect.top + 14 : undefined;
+      openShowcaseContextMenu('tab', (tab.textContent || 'Tab').trim(), x, y);
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (dkCtxMenu && !dkCtxMenu.hidden && !dkCtxMenu.contains(e.target) && e.target !== dkTryCtxBtn && !dkTryCtxBtn?.contains(e.target)) {
+      closeShowcaseContextMenu();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dkCtxMenu && !dkCtxMenu.hidden) {
+      closeShowcaseContextMenu();
+    }
+  });
+
+  // 2c. Fluid Material Design 3 Scroll-Reveal Card Choreography (GPU Transform/Opacity, Reduced-Motion Safe)
+  const revealEls = Array.from(document.querySelectorAll('.m3-reveal'));
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (revealEls.length && 'IntersectionObserver' in window && !prefersReduced) {
+    root.classList.add('m3-motion-ready');
+    const revealObserver = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            obs.unobserve(entry.target);
+          }
+        });
+      },
+      { rootMargin: '0px 0px -6% 0px', threshold: 0.08 }
+    );
+    revealEls.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.96) {
+        el.classList.add('is-visible');
+      } else {
+        revealObserver.observe(el);
+      }
+    });
+  } else {
+    revealEls.forEach((el) => el.classList.add('is-visible'));
+  }
+
+  // Optional direct preview parameter (?ctx=open) for showcase inspection
+  try {
+    const qp = new URLSearchParams(location.search || '');
+    if (qp.get('ctx') === 'open') {
+      requestAnimationFrame(() => openShowcaseContextMenu('link', 'github.com/Dathevinci/Dejavu-browser'));
+    }
+  } catch {}
 
   // 3. Interactive Floating Video & MP3 Quality Menu + Live 8-Segment Accelerator Demo
   const QUALITY_PRESETS = {
@@ -630,7 +810,7 @@
     });
   });
 
-  // 8. GitHub Releases API Dynamic Hydration (Fallback: v4.6.0)
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v4.7.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

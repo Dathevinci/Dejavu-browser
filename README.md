@@ -1,33 +1,30 @@
 # dejavu
 
-A native **Google Material Design 3** browser for **Windows 10/11** and **Android 8.0+**, combining calm Material You tonal design and decluttered zero-duplicate Chrome + Navigation Rail ergonomics with **Live-Synced Simultaneous Multi-Window & Multi-Profile Google Sign-In**, **Zero-Duplicate 10-Category Searchable Material Design 3 Settings**, a built-in **YouTube & 1,000+ Site Multi-Quality Video & MP3 Downloader (4K / 1080p / 720p / MP3 320k — zero browser extensions needed)**, **16 Pure Material Design 3 & 4 Butterfly M3 Wallpapers**, an **86-country AI-ready Smart VPN + 3-Hop Tor**, a **100/100 built-in Ad & Tracker Blocker**, and **E2EE PC ↔ Android Sync** — built natively in C# Win32 + WebView2 and Android SDK (**zero Electron, zero CSS blur, 0.85% idle CPU**).
+A native **Google Material Design 3** browser for **Windows 10/11** and **Android 8.0+**, combining calm Material You tonal design, native **Material Design 3 Right-Click & Long-Press Context Menus**, **Fluid M3 Emphasized & Spring Motion**, and **Native Windows 10/11 & Android Default Browser Registration** with decluttered zero-duplicate Chrome + Navigation Rail ergonomics, **Live-Synced Simultaneous Multi-Window & Multi-Profile Google Sign-In**, **Zero-Duplicate 10-Category Searchable M3 Settings**, a built-in **YouTube & 1,000+ Site 4K / 1080p / 720p / MP3 Downloader**, **16 Pure Material Design 3 & 4 Butterfly M3 Wallpapers**, an **86-country AI-ready Smart VPN + 3-Hop Tor**, a **100/100 built-in Ad & Tracker Blocker**, and **E2EE PC ↔ Android Sync** — built natively in C# Win32 + WebView2 and Android SDK (**zero Electron, zero CSS blur, 0.85% idle CPU**).
 
 **Official Website:** **[dathevinci.github.io/Dejavu-browser](https://dathevinci.github.io/Dejavu-browser/)**
 
 ## Download (Windows 10/11 x64 & Android 8.0+)
 
-Grab the latest **`v4.6.0`** release from the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
+Grab the latest **`v4.7.0`** release from the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
 
-- **`dejavu-Setup.exe`** — Guided Material You Windows installer (Start Menu & Desktop shortcuts, Windows Installed Apps registration, automatic updates).
+- **`dejavu-Setup.exe`** — Guided Material You Windows installer (native Windows 10/11 Default Browser registration, Start Menu & Desktop shortcuts, Windows Installed Apps registration, automatic updates).
 - **`dejavu.exe`** — Standalone portable single-file Windows executable (runs from any folder or USB drive with no admin rights required).
-- **`dejavu-mobile.apk`** — Permanently V1+V2+V3 signed Android Mobile Browser with authentic Google Pixel Material Design 3 UI, streamlined You & Google Account card, searchable Settings, thumb-friendly bottom bar, built-in YouTube multi-quality & audio downloader, 16 Pure M3 & Butterfly wallpapers, 100/100 Ad Blocker, E2EE PC ↔ Phone sync, and automatic in-app updates.
-  > **Upgrading from `v4.2.0` or earlier on Android?** Uninstall once before installing `v4.6.0` — all future updates install automatically in-place using our permanent release keystore.
+- **`dejavu-mobile.apk`** — Permanently V1+V2+V3 signed Android Mobile Browser with authentic Google Pixel Material Design 3 UI, Long-Press M3 Context Menu Bottom Sheets, official Android Default Browser (`RoleManager`) support, Fluid M3 Spring Motion, YouTube multi-quality & audio downloader, 16 Pure M3 & Butterfly wallpapers, 100/100 Ad Blocker, E2EE PC ↔ Phone sync, and automatic in-app updates.
+  > **Upgrading from `v4.2.0` or earlier on Android?** Uninstall once before installing `v4.7.0` — all future updates install automatically in-place using our permanent release keystore.
 
-## What's New in v4.6.0
+## What's New in v4.7.0
 
-- **Zero-Duplicate Decluttered Chrome + Navigation Rail UI (Windows)**:
-  - Eliminated every duplicate icon between the Top Toolbar and Left Navigation Rail: clean Chrome Material 3 top bar (`Back / Forward / Reload`, Pill Omnibox, `VPN` pill, `Profile` pill, `3-Dot Menu`) paired with a single-instance Left Navigation Rail (`New Tab FAB`, `Start Page`, `Downloads`, `Sync`, `History`, and one bottom-anchored `Settings` gear) — with automatic fallback if you hide the rail.
-  - Audited all 10 Settings categories and the Profile Switcher popover so there are **zero duplicate rows or redundant controls**.
-- **Live Cross-Process Multi-Profile Sync & Google Account Polish**:
-  - Open 2+ simultaneous browser windows (`Ctrl+N`, `Ctrl+Shift+N` Private) and run separate profiles (**Personal**, **Work**) side-by-side in isolated processes with live cross-process `REFRESH_PROFILES` sync, **`Ctrl+Shift+M`** instant Profile Switcher shortcut, Material 3 Toast notifications, and stronger Google Account name/email/avatar auto-sync.
-- **Streamlined Android Pixel Material Design 3 Settings & You & Google Card**:
-  - Deduplicated Android Settings & Profile flows into one crisp Google Pixel Material Design 3 Account Card (`Sign in with Google` / `Create Google Account` + quick single-row profile switcher chips + `+ Add`), upgraded Light & Dark HCT tonal surface container contrast, live Settings Search match counters & section badges, and tactile `52×32` checkmark switches.
-- **Thorough Material Design 3 Official Website Overhaul (`docs/`)**:
-  - Elevated `docs/` to genuine Google Material Design 3 (`m3.material.io` / Pixel) craft: pure HCT tonal surface container elevation across all 6 Dynamic Color Seeds in both Dark and Light modes, M3 Top App Bar with `999px` active section pill & Dark/Light segmented pill, and an upgraded Hero Showcase mirroring the decluttered `v4.6.0` zero-duplicate Chrome + Navigation Rail UI.
-- **Built-In YouTube & 1,000+ Site Multi-Quality Video & MP3 Downloader (Zero Browser Extensions)**:
-  - Click the floating Material 3 **⬇ Download** button on YouTube or 1,000+ video sites to pick **`4K 2160p · MP4`**, **`1080p HD · MP4`**, **`720p HD · MP4`**, **`480p / 360p`**, or **`MP3 Audio (320k)` / `M4A Audio`** directly inside the browser alongside 8× parallel byte-range acceleration and native HLS `.m3u8` assembly.
-- **16 Pure Material Design 3 & 4 Butterfly M3 Wallpapers + Permanent V1–V3 Android Signing**:
-  - 12 sculptural Google Pixel architectural compositions plus 4 Material Design 3 Butterfly wallpapers (*Amethyst Origami*, *Pixel Morpho*, *Porcelain Wings*, *Botanical Sage*) — **9 Dark + 7 Light** plus adaptive *Material You Live* (`17` Pure M3 themes total, strictly zero CSS blur) and permanent V1 + V2 + V3 Android release signing with `PackageInstaller.Session` in-place auto-updates.
+- **Material Design 3 Right-Click & Long-Press Context Menus (Windows & Android)**:
+  - **Windows Desktop**: Native `CoreWebView2` Material Design 3 right-click menus for webpages, links, images, text selections, inputs, and media — plus full browser shell right-click menus for **Tabs** (Duplicate, Pin, Mute, Move to New Window, Close Others, Reopen Closed Tab), **Start Page**, **Quick Access shortcuts**, and **Address Bar**, with direct **Turbo 8× Download** & **Inspect Element** actions.
+  - **Android Companion**: Google Pixel Material Design 3 **Long-Press Context Menu Bottom Sheet** (`WebView.HitTestResult` link/image/email/phone detection with preview thumbnails) plus long-press actions on **Start Page Quick Access tiles** (Open, Edit shortcut, Remove) and **Tab Switcher cards** (Duplicate, Share, Send to PC, Close).
+- **Fluid Material Design 3 Motion Everywhere (Zero CSS Blur)**:
+  - Adopted official Material Design 3 Emphasized, Emphasized-Decelerate, and Spring easing tokens across Windows, Android, and the Official Website — smooth GPU-composited `transform`/`opacity` animations on bottom sheets, menus, `52×32` checkmark switches, segmented pills, tab cards, progress bars, and scroll-reveal cards (100% `prefers-reduced-motion` compliant, zero `blur()` / `backdrop-filter`).
+- **Native Windows 10/11 & Android Default Browser Registration**:
+  - **Windows 10/11**: Full `HKCU` `RegisteredApplications` + `StartMenuInternet\dejavu\Capabilities` (`http`/`https`/`ftp` + `.htm`/`.html`/`.webp`/`.svg`/`.pdf`) + `DejavuHTML` ProgID registration with one-click Settings card (`ms-settings:defaultapps`).
+  - **Android 8–15**: Manifest `APP_BROWSER` + MIME-typed `VIEW` intent-filters and official `RoleManager` (`ROLE_BROWSER`) integration with a live **Default Browser** status & quick-set row inside Android Settings.
+- **Zero-Duplicate Chrome + Navigation Rail, Simultaneous Multi-Profile Google Windows & YouTube 4K/MP3 Downloader**:
+  - Single-instance Chrome + Left Navigation Rail ergonomics, zero duplicate Settings rows across all 10 searchable categories, live cross-process Multi-Profile windows (`Ctrl+N`, `Ctrl+Shift+N`, `Ctrl+Shift+M`), built-in YouTube & 1,000+ site `4K / 1080p / 720p / MP3 320k` downloader with 8× byte-range acceleration & HLS `.m3u8` assembly, and 16 Pure Material 3 & 4 Butterfly M3 wallpapers + *Material You Live*.
 
 ## Core Capabilities
 

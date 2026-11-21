@@ -18,6 +18,8 @@ namespace DejavuBrowser
         private bool _everShown;
         private bool _isOpen;
         private bool _hiding;
+        private int _showGeneration;
+        private bool _lastSurfaceLight;
 
         public bool IsPopupOpen
         {
@@ -106,9 +108,10 @@ namespace DejavuBrowser
                 // win32k ActivateOtherWindow() and pushes BrowserForm behind Chrome.
                 if (state == NativeWin32.WA_INACTIVE && _dismissOnDeactivate && _isOpen && !_hiding && IsHandleCreated)
                 {
+                    int gen = _showGeneration;
                     try
                     {
-                        BeginInvoke((Action)(() => HandleDeferredDeactivate(activatedHwnd)));
+                        BeginInvoke((Action)(() => HandleDeferredDeactivate(activatedHwnd, gen)));
                     }
                     catch { }
                 }
@@ -118,9 +121,9 @@ namespace DejavuBrowser
             base.WndProc(ref m);
         }
 
-        private void HandleDeferredDeactivate(IntPtr activatedHwnd)
+        private void HandleDeferredDeactivate(IntPtr activatedHwnd, int generation)
         {
-            if (!_isOpen || IsDisposed || _hiding) return;
+            if (!_isOpen || IsDisposed || _hiding || generation != _showGeneration) return;
 
             IntPtr fg = NativeWin32.GetForegroundWindow();
             if (fg == Handle || (fg != IntPtr.Zero &&
@@ -189,8 +192,26 @@ namespace DejavuBrowser
             }
         }
 
+        public void UpdateSurfaceTheme(bool isLight)
+        {
+            if (IsDisposed) return;
+            if (_everShown && _lastSurfaceLight == isLight) return;
+            _lastSurfaceLight = isLight;
+            Color bg = isLight ? Color.FromArgb(247, 242, 250) : Color.FromArgb(29, 27, 32);
+            BackColor = bg;
+            if (_wv != null && !_wv.IsDisposed)
+            {
+                try { _wv.DefaultBackgroundColor = bg; } catch { }
+            }
+            if (IsHandleCreated)
+            {
+                try { NativeWin32.ApplyWindows11Chrome(Handle, !isLight, true); } catch { }
+            }
+        }
+
         public void ShowAt(Rectangle screenBounds, string stateJson, bool activate)
         {
+            _showGeneration++;
             if (_ready && _wv.CoreWebView2 != null)
             {
                 _wv.CoreWebView2.PostWebMessageAsJson(stateJson);

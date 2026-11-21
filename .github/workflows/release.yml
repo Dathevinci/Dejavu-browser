@@ -43,7 +43,7 @@ jobs:
 
       - name: Sign dejavu.exe with Microsoft Trusted Signing
         if: steps.sign-config.outputs.mode == 'trusted'
-        uses: azure/trusted-signing-action@v0.5.7
+        uses: azure/trusted-signing-action@v0.5.11
         with:
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -51,9 +51,7 @@ jobs:
           endpoint: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
           trusted-signing-account-name: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT || secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
           certificate-profile-name: ${{ secrets.AZURE_TRUSTED_SIGNING_PROFILE || secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME }}
-          files-folder: ${{ github.workspace }}\dist
-          files-folder-filter: exe
-          files-folder-recurse: false
+          files: ${{ github.workspace }}\dist\dejavu.exe
           file-digest: SHA256
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
@@ -95,7 +93,7 @@ jobs:
 
       - name: Sign dejavu-Setup.exe with Microsoft Trusted Signing
         if: steps.sign-config.outputs.mode == 'trusted'
-        uses: azure/trusted-signing-action@v0.5.7
+        uses: azure/trusted-signing-action@v0.5.11
         with:
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -103,10 +101,7 @@ jobs:
           endpoint: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
           trusted-signing-account-name: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT || secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
           certificate-profile-name: ${{ secrets.AZURE_TRUSTED_SIGNING_PROFILE || secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME }}
-          files-folder: ${{ github.workspace }}\dist
-          files-folder-filter: exe
-          files-folder-exclude: dejavu.exe
-          files-folder-recurse: false
+          files: ${{ github.workspace }}\dist\dejavu-Setup.exe
           file-digest: SHA256
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256

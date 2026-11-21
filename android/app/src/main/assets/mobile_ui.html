@@ -89,6 +89,17 @@
     body.theme-light[data-accent="gold"]     { --bg: #fff8f2; --canvas-bg: #fff8f2; --sheet-bg: #f6efe6; --sheet-elev: #ede5db; --input-bg: #eae1d6; --divider: #ede5db; --border: #d2c5b6; --accent: #8a5600; --accent-bright: #5e3800; --accent-soft: #ffddb3; --accent-ink: #ffffff; }
     body.theme-light[data-accent="silver"]   { --bg: #f9f9fc; --canvas-bg: #f9f9fc; --sheet-bg: #eef0f5; --sheet-elev: #e5e8ee; --input-bg: #e2e5ec; --divider: #e5e7ee; --border: #c3c7d0; --accent: #455a77; --accent-bright: #233752; --accent-soft: #d8e4f8; --accent-ink: #ffffff; }
 
+    body {
+      /* Official Material Design 3 Semantic Aliases (Evaluated on body so all 6 Seeds + Dark/Light auto-morph!) */
+      --md-primary: var(--accent);
+      --md-on-primary: var(--accent-ink);
+      --md-primary-container: var(--accent-soft);
+      --md-on-primary-container: var(--accent-bright);
+      --md-surface-container: var(--card);
+      --md-surface-container-high: var(--sheet-elev);
+      --md-surface-container-highest: var(--input-bg);
+    }
+
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; scrollbar-width: none; }
     *::-webkit-scrollbar { display: none; }
     html, body {
@@ -382,18 +393,34 @@
 
     .sp-hero {
       display: flex; flex-direction: column; align-items: center; text-align: center;
-      padding: 12px 8px 4px; gap: 6px;
+      padding: 8px 8px 2px; gap: 8px;
     }
-    .sp-logo {
-      width: 52px; height: 52px; object-fit: contain;
+    .sp-logo-badge {
+      width: 68px; height: 68px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+      transition: transform 0.24s var(--md-ease-spring);
     }
+    body.theme-light .sp-logo-badge {
+      box-shadow: 0 4px 16px rgba(29, 27, 32, 0.10);
+    }
+    .sp-logo-badge svg { width: 68px; height: 68px; display: block; }
     .sp-brand {
-      margin: 0; font-size: 30px; font-weight: 400; letter-spacing: 0.12em;
-      text-indent: 0.12em;
+      margin: 0; font-size: 30px; font-weight: 600; letter-spacing: 0.08em;
+      text-indent: 0.08em; line-height: 1.1;
     }
-    .sp-date {
-      font-size: 12px; font-weight: 600; letter-spacing: 0.05em;
-      text-transform: uppercase; color: var(--muted);
+    .sp-glance-chip {
+      height: 30px; padding: 0 14px; border-radius: 999px;
+      background: var(--md-surface-container);
+      color: var(--muted);
+      font-size: 12px; font-weight: 600; letter-spacing: 0.015em;
+      display: inline-flex; align-items: center; gap: 7px;
+      box-shadow: var(--shadow);
+    }
+    .sp-glance-chip .g-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--md-primary); flex-shrink: 0;
     }
 
     .sp-priv-card {
@@ -406,13 +433,13 @@
     .sp-priv-card h2 { margin: 0; font-size: 18px; font-weight: 700; }
     .sp-priv-card p { margin: 0; font-size: 13px; line-height: 1.48; color: rgba(226, 212, 252, 0.78); }
 
-    /* Favorites Speed Dial Grid */
+    /* Google Pixel Material Design 3 Centered Auto-Balanced Quick Access Squircle Tiles */
     .fav-grid {
-      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      display: flex; flex-wrap: wrap; justify-content: center;
       gap: 14px 10px;
     }
     .fav-tile {
-      position: relative;
+      position: relative; width: 74px;
       display: flex; flex-direction: column; align-items: center; gap: 7px;
       background: transparent; border: none; color: var(--ink);
       padding: 0; font-family: inherit; cursor: pointer;
@@ -420,24 +447,27 @@
       -webkit-user-select: none; user-select: none;
     }
     .fav-sq {
-      width: 58px; height: 58px; border-radius: 17px;
-      background: var(--card-hi); border: 1px solid var(--border);
-      box-shadow: inset 0 1px 0 var(--rim-top), var(--shadow);
+      width: 56px; height: 56px; border-radius: 18px;
+      background: var(--md-surface-container-high); border: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
       display: flex; align-items: center; justify-content: center;
       overflow: hidden; position: relative;
-      transition: transform 0.2s var(--md-ease-spring), border-color 0.18s var(--md-ease-emphasized), background-color 0.16s var(--md-ease-emphasized);
+      transition: transform 0.2s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized);
     }
-    .fav-tile:active .fav-sq { border-color: var(--accent); background: var(--group-press); }
-    .fav-sq .site-ico { width: 34px; height: 34px; border-radius: 10px; font-size: 16px; }
+    body.theme-light .fav-sq {
+      background: var(--sheet-elev);
+      box-shadow: 0 1px 4px rgba(29, 27, 32, 0.08);
+    }
+    .fav-tile:active .fav-sq { background: var(--md-primary-container); }
+    .fav-sq .site-ico { width: 32px; height: 32px; border-radius: 10px; font-size: 15px; }
     .fav-sq.add-sq {
-      background: var(--card); border-style: dashed; color: var(--muted);
+      background: var(--input-bg); color: var(--md-primary);
+      box-shadow: none;
     }
     .fav-lbl {
-      font-size: 11.5px; font-weight: 560; color: var(--ink);
-      max-width: 74px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.34);
+      font-size: 11.5px; font-weight: 600; color: var(--ink);
+      max-width: 72px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    body.theme-light .fav-lbl { text-shadow: none; }
     .fav-del {
       position: absolute; top: -5px; right: 4px; z-index: 3;
       width: 21px; height: 21px; border-radius: 50%;
@@ -475,25 +505,39 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    /* Compact Privacy Shield Pill */
-    .sp-shield-pill {
+    /* Compact Pixel "At a Glance" Shield & Extensions Tonal Status Pill Bar */
+    .sp-glance-bar {
       margin-top: auto;
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 18px; padding: 11px 14px;
-      box-shadow: inset 0 1px 0 var(--rim-top), var(--shadow);
-      display: flex; align-items: center; gap: 11px;
+      background: var(--md-surface-container);
+      border-radius: 24px; padding: 10px 12px;
+      box-shadow: var(--shadow);
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
     }
+    .sp-glance-item {
+      flex: 1; min-width: 0; border: none; background: transparent; color: var(--ink);
+      font-family: inherit; text-align: left; padding: 4px 6px; border-radius: 16px;
+      display: flex; align-items: center; gap: 9px; cursor: pointer;
+      transition: background-color 0.16s var(--md-ease-emphasized), transform 0.2s var(--md-ease-spring);
+    }
+    .sp-glance-item:active { background: var(--group-press); transform: scale(0.97); }
     .sp-shield-badge {
-      width: 34px; height: 34px; border-radius: 11px; flex-shrink: 0;
-      background: var(--accent-soft); border: 1px solid var(--accent);
-      color: var(--accent-bright);
+      width: 34px; height: 34px; border-radius: 12px; flex-shrink: 0;
+      background: var(--md-primary-container);
+      color: var(--md-on-primary-container);
       display: inline-flex; align-items: center; justify-content: center;
     }
+    body.theme-light .sp-shield-badge { color: var(--md-primary); }
+    .sp-ext-chip {
+      height: 36px; padding: 0 13px 0 10px; border-radius: 999px; border: none; flex-shrink: 0;
+      background: var(--md-primary-container); color: var(--md-on-primary-container);
+      font-family: inherit; font-size: 12px; font-weight: 700;
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+      transition: transform 0.2s var(--md-ease-spring), opacity 0.16s ease;
+    }
+    body.theme-light .sp-ext-chip { color: var(--md-primary); }
+    .sp-ext-chip:active { transform: scale(0.95); }
     .sp-shield-status {
-      font-size: 11.5px; font-weight: 660; color: var(--mint);
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 4px 10px; border-radius: 99px;
-      background: rgba(77, 230, 200, 0.12);
+      font-size: 11px; font-weight: 700; color: var(--mint);
     }
 
     /* =====================================================================
@@ -964,47 +1008,106 @@
 
     .empty { text-align: center; padding: 28px 16px; color: var(--muted); font-size: 13px; line-height: 1.5; }
 
-    /* V4.2 Samsung Internet Mobile × Google Pixel Material 3 Start Page Search Pill & Quick Access Board */
+    /* V4.8 True Google Pixel 56px Elevated Solid Tonal Search Pill (Zero Harsh Outline Border!) & Balanced Quick Access */
     .sp-m3-search {
-      width: 100%; height: 50px; border-radius: 999px;
-      border: 1.5px solid var(--border);
-      background: var(--sheet-elev);
+      width: 100%; height: 56px; border-radius: 999px;
+      border: none;
+      background: var(--md-surface-container-high);
       color: var(--muted);
-      padding: 0 8px 0 18px;
-      display: flex; align-items: center; gap: 11px;
-      font-family: inherit; font-size: 14.5px; font-weight: 500;
-      box-shadow: var(--shadow);
+      padding: 0 10px 0 20px;
+      display: flex; align-items: center; gap: 12px;
+      font-family: inherit; font-size: 15px; font-weight: 500;
+      box-shadow: 0 3px 14px rgba(0, 0, 0, 0.24), 0 1px 3px rgba(0, 0, 0, 0.14);
       cursor: pointer; text-align: left;
-      transition: transform 0.14s ease, border-color 0.16s ease;
+      transition: transform 0.2s var(--md-ease-spring), background-color 0.18s var(--md-ease-emphasized), box-shadow 0.2s var(--md-ease-emphasized);
     }
-    .sp-m3-search:active { transform: scale(0.985); border-color: var(--accent); }
+    body.theme-light .sp-m3-search {
+      background: #ffffff;
+      box-shadow: 0 2px 12px rgba(29, 27, 32, 0.08), 0 1px 3px rgba(29, 27, 32, 0.05);
+    }
+    .sp-m3-search:focus-visible, .sp-m3-search:active {
+      transform: scale(0.988);
+      background: var(--md-surface-container-highest);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.30);
+      outline: none;
+    }
+    body.theme-light .sp-m3-search:focus-visible, body.theme-light .sp-m3-search:active {
+      background: var(--sheet-elev);
+      box-shadow: 0 4px 16px rgba(29, 27, 32, 0.12);
+    }
     .sp-m3-search-txt { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .sp-m3-search-chip {
-      height: 34px; padding: 0 12px; border-radius: 999px;
-      background: var(--accent-soft); color: var(--accent-bright);
-      font-size: 11.5px; font-weight: 750;
+      height: 36px; padding: 0 13px; border-radius: 999px;
+      background: var(--md-primary-container); color: var(--md-on-primary-container);
+      font-size: 12px; font-weight: 750;
       display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
     }
-    body.theme-light .sp-m3-search-chip { color: var(--accent); }
+    body.theme-light .sp-m3-search-chip { color: var(--md-primary); }
 
     .sp-qa-board {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 26px;
+      background: var(--md-surface-container);
+      border: none;
+      border-radius: 28px;
       padding: 16px 14px 18px;
       box-shadow: var(--shadow);
-      display: flex; flex-direction: column; gap: 12px;
-    }
-    .sp-qa-board .fav-icon {
-      background: var(--sheet-elev);
-      border: 1px solid var(--border);
-      box-shadow: none;
+      display: flex; flex-direction: column; gap: 14px;
     }
     .sp-qa-board .fav-lbl {
       color: var(--ink);
       text-shadow: none;
       font-weight: 600;
     }
+
+    /* V4.8 Material Design 3 Extensions & Web Add-ons Sheet Styles (Zero Blur) */
+    .ext-hero-card {
+      background: var(--md-surface-container);
+      border: 1px solid var(--border-subtle);
+      border-radius: 24px;
+      padding: 15px 16px;
+      box-shadow: var(--shadow);
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .ext-hero-left { display: flex; align-items: center; gap: 11px; min-width: 0; flex: 1; }
+    .ext-row .g-row-meta { gap: 4px; }
+    .ext-row .g-row-title {
+      white-space: normal; line-height: 1.24; font-size: 14px; font-weight: 620;
+    }
+    .ext-row .g-row-sub {
+      white-space: normal; line-height: 1.32; font-size: 11.5px;
+    }
+    .ext-title-line {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+    }
+    .ext-cat-chip {
+      height: 19px; padding: 0 8px; border-radius: 999px;
+      background: var(--md-primary-container); color: var(--md-on-primary-container);
+      font-size: 10px; font-weight: 750; letter-spacing: 0.02em;
+      display: inline-flex; align-items: center; flex-shrink: 0;
+    }
+    body.theme-light .ext-cat-chip { color: var(--md-primary); }
+    .ext-us-card {
+      background: var(--group-bg); border: 1px solid var(--border-subtle);
+      border-radius: 24px; padding: 14px 16px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .ext-us-top { display: flex; align-items: center; gap: 12px; }
+    .ext-us-domain {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 9px; border-radius: 999px;
+      background: var(--input-bg); color: var(--muted);
+      font-family: ui-monospace, 'SF Mono', monospace; font-size: 11px; font-weight: 600;
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .ext-us-acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ext-code-area {
+      width: 100%; min-height: 116px; padding: 11px 13px; border-radius: 14px;
+      border: 1px solid var(--border); background: var(--input-bg); color: var(--ink);
+      font-family: ui-monospace, 'SF Mono', monospace; font-size: 12px; line-height: 1.48;
+      resize: vertical; outline: none;
+    }
+    .ext-code-area:focus { border-color: var(--md-primary); }
+    .brand-mini-svg { width: 28px; height: 28px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+    .brand-mini-svg svg { width: 100%; height: 100%; display: block; }
 
     /* =====================================================================
        V4.5 GOOGLE PIXEL ANDROID 15 MATERIAL DESIGN 3 — YOU & GOOGLE,
@@ -1467,14 +1570,32 @@
     </div>
 
     <div id="sp-hero-normal" class="sp-hero">
-      <img class="sp-logo" src="logo-transparent.png" alt="dejavu" onerror="this.style.display='none'">
+      <div id="sp-hero-logo" class="sp-logo-badge" aria-label="dejavu">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+          <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+          <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+          <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+          <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+          <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+          <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+          <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+          <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+          <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+          <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+          <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
       <h1 class="sp-brand">dejavu</h1>
-      <div id="sp-date" class="sp-date"></div>
+      <div class="sp-glance-chip">
+        <span class="g-dot" aria-hidden="true"></span>
+        <span id="sp-date"></span>
+      </div>
     </div>
 
-    <!-- Google Pixel Material 3 Expressive Start Page Search Pill -->
+    <!-- True Google Pixel 56px Elevated Solid Tonal Search Pill (Zero Harsh Outline Border) -->
     <button type="button" id="sp-search-pill" class="sp-m3-search" onclick="call('focusOmnibox')">
-      <svg viewBox="0 0 20 20" width="18" height="18" fill="none" style="color:var(--accent);flex-shrink:0;"><circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.8"/><path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 20 20" width="19" height="19" fill="none" style="color:var(--md-primary);flex-shrink:0;"><circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.9"/><path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       <span class="sp-m3-search-txt">Search or enter website</span>
       <span class="sp-m3-search-chip" onclick="event.stopPropagation();call('openDownloads')">
         <svg viewBox="0 0 16 16" width="12" height="12" fill="none"><path d="M8 2.4v7.2M5.2 7L8 9.8 10.8 7M3.4 13h9.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1488,7 +1609,7 @@
       <p>Pages you visit in Private tabs won't appear in history or sync to your Windows PC.</p>
     </div>
 
-    <!-- Samsung Internet Mobile × Material 3 Unified Quick Access Board -->
+    <!-- Google Pixel Material Design 3 Centered Quick Access Squircle Tiles -->
     <div id="sp-fav-section" class="sp-qa-board">
       <div class="sec-hdr">
         <span>Quick Access</span>
@@ -1506,16 +1627,21 @@
       <div id="sp-pc-carousel" class="pc-carousel"></div>
     </div>
 
-    <!-- Compact Privacy Shield Summary Capsule -->
-    <div class="sp-shield-pill" onclick="call('openScreen','settings')">
-      <span class="sp-shield-badge">
-        <svg viewBox="0 0 22 22" width="18" height="18" fill="none"><path d="M11 2.5L4 5.3v5.4c0 4.4 3 7.7 7 9 4-1.3 7-4.6 7-9V5.3L11 2.5z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="M8.1 11.2l2 2 4-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13.5px;font-weight:640;"><span id="sp-blocked">0</span> trackers blocked</div>
-        <div style="font-size:11.5px;color:var(--muted);">dejavu Shield · Ad &amp; Tracker Protection</div>
-      </div>
-      <span id="sp-shield-status" class="sp-shield-status">Active</span>
+    <!-- Compact Pixel "At a Glance" Shield & Extensions Status Pill Bar -->
+    <div class="sp-glance-bar">
+      <button type="button" class="sp-glance-item" onclick="call('openScreen','settings')">
+        <span class="sp-shield-badge">
+          <svg viewBox="0 0 22 22" width="18" height="18" fill="none"><path d="M11 2.5L4 5.3v5.4c0 4.4 3 7.7 7 9 4-1.3 7-4.6 7-9V5.3L11 2.5z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="M8.1 11.2l2 2 4-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+          <span style="font-size:13px;font-weight:660;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span id="sp-blocked">0</span> blocked</span>
+          <span style="font-size:11px;color:var(--muted);">Shield · <span id="sp-shield-status" class="sp-shield-status">Active</span></span>
+        </span>
+      </button>
+      <button type="button" id="sp-ext-btn" class="sp-ext-chip" onclick="call('openScreen','extensions')">
+        <svg viewBox="0 0 20 20" width="15" height="15" fill="none"><path d="M11.2 3.2a1.8 1.8 0 0 1 1.8 1.8v1h2a1.6 1.6 0 0 1 1.6 1.6v2.2h-1a1.8 1.8 0 1 0 0 3.6h1v2.2a1.6 1.6 0 0 1-1.6 1.6h-2.4v-1a1.8 1.8 0 1 0-3.6 0v1H6.4a1.6 1.6 0 0 1-1.6-1.6v-2.4h1a1.8 1.8 0 1 0 0-3.6h-1V7.6A1.6 1.6 0 0 1 6.4 6h2V5a1.8 1.8 0 0 1 2.8-1.8z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+        <span><span id="sp-ext-cnt">4</span> Add-ons</span>
+      </button>
     </div>
   </section>
 
@@ -1611,8 +1737,9 @@
       <div class="sheet-head" data-swipe-dismiss="1">
         <div class="sheet-grab"></div>
         <div class="sheet-title-row">
-          <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:9px;">
             <button type="button" id="menu-back-btn" class="pill-btn ghost" style="display:none;padding-left:0;" onclick="setMenuSubView('main')">‹ Menu</button>
+            <span id="menu-brand-mark" class="brand-mini-svg" aria-hidden="true"></span>
             <h2 id="menu-sheet-title" class="sheet-title">Menu</h2>
           </div>
           <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
@@ -1713,6 +1840,15 @@
                 <span class="g-row-sub">8-thread accelerator &amp; Page Media grabber</span>
               </span>
               <span id="m-cnt-dl" class="g-row-val">0</span>
+              <span class="g-chev">›</span>
+            </button>
+            <button type="button" class="g-row" onclick="call('openScreen','extensions')">
+              <span class="sq-ico ic-teal"><svg viewBox="0 0 18 18" fill="none"><path d="M10.1 2.8a1.6 1.6 0 0 1 1.6 1.6v.9h1.8a1.4 1.4 0 0 1 1.4 1.4v2h-.9a1.6 1.6 0 1 0 0 3.2h.9v2a1.4 1.4 0 0 1-1.4 1.4h-2.1v-.9a1.6 1.6 0 1 0-3.2 0v.9H5.8a1.4 1.4 0 0 1-1.4-1.4v-2.1h.9a1.6 1.6 0 1 0 0-3.2h-.9V6.7a1.4 1.4 0 0 1 1.4-1.4h1.8v-.9a1.6 1.6 0 0 1 2.5-1.6z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg></span>
+              <span class="g-row-meta">
+                <span class="g-row-title">Extensions &amp; Add-ons</span>
+                <span class="g-row-sub">Built-in enhancers &amp; custom userscripts</span>
+              </span>
+              <span id="m-cnt-ext" class="g-row-val">4 active</span>
               <span class="g-chev">›</span>
             </button>
             <button type="button" class="g-row" onclick="call('openScreen','profile')">
@@ -1991,10 +2127,10 @@
           </div>
         </div>
 
-        <!-- 4. SEARCH & TABS -->
-        <div class="set-section" data-search="search engine google duckduckgo bing brave ecosia tabs pull to refresh background links">
+        <!-- 4. SEARCH, TABS & EXTENSIONS -->
+        <div class="set-section" data-search="search engine google duckduckgo bing brave ecosia tabs pull to refresh background links extensions add-ons userscript sponsor dark mode video speed cookie">
           <div class="sec-hdr">
-            <span>Search &amp; Tabs</span>
+            <span>Search, Tabs &amp; Extensions</span>
             <span class="set-match-pill"></span>
           </div>
           <div class="g-group set-item" data-search="default search engine google duckduckgo bing brave ecosia">
@@ -2002,6 +2138,14 @@
             <div id="opt-m-engines"></div>
           </div>
           <div class="g-group">
+            <button type="button" id="set-row-extensions" class="g-row set-item" data-search="extensions add-ons userscript sponsor cleaner dark mode booster video speed copy unlock cookie dismisser" onclick="openExtensionsFromSettings()">
+              <span class="sq-ico ic-teal"><svg viewBox="0 0 18 18" fill="none"><path d="M10.1 2.8a1.6 1.6 0 0 1 1.6 1.6v.9h1.8a1.4 1.4 0 0 1 1.4 1.4v2h-.9a1.6 1.6 0 1 0 0 3.2h.9v2a1.4 1.4 0 0 1-1.4 1.4h-2.1v-.9a1.6 1.6 0 1 0-3.2 0v.9H5.8a1.4 1.4 0 0 1-1.4-1.4v-2.1h.9a1.6 1.6 0 1 0 0-3.2h-.9V6.7a1.4 1.4 0 0 1 1.4-1.4h1.8v-.9a1.6 1.6 0 0 1 2.5-1.6z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg></span>
+              <span class="g-row-meta">
+                <span class="g-row-title">Extensions &amp; Add-ons</span>
+                <span id="opt-ext-sub" class="g-row-sub">4 active · Built-in enhancers &amp; custom userscripts</span>
+              </span>
+              <span class="g-chev">›</span>
+            </button>
             <div class="g-row plain set-item" data-search="pull to refresh swipe down reload tabs" onclick="call('togglePullToRefresh')">
               <div class="g-row-meta">
                 <div class="g-row-title">Pull-to-Refresh</div>
@@ -2059,10 +2203,10 @@
           </div>
         </div>
 
-        <!-- 6. SYSTEM, SYNC & ABOUT v4.7.0 -->
-        <div class="set-section" data-search="system default browser role apps http https links sync dejavu link pc mobile software update auto updater apk version 4.7.0 about reset defaults">
+        <!-- 6. SYSTEM, SYNC & ABOUT v4.8.0 -->
+        <div class="set-section" data-search="system default browser role apps http https links sync dejavu link pc mobile software update auto updater apk version 4.8.0 about reset defaults">
           <div class="sec-hdr">
-            <span>System, Sync &amp; About v4.7.0</span>
+            <span>System, Sync &amp; About v4.8.0</span>
             <span class="set-match-pill"></span>
           </div>
           <div class="g-group">
@@ -2084,10 +2228,10 @@
               <span class="g-chev">›</span>
             </button>
 
-            <div class="g-row set-item" data-search="software update auto updater github releases apk version 4.7.0">
-              <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 14V4M5.6 7.4L9 4l3.4 3.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.8 14.5h10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            <div class="g-row set-item" data-search="software update auto updater github releases apk version 4.8.0 about butterfly">
+              <span id="opt-about-logo" class="brand-mini-svg" style="width:34px;height:34px;" aria-hidden="true"></span>
               <div class="g-row-meta">
-                <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.7.0</div>
+                <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.8.0</div>
                 <div id="opt-upd-sub" class="g-row-sub">Permanent V1-V3 signing · Auto-checks GitHub Releases</div>
               </div>
               <button type="button" id="opt-upd-btn" class="pill-btn" onclick="handleUpdateBtn()">Check</button>
@@ -2108,7 +2252,7 @@
             </div>
 
             <div id="opt-upd-note" class="upd-signing-note">
-              Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.7.0 &mdash; all future updates will install automatically in-place!
+              Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.8.0 &mdash; all future updates will install automatically in-place!
             </div>
 
             <button type="button" class="g-row plain set-item" data-search="reset settings defaults restore factory preferences" onclick="openResetSettingsModal()">
@@ -2127,7 +2271,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:11.5px;color:var(--subtle);padding:4px 0 8px;">
-          dejavu Mobile v4.7.0 · Google Pixel Material Design 3
+          dejavu Mobile v4.8.0 · Google Pixel Material Design 3
         </div>
       </div>
     </div>
@@ -2376,12 +2520,80 @@
     </div>
   </div>
 
+  <!-- ===================================================================
+       SHEET G: PIXEL MATERIAL DESIGN 3 EXTENSIONS & WEB ADD-ONS MANAGER
+       =================================================================== -->
+  <div id="scr-extensions" class="sheet-backdrop hidden" onclick="backdropClose(event)">
+    <div class="sheet-panel" onclick="event.stopPropagation()">
+      <div class="sheet-head" data-swipe-dismiss="1">
+        <div class="sheet-grab"></div>
+        <div class="sheet-title-row">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" id="ext-back-btn" class="pill-btn ghost" style="display:none;padding-left:0;" onclick="backToSettings()">‹ Settings</button>
+            <h2 class="sheet-title">Extensions &amp; Add-ons</h2>
+          </div>
+          <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
+        </div>
+      </div>
+      <div class="sheet-body">
+        <div class="ext-hero-card">
+          <div class="ext-hero-left">
+            <span class="sq-ico ic-teal" style="width:42px;height:42px;border-radius:14px;">
+              <svg viewBox="0 0 20 20" width="20" height="20" fill="none"><path d="M11.2 3.2a1.8 1.8 0 0 1 1.8 1.8v1h2a1.6 1.6 0 0 1 1.6 1.6v2.2h-1a1.8 1.8 0 1 0 0 3.6h1v2.2a1.6 1.6 0 0 1-1.6 1.6h-2.4v-1a1.8 1.8 0 1 0-3.6 0v1H6.4a1.6 1.6 0 0 1-1.6-1.6v-2.4h1a1.8 1.8 0 1 0 0-3.6h-1V7.6A1.6 1.6 0 0 1 6.4 6h2V5a1.8 1.8 0 0 1 2.8-1.8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            </span>
+            <div style="min-width:0;flex:1;">
+              <div class="ext-title-line">
+                <span style="font-size:14.5px;font-weight:700;">Add-ons Engine</span>
+                <span id="ext-active-pill" class="ext-cat-chip">4 Active</span>
+              </div>
+              <div style="font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.35;">Clean page injection · Zero polling</div>
+            </div>
+          </div>
+          <button type="button" class="pill-btn primary" style="flex-shrink:0;" onclick="openUserscriptModal(null)">+ Script</button>
+        </div>
+
+        <div class="sec-hdr">
+          <span>Built-In Extensions</span>
+          <span style="font-size:11px;color:var(--muted);text-transform:none;letter-spacing:0;">Live Toggle</span>
+        </div>
+        <div id="ext-builtins-list" class="g-group"></div>
+
+        <div class="sec-hdr">
+          <span>Custom Userscripts</span>
+          <button type="button" class="sec-act" onclick="openUserscriptModal(null)">+ Add Script</button>
+        </div>
+        <div id="ext-userscripts-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inline Add / Edit Custom Userscript Modal (Material Design 3 Dialog) -->
+  <div id="userscript-modal" class="mini-modal hidden" onclick="closeUserscriptModal()">
+    <div class="mini-modal-card" style="max-width:360px;border-radius:28px;" onclick="event.stopPropagation()">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <h3 id="us-modal-title" style="margin:0;font-size:17px;font-weight:700;">Add Custom Userscript</h3>
+        <button type="button" class="pill-btn ghost" style="height:28px;font-size:11.5px;padding:0 8px;" onclick="parseUserscriptHeader()">Parse .user.js</button>
+      </div>
+      <input id="us-in-name" type="text" maxlength="48" placeholder="Script name (e.g. Clean Reader Tweaks)">
+      <input id="us-in-matches" type="text" placeholder="Match domains (e.g. *, youtube.com, *.reddit.com)">
+      <input id="us-in-desc" type="text" maxlength="90" placeholder="Short description (optional)">
+      <textarea id="us-in-code" class="ext-code-area" placeholder="// Paste .user.js or JavaScript snippet...&#10;document.querySelectorAll('.promo').forEach(el =&gt; el.remove());"></textarea>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px;">
+        <button type="button" class="pill-btn ghost" style="padding:0 8px;font-size:12px;" onclick="loadSampleUserscript()">Sample</button>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="pill-btn" onclick="closeUserscriptModal()">Cancel</button>
+          <button type="button" class="pill-btn primary" onclick="submitUserscript()">Save Script</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Reset Settings Confirmation Modal (Material Design 3 Dialog) -->
   <div id="reset-settings-modal" class="mini-modal hidden" onclick="closeResetSettingsModal()">
     <div class="mini-modal-card" style="border-radius:28px;padding:22px;" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:700;">Reset Settings to Defaults?</h3>
       <div style="font-size:13px;line-height:1.5;color:var(--muted);">
-        This restores Appearance, Privacy, Search, Tabs, and Downloads settings to dejavu v4.7.0 defaults. Your Favorites, Profiles, and PC Link stay safe.
+        This restores Appearance, Privacy, Search, Tabs, and Downloads settings to dejavu v4.8.0 defaults. Your Favorites, Profiles, Custom Userscripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn" onclick="closeResetSettingsModal()">Cancel</button>
@@ -2440,6 +2652,31 @@
     ACCENTS.forEach(([id, hex, lbl]) => { ACCENT_HEX[id] = hex; ACCENT_LABEL[id] = lbl; });
 
     const GOOGLE_G_SVG = '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>';
+
+    function getDynamicButterflySvg(sizePx) {
+      const sz = sizePx || 32;
+      return `<svg viewBox="0 0 64 64" width="${sz}" height="${sz}" fill="none" xmlns="http://www.w3.org/2000/svg">` +
+        `<rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>` +
+        `<rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>` +
+        `<path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>` +
+        `<path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>` +
+        `<path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>` +
+        `<path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>` +
+        `<path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>` +
+        `<path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>` +
+        `<path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>` +
+        `<path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>` +
+        `<rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>` +
+        `<path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>` +
+        `</svg>`;
+    }
+
+    (function hydrateStaticBrandSvgs() {
+      const mBrand = document.getElementById('menu-brand-mark');
+      if (mBrand) mBrand.innerHTML = getDynamicButterflySvg(28);
+      const aLogo = document.getElementById('opt-about-logo');
+      if (aLogo) aLogo.innerHTML = getDynamicButterflySvg(34);
+    })();
 
     let state = {};
     let favEditMode = false;
@@ -2516,7 +2753,7 @@
         return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:#0f0f12;"><svg viewBox="0 0 24 24" width="${Math.round(sz*0.52)}" height="${Math.round(sz*0.52)}" fill="#fff"><path d="M17.5 3.5h2.8l-6.1 7 7.2 10h-5.6l-4.4-5.8-5.1 5.8H3.5l6.5-7.5L3 3.5h5.8l4 5.3 4.7-5.3z"/></svg></span>`;
       }
       if (host.includes('dathevinci.github.io')) {
-        return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:linear-gradient(145deg,#26184c,#0e0a1d);border:1px solid rgba(196,162,255,0.34);"><img src="logo-transparent.png" style="padding:4px;object-fit:contain;filter:brightness(1.25);" alt="D"></span>`;
+        return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:transparent;">${getDynamicButterflySvg(sz)}</span>`;
       }
       if (host.includes('google.com')) {
         return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:#4285f4;font-size:${Math.round(sz*0.54)}px;">G</span>`;
@@ -3027,6 +3264,10 @@
       returnToSettings = true;
       call('openScreen', 'clear-data');
     }
+    function openExtensionsFromSettings() {
+      returnToSettings = true;
+      call('openScreen', 'extensions');
+    }
     function backToSettings() {
       returnToSettings = false;
       call('openScreen', 'settings');
@@ -3215,6 +3456,11 @@
       const shStatus = document.getElementById('sp-shield-status');
       shStatus.textContent = state.adBlockEnabled ? 'Active' : 'Paused';
       shStatus.style.color = state.adBlockEnabled ? 'var(--mint)' : 'var(--muted)';
+      const spExtCnt = document.getElementById('sp-ext-cnt');
+      if (spExtCnt) {
+        const extSnap = state.extensions || {};
+        spExtCnt.textContent = String(typeof extSnap.activeCount === 'number' ? extSnap.activeCount : 4);
+      }
 
       // Start Page Profile Avatar Pill
       const prof = getActiveProfile();
@@ -3457,7 +3703,7 @@
           const previewHtml = (!t.isNewTab && t.thumb)
             ? `<img class="live-shot" src="${t.thumb}" alt=""><div class="tab-card-host">${esc(getHost(t.url))}</div>`
             : `<div class="tab-card-start-prev" style="${wpUrl ? `background-image:url('${wpUrl}')` : 'background:radial-gradient(circle at 30% 25%,#4c26a8,#120c26 70%);'}">
-                 <img src="logo-transparent.png" width="32" height="32" style="object-fit:contain;" alt="" onerror="this.style.display='none'">
+                 ${getDynamicButterflySvg(36)}
                  <span style="font-size:12px;font-weight:600;color:#f6f4ff;">${t.isPrivate ? 'Private Tab' : (t.isNewTab ? 'Start Page' : esc(getHost(t.url)))}</span>
                </div>`;
           card.innerHTML = `
@@ -3538,6 +3784,12 @@
       document.getElementById('m-cnt-hi').textContent = String((state.history || []).length);
       const dlCntEl = document.getElementById('m-cnt-dl');
       if (dlCntEl) dlCntEl.textContent = String((state.turboDownloads || []).length);
+      const extCntEl = document.getElementById('m-cnt-ext');
+      if (extCntEl) {
+        const extSnap = state.extensions || {};
+        const nExt = typeof extSnap.activeCount === 'number' ? extSnap.activeCount : 4;
+        extCntEl.textContent = `${nExt} active`;
+      }
       const prof = getActiveProfile();
       const mProfTitle = document.getElementById('m-prof-title');
       const mProfSub = document.getElementById('m-prof-sub');
@@ -3823,8 +4075,16 @@
           : 'Pair with Windows PC · AES-256 E2EE';
       }
 
+      const optExtSub = document.getElementById('opt-ext-sub');
+      if (optExtSub) {
+        const extSnap = state.extensions || {};
+        const nAct = typeof extSnap.activeCount === 'number' ? extSnap.activeCount : 4;
+        const nUs = Array.isArray(extSnap.userscripts) ? extSnap.userscripts.length : 0;
+        optExtSub.textContent = `${nAct} active · ${nUs ? `${nUs} custom script${nUs === 1 ? '' : 's'}` : 'Built-in enhancers & userscripts'}`;
+      }
+
       const u = state.update || {};
-      const curV = u.currentVersion || '4.7.0';
+      const curV = u.currentVersion || '4.8.0';
       const uTitle = document.getElementById('opt-upd-title');
       const uSub = document.getElementById('opt-upd-sub');
       const uBtn = document.getElementById('opt-upd-btn');
@@ -3878,7 +4138,7 @@
         } else if (u.status === 'ready') {
           uTitle.textContent = `v${u.latestVersion} Ready to Install`;
           uSub.textContent = u.signatureMismatch
-            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '4.7.0')
+            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '4.8.0')
             : 'Verified V1-V3 permanent signature · Tap Install to upgrade';
           uBtn.textContent = 'Install';
           uBtn.classList.add('primary');
@@ -4364,6 +4624,154 @@
       if (state.screen === 'downloads') renderDownloadsSheet();
     };
 
+    // =========================================================================
+    // PIXEL MATERIAL DESIGN 3 EXTENSIONS & CUSTOM USERSCRIPTS MANAGER (v4.8.0)
+    // =========================================================================
+    const DEFAULT_BUILTIN_EXTENSIONS = [
+      { id: 'sponsor_clean',  name: 'Sponsor & Annoyance Cleaner',      desc: 'Hides sponsored promos, newsletter popups & app-install nags', category: 'Privacy',    enabled: true },
+      { id: 'dark_boost',     name: 'Universal Dark Mode Booster',      desc: 'Smart high-contrast dark surfaces with media preservation',    category: 'Appearance', enabled: false },
+      { id: 'video_speed',    name: 'Video Speed Controller (0.5×–3×)', desc: 'Compact Material 3 speed pill on any HTML5 video player',      category: 'Media',      enabled: true },
+      { id: 'copy_unlock',    name: 'Copy-Unlock / Right-Click Enabler',desc: 'Restores text selection, copy & long-press on locked pages',   category: 'Utility',    enabled: true },
+      { id: 'cookie_dismiss', name: 'Cookie Banner Auto-Dismisser',     desc: 'Auto-hides GDPR cookie overlays & restores smooth scrolling',  category: 'Privacy',    enabled: true }
+    ];
+    const EXT_ICONS = {
+      sponsor_clean:  { tone: 'ic-teal',    svg: '<svg viewBox="0 0 18 18" fill="none"><path d="M9 2.2L3.4 4.5v4.3c0 3.6 2.4 6.2 5.6 7.2 3.2-1 5.6-3.6 5.6-7.2V4.5L9 2.2z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M6.6 9.1l1.7 1.7 3.2-3.3" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+      dark_boost:     { tone: 'ic-night',   svg: '<svg viewBox="0 0 18 18" fill="none"><path d="M14 10.6A5.6 5.6 0 1 1 7.4 4a4.5 4.5 0 0 0 6.6 6.6z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>' },
+      video_speed:    { tone: 'ic-violet',  svg: '<svg viewBox="0 0 18 18" fill="none"><path d="M3.2 5.4l5.2 3.6-5.2 3.6V5.4zM9.6 5.4l5.2 3.6-5.2 3.6V5.4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>' },
+      copy_unlock:    { tone: 'ic-indigo',  svg: '<svg viewBox="0 0 18 18" fill="none"><rect x="6" y="6" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 12H3.5A1.5 1.5 0 0 1 2 10.5v-7A1.5 1.5 0 0 1 3.5 2h7A1.5 1.5 0 0 1 12 3.5V4" stroke="currentColor" stroke-width="1.5"/></svg>' },
+      cookie_dismiss: { tone: 'ic-amber',   svg: '<svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.55"/><circle cx="7" cy="7.5" r="1" fill="currentColor"/><circle cx="11.2" cy="8.2" r="1" fill="currentColor"/><circle cx="8.6" cy="11.5" r="1" fill="currentColor"/></svg>' }
+    };
+    let editingUserscriptId = '';
+
+    function openUserscriptModal(us) {
+      editingUserscriptId = (us && us.id) ? us.id : '';
+      const titleEl = document.getElementById('us-modal-title');
+      if (titleEl) titleEl.textContent = editingUserscriptId ? 'Edit Custom Userscript' : 'Add Custom Userscript';
+      document.getElementById('us-in-name').value = (us && us.name) || '';
+      document.getElementById('us-in-matches').value = (us && us.matches) || '*';
+      document.getElementById('us-in-desc').value = (us && us.description) || '';
+      document.getElementById('us-in-code').value = (us && us.code) || '';
+      document.getElementById('userscript-modal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('us-in-name').focus(), 60);
+    }
+
+    function closeUserscriptModal() {
+      editingUserscriptId = '';
+      document.getElementById('userscript-modal').classList.add('hidden');
+    }
+
+    function parseUserscriptHeader() {
+      const code = (document.getElementById('us-in-code').value || '');
+      if (!code.trim()) return;
+      const nm = code.match(/\/\/\s*@name\s+(.+)/i);
+      const desc = code.match(/\/\/\s*@description\s+(.+)/i);
+      const matches = [];
+      const rx = /\/\/\s*@(?:match|include)\s+(.+)/gi;
+      let m;
+      while ((m = rx.exec(code)) !== null) {
+        if (m[1]) matches.push(m[1].trim());
+      }
+      if (nm && nm[1]) document.getElementById('us-in-name').value = nm[1].trim().slice(0, 48);
+      if (desc && desc[1]) document.getElementById('us-in-desc').value = desc[1].trim().slice(0, 90);
+      if (matches.length) document.getElementById('us-in-matches').value = matches.join(', ');
+    }
+
+    function loadSampleUserscript() {
+      document.getElementById('us-in-name').value = 'Focus Reader Width';
+      document.getElementById('us-in-matches').value = 'en.wikipedia.org, *.medium.com';
+      document.getElementById('us-in-desc').value = 'Centers long articles at comfortable reading measure';
+      document.getElementById('us-in-code').value = '// ==UserScript==\n// @name Focus Reader Width\n// @match en.wikipedia.org\n// ==/UserScript==\nconst s = document.createElement("style");\ns.textContent = "article, #mw-content-text { line-height: 1.75 !important; }";\n(document.head || document.documentElement).appendChild(s);';
+    }
+
+    function submitUserscript() {
+      const name = (document.getElementById('us-in-name').value || '').trim();
+      const matches = (document.getElementById('us-in-matches').value || '').trim() || '*';
+      const desc = (document.getElementById('us-in-desc').value || '').trim();
+      const code = (document.getElementById('us-in-code').value || '').trim();
+      if (!code) return;
+      const targetId = editingUserscriptId;
+      closeUserscriptModal();
+      call('saveCustomUserscript', targetId, name || 'Custom Userscript', matches, desc, code, true);
+    }
+
+    function renderExtensionsSheet() {
+      const backBtn = document.getElementById('ext-back-btn');
+      if (backBtn) backBtn.style.display = returnToSettings ? 'inline-flex' : 'none';
+
+      const extSnap = state.extensions || {};
+      const builtins = Array.isArray(extSnap.builtins) && extSnap.builtins.length ? extSnap.builtins : DEFAULT_BUILTIN_EXTENSIONS;
+      const userscripts = Array.isArray(extSnap.userscripts) ? extSnap.userscripts : [];
+      const activeCount = builtins.filter((b) => !!b.enabled).length + userscripts.filter((u) => u.enabled !== false).length;
+
+      const pill = document.getElementById('ext-active-pill');
+      if (pill) pill.textContent = `${activeCount} Active`;
+
+      const bBox = document.getElementById('ext-builtins-list');
+      if (bBox) {
+        bBox.innerHTML = '';
+        builtins.forEach((ext) => {
+          const ico = EXT_ICONS[ext.id] || EXT_ICONS.sponsor_clean;
+          const row = document.createElement('div');
+          row.className = 'g-row ext-row';
+          row.innerHTML = `
+            <span class="sq-ico ${ico.tone}">${ico.svg}</span>
+            <div class="g-row-meta">
+              <div class="ext-title-line">
+                <span class="g-row-title">${esc(ext.name)}</span>
+                <span class="ext-cat-chip">${esc(ext.category || 'Add-on')}</span>
+              </div>
+              <div class="g-row-sub">${esc(ext.desc || '')}</div>
+            </div>
+            <button type="button" class="sw ${ext.enabled ? 'on' : ''}" aria-label="${esc(ext.name)}"></button>
+          `;
+          row.onclick = () => call('toggleBuiltinExtension', ext.id);
+          bBox.appendChild(row);
+        });
+      }
+
+      const uBox = document.getElementById('ext-userscripts-list');
+      if (uBox) {
+        uBox.innerHTML = '';
+        if (!userscripts.length) {
+          const emp = document.createElement('div');
+          emp.className = 'ext-us-card';
+          emp.style.alignItems = 'center';
+          emp.style.textAlign = 'center';
+          emp.innerHTML = `
+            <div style="font-size:13.5px;font-weight:650;">No custom userscripts yet</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.45;">Paste any <code>.user.js</code> script or JavaScript snippet with match domains (e.g. <code>youtube.com</code> or <code>*</code>).</div>
+            <button type="button" class="pill-btn primary" onclick="openUserscriptModal(null)">+ Add Custom Userscript</button>
+          `;
+          uBox.appendChild(emp);
+        } else {
+          userscripts.forEach((us) => {
+            const on = us.enabled !== false;
+            const card = document.createElement('div');
+            card.className = 'ext-us-card';
+            card.innerHTML = `
+              <div class="ext-us-top">
+                <span class="sq-ico ic-violet"><svg viewBox="0 0 18 18" fill="none"><path d="M6.2 5.2L2.8 9l3.4 3.8M11.8 5.2L15.2 9l-3.4 3.8M10.2 3.8L7.8 14.2" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div class="g-row-meta">
+                  <div class="g-row-title">${esc(us.name || 'Custom Userscript')}</div>
+                  ${us.description ? `<div class="g-row-sub">${esc(us.description)}</div>` : ''}
+                  <div style="margin-top:4px;"><span class="ext-us-domain">${esc(us.matches || '*')}</span></div>
+                </div>
+                <button type="button" class="sw ${on ? 'on' : ''} us-sw" aria-label="Toggle ${esc(us.name || 'script')}"></button>
+              </div>
+              <div class="ext-us-acts">
+                <button type="button" class="pill-btn us-edit" style="height:32px;font-size:12px;">Edit Script</button>
+                <button type="button" class="pill-btn danger us-del" style="height:32px;font-size:12px;">Remove</button>
+              </div>
+            `;
+            card.querySelector('.us-sw').onclick = (e) => { e.stopPropagation(); call('toggleCustomUserscript', us.id); };
+            card.querySelector('.us-edit').onclick = () => openUserscriptModal(us);
+            card.querySelector('.us-del').onclick = () => call('deleteCustomUserscript', us.id);
+            uBox.appendChild(card);
+          });
+        }
+      }
+    }
+
     let lastScreen = '';
     let lastDefaultYtq = '';
     window.__onDejavuState = function (st) {
@@ -4402,14 +4810,14 @@
       }
 
       const scr = state.screen || 'start';
-      const isModal = scr === 'menu' || scr === 'sync' || scr === 'settings' || scr === 'profile' || scr === 'clear-data' || scr === 'wallpapers' || scr === 'downloads' || scr === 'context-menu';
+      const isModal = scr === 'menu' || scr === 'sync' || scr === 'settings' || scr === 'profile' || scr === 'clear-data' || scr === 'wallpapers' || scr === 'downloads' || scr === 'extensions' || scr === 'context-menu';
       const showStartBehind = scr === 'start' || (isModal && !state.activeUrl);
 
       if (scr !== lastScreen) {
         if (scr === 'menu') setMenuSubView('main');
         if (scr === 'tabs') tabViewPrivate = !!state.activePrivate;
         if (scr !== 'start') favEditMode = false;
-        if (scr !== 'profile' && scr !== 'clear-data') returnToSettings = false;
+        if (scr !== 'profile' && scr !== 'clear-data' && scr !== 'extensions') returnToSettings = false;
         if (scr !== 'context-menu') localContextMenu = null;
         lastScreen = scr;
       }
@@ -4428,6 +4836,8 @@
       document.getElementById('scr-wallpapers').classList.toggle('hidden', scr !== 'wallpapers');
       const scrDl = document.getElementById('scr-downloads');
       if (scrDl) scrDl.classList.toggle('hidden', scr !== 'downloads');
+      const scrExt = document.getElementById('scr-extensions');
+      if (scrExt) scrExt.classList.toggle('hidden', scr !== 'extensions');
       const scrCtx = document.getElementById('scr-context-menu');
       if (scrCtx) {
         const showCtx = (scr === 'context-menu' && !!state.contextMenu) || !!localContextMenu;
@@ -4444,6 +4854,7 @@
       if (scr === 'clear-data') renderClearDataSheet();
       if (scr === 'wallpapers') renderWallpapersSheet();
       if (scr === 'downloads') renderDownloadsSheet();
+      if (scr === 'extensions') renderExtensionsSheet();
       if (scr === 'context-menu' && state.contextMenu) renderContextMenuSheet(state.contextMenu);
       else if (localContextMenu) renderContextMenuSheet(localContextMenu);
     };
@@ -4517,6 +4928,39 @@
         else if (fn === 'closeTabById') {
           st.tabs = (st.tabs || []).filter((t) => t.id !== args[0]);
         }
+        else if (fn === 'toggleBuiltinExtension') {
+          const extId = args[0];
+          const cur = st.extensions || { builtins: DEFAULT_BUILTIN_EXTENSIONS.map((b) => Object.assign({}, b)), userscripts: [] };
+          cur.builtins = (cur.builtins || []).map((b) => b.id === extId ? Object.assign({}, b, { enabled: !b.enabled }) : b);
+          cur.activeCount = cur.builtins.filter((b) => b.enabled).length + (cur.userscripts || []).filter((u) => u.enabled !== false).length;
+          st.extensions = cur;
+        }
+        else if (fn === 'saveCustomUserscript') {
+          const [id, name, matches, description, code, enabled] = args;
+          const cur = st.extensions || { builtins: DEFAULT_BUILTIN_EXTENSIONS.map((b) => Object.assign({}, b)), userscripts: [] };
+          const targetId = id || ('us_' + Date.now());
+          const item = { id: targetId, name: name || 'Custom Userscript', matches: matches || '*', description: description || '', code: code || '', enabled: enabled !== false, updatedAt: Date.now() };
+          const exists = (cur.userscripts || []).some((u) => u.id === targetId);
+          cur.userscripts = exists
+            ? cur.userscripts.map((u) => u.id === targetId ? item : u)
+            : [...(cur.userscripts || []), item];
+          cur.activeCount = (cur.builtins || []).filter((b) => b.enabled).length + cur.userscripts.filter((u) => u.enabled !== false).length;
+          st.extensions = cur;
+        }
+        else if (fn === 'toggleCustomUserscript') {
+          const id = args[0];
+          const cur = st.extensions || { builtins: DEFAULT_BUILTIN_EXTENSIONS.map((b) => Object.assign({}, b)), userscripts: [] };
+          cur.userscripts = (cur.userscripts || []).map((u) => u.id === id ? Object.assign({}, u, { enabled: u.enabled === false }) : u);
+          cur.activeCount = (cur.builtins || []).filter((b) => b.enabled).length + cur.userscripts.filter((u) => u.enabled !== false).length;
+          st.extensions = cur;
+        }
+        else if (fn === 'deleteCustomUserscript') {
+          const id = args[0];
+          const cur = st.extensions || { builtins: DEFAULT_BUILTIN_EXTENSIONS.map((b) => Object.assign({}, b)), userscripts: [] };
+          cur.userscripts = (cur.userscripts || []).filter((u) => u.id !== id);
+          cur.activeCount = (cur.builtins || []).filter((b) => b.enabled).length + cur.userscripts.filter((u) => u.enabled !== false).length;
+          st.extensions = cur;
+        }
         else if (fn === 'resetSettings') {
           st.themeMode = 'dark'; st.effectiveTheme = 'dark'; st.accentColor = 'amethyst'; st.pageZoom = 100;
           st.desktopSiteDefault = false; st.httpsFirst = true; st.doNotTrack = true; st.blockPopups = true;
@@ -4541,8 +4985,8 @@
             const previewCtx = initScreen === 'context-menu' ? {
               source: 'web',
               kind: ctxKind,
-              title: ctxKind === 'image' ? 'Amethyst Origami · Material Design 3' : 'dejavu Browser v4.7.0 Release',
-              linkUrl: ctxKind === 'image' ? '' : 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v4.7.0',
+              title: ctxKind === 'image' ? 'Amethyst Origami · Material Design 3' : 'dejavu Browser v4.8.0 Release',
+              linkUrl: ctxKind === 'image' ? '' : 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v4.8.0',
               imageUrl: ctxKind === 'link' ? '' : 'wallpapers/wp-m3-butterfly-obsidian.jpg',
               pageTitle: 'dejavu — Material Design 3 Browser',
               pageUrl: 'https://dathevinci.github.io/Dejavu-browser/',
@@ -4619,10 +5063,24 @@
                 { title: 'GitHub — Dathevinci/Dejavu-browser', url: 'https://github.com/Dathevinci/Dejavu-browser' },
                 { title: 'YouTube', url: 'https://m.youtube.com' }
               ],
-              sync: { connected: false, pairingCode: 'DJV-4700-M3UI', remoteTabs: [], drops: [] },
-              update: { currentVersion: '4.7.0', status: 'uptodate', latestVersion: '4.7.0', available: false, hasDownloadedApk: false },
+              sync: { connected: false, pairingCode: 'DJV-4800-M3UI', remoteTabs: [], drops: [] },
+              update: { currentVersion: '4.8.0', status: 'uptodate', latestVersion: '4.8.0', available: false, hasDownloadedApk: false },
               turboDownloads: [],
-              pageMedia: []
+              pageMedia: [],
+              extensions: {
+                builtins: DEFAULT_BUILTIN_EXTENSIONS.map((b) => Object.assign({}, b)),
+                userscripts: [
+                  {
+                    id: 'us_sample_reader',
+                    name: 'Focus Reader Measure',
+                    matches: 'en.wikipedia.org, *.medium.com',
+                    description: 'Improves article line-height and paragraph contrast',
+                    code: 'document.documentElement.dataset.djvFocus = "1";',
+                    enabled: true
+                  }
+                ],
+                activeCount: 5
+              }
             });
           }
         }, 80);

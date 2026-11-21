@@ -17,7 +17,20 @@
     <div id="tabbar" class="chrome-row tabbar-row">
       <div class="tabbar-brand-slot">
         <button id="btn-home" class="brand-inner-btn" title="dejavu">
-          <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
+          <svg class="djv-m3-logo" viewBox="0 0 64 64" width="22" height="22" fill="none" aria-hidden="true">
+            <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+            <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+            <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+            <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+            <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+            <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+            <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+            <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+            <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+            <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+            <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+            <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </button>
         <button id="btn-group-pill" class="m3-chip group-badge-pill hidden" title="Active Tab Group (Click to switch)">
           <span id="group-badge-dot" class="group-badge-dot"></span>
@@ -185,6 +198,15 @@
             </svg>
           </button>
 
+          <div id="pinned-extensions" class="pinned-extensions hidden" aria-label="Pinned Extensions"></div>
+
+          <button id="btn-extensions" class="icon-btn ext-toolbar-btn" title="Extensions">
+            <svg viewBox="0 0 20 20" fill="none">
+              <path d="M11.6 3.2a1.7 1.7 0 0 1 1.7 1.7v.9h1.9a1.4 1.4 0 0 1 1.4 1.4v2.1h-.9a1.7 1.7 0 0 0 0 3.4h.9v2.1a1.4 1.4 0 0 1-1.4 1.4h-2.1v-.9a1.7 1.7 0 0 0-3.4 0v.9H7.2a1.4 1.4 0 0 1-1.4-1.4v-2.1h.9a1.7 1.7 0 0 0 0-3.4h-.9V7.2a1.4 1.4 0 0 1 1.4-1.4h2.7v-.9a1.7 1.7 0 0 1 1.7-1.7z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/>
+            </svg>
+            <span id="ext-toolbar-dot" class="dl-dot hidden"></span>
+          </button>
+
           <button id="btn-profile" class="profile-trigger profile-pill" title="Profiles &amp; Google Account (Ctrl+Shift+M)">
             <span id="profile-avatar-slot" class="profile-avatar-slot"></span>
             <span id="profile-pill-name" class="profile-pill-name">Personal</span>
@@ -208,6 +230,12 @@
       <div id="favbar-list" class="favbar-list"></div>
     </nav>
   </header>
+
+  <!-- Floating M3 Detach Pill when dragging a tab out of the tab bar -->
+  <div id="tab-detach-pill" class="tab-detach-pill hidden" aria-hidden="true">
+    <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><rect x="2.6" y="4.2" width="10.4" height="9.6" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M10.2 2.8h5v5M15 3l-4.6 4.6" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>Release to open in new window</span>
+  </div>
 
   <!-- Google Pixel Material Design 3 Left Navigation Rail (56px) -->
   <aside id="m3-nav-rail" class="m3-nav-rail" aria-label="dejavu Navigation Rail">
@@ -278,10 +306,23 @@
     <section id="newtab-view">
       <div class="startpage-scroll">
         <div class="startpage-container">
-          <!-- Calm Material 3 Brand Header & Profile Greeting Chip -->
+          <!-- Calm Material 3 Brand Header & Pixel At-a-Glance Profile Chip -->
           <div class="hero-brand anim-rise-1">
             <div class="hero-logo-wrap">
-              <img src="https://dejavu.local/logo-transparent.png" id="newtab-logo" alt="dejavu" draggable="false">
+              <svg id="newtab-logo" class="djv-m3-logo djv-m3-logo-hero" viewBox="0 0 64 64" width="68" height="68" fill="none" role="img" aria-label="dejavu">
+                <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+                <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+                <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+                <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+                <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+                <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+              </svg>
             </div>
             <h1 class="hero-title">dejavu</h1>
             <div class="sp-chip-row">
@@ -334,53 +375,52 @@
             <div id="newtab-suggest" class="hero-suggest hidden"></div>
           </div>
 
-          <!-- Quick Access Board (Material Design 3 Tonal Tiles) -->
-          <div id="sp-sec-favorites" class="sp-section anim-rise-3">
-            <div class="sp-section-head">
-              <h2 class="sp-section-title">Quick Access</h2>
-            </div>
+          <!-- Google Pixel / Chrome Material Design 3 Quick Access Tiles -->
+          <div id="sp-sec-favorites" class="sp-section sp-favorites-tray anim-rise-3">
             <div id="shortcuts-grid" class="m3-fav-grid"></div>
           </div>
 
           <!-- Frequently Visited -->
           <div id="sp-sec-frequent" class="sp-section hidden anim-rise-4">
             <div class="sp-section-head">
-              <h2 class="sp-section-title">Frequently Visited</h2>
+              <span class="sp-section-pill">Frequently Visited</span>
             </div>
             <div id="frequent-grid" class="m3-frequent-grid"></div>
           </div>
 
-          <!-- Privacy Report Card + Live VPN Chip -->
-          <div id="sp-sec-privacy" class="sp-section anim-rise-4">
-            <div class="sp-section-head">
-              <h2 class="sp-section-title">Privacy Report</h2>
-            </div>
-            <div id="privacy-report-card" class="m3-privacy-card">
-              <button type="button" id="newtab-shield-chip" class="sp-privacy-main" title="Open Ad Blocker &amp; Privacy Settings">
-                <div class="sp-shield-medallion">
-                  <svg viewBox="0 0 22 22" fill="none" width="20" height="20">
-                    <path d="M11 2.4L4 5.2v5.4c0 4.4 3 7.7 7 9 4-1.3 7-4.6 7-9V5.2L11 2.4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-                    <path d="M8 11.2l2.1 2.1 4.1-4.4" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Google Pixel "At a Glance" Material Design 3 Expressive Tonal Status Strip -->
+          <div id="sp-sec-privacy" class="sp-section sp-glance-section anim-rise-4">
+            <div id="privacy-report-card" class="m3-glance-strip">
+              <button type="button" id="newtab-shield-chip" class="m3-glance-item m3-glance-shield" title="Open Ad Blocker &amp; Privacy Settings">
+                <span class="m3-glance-ico primary">
+                  <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+                    <path d="M10 2.4L3.8 5v4.8c0 3.9 2.6 6.9 6.2 8.1 3.6-1.2 6.2-4.2 6.2-8.1V5L10 2.4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                    <path d="M7.3 10.2l1.9 1.9 3.6-3.9" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
-                </div>
-                <div class="sp-privacy-copy">
-                  <div class="sp-privacy-headline">
-                    <span class="stat-dot" id="stat-dot"></span>
-                    <span id="newtab-stat-count">0</span>
-                    <span id="newtab-stat-label">trackers &amp; ads prevented</span>
-                  </div>
-                  <div id="newtab-stat-text" class="sp-privacy-sub">Built-in 100/100 Ad Blocker is actively protecting your browsing</div>
-                </div>
+                </span>
+                <span class="stat-dot" id="stat-dot"></span>
+                <span id="newtab-stat-count" class="m3-glance-num">0</span>
+                <span id="newtab-stat-label" class="m3-glance-lbl">blocked · Shield Active</span>
+                <span id="newtab-stat-text" class="hidden"></span>
               </button>
 
-              <span class="sp-privacy-divider" aria-hidden="true"></span>
+              <span class="m3-glance-div" aria-hidden="true"></span>
 
-              <button type="button" id="newtab-vpn-chip" class="sp-vpn-chip" title="Open dejavu Encrypted VPN">
+              <button type="button" id="newtab-vpn-chip" class="m3-glance-item m3-glance-vpn" title="Open dejavu 86-Country Encrypted VPN">
                 <span class="vpn-status-dot" id="newtab-vpn-dot"></span>
-                <div class="sp-vpn-copy">
-                  <div id="newtab-vpn-text" class="sp-vpn-title">VPN: Off</div>
-                  <div id="newtab-vpn-sub" class="sp-vpn-sub">86+ global locations</div>
-                </div>
+                <span id="newtab-vpn-text" class="m3-glance-lbl strong">VPN: Off</span>
+                <span id="newtab-vpn-sub" class="hidden">86+ locations</span>
+              </button>
+
+              <span class="m3-glance-div" aria-hidden="true"></span>
+
+              <button type="button" id="newtab-ext-chip" class="m3-glance-item m3-glance-ext" title="Manage Chrome Extensions">
+                <span class="m3-glance-ico secondary">
+                  <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+                    <path d="M11.6 3.2a1.7 1.7 0 0 1 1.7 1.7v.9h1.9a1.4 1.4 0 0 1 1.4 1.4v2.1h-.9a1.7 1.7 0 0 0 0 3.4h.9v2.1a1.4 1.4 0 0 1-1.4 1.4h-2.1v-.9a1.7 1.7 0 0 0-3.4 0v.9H7.2a1.4 1.4 0 0 1-1.4-1.4v-2.1h.9a1.7 1.7 0 0 0 0-3.4h-.9V7.2a1.4 1.4 0 0 1 1.4-1.4h2.7v-.9a1.7 1.7 0 0 1 1.7-1.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span id="newtab-ext-text" class="m3-glance-lbl strong">Extensions</span>
               </button>
             </div>
           </div>
@@ -388,7 +428,7 @@
           <!-- Reading List Shelf -->
           <div id="sp-sec-reading" class="sp-section hidden anim-rise-4">
             <div class="sp-section-head">
-              <h2 class="sp-section-title">Reading List</h2>
+              <span class="sp-section-pill">Reading List</span>
             </div>
             <div id="reading-grid" class="m3-reading-grid"></div>
           </div>
@@ -444,7 +484,20 @@
     <div id="wallpaper-store" class="wallpaper-store hidden">
       <div class="store-head">
         <div class="store-brand">
-          <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
+          <svg class="djv-m3-logo" viewBox="0 0 64 64" width="32" height="32" fill="none" aria-hidden="true">
+            <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+            <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+            <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+            <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+            <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+            <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+            <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+            <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+            <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+            <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+            <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+            <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
           <div>
             <div class="store-title">Customize Start Page</div>
             <div class="store-sub">Quick Access sections &amp; 17 Pure Material Design 3 &amp; Butterfly wallpapers</div>
@@ -495,9 +548,22 @@
         <!-- Top M3 Settings App Bar -->
         <header class="m3-settings-appbar">
           <div class="m3-appbar-brand">
-            <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
+            <svg class="djv-m3-logo" viewBox="0 0 64 64" width="32" height="32" fill="none" aria-hidden="true">
+              <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+              <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+              <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+              <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+              <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+              <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+              <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+              <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+              <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+              <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+              <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+              <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+            </svg>
             <span class="m3-appbar-title">Settings</span>
-            <span id="settings-version-sub" class="m3-tonal-badge">v4.7.0</span>
+            <span id="settings-version-sub" class="m3-tonal-badge">v4.8.0</span>
           </div>
 
           <div class="m3-appbar-search">
@@ -1533,7 +1599,20 @@
                     <div class="m3-pref-card">
                       <div class="opt-row" id="row-default-browser">
                         <div class="m3-row-ico primary" id="default-browser-ico">
-                          <img src="https://dejavu.local/logo-transparent.png" alt="" width="22" height="22" draggable="false">
+                          <svg class="djv-m3-logo" viewBox="0 0 64 64" width="28" height="28" fill="none" aria-hidden="true">
+                            <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+                            <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+                            <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+                            <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                            <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+                            <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                            <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                            <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                            <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                            <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                            <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+                            <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+                          </svg>
                         </div>
                         <div class="opt-meta">
                           <div class="opt-title opt-row-title" id="default-browser-title">Make dejavu your default browser</div>
@@ -1571,11 +1650,24 @@
                   <div class="m3-pref-section opt-group">
                     <div class="m3-about-hero">
                       <div class="m3-about-emblem">
-                        <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
+                        <svg class="djv-m3-logo" viewBox="0 0 64 64" width="58" height="58" fill="none" role="img" aria-label="dejavu">
+                          <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+                          <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+                          <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+                          <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                          <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+                          <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                          <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                          <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                          <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                          <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                          <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+                          <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
                       </div>
                       <div class="m3-about-copy">
-                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v4.7.0</span></div>
-                        <div class="m3-about-sub">Pure Material Design 3 Browser · Multi-Window &amp; Chrome-Style Multi-Profile Edition</div>
+                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v4.8.0</span></div>
+                        <div class="m3-about-sub">Pure Material Design 3 Browser · Chrome Extensions, Multi-Window &amp; Multi-Profile Edition</div>
                         <div id="about-update-status" class="m3-about-update-line">Checking update status…</div>
                       </div>
                       <button type="button" id="btn-about-check-update" class="m3-btn m3-btn-filled sm">Check for Updates</button>
@@ -1608,7 +1700,7 @@
                       <div class="opt-row">
                         <div class="opt-meta">
                           <div class="opt-title opt-row-title">GitHub Releases</div>
-                          <div class="opt-desc">View v4.7.0 release notes, Windows Setup installer, and Android APK</div>
+                          <div class="opt-desc">View v4.8.0 release notes, Windows Setup installer, and Android APK</div>
                         </div>
                         <button type="button" id="btn-about-github" class="m3-btn m3-btn-outlined sm">Open GitHub</button>
                       </div>
@@ -1840,7 +1932,7 @@
     <section id="reset-confirm-overlay" class="m3-modal-scrim hidden" aria-label="Reset Settings">
       <div id="reset-confirm-modal" class="m3-dialog-card compact" role="dialog" aria-modal="true">
         <h3 class="m3-dialog-title">Reset dejavu settings?</h3>
-        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v4.7.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
+        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v4.8.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
         <div class="m3-dialog-actions">
           <button type="button" id="btn-reset-cancel" class="m3-btn m3-btn-text">Cancel</button>
           <button type="button" id="btn-reset-confirm" class="m3-btn m3-btn-danger">Reset Settings</button>
@@ -1973,6 +2065,144 @@
             </div>
             <div id="dlm-list" class="dlm-list"></div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Full-Viewport Chrome-Grade Material Design 3 Extensions Manager (dejavu://extensions) -->
+    <section id="extensions-overlay" class="settings-overlay ext-manager-overlay hidden" aria-label="dejavu Extensions Manager">
+      <div id="extensions-window" class="settings-window m3-ext-workspace">
+        <!-- Top M3 App Bar -->
+        <header class="m3-ext-appbar">
+          <div class="m3-appbar-brand">
+            <span class="m3-ext-appbar-ico" aria-hidden="true">
+              <svg class="djv-m3-logo" viewBox="0 0 64 64" width="32" height="32" fill="none">
+                <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+                <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+                <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+                <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+                <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+                <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="m3-appbar-title">Extensions</span>
+            <span id="ext-count-badge" class="m3-tonal-badge">0</span>
+          </div>
+
+          <div class="m3-appbar-search">
+            <svg viewBox="0 0 18 18" width="17" height="17" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M12 12l3.6 3.6" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/>
+            </svg>
+            <input id="ext-search-input" type="text" placeholder="Search extensions..." spellcheck="false" autocomplete="off" aria-label="Search extensions">
+            <button type="button" id="btn-ext-search-clear" class="m3-search-clear hidden" title="Clear search">
+              <svg viewBox="0 0 14 14" width="12" height="12" fill="none"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+
+          <div class="m3-ext-appbar-right">
+            <label class="ext-dev-toggle-wrap" for="ext-dev-switch" title="Show Developer Mode controls (Load unpacked, Install .crx/.zip, IDs &amp; Reload)">
+              <span>Developer mode</span>
+              <button type="button" id="ext-dev-switch" class="liquid-switch m3-switch" role="switch" aria-checked="false">
+                <span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </button>
+            </label>
+            <button type="button" id="btn-ext-done" class="m3-btn m3-btn-filled sm" title="Close Extensions Manager (Esc)">Done</button>
+          </div>
+        </header>
+
+        <!-- Quick Action Strip: Chrome Web Store, Inline Store URL/ID Install & Import from Chrome -->
+        <div class="ext-action-strip">
+          <div class="ext-action-row">
+            <button type="button" id="btn-ext-webstore" class="m3-btn m3-btn-tonal sm" title="Browse extensions on Chrome Web Store">
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.2" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="9" r="2.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 6.6h5.6M6.9 10.2L4.2 5.4M11.1 10.2l-2.7 4.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <span>Chrome Web Store</span>
+            </button>
+
+            <form id="ext-store-form" class="ext-store-pill-form">
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none" class="ext-store-ico" aria-hidden="true"><path d="M7.6 10.4a3.3 3.3 0 0 0 4.6 0l2-2a3.3 3.3 0 0 0-4.6-4.6L8.4 5M10.4 7.6a3.3 3.3 0 0 0-4.6 0l-2 2a3.3 3.3 0 0 0 4.6 4.6l1.2-1.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <input id="ext-store-input" type="text" placeholder="Paste Chrome Web Store URL or 32-char Extension ID…" spellcheck="false" autocomplete="off">
+              <button type="submit" id="btn-ext-store-install" class="m3-btn m3-btn-filled sm ext-install-btn">Install</button>
+            </form>
+
+            <button type="button" id="btn-ext-scan-chrome" class="m3-btn m3-btn-tonal sm" title="Import extensions already installed in Google Chrome on this PC">
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><path d="M9 3.4v7.8M6 8.2L9 11.2l3-3M3.6 14.6h10.8" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Import from Chrome</span>
+            </button>
+          </div>
+
+          <!-- Chrome 157 Developer Mode Drawer (revealed when Developer mode switch is ON) -->
+          <div id="ext-dev-bar" class="ext-dev-bar hidden">
+            <button type="button" id="btn-ext-load-unpacked" class="m3-btn m3-btn-tonal sm">
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><path d="M2.8 5.2A1.4 1.4 0 0 1 4.2 3.8h3.4l1.4 1.6h4.8a1.4 1.4 0 0 1 1.4 1.4v6.6a1.4 1.4 0 0 1-1.4 1.4H4.2a1.4 1.4 0 0 1-1.4-1.4V5.2z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg>
+              <span>Load Unpacked</span>
+            </button>
+            <button type="button" id="btn-ext-install-file" class="m3-btn m3-btn-tonal sm">
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><rect x="3" y="3.4" width="12" height="11.2" rx="2.2" stroke="currentColor" stroke-width="1.45"/><path d="M3.2 7.4h11.6M7.6 10.6h2.8" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>
+              <span>Install .crx / .zip</span>
+            </button>
+            <button type="button" id="btn-ext-update-all" class="m3-btn m3-btn-outlined sm">
+              <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true"><path d="M14.1 9a5.1 5.1 0 1 1-1.35-3.45M14.1 3.9v2.85h-2.85" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Update All</span>
+            </button>
+            <button type="button" id="btn-ext-refresh" class="m3-btn m3-btn-outlined sm">
+              <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true"><path d="M4.2 9a4.8 4.8 0 0 1 8.3-3.3M13.8 9a4.8 4.8 0 0 1-8.3 3.3M12.5 3.6v2.3h-2.3M5.5 14.4v-2.3h2.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Refresh</span>
+            </button>
+          </div>
+
+          <div id="ext-status-banner" class="ext-status-banner hidden" role="status">
+            <span id="ext-status-dot" class="ext-status-dot"></span>
+            <span id="ext-status-msg"></span>
+          </div>
+        </div>
+
+        <!-- Main Scroll Area: 2-Column Extension Cards Grid OR Extension Details View -->
+        <div id="ext-scroll" class="ext-scroll">
+          <div id="ext-view-grid" class="ext-view-grid">
+            <div id="ext-cards-grid" class="ext-cards-grid"></div>
+          </div>
+
+          <div id="ext-view-details" class="ext-view-details hidden">
+            <div class="ext-details-back-row">
+              <button type="button" id="btn-ext-details-back" class="m3-btn m3-btn-tonal sm">
+                <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><path d="M11.2 4.4L6.6 9l4.6 4.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Back to Extensions</span>
+              </button>
+            </div>
+            <div id="ext-details-body" class="ext-details-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Import Extensions from Google Chrome Modal -->
+    <section id="chrome-import-overlay" class="m3-modal-scrim hidden" aria-label="Import Extensions from Google Chrome">
+      <div id="chrome-import-modal" class="m3-dialog-card chrome-import-card" role="dialog" aria-modal="true">
+        <div class="m3-dialog-head">
+          <div class="m3-dialog-ico">
+            <svg viewBox="0 0 20 20" width="22" height="22" fill="none"><path d="M11.6 3.2a1.7 1.7 0 0 1 1.7 1.7v.9h1.9a1.4 1.4 0 0 1 1.4 1.4v2.1h-.9a1.7 1.7 0 0 0 0 3.4h.9v2.1a1.4 1.4 0 0 1-1.4 1.4h-2.1v-.9a1.7 1.7 0 0 0-3.4 0v.9H7.2a1.4 1.4 0 0 1-1.4-1.4v-2.1h.9a1.7 1.7 0 0 0 0-3.4h-.9V7.2a1.4 1.4 0 0 1 1.4-1.4h2.7v-.9a1.7 1.7 0 0 1 1.7-1.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <h3 class="m3-dialog-title">Import from Google Chrome</h3>
+            <p id="chrome-import-sub" class="m3-dialog-sub">Read-only scan of extensions installed in Google Chrome on this PC</p>
+          </div>
+          <button type="button" id="btn-chrome-import-close" class="icon-btn sm" title="Close (Esc)">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <div id="chrome-import-list" class="chrome-import-list"></div>
+
+        <div class="m3-dialog-actions">
+          <button type="button" id="btn-chrome-import-rescan" class="m3-btn m3-btn-tonal sm">Rescan Chrome</button>
+          <button type="button" id="btn-chrome-import-done" class="m3-btn m3-btn-filled sm">Done</button>
         </div>
       </div>
     </section>

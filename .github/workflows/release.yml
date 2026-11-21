@@ -117,18 +117,18 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — Material Design 3 Context Menus, Fluid M3 Motion Everywhere & Native Windows + Android Default Browser
+          ### dejavu __TAG__ — Real Chrome Extensions Manager, Dynamic Material Design 3 Butterfly Logo, A-to-Z Pixel M3 Home & Tab Drag-to-Reorder
 
-          - **Material Design 3 Right-Click & Long-Press Context Menus (Windows & Android)** — Full native `CoreWebView2` Material Design 3 right-click menus on Windows (webpages, links, images, selections, inputs, media, tabs, Start Page, Quick Access & omnibox) plus Google Pixel Material Design 3 **Long-Press Context Menu Bottom Sheets** on Android (links, images, Quick Access shortcuts & Tab Switcher cards) with one-tap **Turbo 8× Download**, Share, and **Send to PC (`dejavu Link`)**.
-          - **Fluid Material Design 3 Emphasized & Spring Motion Everywhere** — Smooth GPU-composited `transform`/`opacity` animations across bottom sheets, right-click menus, `52×32` checkmark switches, segmented pills, tab cards, progress bars, and website scroll-reveal choreography — 100% `prefers-reduced-motion` safe and strictly zero CSS `blur(` or `backdrop-filter`.
-          - **Native Windows 10/11 & Android Default Browser Registration** — Complete Windows 10/11 `RegisteredApplications` + `StartMenuInternet\dejavu\Capabilities` + `DejavuHTML` ProgID registration with a dedicated Settings card, plus Android `APP_BROWSER` + MIME-typed `VIEW` intent-filters and official `RoleManager` (`ROLE_BROWSER`) Default Browser support in Android Settings.
-          - **Zero-Duplicate Chrome + Navigation Rail, Simultaneous Multi-Profile Google Windows & YouTube 4K/MP3 Downloader** — Decluttered single-instance Chrome + Left Navigation Rail, zero duplicate rows across all 10 searchable M3 Settings categories, live cross-process Multi-Profile windows (`Ctrl+N`, `Ctrl+Shift+N`, `Ctrl+Shift+M`), built-in YouTube & 1,000+ site `4K / 1080p / 720p / MP3 320k` downloader with 8× acceleration & HLS `.m3u8` assembly, 16 Pure Material 3 & 4 Butterfly M3 wallpapers, 86-country AI-ready Smart VPN + 3-Hop Tor, E2EE PC <-> Phone Sync, and permanent V1+V2+V3 Android signing with `PackageInstaller.Session` in-place auto-updates.
+          - **Real Chrome Extensions Manager (Windows) & Extensions / Add-ons Manager (Android)** — Full native Chromium/WebView2 extension engine on Windows (`Load Unpacked`, `.crx` / `.zip`, 1-click Chrome Web Store URL/ID install, Import from Google Chrome, Developer Mode, Toolbar Puzzle Popover & Pin to Toolbar, Enable/Disable, Details & Permissions) plus a Google Pixel Material Design 3 **Extensions & Web Add-ons Manager** on Android with 5 built-in injected extensions (**Sponsor & Annoyance Cleaner**, **Universal Dark Mode Booster**, **Video Speed Controller 0.5×–3×**, **Copy-Unlock / Right-Click Enabler**, **Cookie Banner Auto-Dismisser**) and **Custom Userscripts (`.user.js`)**!
+          - **Dynamic-Color Material Design 3 Geometric Butterfly Logo & Android 13+ Themed App Icon** — Replaced the old static purple halftone raster icon with a razor-sharp **Dynamic-Color Material Design 3 Geometric Origami Butterfly** inside an expressive M3 squircle badge that automatically harmonizes across all 6 Material You seeds (Amethyst, Pixel Blue, Sage, Rose, Honey, Slate) and Dark/Light modes — including Android 13+ Material You Themed Home-Screen App Icons (`<monochrome>` adaptive icon)!
+          - **A-to-Z Google Pixel Material Design 3 Home & Silky-Smooth Tab Drag-to-Reorder** — Redesigned Start Page on Windows and Android with an elevated `56px` solid tonal Pixel search pill (zero harsh outline borders), auto-balanced centered Quick Access squircle tiles, and a compact Pixel "At a Glance" status strip — plus pointer-driven Chrome-grade **Tab Drag-to-Reorder** (respecting pinned tab boundaries and drag-down to open in a new window) and Bookmark/Shortcut drag-to-reorder!
+          - **Everything Else Flagship & Fast** — Native M3 Right-Click & Long-Press Context Menus, Fluid M3 Emphasized & Spring Motion (strictly zero CSS `blur(` / `backdrop-filter`), Native Windows 10/11 & Android Default Browser (`ROLE_BROWSER`) registration, Zero-Duplicate Chrome + Navigation Rail, Live-Synced Multi-Profile Google Windows, built-in YouTube & 1,000+ site `4K / 1080p / 720p / MP3 320k` 8× Turbo Downloader, 16 Pure M3 & 4 Butterfly M3 wallpapers, 86-country AI-ready Smart VPN + 3-Hop Tor, 100/100 Ad Shield, E2EE PC <-> Phone Sync, and permanent V1+V2+V3 Android signing with `PackageInstaller.Session` in-place auto-updates.
             > **Android Upgrade Note:** Upgrading from `v4.2.0` or earlier? Uninstall dejavu once, then install `__TAG__` — **all future updates will install automatically in-place!**
 
           #### Downloads
-          - **dejavu-Setup.exe** — Windows 10/11 Guided Installer (with Default Browser registration)
+          - **dejavu-Setup.exe** — Windows 10/11 Guided Installer (with Default Browser registration & M3 Butterfly Icon)
           - **dejavu.exe** — Windows 10/11 Portable Single-File
-          - **dejavu-mobile.apk** — Android Mobile Browser App (V1+V2+V3 permanently signed, Android 8.0+)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (V1+V2+V3 permanently signed, Material You Themed Icon, Android 8.0+)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
           sed -i "s/__TAG__/$TAG/g" /tmp/release_notes.md
@@ -137,5 +137,5 @@ jobs:
             release-files/dejavu-Setup.exe \
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
-            --title "dejavu $TAG — Material Design 3 Context Menus, Fluid M3 Motion & Native Default Browser" \
+            --title "dejavu $TAG — Chrome Extensions Manager, Dynamic M3 Logo, Pixel M3 Home & Tab Dragging" \
             --notes-file /tmp/release_notes.md

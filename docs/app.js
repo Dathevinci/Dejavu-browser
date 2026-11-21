@@ -1,13 +1,13 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Engine (v4.7.0)
- * 6 Harmonized HCT Dynamic Color Seeds · Dark/Light Segmented Polarity · Scroll-Spy M3 Top Bar
- * Interactive M3 Right-Click Context Menu Preview · Fluid M3 Scroll-Reveal Choreography
- * Decluttered Zero-Duplicate Chrome + Navigation Rail 5-View Dual-Device Showcase
+ * dejavu Official Website — Google Material Design 3 Interactive Engine (v4.8.0)
+ * 6 Harmonized HCT Dynamic Color Seeds · Dynamic M3 Butterfly Logo · Dark/Light Polarity
+ * Interactive Chrome Extensions Manager + Draggable Tabs + M3 Right-Click Context Menu
+ * Decluttered Zero-Duplicate Chrome + Navigation Rail 6-View Dual-Device Showcase
  * Live Multi-Profile & Google Studio · 52x32 Spring Switches · 4K->MP3 Video Demo · 16-Wallpaper Harmonizer
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v4.7.0';
+  const FALLBACK_VERSION = 'v4.8.0';
   const root = document.documentElement;
 
   const THEME_META_COLORS = {
@@ -29,12 +29,40 @@
     }
   };
 
+  const THEME_SEED_WALLPAPERS = {
+    dark: {
+      amethyst: 'assets/wallpapers/wp-m3-amethyst.jpg',
+      sapphire: 'assets/wallpapers/wp-m3-pixel-blue.jpg',
+      aurora:   'assets/wallpapers/wp-m3-sage.jpg',
+      rose:     'assets/wallpapers/wp-m3-blossom.jpg',
+      gold:     'assets/wallpapers/wp-m3-honey.jpg',
+      silver:   'assets/wallpapers/wp-m3-indigo-dune.jpg'
+    },
+    light: {
+      amethyst: 'assets/wallpapers/wp-m3-butterfly-porcelain.jpg',
+      sapphire: 'assets/wallpapers/wp-m3-sky-terrace.jpg',
+      aurora:   'assets/wallpapers/wp-m3-butterfly-sage.jpg',
+      rose:     'assets/wallpapers/wp-m3-blush.jpg',
+      gold:     'assets/wallpapers/wp-m3-warm-limestone.jpg',
+      silver:   'assets/wallpapers/wp-m3-porcelain.jpg'
+    }
+  };
+  let userPickedWallpaper = false;
+
   function syncThemeColorMeta() {
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (!meta) return;
     const mode = root.dataset.theme === 'light' ? 'light' : 'dark';
     const seed = root.dataset.accent || 'amethyst';
-    meta.content = (THEME_META_COLORS[mode] && THEME_META_COLORS[mode][seed]) || THEME_META_COLORS[mode].amethyst;
+    if (meta) {
+      meta.content = (THEME_META_COLORS[mode] && THEME_META_COLORS[mode][seed]) || THEME_META_COLORS[mode].amethyst;
+    }
+    if (!userPickedWallpaper) {
+      const wpSrc = (THEME_SEED_WALLPAPERS[mode] && THEME_SEED_WALLPAPERS[mode][seed]) || THEME_SEED_WALLPAPERS[mode].amethyst;
+      const dkWp = document.getElementById('dk-wp-backdrop');
+      const pxWp = document.getElementById('px-wp');
+      if (dkWp) dkWp.style.backgroundImage = `url("${wpSrc}")`;
+      if (pxWp) pxWp.style.backgroundImage = `url("${wpSrc}")`;
+    }
   }
 
   // 1. Material You Polarity Segmented Pill & 6-Seed Dynamic Color Picker
@@ -66,11 +94,16 @@
   }
 
   try {
+    const qpInit = new URLSearchParams(location.search || '');
+    const qpTheme = qpInit.get('theme');
+    const qpAccent = qpInit.get('accent');
     const savedTheme = localStorage.getItem('djv_web_theme');
     const savedSeed = localStorage.getItem('djv_web_seed');
-    if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
+    if (qpTheme === 'light' || qpTheme === 'dark') setTheme(qpTheme);
+    else if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
     else setTheme('dark');
-    if (savedSeed) setSeed(savedSeed);
+    if (qpAccent) setSeed(qpAccent);
+    else if (savedSeed) setSeed(savedSeed);
     else setSeed('amethyst');
   } catch {
     setTheme('dark');
@@ -143,13 +176,14 @@
     });
   }
 
-  // 2. Clean 5-View Dual-Device Browser Showcase (Decluttered v4.7.0 Chrome + Rail + M3 Context Menu)
+  // 2. Clean 6-View Dual-Device Browser Showcase (v4.8.0 Chrome + Extensions + Draggable Tabs + M3 Context Menu)
   const VIEW_META = {
-    start:    { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
-    profiles: { url: 'dejavu://profiles · Personal + Work Windows', title: 'Multi-Profile · 2 Windows' },
-    video:    { url: 'youtube.com/watch?v=material-you-4k', title: 'Material You 4K Film' },
-    vpn:      { url: 'gemini.google.com/app', title: 'Google Gemini · Smart VPN' },
-    sync:     { url: 'dejavu://link · Paired with Pixel', title: 'dejavu Link · E2EE Sync' }
+    start:      { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
+    extensions: { url: 'dejavu://extensions · Chrome MV3 Manager', title: 'Chrome Extensions · 3 Active' },
+    profiles:   { url: 'dejavu://profiles · Personal + Work Windows', title: 'Multi-Profile · 2 Windows' },
+    video:      { url: 'youtube.com/watch?v=material-you-4k', title: 'Material You 4K Film' },
+    vpn:        { url: 'gemini.google.com/app', title: 'Google Gemini · Smart VPN' },
+    sync:       { url: 'dejavu://link · Paired with Pixel', title: 'dejavu Link · E2EE Sync' }
   };
 
   let activeView = 'start';
@@ -396,13 +430,116 @@
     revealEls.forEach((el) => el.classList.add('is-visible'));
   }
 
-  // Optional direct preview parameter (?ctx=open) for showcase inspection
-  try {
-    const qp = new URLSearchParams(location.search || '');
-    if (qp.get('ctx') === 'open') {
-      requestAnimationFrame(() => openShowcaseContextMenu('link', 'github.com/Dathevinci/Dejavu-browser'));
+  // 2d. Interactive Draggable Tabs in Hero Browser Mockup
+  const dkTabsStrip = document.getElementById('dk-tabs-strip');
+  let draggedTabEl = null;
+  if (dkTabsStrip) {
+    dkTabsStrip.querySelectorAll('.dk-tab').forEach((tab) => {
+      tab.addEventListener('dragstart', (e) => {
+        draggedTabEl = tab;
+        tab.classList.add('is-dragging');
+        try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', tab.dataset.showcase || ''); } catch {}
+      });
+      tab.addEventListener('dragend', () => {
+        tab.classList.remove('is-dragging');
+        dkTabsStrip.querySelectorAll('.dk-tab.drag-over').forEach((n) => n.classList.remove('drag-over'));
+        draggedTabEl = null;
+      });
+      tab.addEventListener('dragover', (e) => {
+        if (!draggedTabEl || draggedTabEl === tab) return;
+        e.preventDefault();
+        tab.classList.add('drag-over');
+      });
+      tab.addEventListener('dragleave', () => {
+        tab.classList.remove('drag-over');
+      });
+      tab.addEventListener('drop', (e) => {
+        e.preventDefault();
+        tab.classList.remove('drag-over');
+        if (!draggedTabEl || draggedTabEl === tab) return;
+        const rect = tab.getBoundingClientRect();
+        const insertAfter = e.clientX > rect.left + rect.width / 2;
+        if (insertAfter) tab.after(draggedTabEl);
+        else tab.before(draggedTabEl);
+        showSnackbar('Reordered browser tabs · Chrome-grade drag-to-reorder');
+      });
+    });
+  }
+
+  // 2e. Interactive Chrome Extensions Manager Showcase (v4.8.0)
+  const DEMO_EXTS = {
+    ublock:     { label: 'uB', name: 'uBlock Origin Lite',    enabled: true,  pinned: true },
+    darkreader: { label: 'DR', name: 'Dark Reader',           enabled: true,  pinned: true },
+    reactdev:   { label: 'Rx', name: 'React Developer Tools', enabled: true,  pinned: false },
+    bitwarden:  { label: 'BW', name: 'Bitwarden Vault',       enabled: false, pinned: false }
+  };
+
+  function syncDemoExtensionsUi() {
+    const pinnedHost = document.getElementById('dk-pinned-exts');
+    const countBadge = document.getElementById('dk-ext-count-badge');
+    const spExtLbl = document.getElementById('dk-sp-ext-lbl');
+    const summaryEl = document.getElementById('demo-ext-summary');
+    const keys = Object.keys(DEMO_EXTS);
+    const activeCount = keys.filter((k) => DEMO_EXTS[k].enabled).length;
+
+    if (countBadge) countBadge.textContent = String(activeCount);
+    if (spExtLbl) spExtLbl.textContent = `${activeCount} Extension${activeCount === 1 ? '' : 's'}`;
+    if (summaryEl) summaryEl.textContent = `${activeCount} active of ${keys.length} · Native Chromium WebView2 MV3`;
+
+    if (pinnedHost) {
+      pinnedHost.innerHTML = '';
+      keys.forEach((k) => {
+        const ex = DEMO_EXTS[k];
+        if (!ex.enabled || !ex.pinned) return;
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = 'dk-pinned-pill';
+        pill.title = `${ex.name} (Pinned extension)`;
+        pill.textContent = ex.label;
+        pill.addEventListener('click', () => {
+          selectShowcase('extensions');
+          showSnackbar(`${ex.name} · Active MV3 extension`);
+        });
+        pinnedHost.appendChild(pill);
+      });
     }
-  } catch {}
+
+    keys.forEach((k) => {
+      const card = document.querySelector(`.ext-card[data-ext-id="${k}"]`);
+      if (card) card.classList.toggle('is-disabled', !DEMO_EXTS[k].enabled);
+      const pinBtn = document.querySelector(`[data-ext-pin="${k}"]`);
+      if (pinBtn) {
+        pinBtn.classList.toggle('is-pinned', DEMO_EXTS[k].pinned);
+        pinBtn.setAttribute('aria-pressed', DEMO_EXTS[k].pinned ? 'true' : 'false');
+        pinBtn.textContent = DEMO_EXTS[k].pinned ? 'Pinned' : 'Pin';
+      }
+    });
+  }
+
+  document.querySelectorAll('[data-ext-pin]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.extPin;
+      if (!DEMO_EXTS[id]) return;
+      DEMO_EXTS[id].pinned = !DEMO_EXTS[id].pinned;
+      syncDemoExtensionsUi();
+      showSnackbar(DEMO_EXTS[id].pinned
+        ? `Pinned ${DEMO_EXTS[id].name} to toolbar`
+        : `Unpinned ${DEMO_EXTS[id].name} from toolbar`);
+    });
+  });
+
+  document.querySelectorAll('[data-ext-action]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const act = btn.dataset.extAction;
+      if (act === 'store') showSnackbar('Chrome Web Store · Paste any extension URL or ID for 1-click install');
+      else if (act === 'import') showSnackbar('Scanned Google Chrome profile · Ready to 1-click import MV3 extensions');
+      else if (act === 'unpacked') showSnackbar('Load Unpacked · Opens folder picker via WebView2 AddBrowserExtensionAsync');
+      else if (act === 'crx') showSnackbar('Install .crx / .zip · Unpacks CRX2/CRX3/ZIP extension packages natively');
+      else if (act === 'update') showSnackbar('All installed extensions are up to date');
+    });
+  });
+
+  syncDemoExtensionsUi();
 
   // 3. Interactive Floating Video & MP3 Quality Menu + Live 8-Segment Accelerator Demo
   const QUALITY_PRESETS = {
@@ -676,6 +813,7 @@
 
   wpCards.forEach((card) => {
     card.addEventListener('click', () => {
+      userPickedWallpaper = true;
       wpCards.forEach((c) => c.classList.toggle('active', c === card));
       const src = card.dataset.wp;
       if (!src) return;
@@ -806,11 +944,20 @@
             ? 'Side-by-side multi-profile windows enabled'
             : 'Profiles switch in current window'
         );
+      } else if (sw.id === 'demo-ext-devmode') {
+        const drawer = document.getElementById('demo-ext-dev-drawer');
+        if (drawer) drawer.hidden = !next;
+        showSnackbar(next ? 'Developer mode ON · Load unpacked & .crx/.zip ready' : 'Developer mode OFF');
+      } else if (sw.dataset.extEnable && DEMO_EXTS[sw.dataset.extEnable]) {
+        const id = sw.dataset.extEnable;
+        DEMO_EXTS[id].enabled = next;
+        syncDemoExtensionsUi();
+        showSnackbar(`${DEMO_EXTS[id].name} ${next ? 'enabled' : 'disabled'}`);
       }
     });
   });
 
-  // 8. GitHub Releases API Dynamic Hydration (Fallback: v4.7.0)
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v4.8.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -890,4 +1037,16 @@
       }
     })
     .catch(() => {});
+
+  // 9. Optional URL preview parameters (?view=extensions, ?ctx=open) evaluated after all bindings
+  try {
+    const qp = new URLSearchParams(location.search || '');
+    const qpView = qp.get('view');
+    if (qpView && VIEW_META[qpView]) {
+      selectShowcase(qpView);
+    }
+    if (qp.get('ctx') === 'open') {
+      requestAnimationFrame(() => openShowcaseContextMenu('link', 'github.com/Dathevinci/Dejavu-browser'));
+    }
+  } catch {}
 })();

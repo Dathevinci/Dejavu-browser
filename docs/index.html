@@ -4,17 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>dejavu — Material Design 3 Browser for Windows &amp; Android</title>
-  <meta name="description" content="A native Windows &amp; Android browser built A to Z with Google Material Design 3 — featuring native Material Design 3 Right-Click &amp; Long-Press Context Menus, Fluid M3 Emphasized &amp; Spring Motion, Native Windows 10/11 &amp; Android Default Browser registration, zero-duplicate Chrome + Navigation Rail UI, live-synced Multi-Profile Google windows, YouTube 4K/MP3 Downloader, 16 Pure M3 &amp; Butterfly wallpapers, 86-country AI-ready VPN, and 0.85% idle CPU.">
+  <meta name="description" content="A native Windows &amp; Android browser built A to Z with Google Material Design 3 — featuring a Real Chrome Extensions Manager, Dynamic-Color M3 Geometric Butterfly Logo, A-to-Z Pixel M3 Home, Chrome-Grade Tab Drag-to-Reorder, native M3 Context Menus, Fluid M3 Motion, Native Default Browser registration, Multi-Profile Google windows, YouTube 4K/MP3 Downloader, 16 Pure M3 &amp; Butterfly wallpapers, 86-country AI-ready VPN, and <1% idle CPU.">
   <meta name="theme-color" content="#141218">
 
-  <link rel="icon" href="assets/dejavu.ico" sizes="any">
-  <link rel="icon" type="image/png" href="assets/logo-transparent.png">
-  <link rel="apple-touch-icon" href="assets/logo-transparent.png">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'%3E%3Crect x='2' y='2' width='60' height='60' rx='18' fill='%234F378B'/%3E%3Cpath d='M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z' fill='%23D0BCFF'/%3E%3Cpath d='M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z' fill='%23D0BCFF'/%3E%3Cpath d='M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z' fill='%23EADDFF' fill-opacity='.82'/%3E%3Cpath d='M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z' fill='%23EADDFF' fill-opacity='.82'/%3E%3Crect x='30' y='23.4' width='4' height='22.4' rx='2' fill='%23EADDFF'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" href="assets/dejavu-logo.png">
+  <link rel="apple-touch-icon" href="assets/dejavu-logo.png">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="dejavu browser">
-  <meta property="og:title" content="dejavu v4.7.0 — Material Design 3 Browser for Windows &amp; Android">
-  <meta property="og:description" content="Flagship Google Material Design 3 browser with native M3 Right-Click &amp; Long-Press Context Menus, Fluid M3 Motion everywhere, Native Windows &amp; Android Default Browser registration, live-synced Multi-Profile Google windows, YouTube 4K/MP3 Downloader, and 16 Pure Material 3 &amp; Butterfly Wallpapers.">
+  <meta property="og:title" content="dejavu v4.8.0 — Material Design 3 Browser for Windows &amp; Android">
+  <meta property="og:description" content="Flagship Google Material Design 3 browser with Real Chrome Extensions Manager, Dynamic-Color M3 Geometric Butterfly Logo, A-to-Z Pixel M3 Home, Chrome-Grade Tab Drag-to-Reorder, native M3 Context Menus, Multi-Profile Google windows, YouTube 4K/MP3 Downloader, and 16 Pure Material 3 &amp; Butterfly Wallpapers.">
   <meta property="og:url" content="https://dathevinci.github.io/Dejavu-browser/">
   <meta property="og:image" content="https://dathevinci.github.io/Dejavu-browser/assets/wallpapers/wp-m3-amethyst.jpg">
 
@@ -30,8 +30,21 @@
   <header id="m3-topbar" class="m3-topbar">
     <nav class="m3-topbar-inner" aria-label="Primary navigation">
       <a href="#overview" class="brand-link">
-        <span class="brand-mark">
-          <img src="assets/logo-transparent.png" alt="dejavu" width="24" height="24">
+        <span class="brand-mark" aria-hidden="true">
+          <svg class="m3-butterfly-svg" viewBox="0 0 64 64" width="38" height="38" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+            <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+            <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+            <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+            <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+            <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+            <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+            <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+            <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+            <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+            <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+            <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </span>
         <span class="brand-name">dejavu</span>
       </a>
@@ -109,7 +122,7 @@
 
   <main>
     <!-- =================================================================
-         HERO SECTION & v4.7.0 DUAL-DEVICE BROWSER SHOWCASE
+         HERO SECTION & v4.8.0 DUAL-DEVICE BROWSER SHOWCASE
          ================================================================= -->
     <section id="overview" class="hero container">
       <div class="hero-stage">
@@ -126,9 +139,9 @@
         <div class="hero-copy">
           <a id="release-pill" class="version-chip" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest" target="_blank" rel="noopener noreferrer">
             <span class="status-dot" aria-hidden="true"></span>
-            <strong id="release-version-badge">v4.7.0</strong>
+            <strong id="release-version-badge">v4.8.0</strong>
             <span class="version-sep" aria-hidden="true">·</span>
-            <span>M3 Context Menus &amp; Fluid Motion</span>
+            <span>Chrome Extensions &amp; Dynamic M3</span>
           </a>
 
           <h1 class="hero-title">
@@ -137,7 +150,7 @@
           </h1>
 
           <p class="hero-subtitle">
-            A calm native browser crafted A to Z in Google Material Design 3 — now with native <strong>M3 Right-Click &amp; Long-Press Context Menus</strong>, <strong>Fluid M3 Spring Motion</strong>, <strong>Native Windows 10/11 &amp; Android Default Browser</strong> registration, zero-duplicate Chrome, simultaneous Multi-Profile Google windows, YouTube 4K/MP3 downloading, and 16 Pure M3 &amp; Butterfly wallpapers.
+            A calm native browser crafted A to Z in Google Material Design 3 — now with a real <strong>Chrome Extensions Manager</strong>, a <strong>Dynamic-Color M3 Butterfly Logo</strong> (plus Android 13+ Themed App Icon), an <strong>A-to-Z Pixel Material 3 Home</strong>, <strong>Chrome-Grade Tab Drag-to-Reorder</strong>, native M3 Context Menus, Multi-Profile Google windows, YouTube 4K/MP3 downloading, and 16 Pure M3 &amp; Butterfly wallpapers.
           </p>
 
           <div class="hero-cta-row">
@@ -179,13 +192,17 @@
             <svg class="m3-seg-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span>Start Page</span>
           </button>
+          <button type="button" class="m3-seg-btn" role="tab" aria-selected="false" data-showcase="extensions">
+            <svg class="m3-seg-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Chrome Extensions</span>
+          </button>
           <button type="button" class="m3-seg-btn" role="tab" aria-selected="false" data-showcase="profiles">
             <svg class="m3-seg-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Multi-Profile &amp; Google</span>
+            <span>Multi-Profile</span>
           </button>
           <button type="button" class="m3-seg-btn" role="tab" aria-selected="false" data-showcase="video">
             <svg class="m3-seg-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>8× Video Downloader</span>
+            <span>8× Video</span>
           </button>
           <button type="button" class="m3-seg-btn" role="tab" aria-selected="false" data-showcase="vpn">
             <svg class="m3-seg-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -193,37 +210,50 @@
           </button>
           <button type="button" class="m3-seg-btn" role="tab" aria-selected="false" data-showcase="sync">
             <svg class="m3-seg-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>PC ↔ Phone Sync</span>
+            <span>PC ↔ Phone</span>
           </button>
         </div>
 
         <div class="dual-stage">
-          <!-- Windows Desktop Browser Frame (v4.7.0 Zero-Duplicate Chrome + M3 Context Menu + Navigation Rail) -->
+          <!-- Windows Desktop Browser Frame (v4.8.0 A-to-Z Pixel M3 Home + Draggable Tabs + Extensions Puzzle + Navigation Rail) -->
           <div class="desktop-frame" id="dk-desktop-frame">
             <div class="dk-tabs-row">
-              <div class="dk-logo-slot">
-                <img src="assets/logo-transparent.png" width="16" height="16" alt="">
+              <div class="dk-logo-slot" title="dejavu v4.8.0 · Dynamic Material 3 Logo">
+                <svg class="m3-butterfly-svg" viewBox="0 0 64 64" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+                  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+                  <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+                  <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                  <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+                  <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                  <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                  <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                  <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                  <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                  <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+                  <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+                </svg>
               </div>
-              <div class="dk-tabs" role="tablist" aria-label="Browser tabs">
-                <button type="button" class="dk-tab active" data-showcase="start">
+              <div class="dk-tabs" id="dk-tabs-strip" role="tablist" aria-label="Draggable browser tabs">
+                <button type="button" class="dk-tab active" data-showcase="start" draggable="true" title="Drag left or right to reorder tabs">
                   <span class="dk-tab-dot" style="background:var(--md-primary)"></span>
                   <span>Start Page</span>
                 </button>
-                <button type="button" class="dk-tab" data-showcase="profiles">
+                <button type="button" class="dk-tab" data-showcase="extensions" draggable="true" title="Drag left or right to reorder tabs">
+                  <span class="dk-tab-dot" style="background:#82d5c7"></span>
+                  <span>Extensions</span>
+                </button>
+                <button type="button" class="dk-tab" data-showcase="profiles" draggable="true" title="Drag left or right to reorder tabs">
                   <span class="dk-tab-dot" style="background:#a8c7fa"></span>
-                  <span>Profiles &amp; Google</span>
+                  <span>Profiles</span>
                 </button>
-                <button type="button" class="dk-tab" data-showcase="video">
+                <button type="button" class="dk-tab" data-showcase="video" draggable="true" title="Drag left or right to reorder tabs">
                   <span class="dk-tab-dot" style="background:#ef5350"></span>
-                  <span>YouTube 4K · MP3</span>
+                  <span>YouTube 4K</span>
                 </button>
-                <button type="button" class="dk-tab" data-showcase="vpn">
+                <button type="button" class="dk-tab" data-showcase="vpn" draggable="true" title="Drag left or right to reorder tabs">
                   <span class="dk-tab-dot" style="background:var(--md-tertiary)"></span>
                   <span>Gemini · VPN</span>
-                </button>
-                <button type="button" class="dk-tab" data-showcase="sync">
-                  <span class="dk-tab-dot" style="background:#82d5c7"></span>
-                  <span>dejavu Link</span>
                 </button>
               </div>
               <div class="dk-spacer"></div>
@@ -232,7 +262,7 @@
               </div>
             </div>
 
-            <!-- Decluttered v4.7.0 Top Chrome: Back / Forward / Reload + Pill Omnibox + VPN Pill + Profile Pill + 3-Dot Menu -->
+            <!-- Decluttered v4.8.0 Top Chrome: Back / Forward / Reload + Pill Omnibox + Pinned Extensions + Puzzle Button + VPN Pill + Profile Pill + 3-Dot Menu -->
             <div class="dk-toolbar">
               <div class="dk-btn-group">
                 <span class="dk-icon-btn muted" aria-hidden="true" title="Back">
@@ -261,6 +291,11 @@
               </div>
 
               <div class="dk-btn-group">
+                <div id="dk-pinned-exts" class="dk-pinned-exts" aria-label="Pinned Chrome extensions"></div>
+                <button type="button" class="dk-icon-btn dk-ext-puzzle-btn" id="dk-btn-extensions" data-showcase="extensions" title="Chrome Extensions Manager (dejavu://extensions)" aria-label="Chrome Extensions">
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><path d="M11.2 3.2a1.8 1.8 0 0 1 1.8 1.8v1h2a1.6 1.6 0 0 1 1.6 1.6v2.2h-1a1.8 1.8 0 1 0 0 3.6h1v2.2a1.6 1.6 0 0 1-1.6 1.6h-2.4v-1a1.8 1.8 0 1 0-3.6 0v1H6.4a1.6 1.6 0 0 1-1.6-1.6v-2.4h1a1.8 1.8 0 1 0 0-3.6h-1V7.6A1.6 1.6 0 0 1 6.4 6h2V5a1.8 1.8 0 0 1 2.8-1.8z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+                  <span id="dk-ext-count-badge" class="dk-puzzle-dot">3</span>
+                </button>
                 <button type="button" class="dk-vpn-pill" data-showcase="vpn" title="86-Country Smart VPN">
                   <span class="status-dot" aria-hidden="true"></span>
                   <span id="dk-vpn-code">US</span>
@@ -331,17 +366,36 @@
                   <div class="sp-item"><span class="sp-dot" style="background:#82d5c7"></span>Reddit — r/Android</div>
                 </aside>
 
-                <!-- VIEW 1: START PAGE -->
+                <!-- VIEW 1: v4.8.0 A-TO-Z PIXEL MATERIAL DESIGN 3 START PAGE -->
                 <div class="dk-page" data-page="start">
                   <div class="dk-wp-backdrop" id="dk-wp-backdrop"></div>
                   <div class="dk-wp-scrim"></div>
                   <div class="dk-sp-inner">
                     <div class="dk-sp-lockup">
-                      <img src="assets/logo-transparent.png" width="40" height="40" alt="dejavu">
+                      <span class="dk-sp-butterfly" aria-hidden="true">
+                        <svg class="m3-butterfly-svg" viewBox="0 0 64 64" width="54" height="54" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+                          <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+                          <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+                          <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                          <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+                          <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                          <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                          <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                          <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                          <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                          <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+                          <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                      </span>
                       <div class="dk-sp-brand">dejavu</div>
+                      <span class="dk-sp-greeting"><span class="status-dot" aria-hidden="true"></span>Good afternoon · Personal</span>
                     </div>
                     <div class="dk-sp-search">
-                      <span>Search Google or enter website</span>
+                      <span class="dk-sp-search-lead">
+                        <svg viewBox="0 0 18 18" width="16" height="16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.75"/><path d="M12 12l3.6 3.6" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/></svg>
+                        <span>Search Google or enter website</span>
+                      </span>
                       <span class="dk-sp-go" aria-hidden="true">
                         <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M3.5 8h9M9 4.5L12.5 8 9 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                       </span>
@@ -355,12 +409,121 @@
                       <div class="dk-qa-tile"><span class="qa-ico">X</span><small>X</small></div>
                     </div>
                     <div class="dk-sp-status">
-                      <span><strong>14,820</strong> ads &amp; trackers blocked</span>
+                      <span><strong>14,820</strong> blocked · Shield</span>
                       <span class="dk-sp-vpn-tag" id="dk-sp-vpn-tag">VPN · United States (Smart)</span>
+                      <button type="button" class="dk-ext-status-pill" data-showcase="extensions" title="Open Material Design 3 Extensions Manager">
+                        <svg viewBox="0 0 16 16" width="12" height="12" fill="none" aria-hidden="true"><path d="M9 2.4a1.4 1.4 0 0 1 1.4 1.4v.8h1.5a1.3 1.3 0 0 1 1.3 1.3v1.7h-.8a1.4 1.4 0 1 0 0 2.8h.8v1.7a1.3 1.3 0 0 1-1.3 1.3H10v-.8a1.4 1.4 0 1 0-2.8 0v.8H5.3A1.3 1.3 0 0 1 4 12.1v-1.9h.8a1.4 1.4 0 1 0 0-2.8H4V5.9a1.3 1.3 0 0 1 1.3-1.3h1.5v-.8A1.4 1.4 0 0 1 9 2.4z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/></svg>
+                        <span id="dk-sp-ext-lbl">3 Extensions</span>
+                      </button>
                       <button type="button" id="dk-try-ctx-btn" class="dk-ctx-trigger-pill" title="Right-click anywhere or click here to preview the Material 3 Context Menu">
                         <svg viewBox="0 0 16 16" width="12" height="12" fill="none" aria-hidden="true"><rect x="2.4" y="2.4" width="11.2" height="11.2" rx="2.6" stroke="currentColor" stroke-width="1.5"/><path d="M5.2 6h5.6M5.2 8.4h4.2M5.2 10.8h5.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                        <span>Try Right-Click Menu</span>
+                        <span>Right-Click</span>
                       </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- VIEW 2: REAL CHROME EXTENSIONS MANAGER (v4.8.0 Material Design 3) -->
+                <div class="dk-page hidden" data-page="extensions">
+                  <div class="dk-ext-stage">
+                    <div class="ext-top-bar">
+                      <div class="ext-title-wrap">
+                        <span class="ext-title-ico" aria-hidden="true">
+                          <svg viewBox="0 0 20 20" width="17" height="17" fill="none"><path d="M11.2 3.2a1.8 1.8 0 0 1 1.8 1.8v1h2a1.6 1.6 0 0 1 1.6 1.6v2.2h-1a1.8 1.8 0 1 0 0 3.6h1v2.2a1.6 1.6 0 0 1-1.6 1.6h-2.4v-1a1.8 1.8 0 1 0-3.6 0v1H6.4a1.6 1.6 0 0 1-1.6-1.6v-2.4h1a1.8 1.8 0 1 0 0-3.6h-1V7.6A1.6 1.6 0 0 1 6.4 6h2V5a1.8 1.8 0 0 1 2.8-1.8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+                        </span>
+                        <div>
+                          <h3>Extensions</h3>
+                          <small id="demo-ext-summary">3 installed · Native Chromium WebView2 MV3</small>
+                        </div>
+                      </div>
+                      <div class="ext-dev-toggle">
+                        <span>Developer mode</span>
+                        <button type="button" id="demo-ext-devmode" class="m3-switch is-on" role="switch" aria-checked="true" aria-label="Toggle Developer mode">
+                          <span class="m3-switch-thumb">
+                            <svg viewBox="0 0 14 14" width="12" height="12" fill="none" aria-hidden="true"><path d="M2.8 7.3L5.6 10.1L11.2 4.1" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="ext-action-bar">
+                      <button type="button" class="m3-btn m3-btn-filled m3-btn-sm" data-ext-action="store">Chrome Web Store</button>
+                      <button type="button" class="m3-btn m3-btn-tonal m3-btn-sm" data-ext-action="import">Import from Chrome</button>
+                      <div id="demo-ext-dev-drawer" class="ext-dev-drawer">
+                        <button type="button" class="m3-btn m3-btn-outlined m3-btn-sm" data-ext-action="unpacked">Load unpacked</button>
+                        <button type="button" class="m3-btn m3-btn-outlined m3-btn-sm" data-ext-action="crx">Install .crx / .zip</button>
+                        <button type="button" class="m3-btn m3-btn-outlined m3-btn-sm" data-ext-action="update">Update all</button>
+                      </div>
+                    </div>
+
+                    <div class="ext-cards-grid" id="demo-ext-grid">
+                      <div class="ext-card" data-ext-id="ublock">
+                        <div class="ext-card-head">
+                          <span class="ext-ico is-shield">uB</span>
+                          <div class="ext-meta">
+                            <strong>uBlock Origin Lite <span class="ext-ver">2026.4</span></strong>
+                            <small>Declarative MV3 content filter &amp; tracker guard</small>
+                          </div>
+                        </div>
+                        <div class="ext-card-foot">
+                          <button type="button" class="ext-pill-btn is-pinned" data-ext-pin="ublock" aria-pressed="true">Pinned</button>
+                          <span class="ext-mv-chip">MV3</span>
+                          <button type="button" class="m3-switch is-on ext-en-sw" data-ext-enable="ublock" role="switch" aria-checked="true" aria-label="Toggle uBlock Origin Lite">
+                            <span class="m3-switch-thumb"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" aria-hidden="true"><path d="M2.8 7.3L5.6 10.1L11.2 4.1" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="ext-card" data-ext-id="darkreader">
+                        <div class="ext-card-head">
+                          <span class="ext-ico is-moon">DR</span>
+                          <div class="ext-meta">
+                            <strong>Dark Reader <span class="ext-ver">4.9.98</span></strong>
+                            <small>Adaptive night themes on every website</small>
+                          </div>
+                        </div>
+                        <div class="ext-card-foot">
+                          <button type="button" class="ext-pill-btn is-pinned" data-ext-pin="darkreader" aria-pressed="true">Pinned</button>
+                          <span class="ext-mv-chip">MV3</span>
+                          <button type="button" class="m3-switch is-on ext-en-sw" data-ext-enable="darkreader" role="switch" aria-checked="true" aria-label="Toggle Dark Reader">
+                            <span class="m3-switch-thumb"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" aria-hidden="true"><path d="M2.8 7.3L5.6 10.1L11.2 4.1" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="ext-card" data-ext-id="reactdev">
+                        <div class="ext-card-head">
+                          <span class="ext-ico is-dev">Rx</span>
+                          <div class="ext-meta">
+                            <strong>React Developer Tools <span class="ext-ver">6.1.0</span></strong>
+                            <small>Inspect component trees &amp; live hooks</small>
+                          </div>
+                        </div>
+                        <div class="ext-card-foot">
+                          <button type="button" class="ext-pill-btn" data-ext-pin="reactdev" aria-pressed="false">Pin</button>
+                          <span class="ext-mv-chip">Unpacked</span>
+                          <button type="button" class="m3-switch is-on ext-en-sw" data-ext-enable="reactdev" role="switch" aria-checked="true" aria-label="Toggle React Developer Tools">
+                            <span class="m3-switch-thumb"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" aria-hidden="true"><path d="M2.8 7.3L5.6 10.1L11.2 4.1" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="ext-card" data-ext-id="bitwarden">
+                        <div class="ext-card-head">
+                          <span class="ext-ico is-vault">BW</span>
+                          <div class="ext-meta">
+                            <strong>Bitwarden Vault <span class="ext-ver">2026.2</span></strong>
+                            <small>Imported from Google Chrome · 1-click autofill</small>
+                          </div>
+                        </div>
+                        <div class="ext-card-foot">
+                          <button type="button" class="ext-pill-btn" data-ext-pin="bitwarden" aria-pressed="false">Pin</button>
+                          <span class="ext-mv-chip">Chrome</span>
+                          <button type="button" class="m3-switch ext-en-sw" data-ext-enable="bitwarden" role="switch" aria-checked="false" aria-label="Toggle Bitwarden Vault">
+                            <span class="m3-switch-thumb"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" aria-hidden="true"><path d="M2.8 7.3L5.6 10.1L11.2 4.1" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -670,7 +833,7 @@
             </div>
           </div>
 
-          <!-- Companion Google Pixel Phone Mockup (Streamlined v4.7.0 M3 Layout) -->
+          <!-- Companion Google Pixel Phone Mockup (A-to-Z v4.8.0 Pixel M3 Layout + Dynamic Butterfly) -->
           <div class="pixel-frame" aria-label="dejavu Mobile on Google Pixel">
             <div class="pixel-camera" aria-hidden="true"></div>
             <div class="pixel-screen">
@@ -695,7 +858,20 @@
                 </div>
 
                 <div class="px-hero">
-                  <img src="assets/logo-transparent.png" width="28" height="28" alt="">
+                  <svg class="m3-butterfly-svg" viewBox="0 0 64 64" width="38" height="38" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+                    <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+                    <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+                    <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                    <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+                    <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+                    <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                    <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                    <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+                    <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+                    <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+                    <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
                   <span>dejavu</span>
                 </div>
 
@@ -714,7 +890,7 @@
                 </div>
 
                 <div class="px-pc-card">
-                  <small>FROM WINDOWS PC</small>
+                  <small>AT A GLANCE · 4 ADD-ONS</small>
                   <strong id="px-synced-title">Start Page · dejavu</strong>
                 </div>
               </div>
@@ -739,24 +915,24 @@
       <!-- MATERIAL 3 TONAL 4-STAT STRIP -->
       <div class="stats-strip">
         <div class="stat-card m3-reveal" style="--reveal-idx:0">
-          <strong>M3</strong>
-          <span>Context Menus &amp; Motion</span>
-          <small>Windows right-click &amp; Android long-press sheets</small>
+          <strong>MV3</strong>
+          <span>Chrome Extensions</span>
+          <small>Web Store, .crx/.zip, Unpacked &amp; Import from Chrome</small>
         </div>
         <div class="stat-card m3-reveal" style="--reveal-idx:1">
-          <strong>2+</strong>
-          <span>Simultaneous Windows</span>
-          <small>Live-synced Google profiles &amp; Private mode</small>
+          <strong>M3</strong>
+          <span>Dynamic Butterfly &amp; Home</span>
+          <small>6 Material You seeds + Android 13+ Themed Icon</small>
         </div>
         <div class="stat-card m3-reveal" style="--reveal-idx:2">
           <strong>8×</strong>
           <span>4K &amp; MP3 Downloader</span>
-          <small>YouTube &amp; 1,000+ sites · Zero extensions</small>
+          <small>YouTube &amp; 1,000+ sites · Built natively</small>
         </div>
         <div class="stat-card m3-reveal" style="--reveal-idx:3">
-          <strong>0.85%</strong>
+          <strong>&lt;1%</strong>
           <span>Idle CPU · 86+ VPN</span>
-          <small>Default browser ready · 279k+ ad shield</small>
+          <small>Tab drag-to-reorder · Default browser · 279k+ shield</small>
         </div>
       </div>
     </section>
@@ -766,39 +942,43 @@
          ================================================================= -->
     <section id="features" class="section container">
       <div class="section-head">
-        <span class="eyebrow">Engineered A to Z · v4.7.0</span>
+        <span class="eyebrow">Engineered A to Z · v4.8.0</span>
         <h2>Calm design. Flagship capabilities.</h2>
-        <p>Every interaction refined in Google Material Design 3 — native right-click &amp; long-press context menus, fluid emphasized &amp; spring motion, one-click Windows &amp; Android default browser registration, zero-duplicate Chrome ergonomics, simultaneous Multi-Profile windows, and built-in 4K/MP3 downloading.</p>
+        <p>Every surface refined A to Z in Google Material Design 3 — real Chrome Extensions on Windows &amp; Web Add-ons on Android, a Dynamic-Color M3 Geometric Butterfly Logo, Chrome-grade Tab Drag-to-Reorder, native right-click &amp; long-press context menus, simultaneous Multi-Profile windows, and built-in 4K/MP3 downloading.</p>
       </div>
 
       <div class="bento-grid">
-        <!-- Row 1: Span 2 + Span 1 (v4.7.0 Headline Upgrades) -->
+        <!-- Row 1: Span 2 + Span 1 (v4.8.0 Headline Upgrades) -->
         <article class="bento-card span-2 tone-primary m3-reveal" style="--reveal-idx:0">
           <div class="bento-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-              <rect x="4" y="4" width="16" height="16" rx="3.5" stroke="currentColor" stroke-width="1.9"/>
-              <path d="M8 9h8M8 12.5h5.5M8 16h8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+              <path d="M13.4 3.5a2.2 2.2 0 0 1 2.2 2.2v1.3h2.4a2 2 0 0 1 2 2v2.7h-1.2a2.2 2.2 0 1 0 0 4.4H20V19a2 2 0 0 1-2 2h-2.9v-1.2a2.2 2.2 0 1 0-4.4 0V21H7.8a2 2 0 0 1-2-2v-2.9h1.2a2.2 2.2 0 1 0 0-4.4H5.8V9a2 2 0 0 1 2-2h2.4V5.7a2.2 2.2 0 0 1 3.2-2.2z" stroke="currentColor" stroke-width="1.85" stroke-linejoin="round"/>
             </svg>
           </div>
-          <h3>Material Design 3 Context Menus &amp; Fluid M3 Motion Everywhere</h3>
-          <p>Native right-click menus on Windows (webpages, links, images, tabs, Start Page &amp; omnibox) and Google Pixel <strong>Long-Press Bottom Sheets</strong> on Android — paired with official M3 Emphasized &amp; Spring GPU-only transitions across every menu, switch, sheet, and dialog with strictly zero CSS blur.</p>
+          <h3>Real Chrome Extensions Manager (Windows) &amp; Add-ons (Android)</h3>
+          <p>Run real Chromium Manifest V3 extensions natively in <strong>dejavu</strong> via WebView2 — install 1-click from the <strong>Chrome Web Store</strong>, <strong>Import from Google Chrome</strong>, <strong>Load Unpacked</strong> folders, or unpack <code>.crx</code> / <code>.zip</code> packages, pin favorites straight to the toolbar Puzzle strip, and enjoy 5 built-in page enhancers + <strong>Custom Userscripts (<code>.user.js</code>)</strong> on Android.</p>
           <div class="bento-pills">
-            <span>Windows Right-Click Menus</span>
-            <span>Android Long-Press Sheets</span>
-            <span>Emphasized &amp; Spring Motion</span>
-            <span>Zero CSS Blur</span>
+            <span>Load Unpacked &amp; .crx/.zip</span>
+            <span>1-Click Chrome Web Store</span>
+            <span>Import from Chrome</span>
+            <span>Pin to Toolbar</span>
+            <span>Android .user.js Add-ons</span>
           </div>
         </article>
 
         <article class="bento-card tone-surface m3-reveal" style="--reveal-idx:1">
           <div class="bento-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-              <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.9"/>
-              <path d="M8.5 12.2l2.3 2.3 4.8-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg class="m3-butterfly-svg" viewBox="0 0 64 64" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+              <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+              <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+              <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.78"/>
+              <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.78"/>
+              <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
             </svg>
           </div>
-          <h3>Native Windows 10/11 &amp; Android Default Browser</h3>
-          <p>Full Windows 10/11 <code>RegisteredApplications</code> + <code>StartMenuInternet</code> protocol/file registration and official Android <code>RoleManager</code> (<code>ROLE_BROWSER</code>) support — make <strong>dejavu</strong> your system default browser in a single tap.</p>
+          <h3>Dynamic M3 Butterfly Logo &amp; Tab Drag-to-Reorder</h3>
+          <p>Our new geometric origami Butterfly morphs automatically across all 6 Material You seeds + Android 13+ Themed Home Icons — paired with an elevated <code>56px</code> Pixel Start Page and silky Chrome-grade <strong>Tab Drag-to-Reorder</strong> with pinned boundaries &amp; drag-to-new-window.</p>
         </article>
 
         <!-- Row 2: Span 1 + Span 2 -->
@@ -811,8 +991,8 @@
               <circle cx="18" cy="17" r="2" stroke="currentColor" stroke-width="1.8"/>
             </svg>
           </div>
-          <h3>Zero-Duplicate Chrome &amp; 10-Category M3 Settings</h3>
-          <p>Decluttered single-instance Chrome + Left Navigation Rail paired with live-searchable 10-category Settings (<code>Ctrl+,</code>), spring-animated <code>52×32</code> checkmark switches, Default Browser status, and Memory Saver.</p>
+          <h3>M3 Context Menus, Default Browser &amp; 10-Category Settings</h3>
+          <p>Native right-click &amp; Android long-press M3 Context Menus, Fluid M3 Spring Motion with zero CSS blur, one-click Windows 10/11 &amp; Android (<code>ROLE_BROWSER</code>) Default Browser registration, and searchable 10-category Settings (<code>Ctrl+,</code>).</p>
           <div class="bento-m3-toggles" aria-label="Interactive Material 3 Settings preview">
             <div class="m3-switch-row compact">
               <span>Memory Saver</span>
@@ -1193,21 +1373,21 @@
     </section>
 
     <!-- =================================================================
-         CLEAN 3-CARD MATERIAL 3 DOWNLOAD SECTION (v4.7.0)
+         CLEAN 3-CARD MATERIAL 3 DOWNLOAD SECTION (v4.8.0)
          ================================================================= -->
     <section id="download" class="section container">
       <div class="dl-panel">
         <div class="section-head">
-          <span class="eyebrow" id="dl-ver-eyebrow">Latest Official Release · v4.7.0</span>
+          <span class="eyebrow" id="dl-ver-eyebrow">Latest Official Release · v4.8.0</span>
           <h2>Get dejavu on Windows &amp; Android.</h2>
-          <p>Permanently signed GitHub Releases with native Windows 10/11 &amp; Android Default Browser registration and built-in automatic updates.</p>
+          <p>Permanently signed GitHub Releases with real Chrome Extensions, Dynamic Material Design 3 Butterfly Logo, native Windows 10/11 &amp; Android Default Browser registration, and built-in automatic updates.</p>
         </div>
 
         <div class="dl-cards">
           <a id="card-dl-setup" class="dl-card featured m3-reveal" style="--reveal-idx:0" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-Setup.exe">
             <span class="dl-tag">Recommended · Windows 10/11</span>
             <h3>Windows Installer</h3>
-            <p>Guided Material You installer with native Windows Default Browser registration, Material 3 Right-Click Context Menus, Fluid M3 Motion, zero-duplicate Chrome + Rail UI, Multi-Window Google Profiles, YouTube 4K/MP3 downloader, and auto-updates.</p>
+            <p>Guided Material You installer with Real Chrome Extensions Manager, Dynamic M3 Butterfly Logo, Chrome-grade Tab Drag-to-Reorder, native Windows Default Browser registration, Multi-Window Google Profiles, YouTube 4K/MP3 downloader, and auto-updates.</p>
             <div class="dl-foot">
               <span class="dl-file-meta" id="card-setup-size">dejavu-Setup.exe</span>
               <span class="m3-btn m3-btn-filled m3-btn-sm">Download</span>
@@ -1217,9 +1397,9 @@
           <a id="card-dl-android" class="dl-card m3-reveal" style="--reveal-idx:1" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-mobile.apk">
             <span class="dl-tag">Android 8.0+ · Permanent V1–V3 Signing</span>
             <h3>Android Mobile (.apk)</h3>
-            <p>Authentic Google Pixel Material Design 3 UI, Long-Press M3 Context Menu Bottom Sheets, official Android Default Browser (RoleManager) support, Fluid M3 Spring Motion, YouTube downloader, 16 Pure M3 &amp; Butterfly wallpapers, and PC sync.</p>
+            <p>A-to-Z Google Pixel Material Design 3 Home, Android 13+ Material You Themed Butterfly Icon, Extensions &amp; Custom Userscripts Manager, Long-Press M3 Context Menus, official Android Default Browser (RoleManager), YouTube downloader, and PC sync.</p>
             <div class="dl-upgrade-note">
-              Upgrading from v4.2.0 or earlier? Uninstall once before installing v4.7.0 — all future updates install automatically in-place.
+              Upgrading from v4.2.0 or earlier? Uninstall once before installing v4.8.0 — all future updates install automatically in-place.
             </div>
             <div class="dl-foot">
               <span class="dl-file-meta" id="card-android-size">dejavu-mobile.apk</span>
@@ -1230,7 +1410,7 @@
           <a id="card-dl-portable" class="dl-card m3-reveal" style="--reveal-idx:2" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu.exe">
             <span class="dl-tag">Zero Install · Windows x64</span>
             <h3>Portable (.exe)</h3>
-            <p>Single-file native Windows executable with Material 3 Right-Click Context Menus, Fluid M3 Motion, simultaneous Multi-Profile Google windows, 4K/MP3 downloader &amp; 0.85% idle CPU — runs from any folder or USB drive.</p>
+            <p>Single-file native Windows executable with Real Chrome Extensions Manager, Dynamic M3 Butterfly Logo, Tab Drag-to-Reorder, simultaneous Multi-Profile Google windows, 4K/MP3 downloader &amp; &lt;1% idle CPU — runs from any folder or USB drive.</p>
             <div class="dl-foot">
               <span class="dl-file-meta" id="card-portable-size">dejavu.exe</span>
               <span class="m3-btn m3-btn-outlined m3-btn-sm">Download</span>
@@ -1244,9 +1424,22 @@
   <footer class="m3-footer">
     <div class="m3-footer-inner">
       <div class="foot-brand">
-        <img src="assets/logo-transparent.png" width="22" height="22" alt="">
+        <svg class="m3-butterfly-svg" viewBox="0 0 64 64" width="26" height="26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+          <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+          <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+          <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+          <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+          <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+          <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+          <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+          <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+          <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+          <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+          <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
         <strong>dejavu</strong>
-        <span>Material Design 3 Browser for Windows &amp; Android · v4.7.0</span>
+        <span>Material Design 3 Browser for Windows &amp; Android · v4.8.0</span>
       </div>
       <div class="foot-links">
         <a href="https://github.com/Dathevinci/Dejavu-browser" target="_blank" rel="noopener noreferrer">GitHub</a>

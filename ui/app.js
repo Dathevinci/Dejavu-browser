@@ -1,7 +1,7 @@
 /**
- * dejavu v4.7.0 Native Shell Controller — Authentic Google Material Design 3
- * Full 10-Category Pixel/Chrome Settings, M3 Right-Click Context Menus Everywhere,
- * Fluid M3 GPU Motion, Multi-Window Profiles, 17 Pure M3 Wallpapers & 8x Turbo Downloader.
+ * dejavu v4.8.0 Native Shell Controller — Authentic Google Material Design 3 Expressive
+ * Dynamic M3 Butterfly Logo, Pixel Home, Live Tab/Bookmark/Shortcut Drag-to-Reorder,
+ * Real Chrome Extensions Manager, 10-Category Settings, M3 Context Menus & 8x Turbo Downloader.
  */
 (function () {
   const send = (msg) => {
@@ -9,6 +9,55 @@
       window.chrome.webview.postMessage(msg);
     } catch {}
   };
+
+  // Canonical Dynamic-Color Material Design 3 Geometric Origami Butterfly SVG (zero raster halftone PNGs!)
+  const DEJAVU_M3_LOGO_SVG = `<svg class="djv-m3-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+    <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+    <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+    <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+    <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+    <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+    <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+    <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+    <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+    <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+    <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+    <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+    <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+  </svg>`;
+
+  function makeM3LogoSpan(sz, cls) {
+    const el = document.createElement('span');
+    el.className = cls || 'm3-logo-fallback';
+    el.style.width = `${sz}px`;
+    el.style.height = `${sz}px`;
+    el.style.display = 'inline-flex';
+    el.style.alignItems = 'center';
+    el.style.justifyContent = 'center';
+    el.style.flexShrink = '0';
+    el.innerHTML = DEJAVU_M3_LOGO_SVG.replace('<svg ', `<svg width="${sz}" height="${sz}" `);
+    return el;
+  }
+
+  function swapImgToM3Logo(imgEl, sz, cls) {
+    if (!imgEl || !imgEl.parentNode) return;
+    imgEl.replaceWith(makeM3LogoSpan(sz, cls));
+  }
+
+  // Upgrade default profile avatar to Dynamic Material Design 3 Butterfly SVG
+  if (window.DejavuAvatars && typeof window.DejavuAvatars.renderHtml === 'function') {
+    const origAvatarRender = window.DejavuAvatars.renderHtml;
+    if (Array.isArray(window.DejavuAvatars.list) && window.DejavuAvatars.list[0] && window.DejavuAvatars.list[0].id === 'dejavu-halftone') {
+      window.DejavuAvatars.list[0].name = 'Material You';
+    }
+    window.DejavuAvatars.renderHtml = function (id, size) {
+      const sz = size || 32;
+      if (!id || id === 'dejavu-halftone') {
+        return `<span class="bf-avatar bf-avatar-m3" style="width:${sz}px;height:${sz}px;">${DEJAVU_M3_LOGO_SVG}</span>`;
+      }
+      return origAvatarRender.call(window.DejavuAvatars, id, sz);
+    };
+  }
 
   const body = document.body;
   const chromeHeader = document.getElementById('chrome-header');
@@ -52,6 +101,10 @@
   const btnTabOverview = document.getElementById('btn-tab-overview');
   const btnHistory = document.getElementById('btn-history');
   const btnSettings = document.getElementById('btn-settings');
+  const pinnedExtensions = document.getElementById('pinned-extensions');
+  const btnExtensions = document.getElementById('btn-extensions');
+  const extToolbarDot = document.getElementById('ext-toolbar-dot');
+  const tabDetachPill = document.getElementById('tab-detach-pill');
   const btnProfile = document.getElementById('btn-profile');
   const profileAvatarSlot = document.getElementById('profile-avatar-slot');
   const profilePillName = document.getElementById('profile-pill-name');
@@ -95,6 +148,8 @@
   const newtabVpnChip = document.getElementById('newtab-vpn-chip');
   const newtabVpnText = document.getElementById('newtab-vpn-text');
   const newtabVpnSub = document.getElementById('newtab-vpn-sub');
+  const newtabExtChip = document.getElementById('newtab-ext-chip');
+  const newtabExtText = document.getElementById('newtab-ext-text');
 
   const tabOverview = document.getElementById('tab-overview');
   const btnOvGroup = document.getElementById('btn-ov-group');
@@ -372,6 +427,39 @@
   const dlmCntActive = document.getElementById('dlm-cnt-active');
   const dlmCntMedia = document.getElementById('dlm-cnt-media');
 
+  // Chrome-Grade Material Design 3 Extensions Manager & Chrome Import Modal
+  const extensionsOverlay = document.getElementById('extensions-overlay');
+  const extCountBadge = document.getElementById('ext-count-badge');
+  const extSearchInput = document.getElementById('ext-search-input');
+  const btnExtSearchClear = document.getElementById('btn-ext-search-clear');
+  const extDevSwitch = document.getElementById('ext-dev-switch');
+  const btnExtDone = document.getElementById('btn-ext-done');
+  const btnExtWebstore = document.getElementById('btn-ext-webstore');
+  const extStoreForm = document.getElementById('ext-store-form');
+  const extStoreInput = document.getElementById('ext-store-input');
+  const btnExtStoreInstall = document.getElementById('btn-ext-store-install');
+  const btnExtScanChrome = document.getElementById('btn-ext-scan-chrome');
+  const extDevBar = document.getElementById('ext-dev-bar');
+  const btnExtLoadUnpacked = document.getElementById('btn-ext-load-unpacked');
+  const btnExtInstallFile = document.getElementById('btn-ext-install-file');
+  const btnExtUpdateAll = document.getElementById('btn-ext-update-all');
+  const btnExtRefresh = document.getElementById('btn-ext-refresh');
+  const extStatusBanner = document.getElementById('ext-status-banner');
+  const extStatusMsg = document.getElementById('ext-status-msg');
+  const extScroll = document.getElementById('ext-scroll');
+  const extViewGrid = document.getElementById('ext-view-grid');
+  const extCardsGrid = document.getElementById('ext-cards-grid');
+  const extViewDetails = document.getElementById('ext-view-details');
+  const btnExtDetailsBack = document.getElementById('btn-ext-details-back');
+  const extDetailsBody = document.getElementById('ext-details-body');
+
+  const chromeImportOverlay = document.getElementById('chrome-import-overlay');
+  const chromeImportSub = document.getElementById('chrome-import-sub');
+  const chromeImportList = document.getElementById('chrome-import-list');
+  const btnChromeImportClose = document.getElementById('btn-chrome-import-close');
+  const btnChromeImportRescan = document.getElementById('btn-chrome-import-rescan');
+  const btnChromeImportDone = document.getElementById('btn-chrome-import-done');
+
   const SEED_COLORS = {
     amethyst: '#d0bcff',
     sapphire: '#a8c7fa',
@@ -381,7 +469,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v4.7.0 — 16 HD + 1 Live = 17 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v4.8.0 — 16 HD + 1 Live = 17 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 12 Sculptural / Architectural Material Design 3 HD Wallpapers
@@ -560,6 +648,11 @@
     settingsPane: 'you',
     dlManagerOpen: false,
     dlManagerTab: 'all',
+    extensionsOpen: false,
+    extensionsSupported: bootData.extensionsSupported !== false,
+    extensionsDevMode: !!bootData.extensionsDevMode,
+    extensionsBusy: false,
+    extensions: Array.isArray(bootData.extensions) ? bootData.extensions : [],
     turboDownloads: [],
     pageMedia: [],
     activeTabUrl: '',
@@ -580,7 +673,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '4.7.0',
+    appVersion: bootData.appVersion || '4.8.0',
     isDefaultBrowser: !!bootData.isDefaultBrowser,
     canReopenClosedTab: !!bootData.canReopenClosedTab,
     updateStatus: bootData.updateStatus || '',
@@ -626,7 +719,8 @@
     const anyModal =
       (profileSetupOverlay && !profileSetupOverlay.classList.contains('hidden')) ||
       (clearDataOverlay && !clearDataOverlay.classList.contains('hidden')) ||
-      (resetConfirmOverlay && !resetConfirmOverlay.classList.contains('hidden'));
+      (resetConfirmOverlay && !resetConfirmOverlay.classList.contains('hidden')) ||
+      (chromeImportOverlay && !chromeImportOverlay.classList.contains('hidden'));
     body.classList.toggle('modal-open', anyModal);
     if (anyModal) window.DejavuNewTabCanvas.start();
   }
@@ -749,6 +843,14 @@
   btnVpn.addEventListener('click', openVpnPopover);
   if (newtabShieldChip) newtabShieldChip.addEventListener('click', openShieldPopover);
   if (newtabVpnChip) newtabVpnChip.addEventListener('click', openVpnPopover);
+  if (newtabExtChip) newtabExtChip.addEventListener('click', () => send({ type: 'openExtensions' }));
+
+  if (btnExtensions) {
+    btnExtensions.addEventListener('click', () => {
+      const r = btnExtensions.getBoundingClientRect();
+      send({ type: 'openExtensionsPopover', anchorRight: Math.round(r.right + 16) });
+    });
+  }
 
   btnDownloads.addEventListener('click', () => {
     const r = btnDownloads.getBoundingClientRect();
@@ -1077,11 +1179,12 @@
   }, { passive: true });
 
   // =========================================================================
-  // Start Page Sections: Quick Access, Frequently Visited, Reading List
+  // Start Page Sections: Quick Access (Drag-to-Reorder), Frequently Visited, Reading List
   // =========================================================================
   let lastShortcutsSig = '';
   let lastFrequentSig = '';
   let lastReadingSig = '';
+  let suppressShortcutClickUntil = 0;
 
   function renderShortcuts(list) {
     const sig = JSON.stringify(list || []);
@@ -1089,11 +1192,13 @@
     lastShortcutsSig = sig;
     shortcutsGrid.innerHTML = '';
 
-    (list || []).forEach((sc, index) => {
+    const items = Array.isArray(list) ? list : [];
+    items.forEach((sc, index) => {
       const host = extractHost(sc.url);
       const item = document.createElement('button');
       item.type = 'button';
       item.className = 'm3-fav-item';
+      item.dataset.scIdx = String(index);
       item.title = sc.url;
 
       const sq = document.createElement('div');
@@ -1120,16 +1225,25 @@
         sq.appendChild(sp);
       }
 
-      const rmBtn = document.createElement('span');
-      rmBtn.className = 'shortcut-remove';
-      rmBtn.textContent = '×';
-      rmBtn.title = 'Remove';
-      rmBtn.addEventListener('click', (e) => {
+      // Hover 3-dot M3 Quick Edit/Menu button
+      const moreBtn = document.createElement('span');
+      moreBtn.className = 'shortcut-more-btn';
+      moreBtn.title = 'Edit or remove shortcut';
+      moreBtn.setAttribute('role', 'button');
+      moreBtn.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3.8" r="1.25" fill="currentColor"/><circle cx="8" cy="8" r="1.25" fill="currentColor"/><circle cx="8" cy="12.2" r="1.25" fill="currentColor"/></svg>';
+      moreBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+      moreBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const next = list.filter((_, i) => i !== index);
-        send({ type: 'saveShortcuts', shortcuts: next });
+        hideStartPageStatus();
+        const r = moreBtn.getBoundingClientRect();
+        showLinkItemContextMenu({
+          kind: 'shortcut',
+          title: sc.name || host,
+          url: sc.url,
+          shortcutIndex: index
+        }, Math.round(r.left), Math.round(r.bottom + 4));
       });
-      sq.appendChild(rmBtn);
+      sq.appendChild(moreBtn);
 
       const label = document.createElement('span');
       label.className = 'm3-fav-label';
@@ -1139,7 +1253,12 @@
       item.appendChild(label);
       item.addEventListener('pointerenter', () => showStartPageStatus(sc.url));
       item.addEventListener('pointerleave', hideStartPageStatus);
+      item.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 || e.target.closest('.shortcut-more-btn')) return;
+        startShortcutDrag(e, item, index);
+      });
       item.addEventListener('click', () => {
+        if (Date.now() < suppressShortcutClickUntil) return;
         hideStartPageStatus();
         send({ type: 'navigate', input: sc.url });
       });
@@ -1157,7 +1276,7 @@
       shortcutsGrid.appendChild(item);
     });
 
-    if ((list || []).length < 12) {
+    if (items.length < 12) {
       const addItem = document.createElement('button');
       addItem.type = 'button';
       addItem.className = 'm3-fav-item shortcut-add';
@@ -1171,6 +1290,74 @@
       addItem.addEventListener('click', () => openShortcutModal(-1));
       shortcutsGrid.appendChild(addItem);
     }
+  }
+
+  function startShortcutDrag(downEv, itemEl, startIdx) {
+    const startX = downEv.clientX;
+    const startY = downEv.clientY;
+    const pid = downEv.pointerId;
+    let active = false;
+    let targetIdx = startIdx;
+    let tileEls = [];
+    let tileRects = [];
+
+    const onMove = (ev) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (!active) {
+        if (Math.hypot(dx, dy) < 6) return;
+        active = true;
+        hideStartPageStatus();
+        tileEls = Array.from(shortcutsGrid.querySelectorAll('.m3-fav-item:not(.shortcut-add)'));
+        tileRects = tileEls.map((el) => el.getBoundingClientRect());
+        itemEl.classList.add('is-dragging');
+        try { itemEl.setPointerCapture(pid); } catch {}
+      }
+      itemEl.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+
+      let nextIdx = startIdx;
+      for (let i = 0; i < tileRects.length; i++) {
+        const r = tileRects[i];
+        if (ev.clientX >= r.left - 8 && ev.clientX <= r.right + 8 && ev.clientY >= r.top - 8 && ev.clientY <= r.bottom + 8) {
+          nextIdx = i;
+          break;
+        }
+      }
+      if (nextIdx !== targetIdx) {
+        if (tileEls[targetIdx]) tileEls[targetIdx].classList.remove('drag-over');
+        targetIdx = nextIdx;
+        if (targetIdx !== startIdx && tileEls[targetIdx]) tileEls[targetIdx].classList.add('drag-over');
+      }
+    };
+
+    const finish = (cancelled) => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+      if (!active) return;
+      suppressShortcutClickUntil = Date.now() + 220;
+      itemEl.classList.remove('is-dragging');
+      itemEl.style.transform = '';
+      tileEls.forEach((el) => el.classList.remove('drag-over'));
+      try { itemEl.releasePointerCapture(pid); } catch {}
+      if (!cancelled && targetIdx !== startIdx) {
+        const cur = Array.isArray(state.shortcuts) ? state.shortcuts.slice() : [];
+        if (startIdx >= 0 && startIdx < cur.length && targetIdx >= 0 && targetIdx < cur.length) {
+          const [moved] = cur.splice(startIdx, 1);
+          cur.splice(targetIdx, 0, moved);
+          state.shortcuts = cur;
+          lastShortcutsSig = '';
+          renderShortcuts(cur);
+          send({ type: 'reorderShortcut', oldIndex: startIdx, newIndex: targetIdx });
+        }
+      }
+    };
+
+    const onUp = () => finish(false);
+    const onCancel = () => finish(true);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
   }
 
   function renderFrequentlyVisited(list, hidePref) {
@@ -1191,17 +1378,22 @@
       card.className = 'freq-card';
       card.title = item.url;
 
-      const icoSrc = item.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64` : 'https://dejavu.local/logo-transparent.png');
+      const icoSrc = item.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64` : '');
       card.innerHTML = `
-        <span class="freq-ico"><img alt="" draggable="false"></span>
+        <span class="freq-ico">${icoSrc ? '<img alt="" draggable="false">' : ''}</span>
         <div class="freq-meta">
           <div class="freq-title"></div>
           <div class="freq-host"></div>
         </div>
       `;
-      const img = card.querySelector('img');
-      img.src = icoSrc;
-      img.onerror = () => { img.src = 'https://dejavu.local/logo-transparent.png'; };
+      const icoSlot = card.querySelector('.freq-ico');
+      const img = icoSlot.querySelector('img');
+      if (img && icoSrc) {
+        img.src = icoSrc;
+        img.onerror = () => swapImgToM3Logo(img, 20, '');
+      } else {
+        icoSlot.appendChild(makeM3LogoSpan(20, ''));
+      }
       card.querySelector('.freq-title').textContent = item.title || host;
       card.querySelector('.freq-host').textContent = host;
       card.addEventListener('pointerenter', () => showStartPageStatus(item.url));
@@ -1241,18 +1433,23 @@
       card.className = 'reading-card';
       card.title = item.url;
 
-      const icoSrc = item.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64` : 'https://dejavu.local/logo-transparent.png');
+      const icoSrc = item.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64` : '');
       card.innerHTML = `
-        <span class="freq-ico"><img alt="" draggable="false"></span>
+        <span class="freq-ico">${icoSrc ? '<img alt="" draggable="false">' : ''}</span>
         <div class="freq-meta">
           <div class="freq-title"></div>
           <div class="freq-host"></div>
         </div>
         <button type="button" class="reading-card-rm" title="Remove from Reading List">×</button>
       `;
-      const img = card.querySelector('img');
-      img.src = icoSrc;
-      img.onerror = () => { img.src = 'https://dejavu.local/logo-transparent.png'; };
+      const icoSlot = card.querySelector('.freq-ico');
+      const img = icoSlot.querySelector('img');
+      if (img && icoSrc) {
+        img.src = icoSrc;
+        img.onerror = () => swapImgToM3Logo(img, 20, '');
+      } else {
+        icoSlot.appendChild(makeM3LogoSpan(20, ''));
+      }
       card.querySelector('.freq-title').textContent = item.title || host;
       card.querySelector('.freq-host').textContent = host;
       card.querySelector('.reading-card-rm').addEventListener('click', (e) => {
@@ -1451,7 +1648,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v4.7.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v4.8.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -1668,7 +1865,7 @@
 
     const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
     const onNewTab = !active || active.isNewTab;
-    applyThemePolarity(o.appearanceMode || 'auto', active, onNewTab, !!state.tabOverviewOpen, !!state.settingsOpen || !!state.dlManagerOpen);
+    applyThemePolarity(o.appearanceMode || 'auto', active, onNewTab, !!state.tabOverviewOpen, !!state.settingsOpen || !!state.dlManagerOpen || !!state.extensionsOpen);
     if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
       window.DejavuNewTabCanvas.setOptions({
         reduceMotion: !!o.reduceWallpaperMotion,
@@ -1683,7 +1880,7 @@
   function syncSettingsUi() {
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
-    const ver = state.appVersion || '4.7.0';
+    const ver = state.appVersion || '4.8.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -2561,7 +2758,8 @@
     const ovOpen = !!state.tabOverviewOpen;
     const optOpen = !!state.settingsOpen;
     const dlOpen = !!state.dlManagerOpen;
-    if (railHome) railHome.classList.toggle('active', onNewTab && !ovOpen && !optOpen && !dlOpen);
+    const extOpen = !!state.extensionsOpen;
+    if (railHome) railHome.classList.toggle('active', onNewTab && !ovOpen && !optOpen && !dlOpen && !extOpen);
     if (railDownloads) railDownloads.classList.toggle('active', dlOpen && activeDlTab !== 'media');
     if (railMedia) railMedia.classList.toggle('active', dlOpen && activeDlTab === 'media');
     if (railTabs) railTabs.classList.toggle('active', ovOpen);
@@ -2581,6 +2779,7 @@
   if (railHome) railHome.addEventListener('click', () => {
     wallpaperStore.classList.add('hidden');
     shortcutModal.classList.add('hidden');
+    if (state.extensionsOpen) send({ type: 'closeExtensions' });
     if (state.dlManagerOpen) send({ type: 'closeDlManager' });
     if (state.settingsOpen) send({ type: 'toggleSettings', open: false });
     if (state.tabOverviewOpen) send({ type: 'toggleTabOverview', open: false });
@@ -2590,12 +2789,14 @@
   if (railDownloads) railDownloads.addEventListener('click', () => {
     wallpaperStore.classList.add('hidden');
     shortcutModal.classList.add('hidden');
+    if (state.extensionsOpen) send({ type: 'closeExtensions' });
     if (state.dlManagerOpen && activeDlTab !== 'media') send({ type: 'closeDlManager' });
     else { activeDlTab = 'all'; send({ type: 'openDlManager', tab: 'all' }); }
   });
   if (railMedia) railMedia.addEventListener('click', () => {
     wallpaperStore.classList.add('hidden');
     shortcutModal.classList.add('hidden');
+    if (state.extensionsOpen) send({ type: 'closeExtensions' });
     if (state.dlManagerOpen && activeDlTab === 'media') send({ type: 'closeDlManager' });
     else { activeDlTab = 'media'; send({ type: 'openDlManager', tab: 'media' }); }
   });
@@ -2610,11 +2811,13 @@
   if (railTabs) railTabs.addEventListener('click', () => {
     wallpaperStore.classList.add('hidden');
     shortcutModal.classList.add('hidden');
+    if (state.extensionsOpen) send({ type: 'closeExtensions' });
     send({ type: 'toggleTabOverview', open: !state.tabOverviewOpen });
   });
   if (railSettings) railSettings.addEventListener('click', () => {
     wallpaperStore.classList.add('hidden');
     shortcutModal.classList.add('hidden');
+    if (state.extensionsOpen) send({ type: 'closeExtensions' });
     send({ type: 'toggleSettings', open: !state.settingsOpen, pane: activeSettingsPane });
   });
   if (railCollapse) railCollapse.addEventListener('click', () => send({ type: 'toggleNavRail' }));
@@ -2688,12 +2891,21 @@
     }
 
     if (e.key === 'Escape') {
-      if (resetConfirmOverlay && !resetConfirmOverlay.classList.contains('hidden')) {
+      if (chromeImportOverlay && !chromeImportOverlay.classList.contains('hidden')) {
+        closeChromeImportModal();
+      } else if (resetConfirmOverlay && !resetConfirmOverlay.classList.contains('hidden')) {
         closeResetConfirmModal();
       } else if (clearDataOverlay && !clearDataOverlay.classList.contains('hidden')) {
         closeClearDataModal();
       } else if (profileSetupOverlay && !profileSetupOverlay.classList.contains('hidden')) {
         closeProfileSetupModal();
+      } else if (state.extensionsOpen) {
+        if (activeExtensionDetailId) {
+          activeExtensionDetailId = null;
+          renderExtensionsManager();
+        } else {
+          send({ type: 'closeExtensions' });
+        }
       } else if (state.settingsOpen) {
         send({ type: 'toggleSettings', open: false });
       } else if (!wallpaperStore.classList.contains('hidden')) {
@@ -2726,25 +2938,33 @@
       card.className = 'ov-card' + (tab.id === state.activeTabId ? ' active' : '');
       const isPinned = !!(tab.pinned || tab.isPinned);
 
-      const favSrc = tab.favicon || 'https://dejavu.local/logo-transparent.png';
+      const hasSiteFav = !tab.isNewTab && !!tab.favicon;
       const titleText = tab.isNewTab ? 'Start Page' : (tab.title || tab.displayUrl || 'Tab');
       const hostText = tab.isNewTab ? 'dejavu Start Page' : (extractCleanDomain(tab.url, tab.displayUrl) || '');
 
       const previewHtml = (!tab.isNewTab && tab.thumbnail)
         ? `<img class="ov-thumb-img" src="${tab.thumbnail}" alt="" draggable="false">`
-        : `<img class="ov-card-fallback-logo" src="${tab.isNewTab ? 'https://dejavu.local/logo-transparent.png' : escapeSugHtml(favSrc)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'"><span class="ov-card-fallback-host">${escapeSugHtml(hostText)}</span>`;
+        : (hasSiteFav
+          ? `<img class="ov-card-fallback-logo" src="${escapeSugHtml(tab.favicon)}" alt="" draggable="false"><span class="ov-card-fallback-host">${escapeSugHtml(hostText)}</span>`
+          : `<span class="ov-card-fallback-svg">${DEJAVU_M3_LOGO_SVG}</span><span class="ov-card-fallback-host">${escapeSugHtml(hostText)}</span>`);
 
       card.innerHTML = `
         <div class="ov-card-head">
           <button type="button" class="ov-card-close" title="Close Tab">
             <svg viewBox="0 0 12 12" width="9" height="9" fill="none"><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           </button>
-          <img class="ov-card-fav" src="${escapeSugHtml(favSrc)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'">
+          ${hasSiteFav
+            ? `<img class="ov-card-fav" src="${escapeSugHtml(tab.favicon)}" alt="" draggable="false">`
+            : `<span class="ov-card-fav-svg">${DEJAVU_M3_LOGO_SVG}</span>`}
           <span class="ov-card-title"></span>
           ${isPinned ? '<span class="ov-card-pin">Pinned</span>' : ''}
         </div>
         <div class="ov-card-preview">${previewHtml}</div>
       `;
+      const favImg = card.querySelector('img.ov-card-fav');
+      if (favImg) favImg.onerror = () => swapImgToM3Logo(favImg, 15, 'ov-card-fav-svg');
+      const fbImg = card.querySelector('img.ov-card-fallback-logo');
+      if (fbImg) fbImg.onerror = () => swapImgToM3Logo(fbImg, 46, 'ov-card-fallback-svg');
       card.querySelector('.ov-card-title').textContent = titleText;
       card.querySelector('.ov-card-close').addEventListener('click', (e) => {
         e.stopPropagation();
@@ -2819,6 +3039,7 @@
       !!state.tabOverviewOpen ||
       !!state.settingsOpen ||
       !!state.dlManagerOpen ||
+      !!state.extensionsOpen ||
       body.classList.contains('modal-open')
     );
   }
@@ -3307,10 +3528,12 @@
   }, { capture: true, passive: true });
 
   // =========================================================================
-  // Top Tab Strip (Chrome Material Design 3 Connected Tabs)
+  // Top Tab Strip (Chrome Material Design 3 Connected Tabs + Live Drag-to-Reorder)
   // =========================================================================
   const tabEls = new Map();
   const closingTabIds = new Set();
+  let tabDragState = null;
+  let suppressTabClickUntil = 0;
 
   if (typeof ResizeObserver !== 'undefined') {
     const tabResizeObserver = new ResizeObserver(() => {
@@ -3340,7 +3563,172 @@
     }, 95);
   }
 
+  function startTabDrag(downEv, tabId, el) {
+    if (tabDragState) return;
+    const startX = downEv.clientX;
+    const startY = downEv.clientY;
+    const pid = downEv.pointerId;
+    const tabbarBottom = tabbar ? tabbar.getBoundingClientRect().bottom : 40;
+
+    let active = false;
+    let orderedTabs = [];
+    let orderedEls = [];
+    let rects = [];
+    let startIdx = -1;
+    let targetIdx = -1;
+    let minIdx = 0;
+    let maxIdx = 0;
+    let stepWidth = 0;
+    let minDx = 0;
+    let maxDx = 0;
+    let detachActive = false;
+
+    const cleanup = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+      if (tabDetachPill) tabDetachPill.classList.add('hidden');
+      if (active) {
+        body.classList.remove('is-dragging-tab');
+        orderedEls.forEach((node) => {
+          node.classList.remove('is-dragging');
+          node.style.transform = '';
+        });
+        try { el.releasePointerCapture(pid); } catch {}
+      }
+      tabDragState = null;
+    };
+
+    const updateSiblingShifts = (nextTarget) => {
+      for (let i = 0; i < orderedEls.length; i++) {
+        if (i === startIdx) continue;
+        let shift = 0;
+        if (nextTarget > startIdx && i > startIdx && i <= nextTarget) {
+          shift = -stepWidth;
+        } else if (nextTarget < startIdx && i >= nextTarget && i < startIdx) {
+          shift = stepWidth;
+        }
+        orderedEls[i].style.transform = shift ? `translate3d(${shift}px, 0, 0)` : '';
+      }
+    };
+
+    const onMove = (ev) => {
+      const rawDx = ev.clientX - startX;
+      const rawDy = ev.clientY - startY;
+
+      if (!active) {
+        if (Math.hypot(rawDx, rawDy) < 5) return;
+        orderedTabs = Array.isArray(state.tabs) ? state.tabs.slice() : [];
+        orderedEls = orderedTabs.map((t) => tabEls.get(t.id)).filter(Boolean);
+        startIdx = orderedTabs.findIndex((t) => t.id === tabId);
+        if (startIdx < 0 || orderedEls.length !== orderedTabs.length) {
+          cleanup();
+          return;
+        }
+        const pinnedCount = orderedTabs.filter((t) => !!(t.pinned || t.isPinned)).length;
+        const isPinned = !!(orderedTabs[startIdx].pinned || orderedTabs[startIdx].isPinned);
+        minIdx = isPinned ? 0 : pinnedCount;
+        maxIdx = isPinned ? Math.max(0, pinnedCount - 1) : (orderedTabs.length - 1);
+        rects = orderedEls.map((node) => node.getBoundingClientRect());
+        stepWidth = rects[startIdx].width + 2;
+        minDx = rects[minIdx].left - rects[startIdx].left;
+        maxDx = rects[maxIdx].right - rects[startIdx].right;
+        targetIdx = startIdx;
+
+        active = true;
+        tabDragState = { tabId, active: true };
+        hideM3ContextMenu();
+        body.classList.add('is-dragging-tab');
+        el.classList.add('is-dragging');
+        try { el.setPointerCapture(pid); } catch {}
+      }
+
+      const curTab = orderedTabs[startIdx];
+      const canDetach = orderedTabs.length > 1 || (curTab && !curTab.isNewTab);
+      const belowStrip = (ev.clientY - tabbarBottom) > 65 || rawDy > 65;
+      detachActive = canDetach && belowStrip;
+
+      if (tabDetachPill) {
+        if (detachActive) {
+          tabDetachPill.classList.remove('hidden');
+          const px = Math.max(12, Math.min(window.innerWidth - 230, Math.round(ev.clientX - 104)));
+          const py = Math.max(48, Math.min(window.innerHeight - 48, Math.round(ev.clientY + 18)));
+          tabDetachPill.style.transform = `translate3d(${px}px, ${py}px, 0)`;
+        } else {
+          tabDetachPill.classList.add('hidden');
+        }
+      }
+
+      if (detachActive) {
+        el.style.transform = `translate3d(${rawDx}px, ${Math.min(24, Math.max(0, rawDy * 0.24))}px, 0) scale(0.97)`;
+        if (targetIdx !== startIdx) {
+          targetIdx = startIdx;
+          updateSiblingShifts(startIdx);
+        }
+        return;
+      }
+
+      const clampedDx = Math.max(minDx, Math.min(maxDx, rawDx));
+      el.style.transform = `translate3d(${clampedDx}px, 0, 0) scale(1.01)`;
+
+      const draggedLeft = rects[startIdx].left + clampedDx;
+      const draggedRight = rects[startIdx].right + clampedDx;
+      let nextTarget = startIdx;
+      if (clampedDx > 0) {
+        for (let i = startIdx + 1; i <= maxIdx; i++) {
+          const center = rects[i].left + rects[i].width * 0.5;
+          if (draggedRight > center) nextTarget = i;
+        }
+      } else if (clampedDx < 0) {
+        for (let i = startIdx - 1; i >= minIdx; i--) {
+          const center = rects[i].left + rects[i].width * 0.5;
+          if (draggedLeft < center) nextTarget = i;
+        }
+      }
+
+      if (nextTarget !== targetIdx) {
+        targetIdx = nextTarget;
+        updateSiblingShifts(targetIdx);
+      }
+    };
+
+    const finish = (cancelled) => {
+      const wasActive = active;
+      const didDetach = detachActive;
+      const fromIdx = startIdx;
+      const toIdx = targetIdx;
+      cleanup();
+      if (!wasActive) return;
+
+      suppressTabClickUntil = Date.now() + 240;
+      if (cancelled) return;
+
+      if (didDetach) {
+        send({ type: 'moveTabToNewWindow', id: tabId });
+        return;
+      }
+
+      if (toIdx !== fromIdx && toIdx >= minIdx && toIdx <= maxIdx) {
+        // Optimistic immediate DOM & local state reorder (zero snap-back flicker)
+        if (Array.isArray(state.tabs) && fromIdx >= 0 && fromIdx < state.tabs.length) {
+          const [moved] = state.tabs.splice(fromIdx, 1);
+          state.tabs.splice(toIdx, 0, moved);
+          syncTabs(state.tabs, state.activeTabId);
+        }
+        send({ type: 'reorderTab', id: tabId, newIndex: toIdx });
+      }
+    };
+
+    const onUp = () => finish(false);
+    const onCancel = () => finish(true);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+  }
+
   function syncTabs(tabs, activeId) {
+    if (tabDragState && tabDragState.active) return;
+
     const alive = new Set(tabs.map((t) => t.id));
     for (const [id, el] of tabEls.entries()) {
       if (!alive.has(id)) {
@@ -3363,7 +3751,8 @@
         el.innerHTML = `
           <span class="tab-content">
             <span class="tab-spinner hidden"></span>
-            <img class="tab-favicon" alt="" draggable="false">
+            <img class="tab-favicon hidden" alt="" draggable="false">
+            <span class="tab-favicon-svg">${DEJAVU_M3_LOGO_SVG}</span>
             <span class="tab-title"></span>
           </span>
           <span class="tab-pin-badge" aria-hidden="true" title="Pinned Tab">
@@ -3379,15 +3768,29 @@
           <span class="tab-sep" aria-hidden="true"></span>
         `;
 
+        const favImgEl = el.querySelector('.tab-favicon');
+        const favSvgEl = el.querySelector('.tab-favicon-svg');
+        favImgEl.addEventListener('error', () => {
+          favImgEl.classList.add('hidden');
+          favSvgEl.classList.remove('hidden');
+        });
+
         const closeBtn = el.querySelector('.tab-close');
+        closeBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
         closeBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); e.preventDefault(); });
         closeBtn.addEventListener('click', (e) => { e.stopPropagation(); requestCloseTab(tab.id, el); });
 
         const audioBtn = el.querySelector('.tab-audio-btn');
+        audioBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
         audioBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); e.preventDefault(); });
         audioBtn.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'muteTab', id: tab.id }); });
 
+        el.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0 || e.target.closest('.tab-close') || e.target.closest('.tab-audio-btn')) return;
+          startTabDrag(e, tab.id, el);
+        });
         el.addEventListener('click', (e) => {
+          if (Date.now() < suppressTabClickUntil) return;
           if (e.target.closest('.tab-close') || e.target.closest('.tab-audio-btn')) return;
           send({ type: 'activateTab', id: tab.id });
         });
@@ -3423,13 +3826,23 @@
 
       const spinner = el.querySelector('.tab-spinner');
       const fav = el.querySelector('.tab-favicon');
+      const favSvg = el.querySelector('.tab-favicon-svg');
       const titleEl = el.querySelector('.tab-title');
       const audioBtn = el.querySelector('.tab-audio-btn');
 
       spinner.classList.toggle('hidden', !tab.loading);
-      fav.classList.toggle('hidden', !!tab.loading);
-      const favSrc = tab.favicon || 'https://dejavu.local/logo-transparent.png';
-      if (fav.getAttribute('src') !== favSrc) fav.setAttribute('src', favSrc);
+      const hasWebFav = !tab.isNewTab && !!tab.favicon;
+      if (tab.loading) {
+        fav.classList.add('hidden');
+        favSvg.classList.add('hidden');
+      } else if (hasWebFav) {
+        if (fav.getAttribute('src') !== tab.favicon) fav.setAttribute('src', tab.favicon);
+        fav.classList.remove('hidden');
+        favSvg.classList.add('hidden');
+      } else {
+        fav.classList.add('hidden');
+        favSvg.classList.remove('hidden');
+      }
       titleEl.textContent = tab.title || 'Start Page';
 
       const showAudio = !tab.isNewTab && (tab.isAudible || isMuted);
@@ -3455,15 +3868,15 @@
   function updateStatText(globalEnabled, total) {
     const n = Number(total || 0);
     if (!globalEnabled) {
-      if (newtabStatCount) newtabStatCount.textContent = 'Paused';
-      if (newtabStatLabel) newtabStatLabel.textContent = '· Ad Blocker off';
+      if (newtabStatCount) newtabStatCount.textContent = 'Shield';
+      if (newtabStatLabel) newtabStatLabel.textContent = 'Paused';
       if (newtabStatText) newtabStatText.textContent = 'Click to re-enable tracker & ad protection';
-      statDot.style.background = 'var(--md-outline)';
+      if (statDot) statDot.style.background = 'var(--md-outline)';
     } else {
       if (newtabStatCount) newtabStatCount.textContent = n.toLocaleString();
-      if (newtabStatLabel) newtabStatLabel.textContent = n === 1 ? 'tracker & ad prevented' : 'trackers & ads prevented';
+      if (newtabStatLabel) newtabStatLabel.textContent = 'blocked · Shield Active';
       if (newtabStatText) newtabStatText.textContent = 'Built-in 100/100 Ad Blocker is actively protecting your browsing';
-      statDot.style.background = '';
+      if (statDot) statDot.style.background = '';
     }
   }
 
@@ -3485,7 +3898,7 @@
       const rawCode = (vpn.exitCountryCode || vpn.countryCode || 'AUTO').toUpperCase();
       const codeDisp = rawCode === 'GB' ? 'UK' : (rawCode === 'AUTO' ? 'Auto' : rawCode);
       const locLabel = vpn.exitCountry || vpn.countryName || codeDisp;
-      newtabVpnText.textContent = `Protected · ${locLabel}`;
+      newtabVpnText.textContent = `VPN · ${locLabel}`;
       if (newtabVpnSub) newtabVpnSub.textContent = vpn.exitIp ? `Exit IP ${vpn.exitIp}` : 'Encrypted VPN tunnel';
     } else if (isBusy) {
       newtabVpnText.textContent = 'VPN: Connecting…';
@@ -3496,8 +3909,105 @@
     }
   }
 
+  function updateNewtabExtChip(extensions) {
+    if (!newtabExtChip || !newtabExtText) return;
+    const list = Array.isArray(extensions) ? extensions : [];
+    const enabledCount = list.filter((e) => e && e.enabled !== false).length;
+    newtabExtChip.classList.toggle('has-exts', enabledCount > 0);
+    newtabExtText.textContent = enabledCount > 0 ? `Extensions · ${enabledCount}` : 'Extensions';
+  }
+
   let lastFavoritesSig = '';
   let lastAvatarRendered = '';
+  let suppressFavClickUntil = 0;
+
+  function startFavoriteDrag(downEv, chipEl, favId, startIdx) {
+    const startX = downEv.clientX;
+    const pid = downEv.pointerId;
+    let active = false;
+    let chips = [];
+    let rects = [];
+    let targetIdx = startIdx;
+    let stepWidth = 0;
+
+    const updateShifts = (nextTarget) => {
+      for (let i = 0; i < chips.length; i++) {
+        if (i === startIdx) continue;
+        let shift = 0;
+        if (nextTarget > startIdx && i > startIdx && i <= nextTarget) shift = -stepWidth;
+        else if (nextTarget < startIdx && i >= nextTarget && i < startIdx) shift = stepWidth;
+        chips[i].style.transform = shift ? `translate3d(${shift}px, 0, 0)` : '';
+      }
+    };
+
+    const onMove = (ev) => {
+      const dx = ev.clientX - startX;
+      if (!active) {
+        if (Math.abs(dx) < 5) return;
+        chips = Array.from(favbarList.querySelectorAll('.fav-chip'));
+        if (startIdx < 0 || startIdx >= chips.length) return;
+        rects = chips.map((c) => c.getBoundingClientRect());
+        stepWidth = rects[startIdx].width + 6;
+        active = true;
+        favbarList.classList.add('is-dragging');
+        chipEl.classList.add('is-dragging');
+        try { chipEl.setPointerCapture(pid); } catch {}
+      }
+      const minDx = rects[0].left - rects[startIdx].left;
+      const maxDx = rects[rects.length - 1].right - rects[startIdx].right;
+      const clampedDx = Math.max(minDx, Math.min(maxDx, dx));
+      chipEl.style.transform = `translate3d(${clampedDx}px, 0, 0)`;
+
+      const draggedLeft = rects[startIdx].left + clampedDx;
+      const draggedRight = rects[startIdx].right + clampedDx;
+      let nextTarget = startIdx;
+      if (clampedDx > 0) {
+        for (let i = startIdx + 1; i < rects.length; i++) {
+          if (draggedRight > rects[i].left + rects[i].width * 0.5) nextTarget = i;
+        }
+      } else if (clampedDx < 0) {
+        for (let i = startIdx - 1; i >= 0; i--) {
+          if (draggedLeft < rects[i].left + rects[i].width * 0.5) nextTarget = i;
+        }
+      }
+      if (nextTarget !== targetIdx) {
+        targetIdx = nextTarget;
+        updateShifts(targetIdx);
+      }
+    };
+
+    const finish = (cancelled) => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+      if (!active) return;
+      suppressFavClickUntil = Date.now() + 220;
+      favbarList.classList.remove('is-dragging');
+      chips.forEach((c) => {
+        c.classList.remove('is-dragging');
+        c.style.transform = '';
+      });
+      try { chipEl.releasePointerCapture(pid); } catch {}
+      if (!cancelled && targetIdx !== startIdx) {
+        const cur = Array.isArray(state.favorites) ? state.favorites.slice() : [];
+        const from = cur.findIndex((f) => f && f.id === favId);
+        if (from >= 0 && targetIdx >= 0 && targetIdx < cur.length) {
+          const [moved] = cur.splice(from, 1);
+          cur.splice(targetIdx, 0, moved);
+          state.favorites = cur;
+          lastFavoritesSig = '';
+          renderFavoritesBar(cur, state.showFavoritesBar);
+          send({ type: 'reorderFavorite', id: favId, newIndex: targetIdx });
+        }
+      }
+    };
+
+    const onUp = () => finish(false);
+    const onCancel = () => finish(true);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+  }
 
   function renderFavoritesBar(list, showFavoritesBar) {
     const favs = Array.isArray(list) ? list : [];
@@ -3510,18 +4020,24 @@
     lastFavoritesSig = sig;
 
     favbarList.innerHTML = '';
-    favs.forEach((fav) => {
+    favs.forEach((fav, idx) => {
       const chip = document.createElement('div');
       chip.className = 'fav-chip';
       chip.title = fav.url;
 
       const host = extractHost(fav.url);
-      const ico = document.createElement('img');
-      ico.className = 'fav-chip-ico';
-      ico.alt = '';
-      ico.draggable = false;
-      ico.src = fav.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : 'https://dejavu.local/logo-transparent.png');
-      ico.onerror = () => { ico.src = 'https://dejavu.local/logo-transparent.png'; };
+      const icoSrc = fav.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : '');
+      if (icoSrc) {
+        const ico = document.createElement('img');
+        ico.className = 'fav-chip-ico';
+        ico.alt = '';
+        ico.draggable = false;
+        ico.src = icoSrc;
+        ico.onerror = () => swapImgToM3Logo(ico, 14, 'fav-chip-ico-svg');
+        chip.appendChild(ico);
+      } else {
+        chip.appendChild(makeM3LogoSpan(14, 'fav-chip-ico-svg'));
+      }
 
       const label = document.createElement('span');
       label.className = 'fav-chip-label';
@@ -3532,15 +4048,22 @@
       rm.className = 'fav-chip-rm';
       rm.textContent = '×';
       rm.title = 'Remove favorite';
+      rm.addEventListener('pointerdown', (e) => e.stopPropagation());
       rm.addEventListener('click', (e) => {
         e.stopPropagation();
         send({ type: 'removeFavorite', id: fav.id });
       });
 
-      chip.appendChild(ico);
       chip.appendChild(label);
       chip.appendChild(rm);
-      chip.addEventListener('click', () => send({ type: 'navigate', input: fav.url }));
+      chip.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 || e.target.closest('.fav-chip-rm')) return;
+        startFavoriteDrag(e, chip, fav.id, idx);
+      });
+      chip.addEventListener('click', () => {
+        if (Date.now() < suppressFavClickUntil) return;
+        send({ type: 'navigate', input: fav.url });
+      });
       chip.addEventListener('auxclick', (e) => {
         if (e.button === 1) { e.preventDefault(); send({ type: 'newTab', url: fav.url }); }
       });
@@ -3660,6 +4183,25 @@
       window.DejavuNewTabCanvas.start();
     }
 
+    const extOpen = !!next.extensionsOpen;
+    const wasExtOpen = body.classList.contains('extensions-open');
+    body.classList.toggle('extensions-open', extOpen);
+    if (extensionsOverlay) extensionsOverlay.classList.toggle('hidden', !extOpen);
+    if (btnExtensions) btnExtensions.classList.toggle('is-active', extOpen);
+    renderPinnedExtensions(state.extensions || []);
+    updateNewtabExtChip(state.extensions || []);
+    if (extOpen) {
+      wallpaperStore.classList.add('hidden');
+      shortcutModal.classList.add('hidden');
+      if (!wasExtOpen) {
+        activeExtensionDetailId = null;
+        if (extSearchInput) extSearchInput.value = '';
+        if (btnExtSearchClear) btnExtSearchClear.classList.add('hidden');
+      }
+      renderExtensionsManager();
+      window.DejavuNewTabCanvas.start();
+    }
+
     applyBrowserOptions(next.browserOptions || state.browserOptions);
     if (optOpen) {
       wallpaperStore.classList.add('hidden');
@@ -3702,20 +4244,20 @@
     btnReload.title = (active && active.loading) ? 'Stop loading' : 'Reload (Ctrl+R)';
 
     const apMode = (next.browserOptions && next.browserOptions.appearanceMode) || 'auto';
-    applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen || dlOpen);
+    applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen || dlOpen || extOpen);
 
     if (onNewTab) {
       body.classList.add('on-newtab');
       window.DejavuNewTabCanvas.start();
-      if (ovOpen || optOpen || dlOpen) hideStartPageStatus();
-      if (!ovOpen && !optOpen && !dlOpen && !body.classList.contains('modal-open') && lastActiveId !== next.activeTabId) {
+      if (ovOpen || optOpen || dlOpen || extOpen) hideStartPageStatus();
+      if (!ovOpen && !optOpen && !dlOpen && !extOpen && !body.classList.contains('modal-open') && lastActiveId !== next.activeTabId) {
         newtabSearchInput.value = '';
         setTimeout(() => newtabSearchInput.focus(), 40);
       }
     } else {
       hideStartPageStatus();
       body.classList.remove('on-newtab');
-      if (!ovOpen && !optOpen && !dlOpen && !body.classList.contains('modal-open')) window.DejavuNewTabCanvas.stop();
+      if (!ovOpen && !optOpen && !dlOpen && !extOpen && !body.classList.contains('modal-open')) window.DejavuNewTabCanvas.stop();
     }
     if (lastActiveId !== -1 && lastActiveId !== next.activeTabId) {
       hideM3ContextMenu();
@@ -4176,6 +4718,580 @@
   });
 
   // =========================================================================
+  // Chrome-Grade Material Design 3 Extensions Manager & Pinned Toolbar Strip
+  // =========================================================================
+  let activeExtensionDetailId = null;
+  let extStatusTimer = null;
+  let lastPinnedExtSig = '';
+
+  const EXT_PIN_ICO_SVG = '<svg viewBox="0 0 18 18" width="13" height="13" fill="none"><path d="M10.8 3.2l4 4-1.5 1.5-1-.45-2.8 2.8.45 2-1.3 1.3-2.5-2.5-3 3-.8-.8 3-3-2.5-2.5 1.3-1.3 2 .45 2.8-2.8-.45-1 1.5-1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+  const EXT_PUZZLE_LG_SVG = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none"><path d="M13.8 3.6a2.1 2.1 0 0 1 2.1 2.1v1.1h2.3a1.7 1.7 0 0 1 1.7 1.7v2.5h-1.1a2.1 2.1 0 0 0 0 4.2h1.1v2.5a1.7 1.7 0 0 1-1.7 1.7h-2.5v-1.1a2.1 2.1 0 0 0-4.2 0v1.1H8.4a1.7 1.7 0 0 1-1.7-1.7v-2.5h1.1a2.1 2.1 0 0 0 0-4.2H6.7V8.5a1.7 1.7 0 0 1 1.7-1.7h3.3V5.7a2.1 2.1 0 0 1 2.1-2.1z" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/></svg>';
+  const EXT_SWITCH_CHECK_SVG = '<svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function formatExtSource(src) {
+    const s = String(src || '').toLowerCase();
+    if (s === 'store') return 'Web Store';
+    if (s === 'chrome') return 'Chrome';
+    if (s === 'crx') return 'CRX';
+    if (s === 'zip') return 'ZIP';
+    if (s === 'unpacked') return 'Unpacked';
+    return 'Installed';
+  }
+
+  function renderPinnedExtensions(list) {
+    if (!pinnedExtensions) return;
+    const all = Array.isArray(list) ? list : [];
+    const pinned = all.filter((e) => e && e.enabled !== false && e.pinned);
+    const hasAny = all.length > 0;
+    if (btnExtensions) {
+      btnExtensions.classList.toggle('has-extensions', hasAny);
+      btnExtensions.title = hasAny ? `Extensions (${all.length} installed)` : 'Extensions';
+    }
+    if (extToolbarDot) extToolbarDot.classList.toggle('hidden', !hasAny);
+
+    const sig = JSON.stringify(pinned.map((e) => [e.id, e.name, e.iconDataUrl, e.popupUrl]));
+    if (sig === lastPinnedExtSig) return;
+    lastPinnedExtSig = sig;
+
+    pinnedExtensions.innerHTML = '';
+    pinnedExtensions.classList.toggle('hidden', pinned.length === 0);
+    if (!pinned.length) return;
+
+    pinned.forEach((ext) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ext-pin-btn';
+      btn.title = ext.name || 'Extension';
+      if (ext.iconDataUrl) {
+        const img = document.createElement('img');
+        img.src = ext.iconDataUrl;
+        img.alt = ext.name || '';
+        img.draggable = false;
+        btn.appendChild(img);
+      } else {
+        const letter = document.createElement('span');
+        letter.className = 'ext-pin-letter';
+        letter.textContent = ((ext.name || 'E')[0] || 'E').toUpperCase();
+        btn.appendChild(letter);
+      }
+      btn.addEventListener('click', () => {
+        if (ext.popupUrl) send({ type: 'extOpenPopup', id: ext.id });
+        else send({ type: 'openExtensions' });
+      });
+      btn.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const items = [];
+        if (ext.popupUrl) items.push({ id: 'openPopup', label: 'Open extension popup', icon: 'open-window' });
+        if (ext.optionsUrl) items.push({ id: 'openOptions', label: 'Extension options', icon: 'settings' });
+        items.push({ id: 'unpin', label: 'Unpin from toolbar', icon: 'unpin' });
+        items.push({ id: 'manage', label: 'Manage extension', icon: 'customize' });
+        items.push({ separator: true });
+        items.push({ id: 'remove', label: 'Remove extension', icon: 'trash', danger: true });
+        openM3ContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          header: { title: ext.name || 'Extension', subtitle: ext.version ? `v${ext.version}` : 'Pinned extension', kind: 'page' },
+          items,
+          onAction: (act) => {
+            if (act === 'openPopup') send({ type: 'extOpenPopup', id: ext.id });
+            else if (act === 'openOptions') send({ type: 'extOpenOptions', id: ext.id });
+            else if (act === 'unpin') send({ type: 'extTogglePin', id: ext.id });
+            else if (act === 'manage') {
+              activeExtensionDetailId = ext.id;
+              send({ type: 'openExtensions' });
+            } else if (act === 'remove') send({ type: 'extRemove', id: ext.id });
+          }
+        });
+      });
+      pinnedExtensions.appendChild(btn);
+    });
+  }
+
+  function showExtStatus(message, kind) {
+    if (!extStatusBanner || !extStatusMsg) return;
+    const msg = String(message || '').trim();
+    if (!msg) {
+      extStatusBanner.classList.add('hidden');
+      return;
+    }
+    extStatusMsg.textContent = msg;
+    extStatusBanner.classList.remove('hidden', 'is-busy', 'is-error', 'is-ok');
+    if (kind === 'busy') extStatusBanner.classList.add('is-busy');
+    else if (kind === 'error') extStatusBanner.classList.add('is-error');
+    else if (kind === 'ok') extStatusBanner.classList.add('is-ok');
+    if (extStatusTimer) clearTimeout(extStatusTimer);
+    if (kind !== 'busy') {
+      extStatusTimer = setTimeout(() => {
+        if (extStatusBanner) extStatusBanner.classList.add('hidden');
+      }, 4200);
+    }
+  }
+
+  function renderExtensionDetails(ext) {
+    if (!extDetailsBody || !ext) return;
+    const isEnabled = ext.enabled !== false;
+    const isPinned = !!ext.pinned;
+    const initial = escapeSugHtml(((ext.name || 'E')[0] || 'E').toUpperCase());
+    const icoHtml = ext.iconDataUrl
+      ? `<img src="${escapeSugHtml(ext.iconDataUrl)}" alt="" draggable="false">`
+      : `<span>${initial}</span>`;
+    const perms = Array.isArray(ext.permissions) ? ext.permissions : [];
+    const hosts = Array.isArray(ext.hostPermissions) ? ext.hostPermissions : [];
+    const isCwsId = /^[a-p]{32}$/i.test(ext.id || '');
+    const mvLabel = ext.manifestVersion ? `Manifest V${ext.manifestVersion}` : 'Manifest V3';
+    const sizeLabel = ext.sizeBytes > 0 ? fmtBytes(ext.sizeBytes) : '—';
+
+    extDetailsBody.innerHTML = `
+      <div class="ext-details-hero">
+        <div class="ext-card-ico">${icoHtml}</div>
+        <div class="ext-card-meta">
+          <div class="ext-card-title-row">
+            <span class="ext-card-name" style="font-size:18px;max-width:none;"></span>
+            ${ext.version ? `<span class="ext-ver-chip">v${escapeSugHtml(ext.version)}</span>` : ''}
+            <span class="ext-src-chip">${escapeSugHtml(formatExtSource(ext.source))}</span>
+          </div>
+          <div class="opt-desc" id="ext-det-desc" style="margin-top:4px;"></div>
+        </div>
+        <button type="button" id="ext-det-enable" class="liquid-switch m3-switch${isEnabled ? ' on' : ''}" role="switch" aria-checked="${isEnabled ? 'true' : 'false'}" title="Enable or disable extension">
+          <span class="switch-knob">${EXT_SWITCH_CHECK_SVG}</span>
+        </button>
+      </div>
+
+      <div class="m3-pref-section">
+        <div class="m3-pref-heading">Controls &amp; Toolbar</div>
+        <div class="m3-pref-card">
+          <div class="opt-row">
+            <div class="opt-meta">
+              <div class="opt-title">Pin to toolbar</div>
+              <div class="opt-desc">Show this extension's icon directly beside the puzzle button in the top toolbar</div>
+            </div>
+            <button type="button" id="ext-det-pin" class="liquid-switch m3-switch${isPinned ? ' on' : ''}" role="switch" aria-checked="${isPinned ? 'true' : 'false'}">
+              <span class="switch-knob">${EXT_SWITCH_CHECK_SVG}</span>
+            </button>
+          </div>
+          ${ext.popupUrl ? `
+            <div class="opt-row">
+              <div class="opt-meta">
+                <div class="opt-title">Extension Popup</div>
+                <div class="opt-desc">Open this extension's interactive popup view</div>
+              </div>
+              <button type="button" id="ext-det-popup" class="m3-btn m3-btn-tonal sm">Open Popup</button>
+            </div>` : ''}
+          ${ext.optionsUrl ? `
+            <div class="opt-row">
+              <div class="opt-meta">
+                <div class="opt-title">Extension Options</div>
+                <div class="opt-desc">Configure preferences inside this extension's options page</div>
+              </div>
+              <button type="button" id="ext-det-options" class="m3-btn m3-btn-tonal sm">Extension Options</button>
+            </div>` : ''}
+          <div class="opt-row">
+            <div class="opt-meta">
+              <div class="opt-title">Reload Extension</div>
+              <div class="opt-desc">Reload manifest, scripts, and background worker from disk</div>
+            </div>
+            <div class="opt-btn-row">
+              <button type="button" id="ext-det-reload" class="m3-btn m3-btn-outlined sm">Reload</button>
+              ${ext.folderPath ? '<button type="button" id="ext-det-folder" class="m3-btn m3-btn-tonal sm">Open Folder</button>' : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="m3-pref-section">
+        <div class="m3-pref-heading">Permissions &amp; Site Access</div>
+        <div class="m3-pref-card">
+          <div class="opt-row stacked">
+            <div class="opt-meta">
+              <div class="opt-title">Requested Permissions</div>
+              <div class="ext-perm-chips" id="ext-det-perms"></div>
+            </div>
+          </div>
+          <div class="opt-row stacked">
+            <div class="opt-meta">
+              <div class="opt-title">Site Access</div>
+              <div class="ext-perm-chips" id="ext-det-hosts"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="m3-pref-section">
+        <div class="m3-pref-heading">Extension Details</div>
+        <div class="m3-pref-card">
+          <div class="opt-row">
+            <div class="opt-meta">
+              <div class="opt-title">Extension ID</div>
+              <div class="opt-desc opt-mono-path" id="ext-det-id" style="user-select:text;"></div>
+            </div>
+            <button type="button" id="ext-det-copy-id" class="m3-btn m3-btn-tonal sm">Copy ID</button>
+          </div>
+          <div class="opt-row">
+            <div class="opt-meta">
+              <div class="opt-title">Version &amp; Manifest</div>
+              <div class="opt-desc">${escapeSugHtml(ext.version || '1.0')} · ${escapeSugHtml(mvLabel)} · Size: ${escapeSugHtml(sizeLabel)} · Source: ${escapeSugHtml(formatExtSource(ext.source))}</div>
+            </div>
+          </div>
+          ${ext.folderPath ? `
+            <div class="opt-row">
+              <div class="opt-meta">
+                <div class="opt-title">Storage Path</div>
+                <div class="opt-desc opt-mono-path" id="ext-det-path" style="user-select:text;"></div>
+              </div>
+            </div>` : ''}
+          ${(ext.homepageUrl || isCwsId) ? `
+            <div class="opt-row">
+              <div class="opt-meta">
+                <div class="opt-title">Store &amp; Website Links</div>
+                <div class="opt-desc">View official extension documentation or Chrome Web Store listing</div>
+              </div>
+              <div class="opt-btn-row">
+                ${ext.homepageUrl ? '<button type="button" id="ext-det-home" class="m3-btn m3-btn-outlined sm">Extension Website</button>' : ''}
+                ${isCwsId ? '<button type="button" id="ext-det-cws" class="m3-btn m3-btn-tonal sm">View in Chrome Web Store</button>' : ''}
+              </div>
+            </div>` : ''}
+          <div class="opt-row">
+            <div class="opt-meta">
+              <div class="opt-title">Remove Extension</div>
+              <div class="opt-desc">Uninstall this extension from your active dejavu profile</div>
+            </div>
+            <button type="button" id="ext-det-remove" class="m3-btn m3-btn-danger sm">Remove Extension</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    extDetailsBody.querySelector('.ext-card-name').textContent = ext.name || 'Extension';
+    extDetailsBody.querySelector('#ext-det-desc').textContent = ext.description || 'Chrome extension loaded in dejavu.';
+    extDetailsBody.querySelector('#ext-det-id').textContent = ext.id || '';
+    const pathEl = extDetailsBody.querySelector('#ext-det-path');
+    if (pathEl) pathEl.textContent = ext.folderPath || '';
+
+    const permsEl = extDetailsBody.querySelector('#ext-det-perms');
+    if (perms.length) {
+      perms.forEach((p) => {
+        const c = document.createElement('span');
+        c.className = 'ext-perm-chip';
+        c.textContent = String(p);
+        permsEl.appendChild(c);
+      });
+    } else {
+      permsEl.innerHTML = '<span class="opt-desc">No special API permissions requested.</span>';
+    }
+
+    const hostsEl = extDetailsBody.querySelector('#ext-det-hosts');
+    if (hosts.length) {
+      hosts.forEach((h) => {
+        const c = document.createElement('span');
+        c.className = 'ext-perm-chip';
+        c.textContent = String(h);
+        hostsEl.appendChild(c);
+      });
+    } else {
+      hostsEl.innerHTML = '<span class="opt-desc">Active only when invoked or on declared extension URLs.</span>';
+    }
+
+    const bEn = extDetailsBody.querySelector('#ext-det-enable');
+    if (bEn) bEn.addEventListener('click', () => send({ type: 'extToggleEnabled', id: ext.id, enabled: !(ext.enabled !== false) }));
+    const bPin = extDetailsBody.querySelector('#ext-det-pin');
+    if (bPin) bPin.addEventListener('click', () => send({ type: 'extTogglePin', id: ext.id }));
+    const bPop = extDetailsBody.querySelector('#ext-det-popup');
+    if (bPop) bPop.addEventListener('click', () => send({ type: 'extOpenPopup', id: ext.id }));
+    const bOpt = extDetailsBody.querySelector('#ext-det-options');
+    if (bOpt) bOpt.addEventListener('click', () => send({ type: 'extOpenOptions', id: ext.id }));
+    const bRel = extDetailsBody.querySelector('#ext-det-reload');
+    if (bRel) bRel.addEventListener('click', () => send({ type: 'extReload', id: ext.id }));
+    const bFld = extDetailsBody.querySelector('#ext-det-folder');
+    if (bFld) bFld.addEventListener('click', () => send({ type: 'extOpenFolder', id: ext.id }));
+    const bCopy = extDetailsBody.querySelector('#ext-det-copy-id');
+    if (bCopy) bCopy.addEventListener('click', () => { copyToClipboard(ext.id || ''); showToast('Extension ID copied', 'success'); });
+    const bHome = extDetailsBody.querySelector('#ext-det-home');
+    if (bHome) bHome.addEventListener('click', () => { send({ type: 'closeExtensions' }); send({ type: 'newTab', url: ext.homepageUrl }); });
+    const bCws = extDetailsBody.querySelector('#ext-det-cws');
+    if (bCws) bCws.addEventListener('click', () => { send({ type: 'closeExtensions' }); send({ type: 'newTab', url: `https://chromewebstore.google.com/detail/${ext.id}` }); });
+    const bRm = extDetailsBody.querySelector('#ext-det-remove');
+    if (bRm) bRm.addEventListener('click', () => { activeExtensionDetailId = null; send({ type: 'extRemove', id: ext.id }); });
+  }
+
+  function renderExtensionsManager() {
+    if (!extensionsOverlay || !extCardsGrid) return;
+    const list = Array.isArray(state.extensions) ? state.extensions : [];
+    const devMode = !!state.extensionsDevMode;
+    const busy = !!state.extensionsBusy;
+
+    if (extCountBadge) extCountBadge.textContent = String(list.length);
+    setSwitchState(extDevSwitch, devMode);
+    if (extDevBar) extDevBar.classList.toggle('hidden', !devMode);
+    if (btnExtStoreInstall) {
+      btnExtStoreInstall.disabled = busy;
+      btnExtStoreInstall.textContent = busy ? 'Installing…' : 'Install';
+    }
+
+    if (activeExtensionDetailId) {
+      const detailExt = list.find((e) => e && e.id === activeExtensionDetailId);
+      if (detailExt) {
+        if (extViewGrid) extViewGrid.classList.add('hidden');
+        if (extViewDetails) extViewDetails.classList.remove('hidden');
+        renderExtensionDetails(detailExt);
+        return;
+      }
+      activeExtensionDetailId = null;
+    }
+
+    if (extViewDetails) extViewDetails.classList.add('hidden');
+    if (extViewGrid) extViewGrid.classList.remove('hidden');
+
+    const q = (extSearchInput ? extSearchInput.value : '').trim().toLowerCase();
+    if (btnExtSearchClear) btnExtSearchClear.classList.toggle('hidden', !q);
+
+    const filtered = q
+      ? list.filter((e) =>
+          (e.name || '').toLowerCase().includes(q) ||
+          (e.description || '').toLowerCase().includes(q) ||
+          (e.id || '').toLowerCase().includes(q)
+        )
+      : list;
+
+    extCardsGrid.innerHTML = '';
+    if (!filtered.length) {
+      extCardsGrid.style.display = 'block';
+      extCardsGrid.innerHTML = q
+        ? `<div class="ext-empty">
+             <div class="ext-empty-ico">${EXT_PUZZLE_LG_SVG}</div>
+             <div class="ext-empty-title">No extensions match "${escapeSugHtml(q)}"</div>
+             <div class="ext-empty-sub">Try searching by name, description, or Extension ID.</div>
+             <div class="ext-empty-acts">
+               <button type="button" id="btn-ext-clear-empty" class="m3-btn m3-btn-tonal sm">Clear search</button>
+             </div>
+           </div>`
+        : `<div class="ext-empty">
+             <div class="ext-empty-ico">${EXT_PUZZLE_LG_SVG}</div>
+             <div class="ext-empty-title">Supercharge dejavu with Chrome Extensions</div>
+             <div class="ext-empty-sub">Browse the Chrome Web Store with one-click <strong>Add to dejavu</strong>, paste any Store URL or Extension ID above, import extensions already installed in Google Chrome, or enable <strong>Developer mode</strong> to load unpacked folders and <code>.crx/.zip</code> packages.</div>
+             <div class="ext-empty-acts">
+               <button type="button" id="btn-ext-empty-cws" class="m3-btn m3-btn-filled sm">Browse Chrome Web Store</button>
+               <button type="button" id="btn-ext-empty-chrome" class="m3-btn m3-btn-tonal sm">Import from Chrome</button>
+               <button type="button" id="btn-ext-empty-unpacked" class="m3-btn m3-btn-outlined sm">Load Unpacked</button>
+             </div>
+           </div>`;
+      const bClear = document.getElementById('btn-ext-clear-empty');
+      if (bClear) bClear.addEventListener('click', () => { if (extSearchInput) extSearchInput.value = ''; renderExtensionsManager(); });
+      const bCws = document.getElementById('btn-ext-empty-cws');
+      if (bCws) bCws.addEventListener('click', () => { send({ type: 'closeExtensions' }); send({ type: 'newTab', url: 'https://chromewebstore.google.com/' }); });
+      const bImp = document.getElementById('btn-ext-empty-chrome');
+      if (bImp) bImp.addEventListener('click', openChromeImportModal);
+      const bUnp = document.getElementById('btn-ext-empty-unpacked');
+      if (bUnp) bUnp.addEventListener('click', () => send({ type: 'extLoadUnpacked' }));
+      return;
+    }
+
+    extCardsGrid.style.display = '';
+    const frag = document.createDocumentFragment();
+    filtered.forEach((ext) => {
+      const isEnabled = ext.enabled !== false;
+      const isPinned = !!ext.pinned;
+      const card = document.createElement('article');
+      card.className = 'ext-card' + (isEnabled ? '' : ' is-disabled');
+      card.dataset.extId = ext.id || '';
+
+      const initial = escapeSugHtml(((ext.name || 'E')[0] || 'E').toUpperCase());
+      const icoHtml = ext.iconDataUrl
+        ? `<img src="${escapeSugHtml(ext.iconDataUrl)}" alt="" draggable="false">`
+        : `<span>${initial}</span>`;
+      const mvTag = ext.manifestVersion ? `MV${ext.manifestVersion}` : '';
+
+      card.innerHTML = `
+        <div class="ext-card-top">
+          <div class="ext-card-ico">${icoHtml}</div>
+          <div class="ext-card-meta">
+            <div class="ext-card-title-row">
+              <span class="ext-card-name"></span>
+              ${ext.version ? `<span class="ext-ver-chip">v${escapeSugHtml(ext.version)}</span>` : ''}
+              ${mvTag ? `<span class="ext-ver-chip">${escapeSugHtml(mvTag)}</span>` : ''}
+              <span class="ext-src-chip">${escapeSugHtml(formatExtSource(ext.source))}</span>
+            </div>
+            <div class="ext-card-desc"></div>
+          </div>
+        </div>
+        ${devMode ? `
+          <div class="ext-card-dev-id">
+            <span>ID: ${escapeSugHtml(ext.id || '')}</span>
+            <button type="button" class="ext-copy-id-btn">Copy</button>
+          </div>` : ''}
+        <div class="ext-card-foot">
+          <div class="ext-card-btns">
+            <button type="button" class="ext-mini-btn act-details">Details</button>
+            <button type="button" class="ext-mini-btn act-pin${isPinned ? ' is-pinned' : ''}" title="${isPinned ? 'Unpin from toolbar' : 'Pin to toolbar'}">${EXT_PIN_ICO_SVG}<span>${isPinned ? 'Pinned' : 'Pin'}</span></button>
+            ${devMode ? '<button type="button" class="ext-mini-btn act-reload" title="Reload extension">Reload</button>' : ''}
+            <button type="button" class="ext-mini-btn danger act-remove">Remove</button>
+          </div>
+          <button type="button" class="liquid-switch m3-switch act-toggle${isEnabled ? ' on' : ''}" role="switch" aria-checked="${isEnabled ? 'true' : 'false'}" title="${isEnabled ? 'Disable extension' : 'Enable extension'}">
+            <span class="switch-knob">${EXT_SWITCH_CHECK_SVG}</span>
+          </button>
+        </div>
+      `;
+
+      card.querySelector('.ext-card-name').textContent = ext.name || 'Extension';
+      card.querySelector('.ext-card-desc').textContent = ext.description || 'Chrome extension installed in your dejavu profile.';
+
+      const bCopy = card.querySelector('.ext-copy-id-btn');
+      if (bCopy) bCopy.addEventListener('click', () => { copyToClipboard(ext.id || ''); showToast('Extension ID copied', 'success'); });
+      card.querySelector('.act-details').addEventListener('click', () => {
+        activeExtensionDetailId = ext.id;
+        renderExtensionsManager();
+        if (extScroll) extScroll.scrollTop = 0;
+      });
+      card.querySelector('.act-pin').addEventListener('click', () => send({ type: 'extTogglePin', id: ext.id }));
+      const bRel = card.querySelector('.act-reload');
+      if (bRel) bRel.addEventListener('click', () => send({ type: 'extReload', id: ext.id }));
+      card.querySelector('.act-remove').addEventListener('click', () => send({ type: 'extRemove', id: ext.id }));
+      card.querySelector('.act-toggle').addEventListener('click', () => send({ type: 'extToggleEnabled', id: ext.id, enabled: !isEnabled }));
+
+      frag.appendChild(card);
+    });
+    extCardsGrid.appendChild(frag);
+  }
+
+  function openChromeImportModal() {
+    if (!chromeImportOverlay || !chromeImportList) return;
+    chromeImportOverlay.classList.remove('hidden');
+    if (chromeImportSub) chromeImportSub.textContent = 'Scanning Google Chrome Default profile extensions…';
+    chromeImportList.innerHTML = '<div class="ext-empty" style="margin:0;padding:28px 18px;"><div class="ext-empty-title">Scanning Google Chrome…</div><div class="ext-empty-sub">Reading installed extensions from your local Chrome profile (read-only).</div></div>';
+    syncModalBodyClass();
+    send({ type: 'extScanChrome' });
+  }
+
+  function closeChromeImportModal() {
+    if (!chromeImportOverlay) return;
+    chromeImportOverlay.classList.add('hidden');
+    syncModalBodyClass();
+  }
+
+  function renderChromeImportList(items, errorMsg) {
+    if (!chromeImportList) return;
+    const list = Array.isArray(items) ? items : [];
+    chromeImportList.innerHTML = '';
+
+    if (errorMsg) {
+      if (chromeImportSub) chromeImportSub.textContent = 'Could not scan Google Chrome extensions';
+      chromeImportList.innerHTML = `<div class="ext-empty" style="margin:0;padding:26px 18px;"><div class="ext-empty-title">Chrome Extensions Folder Not Found</div><div class="ext-empty-sub">${escapeSugHtml(errorMsg)}</div></div>`;
+      return;
+    }
+
+    if (!list.length) {
+      if (chromeImportSub) chromeImportSub.textContent = 'No installed Google Chrome extensions were found';
+      chromeImportList.innerHTML = '<div class="ext-empty" style="margin:0;padding:26px 18px;"><div class="ext-empty-title">No Chrome Extensions Found</div><div class="ext-empty-sub">Install extensions in Google Chrome or paste any Chrome Web Store URL directly in dejavu!</div></div>';
+      return;
+    }
+
+    if (chromeImportSub) chromeImportSub.textContent = `Found ${list.length} ${list.length === 1 ? 'extension' : 'extensions'} in Google Chrome — click Import to copy into dejavu`;
+    const frag = document.createDocumentFragment();
+    list.forEach((ce) => {
+      const row = document.createElement('div');
+      row.className = 'chrome-import-row';
+      const initial = escapeSugHtml(((ce.name || 'C')[0] || 'C').toUpperCase());
+      const icoHtml = ce.iconDataUrl
+        ? `<img src="${escapeSugHtml(ce.iconDataUrl)}" alt="" draggable="false">`
+        : `<span>${initial}</span>`;
+      row.innerHTML = `
+        <span class="chrome-import-ico">${icoHtml}</span>
+        <div class="chrome-import-meta">
+          <div class="chrome-import-name"></div>
+          <div class="chrome-import-sub"></div>
+        </div>
+        <button type="button" class="m3-btn ${ce.alreadyInstalled ? 'm3-btn-tonal' : 'm3-btn-filled'} sm act-import" ${ce.alreadyInstalled ? 'disabled' : ''}>${ce.alreadyInstalled ? 'Installed ✓' : 'Import'}</button>
+      `;
+      row.querySelector('.chrome-import-name').textContent = `${ce.name || ce.chromeId}${ce.version ? ' · v' + ce.version : ''}`;
+      row.querySelector('.chrome-import-sub').textContent = ce.description || ce.chromeId || '';
+      const impBtn = row.querySelector('.act-import');
+      if (!ce.alreadyInstalled) {
+        impBtn.addEventListener('click', () => {
+          impBtn.disabled = true;
+          impBtn.textContent = 'Importing…';
+          send({ type: 'extImportFromChrome', chromeId: ce.chromeId, versionDir: ce.versionDir });
+        });
+      }
+      frag.appendChild(row);
+    });
+    chromeImportList.appendChild(frag);
+  }
+
+  // Extensions Manager UI Event Bindings
+  if (btnExtDone) btnExtDone.addEventListener('click', () => send({ type: 'closeExtensions' }));
+  if (extensionsOverlay) {
+    extensionsOverlay.addEventListener('click', (e) => {
+      if (e.target === extensionsOverlay) send({ type: 'closeExtensions' });
+    });
+  }
+  if (extDevSwitch) {
+    extDevSwitch.addEventListener('click', () => {
+      const nextDev = !state.extensionsDevMode;
+      state.extensionsDevMode = nextDev;
+      renderExtensionsManager();
+      send({ type: 'extSetDevMode', enabled: nextDev });
+    });
+  }
+  if (extSearchInput) {
+    extSearchInput.addEventListener('input', () => renderExtensionsManager());
+    extSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && extSearchInput.value) {
+        e.stopPropagation();
+        extSearchInput.value = '';
+        renderExtensionsManager();
+      }
+    });
+  }
+  if (btnExtSearchClear) {
+    btnExtSearchClear.addEventListener('click', () => {
+      if (extSearchInput) { extSearchInput.value = ''; extSearchInput.focus(); }
+      renderExtensionsManager();
+    });
+  }
+  if (btnExtWebstore) {
+    btnExtWebstore.addEventListener('click', () => {
+      send({ type: 'closeExtensions' });
+      send({ type: 'newTab', url: 'https://chromewebstore.google.com/' });
+    });
+  }
+  if (extStoreForm) {
+    extStoreForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const val = (extStoreInput ? extStoreInput.value : '').trim();
+      if (!val) return;
+      state.extensionsBusy = true;
+      showExtStatus('Downloading & installing extension from Chrome Web Store…', 'busy');
+      renderExtensionsManager();
+      send({ type: 'extInstallFromStore', input: val });
+      if (extStoreInput) extStoreInput.value = '';
+    });
+  }
+  if (btnExtScanChrome) btnExtScanChrome.addEventListener('click', openChromeImportModal);
+  if (btnExtLoadUnpacked) btnExtLoadUnpacked.addEventListener('click', () => send({ type: 'extLoadUnpacked' }));
+  if (btnExtInstallFile) btnExtInstallFile.addEventListener('click', () => send({ type: 'extInstallFile' }));
+  if (btnExtUpdateAll) {
+    btnExtUpdateAll.addEventListener('click', () => {
+      showExtStatus('Updating installed extensions…', 'busy');
+      send({ type: 'extUpdateAll' });
+    });
+  }
+  if (btnExtRefresh) btnExtRefresh.addEventListener('click', () => send({ type: 'extRefresh' }));
+  if (btnExtDetailsBack) {
+    btnExtDetailsBack.addEventListener('click', () => {
+      activeExtensionDetailId = null;
+      renderExtensionsManager();
+    });
+  }
+  if (btnChromeImportClose) btnChromeImportClose.addEventListener('click', closeChromeImportModal);
+  if (btnChromeImportDone) btnChromeImportDone.addEventListener('click', closeChromeImportModal);
+  if (btnChromeImportRescan) btnChromeImportRescan.addEventListener('click', openChromeImportModal);
+  if (chromeImportOverlay) {
+    chromeImportOverlay.addEventListener('click', (e) => {
+      if (e.target === chromeImportOverlay) closeChromeImportModal();
+    });
+  }
+
+  // =========================================================================
   // Native C# BrowserForm Message Receiver
   // =========================================================================
   if (window.chrome && window.chrome.webview) {
@@ -4218,12 +5334,23 @@
         btnDownloads.classList.toggle('downloading', state.hasActiveDownload);
         updateRailIndicators();
         if (state.dlManagerOpen) renderDlManager();
+      } else if (msg.type === 'chromeExtensionsScanned') {
+        renderChromeImportList(msg.chromeExtensions || [], msg.error || '');
+      } else if (msg.type === 'extInstallStatus') {
+        state.extensionsBusy = !!msg.busy;
+        if (msg.message) {
+          showExtStatus(msg.message, msg.busy ? 'busy' : (msg.ok === false ? 'error' : 'ok'));
+        }
+        if (state.extensionsOpen) renderExtensionsManager();
+        if (!msg.busy && chromeImportOverlay && !chromeImportOverlay.classList.contains('hidden')) {
+          send({ type: 'extScanChrome' });
+        }
       } else if (msg.type === 'toast') {
         showToast(msg.message || msg.text || '', msg.tone || 'success');
       } else if (msg.type === 'settingsToast') {
         showToast(msg.text || msg.message || '', msg.tone || 'info');
       } else if (msg.type === 'palette') {
-        if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open') && !body.classList.contains('settings-open') && !body.classList.contains('dl-manager-open') && !body.classList.contains('modal-open')) {
+        if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open') && !body.classList.contains('settings-open') && !body.classList.contains('dl-manager-open') && !body.classList.contains('extensions-open') && !body.classList.contains('modal-open')) {
           const apMode = (state.browserOptions && state.browserOptions.appearanceMode) || 'auto';
           const effLight = (apMode === 'light') ? true : (apMode === 'dark' ? false : !!msg.isLight);
           body.classList.toggle('theme-light', effLight);
@@ -4264,5 +5391,7 @@
   if (bootData.readingList) renderReadingListSection(bootData.readingList, state.startPagePrefs.hideReadingList);
   if (bootData.favorites) renderFavoritesBar(bootData.favorites, bootData.showFavoritesBar);
   updateStatText(state.globalAdBlockEnabled, state.totalBlocked);
+  updateNewtabExtChip(state.extensions || []);
+  renderPinnedExtensions(state.extensions || []);
   if (bootData.activeProfile) syncTopProfilePill(bootData.activeProfile);
 })();

@@ -75,7 +75,7 @@ namespace DejavuBrowser
     }
 
     /// <summary>
-    /// Native AntDM / IDM-grade Video &amp; Audio Extractor Engine for dejavu v4.7.0.
+    /// Native AntDM / IDM-grade Video &amp; Audio Extractor Engine for dejavu v4.8.0.
     /// Zero-bloat on-demand auto-bootstrap of official yt-dlp.exe + ffmpeg.exe (+ ffprobe.exe)
     /// into SettingsStore.AppDataDir\tools, with VPN proxy support, 10-minute format probe caching,
     /// multi-quality MP4 muxing (4K/2K/1080p/720p/480p/360p) and 320 kbps MP3 / M4A audio extraction.

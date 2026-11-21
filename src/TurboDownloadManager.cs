@@ -3024,9 +3024,9 @@ namespace DejavuBrowser
 
         public static string GetFloatingDownloadButtonScript()
         {
-            // Zero-Idle-CPU Shadow DOM Material Design 3 IDM/AntDM Floating Download Button (v4.7.0)
+            // Zero-Idle-CPU Shadow DOM Material Design 3 IDM/AntDM Floating Download Button (v4.8.0)
             // - ZERO setInterval polling! Event-driven + filtered MutationObserver + lazy scroll/ResizeObserver
-            // - ZERO CSS blur / backdrop-filter (Pure Material Design 3 tonal surfaces)
+            // - Pure Material Design 3 solid tonal surfaces (zero frosted filters)
             // - On YouTube / TikTok / Instagram / X / Vimeo / Reddit / Twitch / SoundCloud / etc.:
             //   Shows native Multi-Quality MP4 (4K/2K/1080p/720p/480p/360p) + MP3/M4A picker backed by VideoExtractorEngine (zero extension!)
             // - On direct HTML5 <video>/<audio> & HLS .m3u8 sites: keeps 1-click 8x byte-range & HLS assembler!

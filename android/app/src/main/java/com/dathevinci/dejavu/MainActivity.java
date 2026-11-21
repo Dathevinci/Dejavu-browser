@@ -288,6 +288,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private boolean openLinksInBackground = false;
     private String defaultYoutubeQuality = "auto"; // "auto" | "1080p" | "720p" | "360p" | "m4a"
     private boolean floatingDownloadButton = true;
+    private boolean extSponsorCleaner = true;
+    private boolean extDarkModeBooster = false;
+    private boolean extVideoSpeedController = true;
+    private boolean extCopyUnlock = true;
+    private boolean extCookieDismisser = true;
+    private JSONArray customUserscripts = new JSONArray();
     private String mobileUserAgent = null;
     private boolean chromeCollapsed = false;
 
@@ -1722,6 +1728,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 }
                 injectScrollTopTracker(view);
                 applyDarkWebToTab(tab);
+                applyExtensionsToTab(tab, url);
                 if (!tab.isPrivate) {
                     recordHistory(tab.title, tab.url);
                     saveLocalCollections();
@@ -1973,6 +1980,172 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         tab.webView.evaluateJavascript(js, null);
     }
 
+    // =========================================================================
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v4.8.0)
+    // =========================================================================
+    private JSONObject buildExtensionsSnapshot() {
+        JSONObject root = new JSONObject();
+        JSONArray builtins = new JSONArray();
+        int activeCount = 0;
+        try {
+            Object[][] defs = new Object[][] {
+                { "sponsor_clean", "Sponsor & Annoyance Cleaner", "Hides sponsored promos, newsletter popups & app-install nags", "Privacy", extSponsorCleaner },
+                { "dark_boost", "Universal Dark Mode Booster", "Smart high-contrast dark surfaces with media preservation", "Appearance", extDarkModeBooster },
+                { "video_speed", "Video Speed Controller (0.5x–3x)", "Compact Material 3 speed pill on any HTML5 video player", "Media", extVideoSpeedController },
+                { "copy_unlock", "Copy-Unlock / Right-Click Enabler", "Restores text selection, copy & long-press on locked pages", "Utility", extCopyUnlock },
+                { "cookie_dismiss", "Cookie Banner Auto-Dismisser", "Auto-hides GDPR cookie overlays & restores smooth scrolling", "Privacy", extCookieDismisser }
+            };
+            for (Object[] d : defs) {
+                boolean on = (Boolean) d[4];
+                if (on) activeCount++;
+                JSONObject o = new JSONObject();
+                o.put("id", d[0]);
+                o.put("name", d[1]);
+                o.put("desc", d[2]);
+                o.put("category", d[3]);
+                o.put("enabled", on);
+                builtins.put(o);
+            }
+            for (int i = 0; i < customUserscripts.length(); i++) {
+                JSONObject u = customUserscripts.optJSONObject(i);
+                if (u != null && u.optBoolean("enabled", true)) activeCount++;
+            }
+            root.put("builtins", builtins);
+            root.put("userscripts", customUserscripts);
+            root.put("activeCount", activeCount);
+        } catch (Exception ignored) { }
+        return root;
+    }
+
+    private static boolean doesExtensionMatchUrl(String rawPatterns, String pageUrl) {
+        if (pageUrl == null || (!pageUrl.startsWith("http://") && !pageUrl.startsWith("https://"))) return false;
+        if (rawPatterns == null || rawPatterns.trim().isEmpty()) return true;
+        String host = "";
+        try {
+            String h = Uri.parse(pageUrl).getHost();
+            host = h != null ? h.toLowerCase(Locale.US) : "";
+        } catch (Exception ignored) { }
+        String lowUrl = pageUrl.toLowerCase(Locale.US);
+        String[] parts = rawPatterns.split("[,\\s;]+");
+        for (String p : parts) {
+            String pat = p.trim().toLowerCase(Locale.US);
+            if (pat.isEmpty()) continue;
+            if ("*".equals(pat) || "all".equals(pat) || "*://*/*".equals(pat) || "http*://*/*".equals(pat)) {
+                return true;
+            }
+            if (pat.startsWith("http://") || pat.startsWith("https://") || pat.contains("/")) {
+                String cleanPat = pat.replaceFirst("^https?://", "");
+                String cleanUrl = lowUrl.replaceFirst("^https?://", "");
+                StringBuilder rx = new StringBuilder("^");
+                for (int i = 0; i < cleanPat.length(); i++) {
+                    char c = cleanPat.charAt(i);
+                    if (c == '*') rx.append(".*");
+                    else if ("\\.^$|?+()[]{}".indexOf(c) >= 0) rx.append('\\').append(c);
+                    else rx.append(c);
+                }
+                rx.append("$");
+                try {
+                    if (cleanUrl.matches(rx.toString())) return true;
+                } catch (Exception ignored) { }
+                continue;
+            }
+            String dom = pat.startsWith("*.") ? pat.substring(2) : pat;
+            if (dom.startsWith("www.")) dom = dom.substring(4);
+            if (!dom.isEmpty() && (host.equals(dom) || host.endsWith("." + dom))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void applyExtensionsToTab(MobileTab tab, String pageUrl) {
+        if (tab == null || tab.isNewTab || tab.webView == null) return;
+        String url = (pageUrl != null && !pageUrl.isEmpty()) ? pageUrl : tab.url;
+        if (url == null || (!url.startsWith("http://") && !url.startsWith("https://"))) return;
+
+        // 1. Sponsor & Annoyance Cleaner
+        String sponsorJs = extSponsorCleaner
+            ? "(function(){var s=document.getElementById('__djv_ext_sponsor_css');if(!s){s=document.createElement('style');s.id='__djv_ext_sponsor_css';" +
+              "s.textContent='ytm-promoted-sparkles-web-renderer,ytm-promoted-video-renderer,ytd-promoted-sparkles-web-renderer,ytd-ad-slot-renderer,[data-sponsored=\"true\"],[aria-label=\"Sponsored\"],.smartbanner,.app-install-banner,.open-in-app-banner,.newsletter-modal,.exit-intent-popup{display:none!important;}';" +
+              "(document.head||document.documentElement).appendChild(s);}" +
+              "function sweep(){try{document.querySelectorAll('ytm-promoted-sparkles-web-renderer,ytm-promoted-video-renderer,ytd-ad-slot-renderer,[data-sponsored=\"true\"]').forEach(function(n){n.style.setProperty('display','none','important');});}catch(e){}}" +
+              "sweep();if(!window.__djvSponsorObs&&window.MutationObserver&&document.documentElement){var t=null;window.__djvSponsorObs=new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=null;sweep();},320);});window.__djvSponsorObs.observe(document.documentElement,{childList:true,subtree:true});}})();"
+            : "(function(){var s=document.getElementById('__djv_ext_sponsor_css');if(s)s.remove();if(window.__djvSponsorObs){try{window.__djvSponsorObs.disconnect();}catch(e){}window.__djvSponsorObs=null;}})();";
+        tab.webView.evaluateJavascript(sponsorJs, null);
+
+        // 2. Universal Dark Mode Booster
+        String darkBoostJs = extDarkModeBooster
+            ? "(function(){var s=document.getElementById('__djv_ext_dark_boost');if(!s){s=document.createElement('style');s.id='__djv_ext_dark_boost';" +
+              "s.textContent=':root{color-scheme:dark!important;}html{filter:invert(0.92) hue-rotate(180deg) contrast(0.96)!important;background:#121116!important;}img,video,picture,canvas,svg,iframe,[role=\"img\"],[style*=\"background-image\"]{filter:invert(1) hue-rotate(180deg)!important;}';" +
+              "(document.head||document.documentElement).appendChild(s);}})();"
+            : "(function(){var s=document.getElementById('__djv_ext_dark_boost');if(s)s.remove();})();";
+        tab.webView.evaluateJavascript(darkBoostJs, null);
+
+        // 3. Video Speed Controller (0.5x - 3x) — Pure Solid M3 Tonal Pill, Event-Driven + MutationObserver
+        String speedJs = extVideoSpeedController
+            ? "(function(){var rates=[0.5,0.75,1,1.25,1.5,2,2.5,3];window.__djvVspeedRate=window.__djvVspeedRate||1;" +
+              "function applyRate(r){window.__djvVspeedRate=r;document.querySelectorAll('video').forEach(function(v){try{v.playbackRate=r;}catch(e){}});var lbl=document.getElementById('__djv_vsp_lbl');if(lbl)lbl.textContent=r.toFixed(r%1===0?1:2).replace(/0$/,'')+'x';}" +
+              "function ensureUi(){var vids=document.querySelectorAll('video');var box=document.getElementById('__djv_ext_vspeed');if(!vids.length){if(box)box.remove();return;}" +
+              "vids.forEach(function(v){if(!v.__djvSpBound){v.__djvSpBound=1;v.addEventListener('play',function(){if(window.__djvVspeedRate&&window.__djvVspeedRate!==1)try{v.playbackRate=window.__djvVspeedRate;}catch(e){}});}});if(box)return;" +
+              "box=document.createElement('div');box.id='__djv_ext_vspeed';" +
+              "box.style.cssText='position:fixed;right:12px;top:64px;z-index:2147483645;display:inline-flex;align-items:center;gap:4px;padding:4px 6px;border-radius:999px;background:#2b2930;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 4px 14px rgba(0,0,0,0.36);font:700 12px/1 system-ui,Roboto,sans-serif;';" +
+              "var bStyle='width:24px;height:24px;border-radius:999px;border:none;background:#4f378b;color:#eaddff;font:700 14px/1 system-ui,sans-serif;padding:0;cursor:pointer;';" +
+              "var bMin=document.createElement('button');bMin.type='button';bMin.textContent='−';bMin.style.cssText=bStyle;" +
+              "var lbl=document.createElement('button');lbl.id='__djv_vsp_lbl';lbl.type='button';lbl.textContent='1.0x';lbl.style.cssText='height:24px;padding:0 7px;border-radius:999px;border:none;background:transparent;color:#d0bcff;font:700 12px/1 system-ui,sans-serif;cursor:pointer;';" +
+              "var bPls=document.createElement('button');bPls.type='button';bPls.textContent='+';bPls.style.cssText=bStyle;" +
+              "bMin.onclick=function(e){e.stopPropagation();var i=rates.indexOf(window.__djvVspeedRate);if(i<0)i=2;applyRate(rates[Math.max(0,i-1)]);};" +
+              "bPls.onclick=function(e){e.stopPropagation();var i=rates.indexOf(window.__djvVspeedRate);if(i<0)i=2;applyRate(rates[Math.min(rates.length-1,i+1)]);};" +
+              "lbl.onclick=function(e){e.stopPropagation();applyRate(1);};" +
+              "box.appendChild(bMin);box.appendChild(lbl);box.appendChild(bPls);(document.body||document.documentElement).appendChild(box);applyRate(window.__djvVspeedRate);}" +
+              "ensureUi();if(!window.__djvVspeedObs&&window.MutationObserver&&document.documentElement){var t=null;window.__djvVspeedObs=new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=null;ensureUi();},450);});window.__djvVspeedObs.observe(document.documentElement,{childList:true,subtree:true});}})();"
+            : "(function(){var box=document.getElementById('__djv_ext_vspeed');if(box)box.remove();if(window.__djvVspeedObs){try{window.__djvVspeedObs.disconnect();}catch(e){}window.__djvVspeedObs=null;}window.__djvVspeedRate=1;document.querySelectorAll('video').forEach(function(v){try{v.playbackRate=1;}catch(e){}});})();";
+        tab.webView.evaluateJavascript(speedJs, null);
+
+        // 4. Copy-Unlock / Right-Click Enabler
+        String copyJs = extCopyUnlock
+            ? "(function(){window.__djvCopyUnlockOn=true;var s=document.getElementById('__djv_ext_copy_css');if(!s){s=document.createElement('style');s.id='__djv_ext_copy_css';" +
+              "s.textContent='*,*::before,*::after{-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important;}';" +
+              "(document.head||document.documentElement).appendChild(s);}" +
+              "if(!window.__djvCopyHooked){window.__djvCopyHooked=1;['copy','cut','paste','contextmenu','selectstart','dragstart'].forEach(function(ev){" +
+              "document.addEventListener(ev,function(e){if(window.__djvCopyUnlockOn)e.stopPropagation();},true);});}})();"
+            : "(function(){window.__djvCopyUnlockOn=false;var s=document.getElementById('__djv_ext_copy_css');if(s)s.remove();})();";
+        tab.webView.evaluateJavascript(copyJs, null);
+
+        // 5. Cookie Banner Auto-Dismisser
+        String cookieJs = extCookieDismisser
+            ? "(function(){var s=document.getElementById('__djv_ext_cookie_css');if(!s){s=document.createElement('style');s.id='__djv_ext_cookie_css';" +
+              "s.textContent='#onetrust-consent-sdk,#CybotCookiebotDialog,.qc-cmp2-container,#didomi-host,.truste_overlay,.truste_box_overlay,#cookie-banner,.cookie-banner,.cookie-consent,.cc-window,[aria-label*=\"cookie\" i][role=\"dialog\"]{display:none!important;visibility:hidden!important;}html,body{overflow:auto!important;}';" +
+              "(document.head||document.documentElement).appendChild(s);}" +
+              "function dismiss(){try{var sels=['#onetrust-reject-all-handler','#CybotCookiebotDialogBodyButtonDecline','.qc-cmp2-summary-buttons button[mode=\"secondary\"]','#didomi-notice-disagree-button','button[data-testid=\"cookie-policy-dialog-reject-button\"]'];" +
+              "for(var i=0;i<sels.length;i++){var b=document.querySelector(sels[i]);if(b&&!b.__djvClk){b.__djvClk=1;try{b.click();}catch(e){}}}" +
+              "if(document.body&&getComputedStyle(document.body).overflow==='hidden')document.body.style.overflow='auto';}catch(e){}}" +
+              "dismiss();if(!window.__djvCookieObs&&window.MutationObserver&&document.documentElement){var t=null;window.__djvCookieObs=new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=null;dismiss();},400);});window.__djvCookieObs.observe(document.documentElement,{childList:true,subtree:true});}})();"
+            : "(function(){var s=document.getElementById('__djv_ext_cookie_css');if(s)s.remove();if(window.__djvCookieObs){try{window.__djvCookieObs.disconnect();}catch(e){}window.__djvCookieObs=null;}})();";
+        tab.webView.evaluateJavascript(cookieJs, null);
+
+        // 6. Custom Userscripts (.user.js / JS snippets persisted in SharedPreferences)
+        for (int i = 0; i < customUserscripts.length(); i++) {
+            JSONObject us = customUserscripts.optJSONObject(i);
+            if (us == null || !us.optBoolean("enabled", true)) continue;
+            String code = us.optString("code", "");
+            if (code.trim().isEmpty()) continue;
+            String matches = us.optString("matches", "*");
+            if (!doesExtensionMatchUrl(matches, url)) continue;
+            String usId = us.optString("id", "us_" + i).replaceAll("[^A-Za-z0-9_]", "_");
+            String wrapped = "(function(){try{window.__djvUsRan=window.__djvUsRan||{};var k='" + usId + ":'+location.href;if(window.__djvUsRan[k])return;window.__djvUsRan[k]=1;" +
+                "\n" + code + "\n}catch(e){}})();";
+            tab.webView.evaluateJavascript(wrapped, null);
+        }
+    }
+
+    private void applyExtensionsToAllTabs() {
+        for (MobileTab t : tabs) {
+            if (t != null && !t.isNewTab && t.webView != null) {
+                applyExtensionsToTab(t, t.url);
+            }
+        }
+    }
+
     private void setLoadProgress(int progress, boolean visible) {
         boolean isTop = "top".equals(barPosition);
         ProgressBar active = isTop ? loadProgressTop : loadProgress;
@@ -2030,6 +2203,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private boolean isModalSheetScreen(String scr) {
         return "menu".equals(scr) || "sync".equals(scr) || "settings".equals(scr)
             || "wallpapers".equals(scr) || "downloads".equals(scr)
+            || "extensions".equals(scr)
             || "profile".equals(scr) || "clear-data".equals(scr)
             || "context-menu".equals(scr);
     }
@@ -2273,6 +2447,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     st.put("turboDownloads", downloadManager.getDownloadsSnapshot());
                     st.put("pageMedia", active != null ? downloadManager.getMediaSnapshot(active.id) : new JSONArray());
                 }
+                st.put("extensions", buildExtensionsSnapshot());
                 if ("context-menu".equals(activeUiScreen) && pendingContextMenu != null) {
                     st.put("contextMenu", pendingContextMenu);
                 }
@@ -2460,6 +2635,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         openLinksInBackground = prefs.getBoolean("openLinksInBackground", false);
         defaultYoutubeQuality = normalizeYoutubeQuality(prefs.getString("defaultYoutubeQuality", "auto"));
         floatingDownloadButton = prefs.getBoolean("floatingDownloadButton", true);
+        extSponsorCleaner = prefs.getBoolean("extSponsorCleaner", true);
+        extDarkModeBooster = prefs.getBoolean("extDarkModeBooster", false);
+        extVideoSpeedController = prefs.getBoolean("extVideoSpeedController", true);
+        extCopyUnlock = prefs.getBoolean("extCopyUnlock", true);
+        extCookieDismisser = prefs.getBoolean("extCookieDismisser", true);
+        try {
+            String usRaw = prefs.getString("customUserscripts", "[]");
+            customUserscripts = (usRaw != null && !usRaw.isEmpty()) ? new JSONArray(usRaw) : new JSONArray();
+        } catch (Exception e) {
+            customUserscripts = new JSONArray();
+        }
         activeProfileId = prefs.getString("activeProfileId", "default");
         mainProfileId = prefs.getString("mainProfileId", "default");
         try {
@@ -2516,6 +2702,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putBoolean("openLinksInBackground", openLinksInBackground)
             .putString("defaultYoutubeQuality", defaultYoutubeQuality)
             .putBoolean("floatingDownloadButton", floatingDownloadButton)
+            .putBoolean("extSponsorCleaner", extSponsorCleaner)
+            .putBoolean("extDarkModeBooster", extDarkModeBooster)
+            .putBoolean("extVideoSpeedController", extVideoSpeedController)
+            .putBoolean("extCopyUnlock", extCopyUnlock)
+            .putBoolean("extCookieDismisser", extCookieDismisser)
+            .putString("customUserscripts", customUserscripts.toString())
             .putString("profiles", profiles.toString())
             .putString("activeProfileId", activeProfileId)
             .putString("mainProfileId", mainProfileId)
@@ -3886,6 +4078,118 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         public void downloadOrInstallUpdate() {
             mainHandler.post(() -> {
                 if (autoUpdater != null) autoUpdater.startDownloadOrInstall(MainActivity.this);
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleBuiltinExtension(final String extId) {
+            mainHandler.post(() -> {
+                if ("sponsor_clean".equals(extId)) extSponsorCleaner = !extSponsorCleaner;
+                else if ("dark_boost".equals(extId)) extDarkModeBooster = !extDarkModeBooster;
+                else if ("video_speed".equals(extId)) extVideoSpeedController = !extVideoSpeedController;
+                else if ("copy_unlock".equals(extId)) extCopyUnlock = !extCopyUnlock;
+                else if ("cookie_dismiss".equals(extId)) extCookieDismisser = !extCookieDismisser;
+                else return;
+                saveLocalCollections();
+                applyExtensionsToAllTabs();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void saveCustomUserscript(final String id, final String name, final String matches, final String description, final String code, final boolean enabled) {
+            mainHandler.post(() -> {
+                String cleanCode = code != null ? code.trim() : "";
+                if (cleanCode.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Enter JavaScript code for your userscript", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String cleanName = (name != null && !name.trim().isEmpty()) ? name.trim() : "Custom Userscript";
+                String cleanMatches = (matches != null && !matches.trim().isEmpty()) ? matches.trim() : "*";
+                String cleanDesc = (description != null) ? description.trim() : "";
+                String targetId = (id != null && !id.trim().isEmpty()) ? id.trim() : ("us_" + System.currentTimeMillis());
+
+                JSONArray next = new JSONArray();
+                boolean updated = false;
+                for (int i = 0; i < customUserscripts.length(); i++) {
+                    JSONObject existing = customUserscripts.optJSONObject(i);
+                    if (existing == null) continue;
+                    if (!updated && targetId.equals(existing.optString("id", ""))) {
+                        try {
+                            JSONObject repl = new JSONObject();
+                            repl.put("id", targetId);
+                            repl.put("name", cleanName);
+                            repl.put("matches", cleanMatches);
+                            repl.put("description", cleanDesc);
+                            repl.put("code", cleanCode);
+                            repl.put("enabled", enabled);
+                            repl.put("updatedAt", System.currentTimeMillis());
+                            next.put(repl);
+                            updated = true;
+                        } catch (Exception ignored) { }
+                    } else {
+                        next.put(existing);
+                    }
+                }
+                if (!updated) {
+                    try {
+                        JSONObject item = new JSONObject();
+                        item.put("id", targetId);
+                        item.put("name", cleanName);
+                        item.put("matches", cleanMatches);
+                        item.put("description", cleanDesc);
+                        item.put("code", cleanCode);
+                        item.put("enabled", enabled);
+                        item.put("updatedAt", System.currentTimeMillis());
+                        next.put(item);
+                    } catch (Exception ignored) { }
+                }
+                customUserscripts = next;
+                saveLocalCollections();
+                applyExtensionsToAllTabs();
+                pushStateToUi();
+                Toast.makeText(MainActivity.this, updated ? ("Updated " + cleanName) : ("Added " + cleanName), Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleCustomUserscript(final String id) {
+            mainHandler.post(() -> {
+                if (id == null || id.trim().isEmpty()) return;
+                boolean changed = false;
+                for (int i = 0; i < customUserscripts.length(); i++) {
+                    JSONObject u = customUserscripts.optJSONObject(i);
+                    if (u != null && id.equals(u.optString("id", ""))) {
+                        try {
+                            u.put("enabled", !u.optBoolean("enabled", true));
+                            changed = true;
+                        } catch (Exception ignored) { }
+                        break;
+                    }
+                }
+                if (changed) {
+                    saveLocalCollections();
+                    applyExtensionsToAllTabs();
+                    pushStateToUi();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void deleteCustomUserscript(final String id) {
+            mainHandler.post(() -> {
+                if (id == null || id.trim().isEmpty()) return;
+                JSONArray next = new JSONArray();
+                for (int i = 0; i < customUserscripts.length(); i++) {
+                    JSONObject u = customUserscripts.optJSONObject(i);
+                    if (u != null && !id.equals(u.optString("id", ""))) {
+                        next.put(u);
+                    }
+                }
+                customUserscripts = next;
+                saveLocalCollections();
+                pushStateToUi();
+                Toast.makeText(MainActivity.this, "Userscript removed", Toast.LENGTH_SHORT).show();
             });
         }
 

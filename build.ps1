@@ -64,6 +64,7 @@ $args = @(
   "$root\src\TurboDownloadManager.cs",
   "$root\src\SuggestEngine.cs",
   "$root\src\AdBlocker.cs",
+  "$root\src\ExtensionManager.cs",
   "$root\src\OverlayPopup.cs",
   "$root\src\BrowserForm.cs"
 )

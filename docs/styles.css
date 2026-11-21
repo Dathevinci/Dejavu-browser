@@ -443,12 +443,17 @@ img {
 .brand-mark {
   width: 38px;
   height: 38px;
-  border-radius: 13px;
-  background: var(--md-primary-container);
+  border-radius: 12px;
+  background: transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s var(--md-ease-emphasized);
+  transition: transform 0.2s var(--md-ease-spring);
+}
+
+.m3-butterfly-svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .brand-link:hover .brand-mark {
@@ -959,7 +964,18 @@ img {
   gap: 7px;
   position: relative;
   white-space: nowrap;
-  transition: background-color 0.16s var(--md-ease-emphasized), color 0.16s var(--md-ease-emphasized);
+  cursor: grab;
+  transition: background-color 0.16s var(--md-ease-emphasized), color 0.16s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring);
+}
+
+.dk-tab.is-dragging {
+  opacity: 0.55;
+  cursor: grabbing;
+}
+
+.dk-tab.drag-over {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
 }
 
 .dk-tab:hover {
@@ -1001,7 +1017,7 @@ img {
   color: var(--md-on-surface-variant);
 }
 
-/* Row 2: Decluttered v4.7.0 Chrome M3 Toolbar + Pill Omnibox */
+/* Row 2: Decluttered v4.8.0 Chrome M3 Toolbar + Pill Omnibox + Extensions Puzzle */
 .dk-toolbar {
   height: 50px;
   padding: 0 12px;
@@ -1125,6 +1141,53 @@ img {
 
 .dk-vpn-pill:hover {
   transform: translateY(-1px);
+}
+
+.dk-pinned-exts {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dk-pinned-pill {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  border: none;
+  background: var(--md-surface-container-highest);
+  color: var(--md-on-surface);
+  font-size: 9.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.16s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized);
+}
+
+.dk-pinned-pill:hover {
+  transform: scale(1.08);
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
+
+.dk-ext-puzzle-btn {
+  position: relative;
+}
+
+.dk-puzzle-dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 14px;
+  text-align: center;
 }
 
 .dk-profile-chip {
@@ -1551,7 +1614,13 @@ img {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+}
+
+.dk-sp-butterfly {
+  display: inline-flex;
+  border-radius: 16px;
+  box-shadow: var(--md-elevation-1);
 }
 
 .dk-sp-brand {
@@ -1559,31 +1628,58 @@ img {
   font-size: 26px;
   font-weight: 600;
   letter-spacing: 0.06em;
+  line-height: 1.05;
+}
+
+.dk-sp-greeting {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--md-surface-container);
+  color: var(--md-on-surface-variant);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .dk-sp-search {
-  width: min(444px, 100%);
-  height: 48px;
-  padding: 0 7px 0 20px;
+  width: min(468px, 100%);
+  height: 52px;
+  padding: 0 8px 0 20px;
   border-radius: 999px;
   background: var(--md-surface-container-high);
   box-shadow: var(--md-elevation-1);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
+  gap: 10px;
+  font-size: 13.5px;
   color: var(--md-on-surface-variant);
 }
 
+.dk-sp-search-lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dk-sp-search-lead svg {
+  color: var(--md-primary);
+  flex-shrink: 0;
+}
+
 .dk-sp-go {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--md-primary);
   color: var(--md-on-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .dk-qa-grid {
@@ -1650,6 +1746,229 @@ img {
   color: var(--md-on-tertiary-container);
   font-weight: 700;
   font-size: 11px;
+}
+
+.dk-ext-status-pill {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: none;
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: transform 0.18s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized);
+}
+
+.dk-ext-status-pill:hover {
+  transform: translateY(-1px);
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
+
+/* Page 2: Real Chrome Extensions Manager Showcase (v4.8.0 Material Design 3) */
+.dk-ext-stage {
+  min-height: 472px;
+  height: 100%;
+  padding: 18px 20px;
+  background: var(--md-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.ext-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ext-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ext-title-ico {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ext-title-wrap h3 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.ext-title-wrap small {
+  display: block;
+  font-size: 11px;
+  color: var(--md-on-surface-variant);
+}
+
+.ext-dev-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px 5px 14px;
+  border-radius: 999px;
+  background: var(--md-surface-container);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--md-on-surface);
+}
+
+.ext-action-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ext-dev-drawer {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ext-dev-drawer[hidden] {
+  display: none;
+}
+
+.ext-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  flex: 1;
+}
+
+.ext-card {
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: var(--md-surface-container);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: background-color 0.16s var(--md-ease-emphasized), opacity 0.18s ease;
+}
+
+.ext-card:hover {
+  background: var(--md-surface-container-high);
+}
+
+.ext-card.is-disabled {
+  opacity: 0.64;
+}
+
+.ext-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.ext-ico {
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ext-ico.is-shield { background: #8f1d2c; color: #ffd9dc; }
+.ext-ico.is-moon   { background: var(--md-primary-container); color: var(--md-on-primary-container); }
+.ext-ico.is-dev    { background: #0c4a6e; color: #bae6fd; }
+.ext-ico.is-vault  { background: #1e3a8a; color: #dbeafe; }
+
+.ext-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.ext-meta strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.ext-ver {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--md-on-surface-variant);
+}
+
+.ext-meta small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--md-on-surface-variant);
+}
+
+.ext-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--md-outline-variant);
+}
+
+.ext-pill-btn {
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid var(--md-outline-variant);
+  background: transparent;
+  color: var(--md-on-surface);
+  font-size: 11px;
+  font-weight: 700;
+  transition: background-color 0.16s var(--md-ease-emphasized), border-color 0.16s var(--md-ease-emphasized), color 0.16s ease;
+}
+
+.ext-pill-btn.is-pinned {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  border-color: transparent;
+}
+
+.ext-mv-chip {
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: var(--md-surface-container-highest);
+  color: var(--md-on-surface-variant);
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ext-en-sw {
+  margin-left: auto;
 }
 
 /* Page 2: Chrome-Style Multi-Profile & Material 3 Google Sign-In Studio */
@@ -3579,7 +3898,8 @@ html[data-theme="light"] .dl-upgrade-note {
     margin: 0 auto;
   }
   .dk-vpn-stage,
-  .dk-profiles-stage {
+  .dk-profiles-stage,
+  .ext-cards-grid {
     grid-template-columns: 1fr;
   }
   .stats-strip,
@@ -3655,6 +3975,7 @@ html[data-theme="light"] .dl-upgrade-note {
   }
   .dk-icon-btn.muted,
   .dk-beam-btn,
+  .dk-pinned-exts,
   .dk-win-dots {
     display: none;
   }
@@ -3669,6 +3990,7 @@ html[data-theme="light"] .dl-upgrade-note {
     display: none;
   }
   .dk-profiles-stage,
+  .dk-ext-stage,
   .dk-video-stage,
   .dk-vpn-stage,
   .dk-sync-stage {

@@ -1646,6 +1646,195 @@
     }
 
     .sync-pair-row input:focus { border-color: var(--md-primary); }
+
+    /* Mode 17: Chrome-Grade Material Design 3 Toolbar Extensions Puzzle Popover */
+    #mode-extensions:focus { outline: none; }
+    #btn-ext-pop-close:focus:not(:focus-visible) { outline: none; }
+
+    .ext-pop-list {
+      gap: 4px;
+    }
+
+    .ext-pop-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: var(--md-shape-md);
+      background: transparent;
+      flex-shrink: 0;
+      transition: background-color var(--md-dur-short) var(--md-ease-emphasized);
+    }
+
+    .ext-pop-row:hover {
+      background: var(--md-state-hover);
+    }
+
+    .ext-pop-row.is-disabled {
+      opacity: 0.62;
+    }
+
+    .ext-pop-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: none;
+      background: transparent;
+      color: var(--md-on-surface);
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+      padding: 2px 0;
+    }
+
+    .ext-pop-ico {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: var(--md-surface-container);
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 42%, transparent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      color: var(--md-primary);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .ext-pop-ico img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .ext-pop-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ext-pop-name {
+      font-size: 12.8px;
+      font-weight: 600;
+      color: var(--md-on-surface);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ext-pop-sub {
+      font-size: 11px;
+      color: var(--md-on-surface-variant);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 1px;
+    }
+
+    .ext-pop-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-tertiary);
+      flex-shrink: 0;
+    }
+
+    .ext-pop-row.is-disabled .ext-pop-dot {
+      background: var(--md-outline);
+    }
+
+    .ext-pop-acts {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .ext-pin-toggle {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--md-shape-full);
+      border: none;
+      background: transparent;
+      color: var(--md-on-surface-variant);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color var(--md-dur-short) ease, color var(--md-dur-short) ease, transform var(--md-dur-press) ease;
+    }
+
+    .ext-pin-toggle:hover {
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface);
+    }
+
+    .ext-pin-toggle:active { transform: scale(0.92); }
+
+    .ext-pin-toggle.pinned {
+      background: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+    }
+
+    .ext-pop-empty {
+      padding: 26px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+      color: var(--md-on-surface-variant);
+    }
+
+    .ext-pop-empty-ico {
+      width: 44px;
+      height: 44px;
+      border-radius: 15px;
+      background: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ext-pop-empty-title {
+      font-size: 13.4px;
+      font-weight: 600;
+      color: var(--md-on-surface);
+    }
+
+    .ext-pop-empty-sub {
+      font-size: 11.5px;
+      line-height: 1.45;
+    }
+
+    .ext-pop-foot {
+      padding-top: 8px;
+      border-top: 1px solid color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .ext-pop-foot .pill-btn {
+      flex: 1;
+      height: 34px;
+      font-size: 12.2px;
+    }
+
+    .ov-m3-ico-svg {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .ov-m3-ico-svg svg { display: block; }
   </style>
 </head>
 <body class="theme-dark">
@@ -1757,7 +1946,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v4.7.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v4.8.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -1810,7 +1999,20 @@
   <div id="mode-update" class="overlay-shell hidden">
     <div class="upd-box">
       <div class="upd-top">
-        <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
+        <svg class="djv-m3-logo" viewBox="0 0 64 64" width="32" height="32" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+          <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+          <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+          <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+          <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+          <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+          <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+          <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+          <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+          <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+          <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+          <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
         <div>
           <div id="upd-title" class="upd-title">dejavu update ready</div>
           <div id="upd-sub" class="upd-sub">Downloaded automatically in background</div>
@@ -1982,7 +2184,25 @@
   <div id="mode-share" class="overlay-shell hidden">
     <div class="share-box">
       <div class="share-head">
-        <div class="share-ico-wrap"><img id="share-fav" src="https://dejavu.local/logo-transparent.png" alt="" draggable="false"></div>
+        <div class="share-ico-wrap">
+          <img id="share-fav" class="hidden" alt="" draggable="false">
+          <span id="share-fav-svg" class="ov-m3-ico-svg" aria-hidden="true">
+            <svg class="djv-m3-logo" viewBox="0 0 64 64" width="22" height="22" fill="none">
+              <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+              <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+              <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+              <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+              <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+              <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+              <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+              <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+              <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+              <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+              <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+              <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+        </div>
         <div class="share-meta">
           <div id="share-title" class="share-title">Start Page</div>
           <div id="share-host" class="share-host">dejavu</div>
@@ -2151,7 +2371,20 @@
   <div id="mode-synctoast" class="overlay-shell hidden">
     <div class="sync-toast-box">
       <div class="upd-top">
-        <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
+        <svg class="djv-m3-logo" viewBox="0 0 64 64" width="32" height="32" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+          <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+          <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+          <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+          <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+          <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+          <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+          <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+          <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+          <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+          <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+          <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
         <div style="min-width:0;flex:1;">
           <div id="st-title" class="upd-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Received from Phone</div>
           <div id="st-sub" class="upd-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
@@ -2199,6 +2432,10 @@
         <span class="menu-item-label">History</span>
         <span class="menu-kbd">Ctrl+H</span>
       </button>
+      <button id="mn-extensions" class="menu-item" type="button">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M11.6 3.2a1.7 1.7 0 0 1 1.7 1.7v.9h1.9a1.4 1.4 0 0 1 1.4 1.4v2.1h-.9a1.7 1.7 0 0 0 0 3.4h.9v2.1a1.4 1.4 0 0 1-1.4 1.4h-2.1v-.9a1.7 1.7 0 0 0-3.4 0v.9H7.2a1.4 1.4 0 0 1-1.4-1.4v-2.1h.9a1.7 1.7 0 0 0 0-3.4h-.9V7.2a1.4 1.4 0 0 1 1.4-1.4h2.7v-.9a1.7 1.7 0 0 1 1.7-1.7z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg>
+        <span class="menu-item-label">Extensions</span>
+      </button>
       <div class="share-sep"></div>
       <div class="menu-zoom-row">
         <span class="menu-zoom-label">
@@ -2223,7 +2460,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v4.7.0</span>
+        <span id="mn-version-lbl">dejavu v4.8.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -2237,9 +2474,81 @@
     </div>
   </div>
 
+  <!-- Mode 17: Chrome-Grade Material Design 3 Toolbar Extensions Puzzle Popover -->
+  <div id="mode-extensions" class="overlay-shell hidden" tabindex="-1" aria-label="Extensions">
+    <div class="panel-box">
+      <div class="panel-head">
+        <div class="panel-title">
+          <svg viewBox="0 0 20 20" width="17" height="17" fill="none" style="color:var(--md-primary);flex-shrink:0;">
+            <path d="M11.6 3.2a1.7 1.7 0 0 1 1.7 1.7v.9h1.9a1.4 1.4 0 0 1 1.4 1.4v2.1h-.9a1.7 1.7 0 0 0 0 3.4h.9v2.1a1.4 1.4 0 0 1-1.4 1.4h-2.1v-.9a1.7 1.7 0 0 0-3.4 0v.9H7.2a1.4 1.4 0 0 1-1.4-1.4v-2.1h.9a1.7 1.7 0 0 0 0-3.4h-.9V7.2a1.4 1.4 0 0 1 1.4-1.4h2.7v-.9a1.7 1.7 0 0 1 1.7-1.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+          <span>Extensions</span>
+          <span id="ext-pop-count" class="engine-badge">0</span>
+        </div>
+        <button id="btn-ext-pop-close" class="icon-btn sm" type="button" title="Close">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div id="ext-pop-list" class="panel-scroll ext-pop-list"></div>
+
+      <div class="ext-pop-foot">
+        <button id="btn-ext-pop-manage" class="pill-btn" type="button">
+          <svg viewBox="0 0 18 18" width="14" height="14" fill="none"><circle cx="9" cy="9" r="2.35" stroke="currentColor" stroke-width="1.5"/><path d="M9 2.6v1.5M9 13.9v1.5M2.6 9h1.5M13.9 9h1.5M4.5 4.5l1.1 1.1M12.4 12.4l1.1 1.1M13.5 4.5l-1.1 1.1M5.6 12.4l-1.1 1.1" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>
+          <span>Manage Extensions</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://dejavu.local/avatars.js"></script>
   <script>
     const send = (msg) => { try { window.chrome.webview.postMessage(msg); } catch {} };
+
+    // Dynamic-Color Material Design 3 Geometric Origami Butterfly SVG (zero raster PNGs!)
+    const DEJAVU_M3_LOGO_SVG = `<svg class="djv-m3-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+      <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+      <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+      <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+      <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+      <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+      <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+      <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+      <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+      <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+      <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+      <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+    </svg>`;
+
+    function makeM3LogoSpan(sz, cls) {
+      return `<span class="ov-m3-ico-svg ${cls || ''}" style="width:${sz}px;height:${sz}px;">${DEJAVU_M3_LOGO_SVG.replace('<svg ', `<svg width="${sz}" height="${sz}" `)}</span>`;
+    }
+
+    function swapImgToM3Logo(imgEl, sz, cls) {
+      if (!imgEl || !imgEl.parentNode) return;
+      const wrap = document.createElement('span');
+      wrap.className = `ov-m3-ico-svg ${cls || ''}`;
+      wrap.style.width = `${sz}px`;
+      wrap.style.height = `${sz}px`;
+      wrap.innerHTML = DEJAVU_M3_LOGO_SVG.replace('<svg ', `<svg width="${sz}" height="${sz}" `);
+      imgEl.replaceWith(wrap);
+    }
+
+    // Upgrade default avatar to Dynamic Material Design 3 Butterfly SVG (zero halftone PNG!)
+    if (window.DejavuAvatars && typeof window.DejavuAvatars.renderHtml === 'function') {
+      const origRender = window.DejavuAvatars.renderHtml;
+      if (Array.isArray(window.DejavuAvatars.list) && window.DejavuAvatars.list[0] && window.DejavuAvatars.list[0].id === 'dejavu-halftone') {
+        window.DejavuAvatars.list[0].name = 'Material You';
+      }
+      window.DejavuAvatars.renderHtml = function (id, size) {
+        const sz = size || 32;
+        if (!id || id === 'dejavu-halftone') {
+          return `<span class="bf-avatar bf-avatar-m3" style="width:${sz}px;height:${sz}px;">${DEJAVU_M3_LOGO_SVG}</span>`;
+        }
+        return origRender.call(window.DejavuAvatars, id, sz);
+      };
+    }
 
     // Pure Material Design 3 CSS surface telemetry (0.0ms canvas/backdrop overhead)
     window.__overlaySurfaceMeta = { engine: 'material-design-3-css', backdropCanvas: false };
@@ -2261,7 +2570,8 @@
       sync: document.getElementById('mode-sync'),
       synctoast: document.getElementById('mode-synctoast'),
       menu: document.getElementById('mode-menu'),
-      contextmenu: document.getElementById('mode-contextmenu')
+      contextmenu: document.getElementById('mode-contextmenu'),
+      extensions: document.getElementById('mode-extensions')
     };
 
     // Shield bindings
@@ -2544,7 +2854,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.7.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.8.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -2604,10 +2914,10 @@
         const row = document.createElement('div');
         row.className = 'hist-row';
         const host = extractHost(item.url);
-        const icoSrc = item.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : 'https://dejavu.local/logo-transparent.png');
+        const icoSrc = item.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : '');
 
         row.innerHTML = `
-          <img class="hist-ico" alt="" draggable="false">
+          ${icoSrc ? '<img class="hist-ico" alt="" draggable="false">' : makeM3LogoSpan(16, 'hist-ico')}
           <div class="hist-meta">
             <div class="hist-title"></div>
             <div class="hist-url"></div>
@@ -2618,9 +2928,11 @@
             <button class="mini-act del" title="Remove">×</button>
           </div>
         `;
-        const img = row.querySelector('.hist-ico');
-        img.src = icoSrc;
-        img.onerror = () => { img.src = 'https://dejavu.local/logo-transparent.png'; };
+        const img = row.querySelector('img.hist-ico');
+        if (img && icoSrc) {
+          img.src = icoSrc;
+          img.onerror = () => swapImgToM3Logo(img, 16, 'hist-ico');
+        }
         row.querySelector('.hist-title').textContent = item.title || host;
         row.querySelector('.hist-url').textContent = host;
         row.querySelector('.hist-time').textContent = formatTime(item.visitedAtMs);
@@ -2753,6 +3065,8 @@
         renderMenuPanel(d);
       } else if (d.mode === 'contextmenu') {
         renderContextMenuPanel(d);
+      } else if (d.mode === 'extensions') {
+        renderExtensionsPopover(d);
       }
     });
 
@@ -3122,12 +3436,14 @@
       (d.tabs || []).forEach((t) => {
         const row = document.createElement('div');
         row.className = 'sb-row' + (t.active ? ' active' : '');
-        const fav = t.favicon || 'https://dejavu.local/logo-transparent.png';
+        const fav = t.favicon || '';
         row.innerHTML = `
-          <img class="sb-ico" src="${escapeHtml(fav)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'">
+          ${fav ? `<img class="sb-ico" src="${escapeHtml(fav)}" alt="" draggable="false">` : makeM3LogoSpan(15, 'sb-ico')}
           <span class="sb-label"></span>
           <button class="sb-rm" type="button" title="Close Tab">×</button>
         `;
+        const tImg = row.querySelector('img.sb-ico');
+        if (tImg) tImg.onerror = () => swapImgToM3Logo(tImg, 15, 'sb-ico');
         row.querySelector('.sb-label').textContent = t.title || 'Start Page';
         row.addEventListener('click', (e) => {
           if (e.target.closest('.sb-rm')) return;
@@ -3147,11 +3463,13 @@
       } else {
         favs.forEach((f) => {
           const host = extractHost(f.url);
-          const ico = f.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : 'https://dejavu.local/logo-transparent.png');
+          const ico = f.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : '');
           const row = document.createElement('div');
           row.className = 'sb-row';
           row.title = f.url;
-          row.innerHTML = `<img class="sb-ico" src="${escapeHtml(ico)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'"><span class="sb-label"></span>`;
+          row.innerHTML = `${ico ? `<img class="sb-ico" src="${escapeHtml(ico)}" alt="" draggable="false">` : makeM3LogoSpan(15, 'sb-ico')}<span class="sb-label"></span>`;
+          const fImg = row.querySelector('img.sb-ico');
+          if (fImg) fImg.onerror = () => swapImgToM3Logo(fImg, 15, 'sb-ico');
           row.querySelector('.sb-label').textContent = f.title || host;
           row.addEventListener('click', () => send({ type: 'sidebarOpenUrl', url: f.url }));
           sbFavsList.appendChild(row);
@@ -3169,11 +3487,13 @@
       } else {
         rlist.forEach((r) => {
           const host = extractHost(r.url);
-          const ico = r.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : 'https://dejavu.local/logo-transparent.png');
+          const ico = r.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : '');
           const row = document.createElement('div');
           row.className = 'sb-row';
           row.title = r.url;
-          row.innerHTML = `<img class="sb-ico" src="${escapeHtml(ico)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'"><span class="sb-label"></span><button class="sb-rm" type="button" title="Remove">×</button>`;
+          row.innerHTML = `${ico ? `<img class="sb-ico" src="${escapeHtml(ico)}" alt="" draggable="false">` : makeM3LogoSpan(15, 'sb-ico')}<span class="sb-label"></span><button class="sb-rm" type="button" title="Remove">×</button>`;
+          const rImg = row.querySelector('img.sb-ico');
+          if (rImg) rImg.onerror = () => swapImgToM3Logo(rImg, 15, 'sb-ico');
           row.querySelector('.sb-label').textContent = r.title || host;
           row.addEventListener('click', (e) => {
             if (e.target.closest('.sb-rm')) return;
@@ -3194,11 +3514,13 @@
       } else {
         hist.forEach((h) => {
           const host = extractHost(h.url);
-          const ico = h.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : 'https://dejavu.local/logo-transparent.png');
+          const ico = h.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : '');
           const row = document.createElement('div');
           row.className = 'sb-row';
           row.title = h.url;
-          row.innerHTML = `<img class="sb-ico" src="${escapeHtml(ico)}" alt="" draggable="false" onerror="this.src='https://dejavu.local/logo-transparent.png'"><span class="sb-label"></span>`;
+          row.innerHTML = `${ico ? `<img class="sb-ico" src="${escapeHtml(ico)}" alt="" draggable="false">` : makeM3LogoSpan(15, 'sb-ico')}<span class="sb-label"></span>`;
+          const hImg = row.querySelector('img.sb-ico');
+          if (hImg) hImg.onerror = () => swapImgToM3Logo(hImg, 15, 'sb-ico');
           row.querySelector('.sb-label').textContent = h.title || host;
           row.addEventListener('click', () => send({ type: 'sidebarOpenUrl', url: h.url }));
           sbHistList.appendChild(row);
@@ -3210,6 +3532,7 @@
     // Mode 10: Material Design 3 Share / Page Actions Menu
     // =========================================================================
     const shareFav = document.getElementById('share-fav');
+    const shareFavSvg = document.getElementById('share-fav-svg');
     const shareTitle = document.getElementById('share-title');
     const shareHost = document.getElementById('share-host');
     const shCopy = document.getElementById('sh-copy');
@@ -3249,8 +3572,19 @@
     function renderSharePanel(d) {
       shCopy.classList.remove('copied');
       shCopyLbl.textContent = 'Copy Link';
-      shareFav.src = d.favicon || 'https://dejavu.local/logo-transparent.png';
-      shareFav.onerror = () => { shareFav.src = 'https://dejavu.local/logo-transparent.png'; };
+      const hasFav = !d.isNewTab && !!d.favicon;
+      if (hasFav) {
+        shareFav.src = d.favicon;
+        shareFav.classList.remove('hidden');
+        if (shareFavSvg) shareFavSvg.classList.add('hidden');
+        shareFav.onerror = () => {
+          shareFav.classList.add('hidden');
+          if (shareFavSvg) shareFavSvg.classList.remove('hidden');
+        };
+      } else {
+        shareFav.classList.add('hidden');
+        if (shareFavSvg) shareFavSvg.classList.remove('hidden');
+      }
       shareTitle.textContent = d.title || 'Start Page';
       shareHost.textContent = d.host || 'dejavu';
 
@@ -3711,6 +4045,8 @@
     document.getElementById('mn-profiles').addEventListener('click', () => send({ type: 'openProfiles' }));
     document.getElementById('mn-downloads').addEventListener('click', () => send({ type: 'openDlManager', tab: 'all' }));
     document.getElementById('mn-history').addEventListener('click', () => send({ type: 'openHistory' }));
+    const mnExtensions = document.getElementById('mn-extensions');
+    if (mnExtensions) mnExtensions.addEventListener('click', () => send({ type: 'openExtensions' }));
     document.getElementById('mn-devtools').addEventListener('click', () => send({ type: 'openDevTools' }));
     document.getElementById('mn-settings').addEventListener('click', () => send({ type: 'openSettings', pane: 'you' }));
     mnZoomOut.addEventListener('click', () => send({ type: 'adjustZoom', delta: -0.1 }));
@@ -3723,7 +4059,7 @@
     function renderMenuPanel(d) {
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '4.7.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '4.8.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');
@@ -3917,6 +4253,11 @@
     }
 
     document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && currentOverlayMode === 'extensions') {
+        e.preventDefault();
+        send({ type: 'closePanel' });
+        return;
+      }
       if (currentOverlayMode !== 'contextmenu') return;
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -3946,6 +4287,112 @@
         }
       }
     });
+
+    // =========================================================================
+    // Mode 17: Chrome-Grade Material Design 3 Toolbar Extensions Puzzle Popover
+    // =========================================================================
+    const extPopList = document.getElementById('ext-pop-list');
+    const extPopCount = document.getElementById('ext-pop-count');
+    const btnExtPopClose = document.getElementById('btn-ext-pop-close');
+    const btnExtPopManage = document.getElementById('btn-ext-pop-manage');
+
+    if (btnExtPopClose) btnExtPopClose.addEventListener('click', () => send({ type: 'closePanel' }));
+    if (btnExtPopManage) btnExtPopManage.addEventListener('click', () => send({ type: 'openExtensions' }));
+
+    const PIN_SVG = '<svg viewBox="0 0 18 18" width="14" height="14" fill="none"><path d="M10.8 3.2l4 4-1.5 1.5-1-.45-2.8 2.8.45 2-1.3 1.3-2.5-2.5-3 3-.8-.8 3-3-2.5-2.5 1.3-1.3 2 .45 2.8-2.8-.45-1 1.5-1.5z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/></svg>';
+    const PIN_FILLED_SVG = '<svg viewBox="0 0 18 18" width="14" height="14" fill="none"><path d="M10.8 3.2l4 4-1.5 1.5-1-.45-2.8 2.8.45 2-1.3 1.3-2.5-2.5-3 3-.8-.8 3-3-2.5-2.5 1.3-1.3 2 .45 2.8-2.8-.45-1 1.5-1.5z" fill="currentColor" stroke="currentColor" stroke-width="0.9" stroke-linejoin="round"/></svg>';
+    const PUZZLE_EMPTY_SVG = '<svg viewBox="0 0 22 22" width="24" height="24" fill="none"><path d="M12.8 3.4a1.9 1.9 0 0 1 1.9 1.9v1h2.1a1.6 1.6 0 0 1 1.6 1.6v2.3h-1a1.9 1.9 0 0 0 0 3.8h1v2.3a1.6 1.6 0 0 1-1.6 1.6h-2.3v-1a1.9 1.9 0 0 0-3.8 0v1H7.9a1.6 1.6 0 0 1-1.6-1.6v-2.3h1a1.9 1.9 0 0 0 0-3.8h-1V7.9a1.6 1.6 0 0 1 1.6-1.6h3v-1a1.9 1.9 0 0 1 1.9-1.9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+
+    function renderExtensionsPopover(d) {
+      if (!extPopList) return;
+      if (modes.extensions) {
+        try { modes.extensions.focus({ preventScroll: true }); } catch {}
+        setTimeout(() => {
+          if (currentOverlayMode === 'extensions' && document.activeElement === btnExtPopClose && modes.extensions) {
+            try { modes.extensions.focus({ preventScroll: true }); } catch {}
+          }
+        }, 40);
+      }
+      const list = Array.isArray(d.extensions) ? d.extensions : [];
+      if (extPopCount) extPopCount.textContent = String(list.length);
+      extPopList.innerHTML = '';
+
+      if (!list.length) {
+        extPopList.innerHTML = `
+          <div class="ext-pop-empty">
+            <div class="ext-pop-empty-ico">${PUZZLE_EMPTY_SVG}</div>
+            <div class="ext-pop-empty-title">No extensions installed</div>
+            <div class="ext-pop-empty-sub">Install Chrome extensions from the Chrome Web Store, import from Chrome, or load unpacked in Developer mode.</div>
+            <button type="button" id="btn-ext-pop-cws" class="pill-btn primary" style="height:34px;padding:0 16px;margin-top:4px;">Browse Chrome Web Store</button>
+          </div>
+        `;
+        const cwsBtn = document.getElementById('btn-ext-pop-cws');
+        if (cwsBtn) {
+          cwsBtn.addEventListener('click', () => {
+            send({ type: 'openHistoryUrl', url: 'https://chromewebstore.google.com/', newTab: true });
+          });
+        }
+        return;
+      }
+
+      const sorted = list.slice().sort((a, b) => {
+        if (!!a.enabled !== !!b.enabled) return a.enabled ? -1 : 1;
+        if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
+        return String(a.name || '').localeCompare(String(b.name || ''));
+      });
+
+      const frag = document.createDocumentFragment();
+      sorted.forEach((ext) => {
+        const row = document.createElement('div');
+        row.className = 'ext-pop-row' + (ext.enabled === false ? ' is-disabled' : '');
+        const initial = escapeHtml(((ext.name || 'E')[0] || 'E').toUpperCase());
+        const icoHtml = ext.iconDataUrl
+          ? `<img src="${escapeHtml(ext.iconDataUrl)}" alt="" draggable="false">`
+          : `<span>${initial}</span>`;
+        const statusTxt = ext.enabled === false ? 'Disabled' : (ext.popupUrl ? 'Click to open popup' : 'Active');
+
+        row.innerHTML = `
+          <button type="button" class="ext-pop-main" title="${escapeHtml(ext.name || 'Extension')}">
+            <span class="ext-pop-ico">${icoHtml}</span>
+            <div class="ext-pop-meta">
+              <div class="ext-pop-name"></div>
+              <div class="ext-pop-sub">
+                <span class="ext-pop-dot"></span>
+                <span>${escapeHtml(statusTxt)}${ext.version ? ' · v' + escapeHtml(ext.version) : ''}</span>
+              </div>
+            </div>
+          </button>
+          <div class="ext-pop-acts">
+            <button type="button" class="ext-pin-toggle${ext.pinned ? ' pinned' : ''}" title="${ext.pinned ? 'Unpin from toolbar' : 'Pin to toolbar'}">
+              ${ext.pinned ? PIN_FILLED_SVG : PIN_SVG}
+            </button>
+          </div>
+        `;
+        row.querySelector('.ext-pop-name').textContent = ext.name || 'Extension';
+
+        const mainBtn = row.querySelector('.ext-pop-main');
+        mainBtn.addEventListener('click', () => {
+          if (ext.enabled !== false && ext.popupUrl) {
+            send({ type: 'extOpenPopup', id: ext.id });
+          } else {
+            send({ type: 'openExtensions' });
+          }
+        });
+
+        const pinBtn = row.querySelector('.ext-pin-toggle');
+        pinBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const nextPin = !pinBtn.classList.contains('pinned');
+          pinBtn.classList.toggle('pinned', nextPin);
+          pinBtn.innerHTML = nextPin ? PIN_FILLED_SVG : PIN_SVG;
+          pinBtn.title = nextPin ? 'Unpin from toolbar' : 'Pin to toolbar';
+          send({ type: 'extTogglePin', id: ext.id });
+        });
+
+        frag.appendChild(row);
+      });
+      extPopList.appendChild(frag);
+    }
   </script>
 </body>
 </html>

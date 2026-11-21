@@ -192,6 +192,41 @@ namespace DejavuBrowser
             }
         }
 
+        public async Task InitializeForExtensionPopupAsync(CoreWebView2Environment env, Action<string> onNewWindowUrl)
+        {
+            await _wv.EnsureCoreWebView2Async(env);
+            CoreWebView2 core = _wv.CoreWebView2;
+            core.Settings.AreDefaultContextMenusEnabled = true;
+            core.Settings.AreDevToolsEnabled = true;
+            core.Settings.IsStatusBarEnabled = false;
+            core.Settings.IsZoomControlEnabled = false;
+
+            core.NewWindowRequested += (s, e) =>
+            {
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(e.Uri))
+                    {
+                        e.Handled = true;
+                        string target = e.Uri;
+                        if (onNewWindowUrl != null) onNewWindowUrl(target);
+                    }
+                }
+                catch { }
+            };
+            core.WindowCloseRequested += (s, e) =>
+            {
+                try { HidePopup(true); } catch { }
+            };
+            _ready = true;
+        }
+
+        public void NavigateExtensionUrl(string url)
+        {
+            if (!_ready || _wv == null || _wv.IsDisposed || _wv.CoreWebView2 == null || string.IsNullOrEmpty(url)) return;
+            try { _wv.CoreWebView2.Navigate(url); } catch { }
+        }
+
         public void UpdateSurfaceTheme(bool isLight)
         {
             if (IsDisposed) return;
@@ -212,13 +247,16 @@ namespace DejavuBrowser
         public void ShowAt(Rectangle screenBounds, string stateJson, bool activate)
         {
             _showGeneration++;
-            if (_ready && _wv.CoreWebView2 != null)
+            if (!string.IsNullOrEmpty(stateJson))
             {
-                _wv.CoreWebView2.PostWebMessageAsJson(stateJson);
-            }
-            else
-            {
-                _pendingJson = stateJson;
+                if (_ready && _wv.CoreWebView2 != null)
+                {
+                    _wv.CoreWebView2.PostWebMessageAsJson(stateJson);
+                }
+                else
+                {
+                    _pendingJson = stateJson;
+                }
             }
 
             if (Owner == null && _ownerForm != null && !_ownerForm.IsDisposed)

@@ -53,9 +53,9 @@ public final class MobileAutoUpdater {
     private static final long MIN_VALID_APK_BYTES = 500_000L;
 
     public static final String INCOMPATIBLE_SIGNING_MSG =
-        "Installed app has an older signing key (v4.2.0 or earlier). Uninstall dejavu once, then install v4.7.0 — all future updates will install automatically in-place!";
+        "Installed app has an older signing key (v4.2.0 or earlier). Uninstall dejavu once, then install v4.8.0 — all future updates will install automatically in-place!";
     public static final String UPGRADE_SIGNING_NOTE =
-        "Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.7.0 — all future updates will install automatically in-place!";
+        "Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.8.0 — all future updates will install automatically in-place!";
 
     private static volatile WeakReference<MobileAutoUpdater> activeInstance = new WeakReference<>(null);
 
@@ -118,7 +118,7 @@ public final class MobileAutoUpdater {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private volatile String currentVersion = "4.7.0";
+    private volatile String currentVersion = "4.8.0";
     private volatile String status = "idle"; // "idle" | "checking" | "uptodate" | "available" | "downloading" | "installing" | "ready" | "error"
     private volatile String latestVersion = "";
     private volatile String downloadUrl = "";
@@ -149,7 +149,7 @@ public final class MobileAutoUpdater {
                 return cleanVersion(pi.versionName);
             }
         } catch (Exception ignored) { }
-        return "4.7.0";
+        return "4.8.0";
     }
 
     @SuppressWarnings("deprecation")

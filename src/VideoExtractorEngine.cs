@@ -75,7 +75,7 @@ namespace DejavuBrowser
     }
 
     /// <summary>
-    /// Native AntDM / IDM-grade Video &amp; Audio Extractor Engine for dejavu v4.9.0.
+    /// Native AntDM / IDM-grade Video &amp; Audio Extractor Engine for dejavu v5.0.0.
     /// Zero-bloat on-demand auto-bootstrap of official yt-dlp.exe + ffmpeg.exe (+ ffprobe.exe)
     /// into SettingsStore.AppDataDir\tools, with VPN proxy support, 10-minute format probe caching,
     /// multi-quality MP4 muxing (4K/2K/1080p/720p/480p/360p) and 320 kbps MP3 / M4A audio extraction.
@@ -109,6 +109,10 @@ namespace DejavuBrowser
         private readonly object _cacheGate = new object();
         private readonly Dictionary<string, VideoProbeResult> _probeCache =
             new Dictionary<string, VideoProbeResult>(StringComparer.OrdinalIgnoreCase);
+        private bool _cachedYtDlpReady;
+        private DateTime _cachedYtDlpCheckedUtc = DateTime.MinValue;
+        private bool _cachedFfmpegReady;
+        private DateTime _cachedFfmpegCheckedUtc = DateTime.MinValue;
 
         public VideoExtractorEngine(string dataDir, Func<IWebProxy> proxyProvider)
         {
@@ -122,8 +126,43 @@ namespace DejavuBrowser
         public string FfmpegPath { get { return Path.Combine(_toolsDir, "ffmpeg.exe"); } }
         public string FfprobePath { get { return Path.Combine(_toolsDir, "ffprobe.exe"); } }
 
-        public bool IsYtDlpReady { get { return IsValidPeBinary(YtDlpPath, 2 * 1024 * 1024); } }
-        public bool IsFfmpegReady { get { return IsValidPeBinary(FfmpegPath, 5 * 1024 * 1024); } }
+        public bool IsYtDlpReady
+        {
+            get
+            {
+                DateTime now = DateTime.UtcNow;
+                if ((now - _cachedYtDlpCheckedUtc).TotalMilliseconds < 3000.0)
+                {
+                    return _cachedYtDlpReady;
+                }
+                bool ready = IsValidPeBinary(YtDlpPath, 2 * 1024 * 1024);
+                _cachedYtDlpReady = ready;
+                _cachedYtDlpCheckedUtc = now;
+                return ready;
+            }
+        }
+
+        public bool IsFfmpegReady
+        {
+            get
+            {
+                DateTime now = DateTime.UtcNow;
+                if ((now - _cachedFfmpegCheckedUtc).TotalMilliseconds < 3000.0)
+                {
+                    return _cachedFfmpegReady;
+                }
+                bool ready = IsValidPeBinary(FfmpegPath, 5 * 1024 * 1024);
+                _cachedFfmpegReady = ready;
+                _cachedFfmpegCheckedUtc = now;
+                return ready;
+            }
+        }
+
+        private void InvalidateBinaryReadyCache()
+        {
+            _cachedYtDlpCheckedUtc = DateTime.MinValue;
+            _cachedFfmpegCheckedUtc = DateTime.MinValue;
+        }
 
         public Dictionary<string, object> BuildEngineStatusPayload()
         {
@@ -474,6 +513,7 @@ namespace DejavuBrowser
                     }
 
                     ReplaceFileAtomic(tmpPath, YtDlpPath);
+                    InvalidateBinaryReadyCache();
                     NotifyStatus(onStatus, "Video Engine ready");
                     return YtDlpPath;
                 }
@@ -551,7 +591,7 @@ namespace DejavuBrowser
                         {
                             ReplaceFileAtomic(tmpFfprobe, FfprobePath);
                         }
-
+                        InvalidateBinaryReadyCache();
                         NotifyStatus(onStatus, "Audio/MP4 Muxer ready");
                         return _toolsDir;
                     }

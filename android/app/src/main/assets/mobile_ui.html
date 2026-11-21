@@ -41,6 +41,7 @@
       --md-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
       --md-ease-decel: cubic-bezier(0.05, 0.7, 0.1, 1.0);
       --md-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --md-ease-spring-smooth: cubic-bezier(0.22, 1.18, 0.36, 1);
       --m3-decel: var(--md-ease-decel);
       --m3-std: var(--md-ease-emphasized);
       --font: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -168,6 +169,7 @@
       box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.32);
       display: flex; flex-direction: column;
       overflow: hidden;
+      contain: layout style;
       animation: sheetSpringRise 0.32s var(--md-ease-decel) both;
       will-change: transform, opacity;
     }
@@ -282,6 +284,7 @@
       border-radius: 24px;
       overflow: hidden;
       box-shadow: var(--shadow);
+      contain: layout style;
     }
     .g-card {
       background: var(--card);
@@ -289,6 +292,7 @@
       border-radius: 24px;
       box-shadow: var(--shadow);
       padding: 16px;
+      contain: layout style;
     }
     .g-row {
       width: 100%; background: transparent; border: none; color: var(--ink);
@@ -437,6 +441,7 @@
     .fav-grid {
       display: flex; flex-wrap: wrap; justify-content: center;
       gap: 14px 10px;
+      contain: layout style;
     }
     .fav-tile {
       position: relative; width: 74px;
@@ -608,16 +613,38 @@
       background: var(--sheet-bg);
     }
     .mode-seg {
+      position: relative;
       display: inline-flex; padding: 3px; border-radius: 99px;
       background: var(--input-bg); border: 1px solid var(--border);
       gap: 2px;
     }
+    .seg-glider {
+      position: absolute; top: 3px; left: 0;
+      height: calc(100% - 6px); width: 0;
+      border-radius: 999px;
+      background: var(--sheet-elev);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+      pointer-events: none; z-index: 0; opacity: 0;
+      transform: translate3d(0, 0, 0);
+    }
+    .seg-glider.is-visible { opacity: 1; }
+    .seg-glider.is-ready {
+      will-change: transform, width;
+      transition:
+        transform 0.34s var(--md-ease-spring-smooth),
+        width 0.3s var(--md-ease-emphasized),
+        background-color 0.22s var(--md-ease-emphasized),
+        opacity 0.16s ease;
+    }
+    .seg-glider.is-priv { background: #6d28d9; }
+    .seg-glider.is-tonal { background: var(--accent-soft); box-shadow: none; }
     .mode-seg-btn {
+      position: relative; z-index: 1;
       height: 32px; padding: 0 16px; border-radius: 99px; border: none;
       background: transparent; color: var(--muted);
       font-family: inherit; font-size: 13px; font-weight: 640;
       display: inline-flex; align-items: center; gap: 6px;
-      transition: background 0.16s ease, color 0.16s ease;
+      transition: background-color 0.16s var(--md-ease-emphasized), color 0.16s var(--md-ease-emphasized), transform 0.2s var(--md-ease-spring);
     }
     .mode-seg-btn.active {
       background: var(--sheet-elev); color: var(--ink);
@@ -625,6 +652,11 @@
     }
     .mode-seg-btn.active.priv {
       background: #6d28d9; color: #ffffff;
+    }
+    .mode-seg.has-glider .mode-seg-btn.active,
+    .mode-seg.has-glider .mode-seg-btn.active.priv {
+      background: transparent;
+      box-shadow: none;
     }
     .tabs-scroll {
       flex: 1; min-height: 0; overflow-y: auto;
@@ -634,15 +666,19 @@
     }
     .tabs-grid {
       display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+      contain: layout style;
     }
     .tab-card {
       border-radius: 18px; overflow: hidden;
       background: var(--sheet-elev); border: 1.5px solid var(--border);
       display: flex; flex-direction: column;
       box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.42);
+      contain: layout style;
       transition: transform 0.2s var(--md-ease-spring), border-color 0.18s var(--md-ease-emphasized), box-shadow 0.2s var(--md-ease-emphasized);
-      animation: tabCardEnter 0.28s var(--md-ease-decel) both;
       cursor: pointer; -webkit-user-select: none; user-select: none;
+    }
+    .tab-card.is-entering {
+      animation: tabCardEnter 0.26s var(--md-ease-decel) both;
     }
     .tab-card:hover { transform: translateY(-2px); }
     .tab-card.active {
@@ -743,7 +779,7 @@
     .zoom-val { font-size: 12.5px; font-weight: 700; min-width: 44px; text-align: center; color: var(--accent-bright); }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v4.9.0 (Tab-Free Pixel Material 3 Auto-Sync Hub)
+       SHEET B: DEJAVU LINK v5.0.0 (Tab-Free Pixel Material 3 Auto-Sync Hub)
        ===================================================================== */
     .cta-btn {
       width: 100%; height: 46px; border-radius: 999px; border: none;
@@ -933,11 +969,14 @@
     }
 
     .bar-seg {
+      position: relative;
       display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
       padding: 4px; border-radius: 999px; background: var(--input-bg);
       border: 1px solid var(--border); margin: 0 12px 12px;
     }
+    .bar-seg .seg-glider { top: 4px; height: calc(100% - 8px); }
     .bar-seg button {
+      position: relative; z-index: 1;
       height: 36px; border-radius: 999px; border: none;
       background: transparent; color: var(--muted);
       font-family: inherit; font-size: 12.5px; font-weight: 650;
@@ -947,6 +986,7 @@
       background: var(--accent-soft); color: var(--accent-bright);
       box-shadow: none;
     }
+    .bar-seg.has-glider button.active { background: transparent; }
     body.theme-light .bar-seg button.active { color: var(--accent); }
     .bar-seg button.active::before {
       content: '✓'; font-size: 11.5px; font-weight: 800;
@@ -957,6 +997,7 @@
       padding: 13px 14px; border-radius: 20px;
       background: var(--group-bg); border: 1px solid var(--border);
       display: flex; flex-direction: column; gap: 9px;
+      contain: layout style;
     }
     .dl-card.active { border-color: var(--accent); }
     .dl-card-top { display: flex; align-items: center; gap: 11px; }
@@ -1010,7 +1051,7 @@
       border: 1px solid var(--border); background: var(--group-bg);
       color: var(--muted); font-family: inherit; font-size: 12px; font-weight: 620;
       display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
-      transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease, transform 0.14s var(--m3-decel);
+      transition: background-color 0.14s ease, color 0.14s ease, border-color 0.14s ease, transform 0.14s var(--m3-decel);
     }
     .m3-chip:active { transform: scale(0.95); }
     .m3-chip.active {
@@ -1259,7 +1300,7 @@
       padding: 0 10px 0 16px;
       display: flex; align-items: center; gap: 10px;
       box-shadow: var(--shadow);
-      transition: border-color 0.18s var(--m3-std), background 0.18s var(--m3-std);
+      transition: border-color 0.18s var(--m3-std), background-color 0.18s var(--m3-std);
     }
     .set-search-bar:focus-within { border-color: var(--accent); }
     .set-search-bar input {
@@ -1308,7 +1349,7 @@
     .yg-identity-row {
       display: flex; align-items: center; gap: 13px;
       padding: 2px; border-radius: 16px;
-      transition: background 0.14s var(--m3-std);
+      transition: background-color 0.14s var(--m3-std);
     }
     .yg-identity-row:active { background: var(--group-press); }
     .yg-avatar {
@@ -1371,7 +1412,7 @@
       border: none; background: var(--sheet-elev); color: var(--ink);
       font-family: inherit; font-size: 13px; font-weight: 650; white-space: nowrap;
       display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      cursor: pointer; transition: transform 0.16s var(--m3-decel), background 0.14s var(--m3-std);
+      cursor: pointer; transition: transform 0.16s var(--m3-decel), background-color 0.14s var(--m3-std);
     }
     .yg-tonal-btn:active { transform: scale(0.97); }
     .yg-actions-row {
@@ -1401,7 +1442,7 @@
       border: 1px solid var(--border-subtle); background: var(--group-bg); color: var(--ink);
       font-family: inherit; font-size: 12px; font-weight: 630;
       display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
-      transition: background 0.14s var(--m3-std), border-color 0.14s var(--m3-std);
+      transition: background-color 0.14s var(--m3-std), border-color 0.14s var(--m3-std);
     }
     .yg-prof-chip.active {
       background: var(--accent-soft); border-color: transparent; color: var(--accent-bright);
@@ -1416,24 +1457,30 @@
       font-size: 10px; font-weight: 800; color: #1d1b20; flex-shrink: 0;
     }
 
-    /* Authentic Google Pixel Material 3 3-Way Segmented Button */
+    /* Authentic Google Pixel Material 3 3-Way Segmented Button with Gliding Indicator */
     .m3-seg-3 {
+      position: relative;
       display: grid; grid-template-columns: repeat(3, 1fr);
       border-radius: 999px; border: 1px solid var(--border);
       background: var(--sheet-bg); overflow: hidden;
       margin: 12px 14px 10px;
     }
+    .m3-seg-3 .seg-glider {
+      top: 0; height: 100%; border-radius: 0;
+    }
     .m3-seg-3 button {
+      position: relative; z-index: 1;
       height: 40px; border: none; border-right: 1px solid var(--border);
       background: transparent; color: var(--muted);
       font-family: inherit; font-size: 13px; font-weight: 650;
       display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-      cursor: pointer; transition: background 0.16s ease, color 0.16s ease;
+      cursor: pointer; transition: background-color 0.16s var(--md-ease-emphasized), color 0.16s var(--md-ease-emphasized), transform 0.2s var(--md-ease-spring);
     }
     .m3-seg-3 button:last-child { border-right: none; }
     .m3-seg-3 button.active {
       background: var(--accent-soft); color: var(--accent-bright);
     }
+    .m3-seg-3.has-glider button.active { background: transparent; }
     body.theme-light .m3-seg-3 button.active { color: var(--accent); }
     .m3-seg-3 button.active::before {
       content: '✓'; font-size: 12px; font-weight: 800;
@@ -1534,7 +1581,7 @@
       width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
       border: 2px solid var(--subtle); background: transparent;
       display: inline-flex; align-items: center; justify-content: center;
-      color: var(--accent-ink); transition: background 0.14s ease, border-color 0.14s ease;
+      color: var(--accent-ink); transition: background-color 0.14s ease, border-color 0.14s ease;
     }
     .cbd-chk.on {
       background: var(--accent); border-color: var(--accent);
@@ -1632,7 +1679,9 @@
     .m3-seg-3 button, .bar-seg button, .mode-seg-btn {
       transition: background-color 0.18s var(--md-ease-emphasized), color 0.18s var(--md-ease-emphasized), transform 0.2s var(--md-ease-spring);
     }
-    .m3-seg-3 button.active, .bar-seg button.active, .mode-seg-btn.active {
+    .m3-seg-3:not(.has-glider) button.active,
+    .bar-seg:not(.has-glider) button.active,
+    .mode-seg:not(.has-glider) .mode-seg-btn.active {
       animation: pillPop 0.24s var(--md-ease-spring) both;
     }
     .wp-tile:active { transform: scale(0.96); }
@@ -1805,7 +1854,8 @@
        =================================================================== -->
   <section id="scr-tabs" class="screen hidden">
     <div class="tabs-top">
-      <div class="mode-seg">
+      <div class="mode-seg" id="tabs-mode-seg">
+        <span class="seg-glider" aria-hidden="true"></span>
         <button type="button" id="seg-tabs-normal" class="mode-seg-btn active" onclick="setTabViewMode(false)">
           <span id="seg-tabs-normal-lbl">Tabs (1)</span>
         </button>
@@ -1988,7 +2038,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v4.9.0 (Tab-Free Pixel Material 3 Auto-Sync Hub)
+       SHEET B: DEJAVU LINK v5.0.0 (Tab-Free Pixel Material 3 Auto-Sync Hub)
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2171,7 +2221,7 @@
           </button>
           <div id="m-manual-pair-body" class="sync-manual-body">
             <div style="font-size:11.5px;color:var(--muted);line-height:1.4;">Prefer local code pairing without signing into Google? Scan the QR code or enter your pairing code from dejavu on Windows PC.</div>
-            <div id="m-code-box" class="code-pill">DJV-4900-M3UI</div>
+            <div id="m-code-box" class="code-pill">DJV-5000-M3UI</div>
             <div style="display:flex;gap:8px;">
               <button type="button" class="pill-btn primary" style="flex:1;height:40px;" onclick="call('scanQr')">Scan PC QR Code</button>
               <button type="button" class="pill-btn" style="height:40px;" onclick="copyPairCode()">Copy Code</button>
@@ -2243,7 +2293,8 @@
           <div class="g-group">
             <div class="set-item" data-search="theme mode light dark auto system appearance">
               <div style="padding:13px 14px 2px;font-size:13.5px;font-weight:600;">Theme Mode</div>
-              <div class="m3-seg-3" role="group" aria-label="Theme mode">
+              <div class="m3-seg-3" id="set-theme-seg" role="group" aria-label="Theme mode">
+                <span class="seg-glider is-tonal" aria-hidden="true"></span>
                 <button type="button" id="m-th-light-btn" onclick="call('setThemeMode','light')">Light</button>
                 <button type="button" id="m-th-dark-btn" class="active" onclick="call('setThemeMode','dark')">Dark</button>
                 <button type="button" id="m-th-auto-btn" onclick="call('setThemeMode','auto')">Auto</button>
@@ -2300,7 +2351,8 @@
 
             <div class="set-item" style="border-top:1px solid var(--divider);" data-search="address bar position bottom top navigation toolbar chrome samsung">
               <div style="padding:12px 14px 8px;font-size:13.5px;font-weight:600;">Address Bar Position</div>
-              <div class="bar-seg">
+              <div class="bar-seg" id="set-bar-seg">
+                <span class="seg-glider is-tonal" aria-hidden="true"></span>
                 <button type="button" id="opt-bar-bottom" class="active" onclick="call('setBarPosition','bottom')">Bottom (Pixel / OneUI)</button>
                 <button type="button" id="opt-bar-top" onclick="call('setBarPosition','top')">Top (Classic)</button>
               </div>
@@ -2451,10 +2503,10 @@
           </div>
         </div>
 
-        <!-- 6. SYSTEM, SYNC & ABOUT v4.9.0 -->
-        <div class="set-section" data-search="system default browser role apps http https links sync dejavu link google auto sync pc mobile passkeys webauthn software update auto updater apk version 4.9.0 about reset defaults">
+        <!-- 6. SYSTEM, SYNC & ABOUT v5.0.0 -->
+        <div class="set-section" data-search="system default browser role apps http https links sync dejavu link google auto sync pc mobile passkeys webauthn software update auto updater apk version 5.0.0 about reset defaults">
           <div class="sec-hdr">
-            <span>System, Sync &amp; About v4.9.0</span>
+            <span>System, Sync &amp; About v5.0.0</span>
             <span class="set-match-pill"></span>
           </div>
           <div class="g-group">
@@ -2476,10 +2528,10 @@
               <span class="g-chev">›</span>
             </button>
 
-            <div class="g-row set-item" data-search="software update auto updater github releases apk version 4.9.0 about butterfly">
+            <div class="g-row set-item" data-search="software update auto updater github releases apk version 5.0.0 about butterfly">
               <span id="opt-about-logo" class="brand-mini-svg" style="width:34px;height:34px;" aria-hidden="true"></span>
               <div class="g-row-meta">
-                <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.9.0</div>
+                <div id="opt-upd-title" class="g-row-title">dejavu Mobile v5.0.0</div>
                 <div id="opt-upd-sub" class="g-row-sub">Permanent V1-V3 signing · Auto-checks GitHub Releases</div>
               </div>
               <button type="button" id="opt-upd-btn" class="pill-btn" onclick="handleUpdateBtn()">Check</button>
@@ -2500,7 +2552,7 @@
             </div>
 
             <div id="opt-upd-note" class="upd-signing-note">
-              Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.9.0 &mdash; all future updates will install automatically in-place!
+              Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v5.0.0 &mdash; all future updates will install automatically in-place!
             </div>
 
             <button type="button" class="g-row plain set-item" data-search="reset settings defaults restore factory preferences" onclick="openResetSettingsModal()">
@@ -2519,7 +2571,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:11.5px;color:var(--subtle);padding:4px 0 8px;">
-          dejavu Mobile v4.9.0 · Google Pixel Material Design 3
+          dejavu Mobile v5.0.0 · Google Pixel Material Design 3
         </div>
       </div>
     </div>
@@ -2841,7 +2893,7 @@
     <div class="mini-modal-card" style="border-radius:28px;padding:22px;" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:700;">Reset Settings to Defaults?</h3>
       <div style="font-size:13px;line-height:1.5;color:var(--muted);">
-        This restores Appearance, Privacy, Search, Tabs, and Downloads settings to dejavu v4.9.0 defaults. Your Favorites, Profiles, Custom Userscripts, and PC Link stay safe.
+        This restores Appearance, Privacy, Search, Tabs, and Downloads settings to dejavu v5.0.0 defaults. Your Favorites, Profiles, Custom Userscripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn" onclick="closeResetSettingsModal()">Cancel</button>
@@ -3590,6 +3642,7 @@
     function clearSettingsSearch() {
       const inp = document.getElementById('settings-search-in');
       if (inp) inp.value = '';
+      _domSigs.setSearchLast = '';
       filterSettingsList();
     }
     function filterSettingsList() {
@@ -3731,6 +3784,54 @@
       });
     }
 
+    // Anti-glitch signature caches & smooth gliding active-bar pill helper (v5.0.0)
+    const _domSigs = {
+      spProfAv: '',
+      favGrid: '',
+      pcCar: '',
+      tabsGrid: '',
+      tabsPc: '',
+      syncAvatar: '',
+      syncModePill: '',
+      syncPcTabs: '',
+      syncDrops: '',
+      setYg: '',
+      setProfStrip: '',
+      setAccents: '',
+      setEngines: '',
+      setSearchLast: ''
+    };
+    let tabsScreenJustOpened = false;
+
+    function syncMobileGlider(container, opts) {
+      if (!container) return;
+      const glider = container.querySelector('.seg-glider');
+      const activeBtn = container.querySelector('button.active');
+      if (!glider || !activeBtn) return;
+      if (container.offsetWidth === 0 || activeBtn.offsetWidth === 0) {
+        glider.classList.remove('is-visible');
+        return;
+      }
+      glider.style.width = `${activeBtn.offsetWidth}px`;
+      glider.style.transform = `translate3d(${activeBtn.offsetLeft}px, 0, 0)`;
+      if (opts && typeof opts.isPriv === 'boolean') {
+        glider.classList.toggle('is-priv', opts.isPriv);
+      }
+      container.classList.add('has-glider');
+      glider.classList.add('is-visible');
+      if (!glider.classList.contains('is-ready')) {
+        void glider.offsetWidth;
+        glider.classList.add('is-ready');
+      }
+    }
+
+    function syncAllMobileGliders() {
+      syncMobileGlider(document.getElementById('tabs-mode-seg'), { isPriv: tabViewPrivate });
+      syncMobileGlider(document.getElementById('set-theme-seg'));
+      syncMobileGlider(document.getElementById('set-bar-seg'));
+    }
+    window.addEventListener('resize', syncAllMobileGliders, { passive: true });
+
     function renderStartPage() {
       updateClockGreeting();
       const isPriv = !!state.activePrivate;
@@ -3762,7 +3863,7 @@
         spExtCnt.textContent = String(typeof extSnap.activeCount === 'number' ? extSnap.activeCount : 4);
       }
 
-      // Start Page Profile Avatar Pill
+      // Start Page Profile Avatar Pill (Diff-Guarded to prevent avatar flicker)
       const prof = getActiveProfile();
       const spProfAv = document.getElementById('sp-profile-av');
       const spProfName = document.getElementById('sp-profile-name');
@@ -3770,58 +3871,70 @@
         const pHex = ACCENT_HEX[prof.accentColor] || '#d0bcff';
         const dispName = (prof.isGoogleSignedIn && prof.googleDisplayName) ? prof.googleDisplayName : (prof.name || 'Personal');
         const initial = esc((dispName.trim().charAt(0) || 'P').toUpperCase());
-        spProfAv.style.background = pHex;
-        spProfAv.innerHTML = prof.isGoogleSignedIn && prof.googleAvatarUrl
-          ? `<img src="${esc(prof.googleAvatarUrl)}" alt="" onerror="this.remove()">`
-          : `${initial}`;
+        const avSig = `${pHex}|${prof.isGoogleSignedIn ? 1 : 0}|${prof.googleAvatarUrl || ''}|${initial}`;
+        if (avSig !== _domSigs.spProfAv) {
+          _domSigs.spProfAv = avSig;
+          spProfAv.style.background = pHex;
+          spProfAv.innerHTML = prof.isGoogleSignedIn && prof.googleAvatarUrl
+            ? `<img src="${esc(prof.googleAvatarUrl)}" alt="" onerror="this.remove()">`
+            : `${initial}`;
+        }
         if (spProfName) spProfName.textContent = dispName.split(' ')[0];
       }
 
       document.getElementById('sp-fav-edit-btn').textContent = favEditMode ? 'Done' : 'Edit';
 
-      // Favorites Grid with Real Favicons + Add Shortcut Tile
+      // Favorites Grid with Real Favicons + Add Shortcut Tile (Signature Diff-Guarded)
       const fg = document.getElementById('sp-fav-grid');
-      fg.innerHTML = '';
-      (state.bookmarks || []).slice(0, 11).forEach((b) => {
-        const tile = document.createElement('button');
-        tile.type = 'button'; tile.className = 'fav-tile';
-        tile.innerHTML = `
-          ${favEditMode ? '<span class="fav-del">−</span>' : ''}
-          <div class="fav-sq">${getSiteIconHtml(b.url, b.title, 34)}</div>
-          <div class="fav-lbl">${esc(b.title || getHost(b.url))}</div>
-        `;
-        tile.onclick = () => {
-          if (tile.dataset.lpConsumed === '1') {
-            delete tile.dataset.lpConsumed;
-            return;
-          }
-          if (favEditMode) call('removeFavorite', b.url);
-          else call('navigate', b.url);
-        };
-        attachLongPress(tile, () => {
-          openLocalContextMenu({
-            source: 'shortcut',
-            kind: 'shortcut',
-            title: b.title || getHost(b.url),
-            linkUrl: b.url,
-            imageUrl: ''
-          });
-        });
-        fg.appendChild(tile);
+      const favSlice = (state.bookmarks || []).slice(0, 11);
+      const favSig = JSON.stringify({
+        edit: favEditMode,
+        items: favSlice.map((b) => [b.url || '', b.title || ''])
       });
+      if (fg && favSig !== _domSigs.favGrid) {
+        _domSigs.favGrid = favSig;
+        fg.innerHTML = '';
+        favSlice.forEach((b) => {
+          const tile = document.createElement('button');
+          tile.type = 'button'; tile.className = 'fav-tile';
+          tile.innerHTML = `
+            ${favEditMode ? '<span class="fav-del">−</span>' : ''}
+            <div class="fav-sq">${getSiteIconHtml(b.url, b.title, 34)}</div>
+            <div class="fav-lbl">${esc(b.title || getHost(b.url))}</div>
+          `;
+          tile.onclick = () => {
+            if (tile.dataset.lpConsumed === '1') {
+              delete tile.dataset.lpConsumed;
+              return;
+            }
+            if (favEditMode) call('removeFavorite', b.url);
+            else call('navigate', b.url);
+          };
+          attachLongPress(tile, () => {
+            openLocalContextMenu({
+              source: 'shortcut',
+              kind: 'shortcut',
+              title: b.title || getHost(b.url),
+              linkUrl: b.url,
+              imageUrl: ''
+            });
+          });
+          fg.appendChild(tile);
+        });
 
-      const addTile = document.createElement('button');
-      addTile.type = 'button'; addTile.className = 'fav-tile';
-      addTile.innerHTML = `
-        <div class="fav-sq add-sq">
-          <svg viewBox="0 0 20 20" width="22" height="22" fill="none"><path d="M10 4.5v11M4.5 10h11" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
-        </div>
-        <div class="fav-lbl" style="color:var(--muted);">Add</div>
-      `;
-      addTile.onclick = openAddFav;
-      fg.appendChild(addTile);
+        const addTile = document.createElement('button');
+        addTile.type = 'button'; addTile.className = 'fav-tile';
+        addTile.innerHTML = `
+          <div class="fav-sq add-sq">
+            <svg viewBox="0 0 20 20" width="22" height="22" fill="none"><path d="M10 4.5v11M4.5 10h11" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+          </div>
+          <div class="fav-lbl" style="color:var(--muted);">Add</div>
+        `;
+        addTile.onclick = openAddFav;
+        fg.appendChild(addTile);
+      }
 
-      // Continue from Windows PC Carousel (PC Tabs + Shared Drops)
+      // Continue from Windows PC Carousel (PC Tabs + Shared Drops — Signature Diff-Guarded)
       const pcSec = document.getElementById('sp-pc-section');
       const car = document.getElementById('sp-pc-carousel');
       const rtabs = Array.isArray(sync.remoteTabs) ? sync.remoteTabs : [];
@@ -3832,24 +3945,28 @@
 
       if (!isPriv && cards.length > 0) {
         pcSec.style.display = 'flex';
-        car.innerHTML = '';
-        cards.forEach((c) => {
-          const btn = document.createElement('button');
-          btn.type = 'button'; btn.className = 'pc-card';
-          btn.innerHTML = `
-            ${c.url ? getSiteIconHtml(c.url, c.title, 34) : '<span class="sq-ico ic-violet" style="width:34px;height:34px;">✦</span>'}
-            <div class="pc-card-meta">
-              <div class="pc-card-eyebrow">${esc(c.kind)}</div>
-              <div class="pc-card-title">${esc(c.title)}</div>
-              <div class="pc-card-host">${esc(c.url ? getHost(c.url) : 'Tap to copy note')}</div>
-            </div>
-          `;
-          btn.onclick = () => {
-            if (c.url) call('openNewTab', c.url);
-            else call('copyText', c.text || c.title);
-          };
-          car.appendChild(btn);
-        });
+        const pcSig = JSON.stringify(cards.map((c) => [c.kind, c.title, c.url, c.text]));
+        if (car && pcSig !== _domSigs.pcCar) {
+          _domSigs.pcCar = pcSig;
+          car.innerHTML = '';
+          cards.forEach((c) => {
+            const btn = document.createElement('button');
+            btn.type = 'button'; btn.className = 'pc-card';
+            btn.innerHTML = `
+              ${c.url ? getSiteIconHtml(c.url, c.title, 34) : '<span class="sq-ico ic-violet" style="width:34px;height:34px;">✦</span>'}
+              <div class="pc-card-meta">
+                <div class="pc-card-eyebrow">${esc(c.kind)}</div>
+                <div class="pc-card-title">${esc(c.title)}</div>
+                <div class="pc-card-host">${esc(c.url ? getHost(c.url) : 'Tap to copy note')}</div>
+              </div>
+            `;
+            btn.onclick = () => {
+              if (c.url) call('openNewTab', c.url);
+              else call('copyText', c.text || c.title);
+            };
+            car.appendChild(btn);
+          });
+        }
       } else {
         pcSec.style.display = 'none';
       }
@@ -3985,81 +4102,110 @@
       pBtn.classList.toggle('priv', tabViewPrivate);
       document.getElementById('seg-tabs-normal-lbl').textContent = `Tabs (${normalTabs.length})`;
       document.getElementById('seg-tabs-priv-lbl').textContent = privTabs.length ? `Private (${privTabs.length})` : 'Private';
+      syncMobileGlider(document.getElementById('tabs-mode-seg'), { isPriv: tabViewPrivate });
 
       const fab = document.getElementById('btn-tabs-new');
       fab.classList.toggle('priv', tabViewPrivate);
       document.getElementById('btn-tabs-new-lbl').textContent = tabViewPrivate ? 'New Private' : 'New Tab';
 
+      // Tab Switcher Grid (Signature Diff-Guarded + In-Place Active Sync -> Zero Flicker!)
       const tg = document.getElementById('tabs-grid');
-      tg.innerHTML = '';
-      if (!shown.length) {
-        tg.innerHTML = `<div class="empty" style="grid-column:1/-1;">${tabViewPrivate ? 'No Private tabs open.<br>Tap <b>+ New Private</b> to browse without saving history.' : 'No open tabs.'}</div>`;
-      } else {
-        const normWp = normalizeWallpaperId(state.wallpaper);
-        const wpUrl = (normWp && normWp !== 'obsidian') ? `wallpapers/${normWp}` : '';
-        shown.forEach((t) => {
-          const card = document.createElement('div');
-          card.className = 'tab-card' + (t.id === state.activeTabId ? ' active' : '');
-          const previewHtml = (!t.isNewTab && t.thumb)
-            ? `<img class="live-shot" src="${t.thumb}" alt=""><div class="tab-card-host">${esc(getHost(t.url))}</div>`
-            : `<div class="tab-card-start-prev" style="${wpUrl ? `background-image:url('${wpUrl}')` : 'background:radial-gradient(circle at 30% 25%,#4c26a8,#120c26 70%);'}">
-                 ${getDynamicButterflySvg(36)}
-                 <span style="font-size:12px;font-weight:600;color:#f6f4ff;">${t.isPrivate ? 'Private Tab' : (t.isNewTab ? 'Start Page' : esc(getHost(t.url)))}</span>
-               </div>`;
-          card.innerHTML = `
-            <div class="tab-card-hdr">
-              ${t.isNewTab ? '<span class="sq-ico ic-violet" style="width:18px;height:18px;border-radius:5px;font-size:10px;">✦</span>' : getSiteIconHtml(t.url, t.title, 18)}
-              <div class="tab-card-title">${esc(t.title || 'Start Page')}</div>
-              <button type="button" class="tab-card-x" aria-label="Close tab">×</button>
-            </div>
-            <div class="tab-card-preview">${previewHtml}</div>
-          `;
-          card.onclick = () => {
-            if (card.dataset.lpConsumed === '1') {
-              delete card.dataset.lpConsumed;
-              return;
-            }
-            call('switchTab', t.id);
-          };
-          card.querySelector('.tab-card-x').onclick = (e) => { e.stopPropagation(); call('closeTabById', t.id); };
-          attachLongPress(card, () => {
-            openLocalContextMenu({
-              source: 'tab',
-              kind: 'tab',
-              tabId: t.id,
-              title: t.title || 'Start Page',
-              linkUrl: t.isNewTab ? '' : (t.url || ''),
-              thumb: t.thumb || '',
-              isNewTab: !!t.isNewTab,
-              isPrivate: !!t.isPrivate
+      const normWp = normalizeWallpaperId(state.wallpaper);
+      const tabsSig = JSON.stringify({
+        priv: tabViewPrivate,
+        wp: normWp,
+        tabs: shown.map((t) => [
+          t.id,
+          t.title || '',
+          t.url || '',
+          !!t.isNewTab,
+          !!t.isPrivate,
+          t.thumb ? `${t.thumb.length}:${t.thumb.slice(-24)}` : ''
+        ])
+      });
+
+      if (tg && tabsSig !== _domSigs.tabsGrid) {
+        _domSigs.tabsGrid = tabsSig;
+        const animateCards = tabsScreenJustOpened;
+        tg.innerHTML = '';
+        if (!shown.length) {
+          tg.innerHTML = `<div class="empty" style="grid-column:1/-1;">${tabViewPrivate ? 'No Private tabs open.<br>Tap <b>+ New Private</b> to browse without saving history.' : 'No open tabs.'}</div>`;
+        } else {
+          const wpUrl = (normWp && normWp !== 'obsidian') ? `wallpapers/${normWp}` : '';
+          shown.forEach((t) => {
+            const card = document.createElement('div');
+            card.className = 'tab-card' + (t.id === state.activeTabId ? ' active' : '') + (animateCards ? ' is-entering' : '');
+            card.dataset.tabId = String(t.id);
+            const previewHtml = (!t.isNewTab && t.thumb)
+              ? `<img class="live-shot" src="${t.thumb}" alt=""><div class="tab-card-host">${esc(getHost(t.url))}</div>`
+              : `<div class="tab-card-start-prev" style="${wpUrl ? `background-image:url('${wpUrl}')` : 'background:radial-gradient(circle at 30% 25%,#4c26a8,#120c26 70%);'}">
+                   ${getDynamicButterflySvg(36)}
+                   <span style="font-size:12px;font-weight:600;color:#f6f4ff;">${t.isPrivate ? 'Private Tab' : (t.isNewTab ? 'Start Page' : esc(getHost(t.url)))}</span>
+                 </div>`;
+            card.innerHTML = `
+              <div class="tab-card-hdr">
+                ${t.isNewTab ? '<span class="sq-ico ic-violet" style="width:18px;height:18px;border-radius:5px;font-size:10px;">✦</span>' : getSiteIconHtml(t.url, t.title, 18)}
+                <div class="tab-card-title">${esc(t.title || 'Start Page')}</div>
+                <button type="button" class="tab-card-x" aria-label="Close tab">×</button>
+              </div>
+              <div class="tab-card-preview">${previewHtml}</div>
+            `;
+            card.onclick = () => {
+              if (card.dataset.lpConsumed === '1') {
+                delete card.dataset.lpConsumed;
+                return;
+              }
+              call('switchTab', t.id);
+            };
+            card.querySelector('.tab-card-x').onclick = (e) => { e.stopPropagation(); call('closeTabById', t.id); };
+            attachLongPress(card, () => {
+              openLocalContextMenu({
+                source: 'tab',
+                kind: 'tab',
+                tabId: t.id,
+                title: t.title || 'Start Page',
+                linkUrl: t.isNewTab ? '' : (t.url || ''),
+                thumb: t.thumb || '',
+                isNewTab: !!t.isNewTab,
+                isPrivate: !!t.isPrivate
+              });
             });
+            tg.appendChild(card);
           });
-          tg.appendChild(card);
+        }
+      } else if (tg) {
+        tg.querySelectorAll('.tab-card[data-tab-id]').forEach((card) => {
+          card.classList.toggle('active', Number(card.dataset.tabId) === state.activeTabId);
         });
       }
+      tabsScreenJustOpened = false;
 
       const pcWrap = document.getElementById('pc-tabs-wrap');
       const pcTabs = document.getElementById('pc-tabs-list');
       const rtabs = (state.sync && Array.isArray(state.sync.remoteTabs)) ? state.sync.remoteTabs : [];
       pcWrap.style.display = tabViewPrivate ? 'none' : 'flex';
-      pcTabs.innerHTML = '';
-      if (!rtabs.length) {
-        pcTabs.innerHTML = '<div class="empty">Pair with dejavu on Windows PC to view &amp; open your PC tabs here.</div>';
-      } else {
-        rtabs.forEach((rt) => {
-          const row = document.createElement('button');
-          row.type = 'button'; row.className = 'g-row';
-          row.innerHTML = `
-            ${getSiteIconHtml(rt.url, rt.title, 30)}
-            <div class="g-row-meta">
-              <div class="g-row-title">${esc(rt.title || getHost(rt.url))}</div>
-              <div class="g-row-sub">${esc(getHost(rt.url))}</div>
-            </div>
-            <span class="g-chev">›</span>
-          `;
-          row.onclick = () => call('openNewTab', rt.url);
-          pcTabs.appendChild(row);
-        });
+      const tabsPcSig = JSON.stringify({ priv: tabViewPrivate, rtabs: rtabs.map((r) => [r.url || '', r.title || '']) });
+      if (pcTabs && tabsPcSig !== _domSigs.tabsPc) {
+        _domSigs.tabsPc = tabsPcSig;
+        pcTabs.innerHTML = '';
+        if (!rtabs.length) {
+          pcTabs.innerHTML = '<div class="empty">Pair with dejavu on Windows PC to view &amp; open your PC tabs here.</div>';
+        } else {
+          rtabs.forEach((rt) => {
+            const row = document.createElement('button');
+            row.type = 'button'; row.className = 'g-row';
+            row.innerHTML = `
+              ${getSiteIconHtml(rt.url, rt.title, 30)}
+              <div class="g-row-meta">
+                <div class="g-row-title">${esc(rt.title || getHost(rt.url))}</div>
+                <div class="g-row-sub">${esc(getHost(rt.url))}</div>
+              </div>
+              <span class="g-chev">›</span>
+            `;
+            row.onclick = () => call('openNewTab', rt.url);
+            pcTabs.appendChild(row);
+          });
+        }
       }
     }
 
@@ -4122,7 +4268,11 @@
         if (hasGoogleEmail) {
           gActiveBox.style.display = 'flex';
           gSignInBox.style.display = 'none';
-          renderAvatarContent(document.getElementById('sync-g-avatar'), Object.assign({}, prof, { isGoogleSignedIn: true, googleEmail: effectiveEmail }), true);
+          const syncAvSig = `${(prof && prof.accentColor) || ''}|${(prof && prof.googleAvatarUrl) || ''}|${(prof && prof.googleDisplayName) || ''}|${effectiveEmail}`;
+          if (syncAvSig !== _domSigs.syncAvatar) {
+            _domSigs.syncAvatar = syncAvSig;
+            renderAvatarContent(document.getElementById('sync-g-avatar'), Object.assign({}, prof, { isGoogleSignedIn: true, googleEmail: effectiveEmail }), true);
+          }
           const dispName = (prof && prof.googleDisplayName) ? prof.googleDisplayName : (prof && prof.name ? prof.name : 'Google Account');
           const gNameEl = document.getElementById('sync-g-name');
           const gEmailEl = document.getElementById('sync-g-email');
@@ -4131,10 +4281,14 @@
 
           const modePill = document.getElementById('sync-mode-pill');
           if (modePill) {
+            const mpSig = isGoogleMode ? 'google' : 'manual';
             modePill.classList.toggle('manual', !isGoogleMode);
-            modePill.innerHTML = isGoogleMode
-              ? '<span class="s-dot" aria-hidden="true"></span><span>Auto-Synced via Google</span>'
-              : '<span class="s-dot" aria-hidden="true"></span><span>Manual Pair Active</span>';
+            if (mpSig !== _domSigs.syncModePill) {
+              _domSigs.syncModePill = mpSig;
+              modePill.innerHTML = isGoogleMode
+                ? '<span class="s-dot" aria-hidden="true"></span><span>Auto-Synced via Google</span>'
+                : '<span class="s-dot" aria-hidden="true"></span><span>Manual Pair Active</span>';
+            }
           }
 
           const pcTitle = document.getElementById('sync-status-title');
@@ -4186,12 +4340,14 @@
       }
       if (sendBtn) sendBtn.style.opacity = state.activeUrl ? '1' : '0.62';
 
-      // 3. PC Open Tabs ("Continue on Phone")
+      // 3. PC Open Tabs ("Continue on Phone" — Signature Diff-Guarded)
       const rtabs = Array.isArray(sync.remoteTabs) ? sync.remoteTabs : [];
       const pcCnt = document.getElementById('m-pc-tabs-cnt');
       const pcList = document.getElementById('m-pc-tabs-list');
       if (pcCnt) pcCnt.textContent = rtabs.length === 1 ? '1 PC tab' : `${rtabs.length} PC tabs`;
-      if (pcList) {
+      const syncPcSig = JSON.stringify(rtabs.slice(0, 8).map((r) => [r.url || '', r.title || '']));
+      if (pcList && syncPcSig !== _domSigs.syncPcTabs) {
+        _domSigs.syncPcTabs = syncPcSig;
         pcList.innerHTML = '';
         if (!rtabs.length) {
           pcList.innerHTML = '<div class="empty" style="padding:18px 14px;">Open tabs on your Windows PC appear here automatically for 1-tap handoff.</div>';
@@ -4233,9 +4389,14 @@
       const clrBtn = document.getElementById('m-drops-clear-btn');
       if (clrBtn) clrBtn.style.display = drops.length ? 'inline-block' : 'none';
       const dl = document.getElementById('m-drops-list');
-      if (dl) {
+      const visibleDrops = latestClip ? drops.filter((d) => d && d.id !== latestClip.id) : drops;
+      const syncDropsSig = JSON.stringify({
+        hasClip: !!latestClip,
+        items: visibleDrops.slice(0, 12).map((it) => [it.id || '', it.dropType || '', it.title || '', it.url || '', it.text || '', it.fromName || '', formatAgoShort(it.ts)])
+      });
+      if (dl && syncDropsSig !== _domSigs.syncDrops) {
+        _domSigs.syncDrops = syncDropsSig;
         dl.innerHTML = '';
-        const visibleDrops = latestClip ? drops.filter((d) => d && d.id !== latestClip.id) : drops;
         if (!visibleDrops.length && !latestClip) {
           dl.innerHTML = '<div class="empty" style="padding:18px 14px;">Shared clipboard items, beamed tabs &amp; quick notes appear here instantaneously.</div>';
         } else {
@@ -4281,7 +4442,7 @@
 
       // 6. Collapsible Manual Fallback Code
       const codeBox = document.getElementById('m-code-box');
-      if (codeBox) codeBox.textContent = sync.pairingCode || 'DJV-4900-M3UI';
+      if (codeBox) codeBox.textContent = sync.pairingCode || 'DJV-5000-M3UI';
     }
 
     function renderAvatarContent(el, prof, showGoogleDot) {
@@ -4313,10 +4474,9 @@
     }
 
     function renderSettingsSheet() {
-      // 1. You & Google Hero Card
+      // 1. You & Google Hero Card (Signature Diff-Guarded)
       const prof = getActiveProfile();
       const dispName = (prof.isGoogleSignedIn && prof.googleDisplayName) ? prof.googleDisplayName : (prof.name || 'Personal');
-      renderAvatarContent(document.getElementById('set-yg-avatar'), prof, true);
       const ygName = document.getElementById('set-yg-name');
       const ygEmail = document.getElementById('set-yg-email');
       const ygBadges = document.getElementById('set-yg-badges');
@@ -4327,31 +4487,42 @@
           ? prof.googleEmail
           : 'Sign in with Google or switch profiles';
       }
-      if (ygBadges) ygBadges.innerHTML = renderProfileBadgesHtml(prof);
-      if (ygActs) {
-        if (prof.isGoogleSignedIn) {
-          ygActs.innerHTML = `
-            <button type="button" class="yg-tonal-btn" onclick="call('googleManageAccount')">
-              <span class="yg-google-g-pill">${GOOGLE_G_SVG}</span>
-              <span>Manage your Google Account</span>
-            </button>
-          `;
-        } else {
-          ygActs.innerHTML = `
-            <button type="button" class="yg-google-btn" onclick="call('googleSignIn')">
-              <span class="yg-google-g-pill">${GOOGLE_G_SVG}</span>
-              <span>Sign in with Google</span>
-            </button>
-            <button type="button" class="yg-tonal-btn" onclick="call('googleSignUp')">Create Google Account</button>
-          `;
+      const setYgSig = `${prof.id || ''}|${prof.isGoogleSignedIn ? 1 : 0}|${prof.isMainProfile ? 1 : 0}|${state.mainProfileId || ''}|${prof.googleAvatarUrl || ''}|${prof.accentColor || ''}|${dispName}`;
+      if (setYgSig !== _domSigs.setYg) {
+        _domSigs.setYg = setYgSig;
+        renderAvatarContent(document.getElementById('set-yg-avatar'), prof, true);
+        if (ygBadges) ygBadges.innerHTML = renderProfileBadgesHtml(prof);
+        if (ygActs) {
+          if (prof.isGoogleSignedIn) {
+            ygActs.innerHTML = `
+              <button type="button" class="yg-tonal-btn" onclick="call('googleManageAccount')">
+                <span class="yg-google-g-pill">${GOOGLE_G_SVG}</span>
+                <span>Manage your Google Account</span>
+              </button>
+            `;
+          } else {
+            ygActs.innerHTML = `
+              <button type="button" class="yg-google-btn" onclick="call('googleSignIn')">
+                <span class="yg-google-g-pill">${GOOGLE_G_SVG}</span>
+                <span>Sign in with Google</span>
+              </button>
+              <button type="button" class="yg-tonal-btn" onclick="call('googleSignUp')">Create Google Account</button>
+            `;
+          }
         }
       }
 
-      // Quick Multi-Profile Switcher Strip inside Account Card (Single clean row + "+ Add")
+      // Quick Multi-Profile Switcher Strip inside Account Card (Signature Diff-Guarded)
       const strip = document.getElementById('set-yg-prof-strip');
-      if (strip) {
+      const list = Array.isArray(state.profiles) && state.profiles.length ? state.profiles : [prof];
+      const stripSig = JSON.stringify({
+        act: prof.id,
+        main: state.mainProfileId,
+        list: list.map((p) => [p.id, p.name || '', p.googleDisplayName || '', !!p.isGoogleSignedIn, p.accentColor || '', !!p.isMainProfile])
+      });
+      if (strip && stripSig !== _domSigs.setProfStrip) {
+        _domSigs.setProfStrip = stripSig;
         strip.innerHTML = '';
-        const list = Array.isArray(state.profiles) && state.profiles.length ? state.profiles : [prof];
         list.forEach((p) => {
           const isAct = p.id === prof.id;
           const isMain = p.isMainProfile || p.id === state.mainProfileId;
@@ -4388,17 +4559,26 @@
       const accLbl = document.getElementById('opt-m-accent-lbl');
       if (accLbl) accLbl.textContent = ACCENT_LABEL[curAcc] || 'Amethyst';
       const accBox = document.getElementById('opt-m-accents');
-      accBox.innerHTML = '';
-      ACCENTS.forEach(([id, hex, lbl]) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'acc-orb' + (curAcc === id ? ' active' : '');
-        b.style.background = hex;
-        b.title = lbl;
-        b.setAttribute('aria-label', lbl);
-        b.onclick = () => call('setAccent', id);
-        accBox.appendChild(b);
-      });
+      if (accBox && curAcc !== _domSigs.setAccents) {
+        _domSigs.setAccents = curAcc;
+        if (accBox.children.length === ACCENTS.length) {
+          Array.from(accBox.children).forEach((b, idx) => {
+            b.classList.toggle('active', ACCENTS[idx][0] === curAcc);
+          });
+        } else {
+          accBox.innerHTML = '';
+          ACCENTS.forEach(([id, hex, lbl]) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'acc-orb' + (curAcc === id ? ' active' : '');
+            b.style.background = hex;
+            b.title = lbl;
+            b.setAttribute('aria-label', lbl);
+            b.onclick = () => call('setAccent', id);
+            accBox.appendChild(b);
+          });
+        }
+      }
 
       const curWp = normalizeWallpaperId(state.wallpaper);
       const wpMeta = VALID_WP_MAP[curWp] || WALLPAPERS[0];
@@ -4449,21 +4629,25 @@
           : 'History, cookies, cache & downloads';
       }
 
-      // 4. Search & Tabs
+      // 4. Search & Tabs (Signature Diff-Guarded)
       const engBox = document.getElementById('opt-m-engines');
-      engBox.innerHTML = '';
-      ENGINES.forEach(([id, label, glyph, bg]) => {
-        const on = (state.searchEngine || 'google') === id;
-        const r = document.createElement('button');
-        r.type = 'button'; r.className = 'g-row';
-        r.innerHTML = `
-          <span class="sq-ico" style="background:${bg};color:#ffffff;font-size:13px;font-weight:700;">${glyph}</span>
-          <span class="g-row-meta"><span class="g-row-title">${label}</span></span>
-          <span class="radio-dot${on ? ' on' : ''}">${on ? '<svg viewBox="0 0 14 14" width="11" height="11" fill="none"><path d="M3 7.2l2.6 2.6L11 4.2" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</span>
-        `;
-        r.onclick = () => call('setSearchEngine', id);
-        engBox.appendChild(r);
-      });
+      const curEng = state.searchEngine || 'google';
+      if (engBox && curEng !== _domSigs.setEngines) {
+        _domSigs.setEngines = curEng;
+        engBox.innerHTML = '';
+        ENGINES.forEach(([id, label, glyph, bg]) => {
+          const on = curEng === id;
+          const r = document.createElement('button');
+          r.type = 'button'; r.className = 'g-row';
+          r.innerHTML = `
+            <span class="sq-ico" style="background:${bg};color:#ffffff;font-size:13px;font-weight:700;">${glyph}</span>
+            <span class="g-row-meta"><span class="g-row-title">${label}</span></span>
+            <span class="radio-dot${on ? ' on' : ''}">${on ? '<svg viewBox="0 0 14 14" width="11" height="11" fill="none"><path d="M3 7.2l2.6 2.6L11 4.2" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</span>
+          `;
+          r.onclick = () => call('setSearchEngine', id);
+          engBox.appendChild(r);
+        });
+      }
       const swPtr = document.getElementById('sw-ptr');
       if (swPtr) swPtr.classList.toggle('on', state.pullToRefresh !== false);
       const swBg = document.getElementById('sw-bglinks');
@@ -4520,7 +4704,7 @@
       }
 
       const u = state.update || {};
-      const curV = u.currentVersion || '4.9.0';
+      const curV = u.currentVersion || '5.0.0';
       const uTitle = document.getElementById('opt-upd-title');
       const uSub = document.getElementById('opt-upd-sub');
       const uBtn = document.getElementById('opt-upd-btn');
@@ -4574,7 +4758,7 @@
         } else if (u.status === 'ready') {
           uTitle.textContent = `v${u.latestVersion} Ready to Install`;
           uSub.textContent = u.signatureMismatch
-            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '4.9.0')
+            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '5.0.0')
             : 'Verified V1-V3 permanent signature · Tap Install to upgrade';
           uBtn.textContent = 'Install';
           uBtn.classList.add('primary');
@@ -4600,7 +4784,13 @@
         }
       }
 
-      filterSettingsList();
+      const setQ = (document.getElementById('settings-search-in')?.value || '').trim();
+      if (setQ || _domSigs.setSearchLast !== setQ) {
+        _domSigs.setSearchLast = setQ;
+        filterSettingsList();
+      }
+      syncMobileGlider(document.getElementById('set-theme-seg'));
+      syncMobileGlider(document.getElementById('set-bar-seg'));
     }
 
     function renderProfileSheet() {
@@ -5061,7 +5251,7 @@
     };
 
     // =========================================================================
-    // PIXEL MATERIAL DESIGN 3 EXTENSIONS & CUSTOM USERSCRIPTS MANAGER (v4.9.0)
+    // PIXEL MATERIAL DESIGN 3 EXTENSIONS & CUSTOM USERSCRIPTS MANAGER (v5.0.0)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & Annoyance Cleaner',      desc: 'Hides sponsored promos, newsletter popups & app-install nags', category: 'Privacy',    enabled: true },
@@ -5251,7 +5441,10 @@
 
       if (scr !== lastScreen) {
         if (scr === 'menu') setMenuSubView('main');
-        if (scr === 'tabs') tabViewPrivate = !!state.activePrivate;
+        if (scr === 'tabs') {
+          tabViewPrivate = !!state.activePrivate;
+          tabsScreenJustOpened = true;
+        }
         if (scr !== 'start') favEditMode = false;
         if (scr !== 'profile' && scr !== 'clear-data' && scr !== 'extensions') returnToSettings = false;
         if (scr !== 'context-menu') localContextMenu = null;
@@ -5483,8 +5676,8 @@
             const previewCtx = initScreen === 'context-menu' ? {
               source: 'web',
               kind: ctxKind,
-              title: ctxKind === 'image' ? 'Amethyst Origami · Material Design 3' : 'dejavu Browser v4.9.0 Release',
-              linkUrl: ctxKind === 'image' ? '' : 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v4.9.0',
+              title: ctxKind === 'image' ? 'Amethyst Origami · Material Design 3' : 'dejavu Browser v5.0.0 Release',
+              linkUrl: ctxKind === 'image' ? '' : 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v5.0.0',
               imageUrl: ctxKind === 'link' ? '' : 'wallpapers/wp-m3-butterfly-obsidian.jpg',
               pageTitle: 'dejavu — Material Design 3 Browser',
               pageUrl: 'https://dathevinci.github.io/Dejavu-browser/',
@@ -5522,10 +5715,10 @@
               peerPlatform: 'windows',
               peerOnline: true,
               peerLastSeenMs: nowMs - 8000,
-              pairingCode: 'DJV-4900-M3UI',
+              pairingCode: 'DJV-5000-M3UI',
               latestClipboard: {
                 id: 'clip_pc_1',
-                text: 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v4.9.0 — Zero-QR Google Auto-Sync & Passkeys',
+                text: 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v5.0.0 — Zero-Lag 120Hz Engine & Google Auto-Sync',
                 fromName: 'Windows 11 Desktop',
                 platform: 'windows',
                 ts: nowMs - 25000
@@ -5542,7 +5735,7 @@
                   dropType: 'clipboard',
                   title: 'Clipboard from Windows 11 Desktop',
                   url: '',
-                  text: 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v4.9.0 — Zero-QR Google Auto-Sync & Passkeys',
+                  text: 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v5.0.0 — Zero-Lag 120Hz Engine & Google Auto-Sync',
                   fromName: 'Windows 11 Desktop',
                   platform: 'windows',
                   ts: nowMs - 25000
@@ -5569,7 +5762,7 @@
               peerPlatform: 'windows',
               peerOnline: false,
               peerLastSeenMs: 0,
-              pairingCode: 'DJV-4900-M3UI',
+              pairingCode: 'DJV-5000-M3UI',
               latestClipboard: null,
               prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true },
               remoteTabs: [],
@@ -5629,7 +5822,7 @@
                 { title: 'YouTube', url: 'https://m.youtube.com' }
               ],
               sync: previewSync,
-              update: { currentVersion: '4.9.0', status: 'uptodate', latestVersion: '4.9.0', available: false, hasDownloadedApk: false },
+              update: { currentVersion: '5.0.0', status: 'uptodate', latestVersion: '5.0.0', available: false, hasDownloadedApk: false },
               turboDownloads: [],
               pageMedia: [],
               extensions: {

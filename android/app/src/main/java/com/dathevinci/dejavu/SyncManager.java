@@ -30,7 +30,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * dejavu Link v4.9.0 — Cross-Device E2EE Sync Engine (100% bit-compatible with Windows SyncManager.cs)
+ * dejavu Link v5.0.0 — Cross-Device E2EE Sync Engine (100% bit-compatible with Windows SyncManager.cs)
  * Supports Zero-QR Google-Account Auto-Sync (v2 10,000-round SHA-256 chain -> dv4- topic)
  * AND Manual Pairing Code / QR fallback (v1 -> dv3- topic).
  * Uses AES-256-CBC + HMAC-SHA256 (Encrypt-then-MAC) over dual Direct Wi-Fi LAN + ntfy.sh HTTPS relay.
@@ -111,7 +111,7 @@ public final class SyncManager {
     }
 
     /**
-     * Exact v4.9.0 Cross-Platform Google Auto-Sync Key Derivation (100% bit-identical to Windows SyncManager.cs):
+     * Exact v5.0.0 Cross-Platform Google Auto-Sync Key Derivation (100% bit-identical to Windows SyncManager.cs):
      * - normEmail = email.trim().toLowerCase(Locale.US)
      * - normPass  = passphrase.trim()
      * - seedStr   = "dejavu-google-link-v2:" + normEmail + ":" + normPass
@@ -307,7 +307,7 @@ public final class SyncManager {
     }
 
     /**
-     * Activates Zero-QR Google-Account E2EE Auto-Sync using the exact v4.9.0 cross-platform spec.
+     * Activates Zero-QR Google-Account E2EE Auto-Sync using the exact v5.0.0 cross-platform spec.
      */
     public boolean configureGoogleAccountSync(String email, String passphrase) {
         if (email == null || !email.trim().contains("@")) return false;

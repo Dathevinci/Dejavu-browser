@@ -216,7 +216,7 @@ namespace DejavuBrowser
         }
 
         /// <summary>
-        /// v4.9.0 Cross-Platform Google Account Auto-Sync Key Derivation (100% identical in C# .NET 4.8 and Android Java):
+        /// v5.0.0 Cross-Platform Google Account Auto-Sync Key Derivation (100% identical in C# .NET 4.8 and Android Java):
         ///   normEmail = (email ?? "").Trim().ToLowerInvariant()
         ///   normPass  = (passphrase ?? "").Trim()
         ///   seedStr   = "dejavu-google-link-v2:" + normEmail + ":" + normPass
@@ -1082,7 +1082,7 @@ namespace DejavuBrowser
                     req.Method = "POST";
                     req.Timeout = 8000;
                     req.ReadWriteTimeout = 8000;
-                    req.UserAgent = "dejavu-link/4.9.0";
+                    req.UserAgent = "dejavu-link/5.0.0";
                     req.Headers["Cache"] = "yes";
                     req.ContentType = "text/plain; charset=utf-8";
                     byte[] payload = Encoding.UTF8.GetBytes(encrypted);
@@ -1346,7 +1346,7 @@ namespace DejavuBrowser
                     string url = RelayBase + topic + "/json?since=" + Uri.EscapeDataString(since);
                     req = (HttpWebRequest)WebRequest.Create(url);
                     req.Method = "GET";
-                    req.UserAgent = "dejavu-link/4.9.0";
+                    req.UserAgent = "dejavu-link/5.0.0";
                     req.Timeout = 15000;
                     req.ReadWriteTimeout = 90000;
 

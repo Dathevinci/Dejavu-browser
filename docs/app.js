@@ -1,15 +1,51 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Engine (v4.9.0)
- * 6 Harmonized HCT Dynamic Color Seeds · Dynamic M3 Butterfly Logo · Dark/Light Polarity
+ * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.0.0)
+ * Fluid Gliding M3 Pill Indicators · GPU Cross-Fade Showcase · 6 Harmonized HCT Seeds
+ * Zero-Lag 120Hz Tab Engine & Anti-Glitch Architecture · Dynamic M3 Butterfly Logo
  * Zero-QR Google Account Auto-Sync (dejavu Link) + Shared Clipboard + Passkeys Showcase
- * Interactive Chrome Extensions Manager + Draggable Tabs + M3 Right-Click Context Menu
- * Decluttered Zero-Duplicate Chrome + Navigation Rail 5-View Dual-Device Showcase
+ * Interactive Chrome MV3 Extensions + Draggable Tabs + M3 Right-Click Context Menu
  * 52x32 Spring Switches · 4K->MP3 Video Demo · 16-Wallpaper Harmonizer
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v4.9.0';
+  const FALLBACK_VERSION = 'v5.0.0';
   const root = document.documentElement;
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let themeShiftTimer = null;
+
+  function triggerThemeShift() {
+    if (prefersReduced) return;
+    root.classList.add('m3-theme-shifting');
+    clearTimeout(themeShiftTimer);
+    themeShiftTimer = setTimeout(() => {
+      root.classList.remove('m3-theme-shifting');
+    }, 280);
+  }
+
+  function positionGlidingPill(container, indicator, activeEl, opts) {
+    if (!container || !indicator || !activeEl) return;
+    if (container.offsetWidth === 0 || activeEl.offsetWidth === 0) {
+      indicator.classList.remove('is-visible');
+      return;
+    }
+    const trackY = !!(opts && opts.trackY);
+    const x = activeEl.offsetLeft;
+    const y = trackY ? activeEl.offsetTop : 0;
+    const w = activeEl.offsetWidth;
+    indicator.style.width = `${w}px`;
+    if (trackY) {
+      indicator.style.height = `${activeEl.offsetHeight}px`;
+      indicator.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    } else {
+      indicator.style.transform = `translate3d(${x}px, 0, 0)`;
+    }
+    container.classList.add('has-indicator');
+    indicator.classList.add('is-visible');
+    if (!indicator.classList.contains('is-ready')) {
+      void indicator.offsetWidth;
+      indicator.classList.add('is-ready');
+    }
+  }
 
   const THEME_META_COLORS = {
     dark: {
@@ -67,11 +103,21 @@
   }
 
   // 1. Material You Polarity Segmented Pill & 6-Seed Dynamic Color Picker
+  const themeSegGroups = Array.from(document.querySelectorAll('.theme-segmented'));
   const themeSegBtns = Array.from(document.querySelectorAll('[data-theme-set]'));
   const seedDots = Array.from(document.querySelectorAll('.seed-dot'));
 
-  function setTheme(mode) {
+  function syncThemeIndicators() {
+    themeSegGroups.forEach((group) => {
+      const ind = group.querySelector('.theme-seg-indicator');
+      const act = group.querySelector('.theme-seg-btn.active');
+      if (ind && act) positionGlidingPill(group, ind, act, { trackY: false });
+    });
+  }
+
+  function setTheme(mode, animate) {
     const next = mode === 'light' ? 'light' : 'dark';
+    if (animate && root.dataset.theme !== next) triggerThemeShift();
     root.dataset.theme = next;
     try { localStorage.setItem('djv_web_theme', next); } catch {}
     themeSegBtns.forEach((btn) => {
@@ -79,11 +125,13 @@
       btn.classList.toggle('active', isMatch);
       btn.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
     });
+    syncThemeIndicators();
     syncThemeColorMeta();
   }
 
-  function setSeed(seed) {
+  function setSeed(seed, animate) {
     const next = seed || 'amethyst';
+    if (animate && root.dataset.accent !== next) triggerThemeShift();
     root.dataset.accent = next;
     try { localStorage.setItem('djv_web_seed', next); } catch {}
     seedDots.forEach((b) => {
@@ -100,41 +148,59 @@
     const qpAccent = qpInit.get('accent');
     const savedTheme = localStorage.getItem('djv_web_theme');
     const savedSeed = localStorage.getItem('djv_web_seed');
-    if (qpTheme === 'light' || qpTheme === 'dark') setTheme(qpTheme);
-    else if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
-    else setTheme('dark');
-    if (qpAccent) setSeed(qpAccent);
-    else if (savedSeed) setSeed(savedSeed);
-    else setSeed('amethyst');
+    if (qpTheme === 'light' || qpTheme === 'dark') setTheme(qpTheme, false);
+    else if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme, false);
+    else setTheme('dark', false);
+    if (qpAccent) setSeed(qpAccent, false);
+    else if (savedSeed) setSeed(savedSeed, false);
+    else setSeed('amethyst', false);
   } catch {
-    setTheme('dark');
-    setSeed('amethyst');
+    setTheme('dark', false);
+    setSeed('amethyst', false);
   }
 
   themeSegBtns.forEach((btn) => {
-    btn.addEventListener('click', () => setTheme(btn.dataset.themeSet));
+    btn.addEventListener('click', () => setTheme(btn.dataset.themeSet, true));
   });
 
   seedDots.forEach((dot) => {
-    dot.addEventListener('click', () => setSeed(dot.dataset.seed));
+    dot.addEventListener('click', () => setSeed(dot.dataset.seed, true));
   });
 
-  // Top App Bar Scroll Elevation + Active Section Pill Scroll-Spy
+  // Top App Bar Scroll Elevation + Gliding Active Pill Indicator + Scroll-Spy
   const topbar = document.getElementById('m3-topbar');
+  const navLinksWrap = document.getElementById('nav-links');
+  const navIndicator = document.getElementById('nav-indicator');
   const navSectionLinks = Array.from(document.querySelectorAll('[data-nav-section]'));
   const observedSections = ['overview', 'features', 'wallpapers', 'download']
     .map((id) => document.getElementById(id))
     .filter(Boolean);
+  let activeNavId = 'overview';
+  let navClickLockUntil = 0;
+
+  function syncNavIndicator() {
+    if (!navLinksWrap || !navIndicator) return;
+    const act = navLinksWrap.querySelector(`a[data-nav-section="${activeNavId}"]`) || navLinksWrap.querySelector('a.active');
+    if (act) positionGlidingPill(navLinksWrap, navIndicator, act, { trackY: false });
+  }
 
   function setActiveNavSection(sectionId) {
     if (!sectionId) return;
+    activeNavId = sectionId;
     navSectionLinks.forEach((link) => {
       link.classList.toggle('active', link.dataset.navSection === sectionId);
     });
+    syncNavIndicator();
   }
 
   function syncTopbarScroll() {
     if (topbar) topbar.classList.toggle('is-scrolled', window.scrollY > 10);
+    if (Date.now() < navClickLockUntil) return;
+    if (window.scrollY < 140) {
+      if (activeNavId !== 'overview') setActiveNavSection('overview');
+    } else if ((window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 48)) {
+      if (activeNavId !== 'download') setActiveNavSection('download');
+    }
   }
   window.addEventListener('scroll', syncTopbarScroll, { passive: true });
   syncTopbarScroll();
@@ -142,6 +208,7 @@
   if ('IntersectionObserver' in window && observedSections.length) {
     const sectionObserver = new IntersectionObserver(
       (entries) => {
+        if (Date.now() < navClickLockUntil) return;
         const visible = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
@@ -149,14 +216,17 @@
           setActiveNavSection(visible[0].target.id);
         }
       },
-      { rootMargin: '-18% 0px -58% 0px', threshold: [0.05, 0.25, 0.5] }
+      { rootMargin: '-18% 0px -56% 0px', threshold: [0.05, 0.25, 0.5] }
     );
     observedSections.forEach((sec) => sectionObserver.observe(sec));
   }
 
   navSectionLinks.forEach((link) => {
     link.addEventListener('click', () => {
-      if (link.dataset.navSection) setActiveNavSection(link.dataset.navSection);
+      if (link.dataset.navSection) {
+        navClickLockUntil = Date.now() + 720;
+        setActiveNavSection(link.dataset.navSection);
+      }
     });
   });
 
@@ -168,6 +238,7 @@
       const willOpen = mobDrawer.hidden;
       mobDrawer.hidden = !willOpen;
       mobBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      if (willOpen) requestAnimationFrame(syncThemeIndicators);
     });
     mobDrawer.querySelectorAll('a').forEach((link) => {
       link.addEventListener('click', () => {
@@ -177,7 +248,7 @@
     });
   }
 
-  // 2. Clean 5-View Dual-Device Browser Showcase (v4.9.0 Zero-QR Google Sync + Extensions + Draggable Tabs)
+  // 2. Clean 5-View Dual-Device Browser Showcase (v5.0.0 Zero-Lag 120Hz + Gliding Pill + GPU Cross-Fade)
   const VIEW_META = {
     start:      { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
     sync:       { url: 'dejavu://link · Auto-Synced via Google (alex@gmail.com)', title: 'Google Auto-Sync · Pixel Online' },
@@ -186,10 +257,37 @@
     vpn:        { url: 'gemini.google.com/app', title: 'Google Gemini · Smart VPN' }
   };
 
+  const segContainer = document.getElementById('m3-segmented');
+  const segIndicator = document.getElementById('m3-seg-indicator');
+  const dkLoadBar = document.getElementById('dk-load-bar');
   let activeView = 'start';
+  let showcaseLeaveTimer = null;
+  let loadBarTimer = null;
 
-  function selectShowcase(id) {
-    activeView = VIEW_META[id] ? id : 'start';
+  function syncShowcaseIndicator() {
+    if (!segContainer || !segIndicator) return;
+    const act = segContainer.querySelector(`.m3-seg-btn[data-showcase="${activeView}"]`) || segContainer.querySelector('.m3-seg-btn.active');
+    if (act) positionGlidingPill(segContainer, segIndicator, act, { trackY: true });
+  }
+
+  function triggerShowcaseLoader() {
+    if (!dkLoadBar || prefersReduced) return;
+    dkLoadBar.classList.remove('is-active');
+    void dkLoadBar.offsetWidth;
+    dkLoadBar.classList.add('is-active');
+    clearTimeout(loadBarTimer);
+    loadBarTimer = setTimeout(() => {
+      dkLoadBar.classList.remove('is-active');
+    }, 600);
+  }
+
+  function selectShowcase(id, opts) {
+    const nextView = VIEW_META[id] ? id : 'start';
+    const isSilent = !!(opts && opts.silent);
+    const prevView = activeView;
+    const changed = nextView !== prevView;
+    activeView = nextView;
+
     document.querySelectorAll('[data-showcase]').forEach((el) => {
       const match = el.dataset.showcase === activeView;
       el.classList.toggle('active', match);
@@ -197,15 +295,52 @@
         el.setAttribute('aria-selected', match ? 'true' : 'false');
       }
     });
-    document.querySelectorAll('.dk-page').forEach((page) => {
-      const isMatch = page.dataset.page === activeView;
-      page.classList.toggle('hidden', !isMatch);
-      if (isMatch) {
-        page.style.animation = 'none';
-        void page.offsetWidth;
-        page.style.animation = '';
+
+    const pages = Array.from(document.querySelectorAll('.dk-page'));
+    const nextPage = pages.find((p) => p.dataset.page === activeView);
+    const prevPage = changed ? pages.find((p) => p.dataset.page === prevView && !p.classList.contains('hidden')) : null;
+
+    clearTimeout(showcaseLeaveTimer);
+    pages.forEach((page) => {
+      if (page === nextPage) return;
+      if (page === prevPage && !isSilent && !prefersReduced) {
+        page.classList.remove('hidden', 'is-entering');
+        page.classList.add('is-leaving');
+      } else {
+        page.classList.remove('is-leaving', 'is-entering');
+        page.classList.add('hidden');
       }
     });
+
+    if (nextPage) {
+      nextPage.classList.remove('is-leaving', 'hidden');
+      if (changed && !isSilent && !prefersReduced) {
+        nextPage.classList.add('is-entering');
+        void nextPage.offsetWidth;
+        nextPage.classList.remove('is-entering');
+      } else {
+        nextPage.classList.remove('is-entering');
+      }
+    }
+
+    if (prevPage && !isSilent && !prefersReduced) {
+      showcaseLeaveTimer = setTimeout(() => {
+        prevPage.classList.remove('is-leaving');
+        if (prevPage.dataset.page !== activeView) {
+          prevPage.classList.add('hidden');
+        }
+      }, 230);
+    }
+
+    if (changed && !isSilent) {
+      triggerShowcaseLoader();
+    }
+
+    syncShowcaseIndicator();
+    if (!prefersReduced) {
+      setTimeout(syncShowcaseIndicator, 250);
+    }
+
     const urlEl = document.getElementById('dk-url-text');
     if (urlEl) urlEl.textContent = VIEW_META[activeView].url;
     const syncEl = document.getElementById('px-synced-title');
@@ -217,6 +352,28 @@
   document.querySelectorAll('[data-showcase]').forEach((el) => {
     el.addEventListener('click', () => selectShowcase(el.dataset.showcase));
   });
+
+  function syncAllGlidingIndicators() {
+    syncNavIndicator();
+    syncShowcaseIndicator();
+    syncThemeIndicators();
+  }
+
+  syncAllGlidingIndicators();
+  requestAnimationFrame(syncAllGlidingIndicators);
+  window.addEventListener('resize', syncAllGlidingIndicators, { passive: true });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(syncAllGlidingIndicators).catch(() => {});
+  }
+  if ('ResizeObserver' in window) {
+    const pillRo = new ResizeObserver(() => syncAllGlidingIndicators());
+    if (navLinksWrap) pillRo.observe(navLinksWrap);
+    if (segContainer) {
+      pillRo.observe(segContainer);
+      segContainer.querySelectorAll('.m3-seg-btn').forEach((b) => pillRo.observe(b));
+    }
+    themeSegGroups.forEach((g) => pillRo.observe(g));
+  }
 
   // Decluttered Chrome Reload, 3-Dot Menu, Rail History & Single Bottom Settings Icon
   const sidePanel = document.getElementById('dk-sidepanel');
@@ -256,6 +413,7 @@
       btnReload.classList.remove('spin');
       void btnReload.offsetWidth;
       btnReload.classList.add('spin');
+      triggerShowcaseLoader();
       setTimeout(() => btnReload.classList.remove('spin'), 480);
     });
   }
@@ -404,30 +562,64 @@
 
   // 2c. Fluid Material Design 3 Scroll-Reveal Card Choreography (GPU Transform/Opacity, Reduced-Motion Safe)
   const revealEls = Array.from(document.querySelectorAll('.m3-reveal'));
-  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function revealElement(el, obs) {
+    if (!el || el.classList.contains('is-visible')) return;
+    el.classList.add('is-visible');
+    if (obs) obs.unobserve(el);
+    setTimeout(() => el.classList.add('m3-revealed-done'), 620);
+  }
+
   if (revealEls.length && 'IntersectionObserver' in window && !prefersReduced) {
     root.classList.add('m3-motion-ready');
     const revealObserver = new IntersectionObserver(
       (entries, obs) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            obs.unobserve(entry.target);
+            revealElement(entry.target, obs);
           }
         });
       },
-      { rootMargin: '0px 0px -6% 0px', threshold: 0.08 }
+      { rootMargin: '0px 0px -2% 0px', threshold: 0.02 }
     );
     revealEls.forEach((el) => {
       const rect = el.getBoundingClientRect();
-      if (rect.top < window.innerHeight * 0.96) {
-        el.classList.add('is-visible');
+      if (rect.top < window.innerHeight * 0.98) {
+        revealElement(el, null);
       } else {
         revealObserver.observe(el);
       }
     });
+
+    let scrollSweepScheduled = false;
+    function sweepVisibleReveals() {
+      scrollSweepScheduled = false;
+      const vh = window.innerHeight || 900;
+      const atBottom = (vh + window.scrollY) >= (document.documentElement.scrollHeight - 40);
+      let remaining = 0;
+      for (let i = 0; i < revealEls.length; i++) {
+        const el = revealEls[i];
+        if (el.classList.contains('is-visible')) continue;
+        const rect = el.getBoundingClientRect();
+        if (atBottom || (rect.height > 0 && rect.top <= vh * 0.99)) {
+          revealElement(el, revealObserver);
+        } else {
+          remaining++;
+        }
+      }
+      if (remaining === 0) {
+        window.removeEventListener('scroll', onScrollSweep);
+      }
+    }
+    function onScrollSweep() {
+      if (scrollSweepScheduled) return;
+      scrollSweepScheduled = true;
+      requestAnimationFrame(sweepVisibleReveals);
+    }
+    window.addEventListener('scroll', onScrollSweep, { passive: true });
   } else {
-    revealEls.forEach((el) => el.classList.add('is-visible'));
+    revealEls.forEach((el) => {
+      el.classList.add('is-visible', 'm3-revealed-done');
+    });
   }
 
   // 2d. Interactive Draggable Tabs in Hero Browser Mockup
@@ -466,7 +658,7 @@
     });
   }
 
-  // 2e. Interactive Chrome Extensions Manager Showcase (v4.9.0)
+  // 2e. Interactive Chrome Extensions Manager Showcase (v5.0.0)
   const DEMO_EXTS = {
     ublock:     { label: 'uB', name: 'uBlock Origin Lite',    enabled: true,  pinned: true },
     darkreader: { label: 'DR', name: 'Dark Reader',           enabled: true,  pinned: true },
@@ -826,11 +1018,23 @@
     btn.addEventListener('click', () => {
       const filter = btn.dataset.wpFilter || 'all';
       wpFilters.forEach((x) => x.classList.toggle('active', x === btn));
+      let visIdx = 0;
       wpCards.forEach((card) => {
         const visible =
           filter === 'all' ||
           (filter === 'butterfly' ? card.dataset.butterfly === 'true' : card.dataset.mode === filter);
         card.classList.toggle('is-hidden', !visible);
+        card.classList.remove('wp-filter-in');
+        if (visible) {
+          card.classList.add('is-visible', 'm3-revealed-done');
+          if (!prefersReduced) {
+            card.style.setProperty('--filter-idx', String(Math.min(visIdx, 7)));
+            void card.offsetWidth;
+            card.classList.add('wp-filter-in');
+            setTimeout(() => card.classList.remove('wp-filter-in'), 540);
+          }
+          visIdx++;
+        }
       });
     });
   });
@@ -845,8 +1049,8 @@
       const pxWp = document.getElementById('px-wp');
       if (dkWp) dkWp.style.backgroundImage = `url("${src}")`;
       if (pxWp) pxWp.style.backgroundImage = `url("${src}")`;
-      if (card.dataset.seed) setSeed(card.dataset.seed);
-      if (card.dataset.mode === 'light' || card.dataset.mode === 'dark') setTheme(card.dataset.mode);
+      if (card.dataset.seed) setSeed(card.dataset.seed, true);
+      if (card.dataset.mode === 'light' || card.dataset.mode === 'dark') setTheme(card.dataset.mode, true);
       selectShowcase('start');
       const title = card.dataset.title || 'Material You wallpaper';
       const polarity = card.dataset.mode === 'light' ? 'Light' : 'Dark';
@@ -878,7 +1082,7 @@
     });
   });
 
-  // 8. GitHub Releases API Dynamic Hydration (Fallback: v4.9.0)
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.0.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -964,7 +1168,7 @@
     const qp = new URLSearchParams(location.search || '');
     const qpView = qp.get('view');
     if (qpView && VIEW_META[qpView]) {
-      selectShowcase(qpView);
+      selectShowcase(qpView, { silent: true });
     }
     if (qp.get('ctx') === 'open') {
       requestAnimationFrame(() => openShowcaseContextMenu('link', 'github.com/Dathevinci/Dejavu-browser'));

@@ -134,8 +134,6 @@
             </svg>
           </button>
         </div>
-
-        <div id="load-progress" class="load-progress"></div>
       </div>
 
       <!-- Right: Material Design 3 Utility Action Dock + Profile Pill + Main Menu -->
@@ -229,6 +227,9 @@
     <nav id="favbar" class="favbar hidden" aria-label="Quick Access websites">
       <div id="favbar-list" class="favbar-list"></div>
     </nav>
+
+    <!-- Material Design 3 2px Linear Loading Progress Hairline (GPU scaleX along top chrome bottom edge) -->
+    <div id="load-progress" class="load-progress" aria-hidden="true"></div>
   </header>
 
   <!-- Floating M3 Detach Pill when dragging a tab out of the tab bar -->
@@ -577,7 +578,7 @@
               <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
             </svg>
             <span class="m3-appbar-title">Settings</span>
-            <span id="settings-version-sub" class="m3-tonal-badge">v4.9.0</span>
+            <span id="settings-version-sub" class="m3-tonal-badge">v5.0.0</span>
           </div>
 
           <div class="m3-appbar-search">
@@ -1690,8 +1691,8 @@
                         </svg>
                       </div>
                       <div class="m3-about-copy">
-                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v4.9.0</span></div>
-                        <div class="m3-about-sub">Pure Material Design 3 Browser · Google Auto-Sync, Passkeys &amp; Chrome Extensions</div>
+                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v5.0.0</span></div>
+                        <div class="m3-about-sub">Pure Material Design 3 Browser · Zero-Lag 120Hz Tab Engine, Google Auto-Sync &amp; Passkeys</div>
                         <div id="about-update-status" class="m3-about-update-line">Checking update status…</div>
                       </div>
                       <button type="button" id="btn-about-check-update" class="m3-btn m3-btn-filled sm">Check for Updates</button>
@@ -1724,7 +1725,7 @@
                       <div class="opt-row">
                         <div class="opt-meta">
                           <div class="opt-title opt-row-title">GitHub Releases</div>
-                          <div class="opt-desc">View v4.9.0 release notes, Windows Setup installer, and Android APK</div>
+                          <div class="opt-desc">View v5.0.0 release notes, Windows Setup installer, and Android APK</div>
                         </div>
                         <button type="button" id="btn-about-github" class="m3-btn m3-btn-outlined sm">Open GitHub</button>
                       </div>
@@ -1956,7 +1957,7 @@
     <section id="reset-confirm-overlay" class="m3-modal-scrim hidden" aria-label="Reset Settings">
       <div id="reset-confirm-modal" class="m3-dialog-card compact" role="dialog" aria-modal="true">
         <h3 class="m3-dialog-title">Reset dejavu settings?</h3>
-        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v4.9.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
+        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v5.0.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
         <div class="m3-dialog-actions">
           <button type="button" id="btn-reset-cancel" class="m3-btn m3-btn-text">Cancel</button>
           <button type="button" id="btn-reset-confirm" class="m3-btn m3-btn-danger">Reset Settings</button>

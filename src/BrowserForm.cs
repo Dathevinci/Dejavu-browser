@@ -50,6 +50,9 @@ namespace DejavuBrowser
         public string GroupId;
         public bool ReaderActive;
         public string ThumbnailDataUrl;
+        public string ThumbnailUrl;
+        public DateTime LastThumbnailUtc;
+        public bool CapturingThumbnail;
         public int[] BaseRgb;
         public List<int[]> AccentPalette;
         public WebView2 WebView;
@@ -74,7 +77,10 @@ namespace DejavuBrowser
             GroupId = string.IsNullOrEmpty(groupId) ? "default" : groupId;
             ReaderActive = false;
             ThumbnailDataUrl = "";
-            BaseRgb = new int[] { 11, 9, 20 };
+            ThumbnailUrl = "";
+            LastThumbnailUtc = DateTime.MinValue;
+            CapturingThumbnail = false;
+            BaseRgb = new int[] { 20, 18, 24 };
             AccentPalette = null;
             ZoomFactor = 1.0;
             LastActiveUtc = DateTime.UtcNow;
@@ -811,7 +817,19 @@ namespace DejavuBrowser
         private System.Windows.Forms.Timer _downloadHideTimer;
         private System.Windows.Forms.Timer _vpnTelemetryTimer;
         private System.Windows.Forms.Timer _statePushTimer;
+        private System.Windows.Forms.Timer _tabDeltaTimer;
+        private System.Windows.Forms.Timer _adPulseTimer;
+        private System.Windows.Forms.Timer _mediaPushTimer;
         private System.Windows.Forms.Timer _memorySaverTimer;
+        private bool _adPulseDirty;
+        private int _pendingAdPulseTabId = -1;
+        private int _pendingAdPulseTabBlocked;
+        private long _pendingAdPulseTotalBlocked;
+        private List<string> _cachedOpenProfileIds;
+        private DateTime _cachedOpenProfileIdsUtc = DateTime.MinValue;
+        private string _cachedCustomWallpaperPath;
+        private bool _cachedHasCustomWallpaper;
+        private DateTime _cachedCustomWallpaperUtc = DateTime.MinValue;
         private string _activePopoverMode = "";
         private string _activeHudMode = "";
         private string _lastHiddenPopoverMode = "";
@@ -853,7 +871,7 @@ namespace DejavuBrowser
         private string _docStartScript;
         private string _floatingMediaScript;
         private string _cwsBannerScript;
-        private readonly Dictionary<int, DateTime> _tabMediaPushUtc = new Dictionary<int, DateTime>();
+        private readonly Dictionary<int, DateTime> _pendingMediaPushDueUtc = new Dictionary<int, DateTime>();
         private CancellationTokenSource _videoProbeCts;
         private string _videoProbeUrl = "";
         private string _videoProbeTitle = "";
@@ -966,8 +984,7 @@ namespace DejavuBrowser
                 Size = new Size(1380, 880);
             }
 
-            bool initialLight = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
-            BackColor = initialLight ? Color.FromArgb(247, 242, 250) : Color.FromArgb(20, 18, 24);
+            BackColor = GetThemeSurfaceColor();
             DoubleBuffered = true;
 
             LoadEmbeddedIcon();
@@ -984,6 +1001,30 @@ namespace DejavuBrowser
             {
                 _statePushTimer.Stop();
                 if (!IsDisposed) PushFullStateToShell();
+            };
+
+            _tabDeltaTimer = new System.Windows.Forms.Timer();
+            _tabDeltaTimer.Interval = 32;
+            _tabDeltaTimer.Tick += (s, e) =>
+            {
+                _tabDeltaTimer.Stop();
+                if (!IsDisposed) PushTabDeltaToShell();
+            };
+
+            _adPulseTimer = new System.Windows.Forms.Timer();
+            _adPulseTimer.Interval = 250;
+            _adPulseTimer.Tick += (s, e) =>
+            {
+                _adPulseTimer.Stop();
+                if (!IsDisposed) FlushPendingAdCountPulse();
+            };
+
+            _mediaPushTimer = new System.Windows.Forms.Timer();
+            _mediaPushTimer.Interval = 100;
+            _mediaPushTimer.Tick += (s, e) =>
+            {
+                if (!IsDisposed) ProcessPendingMediaPushes();
+                else _mediaPushTimer.Stop();
             };
 
             _downloadHideTimer = new System.Windows.Forms.Timer();
@@ -1116,6 +1157,9 @@ namespace DejavuBrowser
             }
 
             if (_statePushTimer != null) { _statePushTimer.Stop(); _statePushTimer.Dispose(); }
+            if (_tabDeltaTimer != null) { _tabDeltaTimer.Stop(); _tabDeltaTimer.Dispose(); }
+            if (_adPulseTimer != null) { _adPulseTimer.Stop(); _adPulseTimer.Dispose(); }
+            if (_mediaPushTimer != null) { _mediaPushTimer.Stop(); _mediaPushTimer.Dispose(); }
             if (_vpnTelemetryTimer != null) { _vpnTelemetryTimer.Stop(); _vpnTelemetryTimer.Dispose(); }
             if (_downloadHideTimer != null) { _downloadHideTimer.Stop(); _downloadHideTimer.Dispose(); }
             if (_memorySaverTimer != null) { _memorySaverTimer.Stop(); _memorySaverTimer.Dispose(); }
@@ -1221,13 +1265,13 @@ namespace DejavuBrowser
                 { "vpnMode", _settings.vpnMode ?? "smart" },
                 { "vpnCountry", _settings.vpnCountry ?? "AUTO" },
 
-                // v4.9.0 Appearance
+                // v5.0.0 Appearance
                 { "fontSize", _settings.fontSize ?? "medium" },
                 { "fontFamily", _settings.fontFamily ?? "system" },
                 { "showHomeButton", _settings.showHomeButton },
                 { "smoothScrolling", _settings.smoothScrolling },
 
-                // v4.9.0 Privacy & Security
+                // v5.0.0 Privacy & Security
                 { "doNotTrack", _settings.doNotTrack },
                 { "httpsFirst", _settings.httpsFirst },
                 { "blockThirdPartyCookies", _settings.blockThirdPartyCookies },
@@ -1241,29 +1285,29 @@ namespace DejavuBrowser
                 { "permClipboard", _settings.permClipboard ?? "ask" },
                 { "permAutoplay", _settings.permAutoplay ?? "allow" },
 
-                // v4.9.0 Search
+                // v5.0.0 Search
                 { "customSearchUrl", _settings.customSearchUrl ?? "" },
                 { "addressBarSuggestions", _settings.addressBarSuggestions },
 
-                // v4.9.0 Tabs & Performance
+                // v5.0.0 Tabs & Performance
                 { "memorySaverEnabled", _settings.memorySaverEnabled },
                 { "memorySaverMinutes", _settings.memorySaverMinutes > 0 ? _settings.memorySaverMinutes : 30 },
                 { "confirmCloseMultipleTabs", _settings.confirmCloseMultipleTabs },
                 { "tabHoverPreview", _settings.tabHoverPreview },
 
-                // v4.9.0 Downloads
+                // v5.0.0 Downloads
                 { "downloadFolder", _settings.downloadFolder ?? "" },
                 { "askDownloadLocation", _settings.askDownloadLocation },
                 { "turboThreads", _settings.turboThreads > 0 ? _settings.turboThreads : 8 },
                 { "defaultVideoQuality", _settings.defaultVideoQuality ?? "best" },
                 { "autoOpenDownloads", _settings.autoOpenDownloads },
 
-                // v4.9.0 Passwords & Autofill
+                // v5.0.0 Passwords & Autofill
                 { "savePasswords", _settings.savePasswords },
                 { "autofillAddresses", _settings.autofillAddresses },
                 { "autofillPayments", _settings.autofillPayments },
 
-                // v4.9.0 VPN & System
+                // v5.0.0 VPN & System
                 { "vpnWebRtcProtection", _settings.vpnWebRtcProtection },
                 { "hardwareAcceleration", _settings.hardwareAcceleration },
                 { "spellcheckEnabled", _settings.spellcheckEnabled },
@@ -1422,6 +1466,91 @@ namespace DejavuBrowser
             CreateTab(isSignUp ? GOOGLE_SIGNUP_URL : GOOGLE_SIGNIN_URL, true);
         }
 
+        private Color GetThemeSurfaceColor()
+        {
+            bool isLightTheme = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
+            return isLightTheme ? Color.FromArgb(251, 248, 253) : Color.FromArgb(20, 18, 24);
+        }
+
+        private void ApplyThemeToAllTabs()
+        {
+            bool isLightTheme = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
+            Color surface = GetThemeSurfaceColor();
+            if (IsHandleCreated)
+            {
+                try { NativeWin32.SetImmersiveDarkMode(Handle, !isLightTheme); } catch { }
+            }
+            if (BackColor != surface) BackColor = surface;
+            if (_shellView != null && !_shellView.IsDisposed)
+            {
+                try
+                {
+                    if (_shellView.DefaultBackgroundColor != surface) _shellView.DefaultBackgroundColor = surface;
+                }
+                catch { }
+            }
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab bt = _tabs[i];
+                if (bt == null || bt.WebView == null || bt.WebView.IsDisposed) continue;
+                try
+                {
+                    if (bt.WebView.DefaultBackgroundColor != surface)
+                    {
+                        bt.WebView.DefaultBackgroundColor = surface;
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private List<string> GetCachedOpenProfileIds(bool forceRefresh)
+        {
+            DateTime now = DateTime.UtcNow;
+            if (!forceRefresh && _cachedOpenProfileIds != null && (now - _cachedOpenProfileIdsUtc).TotalMilliseconds < 2000.0)
+            {
+                return _cachedOpenProfileIds;
+            }
+            _cachedOpenProfileIds = _profiles.GetOpenProfileIds();
+            _cachedOpenProfileIdsUtc = now;
+            return _cachedOpenProfileIds;
+        }
+
+        private void InvalidateOpenProfileIdsCache()
+        {
+            _cachedOpenProfileIds = null;
+            _cachedOpenProfileIdsUtc = DateTime.MinValue;
+        }
+
+        private bool GetCachedHasCustomWallpaper(bool forceRefresh)
+        {
+            string path = (_settings != null) ? (_settings.customWallpaperPath ?? "") : "";
+            if (string.IsNullOrEmpty(path))
+            {
+                _cachedCustomWallpaperPath = "";
+                _cachedHasCustomWallpaper = false;
+                _cachedCustomWallpaperUtc = DateTime.UtcNow;
+                return false;
+            }
+            DateTime now = DateTime.UtcNow;
+            if (!forceRefresh &&
+                string.Equals(_cachedCustomWallpaperPath, path, StringComparison.OrdinalIgnoreCase) &&
+                (now - _cachedCustomWallpaperUtc).TotalMilliseconds < 5000.0)
+            {
+                return _cachedHasCustomWallpaper;
+            }
+            _cachedCustomWallpaperPath = path;
+            _cachedHasCustomWallpaper = File.Exists(path);
+            _cachedCustomWallpaperUtc = now;
+            return _cachedHasCustomWallpaper;
+        }
+
+        private void InvalidateCustomWallpaperCache()
+        {
+            _cachedCustomWallpaperPath = null;
+            _cachedCustomWallpaperUtc = DateTime.MinValue;
+        }
+
         public void PushFullStateToShellPublic()
         {
             if (!IsDisposed && _shellReady) PushFullStateToShell();
@@ -1430,6 +1559,7 @@ namespace DejavuBrowser
         public void HandleProfilesRefreshed()
         {
             if (IsDisposed) return;
+            InvalidateOpenProfileIdsCache();
             UpdateWindowTitle();
             if (_shellReady) PushFullStateToShell();
             if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "profiles")
@@ -1442,10 +1572,8 @@ namespace DejavuBrowser
         {
             if (IsDisposed) return;
             _settings = _appContext.Settings;
-            bool isLightForced = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
-            try { NativeWin32.SetImmersiveDarkMode(Handle, !isLightForced); } catch { }
-            BackColor = isLightForced ? Color.FromArgb(247, 242, 250) : Color.FromArgb(20, 18, 24);
-            if (_shellView != null && !_shellView.IsDisposed) _shellView.DefaultBackgroundColor = BackColor;
+            InvalidateCustomWallpaperCache();
+            ApplyThemeToAllTabs();
             _favoritesBarHidden = _settings.favoritesBarHidden;
             for (int i = 0; i < _tabs.Count; i++)
             {
@@ -1766,13 +1894,13 @@ namespace DejavuBrowser
                         { "hidePrivacyReport", _settings.hidePrivacyReport },
                         { "hideReadingList", _settings.hideReadingList }
                     };
-                    List<string> openProfileIds = _profiles.GetOpenProfileIds();
+                    List<string> openProfileIds = GetCachedOpenProfileIds(true);
                     UpdateInfo bootUpd = _updater.ReadyUpdate;
                     string effectiveDownloadFolder = _turboDownloads != null ? _turboDownloads.DownloadsDirectory : "";
                     var boot = new Dictionary<string, object>
                     {
                         { "wallpaper", _settings.wallpaper ?? "art:wp-m3-amethyst.jpg" },
-                        { "hasCustomWallpaper", !string.IsNullOrEmpty(_settings.customWallpaperPath) && File.Exists(_settings.customWallpaperPath) },
+                        { "hasCustomWallpaper", GetCachedHasCustomWallpaper(true) },
                         { "activeProfile", _profiles.ActiveProfile },
                         { "profiles", _profiles.Manifest.profiles },
                         { "mainProfileId", _profiles.Manifest.mainProfileId ?? "default" },
@@ -1827,7 +1955,7 @@ namespace DejavuBrowser
         }
 
         // =====================================================================
-        // Layout Engine (Full-Bleed on New Tab; Dynamic 54px/88px Top Chrome + Live WebView)
+        // Zero-Resize Layout Engine (v5.0.0: _shellView stays full-window ALWAYS — zero Chromium reflow!)
         // =====================================================================
         private void LayoutViews()
         {
@@ -1836,53 +1964,76 @@ namespace DejavuBrowser
             BrowserTab active = GetActiveTab();
             int w = ClientSize.Width;
             int h = ClientSize.Height;
+            Rectangle fullRect = new Rectangle(0, 0, w, h);
 
-            if (_isHtmlFullscreen && active != null && !active.IsNewTab && active.WebView != null)
+            SuspendLayout();
+            try
             {
-                _shellView.Visible = false;
-                active.WebView.Bounds = new Rectangle(0, 0, w, h);
-                active.WebView.Visible = true;
-                active.WebView.BringToFront();
-                return;
-            }
-
-            _shellView.Visible = true;
-
-            if (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab)
-            {
-                _shellView.Bounds = new Rectangle(0, 0, w, h);
-                _shellView.BringToFront();
-                foreach (BrowserTab t in _tabs)
+                if (_isHtmlFullscreen && active != null && !active.IsNewTab && active.WebView != null && !active.WebView.IsDisposed)
                 {
-                    if (t.WebView != null && t.WebView.Visible)
+                    if (active.WebView.Bounds != fullRect) active.WebView.Bounds = fullRect;
+                    if (!active.WebView.Visible) active.WebView.Visible = true;
+                    if (Controls.GetChildIndex(active.WebView) != 0) active.WebView.BringToFront();
+                    if (_shellView.Visible) _shellView.Visible = false;
+                    for (int i = 0; i < _tabs.Count; i++)
                     {
-                        if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
-                        t.WebView.Visible = false;
+                        BrowserTab t = _tabs[i];
+                        if (t.Id == active.Id || t.WebView == null || t.WebView.IsDisposed) continue;
+                        if (t.WebView.Visible)
+                        {
+                            if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
+                            t.WebView.Visible = false;
+                        }
+                    }
+                    return;
+                }
+
+                if (_shellView.Bounds != fullRect) _shellView.Bounds = fullRect;
+                if (!_shellView.Visible) _shellView.Visible = true;
+
+                if (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab)
+                {
+                    if (Controls.GetChildIndex(_shellView) != 0) _shellView.BringToFront();
+                    for (int i = 0; i < _tabs.Count; i++)
+                    {
+                        BrowserTab t = _tabs[i];
+                        if (t.WebView != null && !t.WebView.IsDisposed && t.WebView.Visible)
+                        {
+                            if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
+                            t.WebView.Visible = false;
+                        }
+                    }
+                }
+                else
+                {
+                    int topH = TopBarHeightPx;
+                    int railW = NavRailWidthPx;
+                    Rectangle contentRect = new Rectangle(railW, topH, Math.Max(1, w - railW), Math.Max(1, h - topH));
+
+                    // Show & position the newly active WebView FIRST (before hiding the previous WebView)
+                    // so rapid tab switches between live websites have ZERO 1-frame flash of the underlying surface!
+                    if (active.WebView != null && !active.WebView.IsDisposed)
+                    {
+                        if (active.WebView.Bounds != contentRect) active.WebView.Bounds = contentRect;
+                        if (!active.WebView.Visible) active.WebView.Visible = true;
+                        if (Controls.GetChildIndex(active.WebView) != 0) active.WebView.BringToFront();
+                    }
+
+                    for (int i = 0; i < _tabs.Count; i++)
+                    {
+                        BrowserTab t = _tabs[i];
+                        if (t.Id == active.Id || t.WebView == null || t.WebView.IsDisposed) continue;
+                        if (t.WebView.Visible)
+                        {
+                            if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
+                            t.WebView.Visible = false;
+                        }
                     }
                 }
             }
-            else
+            finally
             {
-                int topH = TopBarHeightPx;
-                int railW = NavRailWidthPx;
-                // Keep _shellView full-window behind active.WebView when Samsung M3 Navigation Rail is visible,
-                // so both the top chrome AND the 56px left Navigation Rail stay interactive with zero extra WebView2s!
-                _shellView.Bounds = (railW > 0) ? new Rectangle(0, 0, w, h) : new Rectangle(0, 0, w, topH);
-                foreach (BrowserTab t in _tabs)
-                {
-                    if (t.WebView == null) continue;
-                    if (t.Id == active.Id)
-                    {
-                        t.WebView.Bounds = new Rectangle(railW, topH, Math.Max(1, w - railW), Math.Max(1, h - topH));
-                        t.WebView.Visible = true;
-                        t.WebView.BringToFront();
-                    }
-                    else if (t.WebView.Visible)
-                    {
-                        if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
-                        t.WebView.Visible = false;
-                    }
-                }
+                ResumeLayout(false);
             }
         }
 
@@ -2028,14 +2179,9 @@ namespace DejavuBrowser
 
             if (activate)
             {
-                _tabOverviewOpen = false;
-                _settingsOpen = false;
-                _dlManagerOpen = false;
-                _extensionsOpen = false;
-                _linkOpen = false;
                 ActivateTab(tab.Id);
             }
-            else PushFullStateToShell();
+            else PushTabDeltaToShell();
         }
 
         private void CreateDefaultNewTab(bool activate)
@@ -2052,6 +2198,9 @@ namespace DejavuBrowser
         {
             BrowserTab tab = FindTab(tabId);
             if (tab == null) return;
+            bool closedOverlay = _tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen;
+            bool changedGroup = !string.Equals(_activeTabGroupId, tab.GroupId, StringComparison.OrdinalIgnoreCase);
+
             _activeTabId = tabId;
             _activeTabGroupId = tab.GroupId;
             tab.LastActiveUtc = DateTime.UtcNow;
@@ -2081,7 +2230,8 @@ namespace DejavuBrowser
             UpdateWindowTitle();
 
             LayoutViews();
-            PushFullStateToShell();
+            if (closedOverlay || changedGroup) PushFullStateToShell();
+            else PushTabDeltaToShell();
         }
 
         private void RecordClosedTab(BrowserTab tab)
@@ -2129,7 +2279,7 @@ namespace DejavuBrowser
                     return;
                 }
             }
-            PushFullStateToShell();
+            PushTabDeltaToShell();
         }
 
         private List<BrowserTab> GetActiveGroupTabs()
@@ -2206,6 +2356,8 @@ namespace DejavuBrowser
                 Controls.Remove(tab.WebView);
                 tab.WebView.Dispose();
             }
+            _pendingMediaPushDueUtc.Remove(tab.Id);
+            if (_turboDownloads != null) _turboDownloads.ClearTabMedia(tab.Id);
             _tabs.RemoveAt(idx);
             groupTabs.RemoveAt(groupIdx);
 
@@ -2223,16 +2375,12 @@ namespace DejavuBrowser
             }
             else
             {
-                PushFullStateToShell();
+                PushTabDeltaToShell();
             }
         }
 
         private void GoHomeActiveTab()
         {
-            _settingsOpen = false;
-            _dlManagerOpen = false;
-            _extensionsOpen = false;
-            _linkOpen = false;
             BrowserTab tab = GetActiveTab();
             if (tab == null) return;
             tab.IsNewTab = true;
@@ -2289,10 +2437,12 @@ namespace DejavuBrowser
             if (TryHandleInternalRoute(rawInput)) return;
             string url = ResolveInputToUrl(rawInput);
             if (string.IsNullOrEmpty(url)) return;
+            bool closedOverlay = _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || _tabOverviewOpen;
             _settingsOpen = false;
             _dlManagerOpen = false;
             _extensionsOpen = false;
             _linkOpen = false;
+            _tabOverviewOpen = false;
             HidePopover();
             HideSuggestPopup();
 
@@ -2315,11 +2465,18 @@ namespace DejavuBrowser
             }
             else if (tab.CoreReady)
             {
+                try
+                {
+                    Color surface = GetThemeSurfaceColor();
+                    if (tab.WebView.DefaultBackgroundColor != surface) tab.WebView.DefaultBackgroundColor = surface;
+                }
+                catch { }
                 tab.WebView.CoreWebView2.Navigate(url);
             }
 
             LayoutViews();
-            PushFullStateToShell();
+            if (closedOverlay) PushFullStateToShell();
+            else PushTabDeltaToShell();
         }
 
         private static CoreWebView2PermissionState MapPermissionState(string settingVal)
@@ -2732,14 +2889,17 @@ namespace DejavuBrowser
             CoreWebView2Environment envForTab = _activeProfileEnv;
 
             WebView2 wv = new WebView2();
-            bool isLightTheme = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
-            wv.DefaultBackgroundColor = isLightTheme ? Color.White : Color.FromArgb(20, 18, 24);
-            wv.Visible = (tab.Id == _activeTabId && !tab.IsNewTab);
+            Color surfaceColor = GetThemeSurfaceColor();
+            wv.DefaultBackgroundColor = surfaceColor;
+            bool shouldShow = (tab.Id == _activeTabId && !tab.IsNewTab && !_tabOverviewOpen && !_settingsOpen && !_dlManagerOpen && !_extensionsOpen && !_linkOpen);
+            wv.Visible = shouldShow;
             wv.KeyDown += OnWebViewKeyDown;
             int topH = TopBarHeightPx;
-            wv.Bounds = new Rectangle(NavRailWidthPx, topH, Math.Max(100, ClientSize.Width - NavRailWidthPx), Math.Max(100, ClientSize.Height - topH));
+            int railW = NavRailWidthPx;
+            wv.Bounds = new Rectangle(railW, topH, Math.Max(100, ClientSize.Width - railW), Math.Max(100, ClientSize.Height - topH));
             tab.WebView = wv;
             Controls.Add(wv);
+            if (shouldShow && Controls.GetChildIndex(wv) != 0) wv.BringToFront();
 
             try
             {
@@ -2754,6 +2914,14 @@ namespace DejavuBrowser
                     await wv.EnsureCoreWebView2Async(envForTab);
                 }
                 if (wv.IsDisposed || tab.WebView != wv) return null;
+
+                // Ensure controller surface color matches active M3 theme BEFORE navigating (zero white flash in Dark Mode!)
+                try
+                {
+                    Color latestSurface = GetThemeSurfaceColor();
+                    if (wv.DefaultBackgroundColor != latestSurface) wv.DefaultBackgroundColor = latestSurface;
+                }
+                catch { }
 
                 CoreWebView2 core = wv.CoreWebView2;
                 tab.CoreReady = true;
@@ -2820,14 +2988,20 @@ namespace DejavuBrowser
                     tab.Url = e.Uri;
                     tab.BlockedCount = 0;
                     if (_turboDownloads != null) _turboDownloads.ClearTabMedia(tab.Id);
-                    _tabMediaPushUtc.Remove(tab.Id);
+                    _pendingMediaPushDueUtc.Remove(tab.Id);
                     bool paused = _adBlocker.IsPausedForHost(AdBlocker.ExtractHost(e.Uri));
                     bool floatBtnOn = (_settings == null || !_settings.hideFloatingMediaButton);
                     core.ExecuteScriptAsync(
                         "window.__dejavuAdblockPaused = " + (paused ? "true" : "false") + ";" +
                         "window.__dejavuFloatingBtnEnabled = " + (floatBtnOn ? "true" : "false") + ";" +
                         "if(window.__dejavuSetFloatingBtnEnabled)window.__dejavuSetFloatingBtnEnabled(" + (floatBtnOn ? "true" : "false") + ");");
-                    SchedulePushFullStateToShell();
+                    SchedulePushTabDeltaToShell();
+                };
+
+                core.ContentLoading += (s, e) =>
+                {
+                    tab.IsLoading = true;
+                    SchedulePushTabDeltaToShell();
                 };
 
                 core.WebResourceResponseReceived += (s, e) => OnTabWebResourceResponseReceived(tab, e);
@@ -2835,7 +3009,7 @@ namespace DejavuBrowser
                 core.SourceChanged += (s, e) =>
                 {
                     tab.Url = core.Source;
-                    SchedulePushFullStateToShell();
+                    SchedulePushTabDeltaToShell();
                 };
 
                 core.DOMContentLoaded += (s, e) =>
@@ -2868,40 +3042,55 @@ namespace DejavuBrowser
                     InjectUserStylePrefs(core);
                     if (e.IsSuccess && !_isPrivateWindow)
                     {
-                        _profiles.RecordHistory(tab.Url, tab.Title, tab.Favicon);
+                        string histUrl = tab.Url;
+                        string histTitle = tab.Title;
+                        string histFav = tab.Favicon;
+                        Task.Run(() => { try { _profiles.RecordHistory(histUrl, histTitle, histFav); } catch { } });
                         if (IsGoogleAccountHost(tab.Url))
                         {
                             ScheduleGoogleAccountDetection(tab);
                         }
                     }
-                    SchedulePushFullStateToShell();
+                    SchedulePushTabDeltaToShell();
                     PushSniffedMediaToTabWidget(tab);
                 };
 
                 core.DocumentTitleChanged += (s, e) =>
                 {
                     tab.Title = core.DocumentTitle;
-                    if (!_isPrivateWindow) _profiles.UpdateLatestHistoryMeta(tab.Url, tab.Title, tab.Favicon);
+                    if (!_isPrivateWindow)
+                    {
+                        string histUrl = tab.Url;
+                        string histTitle = tab.Title;
+                        string histFav = tab.Favicon;
+                        Task.Run(() => { try { _profiles.UpdateLatestHistoryMeta(histUrl, histTitle, histFav); } catch { } });
+                    }
                     if (tab.Id == _activeTabId)
                     {
                         UpdateWindowTitle();
                     }
-                    SchedulePushFullStateToShell();
+                    SchedulePushTabDeltaToShell();
                 };
 
                 core.FaviconChanged += (s, e) =>
                 {
                     tab.Favicon = core.FaviconUri ?? "";
-                    if (!_isPrivateWindow) _profiles.UpdateLatestHistoryMeta(tab.Url, tab.Title, tab.Favicon);
-                    SchedulePushFullStateToShell();
+                    if (!_isPrivateWindow)
+                    {
+                        string histUrl = tab.Url;
+                        string histTitle = tab.Title;
+                        string histFav = tab.Favicon;
+                        Task.Run(() => { try { _profiles.UpdateLatestHistoryMeta(histUrl, histTitle, histFav); } catch { } });
+                    }
+                    SchedulePushTabDeltaToShell();
                 };
 
-                core.HistoryChanged += (s, e) => SchedulePushFullStateToShell();
-                core.IsDocumentPlayingAudioChanged += (s, e) => SchedulePushFullStateToShell();
+                core.HistoryChanged += (s, e) => SchedulePushTabDeltaToShell();
+                core.IsDocumentPlayingAudioChanged += (s, e) => SchedulePushTabDeltaToShell();
                 core.IsMutedChanged += (s, e) =>
                 {
                     try { tab.IsMuted = core.IsMuted; } catch { }
-                    SchedulePushFullStateToShell();
+                    SchedulePushTabDeltaToShell();
                 };
                 core.ContextMenuRequested += (s, e) => OnTabContextMenuRequested(tab, e);
                 core.ContainsFullScreenElementChanged += (s, e) => SetHtmlFullscreen(core.ContainsFullScreenElement);
@@ -2979,14 +3168,33 @@ namespace DejavuBrowser
         {
             try
             {
-                if (_settings != null && _settings.doNotTrack)
+                bool dnt = (_settings != null && _settings.doNotTrack);
+                bool adBlockOn = (_adBlocker != null && _adBlocker.GlobalEnabled);
+                if (!dnt && !adBlockOn) return;
+
+                string reqUri = e.Request.Uri;
+                if (string.IsNullOrEmpty(reqUri) || reqUri.Length < 10) return;
+
+                // Ultra-fast O(1) prefix skip for data:, blob:, chrome-extension:, about:, javascript:, file:
+                char c0 = reqUri[0];
+                if (c0 != 'h' && c0 != 'H') return;
+                if (!reqUri.StartsWith("https://", StringComparison.OrdinalIgnoreCase) &&
+                    !reqUri.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                if (dnt)
                 {
                     try { e.Request.Headers.SetHeader("DNT", "1"); } catch { }
                 }
-                bool isMainDoc = (e.ResourceContext == CoreWebView2WebResourceContext.Document);
-                if (_adBlocker.ShouldBlockRequest(e.Request.Uri, tab.Url, isMainDoc))
+
+                if (!adBlockOn) return;
+                if (e.ResourceContext == CoreWebView2WebResourceContext.Document) return;
+
+                if (_adBlocker.ShouldBlockRequest(reqUri, tab.Url, false))
                 {
-                    e.Response = _adBlocker.CreateBlockedResponse(env, e.ResourceContext, e.Request.Uri);
+                    e.Response = _adBlocker.CreateBlockedResponse(env, e.ResourceContext, reqUri);
                     tab.BlockedCount++;
                     long total = _adBlocker.RecordBlocked();
                     if (tab.Id == _activeTabId)
@@ -3056,7 +3264,7 @@ namespace DejavuBrowser
                 catch { }
 
                 bool isLightPopup = !_isPrivateWindow && (_settings != null && _settings.appearanceMode == "light");
-                Color surfaceBg = isLightPopup ? Color.FromArgb(247, 245, 252) : Color.FromArgb(20, 18, 24);
+                Color surfaceBg = GetThemeSurfaceColor();
                 Color barBg = isLightPopup ? Color.FromArgb(236, 232, 246) : Color.FromArgb(29, 27, 36);
                 Color pillBg = isLightPopup ? Color.FromArgb(255, 255, 255) : Color.FromArgb(40, 37, 50);
                 Color borderCol = isLightPopup ? Color.FromArgb(215, 209, 228) : Color.FromArgb(52, 48, 64);
@@ -3252,6 +3460,7 @@ namespace DejavuBrowser
                 tab.PendingNavigateUrl = null; // CoreWebView2 automatically navigates e.NewWindow!
                 _tabs.Add(tab);
 
+                bool closedOverlay = _tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen;
                 _tabOverviewOpen = false;
                 _settingsOpen = false;
                 _dlManagerOpen = false;
@@ -3267,7 +3476,8 @@ namespace DejavuBrowser
                     e.Handled = true;
                     UpdateWindowTitle();
                     LayoutViews();
-                    PushFullStateToShell();
+                    if (closedOverlay) PushFullStateToShell();
+                    else PushTabDeltaToShell();
                 }
                 else
                 {
@@ -3377,7 +3587,14 @@ namespace DejavuBrowser
                 int status = e.Response.StatusCode;
                 if (status < 200 || status >= 300) return;
                 string uri = e.Request.Uri;
-                if (string.IsNullOrEmpty(uri)) return;
+                if (string.IsNullOrEmpty(uri) || uri.Length < 10) return;
+                char c0 = uri[0];
+                if (c0 != 'h' && c0 != 'H') return;
+                if (!uri.StartsWith("https://", StringComparison.OrdinalIgnoreCase) &&
+                    !uri.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
                 string mime = "";
                 long cl = 0;
                 try
@@ -3408,13 +3625,55 @@ namespace DejavuBrowser
         {
             if (_turboDownloads == null || tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed) return;
             if (_settings != null && _settings.hideFloatingMediaButton) return;
+            // Per-tab 400ms trailing debounce so bursts of media HTTP responses coalesce into 1 ExecuteScriptAsync call!
+            _pendingMediaPushDueUtc[tab.Id] = DateTime.UtcNow.AddMilliseconds(400);
+            if (_mediaPushTimer != null && !_mediaPushTimer.Enabled)
+            {
+                _mediaPushTimer.Start();
+            }
+        }
+
+        private void ProcessPendingMediaPushes()
+        {
+            if (_pendingMediaPushDueUtc.Count == 0)
+            {
+                if (_mediaPushTimer != null && _mediaPushTimer.Enabled) _mediaPushTimer.Stop();
+                return;
+            }
             DateTime now = DateTime.UtcNow;
-            DateTime last;
-            if (_tabMediaPushUtc.TryGetValue(tab.Id, out last) && (now - last).TotalMilliseconds < 320)
+            List<int> dueTabIds = null;
+            foreach (KeyValuePair<int, DateTime> kv in _pendingMediaPushDueUtc)
+            {
+                if (now >= kv.Value)
+                {
+                    if (dueTabIds == null) dueTabIds = new List<int>();
+                    dueTabIds.Add(kv.Key);
+                }
+            }
+            if (dueTabIds != null)
+            {
+                for (int i = 0; i < dueTabIds.Count; i++)
+                {
+                    int tid = dueTabIds[i];
+                    _pendingMediaPushDueUtc.Remove(tid);
+                    BrowserTab tab = FindTab(tid);
+                    PushSniffedMediaToTabWidgetImmediate(tab);
+                }
+            }
+            if (_pendingMediaPushDueUtc.Count == 0 && _mediaPushTimer != null && _mediaPushTimer.Enabled)
+            {
+                _mediaPushTimer.Stop();
+            }
+        }
+
+        private void PushSniffedMediaToTabWidgetImmediate(BrowserTab tab)
+        {
+            if (_turboDownloads == null || tab == null || tab.IsNewTab || !tab.CoreReady ||
+                tab.WebView == null || tab.WebView.IsDisposed || tab.WebView.CoreWebView2 == null)
             {
                 return;
             }
-            _tabMediaPushUtc[tab.Id] = now;
+            if (_settings != null && _settings.hideFloatingMediaButton) return;
             try
             {
                 var list = _turboDownloads.BuildMediaPayloadList(tab.Id);
@@ -4131,7 +4390,7 @@ namespace DejavuBrowser
 
         private string BuildProfilesPayloadJson(string backdrop)
         {
-            List<string> openProfileIds = _profiles.GetOpenProfileIds();
+            List<string> openProfileIds = GetCachedOpenProfileIds(true);
             BrowserTab tab = GetActiveTab();
             UpdateInfo upd = _updater.ReadyUpdate;
             var payload = new Dictionary<string, object>
@@ -5301,13 +5560,7 @@ namespace DejavuBrowser
                 if (am == "auto" || am == "dark" || am == "light")
                 {
                     _settings.appearanceMode = am;
-                    bool isLightForced = (am == "light" && !_isPrivateWindow);
-                    NativeWin32.SetImmersiveDarkMode(Handle, !isLightForced);
-                    BackColor = isLightForced ? Color.FromArgb(247, 242, 250) : Color.FromArgb(20, 18, 24);
-                    if (_shellView != null && !_shellView.IsDisposed)
-                    {
-                        _shellView.DefaultBackgroundColor = BackColor;
-                    }
+                    ApplyThemeToAllTabs();
                     needTabSettingsApply = true;
                 }
             }
@@ -5436,7 +5689,7 @@ namespace DejavuBrowser
                 }
             }
 
-            // v4.9.0 Appearance
+            // v5.0.0 Appearance
             if (msg.ContainsKey("fontSize"))
             {
                 _settings.fontSize = SettingsStore.NormalizeFontSize(Convert.ToString(msg["fontSize"]));
@@ -5455,7 +5708,7 @@ namespace DejavuBrowser
                 needTabSettingsApply = true;
             }
 
-            // v4.9.0 Privacy & Security
+            // v5.0.0 Privacy & Security
             if (msg.ContainsKey("doNotTrack"))
                 _settings.doNotTrack = Convert.ToBoolean(msg["doNotTrack"]);
             if (msg.ContainsKey("httpsFirst"))
@@ -5490,7 +5743,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("permAutoplay"))
                 _settings.permAutoplay = SettingsStore.NormalizePermission(Convert.ToString(msg["permAutoplay"]), "allow");
 
-            // v4.9.0 Search
+            // v5.0.0 Search
             if (msg.ContainsKey("customSearchUrl"))
                 _settings.customSearchUrl = (Convert.ToString(msg["customSearchUrl"]) ?? "").Trim();
             if (msg.ContainsKey("addressBarSuggestions"))
@@ -5499,7 +5752,7 @@ namespace DejavuBrowser
                 if (!_settings.addressBarSuggestions) HideSuggestPopup();
             }
 
-            // v4.9.0 Tabs & Performance
+            // v5.0.0 Tabs & Performance
             if (msg.ContainsKey("memorySaverEnabled"))
                 _settings.memorySaverEnabled = Convert.ToBoolean(msg["memorySaverEnabled"]);
             if (msg.ContainsKey("memorySaverMinutes"))
@@ -5512,7 +5765,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("tabHoverPreview"))
                 _settings.tabHoverPreview = Convert.ToBoolean(msg["tabHoverPreview"]);
 
-            // v4.9.0 Downloads
+            // v5.0.0 Downloads
             if (msg.ContainsKey("downloadFolder"))
             {
                 _settings.downloadFolder = (Convert.ToString(msg["downloadFolder"]) ?? "").Trim();
@@ -5534,7 +5787,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("autoOpenDownloads"))
                 _settings.autoOpenDownloads = Convert.ToBoolean(msg["autoOpenDownloads"]);
 
-            // v4.9.0 Passwords & Autofill
+            // v5.0.0 Passwords & Autofill
             if (msg.ContainsKey("savePasswords"))
             {
                 _settings.savePasswords = Convert.ToBoolean(msg["savePasswords"]);
@@ -5548,7 +5801,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("autofillPayments"))
                 _settings.autofillPayments = Convert.ToBoolean(msg["autofillPayments"]);
 
-            // v4.9.0 VPN & System
+            // v5.0.0 VPN & System
             if (msg.ContainsKey("vpnWebRtcProtection"))
                 _settings.vpnWebRtcProtection = Convert.ToBoolean(msg["vpnWebRtcProtection"]);
             if (msg.ContainsKey("hardwareAcceleration"))
@@ -5786,9 +6039,8 @@ namespace DejavuBrowser
             _adBlocker.SwitchProfileSettings(_settings, _profiles.ActiveSettingsPath);
             if (_vpn != null) _vpn.AutoConnect = _settings.vpnAutoConnect;
 
-            NativeWin32.SetImmersiveDarkMode(Handle, true);
-            BackColor = Color.FromArgb(20, 18, 24);
-            if (_shellView != null && !_shellView.IsDisposed) _shellView.DefaultBackgroundColor = BackColor;
+            InvalidateCustomWallpaperCache();
+            ApplyThemeToAllTabs();
             _favoritesBarHidden = false;
             _httpsFallbackHosts.Clear();
             _profiles.SaveActiveSettings(_settings);
@@ -5803,7 +6055,7 @@ namespace DejavuBrowser
                 }
             }
             _appContext.BroadcastSettingsApplied();
-            PushShellToast("Settings restored to v4.9.0 defaults", "success");
+            PushShellToast("Settings restored to v5.0.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -5857,7 +6109,7 @@ namespace DejavuBrowser
             _tabs.Clear();
             _tabs.AddRange(pinned);
             _tabs.AddRange(unpinned);
-            PushFullStateToShell();
+            PushTabDeltaToShell();
             RefreshSidebarIfOpen();
         }
 
@@ -5897,7 +6149,7 @@ namespace DejavuBrowser
                 }
             }
 
-            PushFullStateToShell();
+            PushTabDeltaToShell();
             RefreshSidebarIfOpen();
         }
 
@@ -5995,7 +6247,7 @@ namespace DejavuBrowser
             }
 
             if (closedActive) ActivateTab(tabId);
-            else PushFullStateToShell();
+            else PushTabDeltaToShell();
             RefreshSidebarIfOpen();
         }
 
@@ -6147,7 +6399,21 @@ namespace DejavuBrowser
 
         private async Task CaptureTabThumbnailAsync(BrowserTab tab)
         {
-            if (tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed) return;
+            if (tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed || tab.WebView.CoreWebView2 == null) return;
+            if (tab.CapturingThumbnail || tab.IsLoading) return;
+
+            DateTime now = DateTime.UtcNow;
+            // Avoid redundant capture during rapid tab switches: require tab to settle > 1200ms (or have no thumbnail yet)
+            if ((now - tab.LastActiveUtc).TotalMilliseconds < 1200.0 && !string.IsNullOrEmpty(tab.ThumbnailDataUrl)) return;
+            if (!string.IsNullOrEmpty(tab.ThumbnailDataUrl) &&
+                string.Equals(tab.ThumbnailUrl, tab.Url, StringComparison.OrdinalIgnoreCase) &&
+                (now - tab.LastThumbnailUtc).TotalMilliseconds < 3000.0)
+            {
+                return;
+            }
+
+            tab.CapturingThumbnail = true;
+            string captureUrl = tab.Url ?? "";
             try
             {
                 using (MemoryStream ms = new MemoryStream())
@@ -6173,11 +6439,17 @@ namespace DejavuBrowser
                     if (!string.IsNullOrEmpty(thumb))
                     {
                         tab.ThumbnailDataUrl = thumb;
+                        tab.ThumbnailUrl = captureUrl;
+                        tab.LastThumbnailUtc = DateTime.UtcNow;
                         if (_tabOverviewOpen && !IsDisposed) PushFullStateToShell();
                     }
                 }
             }
             catch { }
+            finally
+            {
+                tab.CapturingThumbnail = false;
+            }
         }
 
         private async void ToggleTabOverviewAsync(bool open)
@@ -6187,9 +6459,11 @@ namespace DejavuBrowser
             if (open)
             {
                 BrowserTab active = GetActiveTab();
-                if (active != null && !active.IsNewTab && active.CoreReady && active.WebView != null && active.WebView.Visible)
+                if (active != null && !active.IsNewTab && !active.IsLoading && active.CoreReady &&
+                    active.WebView != null && !active.WebView.IsDisposed && active.WebView.Visible &&
+                    ((DateTime.UtcNow - active.LastActiveUtc).TotalMilliseconds >= 1200.0 || string.IsNullOrEmpty(active.ThumbnailDataUrl)))
                 {
-                    // Capture fresh live preview right before hiding the WebView (max 220ms budget so it stays instant!)
+                    // Capture fresh live preview only when tab has settled > 1200ms (or lacks any preview), max 220ms budget
                     try
                     {
                         await Task.WhenAny(CaptureTabThumbnailAsync(active), Task.Delay(220));
@@ -6266,7 +6540,7 @@ namespace DejavuBrowser
             {
                 string res = await tab.WebView.CoreWebView2.ExecuteScriptAsync(readerJs);
                 tab.ReaderActive = (res != null && res.Contains("on"));
-                PushFullStateToShell();
+                PushTabDeltaToShell();
             }
             catch { }
         }
@@ -6932,7 +7206,7 @@ namespace DejavuBrowser
             if (t == null || t.IsNewTab || t.WebView == null) return;
             t.ZoomFactor = Math.Round(Math.Max(0.5, Math.Min(2.5, t.ZoomFactor + delta)), 2);
             t.WebView.ZoomFactor = t.ZoomFactor;
-            PushFullStateToShell();
+            PushTabDeltaToShell();
         }
 
         private void ResetZoom()
@@ -6941,7 +7215,7 @@ namespace DejavuBrowser
             if (t == null || t.IsNewTab || t.WebView == null) return;
             t.ZoomFactor = 1.0;
             t.WebView.ZoomFactor = 1.0;
-            PushFullStateToShell();
+            PushTabDeltaToShell();
         }
 
         private void ToggleMuteTab(int tabId)
@@ -6959,7 +7233,7 @@ namespace DejavuBrowser
                 catch { }
             }
             t.IsMuted = nextMuted;
-            PushFullStateToShell();
+            PushTabDeltaToShell();
         }
 
         // =====================================================================
@@ -8958,6 +9232,7 @@ namespace DejavuBrowser
                         File.Copy(ofd.FileName, dest, true);
                         _settings.customWallpaperPath = dest;
                         _settings.wallpaper = "custom:" + DateTime.UtcNow.Ticks;
+                        InvalidateCustomWallpaperCache();
                         _profiles.SaveActiveSettings(_settings);
                         PushFullStateToShell();
                     }
@@ -8977,6 +9252,98 @@ namespace DejavuBrowser
             {
                 PushFullStateToShell();
             }
+        }
+
+        private void SchedulePushTabDeltaToShell()
+        {
+            if (!_shellReady || IsDisposed) return;
+            if (_tabDeltaTimer != null && !_tabDeltaTimer.Enabled)
+            {
+                _tabDeltaTimer.Start();
+            }
+            else if (_tabDeltaTimer == null)
+            {
+                PushTabDeltaToShell();
+            }
+        }
+
+        private List<Dictionary<string, object>> BuildTabPayloadList()
+        {
+            List<Dictionary<string, object>> tabList = new List<Dictionary<string, object>>();
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab t = _tabs[i];
+                if (!string.Equals(t.GroupId, _activeTabGroupId, StringComparison.OrdinalIgnoreCase)) continue;
+                CoreWebView2 core = (t.CoreReady && t.WebView != null && !t.WebView.IsDisposed) ? t.WebView.CoreWebView2 : null;
+                bool tabMuted = (core != null) ? core.IsMuted : t.IsMuted;
+                tabList.Add(new Dictionary<string, object>
+                {
+                    { "id", t.Id },
+                    { "url", t.Url },
+                    { "displayUrl", FormatDisplayUrl(t.Url) },
+                    { "title", t.IsNewTab ? "Start Page" : (string.IsNullOrEmpty(t.Title) ? FormatDisplayUrl(t.Url) : t.Title) },
+                    { "favicon", t.Favicon ?? "" },
+                    { "isNewTab", t.IsNewTab },
+                    { "isPinned", t.IsPinned },
+                    { "pinned", t.IsPinned },
+                    { "groupId", t.GroupId },
+                    { "readerActive", t.ReaderActive },
+                    { "thumbnail", _tabOverviewOpen ? (t.ThumbnailDataUrl ?? "") : "" },
+                    { "loading", t.IsLoading },
+                    { "blockedCount", t.BlockedCount },
+                    { "isLight", t.IsLight },
+                    { "isAudible", core != null && core.IsDocumentPlayingAudio },
+                    { "isMuted", tabMuted },
+                    { "muted", tabMuted },
+                    { "isSuspended", core != null && core.IsSuspended },
+                    { "zoomPercent", (int)Math.Round(t.ZoomFactor * 100.0) },
+                    { "canGoBack", core != null && core.CanGoBack },
+                    { "canGoForward", core != null && core.CanGoForward }
+                });
+            }
+            return tabList;
+        }
+
+        private void PushTabDeltaToShell()
+        {
+            if (!_shellReady || _shellView == null || _shellView.CoreWebView2 == null) return;
+            if (_tabDeltaTimer != null && _tabDeltaTimer.Enabled) _tabDeltaTimer.Stop();
+
+            List<Dictionary<string, object>> tabList = BuildTabPayloadList();
+            BrowserTab active = GetActiveTab();
+            string activeUrl = (active != null && !active.IsNewTab) ? (active.Url ?? "") : "";
+            string activeTitle = (active != null && !active.IsNewTab) ? (active.Title ?? "") : "";
+            string host = !string.IsNullOrEmpty(activeUrl) ? AdBlocker.ExtractHost(activeUrl) : "";
+
+            if (_sync != null)
+            {
+                int webTabCount = 0;
+                for (int i = 0; i < _tabs.Count; i++)
+                {
+                    if (_tabs[i] != null && !_tabs[i].IsNewTab && !string.IsNullOrEmpty(_tabs[i].Url)) webTabCount++;
+                }
+                _sync.SetLocalTabCount(webTabCount);
+            }
+
+            var delta = new Dictionary<string, object>
+            {
+                { "type", "tabDelta" },
+                { "activeTabId", _activeTabId },
+                { "tabs", tabList },
+                { "activeForSite", _adBlocker.IsActiveForHost(host) },
+                { "isCurrentFavorite", active != null && !active.IsNewTab && _profiles.IsFavorite(active.Url) },
+                { "isCurrentInReadingList", active != null && !active.IsNewTab && _profiles.IsInReadingList(active.Url) },
+                { "readerActive", active != null && active.ReaderActive },
+                { "baseRgb", active != null ? active.BaseRgb : new int[] { 20, 18, 24 } },
+                { "accents", active != null ? active.AccentPalette : null },
+                { "totalBlocked", _adBlocker.TotalBlocked },
+                { "activeTabUrl", activeUrl },
+                { "activeTabTitle", activeTitle },
+                { "activeTabIsVideoSite", VideoExtractorEngine.IsSupportedVideoSiteUrl(activeUrl) },
+                { "canReopenClosedTab", _closedTabs.Count > 0 }
+            };
+
+            try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(delta)); } catch { }
         }
 
         private static Dictionary<string, object> BuildShellVpnSummary(VpnStatusSnapshot snap)
@@ -9006,45 +9373,13 @@ namespace DejavuBrowser
         {
             if (!_shellReady || _shellView == null || _shellView.CoreWebView2 == null) return;
             if (_statePushTimer != null && _statePushTimer.Enabled) _statePushTimer.Stop();
+            if (_tabDeltaTimer != null && _tabDeltaTimer.Enabled) _tabDeltaTimer.Stop();
 
-            List<Dictionary<string, object>> tabList = new List<Dictionary<string, object>>();
-            for (int i = 0; i < _tabs.Count; i++)
-            {
-                BrowserTab t = _tabs[i];
-                if (!string.Equals(t.GroupId, _activeTabGroupId, StringComparison.OrdinalIgnoreCase)) continue;
-                bool tabMuted = (t.CoreReady && t.WebView != null && !t.WebView.IsDisposed && t.WebView.CoreWebView2 != null)
-                    ? t.WebView.CoreWebView2.IsMuted
-                    : t.IsMuted;
-                tabList.Add(new Dictionary<string, object>
-                {
-                    { "id", t.Id },
-                    { "url", t.Url },
-                    { "displayUrl", FormatDisplayUrl(t.Url) },
-                    { "title", t.IsNewTab ? "Start Page" : (string.IsNullOrEmpty(t.Title) ? FormatDisplayUrl(t.Url) : t.Title) },
-                    { "favicon", t.Favicon ?? "" },
-                    { "isNewTab", t.IsNewTab },
-                    { "isPinned", t.IsPinned },
-                    { "pinned", t.IsPinned },
-                    { "groupId", t.GroupId },
-                    { "readerActive", t.ReaderActive },
-                    { "thumbnail", _tabOverviewOpen ? (t.ThumbnailDataUrl ?? "") : "" },
-                    { "loading", t.IsLoading },
-                    { "blockedCount", t.BlockedCount },
-                    { "isLight", t.IsLight },
-                    { "isAudible", t.CoreReady && t.WebView != null && !t.WebView.IsDisposed && t.WebView.CoreWebView2 != null && t.WebView.CoreWebView2.IsDocumentPlayingAudio },
-                    { "isMuted", tabMuted },
-                    { "muted", tabMuted },
-                    { "isSuspended", t.CoreReady && t.WebView != null && !t.WebView.IsDisposed && t.WebView.CoreWebView2 != null && t.WebView.CoreWebView2.IsSuspended },
-                    { "zoomPercent", (int)Math.Round(t.ZoomFactor * 100.0) },
-                    { "canGoBack", t.CoreReady && t.WebView != null && !t.WebView.IsDisposed && t.WebView.CoreWebView2 != null && t.WebView.CoreWebView2.CanGoBack },
-                    { "canGoForward", t.CoreReady && t.WebView != null && !t.WebView.IsDisposed && t.WebView.CoreWebView2 != null && t.WebView.CoreWebView2.CanGoForward }
-                });
-            }
-
+            List<Dictionary<string, object>> tabList = BuildTabPayloadList();
             BrowserTab active = GetActiveTab();
             string host = (active != null && !active.IsNewTab) ? AdBlocker.ExtractHost(active.Url) : "";
             UpdateInfo upd = _updater.ReadyUpdate;
-            List<string> openProfileIds = _profiles.GetOpenProfileIds();
+            List<string> openProfileIds = GetCachedOpenProfileIds(false);
             string effectiveDownloadFolder = _turboDownloads != null ? _turboDownloads.DownloadsDirectory : "";
             string activeGroupName = "Start Tabs";
             for (int i = 0; i < _profiles.TabGroups.Count; i++)
@@ -9133,7 +9468,7 @@ namespace DejavuBrowser
                 { "vpn", BuildShellVpnSummary(_vpn.GetSnapshot()) },
                 { "sync", _sync != null ? _sync.GetSnapshot() : null },
                 { "wallpaper", _settings.wallpaper ?? "art:wp-m3-amethyst.jpg" },
-                { "hasCustomWallpaper", !string.IsNullOrEmpty(_settings.customWallpaperPath) && File.Exists(_settings.customWallpaperPath) },
+                { "hasCustomWallpaper", GetCachedHasCustomWallpaper(false) },
                 { "baseRgb", active != null ? active.BaseRgb : new int[] { 20, 18, 24 } },
                 { "accents", active != null ? active.AccentPalette : null }
             };
@@ -9145,12 +9480,31 @@ namespace DejavuBrowser
         private void PushAdCountPulse(int tabId, int tabBlocked, long totalBlocked)
         {
             if (!_shellReady || _shellView == null || _shellView.CoreWebView2 == null) return;
+            // Coalesce rapid bursts of blocked ad/tracker requests into a single 250ms trailing IPC pulse!
+            _pendingAdPulseTabId = tabId;
+            _pendingAdPulseTabBlocked = tabBlocked;
+            _pendingAdPulseTotalBlocked = totalBlocked;
+            _adPulseDirty = true;
+            if (_adPulseTimer != null)
+            {
+                if (!_adPulseTimer.Enabled) _adPulseTimer.Start();
+            }
+            else
+            {
+                FlushPendingAdCountPulse();
+            }
+        }
+
+        private void FlushPendingAdCountPulse()
+        {
+            if (!_adPulseDirty || !_shellReady || _shellView == null || _shellView.CoreWebView2 == null) return;
+            _adPulseDirty = false;
             var msg = new Dictionary<string, object>
             {
                 { "type", "adBlocked" },
-                { "tabId", tabId },
-                { "tabBlocked", tabBlocked },
-                { "totalBlocked", totalBlocked }
+                { "tabId", _pendingAdPulseTabId },
+                { "tabBlocked", _pendingAdPulseTabBlocked },
+                { "totalBlocked", _pendingAdPulseTotalBlocked }
             };
             try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(msg)); } catch { }
         }

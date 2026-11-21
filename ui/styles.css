@@ -1,5 +1,5 @@
 /* ==========================================================================
-   dejavu v4.9.0 — Authentic Google Material Design 3 Expressive (Pixel + Chrome M3)
+   dejavu v5.0.0 — Authentic Google Material Design 3 Expressive (Pixel + Chrome M3)
    Pure HCT Tonal Surface Hierarchy · Official M3 Motion · State Layers
    Zero Compositing Overhead · Strictly Zero CSS Filter Softening
    ========================================================================== */
@@ -91,6 +91,8 @@
   --accent-bright: var(--md-on-primary-container);
   --shield-green: var(--md-tertiary);
   --danger: var(--md-error);
+  --md-chrome-strip-bg: var(--md-surface);
+  --md-chrome-bar-bg: var(--md-surface-container);
 }
 
 /* ==========================================================================
@@ -246,6 +248,8 @@ body.force-light {
   --accent-bright: var(--md-primary);
   --shield-green: var(--md-tertiary);
   --danger: var(--md-error);
+  --md-chrome-strip-bg: var(--md-surface-container-high);
+  --md-chrome-bar-bg: var(--md-surface-container-lowest);
 }
 
 :root[data-accent="sapphire"] body.theme-light,
@@ -355,6 +359,8 @@ body.is-private.force-light {
   --md-on-secondary-container: #e3e4f4;
   --md-inverse-surface: #e6e6f2;
   --md-inverse-on-surface: #1d1e29;
+  --md-chrome-strip-bg: var(--md-surface);
+  --md-chrome-bar-bg: var(--md-surface-container);
 }
 
 /* Single-Owner Toolbar/Rail Deduplication: hide rail-owned toolbar buttons whenever Left Nav Rail is visible */
@@ -492,7 +498,7 @@ body:not(.on-newtab):not(.tab-overview-open):not(.settings-open):not(.dl-manager
   z-index: 40;
   display: flex;
   flex-direction: column;
-  background: var(--md-surface-container-low);
+  background: var(--md-chrome-strip-bg);
   border-bottom: 1px solid color-mix(in srgb, var(--md-outline-variant) 65%, transparent);
   transition: opacity var(--md-dur-enter) var(--md-ease-emphasized-decel), transform var(--md-dur-enter) var(--md-ease-emphasized-decel);
 }
@@ -512,7 +518,7 @@ body.is-fullscreen #chrome-header {
   display: flex;
   align-items: stretch;
   gap: 6px;
-  background: var(--md-surface-container-low);
+  background: var(--md-chrome-strip-bg);
 }
 
 body.compact-tabs #tabbar.tabbar-row {
@@ -641,8 +647,13 @@ body.tab-overview-open #tabbar.tabbar-row {
   align-items: center;
   justify-content: flex-start;
   cursor: pointer;
-  animation: m3TabIn 200ms var(--md-ease-emphasized-decel);
+  contain: layout style;
+  isolation: isolate;
   transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
+}
+
+.tab-pill.tab-entering {
+  animation: m3TabIn 180ms var(--md-ease-emphasized-decel);
 }
 
 .tab-pill.has-audio:not(.pinned) {
@@ -650,8 +661,8 @@ body.tab-overview-open #tabbar.tabbar-row {
 }
 
 @keyframes m3TabIn {
-  from { opacity: 0; transform: translateX(-8px) scale(0.96); }
-  to { opacity: 1; transform: translateX(0) scale(1); }
+  from { opacity: 0; transform: translate3d(-6px, 0, 0) scale(0.96); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
 .tab-pill:not(.active)::after {
@@ -682,6 +693,7 @@ body.tab-overview-open #tabbar.tabbar-row {
   border-radius: 9px;
   background: transparent;
   pointer-events: none;
+  z-index: -1;
   transition: background-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
 }
 
@@ -690,7 +702,12 @@ body.tab-overview-open #tabbar.tabbar-row {
 }
 
 .tab-pill:hover:not(.active)::before {
-  background: color-mix(in srgb, var(--md-surface-container-high) 84%, transparent);
+  background: color-mix(in srgb, var(--md-surface-container-high) 76%, transparent);
+}
+
+body.theme-light .tab-pill:hover:not(.active)::before,
+body.force-light .tab-pill:hover:not(.active)::before {
+  background: color-mix(in srgb, var(--md-chrome-bar-bg) 68%, transparent);
 }
 
 .tab-pill:active:not(.active)::before {
@@ -700,7 +717,7 @@ body.tab-overview-open #tabbar.tabbar-row {
 
 /* Chrome M3 Active Tab seamlessly merged into Toolbar surface with soft curved bottom skirts */
 .tab-pill.active {
-  background: var(--md-surface-container);
+  background: var(--md-chrome-bar-bg);
   color: var(--md-on-surface);
   z-index: 2;
 }
@@ -718,12 +735,12 @@ body.tab-overview-open #tabbar.tabbar-row {
 
 .tab-pill.active::before {
   left: -9px;
-  background: radial-gradient(circle at 0 0, transparent 8.5px, var(--md-surface-container) 9px);
+  background: radial-gradient(circle at 0 0, transparent 8.5px, var(--md-chrome-bar-bg) 9px);
 }
 
 .tab-pill.active::after {
   right: -9px;
-  background: radial-gradient(circle at 100% 0, transparent 8.5px, var(--md-surface-container) 9px);
+  background: radial-gradient(circle at 100% 0, transparent 8.5px, var(--md-chrome-bar-bg) 9px);
 }
 
 .tab-pill.active .tab-title {
@@ -812,6 +829,8 @@ body.tab-overview-open #tabbar.tabbar-row {
 }
 
 .tab-content {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1057,7 +1076,7 @@ body.is-maximized .win-btn .ico-restore { display: block; }
 #toolbar.toolbar-row {
   height: 48px;
   padding: 0 10px;
-  background: var(--md-surface-container);
+  background: var(--md-chrome-bar-bg);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1130,33 +1149,38 @@ body.is-maximized .win-btn .ico-restore { display: block; }
   gap: 5px;
   overflow: hidden;
   cursor: text;
-  transition: background-color 180ms var(--md-ease-emphasized), border-color 180ms var(--md-ease-emphasized), box-shadow 200ms var(--md-ease-emphasized-decel), padding-left 180ms var(--md-ease-emphasized-decel);
+  transition: background-color 160ms var(--md-ease-emphasized), border-color 160ms var(--md-ease-emphasized), color 160ms var(--md-ease-emphasized);
 }
 
 body.theme-light #omnibox-pill.omnibox-pill,
 body.force-light #omnibox-pill.omnibox-pill {
-  background: var(--md-surface-container-high);
+  background: var(--md-surface-container);
 }
 
 #omnibox-pill.omnibox-pill:hover:not(.is-editing):not(:focus-within) {
   background: color-mix(in srgb, var(--md-surface-container-highest) 90%, var(--md-on-surface) 7%);
 }
 
+body.theme-light #omnibox-pill.omnibox-pill:hover:not(.is-editing):not(:focus-within),
+body.force-light #omnibox-pill.omnibox-pill:hover:not(.is-editing):not(:focus-within) {
+  background: var(--md-surface-container-high);
+}
+
 #omnibox-pill.omnibox-pill:focus-within,
 #omnibox-pill.omnibox-pill.is-editing {
   padding-left: 12px;
   background: var(--md-surface-container-low);
-  border-color: color-mix(in srgb, var(--md-primary) 72%, transparent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-primary) 18%, transparent);
+  border-color: var(--md-primary);
+  box-shadow: var(--md-elev-1);
 }
 
 body.theme-light #omnibox-pill.omnibox-pill:focus-within,
 body.force-light #omnibox-pill.omnibox-pill:focus-within,
 body.theme-light #omnibox-pill.omnibox-pill.is-editing,
 body.force-light #omnibox-pill.omnibox-pill.is-editing {
-  background: #ffffff;
-  border-color: color-mix(in srgb, var(--md-primary) 76%, transparent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-primary) 16%, transparent);
+  background: var(--md-surface-container-lowest);
+  border-color: var(--md-primary);
+  box-shadow: var(--md-elev-1);
 }
 
 .omnibox-left-actions {
@@ -1355,23 +1379,34 @@ body.on-newtab .omnibox-display { padding: 0 54px; }
 .omni-share-btn { width: 26px; height: 26px; }
 .omni-share-btn svg { width: 15px; height: 15px; }
 
+/* Material Design 3 2px Linear Loading Progress Hairline along Top Chrome bottom edge */
 .load-progress {
   position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 0;
+  left: 0;
+  right: 0;
+  bottom: -1px;
   height: 2px;
-  border-radius: var(--md-shape-full);
   background: var(--md-primary);
   transform-origin: left center;
   transform: scaleX(0);
   opacity: 0;
   pointer-events: none;
-  z-index: 4;
-  transition: transform 280ms var(--md-ease-emphasized-decel), opacity 200ms ease;
+  z-index: 45;
+  will-change: transform, opacity;
+  transition: transform 240ms var(--md-ease-emphasized-decel), opacity 180ms ease;
 }
 
-.load-progress.active { opacity: 1; }
+.load-progress.active {
+  opacity: 1;
+}
+
+.load-progress.is-loading {
+  transition: transform 1200ms var(--md-ease-emphasized-decel), opacity 140ms ease;
+}
+
+.load-progress.completing {
+  transition: transform 150ms var(--md-ease-emphasized-decel), opacity 200ms ease 60ms;
+}
 
 /* Private / Incognito Indicator Badge */
 .private-badge-pill {
@@ -1597,7 +1632,7 @@ body.on-newtab .omnibox-display { padding: 0 54px; }
 #favbar.favbar {
   height: 34px;
   padding: 0 12px;
-  background: var(--md-surface-container);
+  background: var(--md-chrome-bar-bg);
   border-top: 1px solid color-mix(in srgb, var(--md-outline-variant) 42%, transparent);
   display: flex;
   align-items: center;
@@ -1614,7 +1649,8 @@ body.on-newtab .omnibox-display { padding: 0 54px; }
 
 .favbar-list::-webkit-scrollbar { display: none; }
 
-.fav-chip {
+.fav-chip,
+.fav-pill {
   height: 26px;
   max-width: 176px;
   padding: 0 8px 0 9px;
@@ -1631,13 +1667,16 @@ body.on-newtab .omnibox-display { padding: 0 54px; }
   cursor: pointer;
   flex-shrink: 0;
   touch-action: none;
+  contain: layout style;
   transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
 }
 
 body.theme-light .fav-chip,
-body.force-light .fav-chip {
-  background: var(--md-surface-container-lowest);
-  border-color: color-mix(in srgb, var(--md-outline-variant) 50%, transparent);
+body.force-light .fav-chip,
+body.theme-light .fav-pill,
+body.force-light .fav-pill {
+  background: var(--md-surface-container-low);
+  border-color: color-mix(in srgb, var(--md-outline-variant) 46%, transparent);
 }
 
 .fav-chip:hover {
@@ -1982,15 +2021,15 @@ body.force-light .sp-profile-badge {
 .hero-search {
   width: 100%;
   height: 56px;
-  padding: 0 8px 0 24px;
+  padding: 0 8px 0 22px;
   border-radius: var(--md-shape-full);
   background: var(--md-surface-container-high);
-  border: 1px solid color-mix(in srgb, var(--md-outline-variant) 26%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--md-outline-variant) 26%, transparent);
   box-shadow: var(--md-elev-2);
   display: flex;
   align-items: center;
   gap: 12px;
-  transition: padding-left 200ms var(--md-ease-emphasized-decel), border-color var(--md-dur-short) var(--md-ease-emphasized), background-color var(--md-dur-short) var(--md-ease-emphasized), box-shadow var(--md-dur-medium) var(--md-ease-emphasized);
+  transition: border-color var(--md-dur-short) var(--md-ease-emphasized), background-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-short) var(--md-ease-emphasized);
 }
 
 body.theme-light .hero-search,
@@ -2010,17 +2049,16 @@ body.force-light .hero-search:hover:not(:focus-within) {
 }
 
 .hero-search:focus-within {
-  padding-left: 18px;
   background: var(--md-surface-container-highest);
-  border-color: color-mix(in srgb, var(--md-primary) 42%, transparent);
-  box-shadow: var(--md-elev-3), 0 0 0 2px color-mix(in srgb, var(--md-primary) 22%, transparent);
+  border-color: var(--md-primary);
+  box-shadow: var(--md-elev-3);
 }
 
 body.theme-light .hero-search:focus-within,
 body.force-light .hero-search:focus-within {
   background: #ffffff;
-  border-color: color-mix(in srgb, var(--md-primary) 48%, transparent);
-  box-shadow: var(--md-elev-3), 0 0 0 2px color-mix(in srgb, var(--md-primary) 18%, transparent);
+  border-color: var(--md-primary);
+  box-shadow: var(--md-elev-3);
 }
 
 .hero-search-ico {
@@ -2469,10 +2507,10 @@ body.force-light .m3-glance-strip {
   to { opacity: 1; transform: translateY(0); }
 }
 
-body.on-newtab .anim-rise-1 { animation: m3RiseIn 260ms var(--md-ease-emphasized-decel) both; }
-body.on-newtab .anim-rise-2 { animation: m3RiseIn 300ms var(--md-ease-emphasized-decel) 30ms both; }
-body.on-newtab .anim-rise-3 { animation: m3RiseIn 320ms var(--md-ease-emphasized-decel) 60ms both; }
-body.on-newtab .anim-rise-4 { animation: m3RiseIn 340ms var(--md-ease-emphasized-decel) 90ms both; }
+body.on-newtab.sp-entering .anim-rise-1 { animation: m3RiseIn 240ms var(--md-ease-emphasized-decel) both; }
+body.on-newtab.sp-entering .anim-rise-2 { animation: m3RiseIn 270ms var(--md-ease-emphasized-decel) 25ms both; }
+body.on-newtab.sp-entering .anim-rise-3 { animation: m3RiseIn 290ms var(--md-ease-emphasized-decel) 50ms both; }
+body.on-newtab.sp-entering .anim-rise-4 { animation: m3RiseIn 310ms var(--md-ease-emphasized-decel) 75ms both; }
 
 /* ==========================================================================
    Material Design 3 Tab Overview Grid (Ctrl+Shift+O)
@@ -3423,6 +3461,7 @@ body.force-light .m3-appbar-search { background: var(--md-surface-container-high
   border: 1px solid color-mix(in srgb, var(--md-outline-variant) 32%, transparent);
   border-radius: var(--md-shape-xl);
   overflow: hidden;
+  contain: layout style;
 }
 
 body.theme-light .m3-pref-card,
@@ -4490,7 +4529,8 @@ body.theme-light .dlm-video-card, body.force-light .dlm-video-card { background:
 .dlm-mb-sub { font-size: 11.8px; opacity: 0.86; margin-top: 2px; }
 
 .dlm-list { display: flex; flex-direction: column; gap: 10px; }
-.dlm-card { border-radius: 20px; background: var(--md-surface-container); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.dlm-card,
+.dlm-item { border-radius: 20px; background: var(--md-surface-container); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; contain: layout style; }
 .dlm-card.is-active { box-shadow: inset 0 0 0 1.5px var(--md-primary); }
 .dlm-card-top { display: flex; align-items: center; gap: 12px; }
 .dlm-cat-ico { width: 40px; height: 40px; border-radius: 14px; background: var(--md-secondary-container); color: var(--md-on-secondary-container); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11.5px; font-weight: 800; }
@@ -4613,7 +4653,7 @@ body.theme-light .dlm-video-card, body.force-light .dlm-video-card { background:
 }
 
 /* ==========================================================================
-   Full-Viewport Chrome-Grade Material Design 3 Extensions Manager (v4.9.0)
+   Full-Viewport Chrome-Grade Material Design 3 Extensions Manager (v5.0.0)
    28px Expressive Workspace · 2-Col M3 Cards · Details View · Chrome Import
    ========================================================================== */
 .ext-manager-overlay { z-index: 176; }
@@ -4817,7 +4857,8 @@ body.force-light .ext-store-pill-form:focus-within {
   flex-direction: column;
   gap: 12px;
   box-shadow: var(--md-elev-1);
-  transition: transform var(--md-dur-medium) var(--md-ease-emphasized-decel), border-color var(--md-dur-short) ease, box-shadow var(--md-dur-short) ease, opacity var(--md-dur-short) ease;
+  contain: layout style;
+  transition: transform var(--md-dur-medium) var(--md-ease-emphasized-decel), border-color var(--md-dur-short) ease, background-color var(--md-dur-short) ease, opacity var(--md-dur-short) ease;
 }
 
 body.theme-light .ext-card,
@@ -5159,7 +5200,7 @@ body.force-light .ext-details-hero {
 }
 
 /* ==========================================================================
-   Full-Viewport Material Design 3 dejavu Link Hub (v4.9.0)
+   Full-Viewport Material Design 3 dejavu Link Hub (v5.0.0)
    Single-Scroll · Zero Sub-Tabs · Google Auto-Sync · Pure Tonal Elevation
    ========================================================================== */
 .link-hub-overlay { z-index: 175; }

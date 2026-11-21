@@ -1,5 +1,6 @@
 /**
- * dejavu v4.9.0 Native Shell Controller — Authentic Google Material Design 3 Expressive
+ * dejavu v5.0.0 Native Shell Controller — Authentic Google Material Design 3 Expressive
+ * Zero-Glitch 120Hz Tab Strip, Diff-Guarded Shell DOM, Lightweight tabDelta IPC,
  * Dynamic M3 Butterfly Logo, Pixel Home, Google Auto-Sync dejavu Link Hub,
  * Real Chrome Extensions Manager, 10-Category Settings, M3 Context Menus & 8x Turbo Downloader.
  */
@@ -515,7 +516,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v4.9.0 — 16 HD + 1 Live = 17 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.0.0 — 16 HD + 1 Live = 17 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 12 Sculptural / Architectural Material Design 3 HD Wallpapers
@@ -742,7 +743,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '4.9.0',
+    appVersion: bootData.appVersion || '5.0.0',
     isDefaultBrowser: !!bootData.isDefaultBrowser,
     canReopenClosedTab: !!bootData.canReopenClosedTab,
     updateStatus: bootData.updateStatus || '',
@@ -980,9 +981,15 @@
   }
 
   let lastSpBadgeKey = '';
+  let lastSpGreeting = '';
+  let lastSpGoogleCtaShow = null;
   function syncStartPageProfileBadge(profile) {
     if (!startpageProfileBadge) return;
-    if (spBadgeGreeting) spBadgeGreeting.textContent = getTimeGreeting();
+    const greeting = getTimeGreeting();
+    if (spBadgeGreeting && greeting !== lastSpGreeting) {
+      lastSpGreeting = greeting;
+      spBadgeGreeting.textContent = greeting;
+    }
     if (!profile) return;
     const dispName = profile.googleDisplayName || profile.name || 'Personal';
     const key = `${profile.avatar}_${profile.googleAvatarUrl || ''}_${dispName}`;
@@ -993,7 +1000,10 @@
     }
     if (spGoogleCta) {
       const showCta = !state.isPrivateWindow && !profile.isGoogleSignedIn && !state.onboardingCompleted;
-      spGoogleCta.classList.toggle('hidden', !showCta);
+      if (showCta !== lastSpGoogleCtaShow) {
+        lastSpGoogleCtaShow = showCta;
+        spGoogleCta.classList.toggle('hidden', !showCta);
+      }
     }
   }
 
@@ -1053,10 +1063,12 @@
     if (active && !active.isNewTab) {
       const showFull = !!(state.browserOptions && state.browserOptions.showFullWebsiteAddress);
       const domain = showFull ? (active.url || active.displayUrl || '') : extractCleanDomain(active.url, active.displayUrl);
-      omniboxDomain.textContent = domain || active.displayUrl || '';
+      const nextText = domain || active.displayUrl || '';
+      if (omniboxDomain.textContent !== nextText) omniboxDomain.textContent = nextText;
       omniboxDomain.classList.remove('is-placeholder');
     } else {
-      omniboxDomain.textContent = state.isPrivateWindow ? 'Search privately or enter website' : 'Search or enter website name';
+      const nextText = state.isPrivateWindow ? 'Search privately or enter website' : 'Search or enter website name';
+      if (omniboxDomain.textContent !== nextText) omniboxDomain.textContent = nextText;
       omniboxDomain.classList.add('is-placeholder');
     }
   }
@@ -1552,8 +1564,12 @@
     });
   }
 
+  let lastStartPagePrefsSig = '';
   function applyStartPagePrefs(prefs) {
     const p = prefs || {};
+    const sig = `${p.hideFavorites ? 1 : 0}|${p.hideFrequentlyVisited ? 1 : 0}|${p.hidePrivacyReport ? 1 : 0}|${p.hideReadingList ? 1 : 0}`;
+    if (sig === lastStartPagePrefsSig) return;
+    lastStartPagePrefsSig = sig;
     spSecFavorites.classList.toggle('hidden', !!p.hideFavorites);
     spSecPrivacy.classList.toggle('hidden', !!p.hidePrivacyReport);
     setSwitchState(prefFavorites, !p.hideFavorites);
@@ -1722,7 +1738,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v4.9.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.0.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -1810,10 +1826,20 @@
     });
   }
 
+  let lastYouPaneSig = '';
   function renderYouAndGooglePane() {
     const ap = state.activeProfile || { id: 'default', name: 'Personal', avatar: 'dejavu-halftone', isMainProfile: true };
     const signedIn = !!ap.isGoogleSignedIn;
     const isMain = !!ap.isMainProfile || ap.id === state.mainProfileId;
+    const allProfiles = Array.isArray(state.profiles) ? state.profiles : [];
+    const openIds = Array.isArray(state.openProfileIds) ? state.openProfileIds : [];
+    const sig = JSON.stringify([
+      ap.id, ap.name, ap.avatar, ap.googleDisplayName, ap.googleEmail, ap.googleAvatarUrl,
+      signedIn, isMain, state.windowCount || 1, state.mainProfileId, openIds,
+      allProfiles.map((p) => [p.id, p.name, p.avatar, p.googleDisplayName, p.googleEmail, p.googleAvatarUrl, !!p.isGoogleSignedIn, !!p.isMainProfile, !!p.isRunning])
+    ]);
+    if (sig === lastYouPaneSig) return;
+    lastYouPaneSig = sig;
 
     if (youHeroAvatar) youHeroAvatar.innerHTML = renderProfileAvatarHtml(ap, 64);
     if (youHeroName) youHeroName.textContent = ap.googleDisplayName || ap.name || 'Personal';
@@ -1836,7 +1862,6 @@
     }
 
     if (!settingsProfilesList) return;
-    const allProfiles = Array.isArray(state.profiles) ? state.profiles : [];
     const others = allProfiles.filter((p) => !ap || p.id !== ap.id);
     settingsProfilesList.innerHTML = '';
 
@@ -1903,10 +1928,15 @@
     optDefaultZoomSlider.style.setProperty('--slider-pct', `${ratio.toFixed(2)}%`);
   }
 
+  let lastPolarityKey = '';
   function applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen) {
     if (state.isPrivateWindow) {
-      body.classList.remove('force-light', 'theme-light');
-      body.classList.add('force-dark', 'theme-dark');
+      const pKey = 'private';
+      if (pKey !== lastPolarityKey) {
+        lastPolarityKey = pKey;
+        body.classList.remove('force-light', 'theme-light');
+        body.classList.add('force-dark', 'theme-dark');
+      }
       return false;
     }
     const mode = apMode || 'auto';
@@ -1916,45 +1946,70 @@
       ? true
       : (forceDark ? false : (!onNewTab && !ovOpen && !optOpen && !!(active && active.isLight)));
 
-    body.classList.toggle('force-light', forceLight);
-    body.classList.toggle('force-dark', forceDark);
-    body.classList.toggle('theme-light', effLight);
-    body.classList.toggle('theme-dark', !effLight);
+    const pKey = `${forceLight ? 1 : 0}|${forceDark ? 1 : 0}|${effLight ? 1 : 0}`;
+    if (pKey !== lastPolarityKey) {
+      lastPolarityKey = pKey;
+      body.classList.toggle('force-light', forceLight);
+      body.classList.toggle('force-dark', forceDark);
+      body.classList.toggle('theme-light', effLight);
+      body.classList.toggle('theme-dark', !effLight);
+    }
     return effLight;
   }
 
+  let lastBrowserOptionsSig = '';
+  let lastPausedHostsSig = '';
   function applyBrowserOptions(opts) {
     const o = opts || {};
     const ac = o.accentColor || 'amethyst';
-    document.documentElement.dataset.accent = ac;
-    body.dataset.accent = ac;
-    body.classList.toggle('compact-tabs', !!o.compactTabBar);
-    body.classList.toggle('always-show-tab-close', !!o.alwaysShowTabClose);
-    body.classList.toggle('nav-rail-hidden', !!o.hideNavRail);
-    body.classList.toggle('reduce-motion', !!o.reduceWallpaperMotion);
-    if (btnToolbarHome) btnToolbarHome.classList.toggle('hidden', o.showHomeButton === false);
-    if (spPrivateChip) spPrivateChip.classList.toggle('hidden', !state.isPrivateWindow);
-    if (startpageProfileBadge) startpageProfileBadge.classList.toggle('hidden', !!o.hideGreetingBadge || !!state.isPrivateWindow);
-    if (heroSearchWrap) heroSearchWrap.classList.toggle('hidden', !!o.hideStartPageSearch);
+    const optSig = JSON.stringify([
+      ac,
+      !!o.compactTabBar,
+      !!o.alwaysShowTabClose,
+      !!o.hideNavRail,
+      !!o.reduceWallpaperMotion,
+      o.showHomeButton !== false,
+      !!o.hideGreetingBadge,
+      !!o.hideStartPageSearch,
+      o.appearanceMode || 'auto',
+      o.wallpaperDim || 'balanced',
+      !!state.isPrivateWindow
+    ]);
+    const optsChanged = (optSig !== lastBrowserOptionsSig);
+    if (optsChanged) {
+      lastBrowserOptionsSig = optSig;
+      if (document.documentElement.dataset.accent !== ac) document.documentElement.dataset.accent = ac;
+      if (body.dataset.accent !== ac) body.dataset.accent = ac;
+      body.classList.toggle('compact-tabs', !!o.compactTabBar);
+      body.classList.toggle('always-show-tab-close', !!o.alwaysShowTabClose);
+      body.classList.toggle('nav-rail-hidden', !!o.hideNavRail);
+      body.classList.toggle('reduce-motion', !!o.reduceWallpaperMotion);
+      if (btnToolbarHome) btnToolbarHome.classList.toggle('hidden', o.showHomeButton === false);
+      if (spPrivateChip) spPrivateChip.classList.toggle('hidden', !state.isPrivateWindow);
+      if (startpageProfileBadge) startpageProfileBadge.classList.toggle('hidden', !!o.hideGreetingBadge || !!state.isPrivateWindow);
+      if (heroSearchWrap) heroSearchWrap.classList.toggle('hidden', !!o.hideStartPageSearch);
+      if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
+        window.DejavuNewTabCanvas.setOptions({
+          reduceMotion: !!o.reduceWallpaperMotion,
+          dim: o.wallpaperDim || 'balanced',
+          lightMode: !state.isPrivateWindow && (o.appearanceMode === 'light'),
+          accentColor: ac
+        });
+      }
+    }
 
     const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
     const onNewTab = !active || active.isNewTab;
     applyThemePolarity(o.appearanceMode || 'auto', active, onNewTab, !!state.tabOverviewOpen, !!state.settingsOpen || !!state.dlManagerOpen || !!state.extensionsOpen || !!state.linkOpen);
-    if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
-      window.DejavuNewTabCanvas.setOptions({
-        reduceMotion: !!o.reduceWallpaperMotion,
-        dim: o.wallpaperDim || 'balanced',
-        lightMode: !state.isPrivateWindow && (o.appearanceMode === 'light'),
-        accentColor: ac
-      });
+    if (state.settingsOpen || optsChanged) {
+      syncSettingsUi();
     }
-    syncSettingsUi();
   }
 
   function syncSettingsUi() {
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
-    const ver = state.appVersion || '4.9.0';
+    const ver = state.appVersion || '5.0.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -2002,26 +2057,30 @@
     }
     if (optPausedHostsList) {
       const hosts = Array.isArray(state.pausedHosts) ? state.pausedHosts : [];
-      optPausedHostsList.innerHTML = '';
-      if (!hosts.length) {
-        const empty = document.createElement('div');
-        empty.className = 'opt-paused-empty';
-        empty.textContent = 'No paused sites — dejavu Shield is protecting every website.';
-        optPausedHostsList.appendChild(empty);
-      } else {
-        hosts.forEach((h) => {
-          const chip = document.createElement('span');
-          chip.className = 'opt-paused-chip';
-          const lbl = document.createElement('span');
-          lbl.textContent = h;
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.textContent = 'Resume';
-          btn.addEventListener('click', () => send({ type: 'resumePausedHost', host: h }));
-          chip.appendChild(lbl);
-          chip.appendChild(btn);
-          optPausedHostsList.appendChild(chip);
-        });
+      const hostsSig = JSON.stringify(hosts);
+      if (hostsSig !== lastPausedHostsSig) {
+        lastPausedHostsSig = hostsSig;
+        optPausedHostsList.innerHTML = '';
+        if (!hosts.length) {
+          const empty = document.createElement('div');
+          empty.className = 'opt-paused-empty';
+          empty.textContent = 'No paused sites — dejavu Shield is protecting every website.';
+          optPausedHostsList.appendChild(empty);
+        } else {
+          hosts.forEach((h) => {
+            const chip = document.createElement('span');
+            chip.className = 'opt-paused-chip';
+            const lbl = document.createElement('span');
+            lbl.textContent = h;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = 'Resume';
+            btn.addEventListener('click', () => send({ type: 'resumePausedHost', host: h }));
+            chip.appendChild(lbl);
+            chip.appendChild(btn);
+            optPausedHostsList.appendChild(chip);
+          });
+        }
       }
     }
     setSwitchState(optSafeBrowsing, o.safeBrowsing !== false);
@@ -2826,6 +2885,7 @@
   // =========================================================================
   // Material Design 3 Left Navigation Rail
   // =========================================================================
+  let lastRailSig = '';
   function updateRailIndicators() {
     const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
     const onNewTab = !active || active.isNewTab;
@@ -2834,22 +2894,25 @@
     const dlOpen = !!state.dlManagerOpen;
     const extOpen = !!state.extensionsOpen;
     const lnkOpen = !!state.linkOpen;
+    const dlCnt = Number(state.downloadsCount || 0);
+    const mCnt = (Array.isArray(state.pageMedia) ? state.pageMedia.length : 0) + (state.activeTabIsVideoSite ? 1 : 0);
+    const syncObj = state.sync || {};
+    const syncConn = !!(syncObj.paired || syncObj.connected || (syncObj.syncMode === 'google' && syncObj.googleEmail));
+    const sig = `${onNewTab ? 1 : 0}|${ovOpen ? 1 : 0}|${optOpen ? 1 : 0}|${dlOpen ? 1 : 0}|${activeDlTab}|${extOpen ? 1 : 0}|${lnkOpen ? 1 : 0}|${dlCnt}|${state.hasActiveDownload ? 1 : 0}|${mCnt > 0 ? 1 : 0}|${syncConn ? 1 : 0}`;
+    if (sig === lastRailSig) return;
+    lastRailSig = sig;
     if (railHome) railHome.classList.toggle('active', onNewTab && !ovOpen && !optOpen && !dlOpen && !extOpen && !lnkOpen);
     if (railDownloads) railDownloads.classList.toggle('active', dlOpen && activeDlTab !== 'media');
     if (railMedia) railMedia.classList.toggle('active', dlOpen && activeDlTab === 'media');
     if (railSync) railSync.classList.toggle('active', lnkOpen);
     if (railTabs) railTabs.classList.toggle('active', ovOpen);
     if (railSettings) railSettings.classList.toggle('active', optOpen);
-    const dlCnt = Number(state.downloadsCount || 0);
     if (railDlBadge) {
       railDlBadge.classList.toggle('hidden', dlCnt <= 0);
       railDlBadge.classList.toggle('is-running', !!state.hasActiveDownload);
       railDlBadge.textContent = dlCnt > 99 ? '99' : String(dlCnt);
     }
-    const mCnt = (Array.isArray(state.pageMedia) ? state.pageMedia.length : 0) + (state.activeTabIsVideoSite ? 1 : 0);
     if (railMediaDot) railMediaDot.classList.toggle('hidden', mCnt <= 0);
-    const syncObj = state.sync || {};
-    const syncConn = !!(syncObj.paired || syncObj.connected || (syncObj.syncMode === 'google' && syncObj.googleEmail));
     if (railSyncDot) railSyncDot.classList.toggle('hidden', !syncConn);
   }
 
@@ -3815,23 +3878,46 @@
     window.addEventListener('pointercancel', onCancel);
   }
 
+  const tabMetaMap = new Map();
+  let hasCompletedInitialTabSync = false;
+  let lastTabLayoutSig = '';
+  const shellStats = (window.__dejavuShellStats = {
+    tabDeltaCount: 0,
+    stateCount: 0,
+    syncTabsReorders: 0,
+    syncTabsCreated: 0,
+    lastTabDeltaMs: 0
+  });
+
   function syncTabs(tabs, activeId) {
     if (tabDragState && tabDragState.active) return;
 
-    const alive = new Set(tabs.map((t) => t.id));
+    const list = Array.isArray(tabs) ? tabs : [];
+    const alive = new Set();
+    for (let i = 0; i < list.length; i++) alive.add(list[i].id);
+
     for (const [id, el] of tabEls.entries()) {
       if (!alive.has(id)) {
         el.remove();
         tabEls.delete(id);
+        tabMetaMap.delete(id);
         closingTabIds.delete(id);
       }
     }
 
     const showHover = !(state.browserOptions && state.browserOptions.tabHoverPreview === false);
+    const existingTabNodes = Array.from(tabsStrip.children).filter(
+      (n) => n.classList && n.classList.contains('tab-pill')
+    );
+    const newTabBtnInStrip = (btnNewTab && btnNewTab.parentNode === tabsStrip) ? btnNewTab : null;
+    const allowEnterAnim = hasCompletedInitialTabSync && !body.classList.contains('app-booting');
+    let pinnedCount = 0;
 
-    tabs.forEach((tab, idx) => {
+    list.forEach((tab, idx) => {
       let el = tabEls.get(tab.id);
+      let meta = tabMetaMap.get(tab.id);
       const isNew = !el;
+
       if (!el) {
         el = document.createElement('div');
         el.className = 'tab-pill tab';
@@ -3857,19 +3943,48 @@
           <span class="tab-sep" aria-hidden="true"></span>
         `;
 
+        const spinner = el.querySelector('.tab-spinner');
         const favImgEl = el.querySelector('.tab-favicon');
         const favSvgEl = el.querySelector('.tab-favicon-svg');
+        const titleEl = el.querySelector('.tab-title');
+        const audioBtn = el.querySelector('.tab-audio-btn');
+        const volOn = audioBtn.querySelector('.ico-vol-on');
+        const volOff = audioBtn.querySelector('.ico-vol-off');
+        const closeBtn = el.querySelector('.tab-close');
+
+        meta = {
+          spinner,
+          fav: favImgEl,
+          favSvg: favSvgEl,
+          titleEl,
+          audioBtn,
+          volOn,
+          volOff,
+          title: '',
+          tooltip: '',
+          favicon: '',
+          iconMode: 'svg',
+          pinned: false,
+          muted: false,
+          active: false,
+          showAudio: false,
+          hasAudioCls: false,
+          audioTitle: 'Mute tab (Ctrl+M)'
+        };
+
         favImgEl.addEventListener('error', () => {
+          favImgEl.dataset.failedSrc = favImgEl.getAttribute('src') || '';
           favImgEl.classList.add('hidden');
-          favSvgEl.classList.remove('hidden');
+          if (meta.iconMode !== 'loading') {
+            favSvgEl.classList.remove('hidden');
+            meta.iconMode = 'svg';
+          }
         });
 
-        const closeBtn = el.querySelector('.tab-close');
         closeBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
         closeBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); e.preventDefault(); });
         closeBtn.addEventListener('click', (e) => { e.stopPropagation(); requestCloseTab(tab.id, el); });
 
-        const audioBtn = el.querySelector('.tab-audio-btn');
         audioBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
         audioBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); e.preventDefault(); });
         audioBtn.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'muteTab', id: tab.id }); });
@@ -3892,70 +4007,138 @@
           const latest = (state.tabs || []).find((t) => t.id === tab.id) || tab;
           showTabContextMenu(latest, e.clientX, e.clientY);
         });
-        tabsStrip.appendChild(el);
+
+        const refNode = existingTabNodes[idx] || newTabBtnInStrip || null;
+        tabsStrip.insertBefore(el, refNode);
+        existingTabNodes.splice(idx, 0, el);
         tabEls.set(tab.id, el);
-      } else {
-        const desiredAt = tabsStrip.children[idx + 1];
-        if (el !== desiredAt) tabsStrip.insertBefore(el, desiredAt || null);
+        tabMetaMap.set(tab.id, meta);
+        shellStats.syncTabsCreated++;
+
+        if (allowEnterAnim) {
+          el.classList.add('tab-entering');
+          let enterDone = false;
+          const clearEntering = () => {
+            if (enterDone) return;
+            enterDone = true;
+            el.classList.remove('tab-entering');
+          };
+          el.addEventListener('animationend', clearEntering, { once: true });
+          setTimeout(clearEntering, 220);
+        }
+      } else if (existingTabNodes[idx] !== el) {
+        const refNode = existingTabNodes[idx] || newTabBtnInStrip || null;
+        tabsStrip.insertBefore(el, refNode);
+        const oldPos = existingTabNodes.indexOf(el);
+        if (oldPos >= 0) existingTabNodes.splice(oldPos, 1);
+        existingTabNodes.splice(idx, 0, el);
+        shellStats.syncTabsReorders++;
       }
 
       const isPinned = !!(tab.pinned || tab.isPinned);
       const isMuted = !!(tab.muted || tab.isMuted);
+      if (isPinned) pinnedCount++;
 
-      if (!closingTabIds.has(tab.id)) el.classList.remove('closing');
-      el.classList.toggle('pinned', isPinned);
-      el.classList.toggle('muted', isMuted);
-
-      const wasActive = el.classList.contains('active');
-      const nowActive = tab.id === activeId;
-      el.classList.toggle('active', nowActive);
-      el.title = showHover
-        ? (isPinned ? `${tab.title || 'Pinned Tab'} (Pinned — Right-click to unpin)` : ((tab.title || 'Start Page') + (tab.displayUrl ? ` · ${tab.displayUrl}` : '')))
-        : '';
-
-      const spinner = el.querySelector('.tab-spinner');
-      const fav = el.querySelector('.tab-favicon');
-      const favSvg = el.querySelector('.tab-favicon-svg');
-      const titleEl = el.querySelector('.tab-title');
-      const audioBtn = el.querySelector('.tab-audio-btn');
-
-      spinner.classList.toggle('hidden', !tab.loading);
-      const hasWebFav = !tab.isNewTab && !!tab.favicon;
-      if (tab.loading) {
-        fav.classList.add('hidden');
-        favSvg.classList.add('hidden');
-      } else if (hasWebFav) {
-        if (fav.getAttribute('src') !== tab.favicon) fav.setAttribute('src', tab.favicon);
-        fav.classList.remove('hidden');
-        favSvg.classList.add('hidden');
-      } else {
-        fav.classList.add('hidden');
-        favSvg.classList.remove('hidden');
+      if (!closingTabIds.has(tab.id) && el.classList.contains('closing')) {
+        el.classList.remove('closing');
       }
-      titleEl.textContent = tab.title || 'Start Page';
+      if (meta.pinned !== isPinned) {
+        meta.pinned = isPinned;
+        el.classList.toggle('pinned', isPinned);
+      }
+      if (meta.muted !== isMuted) {
+        meta.muted = isMuted;
+        el.classList.toggle('muted', isMuted);
+      }
 
-      const showAudio = !tab.isNewTab && (tab.isAudible || isMuted);
-      el.classList.toggle('has-audio', showAudio && !isPinned);
-      audioBtn.classList.toggle('hidden', !showAudio);
-      audioBtn.classList.toggle('muted', isMuted);
-      audioBtn.title = isMuted ? 'Unmute tab (Ctrl+M)' : 'Mute tab (Ctrl+M)';
-      audioBtn.querySelector('.ico-vol-on').classList.toggle('hidden', isMuted);
-      audioBtn.querySelector('.ico-vol-off').classList.toggle('hidden', !isMuted);
+      const wasActive = meta.active;
+      const nowActive = tab.id === activeId;
+      if (meta.active !== nowActive) {
+        meta.active = nowActive;
+        el.classList.toggle('active', nowActive);
+        el.setAttribute('aria-selected', nowActive ? 'true' : 'false');
+      }
 
-      if ((isNew || (!wasActive && nowActive)) && nowActive) {
+      const nextTitle = tab.title || 'Start Page';
+      if (meta.title !== nextTitle) {
+        meta.title = nextTitle;
+        if (meta.titleEl.firstChild && meta.titleEl.firstChild.nodeType === 3) {
+          meta.titleEl.firstChild.nodeValue = nextTitle;
+        } else {
+          meta.titleEl.textContent = nextTitle;
+        }
+      }
+
+      const nextTooltip = showHover
+        ? (isPinned ? `${tab.title || 'Pinned Tab'} (Pinned — Right-click to unpin)` : (nextTitle + (tab.displayUrl ? ` · ${tab.displayUrl}` : '')))
+        : '';
+      if (meta.tooltip !== nextTooltip) {
+        meta.tooltip = nextTooltip;
+        el.title = nextTooltip;
+      }
+
+      const favUrl = (!tab.isNewTab && tab.favicon) ? String(tab.favicon) : '';
+      if (favUrl && meta.favicon !== favUrl) {
+        meta.favicon = favUrl;
+        delete meta.fav.dataset.failedSrc;
+        meta.fav.setAttribute('src', favUrl);
+      } else if (!favUrl && meta.favicon) {
+        meta.favicon = '';
+        delete meta.fav.dataset.failedSrc;
+      }
+
+      const canShowFav = !!favUrl && meta.fav.dataset.failedSrc !== favUrl;
+      const nextIconMode = tab.loading ? 'loading' : (canShowFav ? 'favicon' : 'svg');
+      if (meta.iconMode !== nextIconMode) {
+        meta.iconMode = nextIconMode;
+        meta.spinner.classList.toggle('hidden', nextIconMode !== 'loading');
+        meta.fav.classList.toggle('hidden', nextIconMode !== 'favicon');
+        meta.favSvg.classList.toggle('hidden', nextIconMode !== 'svg');
+      }
+
+      const showAudio = !tab.isNewTab && (!!tab.isAudible || isMuted);
+      const hasAudioCls = showAudio && !isPinned;
+      if (meta.hasAudioCls !== hasAudioCls) {
+        meta.hasAudioCls = hasAudioCls;
+        el.classList.toggle('has-audio', hasAudioCls);
+      }
+      if (meta.showAudio !== showAudio) {
+        meta.showAudio = showAudio;
+        meta.audioBtn.classList.toggle('hidden', !showAudio);
+      }
+      const nextAudioTitle = isMuted ? 'Unmute tab (Ctrl+M)' : 'Mute tab (Ctrl+M)';
+      if (meta.audioTitle !== nextAudioTitle) {
+        meta.audioTitle = nextAudioTitle;
+        meta.audioBtn.classList.toggle('muted', isMuted);
+        meta.audioBtn.title = nextAudioTitle;
+        meta.volOn.classList.toggle('hidden', isMuted);
+        meta.volOff.classList.toggle('hidden', !isMuted);
+      }
+
+      if (allowEnterAnim && (isNew || (!wasActive && nowActive)) && nowActive) {
         requestAnimationFrame(() => {
           try { el.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' }); } catch {}
         });
       }
     });
 
-    requestAnimationFrame(() => {
-      tabsStrip.classList.toggle('scrollable', tabsStrip.scrollWidth > tabsStrip.clientWidth + 4);
-    });
+    if (list.length > 0) hasCompletedInitialTabSync = true;
+
+    const layoutSig = `${list.length}|${pinnedCount}`;
+    if (layoutSig !== lastTabLayoutSig) {
+      lastTabLayoutSig = layoutSig;
+      requestAnimationFrame(() => {
+        tabsStrip.classList.toggle('scrollable', tabsStrip.scrollWidth > tabsStrip.clientWidth + 4);
+      });
+    }
   }
 
+  let lastStatSig = '';
   function updateStatText(globalEnabled, total) {
     const n = Number(total || 0);
+    const sig = `${globalEnabled ? 1 : 0}|${n}`;
+    if (sig === lastStatSig) return;
+    lastStatSig = sig;
     if (!globalEnabled) {
       if (newtabStatCount) newtabStatCount.textContent = 'Shield';
       if (newtabStatLabel) newtabStatLabel.textContent = 'Paused';
@@ -3969,9 +4152,15 @@
     }
   }
 
+  let lastVpnChipSig = '';
   function updateNewtabVpnChip(vpn) {
     if (!newtabVpnChip || !newtabVpnText) return;
     const totalLoc = (vpn && vpn.countriesCount) || ((vpn && Array.isArray(vpn.countries) && vpn.countries.length) ? vpn.countries.length : 86);
+    const sig = vpn
+      ? `${vpn.state || ''}|${vpn.exitCountryCode || ''}|${vpn.countryCode || ''}|${vpn.exitCountry || ''}|${vpn.countryName || ''}|${vpn.exitIp || ''}|${vpn.statusText || ''}|${totalLoc}`
+      : `none|${totalLoc}`;
+    if (sig === lastVpnChipSig) return;
+    lastVpnChipSig = sig;
     if (!vpn) {
       newtabVpnChip.classList.remove('connected', 'connecting');
       newtabVpnText.textContent = 'VPN: Off';
@@ -3998,9 +4187,13 @@
     }
   }
 
+  let lastLinkChipSig = '';
   function updateNewtabLinkChip(sync) {
     if (!newtabLinkChip || !newtabLinkText) return;
     const s = sync || {};
+    const sig = `${s.syncMode || ''}|${s.googleEmail || ''}|${s.paired ? 1 : 0}|${s.connected ? 1 : 0}|${s.peerOnline ? 1 : 0}|${s.peerName || ''}`;
+    if (sig === lastLinkChipSig) return;
+    lastLinkChipSig = sig;
     const isGoogle = s.syncMode === 'google' && !!s.googleEmail;
     const isPaired = !!(s.paired || s.connected || isGoogle);
     newtabLinkChip.classList.toggle('synced', isPaired);
@@ -4016,10 +4209,13 @@
     }
   }
 
+  let lastExtChipCount = -1;
   function updateNewtabExtChip(extensions) {
     if (!newtabExtChip || !newtabExtText) return;
     const list = Array.isArray(extensions) ? extensions : [];
     const enabledCount = list.filter((e) => e && e.enabled !== false).length;
+    if (enabledCount === lastExtChipCount) return;
+    lastExtChipCount = enabledCount;
     newtabExtChip.classList.toggle('has-exts', enabledCount > 0);
     newtabExtText.textContent = enabledCount > 0 ? `Extensions · ${enabledCount}` : 'Extensions';
   }
@@ -4116,11 +4312,15 @@
     window.addEventListener('pointercancel', onCancel);
   }
 
+  let lastFavbarVisible = null;
   function renderFavoritesBar(list, showFavoritesBar) {
     const favs = Array.isArray(list) ? list : [];
     const hasFavs = showFavoritesBar !== false && favs.length > 0;
-    body.classList.toggle('has-favorites', hasFavs);
-    favbar.classList.toggle('hidden', !hasFavs);
+    if (hasFavs !== lastFavbarVisible) {
+      lastFavbarVisible = hasFavs;
+      body.classList.toggle('has-favorites', hasFavs);
+      favbar.classList.toggle('hidden', !hasFavs);
+    }
 
     const sig = JSON.stringify(favs);
     if (sig === lastFavoritesSig) return;
@@ -4207,7 +4407,205 @@
     syncStartPageProfileBadge(profile);
   }
 
+  let loadProgressFinishTimer = null;
+  let loadProgressResetTimer = null;
+  let loadProgressTabId = -1;
+  let loadProgressActive = false;
+  let spEnteringTimer = null;
+
+  function updateLoadProgress(active) {
+    if (!loadProgress) return;
+    const isLoading = !!(active && !active.isNewTab && active.loading);
+    const tabId = active ? active.id : -1;
+
+    if (isLoading) {
+      if (loadProgressFinishTimer) { clearTimeout(loadProgressFinishTimer); loadProgressFinishTimer = null; }
+      if (loadProgressResetTimer) { clearTimeout(loadProgressResetTimer); loadProgressResetTimer = null; }
+      if (!loadProgressActive || loadProgressTabId !== tabId) {
+        loadProgressActive = true;
+        loadProgressTabId = tabId;
+        loadProgress.classList.remove('completing', 'is-loading');
+        loadProgress.style.transition = 'none';
+        loadProgress.style.transform = 'scaleX(0.08)';
+        loadProgress.classList.add('active');
+        requestAnimationFrame(() => {
+          if (!loadProgressActive || loadProgressTabId !== tabId) return;
+          loadProgress.style.transition = '';
+          loadProgress.classList.add('is-loading');
+          loadProgress.style.transform = 'scaleX(0.78)';
+        });
+      }
+    } else if (loadProgressActive) {
+      const switchedAway = (loadProgressTabId !== tabId) || !active || active.isNewTab;
+      loadProgressActive = false;
+      loadProgressTabId = tabId;
+      if (loadProgressFinishTimer) { clearTimeout(loadProgressFinishTimer); loadProgressFinishTimer = null; }
+      if (loadProgressResetTimer) { clearTimeout(loadProgressResetTimer); loadProgressResetTimer = null; }
+      if (switchedAway) {
+        loadProgress.classList.remove('active', 'is-loading', 'completing');
+        loadProgress.style.transition = 'none';
+        loadProgress.style.transform = 'scaleX(0)';
+        requestAnimationFrame(() => { loadProgress.style.transition = ''; });
+      } else {
+        loadProgress.classList.remove('is-loading');
+        loadProgress.classList.add('completing');
+        loadProgress.style.transition = '';
+        loadProgress.style.transform = 'scaleX(1)';
+        loadProgressFinishTimer = setTimeout(() => {
+          loadProgressFinishTimer = null;
+          loadProgress.classList.remove('active');
+          loadProgressResetTimer = setTimeout(() => {
+            loadProgressResetTimer = null;
+            if (!loadProgressActive) {
+              loadProgress.classList.remove('completing');
+              loadProgress.style.transition = 'none';
+              loadProgress.style.transform = 'scaleX(0)';
+              requestAnimationFrame(() => { loadProgress.style.transition = ''; });
+            }
+          }, 210);
+        }, 150);
+      }
+    }
+  }
+
+  function syncActiveTabChrome(active, payload) {
+    const onNewTab = !active || !!active.isNewTab;
+    const ovOpen = !!state.tabOverviewOpen;
+    const optOpen = !!state.settingsOpen;
+    const dlOpen = !!state.dlManagerOpen;
+    const extOpen = !!state.extensionsOpen;
+    const linkOpen = !!state.linkOpen;
+    const anyOverlay = ovOpen || optOpen || dlOpen || extOpen || linkOpen;
+
+    btnFavStar.classList.toggle('hidden', onNewTab);
+    btnFavStar.classList.toggle('starred', !!payload.isCurrentFavorite);
+    const favStarTitle = payload.isCurrentFavorite ? 'Remove from Quick Access Bar (Ctrl+D)' : 'Pin to Quick Access Bar (Ctrl+D)';
+    if (btnFavStar.title !== favStarTitle) btnFavStar.title = favStarTitle;
+
+    if (btnZoomPill) {
+      const zp = (!onNewTab && active && active.zoomPercent) ? active.zoomPercent : 100;
+      btnZoomPill.classList.toggle('hidden', zp === 100);
+      const zpText = `${zp}%`;
+      if (zp !== 100 && btnZoomPill.textContent !== zpText) btnZoomPill.textContent = zpText;
+    }
+
+    btnReader.classList.toggle('hidden', onNewTab);
+    btnReader.classList.toggle('active', !!payload.readerActive);
+    const readerTitle = payload.readerActive ? 'Hide Reader View (Ctrl+Shift+R)' : 'Show Reader View (Ctrl+Shift+R)';
+    if (btnReader.title !== readerTitle) btnReader.title = readerTitle;
+
+    const isLoading = !!(active && active.loading);
+    btnReload.classList.toggle('hidden', onNewTab);
+    btnReload.classList.toggle('loading', isLoading);
+    const reloadTitle = isLoading ? 'Stop loading' : 'Reload (Ctrl+R)';
+    if (btnReload.title !== reloadTitle) btnReload.title = reloadTitle;
+
+    const apMode = (state.browserOptions && state.browserOptions.appearanceMode) || 'auto';
+    applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen || dlOpen || extOpen || linkOpen);
+
+    const wasOnNewTab = body.classList.contains('on-newtab');
+    if (onNewTab) {
+      if (!wasOnNewTab) {
+        body.classList.add('on-newtab');
+        if (!anyOverlay && !body.classList.contains('modal-open') && !body.classList.contains('app-booting')) {
+          if (spEnteringTimer) clearTimeout(spEnteringTimer);
+          body.classList.add('sp-entering');
+          spEnteringTimer = setTimeout(() => {
+            spEnteringTimer = null;
+            body.classList.remove('sp-entering');
+          }, 400);
+        }
+      }
+      window.DejavuNewTabCanvas.start();
+      if (anyOverlay) hideStartPageStatus();
+      if (!anyOverlay && !body.classList.contains('modal-open') && lastActiveId !== payload.activeTabId) {
+        newtabSearchInput.value = '';
+        setTimeout(() => newtabSearchInput.focus(), 40);
+      }
+    } else {
+      hideStartPageStatus();
+      if (wasOnNewTab) {
+        if (spEnteringTimer) { clearTimeout(spEnteringTimer); spEnteringTimer = null; }
+        body.classList.remove('on-newtab', 'sp-entering');
+      }
+      if (!anyOverlay && !body.classList.contains('modal-open')) window.DejavuNewTabCanvas.stop();
+    }
+    if (lastActiveId !== -1 && lastActiveId !== payload.activeTabId) {
+      hideM3ContextMenu();
+    }
+    lastActiveId = payload.activeTabId;
+
+    btnBack.disabled = !active || active.isNewTab || !active.canGoBack;
+    btnForward.disabled = !active || active.isNewTab || !active.canGoForward;
+
+    updateLoadProgress(active);
+
+    omniboxIcon.classList.toggle('secure', !!(active && !active.isNewTab && /^https:\/\//i.test(active.url || '')));
+    syncOmniboxDisplay(active);
+    if (document.activeElement !== omniboxInput) {
+      const nextInputVal = (active && !active.isNewTab) ? (active.displayUrl || '') : '';
+      if (omniboxInput.value !== nextInputVal) omniboxInput.value = nextInputVal;
+    }
+
+    btnShield.classList.toggle('active', !!payload.activeForSite);
+    btnShield.classList.toggle('paused', !payload.activeForSite);
+    const nextShieldDisp = onNewTab ? 'none' : '';
+    if (shieldCount.style.display !== nextShieldDisp) shieldCount.style.display = nextShieldDisp;
+    const nextShieldTxt = onNewTab ? '' : String((active && active.blockedCount) || 0);
+    if (shieldCount.textContent !== nextShieldTxt) shieldCount.textContent = nextShieldTxt;
+
+    updateRailIndicators();
+  }
+
+  function applyTabDelta(msg) {
+    const t0 = performance.now();
+    shellStats.tabDeltaCount++;
+
+    const incomingTabs = Array.isArray(msg.tabs) ? msg.tabs : [];
+    if (Array.isArray(state.tabs) && state.tabs.length > 0 && incomingTabs.length > 0) {
+      const thumbById = new Map();
+      for (let i = 0; i < state.tabs.length; i++) {
+        const oldT = state.tabs[i];
+        if (oldT && oldT.thumbnail) thumbById.set(oldT.id, oldT.thumbnail);
+      }
+      if (thumbById.size > 0) {
+        for (let i = 0; i < incomingTabs.length; i++) {
+          const t = incomingTabs[i];
+          if (t && !t.thumbnail && thumbById.has(t.id)) t.thumbnail = thumbById.get(t.id);
+        }
+      }
+    }
+
+    state.tabs = incomingTabs;
+    if (typeof msg.activeTabId === 'number') state.activeTabId = msg.activeTabId;
+    if (typeof msg.activeForSite === 'boolean') state.activeForSite = msg.activeForSite;
+    if (typeof msg.isCurrentFavorite === 'boolean') state.isCurrentFavorite = msg.isCurrentFavorite;
+    if (typeof msg.isCurrentInReadingList === 'boolean') state.isCurrentInReadingList = msg.isCurrentInReadingList;
+    if (typeof msg.readerActive === 'boolean') state.readerActive = msg.readerActive;
+    if (typeof msg.baseRgb !== 'undefined') state.baseRgb = msg.baseRgb;
+    if (typeof msg.accents !== 'undefined') state.accents = msg.accents;
+    if (typeof msg.totalBlocked === 'number') state.totalBlocked = msg.totalBlocked;
+    if (typeof msg.activeTabUrl === 'string') state.activeTabUrl = msg.activeTabUrl;
+    if (typeof msg.activeTabTitle === 'string') state.activeTabTitle = msg.activeTabTitle;
+    if (typeof msg.activeTabIsVideoSite === 'boolean') state.activeTabIsVideoSite = msg.activeTabIsVideoSite;
+    if (typeof msg.canReopenClosedTab === 'boolean') state.canReopenClosedTab = msg.canReopenClosedTab;
+
+    syncTabs(state.tabs, state.activeTabId);
+    if (!bootTabsReady && state.tabs.length > 0) {
+      bootTabsReady = true;
+      tryRevealApp();
+    }
+
+    const active = state.tabs.find((t) => t.id === state.activeTabId);
+    syncActiveTabChrome(active, state);
+    updateStatText(state.globalAdBlockEnabled, state.totalBlocked);
+    if (state.tabOverviewOpen) renderTabOverview();
+
+    shellStats.lastTabDeltaMs = Number((performance.now() - t0).toFixed(3));
+  }
+
   function applyState(next) {
+    shellStats.stateCount++;
     const wasOverview = !!state.tabOverviewOpen;
     const prevVideoFormats = state.videoFormats;
     const prevVideoProbeUrl = state.videoProbeUrl;
@@ -4244,14 +4642,16 @@
     updateNewtabVpnChip(next.vpn);
 
     body.classList.toggle('is-maximized', !!next.isMaximized);
-    if (winMaxBtn) winMaxBtn.title = next.isMaximized ? 'Restore' : 'Maximize';
+    const maxTitle = next.isMaximized ? 'Restore' : 'Maximize';
+    if (winMaxBtn && winMaxBtn.title !== maxTitle) winMaxBtn.title = maxTitle;
 
     const isCustomGroup = next.activeTabGroupId && next.activeTabGroupId !== 'default';
     btnGroupPill.classList.toggle('hidden', !isCustomGroup);
     if (isCustomGroup) {
       const grp = (next.tabGroups || []).find((g) => g.id === next.activeTabGroupId);
       groupBadgeDot.style.background = grp ? grp.color : '#d0bcff';
-      groupBadgeName.textContent = next.activeTabGroupName || 'Tab Group';
+      const grpName = next.activeTabGroupName || 'Tab Group';
+      if (groupBadgeName.textContent !== grpName) groupBadgeName.textContent = grpName;
     }
 
     const hasDl = Number(next.downloadsCount || 0) > 0;
@@ -4342,71 +4742,7 @@
     if (!wallpaperStore.classList.contains('hidden')) renderWallpaperGrid();
 
     const active = (next.tabs || []).find((t) => t.id === next.activeTabId);
-    const onNewTab = !active || active.isNewTab;
-
-    btnFavStar.classList.toggle('hidden', onNewTab);
-    btnFavStar.classList.toggle('starred', !!next.isCurrentFavorite);
-    btnFavStar.title = next.isCurrentFavorite ? 'Remove from Quick Access Bar (Ctrl+D)' : 'Pin to Quick Access Bar (Ctrl+D)';
-
-    if (btnZoomPill) {
-      const zp = (!onNewTab && active && active.zoomPercent) ? active.zoomPercent : 100;
-      btnZoomPill.classList.toggle('hidden', zp === 100);
-      if (zp !== 100) btnZoomPill.textContent = `${zp}%`;
-    }
-
-    btnReader.classList.toggle('hidden', onNewTab);
-    btnReader.classList.toggle('active', !!next.readerActive);
-    btnReader.title = next.readerActive ? 'Hide Reader View (Ctrl+Shift+R)' : 'Show Reader View (Ctrl+Shift+R)';
-
-    btnReload.classList.toggle('hidden', onNewTab);
-    btnReload.classList.toggle('loading', !!(active && active.loading));
-    btnReload.title = (active && active.loading) ? 'Stop loading' : 'Reload (Ctrl+R)';
-
-    const apMode = (next.browserOptions && next.browserOptions.appearanceMode) || 'auto';
-    applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen || dlOpen || extOpen || linkOpen);
-
-    if (onNewTab) {
-      body.classList.add('on-newtab');
-      window.DejavuNewTabCanvas.start();
-      if (ovOpen || optOpen || dlOpen || extOpen || linkOpen) hideStartPageStatus();
-      if (!ovOpen && !optOpen && !dlOpen && !extOpen && !linkOpen && !body.classList.contains('modal-open') && lastActiveId !== next.activeTabId) {
-        newtabSearchInput.value = '';
-        setTimeout(() => newtabSearchInput.focus(), 40);
-      }
-    } else {
-      hideStartPageStatus();
-      body.classList.remove('on-newtab');
-      if (!ovOpen && !optOpen && !dlOpen && !extOpen && !linkOpen && !body.classList.contains('modal-open')) window.DejavuNewTabCanvas.stop();
-    }
-    if (lastActiveId !== -1 && lastActiveId !== next.activeTabId) {
-      hideM3ContextMenu();
-    }
-    lastActiveId = next.activeTabId;
-
-    btnBack.disabled = !active || active.isNewTab || !active.canGoBack;
-    btnForward.disabled = !active || active.isNewTab || !active.canGoForward;
-
-    if (active && active.loading) {
-      loadProgress.classList.add('active');
-      loadProgress.style.transform = 'scaleX(0.55)';
-    } else if (loadProgress.classList.contains('active')) {
-      loadProgress.style.transform = 'scaleX(1)';
-      setTimeout(() => {
-        loadProgress.classList.remove('active');
-        loadProgress.style.transform = 'scaleX(0)';
-      }, 180);
-    }
-
-    omniboxIcon.classList.toggle('secure', !!(active && !active.isNewTab && /^https:\/\//i.test(active.url || '')));
-    syncOmniboxDisplay(active);
-    if (document.activeElement !== omniboxInput) {
-      omniboxInput.value = (active && !active.isNewTab) ? (active.displayUrl || '') : '';
-    }
-
-    btnShield.classList.toggle('active', !!next.activeForSite);
-    btnShield.classList.toggle('paused', !next.activeForSite);
-    shieldCount.style.display = onNewTab ? 'none' : '';
-    shieldCount.textContent = onNewTab ? '' : String(active.blockedCount || 0);
+    syncActiveTabChrome(active, next);
 
     if (next.sync && btnSync && syncDot) {
       const sObj = next.sync;
@@ -4414,11 +4750,12 @@
       const sc = !!(sObj.paired || sObj.connected || isGoogleSync);
       syncDot.classList.toggle('hidden', !sc);
       btnSync.classList.toggle('sync-connected', sc);
-      btnSync.title = isGoogleSync
+      const syncTitle = isGoogleSync
         ? `dejavu Link · Google Auto-Sync (${sObj.googleEmail})`
         : (sObj.connected
           ? `dejavu Link · Connected to ${sObj.peerName || 'Android Phone'}`
           : 'dejavu Link · Sync Tabs, Clipboard & Drops with Phone');
+      if (btnSync.title !== syncTitle) btnSync.title = syncTitle;
     }
 
     if (next.vpn) {
@@ -4430,15 +4767,16 @@
       const rawCode = (next.vpn.exitCountryCode || next.vpn.countryCode || 'AUTO').toUpperCase();
       const codeDisp = rawCode === 'GB' ? 'UK' : (rawCode === 'AUTO' ? 'VPN' : rawCode);
       if (isConn) {
-        vpnChipCode.textContent = codeDisp;
+        if (vpnChipCode.textContent !== codeDisp) vpnChipCode.textContent = codeDisp;
         vpnChipCode.classList.remove('hidden');
         btnVpn.title = `dejavu VPN · Protected (${next.vpn.exitCountry || next.vpn.countryName || codeDisp}${next.vpn.exitIp ? ' · ' + next.vpn.exitIp : ''})`;
       } else if (isBusy) {
-        vpnChipCode.textContent = `${Math.max(5, next.vpn.progress || 10)}%`;
+        const pctTxt = `${Math.max(5, next.vpn.progress || 10)}%`;
+        if (vpnChipCode.textContent !== pctTxt) vpnChipCode.textContent = pctTxt;
         vpnChipCode.classList.remove('hidden');
         btnVpn.title = next.vpn.statusText || 'dejavu VPN · Connecting…';
       } else {
-        vpnChipCode.textContent = '';
+        if (vpnChipCode.textContent !== '') vpnChipCode.textContent = '';
         vpnChipCode.classList.add('hidden');
         btnVpn.title = 'dejavu VPN · Disconnected (Click to connect)';
       }
@@ -4861,16 +5199,20 @@
     return 'Installed';
   }
 
+  let lastExtTotalCount = -1;
   function renderPinnedExtensions(list) {
     if (!pinnedExtensions) return;
     const all = Array.isArray(list) ? list : [];
     const pinned = all.filter((e) => e && e.enabled !== false && e.pinned);
     const hasAny = all.length > 0;
-    if (btnExtensions) {
-      btnExtensions.classList.toggle('has-extensions', hasAny);
-      btnExtensions.title = hasAny ? `Extensions (${all.length} installed)` : 'Extensions';
+    if (all.length !== lastExtTotalCount) {
+      lastExtTotalCount = all.length;
+      if (btnExtensions) {
+        btnExtensions.classList.toggle('has-extensions', hasAny);
+        btnExtensions.title = hasAny ? `Extensions (${all.length} installed)` : 'Extensions';
+      }
+      if (extToolbarDot) extToolbarDot.classList.toggle('hidden', !hasAny);
     }
-    if (extToolbarDot) extToolbarDot.classList.toggle('hidden', !hasAny);
 
     const sig = JSON.stringify(pinned.map((e) => [e.id, e.name, e.iconDataUrl, e.popupUrl]));
     if (sig === lastPinnedExtSig) return;
@@ -5866,7 +6208,9 @@
       const msg = ev.data;
       if (!msg || !msg.type) return;
 
-      if (msg.type === 'state') {
+      if (msg.type === 'tabDelta') {
+        applyTabDelta(msg);
+      } else if (msg.type === 'state') {
         applyState(msg);
       } else if (msg.type === 'openProfileSetup') {
         openProfileSetupModal(msg.mode || 'setup', msg.profileId || null);
@@ -5919,15 +6263,14 @@
       } else if (msg.type === 'palette') {
         if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open') && !body.classList.contains('settings-open') && !body.classList.contains('dl-manager-open') && !body.classList.contains('extensions-open') && !body.classList.contains('link-hub-open') && !body.classList.contains('modal-open')) {
           const apMode = (state.browserOptions && state.browserOptions.appearanceMode) || 'auto';
-          const effLight = (apMode === 'light') ? true : (apMode === 'dark' ? false : !!msg.isLight);
-          body.classList.toggle('theme-light', effLight);
-          body.classList.toggle('theme-dark', !effLight);
+          applyThemePolarity(apMode, { isLight: !!msg.isLight }, false, false, false);
         }
       } else if (msg.type === 'adBlocked') {
         state.totalBlocked = msg.totalBlocked;
         updateStatText(state.globalAdBlockEnabled, msg.totalBlocked);
         if (msg.tabId === state.activeTabId) {
-          shieldCount.textContent = String(msg.tabBlocked || 0);
+          const nextShieldTxt = String(msg.tabBlocked || 0);
+          if (shieldCount.textContent !== nextShieldTxt) shieldCount.textContent = nextShieldTxt;
           btnShield.classList.add('pulse');
           setTimeout(() => btnShield.classList.remove('pulse'), 280);
         }

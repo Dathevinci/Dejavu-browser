@@ -44,12 +44,12 @@ namespace DejavuBrowser
             FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.Manual;
-            BackColor = Color.FromArgb(12, 10, 22);
+            BackColor = Color.FromArgb(20, 18, 24);
             TopMost = false;
 
             _wv = new WebView2();
             _wv.Dock = DockStyle.Fill;
-            _wv.DefaultBackgroundColor = Color.FromArgb(12, 10, 22);
+            _wv.DefaultBackgroundColor = Color.FromArgb(20, 18, 24);
             _wv.KeyDown += (s, e) =>
             {
                 if (e == null || e.Handled) return;
@@ -232,7 +232,7 @@ namespace DejavuBrowser
             if (IsDisposed) return;
             if (_everShown && _lastSurfaceLight == isLight) return;
             _lastSurfaceLight = isLight;
-            Color bg = isLight ? Color.FromArgb(247, 242, 250) : Color.FromArgb(29, 27, 32);
+            Color bg = isLight ? Color.FromArgb(251, 248, 253) : Color.FromArgb(20, 18, 24);
             BackColor = bg;
             if (_wv != null && !_wv.IsDisposed)
             {

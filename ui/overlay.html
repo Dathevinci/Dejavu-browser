@@ -30,21 +30,23 @@
       background: var(--md-surface-container-high);
       border: 1px solid color-mix(in srgb, var(--md-outline-variant) 65%, transparent);
       box-shadow: var(--md-elev-3);
-      animation: m3OverlayIn 180ms var(--md-ease-emphasized-decel);
+      contain: layout style;
+      will-change: transform, opacity;
+      animation: m3OverlayIn 170ms var(--md-ease-emphasized-decel);
     }
 
     body.theme-light .overlay-shell {
-      background: var(--md-surface-container-low);
+      background: var(--md-surface-container-lowest);
     }
 
     @keyframes m3OverlayIn {
-      from { opacity: 0; transform: scale(0.94) translateY(-6px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
+      from { opacity: 0; transform: translate3d(0, -5px, 0) scale(0.96); }
+      to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
     }
 
     @keyframes m3CtxOverlayIn {
-      from { opacity: 0; transform: scale(0.93) translateY(-4px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
+      from { opacity: 0; transform: translate3d(0, -4px, 0) scale(0.95); }
+      to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
     }
 
     /* Mode 16: Authentic Google Material Design 3 Web & Shell Context Menu */
@@ -53,11 +55,11 @@
       background: var(--md-surface-container);
       border: 1px solid color-mix(in srgb, var(--md-outline-variant) 70%, transparent);
       box-shadow: var(--md-elev-3);
-      animation: m3CtxOverlayIn 160ms var(--md-ease-emphasized-decel);
+      animation: m3CtxOverlayIn 150ms var(--md-ease-emphasized-decel);
     }
 
     body.theme-light #mode-contextmenu.overlay-shell {
-      background: var(--md-surface-container-low);
+      background: var(--md-surface-container-lowest);
       border-color: color-mix(in srgb, var(--md-outline-variant) 80%, transparent);
     }
 
@@ -385,7 +387,7 @@
       background-clip: content-box;
     }
 
-    .prof-row, .hist-row, .sb-row, .dls-row, .vpn-country-row {
+    .prof-row, .hist-row, .sb-row, .dls-row, .vpn-country-row, .ctxm-item, .menu-item, .ext-pop-row {
       flex-shrink: 0;
       contain: layout style;
     }
@@ -2062,7 +2064,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v4.9.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v5.0.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -2568,7 +2570,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v4.9.0</span>
+        <span id="mn-version-lbl">dejavu v5.0.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -2962,7 +2964,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.9.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.0.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -4094,7 +4096,7 @@
     function renderMenuPanel(d) {
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '4.9.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.0.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');

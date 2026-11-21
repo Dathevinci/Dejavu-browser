@@ -713,12 +713,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         return isLight ? 0xFF6750A4 : 0xFFD0BCFF;
     }
 
+    private int resolveWebViewSurfaceColor(boolean isLight) {
+        return isLight ? 0xFFFBF8FD : 0xFF131116;
+    }
+
     private void applyNativeTheme() {
         boolean isLight = isEffectiveLightTheme();
         MobileTab active = getActiveTab();
         boolean isPriv = active != null && active.isPrivate;
 
         int bgColor = isLight ? 0xFFFEF7FF : 0xFF141218;
+        int webSurfaceColor = resolveWebViewSurfaceColor(isLight);
         int inkPrimary = isLight ? 0xFF1D1B20 : 0xFFE6E0E9;
         int inkMuted = isLight ? 0xFF49454F : 0xFFCAC4D0;
         int accent = resolveAccentInt(isLight);
@@ -734,6 +739,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         } catch (Exception ignored) { }
 
         if (rootContainer != null) rootContainer.setBackgroundColor(bgColor);
+        if (webContainer != null) webContainer.setBackgroundColor(webSurfaceColor);
+        for (MobileTab t : tabs) {
+            if (t != null && t.webView != null) {
+                t.webView.setBackgroundColor(webSurfaceColor);
+            }
+        }
         if (statusScrim != null) statusScrim.setBackgroundColor(isPriv ? 0xFF120A22 : bgColor);
         if (topChrome != null) topChrome.setBackgroundResource(isLight ? R.drawable.bg_top_bar_light : R.drawable.bg_top_bar);
         if (bottomChrome != null) bottomChrome.setBackgroundResource(isLight ? R.drawable.bg_bottom_bar_light : R.drawable.bg_bottom_bar);
@@ -1617,6 +1628,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private void ensureTabWebView(final MobileTab tab) {
         if (tab.webView != null) return;
         ObservableWebView wv = new ObservableWebView(this);
+        wv.setBackgroundColor(resolveWebViewSurfaceColor(isEffectiveLightTheme()));
         wv.setLayoutParams(new FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
@@ -2064,6 +2076,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             ));
 
             final WebView popupWv = new WebView(this);
+            popupWv.setBackgroundColor(resolveWebViewSurfaceColor(isLight));
             WebSettings pws = popupWv.getSettings();
             pws.setJavaScriptEnabled(true);
             pws.setDomStorageEnabled(true);
@@ -2358,7 +2371,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v4.9.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.0.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();

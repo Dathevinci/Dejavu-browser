@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Security;
@@ -11,21 +13,65 @@ using System.Threading.Tasks;
 
 namespace DejavuBrowser
 {
+    public enum UpstreamKind
+    {
+        Socks5,
+        HttpConnect,
+        Socks4
+    }
+
+    public sealed class UpstreamEndpoint
+    {
+        public UpstreamKind Kind;
+        public string Host;
+        public int Port;
+        public string ExitIp;
+        public string City;
+        public string Country;
+        public string CountryCode;
+        public int LatencyMs;
+
+        public string Key
+        {
+            get { return Kind.ToString() + "://" + (Host ?? "") + ":" + Port; }
+        }
+    }
+
+    public sealed class HttpsProbeResult
+    {
+        public int StatusCode;
+        public string Body;
+        public int LatencyMs;
+        public bool Success { get { return StatusCode > 0; } }
+    }
+
     /// <summary>
     /// Ultra-fast loopback HTTP/CONNECT proxy bridge for WebView2.
     /// When VPN is OFF: relays TCP sockets directly with zero restart.
-    /// When VPN is ON: tunnels all TCP + remote DNS (SOCKS5 ATYP 0x03) strictly
-    /// through the encrypted local SOCKS5 tunnel with a fail-closed kill-switch.
+    /// When VPN is ON: tunnels traffic through either:
+    ///   - Smart Clean-IP Global Relay Pool (SOCKS5 / HTTPS CONNECT / SOCKS4 with automatic zero-drop failover), OR
+    ///   - 3-Hop Tor Onion SOCKS5 tunnel (127.0.0.1:socksPort, remote DNS ATYP 0x03)
+    /// with a fail-closed kill-switch when connecting.
     /// </summary>
     internal sealed class LocalProxyBridge : IDisposable
     {
+        private sealed class DnsCacheEntry
+        {
+            public byte[] Ipv4;
+            public DateTime ExpiresUtc;
+        }
+
+        private static readonly ConcurrentDictionary<string, DnsCacheEntry> DnsV4Cache =
+            new ConcurrentDictionary<string, DnsCacheEntry>(StringComparer.OrdinalIgnoreCase);
+
         private readonly TcpListener _listener;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly object _sync = new object();
         private readonly HashSet<TcpClient> _activeVpnClients = new HashSet<TcpClient>();
 
         private volatile bool _vpnEnabled;
-        private volatile int _socksPort;
+        private List<UpstreamEndpoint> _upstreamPool = new List<UpstreamEndpoint>();
+        private int _primaryIndex;
         private long _vpnBytesSent;
         private long _vpnBytesReceived;
         private bool _disposed;
@@ -63,23 +109,93 @@ namespace DejavuBrowser
 
         public void SetDirectMode()
         {
-            _vpnEnabled = false;
-            _socksPort = 0;
+            lock (_sync)
+            {
+                _vpnEnabled = false;
+                _upstreamPool = new List<UpstreamEndpoint>();
+                _primaryIndex = 0;
+            }
             ResetTunneledConnections();
         }
 
         public void SetVpnKillSwitchEngaged()
         {
-            _vpnEnabled = true;
-            _socksPort = 0;
+            lock (_sync)
+            {
+                _vpnEnabled = true;
+                _upstreamPool = new List<UpstreamEndpoint>();
+                _primaryIndex = 0;
+            }
             ResetTunneledConnections();
         }
 
         public void SetSocks5Tunnel(int socksPort)
         {
-            _socksPort = socksPort;
-            _vpnEnabled = true;
+            List<UpstreamEndpoint> pool = new List<UpstreamEndpoint>();
+            if (socksPort > 0)
+            {
+                pool.Add(new UpstreamEndpoint
+                {
+                    Kind = UpstreamKind.Socks5,
+                    Host = "127.0.0.1",
+                    Port = socksPort
+                });
+            }
+            SetUpstreamPool(pool);
+        }
+
+        public void SetUpstreamPool(List<UpstreamEndpoint> endpoints)
+        {
+            lock (_sync)
+            {
+                _upstreamPool = (endpoints != null) ? new List<UpstreamEndpoint>(endpoints) : new List<UpstreamEndpoint>();
+                _primaryIndex = 0;
+                _vpnEnabled = true;
+            }
             ResetTunneledConnections();
+        }
+
+        public UpstreamEndpoint GetPrimaryEndpoint()
+        {
+            lock (_sync)
+            {
+                if (_upstreamPool == null || _upstreamPool.Count == 0) return null;
+                int idx = _primaryIndex % _upstreamPool.Count;
+                return _upstreamPool[idx];
+            }
+        }
+
+        private List<UpstreamEndpoint> SnapshotOrderedPool()
+        {
+            lock (_sync)
+            {
+                if (_upstreamPool == null || _upstreamPool.Count == 0) return null;
+                int count = _upstreamPool.Count;
+                int start = _primaryIndex % count;
+                List<UpstreamEndpoint> ordered = new List<UpstreamEndpoint>(count);
+                for (int i = 0; i < count; i++)
+                {
+                    ordered.Add(_upstreamPool[(start + i) % count]);
+                }
+                return ordered;
+            }
+        }
+
+        private void PromoteEndpointIfInPool(UpstreamEndpoint winner)
+        {
+            if (winner == null) return;
+            lock (_sync)
+            {
+                if (_upstreamPool == null || _upstreamPool.Count <= 1) return;
+                for (int i = 0; i < _upstreamPool.Count; i++)
+                {
+                    if (string.Equals(_upstreamPool[i].Key, winner.Key, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _primaryIndex = i;
+                        return;
+                    }
+                }
+            }
         }
 
         public void ResetTunneledConnections()
@@ -114,6 +230,28 @@ namespace DejavuBrowser
                     if (token.IsCancellationRequested) break;
                 }
             }
+        }
+
+        private async Task<TcpClient> ConnectUsingPoolAsync(string targetHost, int targetPort, CancellationToken token)
+        {
+            List<UpstreamEndpoint> pool = SnapshotOrderedPool();
+            if (pool == null || pool.Count == 0) return null;
+
+            int maxTries = Math.Min(pool.Count, 3);
+            for (int i = 0; i < maxTries; i++)
+            {
+                if (token.IsCancellationRequested) return null;
+                UpstreamEndpoint ep = pool[i];
+                bool isLocalTor = (ep.Kind == UpstreamKind.Socks5 && ep.Host == "127.0.0.1");
+                int timeoutMs = isLocalTor ? 24000 : (i == 0 ? 7500 : 6000);
+                TcpClient tcp = await ConnectViaEndpointAsync(ep, targetHost, targetPort, timeoutMs, token).ConfigureAwait(false);
+                if (tcp != null)
+                {
+                    if (i > 0) PromoteEndpointIfInPool(ep);
+                    return tcp;
+                }
+            }
+            return null;
         }
 
         private async Task HandleClientAsync(TcpClient client, CancellationToken token)
@@ -155,7 +293,7 @@ namespace DejavuBrowser
                     int leftoverLen = totalRead - bodyStart;
 
                     bool useVpn = _vpnEnabled;
-                    int activeSocks = _socksPort;
+                    bool hasPool = (GetPrimaryEndpoint() != null);
 
                     if (method == "CONNECT")
                     {
@@ -167,14 +305,14 @@ namespace DejavuBrowser
                             return;
                         }
 
-                        if (useVpn && activeSocks <= 0)
+                        if (useVpn && !hasPool)
                         {
                             await WriteAsciiAsync(clientStream, "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\n\r\n").ConfigureAwait(false);
                             return;
                         }
 
                         upstream = useVpn
-                            ? await ConnectViaSocks5Async(activeSocks, host, port, 25000, token).ConfigureAwait(false)
+                            ? await ConnectUsingPoolAsync(host, port, token).ConfigureAwait(false)
                             : await ConnectDirectAsync(host, port, 15000, token).ConfigureAwait(false);
 
                         if (upstream == null)
@@ -218,15 +356,26 @@ namespace DejavuBrowser
                         int port = uri.Port > 0 ? uri.Port : 80;
                         string relPath = string.IsNullOrEmpty(uri.PathAndQuery) ? "/" : uri.PathAndQuery;
 
-                        if (useVpn && activeSocks <= 0)
+                        if (useVpn && !hasPool)
                         {
                             await WriteAsciiAsync(clientStream, "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\n\r\n").ConfigureAwait(false);
                             return;
                         }
 
-                        upstream = useVpn
-                            ? await ConnectViaSocks5Async(activeSocks, host, port, 25000, token).ConfigureAwait(false)
-                            : await ConnectDirectAsync(host, port, 15000, token).ConfigureAwait(false);
+                        // For plain HTTP over an HttpConnect upstream, forward directly to proxy with absolute URI!
+                        UpstreamEndpoint primary = useVpn ? GetPrimaryEndpoint() : null;
+                        bool forwardAsHttpProxy = (useVpn && primary != null && primary.Kind == UpstreamKind.HttpConnect);
+
+                        if (forwardAsHttpProxy)
+                        {
+                            upstream = await ConnectDirectAsync(primary.Host, primary.Port, 7500, token).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            upstream = useVpn
+                                ? await ConnectUsingPoolAsync(host, port, token).ConfigureAwait(false)
+                                : await ConnectDirectAsync(host, port, 15000, token).ConfigureAwait(false);
+                        }
 
                         if (upstream == null)
                         {
@@ -246,7 +395,7 @@ namespace DejavuBrowser
                         TrackVpnSocket(upstream, client);
 
                         StringBuilder sb = new StringBuilder();
-                        sb.Append(method).Append(' ').Append(relPath).Append(' ').Append(httpVer).Append("\r\n");
+                        sb.Append(method).Append(' ').Append(forwardAsHttpProxy ? target : relPath).Append(' ').Append(httpVer).Append("\r\n");
                         bool hasHost = false;
                         for (int i = 1; i < lines.Length; i++)
                         {
@@ -337,21 +486,34 @@ namespace DejavuBrowser
             }
         }
 
-        public static async Task<TcpClient> ConnectViaSocks5Async(int socksPort, string host, int port, int timeoutMs, CancellationToken token)
+        public static Task<TcpClient> ConnectViaEndpointAsync(
+            UpstreamEndpoint ep, string targetHost, int targetPort, int timeoutMs, CancellationToken token)
         {
-            TcpClient tcp = new TcpClient();
-            tcp.NoDelay = true;
+            if (ep == null || string.IsNullOrEmpty(ep.Host) || ep.Port <= 0)
+                return Task.FromResult<TcpClient>(null);
+
+            if (ep.Kind == UpstreamKind.Socks5)
+                return ConnectViaSocks5HostAsync(ep.Host, ep.Port, targetHost, targetPort, timeoutMs, token);
+            if (ep.Kind == UpstreamKind.HttpConnect)
+                return ConnectViaHttpConnectAsync(ep.Host, ep.Port, targetHost, targetPort, timeoutMs, token);
+            if (ep.Kind == UpstreamKind.Socks4)
+                return ConnectViaSocks4Async(ep.Host, ep.Port, targetHost, targetPort, timeoutMs, token);
+
+            return Task.FromResult<TcpClient>(null);
+        }
+
+        public static Task<TcpClient> ConnectViaSocks5Async(int socksPort, string host, int port, int timeoutMs, CancellationToken token)
+        {
+            return ConnectViaSocks5HostAsync("127.0.0.1", socksPort, host, port, timeoutMs, token);
+        }
+
+        public static async Task<TcpClient> ConnectViaSocks5HostAsync(
+            string proxyHost, int proxyPort, string host, int port, int timeoutMs, CancellationToken token)
+        {
+            TcpClient tcp = await ConnectDirectAsync(proxyHost, proxyPort, timeoutMs, token).ConfigureAwait(false);
+            if (tcp == null) return null;
             try
             {
-                Task connectTask = tcp.ConnectAsync(IPAddress.Loopback, socksPort);
-                Task delayTask = Task.Delay(timeoutMs, token);
-                if (await Task.WhenAny(connectTask, delayTask).ConfigureAwait(false) != connectTask)
-                {
-                    try { tcp.Close(); } catch { }
-                    return null;
-                }
-                await connectTask.ConfigureAwait(false);
-
                 NetworkStream s = tcp.GetStream();
 
                 // 1. SOCKS5 Greeting: Version 5, 1 Auth Method, No Auth (0x00)
@@ -378,10 +540,10 @@ namespace DejavuBrowser
                     return null;
                 }
                 byte[] req = new byte[7 + hostBytes.Length];
-                req[0] = 0x05; // VER
-                req[1] = 0x01; // CMD = CONNECT
-                req[2] = 0x00; // RSV
-                req[3] = 0x03; // ATYP = DOMAINNAME
+                req[0] = 0x05;
+                req[1] = 0x01;
+                req[2] = 0x00;
+                req[3] = 0x03;
                 req[4] = (byte)hostBytes.Length;
                 Buffer.BlockCopy(hostBytes, 0, req, 5, hostBytes.Length);
                 req[5 + hostBytes.Length] = (byte)((port >> 8) & 0xFF);
@@ -401,8 +563,8 @@ namespace DejavuBrowser
                 }
 
                 int skipBytes = 0;
-                if (repHead[3] == 0x01) skipBytes = 6; // IPv4 (4) + port (2)
-                else if (repHead[3] == 0x04) skipBytes = 18; // IPv6 (16) + port (2)
+                if (repHead[3] == 0x01) skipBytes = 6;
+                else if (repHead[3] == 0x04) skipBytes = 18;
                 else if (repHead[3] == 0x03)
                 {
                     byte[] lenB = new byte[1];
@@ -433,20 +595,168 @@ namespace DejavuBrowser
             }
         }
 
-        /// <summary>
-        /// Performs a real HTTPS GET directly through the SOCKS5 tunnel (using SslStream)
-        /// so dejavu cryptographically verifies the actual exit IP, city, and country!
-        /// </summary>
-        public static async Task<string> HttpsGetViaSocks5Async(int socksPort, string host, string path, int timeoutMs, CancellationToken token)
+        public static async Task<TcpClient> ConnectViaHttpConnectAsync(
+            string proxyHost, int proxyPort, string targetHost, int targetPort, int timeoutMs, CancellationToken token)
         {
-            TcpClient tcp = await ConnectViaSocks5Async(socksPort, host, 443, timeoutMs, token).ConfigureAwait(false);
+            TcpClient tcp = await ConnectDirectAsync(proxyHost, proxyPort, timeoutMs, token).ConfigureAwait(false);
+            if (tcp == null) return null;
+            try
+            {
+                NetworkStream s = tcp.GetStream();
+                string connectReq =
+                    "CONNECT " + targetHost + ":" + targetPort + " HTTP/1.1\r\n" +
+                    "Host: " + targetHost + ":" + targetPort + "\r\n" +
+                    "Proxy-Connection: keep-alive\r\n" +
+                    "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36\r\n\r\n";
+                byte[] reqBytes = Encoding.ASCII.GetBytes(connectReq);
+                await s.WriteAsync(reqBytes, 0, reqBytes.Length, token).ConfigureAwait(false);
+
+                // Read HTTP response header byte-by-byte up to \r\n\r\n so zero TLS bytes are over-read
+                byte[] buf = new byte[4096];
+                int len = 0;
+                int state = 0;
+                while (len < buf.Length)
+                {
+                    int n = await ReadWithTimeoutAsync(s, buf, len, 1, timeoutMs, token).ConfigureAwait(false);
+                    if (n <= 0)
+                    {
+                        try { tcp.Close(); } catch { }
+                        return null;
+                    }
+                    byte b = buf[len];
+                    len++;
+                    if (state == 0 && b == 13) state = 1;
+                    else if (state == 1 && b == 10) state = 2;
+                    else if (state == 2 && b == 13) state = 3;
+                    else if (state == 3 && b == 10) break;
+                    else state = (b == 13) ? 1 : 0;
+                }
+
+                string respHeader = Encoding.ASCII.GetString(buf, 0, len);
+                int firstNl = respHeader.IndexOf('\n');
+                string statusLine = firstNl > 0 ? respHeader.Substring(0, firstNl) : respHeader;
+                if (statusLine.IndexOf(" 200", StringComparison.Ordinal) < 0)
+                {
+                    try { tcp.Close(); } catch { }
+                    return null;
+                }
+
+                return tcp;
+            }
+            catch
+            {
+                try { tcp.Close(); } catch { }
+                return null;
+            }
+        }
+
+        private static async Task<byte[]> ResolveIpv4CachedAsync(string host, int timeoutMs, CancellationToken token)
+        {
+            IPAddress parsed;
+            if (IPAddress.TryParse(host, out parsed) && parsed.AddressFamily == AddressFamily.InterNetwork)
+            {
+                return parsed.GetAddressBytes();
+            }
+
+            DnsCacheEntry entry;
+            if (DnsV4Cache.TryGetValue(host, out entry) && entry.ExpiresUtc > DateTime.UtcNow)
+            {
+                return entry.Ipv4;
+            }
+
+            try
+            {
+                Task<IPAddress[]> dnsTask = Dns.GetHostAddressesAsync(host);
+                Task delayTask = Task.Delay(Math.Min(timeoutMs, 3500), token);
+                if (await Task.WhenAny(dnsTask, delayTask).ConfigureAwait(false) != dnsTask)
+                {
+                    return null;
+                }
+                IPAddress[] addrs = await dnsTask.ConfigureAwait(false);
+                if (addrs != null)
+                {
+                    for (int i = 0; i < addrs.Length; i++)
+                    {
+                        if (addrs[i].AddressFamily == AddressFamily.InterNetwork)
+                        {
+                            byte[] ipv4 = addrs[i].GetAddressBytes();
+                            DnsV4Cache[host] = new DnsCacheEntry
+                            {
+                                Ipv4 = ipv4,
+                                ExpiresUtc = DateTime.UtcNow.AddMinutes(5)
+                            };
+                            return ipv4;
+                        }
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        public static async Task<TcpClient> ConnectViaSocks4Async(
+            string proxyHost, int proxyPort, string targetHost, int targetPort, int timeoutMs, CancellationToken token)
+        {
+            byte[] ipv4 = await ResolveIpv4CachedAsync(targetHost, timeoutMs, token).ConfigureAwait(false);
+            if (ipv4 == null || ipv4.Length != 4) return null;
+
+            TcpClient tcp = await ConnectDirectAsync(proxyHost, proxyPort, timeoutMs, token).ConfigureAwait(false);
+            if (tcp == null) return null;
+            try
+            {
+                NetworkStream s = tcp.GetStream();
+                byte[] req = new byte[9];
+                req[0] = 0x04; // SOCKS4
+                req[1] = 0x01; // CONNECT
+                req[2] = (byte)((targetPort >> 8) & 0xFF);
+                req[3] = (byte)(targetPort & 0xFF);
+                req[4] = ipv4[0];
+                req[5] = ipv4[1];
+                req[6] = ipv4[2];
+                req[7] = ipv4[3];
+                req[8] = 0x00; // empty userid terminator
+                await s.WriteAsync(req, 0, req.Length, token).ConfigureAwait(false);
+
+                byte[] rep = new byte[8];
+                if (!await ReadExactAsync(s, rep, 0, 8, timeoutMs, token).ConfigureAwait(false))
+                {
+                    try { tcp.Close(); } catch { }
+                    return null;
+                }
+                // SOCKS4 reply: VN=0x00, CD=0x5A (90 = request granted)
+                if (rep[1] != 0x5A)
+                {
+                    try { tcp.Close(); } catch { }
+                    return null;
+                }
+                return tcp;
+            }
+            catch
+            {
+                try { tcp.Close(); } catch { }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Performs a real HTTPS GET directly through ANY upstream endpoint (SOCKS5 / HTTP CONNECT / SOCKS4)
+        /// using SslStream and returns HTTP status code, decoded body, and measured round-trip latency!
+        /// </summary>
+        public static async Task<HttpsProbeResult> HttpsProbeViaEndpointAsync(
+            UpstreamEndpoint ep, string host, string path, int timeoutMs, CancellationToken token)
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+            TcpClient tcp = await ConnectViaEndpointAsync(ep, host, 443, timeoutMs, token).ConfigureAwait(false);
             if (tcp == null) return null;
             try
             {
                 using (tcp)
                 using (SslStream ssl = new SslStream(tcp.GetStream(), false))
                 {
-                    Task authTask = ssl.AuthenticateAsClientAsync(host, null, SslProtocols.Tls12, false);
+                    SslProtocols protos = SslProtocols.Tls12;
+                    try { protos = SslProtocols.Tls12 | (SslProtocols)12288; } catch { }
+
+                    Task authTask = ssl.AuthenticateAsClientAsync(host, null, protos, false);
                     if (await Task.WhenAny(authTask, Task.Delay(timeoutMs, token)).ConfigureAwait(false) != authTask)
                     {
                         return null;
@@ -455,8 +765,8 @@ namespace DejavuBrowser
 
                     string req = "GET " + path + " HTTP/1.1\r\n" +
                                  "Host: " + host + "\r\n" +
-                                 "User-Agent: dejavu-vpn/2.6\r\n" +
-                                 "Accept: application/json\r\n" +
+                                 "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36\r\n" +
+                                 "Accept: application/json,text/html,*/*\r\n" +
                                  "Accept-Encoding: identity\r\n" +
                                  "Connection: close\r\n\r\n";
                     byte[] reqBytes = Encoding.ASCII.GetBytes(req);
@@ -471,12 +781,13 @@ namespace DejavuBrowser
                             int n = await ReadWithTimeoutAsync(ssl, buf, 0, buf.Length, timeoutMs, token).ConfigureAwait(false);
                             if (n <= 0) break;
                             ms.Write(buf, 0, n);
-                            if (ms.Length > 65536) break;
+                            if (ms.Length > 49152) break;
                         }
                         byte[] raw = ms.ToArray();
                         int sep = FindHeaderEnd(raw, raw.Length);
                         if (sep < 0) return null;
                         string headers = Encoding.ASCII.GetString(raw, 0, sep);
+                        int statusCode = ParseHttpStatusCode(headers);
                         int bodyOffset = sep + 4;
                         string body;
                         if (headers.IndexOf("Transfer-Encoding: chunked", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -488,7 +799,12 @@ namespace DejavuBrowser
                         {
                             body = Encoding.UTF8.GetString(raw, bodyOffset, raw.Length - bodyOffset);
                         }
-                        return body.Trim();
+                        return new HttpsProbeResult
+                        {
+                            StatusCode = statusCode,
+                            Body = body.Trim(),
+                            LatencyMs = Math.Max(1, (int)sw.ElapsedMilliseconds)
+                        };
                     }
                 }
             }
@@ -496,6 +812,31 @@ namespace DejavuBrowser
             {
                 return null;
             }
+        }
+
+        public static async Task<string> HttpsGetViaEndpointAsync(
+            UpstreamEndpoint ep, string host, string path, int timeoutMs, CancellationToken token)
+        {
+            HttpsProbeResult res = await HttpsProbeViaEndpointAsync(ep, host, path, timeoutMs, token).ConfigureAwait(false);
+            if (res == null || res.StatusCode < 200 || res.StatusCode >= 300) return null;
+            return res.Body;
+        }
+
+        public static Task<string> HttpsGetViaSocks5Async(int socksPort, string host, string path, int timeoutMs, CancellationToken token)
+        {
+            UpstreamEndpoint ep = new UpstreamEndpoint { Kind = UpstreamKind.Socks5, Host = "127.0.0.1", Port = socksPort };
+            return HttpsGetViaEndpointAsync(ep, host, path, timeoutMs, token);
+        }
+
+        private static int ParseHttpStatusCode(string headers)
+        {
+            if (string.IsNullOrEmpty(headers)) return 0;
+            int nl = headers.IndexOf('\n');
+            string line = (nl > 0 ? headers.Substring(0, nl) : headers).Trim();
+            string[] parts = line.Split(' ');
+            int code;
+            if (parts.Length >= 2 && int.TryParse(parts[1], out code)) return code;
+            return 0;
         }
 
         private static byte[] DecodeChunkedBytes(byte[] raw, int startOffset)

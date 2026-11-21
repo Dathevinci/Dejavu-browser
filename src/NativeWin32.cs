@@ -65,6 +65,8 @@ namespace DejavuBrowser
         public const int DWMWCP_ROUNDSMALL = 3;
 
         public const int SW_SHOWNOACTIVATE = 4;
+        public const int SW_SHOW = 5;
+        public const int SW_RESTORE = 9;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct MARGINS
@@ -141,6 +143,9 @@ namespace DejavuBrowser
         public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
         [DllImport("user32.dll")]
+        public static extern bool IsIconic(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
         public static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
@@ -209,14 +214,19 @@ namespace DejavuBrowser
             }
         }
 
-        public static void ApplyWindows11Chrome(IntPtr hwnd, bool roundCorners, bool addShadow)
+        public static void SetImmersiveDarkMode(IntPtr hwnd, bool darkMode)
         {
             try
             {
-                int dark = 1;
-                DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref dark, sizeof(int));
+                int val = darkMode ? 1 : 0;
+                DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref val, sizeof(int));
             }
             catch { }
+        }
+
+        public static void ApplyWindows11Chrome(IntPtr hwnd, bool roundCorners, bool addShadow)
+        {
+            SetImmersiveDarkMode(hwnd, true);
 
             if (roundCorners)
             {

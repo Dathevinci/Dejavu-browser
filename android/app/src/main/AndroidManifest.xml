@@ -21,9 +21,13 @@
 
         <activity
             android:name=".MainActivity"
+            android:alwaysRetainTaskState="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|uiMode"
+            android:documentLaunchMode="never"
             android:exported="true"
             android:launchMode="singleTask"
+            android:maxRecents="1"
+            android:taskAffinity="com.dathevinci.dejavu.main"
             android:windowSoftInputMode="adjustResize">
 
             <intent-filter>

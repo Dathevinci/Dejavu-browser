@@ -32,6 +32,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -43,6 +44,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.journeyapps.barcodescanner.ScanContract;
@@ -86,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private String searchEngine = "google";
     private String wallpaper = "wp-velvet-mirage.jpg";
     private String accentColor = "amethyst";
+    private String themeMode = "dark";
     private JSONArray bookmarks = new JSONArray();
     private JSONArray readingList = new JSONArray();
     private JSONArray history = new JSONArray();
@@ -96,20 +99,27 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private WebView uiWebView;
     private ProgressBar loadProgress;
     private LinearLayout bottomChrome;
+    private LinearLayout urlPillBox;
     private LinearLayout findBar;
     private EditText findInput;
+    private ImageView btnFindPrev;
+    private ImageView btnFindNext;
+    private ImageView btnFindClose;
     private EditText urlInput;
-    private TextView btnShield;
-    private TextView btnReload;
-    private TextView btnBeamPc;
-    private TextView navBack;
-    private TextView navForward;
-    private TextView navHome;
+    private View btnShieldWrap;
+    private ImageView btnShieldIco;
+    private TextView btnShieldCount;
+    private ImageView btnReload;
+    private ImageView btnBeamPc;
+    private ImageView navBack;
+    private ImageView navForward;
+    private ImageView navHome;
     private View navTabsWrap;
     private TextView navTabsBadge;
     private View navSyncWrap;
+    private ImageView navSyncIco;
     private View navSyncDot;
-    private TextView navMenu;
+    private ImageView navMenu;
 
     private LinearLayout incomingBanner;
     private TextView incomingTitle;
@@ -147,6 +157,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Single-instance guard: prevent Android launcher re-launches from stacking a duplicate activity!
+        if (!isTaskRoot() && getIntent() != null &&
+            Intent.ACTION_MAIN.equals(getIntent().getAction()) &&
+            getIntent().hasCategory(Intent.CATEGORY_LAUNCHER)) {
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_main);
 
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
@@ -159,6 +178,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         syncManager = new SyncManager(this, this);
 
         bindViews();
+        applyNativeTheme();
         setupInsets();
         setupUiWebView();
         setupChromeListeners();
@@ -175,10 +195,16 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         uiWebView = findViewById(R.id.ui_webview);
         loadProgress = findViewById(R.id.load_progress);
         bottomChrome = findViewById(R.id.bottom_chrome);
+        urlPillBox = findViewById(R.id.url_pill_box);
         findBar = findViewById(R.id.find_bar);
         findInput = findViewById(R.id.find_input);
+        btnFindPrev = findViewById(R.id.btn_find_prev);
+        btnFindNext = findViewById(R.id.btn_find_next);
+        btnFindClose = findViewById(R.id.btn_find_close);
         urlInput = findViewById(R.id.url_input);
-        btnShield = findViewById(R.id.btn_shield);
+        btnShieldWrap = findViewById(R.id.btn_shield_wrap);
+        btnShieldIco = findViewById(R.id.btn_shield_ico);
+        btnShieldCount = findViewById(R.id.btn_shield_count);
         btnReload = findViewById(R.id.btn_reload);
         btnBeamPc = findViewById(R.id.btn_beam_pc);
         navBack = findViewById(R.id.nav_back);
@@ -187,6 +213,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         navTabsWrap = findViewById(R.id.nav_tabs_wrap);
         navTabsBadge = findViewById(R.id.nav_tabs_badge);
         navSyncWrap = findViewById(R.id.nav_sync_wrap);
+        navSyncIco = findViewById(R.id.nav_sync);
         navSyncDot = findViewById(R.id.nav_sync_dot);
         navMenu = findViewById(R.id.nav_menu);
 
@@ -197,6 +224,78 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         btnIncomingCopy = findViewById(R.id.btn_incoming_copy);
         btnIncomingDismiss = findViewById(R.id.btn_incoming_dismiss);
         fullscreenContainer = findViewById(R.id.fullscreen_container);
+    }
+
+    private int resolveAccentInt(boolean isLight) {
+        if ("sapphire".equals(accentColor)) return isLight ? 0xFF0284C7 : 0xFF4DA6FF;
+        if ("aurora".equals(accentColor))   return isLight ? 0xFF0D9488 : 0xFF38D9A9;
+        if ("rose".equals(accentColor))     return isLight ? 0xFFDB2777 : 0xFFF472B6;
+        if ("gold".equals(accentColor))     return isLight ? 0xFFD97706 : 0xFFF5B942;
+        return isLight ? 0xFF7C4DFF : 0xFFD4B8FF;
+    }
+
+    private void applyNativeTheme() {
+        boolean isLight = "light".equals(themeMode);
+        int bgColor = isLight ? 0xFFF4F1FC : 0xFF07060D;
+        int inkPrimary = isLight ? 0xFF141122 : 0xFFF6F4FF;
+        int inkMuted = isLight ? 0xFF5D5678 : 0xFFB8B0D4;
+        int accent = resolveAccentInt(isLight);
+
+        try {
+            getWindow().setStatusBarColor(bgColor);
+            getWindow().setNavigationBarColor(isLight ? 0xFFF3EFFC : 0xFF07060D);
+            WindowInsetsControllerCompat wic = ViewCompat.getWindowInsetsController(getWindow().getDecorView());
+            if (wic != null) {
+                wic.setAppearanceLightStatusBars(isLight);
+                wic.setAppearanceLightNavigationBars(isLight);
+            }
+        } catch (Exception ignored) { }
+
+        if (rootContainer != null) rootContainer.setBackgroundColor(bgColor);
+        if (uiWebView != null) uiWebView.setBackgroundColor(bgColor);
+        if (bottomChrome != null) bottomChrome.setBackgroundResource(isLight ? R.drawable.bg_bottom_bar_light : R.drawable.bg_bottom_bar);
+        if (urlPillBox != null) urlPillBox.setBackgroundResource(isLight ? R.drawable.bg_glass_pill_light : R.drawable.bg_glass_pill);
+        if (urlInput != null) {
+            urlInput.setTextColor(inkPrimary);
+            urlInput.setHintTextColor(inkMuted);
+        }
+        if (findBar != null) findBar.setBackgroundColor(isLight ? 0xFAFFFFFF : 0xF5120F22);
+        if (findInput != null) {
+            findInput.setTextColor(inkPrimary);
+            findInput.setHintTextColor(inkMuted);
+        }
+        if (btnFindPrev != null) btnFindPrev.setColorFilter(inkPrimary);
+        if (btnFindNext != null) btnFindNext.setColorFilter(inkPrimary);
+        if (btnFindClose != null) btnFindClose.setColorFilter(accent);
+        if (btnShieldIco != null) btnShieldIco.setColorFilter(accent);
+        if (btnShieldCount != null) btnShieldCount.setTextColor(accent);
+        if (btnReload != null) btnReload.setColorFilter(inkMuted);
+        if (btnBeamPc != null) btnBeamPc.setColorFilter(accent);
+        if (navBack != null) navBack.setColorFilter(inkPrimary);
+        if (navForward != null) navForward.setColorFilter(inkPrimary);
+        if (navHome != null) navHome.setColorFilter(inkPrimary);
+        if (navSyncIco != null) navSyncIco.setColorFilter(accent);
+        if (navMenu != null) navMenu.setColorFilter(inkPrimary);
+        if (navTabsBadge != null) {
+            navTabsBadge.setBackgroundResource(isLight ? R.drawable.bg_tab_badge_light : R.drawable.bg_tab_badge);
+            navTabsBadge.setTextColor(accent);
+        }
+        if (incomingBanner != null) incomingBanner.setBackgroundResource(isLight ? R.drawable.bg_toast_banner_light : R.drawable.bg_toast_banner);
+        if (incomingTitle != null) incomingTitle.setTextColor(inkPrimary);
+        if (incomingBody != null) incomingBody.setTextColor(inkMuted);
+        if (btnIncomingDismiss != null) btnIncomingDismiss.setTextColor(inkMuted);
+        if (btnIncomingCopy != null) {
+            btnIncomingCopy.setBackgroundResource(isLight ? R.drawable.bg_glass_pill_light : R.drawable.bg_glass_pill);
+            btnIncomingCopy.setTextColor(inkPrimary);
+        }
+        if (btnIncomingOpen != null) {
+            btnIncomingOpen.setBackgroundResource(isLight ? R.drawable.bg_tab_badge_light : R.drawable.bg_tab_badge);
+            btnIncomingOpen.setTextColor(accent);
+        }
+        if (swipeRefresh != null) {
+            swipeRefresh.setProgressBackgroundColorSchemeColor(isLight ? 0xFFFFFFFF : 0xFF141028);
+            swipeRefresh.setColorSchemeColors(accent, 0xFF5EEAD4);
+        }
     }
 
     private void setupInsets() {
@@ -214,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         ws.setDomStorageEnabled(true);
         ws.setAllowFileAccess(true);
         ws.setAllowFileAccessFromFileURLs(true);
-        uiWebView.setBackgroundColor(0xFF07060D);
+        uiWebView.setBackgroundColor("light".equals(themeMode) ? 0xFFF4F1FC : 0xFF07060D);
         uiWebView.addJavascriptInterface(new MobileJsBridge(), "DejavuMobile");
         uiWebView.setWebViewClient(new WebViewClient() {
             @Override
@@ -250,7 +349,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             return false;
         });
 
-        btnShield.setOnClickListener(v -> {
+        btnShieldWrap.setOnClickListener(v -> {
             adBlocker.setEnabled(!adBlocker.isEnabled());
             saveLocalCollections();
             MobileTab t = getActiveTab();
@@ -729,11 +828,14 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (!urlInput.hasFocus()) {
             urlInput.setText(onWeb ? formatHost(t.url) : "");
         }
-        btnShield.setText(adBlocker.isEnabled()
-            ? (onWeb && t.blockedCount > 0 ? ("🛡 " + t.blockedCount) : "🛡")
-            : "○");
-        btnShield.setAlpha(adBlocker.isEnabled() ? 1.0f : 0.45f);
-        btnReload.setText(onWeb && t.loading ? "✕" : "↻");
+        btnShieldWrap.setAlpha(adBlocker.isEnabled() ? 1.0f : 0.42f);
+        if (adBlocker.isEnabled() && onWeb && t.blockedCount > 0) {
+            btnShieldCount.setText(String.valueOf(t.blockedCount));
+            btnShieldCount.setVisibility(View.VISIBLE);
+        } else {
+            btnShieldCount.setVisibility(View.GONE);
+        }
+        btnReload.setImageResource(onWeb && t.loading ? R.drawable.ic_close : R.drawable.ic_reload);
         btnReload.setVisibility(onWeb ? View.VISIBLE : View.GONE);
         btnBeamPc.setAlpha(onWeb ? 1.0f : 0.55f);
 
@@ -758,6 +860,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("searchEngine", searchEngine);
                 st.put("wallpaper", wallpaper);
                 st.put("accentColor", accentColor);
+                st.put("themeMode", themeMode);
                 st.put("adBlockEnabled", adBlocker.isEnabled());
                 st.put("totalBlocked", adBlocker.getTotalBlocked());
 
@@ -828,6 +931,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         searchEngine = prefs.getString("searchEngine", "google");
         wallpaper = prefs.getString("wallpaper", "wp-velvet-mirage.jpg");
         accentColor = prefs.getString("accentColor", "amethyst");
+        themeMode = prefs.getString("themeMode", "dark");
         try { bookmarks = new JSONArray(prefs.getString("bookmarks", "")); } catch (Exception e) { bookmarks = defaultBookmarks(); }
         if (bookmarks.length() == 0) bookmarks = defaultBookmarks();
         try { readingList = new JSONArray(prefs.getString("readingList", "[]")); } catch (Exception e) { readingList = new JSONArray(); }
@@ -860,6 +964,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putString("searchEngine", searchEngine)
             .putString("wallpaper", wallpaper)
             .putString("accentColor", accentColor)
+            .putString("themeMode", themeMode)
             .putBoolean("adBlockEnabled", adBlocker != null && adBlocker.isEnabled())
             .putLong("totalBlocked", adBlocker != null ? adBlocker.getTotalBlocked() : 0)
             .putString("bookmarks", bookmarks.toString())
@@ -1253,6 +1358,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             mainHandler.post(() -> {
                 accentColor = ac;
                 saveLocalCollections();
+                applyNativeTheme();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void setThemeMode(final String mode) {
+            mainHandler.post(() -> {
+                themeMode = "light".equalsIgnoreCase(mode) ? "light" : "dark";
+                saveLocalCollections();
+                applyNativeTheme();
                 pushStateToUi();
             });
         }

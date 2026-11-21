@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.IO.Pipes;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -85,6 +86,8 @@ namespace DejavuBrowser
         private readonly SuggestEngine _suggest = new SuggestEngine();
         private readonly string _initialUrl;
         private readonly int _debugPort;
+        private readonly string _singleInstancePipeName;
+        private readonly CancellationTokenSource _pipeCts = new CancellationTokenSource();
 
         private readonly Dictionary<string, CoreWebView2Environment> _envCache =
             new Dictionary<string, CoreWebView2Environment>(StringComparer.OrdinalIgnoreCase);
@@ -148,10 +151,11 @@ namespace DejavuBrowser
             "id.twitch.tv", "www.facebook.com", "api.twitter.com", "x.com"
         };
 
-        public BrowserForm(string initialUrl, string requestedProfileId, int debugPort)
+        public BrowserForm(string initialUrl, string requestedProfileId, int debugPort, string singleInstancePipeName)
         {
             _initialUrl = initialUrl;
             _debugPort = debugPort;
+            _singleInstancePipeName = singleInstancePipeName;
             _profiles = new ProfileManager(requestedProfileId);
             _settings = _profiles.LoadActiveSettings();
             _adBlocker = new AdBlocker(_settings, _profiles.ActiveSettingsPath);
@@ -163,7 +167,7 @@ namespace DejavuBrowser
             _updater.StatusChanged += OnUpdaterStatusChanged;
 
             _proxyBridge = new LocalProxyBridge();
-            _vpn = new VpnManager(_proxyBridge, _settings.vpnCountry, _settings.vpnAutoConnect);
+            _vpn = new VpnManager(_proxyBridge, _settings.vpnCountry, _settings.vpnAutoConnect, _settings.vpnMode);
             _vpn.StateChanged += OnVpnStateChanged;
 
             _sync = new SyncManager(_profiles.GetProfileDataDir(_profiles.ActiveProfile.id));
@@ -237,6 +241,8 @@ namespace DejavuBrowser
             };
             FormClosing += (s, e) =>
             {
+                try { _pipeCts.Cancel(); } catch { }
+                try { _pipeCts.Dispose(); } catch { }
                 try
                 {
                     List<string> sessionUrls = new List<string>();
@@ -319,6 +325,7 @@ namespace DejavuBrowser
                 { "hideStartPageSearch", _settings.hideStartPageSearch },
                 { "favoritesBarHidden", _favoritesBarHidden },
                 { "vpnAutoConnect", _settings.vpnAutoConnect },
+                { "vpnMode", _settings.vpnMode ?? "smart" },
                 { "vpnCountry", _settings.vpnCountry ?? "AUTO" }
             };
         }
@@ -436,7 +443,100 @@ namespace DejavuBrowser
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
+            bool lightMode = (_settings != null && _settings.appearanceMode == "light");
             NativeWin32.ApplyWindows11Chrome(Handle, true, true);
+            NativeWin32.SetImmersiveDarkMode(Handle, !lightMode);
+            if (!string.IsNullOrEmpty(_singleInstancePipeName))
+            {
+                Task.Run(() => RunSingleInstancePipeLoopAsync(_pipeCts.Token));
+            }
+        }
+
+        private async Task RunSingleInstancePipeLoopAsync(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested && !IsDisposed)
+            {
+                bool failed = false;
+                try
+                {
+                    using (NamedPipeServerStream server = new NamedPipeServerStream(
+                        _singleInstancePipeName,
+                        PipeDirection.In,
+                        4,
+                        PipeTransmissionMode.Byte,
+                        PipeOptions.Asynchronous))
+                    {
+                        using (token.Register(() => { try { server.Dispose(); } catch { } }))
+                        {
+                            await Task.Factory.FromAsync(server.BeginWaitForConnection, server.EndWaitForConnection, null).ConfigureAwait(false);
+                        }
+                        if (token.IsCancellationRequested || IsDisposed) break;
+
+                        using (StreamReader sr = new StreamReader(server, System.Text.Encoding.UTF8))
+                        {
+                            string line = await sr.ReadLineAsync().ConfigureAwait(false);
+                            if (!string.IsNullOrWhiteSpace(line) && !IsDisposed && IsHandleCreated)
+                            {
+                                string cmd = line.Trim();
+                                BeginInvoke((Action)(() => HandleSecondaryInstanceCommand(cmd)));
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    failed = true;
+                }
+                if (failed)
+                {
+                    if (token.IsCancellationRequested || IsDisposed) break;
+                    try { await Task.Delay(150, token).ConfigureAwait(false); } catch { break; }
+                }
+            }
+        }
+
+        private void HandleSecondaryInstanceCommand(string cmd)
+        {
+            if (IsDisposed) return;
+            BringWindowToFront();
+            if (cmd.StartsWith("OPEN:", StringComparison.OrdinalIgnoreCase))
+            {
+                string rawUrl = cmd.Substring(5).Trim();
+                if (!string.IsNullOrEmpty(rawUrl))
+                {
+                    CreateTab(ResolveInputToUrl(rawUrl), true);
+                }
+            }
+            else if (cmd.StartsWith("PROFILE:", StringComparison.OrdinalIgnoreCase))
+            {
+                string pid = cmd.Substring(8).Trim();
+                if (!string.IsNullOrEmpty(pid) &&
+                    !string.Equals(_profiles.ActiveProfile.id, pid, StringComparison.OrdinalIgnoreCase))
+                {
+                    SwitchActiveProfileAsync(pid);
+                }
+            }
+        }
+
+        private void BringWindowToFront()
+        {
+            try
+            {
+                if (WindowState == FormWindowState.Minimized || NativeWin32.IsIconic(Handle))
+                {
+                    NativeWin32.ShowWindow(Handle, NativeWin32.SW_RESTORE);
+                }
+                else
+                {
+                    NativeWin32.ShowWindow(Handle, NativeWin32.SW_SHOW);
+                }
+                bool prevTop = TopMost;
+                TopMost = true;
+                Activate();
+                NativeWin32.SetForegroundWindow(Handle);
+                TopMost = prevTop;
+            }
+            catch { }
         }
 
         protected override void WndProc(ref Message m)
@@ -899,12 +999,18 @@ namespace DejavuBrowser
 
         private void OpenProfileInNewWindow(string profileId)
         {
-            try
+            // Strict Single-Instance: never spawn a duplicate process (which creates a black WebView2 window).
+            // If targeting another profile, switch seamlessly in-window; if same profile, open a clean Start Page tab!
+            if (!string.IsNullOrEmpty(profileId) &&
+                !string.Equals(_profiles.ActiveProfile.id, profileId, StringComparison.OrdinalIgnoreCase))
             {
-                string exe = Assembly.GetExecutingAssembly().Location;
-                Process.Start(new ProcessStartInfo(exe, "--profile=" + profileId) { UseShellExecute = true });
+                SwitchActiveProfileAsync(profileId);
             }
-            catch { }
+            else
+            {
+                CreateDefaultNewTab(true);
+            }
+            BringWindowToFront();
         }
 
         // =====================================================================
@@ -1619,7 +1725,7 @@ namespace DejavuBrowser
             if (sourceWv == null || sourceWv.IsDisposed || sourceWv.CoreWebView2 == null) return "";
 
             int topOffset = captureShell ? 0 : TopBarHeightPx;
-            bool isLight = !captureShell && tab.IsLight;
+            bool isLight = GetEffectiveIsLight(tab, captureShell);
 
             string cached = TryCropCachedBackdrop(clientRect, captureShell, tabId, isLight);
             if (cached != null) return cached;
@@ -1736,7 +1842,7 @@ namespace DejavuBrowser
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
             BrowserTab tab = GetActiveTab();
             bool captureShell = (tab == null || tab.IsNewTab);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, !captureShell && tab.IsLight);
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, GetEffectiveIsLight(tab, captureShell));
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildProfilesPayloadJson(cached ?? ""), true);
@@ -1793,7 +1899,7 @@ namespace DejavuBrowser
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
             BrowserTab tab = GetActiveTab();
             bool captureShell = (tab == null || tab.IsNewTab);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, !captureShell && tab.IsLight);
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, GetEffectiveIsLight(tab, captureShell));
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildHistoryPayloadJson(cached ?? ""), true);
@@ -2029,8 +2135,8 @@ namespace DejavuBrowser
             HideSuggestPopup();
             _activePopoverMode = "vpn";
             float sc = DpiScale;
-            int popW = (int)Math.Round(396 * sc);
-            int popH = (int)Math.Round(566 * sc);
+            int popW = (int)Math.Round(398 * sc);
+            int popH = (int)Math.Round(592 * sc);
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
@@ -2038,7 +2144,7 @@ namespace DejavuBrowser
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
             BrowserTab tab = GetActiveTab();
             bool captureShell = (tab == null || tab.IsNewTab);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, !captureShell && tab.IsLight);
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, GetEffectiveIsLight(tab, captureShell));
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildVpnPayloadJson(cached ?? ""), true);
@@ -2128,7 +2234,7 @@ namespace DejavuBrowser
                 if (token.IsCancellationRequested || seq != _suggestSeq) return;
 
                 List<SuggestItem> merged = await _suggest.MergeWithLiveSuggestionsAsync(
-                    trimmed, _settings.searchEngine, local, _vpn.IsBusyOrConnected, _vpn.ActiveSocksPort, token);
+                    trimmed, _settings.searchEngine, local, _vpn.IsBusyOrConnected, _vpn.ActiveUpstreamEndpoint, token);
 
                 if (token.IsCancellationRequested || seq != _suggestSeq || IsDisposed) return;
 
@@ -2176,7 +2282,7 @@ namespace DejavuBrowser
 
             BrowserTab tab = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
-            bool isLight = !captureShell && tab.IsLight;
+            bool isLight = GetEffectiveIsLight(tab, captureShell);
             bool needBackdrop = string.IsNullOrEmpty(_suggestBackdropCache) || !_suggestPopup.IsPopupOpen ||
                 Math.Abs(_suggestLastRect.X - clientRect.X) > 20 || Math.Abs(_suggestLastRect.Width - clientRect.Width) > 20;
 
@@ -2224,7 +2330,8 @@ namespace DejavuBrowser
             var payload = new Dictionary<string, object>
             {
                 { "mode", "suggest" },
-                { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
+                { "isLight", GetEffectiveIsLight(tab, _tabOverviewOpen || tab == null || tab.IsNewTab) },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "items", _lastSuggestItems },
                 { "selectedIndex", _suggestSelectedIndex }
             };
@@ -2285,7 +2392,8 @@ namespace DejavuBrowser
             var payload = new Dictionary<string, object>
             {
                 { "mode", "find" },
-                { "isLight", tab.IsLight },
+                { "isLight", GetEffectiveIsLight(tab, false) },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "backdrop", backdropDataUrl }
             };
 
@@ -2328,7 +2436,8 @@ namespace DejavuBrowser
             var payload = new Dictionary<string, object>
             {
                 { "mode", "download" },
-                { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
+                { "isLight", GetEffectiveIsLight(tab, tab == null || tab.IsNewTab) },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "filename", filename },
                 { "filePath", filePath },
                 { "received", received },
@@ -2363,7 +2472,8 @@ namespace DejavuBrowser
             var payload = new Dictionary<string, object>
             {
                 { "mode", "update" },
-                { "isLight", tab != null && !tab.IsNewTab && tab.IsLight },
+                { "isLight", GetEffectiveIsLight(tab, tab == null || tab.IsNewTab) },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "backdrop", backdrop ?? "" },
                 { "version", info.Version },
                 { "currentVersion", AutoUpdater.CurrentVersion }
@@ -2528,6 +2638,14 @@ namespace DejavuBrowser
                 if (am == "auto" || am == "dark" || am == "light")
                 {
                     _settings.appearanceMode = am;
+                    _cachedBackdropJpeg = null;
+                    bool isLightForced = (am == "light");
+                    NativeWin32.SetImmersiveDarkMode(Handle, !isLightForced);
+                    BackColor = isLightForced ? Color.FromArgb(245, 244, 250) : Color.FromArgb(7, 6, 13);
+                    if (_shellView != null && !_shellView.IsDisposed)
+                    {
+                        _shellView.DefaultBackgroundColor = BackColor;
+                    }
                 }
             }
             if (msg.ContainsKey("accentColor"))
@@ -2604,6 +2722,19 @@ namespace DejavuBrowser
             if (msg.ContainsKey("vpnAutoConnect"))
             {
                 _settings.vpnAutoConnect = Convert.ToBoolean(msg["vpnAutoConnect"]);
+                if (_vpn != null) _vpn.AutoConnect = _settings.vpnAutoConnect;
+            }
+            if (msg.ContainsKey("vpnMode"))
+            {
+                string vm = VpnManager.NormalizeMode(Convert.ToString(msg["vpnMode"]));
+                if (!string.Equals(_settings.vpnMode, vm, StringComparison.OrdinalIgnoreCase))
+                {
+                    _settings.vpnMode = vm;
+                    if (_vpn != null)
+                    {
+                        Task ignoredMode = _vpn.SetModeAsync(vm);
+                    }
+                }
             }
             if (msg.ContainsKey("vpnCountry"))
             {
@@ -2671,6 +2802,10 @@ namespace DejavuBrowser
         {
             _settings.searchEngine = "google";
             _settings.appearanceMode = "auto";
+            _cachedBackdropJpeg = null;
+            NativeWin32.SetImmersiveDarkMode(Handle, true);
+            BackColor = Color.FromArgb(7, 6, 13);
+            if (_shellView != null && !_shellView.IsDisposed) _shellView.DefaultBackgroundColor = BackColor;
             _settings.accentColor = "amethyst";
             _settings.showFullWebsiteAddress = false;
             _settings.alwaysShowTabClose = false;
@@ -2938,7 +3073,7 @@ namespace DejavuBrowser
             Rectangle clientRect = new Rectangle(x, topY, popW, popH);
             BrowserTab tab = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, !captureShell && tab.IsLight);
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, GetEffectiveIsLight(tab, captureShell));
 
             Point screenPt = PointToScreen(new Point(x, topY));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildSidebarPayloadJson(cached ?? ""), true);
@@ -2978,7 +3113,8 @@ namespace DejavuBrowser
             var payload = new Dictionary<string, object>
             {
                 { "mode", "sidebar" },
-                { "isLight", !_tabOverviewOpen && active != null && !active.IsNewTab && active.IsLight },
+                { "isLight", GetEffectiveIsLight(active, _tabOverviewOpen || active == null || active.IsNewTab) },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "profile", _profiles.ActiveProfile },
                 { "tabGroups", _profiles.TabGroups },
                 { "activeGroupId", _activeTabGroupId },
@@ -3015,13 +3151,14 @@ namespace DejavuBrowser
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
             BrowserTab tab = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
-            bool isLight = !captureShell && tab.IsLight;
+            bool isLight = GetEffectiveIsLight(tab, captureShell);
             string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, isLight);
 
             var payload = new Dictionary<string, object>
             {
                 { "mode", "share" },
                 { "isLight", isLight },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "backdrop", cached ?? "" },
                 { "isNewTab", tab == null || tab.IsNewTab },
                 { "title", (tab != null && !tab.IsNewTab) ? (string.IsNullOrEmpty(tab.Title) ? FormatDisplayUrl(tab.Url) : tab.Title) : "Start Page" },
@@ -3061,7 +3198,7 @@ namespace DejavuBrowser
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
             BrowserTab tab = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, !captureShell && tab.IsLight);
+            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, GetEffectiveIsLight(tab, captureShell));
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildDownloadsPayloadJson(cached ?? ""), true);
@@ -3074,7 +3211,8 @@ namespace DejavuBrowser
             var payload = new Dictionary<string, object>
             {
                 { "mode", "downloads" },
-                { "isLight", !_tabOverviewOpen && tab != null && !tab.IsNewTab && tab.IsLight },
+                { "isLight", GetEffectiveIsLight(tab, _tabOverviewOpen || tab == null || tab.IsNewTab) },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "items", _downloads }
             };
             if (backdrop != null) payload["backdrop"] = backdrop;
@@ -3098,7 +3236,7 @@ namespace DejavuBrowser
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
             BrowserTab active = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || active == null || active.IsNewTab);
-            bool isLight = !captureShell && active.IsLight;
+            bool isLight = GetEffectiveIsLight(active, captureShell);
             string cached = TryCropCachedBackdrop(clientRect, captureShell, active != null ? active.Id : -1, isLight);
             bool isMuted = target.CoreReady && target.WebView != null && target.WebView.CoreWebView2.IsMuted;
 
@@ -3106,6 +3244,7 @@ namespace DejavuBrowser
             {
                 { "mode", "tabmenu" },
                 { "isLight", isLight },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "backdrop", cached ?? "" },
                 { "tabId", target.Id },
                 { "isPinned", target.IsPinned },
@@ -3549,6 +3688,15 @@ namespace DejavuBrowser
                     _settings.vpnAutoConnect = enabled;
                     _profiles.SaveActiveSettings(_settings);
                     _vpn.AutoConnect = enabled;
+                    PushFullStateToShell();
+                    SendVpnPanelState(null);
+                }
+                else if (type == "setVpnMode")
+                {
+                    string mode = VpnManager.NormalizeMode(msg.ContainsKey("mode") ? Convert.ToString(msg["mode"]) : "smart");
+                    _settings.vpnMode = mode;
+                    _profiles.SaveActiveSettings(_settings);
+                    await _vpn.SetModeAsync(mode);
                     PushFullStateToShell();
                     SendVpnPanelState(null);
                 }

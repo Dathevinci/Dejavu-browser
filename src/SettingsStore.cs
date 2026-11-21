@@ -21,6 +21,7 @@ namespace DejavuBrowser
         public string wallpaper { get; set; }
         public string customWallpaperPath { get; set; }
         public string vpnCountry { get; set; }
+        public string vpnMode { get; set; }
         public bool vpnAutoConnect { get; set; }
         public bool hideFavorites { get; set; }
         public bool hideFrequentlyVisited { get; set; }
@@ -53,6 +54,7 @@ namespace DejavuBrowser
             wallpaper = "live:obsidian-prism";
             customWallpaperPath = "";
             vpnCountry = "AUTO";
+            vpnMode = "smart";
             vpnAutoConnect = false;
             appearanceMode = "auto";
             accentColor = "amethyst";
@@ -127,6 +129,7 @@ namespace DejavuBrowser
                             if (string.IsNullOrEmpty(loaded.wallpaper)) loaded.wallpaper = "live:obsidian-prism";
                             if (loaded.customWallpaperPath == null) loaded.customWallpaperPath = "";
                             if (string.IsNullOrEmpty(loaded.vpnCountry)) loaded.vpnCountry = "AUTO";
+                            if (string.IsNullOrEmpty(loaded.vpnMode)) loaded.vpnMode = "smart";
                             if (loaded.pausedHosts == null) loaded.pausedHosts = new List<string>();
                             if (string.IsNullOrEmpty(loaded.appearanceMode)) loaded.appearanceMode = "auto";
                             if (string.IsNullOrEmpty(loaded.accentColor)) loaded.accentColor = "amethyst";

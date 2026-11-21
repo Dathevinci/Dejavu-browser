@@ -11,7 +11,7 @@
   'use strict';
 
   const REPO_API = 'https://api.github.com/repos/Dathevinci/Dejavu-browser/releases/latest';
-  const FALLBACK_VERSION = 'v3.1.0';
+  const FALLBACK_VERSION = 'v3.2.0';
   const FALLBACK_SETUP_URL = 'https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-Setup.exe';
   const FALLBACK_PORTABLE_URL = 'https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu.exe';
 
@@ -854,7 +854,7 @@
       if (mvpIp) mvpIp.textContent = vpnConnected ? vpnIp : 'Direct';
       if (mvpLoc) mvpLoc.textContent = vpnConnected ? vpnName : 'Disconnected';
       if (mvpStatus) mvpStatus.textContent = vpnConnected ? '3-Hop Encrypted · Remote DNS' : 'Disconnected · Direct connection';
-      if (spVpnLabel) spVpnLabel.textContent = vpnConnected ? 'VPN: ' + vpnName : 'VPN: Off · 46 locations';
+      if (spVpnLabel) spVpnLabel.textContent = vpnConnected ? 'VPN: ' + vpnName : 'VPN: Off · 86+ locations';
     }
 
     function toggleVpnPopover() {

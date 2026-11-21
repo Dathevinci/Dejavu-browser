@@ -1,7 +1,11 @@
 using System;
 using System.IO;
+using System.IO.Pipes;
 using System.Net;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace DejavuBrowser
@@ -21,16 +25,6 @@ namespace DejavuBrowser
             {
                 try { ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12; } catch { }
             }
-
-            NativeWin32.EnablePerMonitorDpi();
-
-            // Self-contained single-EXE runtime bootstrap:
-            // Extracts WebView2Loader.dll once into %LOCALAPPDATA%\dejavu\runtime\
-            // and loads managed WebView2 assemblies directly from embedded resources.
-            BootstrapEmbeddedDependencies();
-
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
 
             string initialUrl = null;
             string profileId = null;
@@ -54,14 +48,107 @@ namespace DejavuBrowser
                     }
                 }
             }
-            RunApp(initialUrl, profileId, debugPort);
+
+            // Bulletproof Single-Instance Lock keyed by Data Directory:
+            // Prevents spawning a duplicate window (which causes WebView2 proxy-port black windows)
+            // and instead activates the running instance and opens any passed URL in a new tab!
+            string instanceHash = ComputeShortHash(SettingsStore.AppDataDir.TrimEnd('\\', '/').ToLowerInvariant());
+            string mutexName = "Local\\DejavuBrowser_SingleInstance_" + instanceHash;
+            string pipeName = "DejavuBrowser_Pipe_" + instanceHash;
+
+            bool createdNew = false;
+            Mutex singleMutex = null;
+            try
+            {
+                singleMutex = new Mutex(true, mutexName, out createdNew);
+            }
+            catch
+            {
+                createdNew = true;
+            }
+
+            if (!createdNew)
+            {
+                NotifyRunningInstance(pipeName, initialUrl, profileId);
+                try { if (singleMutex != null) singleMutex.Dispose(); } catch { }
+                return;
+            }
+
+            try
+            {
+                NativeWin32.EnablePerMonitorDpi();
+
+                // Self-contained single-EXE runtime bootstrap:
+                // Extracts WebView2Loader.dll once into %LOCALAPPDATA%\dejavu\runtime-x64\
+                // and loads managed WebView2 assemblies directly from embedded resources.
+                BootstrapEmbeddedDependencies();
+
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+
+                RunApp(initialUrl, profileId, debugPort, pipeName);
+            }
+            finally
+            {
+                if (singleMutex != null)
+                {
+                    try { singleMutex.ReleaseMutex(); } catch { }
+                    try { singleMutex.Dispose(); } catch { }
+                }
+            }
         }
 
-        private static void RunApp(string initialUrl, string profileId, int debugPort)
+        private static string ComputeShortHash(string input)
+        {
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(input ?? "dejavu"));
+                StringBuilder sb = new StringBuilder(16);
+                for (int i = 0; i < 8; i++)
+                {
+                    sb.Append(bytes[i].ToString("x2"));
+                }
+                return sb.ToString();
+            }
+        }
+
+        private static void NotifyRunningInstance(string pipeName, string initialUrl, string profileId)
+        {
+            string payload = "ACTIVATE";
+            if (!string.IsNullOrWhiteSpace(initialUrl))
+            {
+                payload = "OPEN:" + initialUrl.Trim();
+            }
+            else if (!string.IsNullOrWhiteSpace(profileId))
+            {
+                payload = "PROFILE:" + profileId.Trim();
+            }
+
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                try
+                {
+                    using (NamedPipeClientStream client = new NamedPipeClientStream(".", pipeName, PipeDirection.Out))
+                    {
+                        client.Connect(1200);
+                        byte[] data = Encoding.UTF8.GetBytes(payload + "\n");
+                        client.Write(data, 0, data.Length);
+                        client.Flush();
+                        return;
+                    }
+                }
+                catch
+                {
+                    Thread.Sleep(120);
+                }
+            }
+        }
+
+        private static void RunApp(string initialUrl, string profileId, int debugPort, string pipeName)
         {
             // Keep BrowserForm in a separate method so CLR doesn't JIT WebView2 types
             // before AssemblyResolve and WebView2Loader.dll are registered.
-            using (BrowserForm form = new BrowserForm(initialUrl, profileId, debugPort))
+            using (BrowserForm form = new BrowserForm(initialUrl, profileId, debugPort, pipeName))
             {
                 Application.Run(form);
             }

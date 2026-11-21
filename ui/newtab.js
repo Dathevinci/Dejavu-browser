@@ -205,6 +205,7 @@
   let currentWallpaper = (window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.wallpaper) || 'live:obsidian-prism';
   let reduceMotion = !!(window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.browserOptions && window.__DEJAVU_BOOT__.browserOptions.reduceWallpaperMotion);
   let dimMode = (window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.browserOptions && window.__DEJAVU_BOOT__.browserOptions.wallpaperDim) || 'balanced';
+  let lightMode = !!(window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.browserOptions && window.__DEJAVU_BOOT__.browserOptions.appearanceMode === 'light');
   let frozenTime = 0;
   let artImage = null;
   let prevArtImage = null;
@@ -453,7 +454,7 @@
   }
 
   function drawArtworkMode(t, dt) {
-    ctx.fillStyle = '#06050b';
+    ctx.fillStyle = lightMode ? '#f3f0fa' : '#06050b';
     ctx.fillRect(0, 0, width, height);
 
     if (artLoaded && artImage && artImage.naturalWidth > 0) {
@@ -470,25 +471,45 @@
         drawCoverImage(artImage, 1);
       }
 
-      // Refined ambient vignette: respects Safari Appearance Wallpaper Dimming (vivid / balanced / calm)
       const dimMult = dimMode === 'vivid' ? 0.45 : (dimMode === 'calm' ? 1.85 : 1.0);
-      const vig = ctx.createRadialGradient(
-        width * 0.5, height * 0.45, Math.min(width, height) * 0.08,
-        width * 0.5, height * 0.50, Math.max(width, height) * 0.76
-      );
-      vig.addColorStop(0, `rgba(6, 5, 13, ${(0.17 * dimMult).toFixed(3)})`);
-      vig.addColorStop(0.42, `rgba(6, 5, 13, ${(0.08 * dimMult).toFixed(3)})`);
-      vig.addColorStop(0.72, `rgba(5, 4, 11, ${(0.03 * dimMult).toFixed(3)})`);
-      vig.addColorStop(1, `rgba(4, 3, 10, ${Math.min(0.62, 0.28 * dimMult).toFixed(3)})`);
-      ctx.fillStyle = vig;
-      ctx.fillRect(0, 0, width, height);
+      if (lightMode) {
+        // Luminous Apple Porcelain Pearl Veil: softens dark wallpapers so crisp dark typography shines!
+        const veilAlpha = dimMode === 'vivid' ? 0.44 : (dimMode === 'calm' ? 0.72 : 0.58);
+        const vig = ctx.createRadialGradient(
+          width * 0.5, height * 0.44, Math.min(width, height) * 0.08,
+          width * 0.5, height * 0.50, Math.max(width, height) * 0.80
+        );
+        vig.addColorStop(0, `rgba(250, 248, 255, ${(veilAlpha + 0.14).toFixed(3)})`);
+        vig.addColorStop(0.55, `rgba(244, 240, 254, ${veilAlpha.toFixed(3)})`);
+        vig.addColorStop(1, `rgba(235, 229, 252, ${Math.min(0.84, veilAlpha + 0.16).toFixed(3)})`);
+        ctx.fillStyle = vig;
+        ctx.fillRect(0, 0, width, height);
 
-      // Whisper-soft top toolbar scrim so unified Safari chrome reads cleanly over bright skies
-      const topScrim = ctx.createLinearGradient(0, 0, 0, Math.min(160, height * 0.22));
-      topScrim.addColorStop(0, `rgba(5, 4, 12, ${Math.min(0.48, 0.24 * dimMult).toFixed(3)})`);
-      topScrim.addColorStop(1, 'rgba(5, 4, 12, 0)');
-      ctx.fillStyle = topScrim;
-      ctx.fillRect(0, 0, width, Math.min(160, height * 0.22));
+        const topScrim = ctx.createLinearGradient(0, 0, 0, Math.min(150, height * 0.22));
+        topScrim.addColorStop(0, 'rgba(247, 245, 254, 0.72)');
+        topScrim.addColorStop(1, 'rgba(247, 245, 254, 0)');
+        ctx.fillStyle = topScrim;
+        ctx.fillRect(0, 0, width, Math.min(150, height * 0.22));
+      } else {
+        // Refined ambient vignette: respects Safari Appearance Wallpaper Dimming (vivid / balanced / calm)
+        const vig = ctx.createRadialGradient(
+          width * 0.5, height * 0.45, Math.min(width, height) * 0.08,
+          width * 0.5, height * 0.50, Math.max(width, height) * 0.76
+        );
+        vig.addColorStop(0, `rgba(6, 5, 13, ${(0.17 * dimMult).toFixed(3)})`);
+        vig.addColorStop(0.42, `rgba(6, 5, 13, ${(0.08 * dimMult).toFixed(3)})`);
+        vig.addColorStop(0.72, `rgba(5, 4, 11, ${(0.03 * dimMult).toFixed(3)})`);
+        vig.addColorStop(1, `rgba(4, 3, 10, ${Math.min(0.62, 0.28 * dimMult).toFixed(3)})`);
+        ctx.fillStyle = vig;
+        ctx.fillRect(0, 0, width, height);
+
+        // Whisper-soft top toolbar scrim so unified Safari chrome reads cleanly over bright skies
+        const topScrim = ctx.createLinearGradient(0, 0, 0, Math.min(160, height * 0.22));
+        topScrim.addColorStop(0, `rgba(5, 4, 12, ${Math.min(0.48, 0.24 * dimMult).toFixed(3)})`);
+        topScrim.addColorStop(1, 'rgba(5, 4, 12, 0)');
+        ctx.fillStyle = topScrim;
+        ctx.fillRect(0, 0, width, Math.min(160, height * 0.22));
+      }
     }
 
     // Ultra-delicate shimmering optical stardust motes (paused when reduceMotion is active)
@@ -515,9 +536,15 @@
       width * pointerX, height * pointerY, 24,
       width * 0.5, height * 0.5, Math.max(width, height) * 0.88
     );
-    bg.addColorStop(0, theme.bg0);
-    bg.addColorStop(0.46, theme.bg1);
-    bg.addColorStop(1, theme.bg2);
+    if (lightMode) {
+      bg.addColorStop(0, '#fcfbff');
+      bg.addColorStop(0.48, '#f0eafd');
+      bg.addColorStop(1, '#e1d7f8');
+    } else {
+      bg.addColorStop(0, theme.bg0);
+      bg.addColorStop(0.46, theme.bg1);
+      bg.addColorStop(1, theme.bg2);
+    }
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
 
@@ -665,6 +692,9 @@
     if (typeof opts.reduceMotion === 'boolean') reduceMotion = opts.reduceMotion;
     if (typeof opts.dim === 'string' && (opts.dim === 'vivid' || opts.dim === 'balanced' || opts.dim === 'calm')) {
       dimMode = opts.dim;
+    }
+    if (typeof opts.lightMode === 'boolean') {
+      lightMode = opts.lightMode;
     }
   }
 

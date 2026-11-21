@@ -11,7 +11,12 @@ Visit the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** o
 - **`dejavu.exe`** — Standalone portable single-file executable (double-click to run directly).
 - **`dejavu-mobile.apk`** — Native Android Mobile Browser (Android 8.0+) with thumb-friendly Samsung Internet × Safari Liquid Glass bottom bar, built-in Ad Blocker, 6 HD wallpapers, QR scanner, Share-to-PC, and real-time E2EE PC ↔ Phone sync!
 
-## Features (v3.1.0)
+## Features (v3.2.0)
+
+- **Dual-Engine Global VPN (86+ Countries, incl. Nepal & AI-Ready US)**: Smart Clean-IP TLS tunnel (works cleanly with Google Gemini, ChatGPT, YouTube & 86+ countries including Nepal, India, Bangladesh, US, UK, Japan, Singapore) + 3-Hop Tor Onion privacy mode, hot multi-node failover, and 1-click IP rotation.
+- **Redesigned macOS System Settings Options & True Light Porcelain Mode**: Live sidebar search, SF-style color-coded squircle icons, interactive visual Auto / Dark Obsidian / Light Porcelain preview cards, circular accent orbs, and full Light Porcelain polarity across Start Page, Options, Toolbar, Tabs & all popovers.
+- **Single-Instance Lock (Windows & Android)**: Prevents duplicate app windows or black WebView2 proxy-port windows; secondary launches cleanly focus the active window and open URLs in a new tab.
+- **Polished Android Mobile Companion (`dejavu-mobile.apk`)**: Crisp native VectorDrawable chrome icons, Dark Obsidian & Light Porcelain theme switcher, and real-time E2EE `dejavu Link` cross-device tab/link/text sync.
 
 - **dejavu Link — Real-Time Cross-Device PC ↔ Android Mobile Sync (`AES-256-CBC + HMAC-SHA256`)**:
   - Pair Windows PC and Android Mobile in seconds via **scannable QR code** or short code (`DJV-XXXX-XXXX`) — works over **both local Wi-Fi LAN and mobile 4G/5G** with zero accounts required.

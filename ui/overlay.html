@@ -549,6 +549,48 @@
       border-color: rgba(196, 156, 255, 0.46);
     }
 
+    /* VPN Mode Segmented Control (Smart Web & AI vs 3-Hop Tor) */
+    .vpn-mode-seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px;
+      padding: 3px;
+      border-radius: 10px;
+      background: rgba(8, 10, 20, 0.44);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      flex-shrink: 0;
+    }
+    body.theme-light .vpn-mode-seg {
+      background: rgba(24, 18, 52, 0.055);
+      border-color: rgba(24, 18, 52, 0.09);
+    }
+    .vpn-mode-btn {
+      height: 25px;
+      border-radius: 7.5px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--ink-muted);
+      font-family: inherit;
+      font-size: 10.8px;
+      font-weight: 560;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+    }
+    .vpn-mode-btn:hover { color: var(--ink); }
+    .vpn-mode-btn.active {
+      background: rgba(176, 124, 255, 0.24);
+      border-color: rgba(206, 174, 255, 0.46);
+      color: var(--ink);
+      font-weight: 630;
+    }
+    body.theme-light .vpn-mode-btn.active {
+      background: #ffffff;
+      border-color: rgba(124, 77, 255, 0.34);
+      color: #6435e8;
+      box-shadow: 0 2px 6px -2px rgba(24, 16, 64, 0.12);
+    }
+
     /* Safari VPN Region Filter Pills */
     .vpn-region-tabs {
       display: flex;
@@ -1354,9 +1396,14 @@
         </div>
       </div>
 
-      <input id="vpn-search-input" class="hist-search" type="text" placeholder="Search 46 countries &amp; regions..." spellcheck="false" autocomplete="off">
+      <div id="vpn-mode-seg" class="vpn-mode-seg" role="tablist" title="Smart mode works with Gemini, Google &amp; 86+ countries including Nepal; Tor uses 3-hop onion routing">
+        <button type="button" class="vpn-mode-btn active" data-mode="smart">Smart · Web &amp; AI</button>
+        <button type="button" class="vpn-mode-btn" data-mode="tor">3-Hop Tor</button>
+      </div>
+
+      <input id="vpn-search-input" class="hist-search" type="text" placeholder="Search 86+ countries (Nepal, US, UK, India…)" spellcheck="false" autocomplete="off">
       <div id="vpn-region-tabs" class="vpn-region-tabs">
-        <button type="button" class="vpn-reg-pill active" data-reg="all">All (46)</button>
+        <button type="button" class="vpn-reg-pill active" data-reg="all">All (86)</button>
         <button type="button" class="vpn-reg-pill" data-reg="fast">Fast</button>
         <button type="button" class="vpn-reg-pill" data-reg="americas">Americas</button>
         <button type="button" class="vpn-reg-pill" data-reg="europe">Europe</button>
@@ -2254,7 +2301,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '3.1.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '3.2.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -2499,6 +2546,7 @@
     const vpnTraffic = document.getElementById('vpn-traffic');
     const vpnProgWrap = document.getElementById('vpn-prog-wrap');
     const vpnProgFill = document.getElementById('vpn-prog-fill');
+    const vpnModeSeg = document.getElementById('vpn-mode-seg');
     const vpnSearchInput = document.getElementById('vpn-search-input');
     const vpnRegionTabs = document.getElementById('vpn-region-tabs');
     const vpnCountryList = document.getElementById('vpn-country-list');
@@ -2514,6 +2562,16 @@
 
     document.getElementById('btn-vpn-close').addEventListener('click', () => send({ type: 'closePanel' }));
     btnVpnToggle.addEventListener('click', () => send({ type: 'toggleVpn' }));
+
+    if (vpnModeSeg) {
+      vpnModeSeg.addEventListener('click', (e) => {
+        const btn = e.target.closest('.vpn-mode-btn');
+        if (!btn || !btn.dataset.mode) return;
+        const m = btn.dataset.mode;
+        vpnModeSeg.querySelectorAll('.vpn-mode-btn').forEach((b) => b.classList.toggle('active', b === btn));
+        send({ type: 'setVpnMode', mode: m });
+      });
+    }
 
     vpnRegionTabs.addEventListener('click', (e) => {
       const pill = e.target.closest('.vpn-reg-pill');
@@ -2618,12 +2676,18 @@
         if (!vpnProgWrap.classList.contains('hidden')) vpnProgWrap.classList.add('hidden');
       }
 
+      if (vpnModeSeg) {
+        const curMode = (v.mode || 'smart').toLowerCase();
+        vpnModeSeg.querySelectorAll('.vpn-mode-btn').forEach((b) => {
+          b.classList.toggle('active', b.dataset.mode === curMode);
+        });
+      }
       if (typeof v.autoConnect === 'boolean' && btnVpnAutoConnect.classList.contains('on') !== v.autoConnect) {
         btnVpnAutoConnect.classList.toggle('on', v.autoConnect);
       }
       setTextIfChanged(
         vpnProtocolNote,
-        v.protocol ? `${v.protocol} · WebRTC shield` : '3-Hop Encrypted · Remote DNS & WebRTC shield'
+        v.protocol ? `${v.protocol} · WebRTC shield` : 'Smart TLS Tunnel · Clean IP · WebRTC shield'
       );
 
       renderVpnCountries(v);

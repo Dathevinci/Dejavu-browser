@@ -116,6 +116,7 @@
 
   const settingsOverlay = document.getElementById('settings-overlay');
   const settingsWindow = document.getElementById('settings-window');
+  const settingsSearchInput = document.getElementById('settings-search-input');
   const settingsNav = document.getElementById('settings-nav');
   const settingsPaneTitle = document.getElementById('settings-pane-title');
   const settingsPaneSub = document.getElementById('settings-pane-sub');
@@ -151,6 +152,7 @@
   const optGlobalAdblock = document.getElementById('opt-global-adblock');
   const optAdblockStats = document.getElementById('opt-adblock-stats');
   const optPausedHostsList = document.getElementById('opt-paused-hosts-list');
+  const optVpnMode = document.getElementById('opt-vpn-mode');
   const optVpnAuto = document.getElementById('opt-vpn-auto');
   const optVpnSummary = document.getElementById('opt-vpn-summary');
   const btnOptOpenVpn = document.getElementById('btn-opt-open-vpn');
@@ -1104,7 +1106,7 @@
     appearance: { title: 'Appearance & Liquid Glass', sub: 'Theme polarity, Butterfly accent colors, tab layout & page zoom' },
     startpage: { title: 'Start Page', sub: 'Choose which Safari sections appear on every new tab' },
     wallpapers: { title: 'Butterfly HD Wallpapers', sub: '16 razor-sharp 2K dejavu artworks, 10 live 60fps themes & custom photos' },
-    privacy: { title: 'Privacy, Ad Blocker & VPN', sub: '100/100 ad shield, paused sites, 46-country VPN & browsing data' },
+    privacy: { title: 'Privacy, Ad Blocker & VPN', sub: '100/100 ad shield, paused sites, 86+ country Smart & Tor VPN' },
     shortcuts: { title: 'Tabs & Keyboard Shortcuts', sub: 'Tab behavior preferences & MacBook Safari-style hotkeys' }
   };
 
@@ -1142,6 +1144,21 @@
     });
   }
 
+  function applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen) {
+    const mode = apMode || 'auto';
+    const forceLight = (mode === 'light');
+    const forceDark = (mode === 'dark');
+    const effLight = forceLight
+      ? true
+      : (forceDark ? false : (!onNewTab && !ovOpen && !optOpen && !!(active && active.isLight)));
+
+    body.classList.toggle('force-light', forceLight);
+    body.classList.toggle('force-dark', forceDark);
+    body.classList.toggle('theme-light', effLight);
+    body.classList.toggle('theme-dark', !effLight);
+    return effLight;
+  }
+
   function applyBrowserOptions(opts) {
     const o = opts || {};
     document.documentElement.dataset.accent = o.accentColor || 'amethyst';
@@ -1153,10 +1170,14 @@
     if (heroSearchWrap) {
       heroSearchWrap.classList.toggle('hidden', !!o.hideStartPageSearch);
     }
+    const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
+    const onNewTab = !active || active.isNewTab;
+    applyThemePolarity(o.appearanceMode || 'auto', active, onNewTab, !!state.tabOverviewOpen, !!state.settingsOpen);
     if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
       window.DejavuNewTabCanvas.setOptions({
         reduceMotion: !!o.reduceWallpaperMotion,
-        dim: o.wallpaperDim || 'balanced'
+        dim: o.wallpaperDim || 'balanced',
+        lightMode: (o.appearanceMode === 'light')
       });
     }
     syncSettingsUi();
@@ -1166,7 +1187,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     if (settingsVersionSub) {
-      settingsVersionSub.textContent = `Safari Edition · v${state.appVersion || '3.0.0'}`;
+      settingsVersionSub.textContent = `Safari Edition · v${state.appVersion || '3.2.0'}`;
     }
     setSegmentedVal(optSearchEngine, o.searchEngine || state.searchEngine || 'google');
     setSegmentedVal(optStartup, o.startupBehavior || 'startpage');
@@ -1228,12 +1249,14 @@
         });
       }
     }
+    setSegmentedVal(optVpnMode, (state.vpn && state.vpn.mode) || o.vpnMode || 'smart');
     if (optVpnAuto) optVpnAuto.classList.toggle('on', !!o.vpnAutoConnect);
     if (optVpnSummary && state.vpn) {
       const st = state.vpn.state || 'disconnected';
+      const totalLoc = Array.isArray(state.vpn.countries) && state.vpn.countries.length ? state.vpn.countries.length : 86;
       optVpnSummary.textContent = st === 'connected'
         ? `Connected via ${state.vpn.exitCountry || state.vpn.countryName || 'VPN'} (${state.vpn.exitIp || 'Encrypted'})`
-        : 'Disconnected · 46 encrypted global locations ready';
+        : `Disconnected · ${totalLoc} global countries (Nepal, US, UK, India, Japan…)`;
     }
   }
 
@@ -1269,7 +1292,62 @@
     settingsNav.addEventListener('click', (e) => {
       const btn = e.target.closest('.settings-nav-item');
       if (!btn) return;
+      if (settingsSearchInput && settingsSearchInput.value) {
+        settingsSearchInput.value = '';
+        filterSettingsOptions('');
+      }
       setActiveSettingsPane(btn.dataset.pane || 'general');
+    });
+  }
+  function filterSettingsOptions(rawQ) {
+    const q = (rawQ || '').trim().toLowerCase();
+    const panes = document.querySelectorAll('.settings-pane');
+    if (!q) {
+      panes.forEach((p) => {
+        p.querySelectorAll('.opt-row, .opt-group').forEach((el) => el.classList.remove('search-hidden', 'search-hit'));
+      });
+      setActiveSettingsPane(activeSettingsPane);
+      return;
+    }
+    let firstMatchPane = null;
+    panes.forEach((p) => {
+      const pKey = p.dataset.paneBody;
+      let paneHasHit = false;
+      p.querySelectorAll('.opt-group').forEach((grp) => {
+        let grpHit = false;
+        const rows = grp.querySelectorAll('.opt-row');
+        if (rows.length === 0) {
+          const hit = grp.textContent.toLowerCase().includes(q);
+          grp.classList.toggle('search-hidden', !hit);
+          if (hit) grpHit = true;
+        } else {
+          rows.forEach((row) => {
+            const hit = row.textContent.toLowerCase().includes(q);
+            row.classList.toggle('search-hidden', !hit);
+            row.classList.toggle('search-hit', hit);
+            if (hit) grpHit = true;
+          });
+          grp.classList.toggle('search-hidden', !grpHit);
+        }
+        if (grpHit) paneHasHit = true;
+      });
+      if (pKey === 'wallpapers' && ('wallpaper background photo art live theme'.includes(q) || q.includes('wall'))) {
+        paneHasHit = true;
+      }
+      if (paneHasHit && !firstMatchPane) firstMatchPane = pKey;
+    });
+    if (firstMatchPane) {
+      setActiveSettingsPane(firstMatchPane);
+    }
+  }
+  if (settingsSearchInput) {
+    settingsSearchInput.addEventListener('input', () => filterSettingsOptions(settingsSearchInput.value));
+    settingsSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && settingsSearchInput.value) {
+        e.stopPropagation();
+        settingsSearchInput.value = '';
+        filterSettingsOptions('');
+      }
     });
   }
   if (btnSettingsReset) {
@@ -1291,6 +1369,7 @@
   bindSeg(optAppearanceMode, 'appearanceMode');
   bindSeg(optDefaultZoom, 'defaultZoomPercent', Number);
   bindSeg(optWpDim, 'wallpaperDim');
+  bindSeg(optVpnMode, 'vpnMode');
 
   if (optAccentSwatches) {
     optAccentSwatches.addEventListener('click', (e) => {
@@ -1696,10 +1775,11 @@
 
   function updateNewtabVpnChip(vpn) {
     if (!newtabVpnChip || !newtabVpnText) return;
+    const totalLoc = (vpn && Array.isArray(vpn.countries) && vpn.countries.length) ? vpn.countries.length : 86;
     if (!vpn) {
       newtabVpnChip.classList.remove('connected', 'connecting');
       newtabVpnText.textContent = 'VPN: Off';
-      if (newtabVpnSub) newtabVpnSub.textContent = '46 encrypted locations';
+      if (newtabVpnSub) newtabVpnSub.textContent = `${totalLoc} global locations`;
       return;
     }
     const vst = vpn.state || 'disconnected';
@@ -1712,13 +1792,13 @@
       const codeDisp = rawCode === 'GB' ? 'UK' : (rawCode === 'AUTO' ? 'Auto' : rawCode);
       const locLabel = vpn.exitCountry || vpn.countryName || codeDisp;
       newtabVpnText.textContent = `Protected · ${locLabel}`;
-      if (newtabVpnSub) newtabVpnSub.textContent = vpn.exitIp ? `Exit IP ${vpn.exitIp}` : '3-hop encrypted tunnel';
+      if (newtabVpnSub) newtabVpnSub.textContent = vpn.exitIp ? `Exit IP ${vpn.exitIp}` : 'Encrypted VPN tunnel';
     } else if (isBusy) {
       newtabVpnText.textContent = 'VPN: Connecting…';
       if (newtabVpnSub) newtabVpnSub.textContent = vpn.statusText || 'Building encrypted tunnel';
     } else {
       newtabVpnText.textContent = 'VPN: Off';
-      if (newtabVpnSub) newtabVpnSub.textContent = '46 encrypted locations';
+      if (newtabVpnSub) newtabVpnSub.textContent = `${totalLoc} global locations`;
     }
   }
 
@@ -1894,9 +1974,9 @@
     btnReload.title = (active && active.loading) ? 'Stop loading' : 'Reload (Ctrl+R)';
 
     const apMode = (next.browserOptions && next.browserOptions.appearanceMode) || 'auto';
+    const effLight = applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen);
     if (onNewTab) {
-      body.classList.add('on-newtab', 'theme-dark');
-      body.classList.remove('theme-light');
+      body.classList.add('on-newtab');
       window.DejavuNewTabCanvas.start();
       if (ovOpen || optOpen) hideStartPageStatus();
       if (!ovOpen && !optOpen && lastActiveId !== next.activeTabId) {
@@ -1907,11 +1987,8 @@
       hideStartPageStatus();
       body.classList.remove('on-newtab');
       if (!ovOpen && !optOpen) window.DejavuNewTabCanvas.stop();
-      const effLight = (apMode === 'light') ? true : (apMode === 'dark' ? false : !!active.isLight);
-      body.classList.toggle('theme-light', !ovOpen && !optOpen && effLight);
-      body.classList.toggle('theme-dark', ovOpen || optOpen || !effLight);
       drawTopLightGuide({
-        baseRgb: next.baseRgb,
+        baseRgb: effLight && apMode === 'light' ? [246, 244, 253] : next.baseRgb,
         accents: next.accents,
         isLight: effLight
       });

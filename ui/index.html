@@ -289,7 +289,7 @@
                 <span class="vpn-status-dot" id="newtab-vpn-dot"></span>
                 <div class="sp-vpn-copy">
                   <div id="newtab-vpn-text" class="sp-vpn-title">VPN: Off</div>
-                  <div id="newtab-vpn-sub" class="sp-vpn-sub">46 encrypted locations</div>
+                  <div id="newtab-vpn-sub" class="sp-vpn-sub">86+ global locations</div>
                 </div>
               </button>
             </div>
@@ -421,40 +421,57 @@
     <!-- Authentic macOS Safari Options & Customization Window (Ctrl+,) -->
     <section id="settings-overlay" class="settings-overlay hidden" aria-label="Safari Options">
       <div id="settings-window" class="glass-card settings-window" data-liquid-glass data-lg-fast="1" data-lg-bezel="20" data-lg-scale="24" data-lg-dome="0.025">
-        <!-- Left macOS Sidebar Navigation -->
+        <!-- Left macOS System Settings Sidebar Navigation -->
         <aside class="settings-sidebar">
           <div class="settings-brand">
             <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
             <div>
               <div class="settings-brand-title">dejavu Options</div>
-              <div id="settings-version-sub" class="settings-brand-sub">Safari Edition · v3.0.0</div>
+              <div id="settings-version-sub" class="settings-brand-sub">Safari Edition · v3.2.0</div>
             </div>
+          </div>
+
+          <div class="settings-search-box">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><circle cx="7.2" cy="7.2" r="4.4" stroke="currentColor" stroke-width="1.45"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <input id="settings-search-input" type="text" placeholder="Search options…" spellcheck="false" autocomplete="off">
           </div>
 
           <nav id="settings-nav" class="settings-nav" role="tablist">
             <button type="button" class="settings-nav-item active" data-pane="general" role="tab">
-              <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M9 2.6v1.5M9 13.9v1.5M2.6 9h1.5M13.9 9h1.5M4.5 4.5l1.1 1.1M12.4 12.4l1.1 1.1M13.5 4.5l-1.1 1.1M5.6 12.4l-1.1 1.1" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+              <span class="snav-ico ico-general">
+                <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M9 2.6v1.5M9 13.9v1.5M2.6 9h1.5M13.9 9h1.5M4.5 4.5l1.1 1.1M12.4 12.4l1.1 1.1M13.5 4.5l-1.1 1.1M5.6 12.4l-1.1 1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              </span>
               <span>General</span>
             </button>
             <button type="button" class="settings-nav-item" data-pane="appearance" role="tab">
-              <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M9 3a6 6 0 0 1 0 12V3z" fill="currentColor" opacity="0.45"/></svg>
+              <span class="snav-ico ico-appearance">
+                <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="5.6" stroke="currentColor" stroke-width="1.5"/><path d="M9 3.4a5.6 5.6 0 0 1 0 11.2V3.4z" fill="currentColor" opacity="0.72"/></svg>
+              </span>
               <span>Appearance</span>
             </button>
             <button type="button" class="settings-nav-item" data-pane="startpage" role="tab">
-              <svg viewBox="0 0 18 18" fill="none"><rect x="3" y="3.5" width="12" height="11" rx="2.4" stroke="currentColor" stroke-width="1.4"/><path d="M3 7h12M7.2 7v7.5" stroke="currentColor" stroke-width="1.3"/></svg>
+              <span class="snav-ico ico-startpage">
+                <svg viewBox="0 0 18 18" fill="none"><rect x="3" y="3.5" width="12" height="11" rx="2.4" stroke="currentColor" stroke-width="1.45"/><path d="M3 7h12M7.2 7v7.5" stroke="currentColor" stroke-width="1.35"/></svg>
+              </span>
               <span>Start Page</span>
             </button>
             <button type="button" class="settings-nav-item" data-pane="wallpapers" role="tab">
-              <svg viewBox="0 0 18 18" fill="none"><rect x="2.8" y="3.6" width="12.4" height="10.8" rx="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="6.7" cy="7.3" r="1.15" fill="currentColor"/><path d="M3.4 12.7l3.2-3.1 2.4 2.2 2.2-2.2 3.3 3.1" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="snav-ico ico-wallpapers">
+                <svg viewBox="0 0 18 18" fill="none"><rect x="2.8" y="3.6" width="12.4" height="10.8" rx="2.3" stroke="currentColor" stroke-width="1.45"/><circle cx="6.7" cy="7.3" r="1.2" fill="currentColor"/><path d="M3.4 12.7l3.2-3.1 2.4 2.2 2.2-2.2 3.3 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
               <span>Wallpapers</span>
               <span class="settings-nav-pill">26</span>
             </button>
             <button type="button" class="settings-nav-item" data-pane="privacy" role="tab">
-              <svg viewBox="0 0 18 18" fill="none"><path d="M9 2.4L3.6 4.6v4.3c0 3.5 2.3 6.2 5.4 7.3 3.1-1.1 5.4-3.8 5.4-7.3V4.6L9 2.4z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6.6 9.1l1.7 1.7 3.3-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="snav-ico ico-privacy">
+                <svg viewBox="0 0 18 18" fill="none"><path d="M9 2.4L3.6 4.6v4.3c0 3.5 2.3 6.2 5.4 7.3 3.1-1.1 5.4-3.8 5.4-7.3V4.6L9 2.4z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M6.6 9.1l1.7 1.7 3.3-3.5" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
               <span>Privacy &amp; VPN</span>
             </button>
             <button type="button" class="settings-nav-item" data-pane="shortcuts" role="tab">
-              <svg viewBox="0 0 18 18" fill="none"><rect x="2.5" y="4.5" width="13" height="9" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M5.2 7.6h1.2M8.4 7.6h1.2M11.6 7.6h1.2M6 10.6h6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+              <span class="snav-ico ico-shortcuts">
+                <svg viewBox="0 0 18 18" fill="none"><rect x="2.5" y="4.5" width="13" height="9" rx="2" stroke="currentColor" stroke-width="1.45"/><path d="M5.2 7.6h1.2M8.4 7.6h1.2M11.6 7.6h1.2M6 10.6h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              </span>
               <span>Tabs &amp; Shortcuts</span>
             </button>
           </nav>
@@ -543,16 +560,39 @@
             <!-- Pane 2: Appearance & Liquid Glass -->
             <div class="settings-pane hidden" data-pane-body="appearance">
               <div class="opt-group">
-                <div class="opt-group-label">Theme &amp; Butterfly Accent</div>
-                <div class="opt-row">
+                <div class="opt-group-label">Theme Polarity &amp; Butterfly Accent</div>
+                <div class="opt-row stacked">
                   <div class="opt-meta">
-                    <div class="opt-title">Appearance Polarity</div>
-                    <div class="opt-desc">Auto adapts chrome &amp; popovers to each website's brightness</div>
+                    <div class="opt-title">Appearance Mode</div>
+                    <div class="opt-desc">Instantly transforms toolbar, Start Page, Options &amp; all Liquid Glass popovers</div>
                   </div>
-                  <div class="opt-seg compact" id="opt-appearance-mode">
-                    <button type="button" class="opt-seg-btn active" data-val="auto">Auto</button>
-                    <button type="button" class="opt-seg-btn" data-val="dark">Dark</button>
-                    <button type="button" class="opt-seg-btn" data-val="light">Light</button>
+                  <div class="appearance-cards" id="opt-appearance-mode">
+                    <button type="button" class="appearance-card opt-seg-btn active" data-val="auto">
+                      <div class="ap-preview ap-prev-auto">
+                        <div class="ap-half ap-h-dark"><span class="ap-dots"><i></i><i></i><i></i></span><span class="ap-pill"></span><span class="ap-card"></span></div>
+                        <div class="ap-half ap-h-light"><span class="ap-pill"></span><span class="ap-card"></span></div>
+                      </div>
+                      <span class="ap-label">Auto</span>
+                      <span class="ap-sub">Site-Adaptive</span>
+                    </button>
+                    <button type="button" class="appearance-card opt-seg-btn" data-val="dark">
+                      <div class="ap-preview ap-prev-dark">
+                        <span class="ap-dots"><i></i><i></i><i></i></span>
+                        <span class="ap-pill"></span>
+                        <div class="ap-mini-body"><span class="ap-card"></span><span class="ap-card sm"></span></div>
+                      </div>
+                      <span class="ap-label">Dark</span>
+                      <span class="ap-sub">Smoked Obsidian</span>
+                    </button>
+                    <button type="button" class="appearance-card opt-seg-btn" data-val="light">
+                      <div class="ap-preview ap-prev-light">
+                        <span class="ap-dots"><i></i><i></i><i></i></span>
+                        <span class="ap-pill"></span>
+                        <div class="ap-mini-body"><span class="ap-card"></span><span class="ap-card sm"></span></div>
+                      </div>
+                      <span class="ap-label">Light</span>
+                      <span class="ap-sub">Pearl Porcelain</span>
+                    </button>
                   </div>
                 </div>
                 <div class="opt-row stacked">
@@ -730,20 +770,30 @@
               </div>
 
               <div class="opt-group">
-                <div class="opt-group-label">dejavu Encrypted VPN (46 Countries)</div>
+                <div class="opt-group-label">dejavu Global VPN (86+ Countries · Nepal, US &amp; More)</div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">VPN Routing Engine</div>
+                    <div class="opt-desc">Smart mode uses clean IPs for Gemini, Google &amp; 86+ countries; Tor uses 3-hop onion circuits</div>
+                  </div>
+                  <div class="opt-seg compact" id="opt-vpn-mode">
+                    <button type="button" class="opt-seg-btn active" data-val="smart">Smart · Web &amp; AI</button>
+                    <button type="button" class="opt-seg-btn" data-val="tor">3-Hop Tor</button>
+                  </div>
+                </div>
                 <div class="opt-row">
                   <div class="opt-meta">
                     <div class="opt-title">Auto-connect VPN on startup</div>
-                    <div class="opt-desc">Automatically establish a 3-hop encrypted tunnel when dejavu launches</div>
+                    <div class="opt-desc">Automatically establish your protected tunnel when dejavu launches</div>
                   </div>
                   <button type="button" id="opt-vpn-auto" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
                 </div>
                 <div class="opt-row">
                   <div class="opt-meta">
                     <div class="opt-title">Switch VPN Country &amp; Live Status</div>
-                    <div id="opt-vpn-summary" class="opt-desc">Choose from 46 global regions with zero-lag scrolling</div>
+                    <div id="opt-vpn-summary" class="opt-desc">Choose from 86+ global countries including Nepal, US, UK, India &amp; Japan</div>
                   </div>
-                  <button type="button" id="btn-opt-open-vpn" class="opt-mini-btn">Open VPN</button>
+                  <button type="button" id="btn-opt-open-vpn" class="opt-mini-btn primary">Open VPN</button>
                 </div>
               </div>
 

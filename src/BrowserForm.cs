@@ -1265,13 +1265,13 @@ namespace DejavuBrowser
                 { "vpnMode", _settings.vpnMode ?? "smart" },
                 { "vpnCountry", _settings.vpnCountry ?? "AUTO" },
 
-                // v5.0.0 Appearance
+                // v5.1.0 Appearance
                 { "fontSize", _settings.fontSize ?? "medium" },
                 { "fontFamily", _settings.fontFamily ?? "system" },
                 { "showHomeButton", _settings.showHomeButton },
                 { "smoothScrolling", _settings.smoothScrolling },
 
-                // v5.0.0 Privacy & Security
+                // v5.1.0 Privacy & Security
                 { "doNotTrack", _settings.doNotTrack },
                 { "httpsFirst", _settings.httpsFirst },
                 { "blockThirdPartyCookies", _settings.blockThirdPartyCookies },
@@ -1285,29 +1285,29 @@ namespace DejavuBrowser
                 { "permClipboard", _settings.permClipboard ?? "ask" },
                 { "permAutoplay", _settings.permAutoplay ?? "allow" },
 
-                // v5.0.0 Search
+                // v5.1.0 Search
                 { "customSearchUrl", _settings.customSearchUrl ?? "" },
                 { "addressBarSuggestions", _settings.addressBarSuggestions },
 
-                // v5.0.0 Tabs & Performance
+                // v5.1.0 Tabs & Performance
                 { "memorySaverEnabled", _settings.memorySaverEnabled },
                 { "memorySaverMinutes", _settings.memorySaverMinutes > 0 ? _settings.memorySaverMinutes : 30 },
                 { "confirmCloseMultipleTabs", _settings.confirmCloseMultipleTabs },
                 { "tabHoverPreview", _settings.tabHoverPreview },
 
-                // v5.0.0 Downloads
+                // v5.1.0 Downloads
                 { "downloadFolder", _settings.downloadFolder ?? "" },
                 { "askDownloadLocation", _settings.askDownloadLocation },
                 { "turboThreads", _settings.turboThreads > 0 ? _settings.turboThreads : 8 },
                 { "defaultVideoQuality", _settings.defaultVideoQuality ?? "best" },
                 { "autoOpenDownloads", _settings.autoOpenDownloads },
 
-                // v5.0.0 Passwords & Autofill
+                // v5.1.0 Passwords & Autofill
                 { "savePasswords", _settings.savePasswords },
                 { "autofillAddresses", _settings.autofillAddresses },
                 { "autofillPayments", _settings.autofillPayments },
 
-                // v5.0.0 VPN & System
+                // v5.1.0 VPN & System
                 { "vpnWebRtcProtection", _settings.vpnWebRtcProtection },
                 { "hardwareAcceleration", _settings.hardwareAcceleration },
                 { "spellcheckEnabled", _settings.spellcheckEnabled },
@@ -1955,7 +1955,7 @@ namespace DejavuBrowser
         }
 
         // =====================================================================
-        // Zero-Resize Layout Engine (v5.0.0: _shellView stays full-window ALWAYS — zero Chromium reflow!)
+        // Zero-Resize Layout Engine (v5.1.0: _shellView stays full-window ALWAYS — zero Chromium reflow!)
         // =====================================================================
         private void LayoutViews()
         {
@@ -5689,7 +5689,7 @@ namespace DejavuBrowser
                 }
             }
 
-            // v5.0.0 Appearance
+            // v5.1.0 Appearance
             if (msg.ContainsKey("fontSize"))
             {
                 _settings.fontSize = SettingsStore.NormalizeFontSize(Convert.ToString(msg["fontSize"]));
@@ -5708,7 +5708,7 @@ namespace DejavuBrowser
                 needTabSettingsApply = true;
             }
 
-            // v5.0.0 Privacy & Security
+            // v5.1.0 Privacy & Security
             if (msg.ContainsKey("doNotTrack"))
                 _settings.doNotTrack = Convert.ToBoolean(msg["doNotTrack"]);
             if (msg.ContainsKey("httpsFirst"))
@@ -5743,7 +5743,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("permAutoplay"))
                 _settings.permAutoplay = SettingsStore.NormalizePermission(Convert.ToString(msg["permAutoplay"]), "allow");
 
-            // v5.0.0 Search
+            // v5.1.0 Search
             if (msg.ContainsKey("customSearchUrl"))
                 _settings.customSearchUrl = (Convert.ToString(msg["customSearchUrl"]) ?? "").Trim();
             if (msg.ContainsKey("addressBarSuggestions"))
@@ -5752,7 +5752,7 @@ namespace DejavuBrowser
                 if (!_settings.addressBarSuggestions) HideSuggestPopup();
             }
 
-            // v5.0.0 Tabs & Performance
+            // v5.1.0 Tabs & Performance
             if (msg.ContainsKey("memorySaverEnabled"))
                 _settings.memorySaverEnabled = Convert.ToBoolean(msg["memorySaverEnabled"]);
             if (msg.ContainsKey("memorySaverMinutes"))
@@ -5765,7 +5765,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("tabHoverPreview"))
                 _settings.tabHoverPreview = Convert.ToBoolean(msg["tabHoverPreview"]);
 
-            // v5.0.0 Downloads
+            // v5.1.0 Downloads
             if (msg.ContainsKey("downloadFolder"))
             {
                 _settings.downloadFolder = (Convert.ToString(msg["downloadFolder"]) ?? "").Trim();
@@ -5787,7 +5787,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("autoOpenDownloads"))
                 _settings.autoOpenDownloads = Convert.ToBoolean(msg["autoOpenDownloads"]);
 
-            // v5.0.0 Passwords & Autofill
+            // v5.1.0 Passwords & Autofill
             if (msg.ContainsKey("savePasswords"))
             {
                 _settings.savePasswords = Convert.ToBoolean(msg["savePasswords"]);
@@ -5801,7 +5801,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("autofillPayments"))
                 _settings.autofillPayments = Convert.ToBoolean(msg["autofillPayments"]);
 
-            // v5.0.0 VPN & System
+            // v5.1.0 VPN & System
             if (msg.ContainsKey("vpnWebRtcProtection"))
                 _settings.vpnWebRtcProtection = Convert.ToBoolean(msg["vpnWebRtcProtection"]);
             if (msg.ContainsKey("hardwareAcceleration"))
@@ -6055,7 +6055,7 @@ namespace DejavuBrowser
                 }
             }
             _appContext.BroadcastSettingsApplied();
-            PushShellToast("Settings restored to v5.0.0 defaults", "success");
+            PushShellToast("Settings restored to v5.1.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()

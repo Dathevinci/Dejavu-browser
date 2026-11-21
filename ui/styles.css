@@ -1,5 +1,5 @@
 /* ==========================================================================
-   dejavu v5.0.0 — Authentic Google Material Design 3 Expressive (Pixel + Chrome M3)
+   dejavu v5.1.0 — Authentic Google Material Design 3 Expressive (Pixel + Chrome M3)
    Pure HCT Tonal Surface Hierarchy · Official M3 Motion · State Layers
    Zero Compositing Overhead · Strictly Zero CSS Filter Softening
    ========================================================================== */
@@ -4653,7 +4653,7 @@ body.theme-light .dlm-video-card, body.force-light .dlm-video-card { background:
 }
 
 /* ==========================================================================
-   Full-Viewport Chrome-Grade Material Design 3 Extensions Manager (v5.0.0)
+   Full-Viewport Chrome-Grade Material Design 3 Extensions Manager (v5.1.0)
    28px Expressive Workspace · 2-Col M3 Cards · Details View · Chrome Import
    ========================================================================== */
 .ext-manager-overlay { z-index: 176; }
@@ -5200,7 +5200,7 @@ body.force-light .ext-details-hero {
 }
 
 /* ==========================================================================
-   Full-Viewport Material Design 3 dejavu Link Hub (v5.0.0)
+   Full-Viewport Material Design 3 dejavu Link Hub (v5.1.0)
    Single-Scroll · Zero Sub-Tabs · Google Auto-Sync · Pure Tonal Elevation
    ========================================================================== */
 .link-hub-overlay { z-index: 175; }

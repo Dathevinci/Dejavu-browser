@@ -46,7 +46,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
-        android:elevation="6dp"
+        android:elevation="2dp"
         android:orientation="vertical"
         android:visibility="gone">
 
@@ -135,15 +135,15 @@
     <LinearLayout
         android:id="@+id/collapsed_pill"
         android:layout_width="wrap_content"
-        android:layout_height="36dp"
+        android:layout_height="34dp"
         android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="14dp"
+        android:layout_marginBottom="12dp"
         android:background="@drawable/bg_collapsed_pill"
-        android:elevation="6dp"
+        android:elevation="2dp"
         android:gravity="center"
         android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
         android:visibility="gone">
 
         <ImageView
@@ -174,10 +174,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@drawable/bg_bottom_bar"
-        android:elevation="6dp"
+        android:elevation="2dp"
         android:orientation="vertical">
 
-        <!-- Thin Amethyst Page Load Progress Line (Bottom Mode) -->
+        <!-- Thin Dynamic Material You Page Load Progress Line (Bottom Mode) -->
         <ProgressBar
             android:id="@+id/load_progress"
             style="?android:attr/progressBarStyleHorizontal"
@@ -189,32 +189,33 @@
             android:progressTint="@color/amethyst"
             android:visibility="gone" />
 
-        <!-- Floating Address / Omnibox Slot (Default Bottom Position) -->
+        <!-- Floating Address / Omnibox Slot (Hidden on Start Page; Shown on Webpages & Omnibox) -->
         <FrameLayout
             android:id="@+id/bottom_url_slot"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingStart="12dp"
-            android:paddingTop="9dp"
+            android:paddingTop="8dp"
             android:paddingEnd="12dp"
-            android:paddingBottom="4dp">
+            android:paddingBottom="4dp"
+            android:visibility="gone">
 
             <LinearLayout
                 android:id="@+id/url_pill_box"
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
+                android:layout_height="48dp"
                 android:background="@drawable/bg_glass_pill"
-                android:elevation="3dp"
+                android:elevation="1dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="10dp"
-                android:paddingEnd="6dp">
+                android:paddingStart="12dp"
+                android:paddingEnd="8dp">
 
-                <!-- Left: Shield / HTTPS Lock / Private / Search indicator -->
+                <!-- Left: Clean Minimal Shield / HTTPS Lock / Private / Search indicator -->
                 <LinearLayout
                     android:id="@+id/btn_shield_wrap"
                     android:layout_width="wrap_content"
-                    android:layout_height="34dp"
+                    android:layout_height="36dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:gravity="center"
                     android:orientation="horizontal"
@@ -223,8 +224,8 @@
 
                     <ImageView
                         android:id="@+id/btn_shield_ico"
-                        android:layout_width="17dp"
-                        android:layout_height="17dp"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
                         android:contentDescription="Site Security &amp; Shield"
                         android:src="@drawable/ic_search"
                         android:tint="@color/ink_muted" />
@@ -240,7 +241,7 @@
                         android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Center: Omnibox Input (centered when idle like Safari, left-aligned when typing) -->
+                <!-- Center: Omnibox Input (centered when idle, left-aligned when typing) -->
                 <EditText
                     android:id="@+id/url_input"
                     android:layout_width="0dp"
@@ -260,31 +261,30 @@
                     android:textColorHint="@color/ink_muted"
                     android:textSize="14.5sp" />
 
-                <!-- Right: Clear button (visible only while typing) -->
+                <!-- Right: Single Trailing Action — Clear (while typing) OR Reload/Stop (on webpage) -->
                 <ImageView
                     android:id="@+id/btn_url_clear"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Clear text"
-                    android:padding="7dp"
+                    android:padding="8dp"
                     android:src="@drawable/ic_clear"
                     android:tint="@color/ink_muted"
                     android:visibility="gone" />
 
-                <!-- Right: Reload / Stop (visible on webpages) -->
                 <ImageView
                     android:id="@+id/btn_reload"
-                    android:layout_width="34dp"
-                    android:layout_height="34dp"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Reload"
-                    android:padding="7.5dp"
+                    android:padding="8dp"
                     android:src="@drawable/ic_reload"
                     android:tint="@color/ink_muted"
                     android:visibility="gone" />
 
-                <!-- Right: 1-Tap Beam to PC (visible on webpages) -->
+                <!-- Kept GONE to keep URL pill clutter-free; Send-to-PC lives 1-tap in Menu & Link Hub -->
                 <ImageView
                     android:id="@+id/btn_beam_pc"
                     android:layout_width="34dp"
@@ -298,15 +298,15 @@
             </LinearLayout>
         </FrameLayout>
 
-        <!-- Balanced 5-Icon Thumb Navigation Dock (Safari iOS x Arc x Samsung Internet) -->
+        <!-- Sleek, Calm 5-Destination Material 3 Navigation Bar -->
         <LinearLayout
             android:id="@+id/nav_dock_row"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="54dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp">
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
 
             <!-- 1. Back -->
             <ImageView
@@ -316,9 +316,9 @@
                 android:layout_weight="1"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Back"
-                android:padding="13dp"
+                android:padding="15dp"
                 android:src="@drawable/ic_back"
-                android:tint="@color/ink_primary" />
+                android:tint="@color/ink_muted" />
 
             <!-- 2. Forward -->
             <ImageView
@@ -328,11 +328,11 @@
                 android:layout_weight="1"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Forward"
-                android:padding="13dp"
+                android:padding="15dp"
                 android:src="@drawable/ic_forward"
-                android:tint="@color/ink_primary" />
+                android:tint="@color/ink_muted" />
 
-            <!-- 3. Center Material 3 Tonal Pill: dejavu Link / PC Sync -->
+            <!-- 3. Center Calm Material 3 Tonal Capsule: dejavu Link -->
             <FrameLayout
                 android:id="@+id/nav_sync_wrap"
                 android:layout_width="0dp"
@@ -354,15 +354,15 @@
                         android:layout_gravity="center"
                         android:contentDescription="dejavu Link"
                         android:src="@drawable/ic_sync"
-                        android:tint="@color/amethyst_bright" />
+                        android:tint="@color/ink_muted" />
 
                     <View
                         android:id="@+id/nav_sync_dot"
-                        android:layout_width="7dp"
-                        android:layout_height="7dp"
+                        android:layout_width="6dp"
+                        android:layout_height="6dp"
                         android:layout_gravity="top|end"
                         android:layout_marginTop="4dp"
-                        android:layout_marginEnd="6dp"
+                        android:layout_marginEnd="7dp"
                         android:background="@drawable/bg_sync_dot"
                         android:visibility="gone" />
                 </FrameLayout>
@@ -382,6 +382,7 @@
                     android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:background="@drawable/bg_tab_badge"
+                    android:fontFeatureSettings="tnum"
                     android:gravity="center"
                     android:text="1"
                     android:textColor="@color/ink_primary"
@@ -397,9 +398,9 @@
                 android:layout_weight="1"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Menu"
-                android:padding="13dp"
+                android:padding="15dp"
                 android:src="@drawable/ic_more_horiz"
-                android:tint="@color/ink_primary" />
+                android:tint="@color/ink_muted" />
         </LinearLayout>
     </LinearLayout>
 
@@ -413,7 +414,7 @@
         android:layout_marginTop="14dp"
         android:layout_marginEnd="14dp"
         android:background="@drawable/bg_toast_banner"
-        android:elevation="10dp"
+        android:elevation="4dp"
         android:orientation="vertical"
         android:padding="16dp"
         android:visibility="gone">
@@ -497,7 +498,7 @@
         android:layout_marginTop="14dp"
         android:layout_marginEnd="14dp"
         android:background="@drawable/bg_toast_banner"
-        android:elevation="12dp"
+        android:elevation="4dp"
         android:orientation="vertical"
         android:padding="16dp"
         android:visibility="gone">

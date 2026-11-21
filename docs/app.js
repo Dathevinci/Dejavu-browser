@@ -1,6 +1,6 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.0.0)
- * Fluid Gliding M3 Pill Indicators · GPU Cross-Fade Showcase · 6 Harmonized HCT Seeds
+ * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.1.0)
+ * Clean Android Material Design 3 Overhaul · Fluid Gliding M3 Pill Indicators · 6 Harmonized HCT Seeds
  * Zero-Lag 120Hz Tab Engine & Anti-Glitch Architecture · Dynamic M3 Butterfly Logo
  * Zero-QR Google Account Auto-Sync (dejavu Link) + Shared Clipboard + Passkeys Showcase
  * Interactive Chrome MV3 Extensions + Draggable Tabs + M3 Right-Click Context Menu
@@ -8,7 +8,7 @@
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v5.0.0';
+  const FALLBACK_VERSION = 'v5.1.0';
   const root = document.documentElement;
   const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let themeShiftTimer = null;
@@ -248,7 +248,7 @@
     });
   }
 
-  // 2. Clean 5-View Dual-Device Browser Showcase (v5.0.0 Zero-Lag 120Hz + Gliding Pill + GPU Cross-Fade)
+  // 2. Clean 5-View Dual-Device Browser Showcase (v5.1.0 Clean Android M3 + 120Hz + Gliding Pill + GPU Cross-Fade)
   const VIEW_META = {
     start:      { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
     sync:       { url: 'dejavu://link · Auto-Synced via Google (alex@gmail.com)', title: 'Google Auto-Sync · Pixel Online' },
@@ -658,7 +658,7 @@
     });
   }
 
-  // 2e. Interactive Chrome Extensions Manager Showcase (v5.0.0)
+  // 2e. Interactive Chrome Extensions Manager Showcase (v5.1.0)
   const DEMO_EXTS = {
     ublock:     { label: 'uB', name: 'uBlock Origin Lite',    enabled: true,  pinned: true },
     darkreader: { label: 'DR', name: 'Dark Reader',           enabled: true,  pinned: true },
@@ -1082,7 +1082,7 @@
     });
   });
 
-  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.0.0)
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.1.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

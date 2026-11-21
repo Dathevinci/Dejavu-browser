@@ -116,7 +116,7 @@ namespace DejavuBrowser
     }
 
     /// <summary>
-    /// Native Chromium Extension Engine for dejavu v5.0.0.
+    /// Native Chromium Extension Engine for dejavu v5.1.0.
     /// Wraps WebView2 CoreWebView2Profile browser extension APIs, CRX2/CRX3/ZIP unpacking,
     /// _locales i18n resolution, Chrome Web Store downloads, and read-only Google Chrome import.
     /// </summary>

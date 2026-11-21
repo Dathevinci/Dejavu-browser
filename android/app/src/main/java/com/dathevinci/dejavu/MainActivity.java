@@ -13,12 +13,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -310,6 +313,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private JSONArray customUserscripts = new JSONArray();
     private String mobileUserAgent = null;
     private boolean chromeCollapsed = false;
+    private float lastNavBackAlpha = -1f;
+    private float lastNavFwdAlpha = -1f;
+    private String lastSyncPillKey = "";
 
     private JSONArray profiles = new JSONArray();
     private String activeProfileId = "default";
@@ -563,6 +569,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
+    private float dpF(float value) {
+        return value * getResources().getDisplayMetrics().density;
+    }
+
     private int pxToDp(int px) {
         float d = getResources().getDisplayMetrics().density;
         return d > 0 ? Math.round(px / d) : px;
@@ -677,15 +687,32 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private void updateViewportPadding() {
         if (viewportHost == null) return;
         boolean topBar = "top".equals(barPosition);
+        MobileTab active = getActiveTab();
+        boolean hasWebTab = active != null && !active.isNewTab;
         int topPad = insetTopPx;
-        if (topBar && !chromeCollapsed) topPad += dp(62);
-        if (findBar != null && findBar.getVisibility() == View.VISIBLE) topPad += dp(48);
+        if (topBar && hasWebTab && !chromeCollapsed) {
+            topPad += (topUrlSlot != null && topUrlSlot.getHeight() > 0) ? topUrlSlot.getHeight() : dp(64);
+        }
+        if (findBar != null && findBar.getVisibility() == View.VISIBLE) {
+            topPad += findBar.getHeight() > 0 ? findBar.getHeight() : dp(48);
+        }
 
         int bottomPad = insetBottomPx;
         if (!chromeCollapsed) {
-            bottomPad += topBar ? dp(48) : dp(107);
+            int navH = (navDockRow != null && navDockRow.getHeight() > 0) ? navDockRow.getHeight() : dp(54);
+            if (hasWebTab) {
+                int urlH = (bottomUrlSlot != null && bottomUrlSlot.getHeight() > 0) ? bottomUrlSlot.getHeight() : dp(60);
+                bottomPad += topBar ? navH : (navH + urlH);
+            } else {
+                bottomPad += navH;
+            }
         }
-        viewportHost.setPadding(insetLeftPx, topPad, insetRightPx, bottomPad);
+        if (viewportHost.getPaddingLeft() != insetLeftPx ||
+            viewportHost.getPaddingTop() != topPad ||
+            viewportHost.getPaddingRight() != insetRightPx ||
+            viewportHost.getPaddingBottom() != bottomPad) {
+            viewportHost.setPadding(insetLeftPx, topPad, insetRightPx, bottomPad);
+        }
     }
 
     private void applyBarPosition() {
@@ -697,24 +724,152 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (parent instanceof ViewGroup) ((ViewGroup) parent).removeView(urlPillBox);
                 target.addView(urlPillBox);
             }
-            topUrlSlot.setVisibility(isTop ? View.VISIBLE : View.GONE);
-            bottomUrlSlot.setVisibility(isTop ? View.GONE : View.VISIBLE);
         }
         updateChromeVisibility();
         updateViewportPadding();
     }
 
+    private static final class M3Palette {
+        final int bg;
+        final int surfaceContainer;
+        final int surfaceContainerHigh;
+        final int primary;
+        final int primaryContainer;
+        final int onPrimaryContainer;
+        final int outlineVariant;
+        final int onSurface;
+        final int onSurfaceVariant;
+
+        M3Palette(int bg, int surfaceContainer, int surfaceContainerHigh,
+                  int primary, int primaryContainer, int onPrimaryContainer,
+                  int outlineVariant, int onSurface, int onSurfaceVariant) {
+            this.bg = bg;
+            this.surfaceContainer = surfaceContainer;
+            this.surfaceContainerHigh = surfaceContainerHigh;
+            this.primary = primary;
+            this.primaryContainer = primaryContainer;
+            this.onPrimaryContainer = onPrimaryContainer;
+            this.outlineVariant = outlineVariant;
+            this.onSurface = onSurface;
+            this.onSurfaceVariant = onSurfaceVariant;
+        }
+    }
+
+    private M3Palette resolveM3Palette(boolean isLight, boolean isPrivate) {
+        if (isPrivate) {
+            return new M3Palette(
+                0xFF120A22, 0xFF1B1030, 0xFF291A45,
+                0xFFD4B8FF, 0xFF4A2B7D, 0xFFF0E4FF,
+                0xFF573B87, 0xFFF6F0FF, 0xFFCBB8EB
+            );
+        }
+        if ("sapphire".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFFAF9FF, 0xFFEEF0F9, 0xFFE4E7F2, 0xFF1B6EF3, 0xFFD3E3FD, 0xFF0842A0, 0xFFC2C6D4, 0xFF1D1B20, 0xFF44474F)
+                : new M3Palette(0xFF111318, 0xFF1E222A, 0xFF282C36, 0xFFA8C7FA, 0xFF263B5E, 0xFFD3E3FD, 0xFF44474F, 0xFFE6E0E9, 0xFFC4C6D0);
+        }
+        if ("aurora".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFF4FBF8, 0xFFE9F2EF, 0xFFDFE9E6, 0xFF006A60, 0xFFA3F2E5, 0xFF004F47, 0xFFBAC9C4, 0xFF1D1B20, 0xFF3F4946)
+                : new M3Palette(0xFF0F1513, 0xFF1C2421, 0xFF252E2B, 0xFF7BD8C6, 0xFF1F4841, 0xFFA3F2E5, 0xFF3F4946, 0xFFE6E0E9, 0xFFBFC9C5);
+        }
+        if ("rose".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFFFF8F8, 0xFFF8ECEF, 0xFFF0E3E7, 0xFFA83268, 0xFFFFD8E6, 0xFF6F153F, 0xFFD5C1C7, 0xFF1D1B20, 0xFF514348)
+                : new M3Palette(0xFF181114, 0xFF271E22, 0xFF31272B, 0xFFFFB0CE, 0xFF5C2A40, 0xFFFFD8E6, 0xFF514348, 0xFFE6E0E9, 0xFFD5C2C8);
+        }
+        if ("gold".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFFFF8F2, 0xFFF6EFE6, 0xFFEDE5DB, 0xFF8A5600, 0xFFFFDDB3, 0xFF5E3800, 0xFFD2C5B6, 0xFF1D1B20, 0xFF4E463A)
+                : new M3Palette(0xFF17130D, 0xFF262119, 0xFF302A21, 0xFFFFB951, 0xFF523B18, 0xFFFFDDB3, 0xFF4E463A, 0xFFE6E0E9, 0xFFD2C5B6);
+        }
+        if ("silver".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFF9F9FC, 0xFFEEF0F5, 0xFFE5E8EE, 0xFF455A77, 0xFFD8E4F8, 0xFF233752, 0xFFC3C7D0, 0xFF1D1B20, 0xFF44474E)
+                : new M3Palette(0xFF121316, 0xFF202328, 0xFF2A2D33, 0xFFB8C8E2, 0xFF344154, 0xFFD8E4F8, 0xFF44474E, 0xFFE6E0E9, 0xFFC3C7D0);
+        }
+        // Default: Amethyst (Official Google Pixel M3 Baseline)
+        return isLight
+            ? new M3Palette(0xFFFEF7FF, 0xFFF3EDF7, 0xFFECE6F0, 0xFF6750A4, 0xFFEADDFF, 0xFF21005D, 0xFFC5BFD0, 0xFF1D1B20, 0xFF49454F)
+            : new M3Palette(0xFF141218, 0xFF211F26, 0xFF2B2930, 0xFFD0BCFF, 0xFF4F378B, 0xFFEADDFF, 0xFF49454F, 0xFFE6E0E9, 0xFFCAC4D0);
+    }
+
     private int resolveAccentInt(boolean isLight) {
-        if ("sapphire".equals(accentColor)) return isLight ? 0xFF1B6EF3 : 0xFFA8C7FA;
-        if ("aurora".equals(accentColor))   return isLight ? 0xFF006A60 : 0xFF7BD8C6;
-        if ("rose".equals(accentColor))     return isLight ? 0xFFA83268 : 0xFFFFB0CE;
-        if ("gold".equals(accentColor))     return isLight ? 0xFF8A5600 : 0xFFFFB951;
-        if ("silver".equals(accentColor))   return isLight ? 0xFF455A77 : 0xFFB8C8E2;
-        return isLight ? 0xFF6750A4 : 0xFFD0BCFF;
+        return resolveM3Palette(isLight, false).primary;
     }
 
     private int resolveWebViewSurfaceColor(boolean isLight) {
-        return isLight ? 0xFFFBF8FD : 0xFF131116;
+        return resolveM3Palette(isLight, false).bg;
+    }
+
+    private GradientDrawable makeM3PillDrawable(int fillColor, int strokeColor, float strokeDp, float radiusDp) {
+        GradientDrawable gd = new GradientDrawable();
+        gd.setShape(GradientDrawable.RECTANGLE);
+        gd.setColor(fillColor);
+        gd.setCornerRadius(dpF(radiusDp));
+        if (strokeDp > 0f && Color.alpha(strokeColor) > 0) {
+            gd.setStroke(Math.max(1, Math.round(dpF(strokeDp))), strokeColor);
+        }
+        return gd;
+    }
+
+    private Drawable makeM3SurfaceDrawable(int fillColor, int topDividerColor) {
+        return makeM3BarDrawable(fillColor, topDividerColor, true);
+    }
+
+    private Drawable makeM3BarDrawable(int fillColor, int dividerColor, boolean dividerOnTop) {
+        GradientDrawable surface = new GradientDrawable();
+        surface.setShape(GradientDrawable.RECTANGLE);
+        surface.setColor(fillColor);
+        if (Color.alpha(dividerColor) == 0) {
+            return surface;
+        }
+        GradientDrawable divider = new GradientDrawable();
+        divider.setShape(GradientDrawable.RECTANGLE);
+        divider.setColor(dividerColor);
+        LayerDrawable ld = new LayerDrawable(new Drawable[] { divider, surface });
+        int hairlinePx = Math.max(1, Math.round(dpF(0.75f)));
+        if (dividerOnTop) {
+            ld.setLayerInset(1, 0, hairlinePx, 0, 0);
+        } else {
+            ld.setLayerInset(1, 0, 0, 0, hairlinePx);
+        }
+        return ld;
+    }
+
+    private static int withAlpha(int argb, int alpha) {
+        return ((alpha & 0xFF) << 24) | (argb & 0x00FFFFFF);
+    }
+
+    private static String toCssHex(int argb) {
+        return String.format(Locale.US, "#%06X", (argb & 0x00FFFFFF));
+    }
+
+    private boolean isSyncActivelyPaired() {
+        if (syncManager == null) return false;
+        JSONObject syncSnap = syncManager.getSnapshot();
+        return syncSnap.optBoolean("connected", false) || syncSnap.optBoolean("paired", false);
+    }
+
+    private void applySyncPillTheme(M3Palette p, boolean isLight, boolean syncPaired) {
+        int pillFill = syncPaired ? p.primaryContainer : p.surfaceContainerHigh;
+        int icoTint = syncPaired ? p.onPrimaryContainer : p.onSurfaceVariant;
+        String key = pillFill + ":" + icoTint + ":" + syncPaired + ":" + isLight;
+        if (key.equals(lastSyncPillKey)) return;
+        lastSyncPillKey = key;
+        if (navSyncPill != null) {
+            navSyncPill.setBackground(makeM3PillDrawable(pillFill, 0, 0f, 16f));
+        }
+        if (navSyncIco != null) {
+            navSyncIco.setColorFilter(icoTint);
+        }
+        if (navSyncDot != null) {
+            GradientDrawable dot = new GradientDrawable();
+            dot.setShape(GradientDrawable.OVAL);
+            dot.setColor(isLight ? 0xFF00796B : 0xFF5EEAD4);
+            navSyncDot.setBackground(dot);
+            navSyncDot.setVisibility(syncPaired ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void applyNativeTheme() {
@@ -722,11 +877,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         MobileTab active = getActiveTab();
         boolean isPriv = active != null && active.isPrivate;
 
-        int bgColor = isLight ? 0xFFFEF7FF : 0xFF141218;
+        M3Palette p = resolveM3Palette(isLight, isPriv);
         int webSurfaceColor = resolveWebViewSurfaceColor(isLight);
-        int inkPrimary = isLight ? 0xFF1D1B20 : 0xFFE6E0E9;
-        int inkMuted = isLight ? 0xFF49454F : 0xFFCAC4D0;
-        int accent = resolveAccentInt(isLight);
+        int subtleDivider = withAlpha(p.outlineVariant, isLight ? 0x5C : 0x60);
 
         try {
             getWindow().setStatusBarColor(Color.TRANSPARENT);
@@ -738,85 +891,100 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             }
         } catch (Exception ignored) { }
 
-        if (rootContainer != null) rootContainer.setBackgroundColor(bgColor);
+        if (rootContainer != null) rootContainer.setBackgroundColor(p.bg);
         if (webContainer != null) webContainer.setBackgroundColor(webSurfaceColor);
         for (MobileTab t : tabs) {
             if (t != null && t.webView != null) {
                 t.webView.setBackgroundColor(webSurfaceColor);
             }
         }
-        if (statusScrim != null) statusScrim.setBackgroundColor(isPriv ? 0xFF120A22 : bgColor);
-        if (topChrome != null) topChrome.setBackgroundResource(isLight ? R.drawable.bg_top_bar_light : R.drawable.bg_top_bar);
-        if (bottomChrome != null) bottomChrome.setBackgroundResource(isLight ? R.drawable.bg_bottom_bar_light : R.drawable.bg_bottom_bar);
+        if (statusScrim != null) statusScrim.setBackgroundColor(p.bg);
+        if (topChrome != null) topChrome.setBackground(makeM3BarDrawable(p.surfaceContainer, subtleDivider, false));
+        if (bottomChrome != null) bottomChrome.setBackground(makeM3SurfaceDrawable(p.surfaceContainer, subtleDivider));
 
+        // Pure Google Pixel M3 48dp Address Pill (24dp radius, zero harsh border, surfaceContainerHigh tonal fill)
         if (urlPillBox != null) {
-            if (isPriv) {
-                urlPillBox.setBackgroundResource(R.drawable.bg_glass_pill_private);
-            } else {
-                urlPillBox.setBackgroundResource(isLight ? R.drawable.bg_glass_pill_light : R.drawable.bg_glass_pill);
-            }
+            urlPillBox.setBackground(makeM3PillDrawable(p.surfaceContainerHigh, 0, 0f, 24f));
         }
         if (urlInput != null) {
-            urlInput.setTextColor(isPriv ? 0xFFF6F0FF : inkPrimary);
-            urlInput.setHintTextColor(isPriv ? 0xFFC4B0E8 : inkMuted);
+            urlInput.setTextColor(p.onSurface);
+            urlInput.setHintTextColor(p.onSurfaceVariant);
         }
+
+        // Sleek 34dp Scroll-Collapsed Floating Domain Pill
         if (collapsedPill != null) {
-            collapsedPill.setBackgroundResource(isLight ? R.drawable.bg_collapsed_pill_light : R.drawable.bg_collapsed_pill);
+            collapsedPill.setBackground(makeM3PillDrawable(p.surfaceContainerHigh, 0, 0f, 17f));
         }
-        if (collapsedDomain != null) collapsedDomain.setTextColor(inkPrimary);
-        if (collapsedIco != null) collapsedIco.setColorFilter(isPriv ? 0xFFD4B8FF : inkMuted);
+        if (collapsedDomain != null) collapsedDomain.setTextColor(p.onSurface);
+        if (collapsedIco != null) collapsedIco.setColorFilter(isPriv ? p.primary : p.onSurfaceVariant);
 
-        if (findBar != null) findBar.setBackgroundColor(isLight ? 0xFFF3EDF7 : 0xFF211F26);
+        if (findBar != null) findBar.setBackgroundColor(p.surfaceContainer);
         if (findInput != null) {
-            findInput.setTextColor(inkPrimary);
-            findInput.setHintTextColor(inkMuted);
+            findInput.setTextColor(p.onSurface);
+            findInput.setHintTextColor(p.onSurfaceVariant);
         }
-        if (btnFindPrev != null) btnFindPrev.setColorFilter(inkPrimary);
-        if (btnFindNext != null) btnFindNext.setColorFilter(inkPrimary);
-        if (btnFindClose != null) btnFindClose.setColorFilter(accent);
+        if (btnFindPrev != null) btnFindPrev.setColorFilter(p.onSurfaceVariant);
+        if (btnFindNext != null) btnFindNext.setColorFilter(p.onSurfaceVariant);
+        if (btnFindClose != null) btnFindClose.setColorFilter(p.primary);
 
-        if (btnShieldCount != null) btnShieldCount.setTextColor(isPriv ? 0xFFD4B8FF : accent);
-        if (btnUrlClear != null) btnUrlClear.setColorFilter(isPriv ? 0xFFD4B8FF : inkMuted);
-        if (btnReload != null) btnReload.setColorFilter(isPriv ? 0xFFD4B8FF : inkMuted);
-        if (btnBeamPc != null) btnBeamPc.setColorFilter(isPriv ? 0xFFD4B8FF : accent);
+        ColorStateList progressTint = ColorStateList.valueOf(p.primary);
+        if (loadProgress != null) loadProgress.setProgressTintList(progressTint);
+        if (loadProgressTop != null) loadProgressTop.setProgressTintList(progressTint);
+        if (updateProgress != null) updateProgress.setProgressTintList(progressTint);
 
-        if (navBack != null) navBack.setColorFilter(inkPrimary);
-        if (navForward != null) navForward.setColorFilter(inkPrimary);
-        if (navSyncPill != null) navSyncPill.setBackgroundResource(isLight ? R.drawable.bg_center_action_light : R.drawable.bg_center_action);
-        if (navSyncIco != null) navSyncIco.setColorFilter(accent);
-        if (navMenu != null) navMenu.setColorFilter(inkPrimary);
+        if (btnShieldCount != null) {
+            btnShieldCount.setTextColor(p.primary);
+            btnShieldCount.setVisibility(View.GONE);
+        }
+        if (btnUrlClear != null) btnUrlClear.setColorFilter(p.onSurfaceVariant);
+        if (btnReload != null) btnReload.setColorFilter(p.onSurfaceVariant);
+        if (btnBeamPc != null) {
+            btnBeamPc.setColorFilter(p.primary);
+            btnBeamPc.setVisibility(View.GONE);
+        }
+
+        if (navBack != null) navBack.setColorFilter(p.onSurfaceVariant);
+        if (navForward != null) navForward.setColorFilter(p.onSurfaceVariant);
+        applySyncPillTheme(p, isLight, isSyncActivelyPaired());
+        if (navMenu != null) navMenu.setColorFilter(p.onSurfaceVariant);
         if (navTabsBadge != null) {
             if (isPriv) {
-                navTabsBadge.setBackgroundResource(R.drawable.bg_tab_badge_private);
-                navTabsBadge.setTextColor(0xFFD4B8FF);
+                navTabsBadge.setBackground(makeM3PillDrawable(withAlpha(p.primary, 0x28), p.primary, 1.6f, 6f));
+                navTabsBadge.setTextColor(p.primary);
             } else {
-                navTabsBadge.setBackgroundResource(isLight ? R.drawable.bg_tab_badge_light : R.drawable.bg_tab_badge);
-                navTabsBadge.setTextColor(inkPrimary);
+                navTabsBadge.setBackground(makeM3PillDrawable(Color.TRANSPARENT, p.onSurfaceVariant, 1.6f, 6f));
+                navTabsBadge.setTextColor(p.onSurface);
             }
         }
-        if (incomingBanner != null) incomingBanner.setBackgroundResource(isLight ? R.drawable.bg_toast_banner_light : R.drawable.bg_toast_banner);
-        if (incomingTitle != null) incomingTitle.setTextColor(inkPrimary);
-        if (incomingBody != null) incomingBody.setTextColor(inkMuted);
-        if (btnIncomingDismiss != null) btnIncomingDismiss.setTextColor(inkMuted);
+
+        if (incomingBanner != null) {
+            incomingBanner.setBackground(makeM3PillDrawable(p.surfaceContainerHigh, subtleDivider, 0.75f, 24f));
+        }
+        if (incomingTitle != null) incomingTitle.setTextColor(p.onSurface);
+        if (incomingBody != null) incomingBody.setTextColor(p.onSurfaceVariant);
+        if (btnIncomingDismiss != null) btnIncomingDismiss.setTextColor(p.onSurfaceVariant);
         if (btnIncomingCopy != null) {
-            btnIncomingCopy.setBackgroundResource(isLight ? R.drawable.bg_glass_pill_light : R.drawable.bg_glass_pill);
-            btnIncomingCopy.setTextColor(inkPrimary);
+            btnIncomingCopy.setBackground(makeM3PillDrawable(p.surfaceContainer, 0, 0f, 16f));
+            btnIncomingCopy.setTextColor(p.onSurface);
         }
         if (btnIncomingOpen != null) {
-            btnIncomingOpen.setBackgroundResource(isLight ? R.drawable.bg_center_action_light : R.drawable.bg_center_action);
-            btnIncomingOpen.setTextColor(accent);
+            btnIncomingOpen.setBackground(makeM3PillDrawable(p.primaryContainer, 0, 0f, 16f));
+            btnIncomingOpen.setTextColor(p.onPrimaryContainer);
         }
-        if (updateBanner != null) updateBanner.setBackgroundResource(isLight ? R.drawable.bg_toast_banner_light : R.drawable.bg_toast_banner);
-        if (updateTitle != null) updateTitle.setTextColor(inkPrimary);
-        if (updateBody != null) updateBody.setTextColor(inkMuted);
-        if (btnUpdateLater != null) btnUpdateLater.setTextColor(inkMuted);
+
+        if (updateBanner != null) {
+            updateBanner.setBackground(makeM3PillDrawable(p.surfaceContainerHigh, subtleDivider, 0.75f, 24f));
+        }
+        if (updateTitle != null) updateTitle.setTextColor(p.onSurface);
+        if (updateBody != null) updateBody.setTextColor(p.onSurfaceVariant);
+        if (btnUpdateLater != null) btnUpdateLater.setTextColor(p.onSurfaceVariant);
         if (btnUpdateNow != null) {
-            btnUpdateNow.setBackgroundResource(isLight ? R.drawable.bg_center_action_light : R.drawable.bg_center_action);
-            btnUpdateNow.setTextColor(accent);
+            btnUpdateNow.setBackground(makeM3PillDrawable(p.primaryContainer, 0, 0f, 16f));
+            btnUpdateNow.setTextColor(p.onPrimaryContainer);
         }
         if (swipeRefresh != null) {
-            swipeRefresh.setProgressBackgroundColorSchemeColor(isLight ? 0xFFF3EDF7 : 0xFF211F26);
-            swipeRefresh.setColorSchemeColors(accent, 0xFF7BD8C6);
+            swipeRefresh.setProgressBackgroundColorSchemeColor(p.surfaceContainerHigh);
+            swipeRefresh.setColorSchemeColors(p.primary, isLight ? 0xFF006A60 : 0xFF7BD8C6);
         }
     }
 
@@ -913,7 +1081,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 }
                 updatingUrlText = false;
                 liveSuggestions = new JSONArray();
-                openUiScreen("omnibox");
+                if (!"omnibox".equals(activeUiScreen)) {
+                    openUiScreen("omnibox");
+                } else {
+                    updateChromeUi();
+                    pushStateToUi();
+                }
                 updateUrlInlineButtons();
             } else {
                 urlInput.setGravity(Gravity.CENTER);
@@ -964,6 +1137,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 showKeyboard(urlInput);
                 return;
             }
+            int prevBlocked = t.blockedCount;
             adBlocker.setEnabled(!adBlocker.isEnabled());
             saveLocalCollections();
             if (t.webView != null) {
@@ -972,7 +1146,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             }
             updateChromeUi();
             pushStateToUi();
-            Toast.makeText(this, adBlocker.isEnabled() ? "dejavu Shield Active" : "dejavu Shield Paused", Toast.LENGTH_SHORT).show();
+            String shieldMsg = adBlocker.isEnabled()
+                ? "dejavu Shield Active"
+                : (prevBlocked > 0 ? ("dejavu Shield Paused (" + prevBlocked + " blocked on page)") : "dejavu Shield Paused");
+            Toast.makeText(this, shieldMsg, Toast.LENGTH_SHORT).show();
         });
 
         btnReload.setOnClickListener(v -> {
@@ -1169,6 +1346,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
     private void goActiveTabHome() {
         setChromeCollapsed(false);
+        if (loadProgress != null) loadProgress.setVisibility(View.GONE);
+        if (loadProgressTop != null) loadProgressTop.setVisibility(View.GONE);
         MobileTab t = getActiveTab();
         if (t != null) {
             t.isNewTab = true;
@@ -1245,32 +1424,34 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         boolean isTop = "top".equals(barPosition);
         if (collapsed) {
             if (isTop && topChrome != null) {
-                topChrome.animate().translationY(-topChrome.getHeight()).setDuration(220)
+                topChrome.animate().translationY(-topChrome.getHeight()).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (bottomChrome != null) {
-                bottomChrome.animate().translationY(bottomChrome.getHeight()).setDuration(230)
+                bottomChrome.animate().translationY(bottomChrome.getHeight()).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (collapsedPill != null) {
                 collapsedDomain.setText(formatHost(t.url));
+                collapsedPill.animate().cancel();
                 collapsedPill.setVisibility(View.VISIBLE);
                 collapsedPill.setAlpha(0f);
-                collapsedPill.setTranslationY(dp(18));
+                collapsedPill.setTranslationY(dp(16));
                 collapsedPill.animate().alpha(1f).translationY(0f).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
         } else {
             if (topChrome != null) {
-                topChrome.animate().translationY(0f).setDuration(220)
+                topChrome.animate().translationY(0f).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (bottomChrome != null) {
-                bottomChrome.animate().translationY(0f).setDuration(220)
+                bottomChrome.animate().translationY(0f).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (collapsedPill != null && collapsedPill.getVisibility() == View.VISIBLE) {
-                collapsedPill.animate().alpha(0f).translationY(dp(16)).setDuration(160)
+                collapsedPill.animate().cancel();
+                collapsedPill.animate().alpha(0f).translationY(dp(14)).setDuration(180)
                     .setInterpolator(M3_EMPHASIZED_DECEL)
                     .withEndAction(() -> collapsedPill.setVisibility(View.GONE)).start();
             }
@@ -1909,7 +2090,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (!clean.startsWith("http://") && !clean.startsWith("https://")) return;
         try {
             boolean isLight = isEffectiveLightTheme();
-            int barColor = isLight ? 0xFFFEF7FF : 0xFF141218;
+            int barColor = resolveM3Palette(isLight, false).bg;
             CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
             builder.setShowTitle(true);
             builder.setUrlBarHidingEnabled(false);
@@ -1957,14 +2138,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             dismissActiveAuthDialog();
 
             boolean isLight = isEffectiveLightTheme();
-            int surfaceBg = isLight ? 0xFFFEF7FF : 0xFF16141A;
-            int headerBg = isLight ? 0xFFF3EDF7 : 0xFF222028;
-            int dividerColor = isLight ? 0xFFEBE5F0 : 0xFF35323D;
-            int inkPrimary = isLight ? 0xFF1D1B20 : 0xFFE6E0E9;
-            int inkMuted = isLight ? 0xFF49454F : 0xFFCAC4D0;
-            int accent = resolveAccentInt(isLight);
-            int accentContainer = isLight ? 0xFFEADDFF : 0xFF4F378B;
-            int onAccentContainer = isLight ? 0xFF21005D : 0xFFEADDFF;
+            M3Palette pal = resolveM3Palette(isLight, false);
+            int surfaceBg = pal.bg;
+            int headerBg = pal.surfaceContainer;
+            int dividerColor = withAlpha(pal.outlineVariant, 0x80);
+            int inkPrimary = pal.onSurface;
+            int inkMuted = pal.onSurfaceVariant;
+            int accent = pal.primary;
+            int accentContainer = pal.primaryContainer;
+            int onAccentContainer = pal.onPrimaryContainer;
             int secureMint = isLight ? 0xFF006A60 : 0xFF7BD8C6;
 
             final Dialog dialog = new Dialog(this);
@@ -2371,7 +2553,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.0.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.1.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -2598,18 +2780,61 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             || "context-menu".equals(scr);
     }
 
+    private void animateUrlSlotReveal(View slot, boolean fromTop) {
+        if (slot == null) return;
+        if (slot.getVisibility() != View.VISIBLE) {
+            slot.animate().cancel();
+            slot.setVisibility(View.VISIBLE);
+            slot.setAlpha(0f);
+            slot.setTranslationY(fromTop ? -dp(10) : dp(10));
+            slot.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(220)
+                .setInterpolator(M3_EMPHASIZED_DECEL)
+                .start();
+        }
+    }
+
+    private void hideUrlSlotImmediate(View slot) {
+        if (slot == null) return;
+        slot.animate().cancel();
+        if (slot.getVisibility() != View.GONE) {
+            slot.setVisibility(View.GONE);
+        }
+        slot.setAlpha(1f);
+        slot.setTranslationY(0f);
+    }
+
     private void updateChromeVisibility() {
         boolean isTop = "top".equals(barPosition);
         boolean hideBars = isModalSheetScreen(activeUiScreen) || "tabs".equals(activeUiScreen);
+        boolean isStart = "start".equals(activeUiScreen);
         boolean inOmnibox = "omnibox".equals(activeUiScreen);
         boolean onWeb = "none".equals(activeUiScreen);
+        boolean showUrlBar = !hideBars && !isStart && (onWeb || inOmnibox);
 
         if (statusScrim != null) {
             statusScrim.setVisibility(onWeb ? View.VISIBLE : View.GONE);
         }
         if (navDockRow != null) {
-            navDockRow.setVisibility(inOmnibox ? View.GONE : View.VISIBLE);
+            navDockRow.setVisibility((hideBars || inOmnibox) ? View.GONE : View.VISIBLE);
         }
+
+        // Start Page has its own Pixel Search Pill (#sp-search-pill): hide native URL slots on "start"
+        if (showUrlBar) {
+            if (isTop) {
+                animateUrlSlotReveal(topUrlSlot, true);
+                hideUrlSlotImmediate(bottomUrlSlot);
+            } else {
+                animateUrlSlotReveal(bottomUrlSlot, false);
+                hideUrlSlotImmediate(topUrlSlot);
+            }
+        } else {
+            hideUrlSlotImmediate(bottomUrlSlot);
+            hideUrlSlotImmediate(topUrlSlot);
+        }
+
         if (bottomChrome != null) {
             boolean showBottom = !hideBars && !(inOmnibox && isTop);
             bottomChrome.setVisibility(showBottom ? View.VISIBLE : View.GONE);
@@ -2617,7 +2842,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
         if (topChrome != null) {
             boolean hasFind = findBar != null && findBar.getVisibility() == View.VISIBLE;
-            boolean showTop = !hideBars && (isTop || hasFind);
+            boolean showTop = !hideBars && ((isTop && showUrlBar) || hasFind);
             topChrome.setVisibility(showTop ? View.VISIBLE : View.GONE);
             if (showTop && !chromeCollapsed) topChrome.setTranslationY(0f);
         }
@@ -2626,11 +2851,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
         if (uiWebView != null) {
             // Keep uiWebView transparent on modal bottom sheets so live webpage stays dimmed cleanly behind sheet!
-            if (isModalSheetScreen(activeUiScreen)) {
-                uiWebView.setBackgroundColor(Color.TRANSPARENT);
-            } else {
-                uiWebView.setBackgroundColor(Color.TRANSPARENT);
-            }
+            uiWebView.setBackgroundColor(Color.TRANSPARENT);
         }
         updateViewportPadding();
     }
@@ -2680,9 +2901,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         boolean hasTxt = urlInput.getText() != null && urlInput.getText().length() > 0;
         MobileTab t = getActiveTab();
         boolean onWeb = (t != null && !t.isNewTab && "none".equals(activeUiScreen));
+        // Only 1 clean trailing icon in url_pill_box: Clear while typing OR Reload/Stop on webpages
         if (btnUrlClear != null) btnUrlClear.setVisibility(focused && hasTxt ? View.VISIBLE : View.GONE);
         if (btnReload != null) btnReload.setVisibility(!focused && onWeb ? View.VISIBLE : View.GONE);
-        if (btnBeamPc != null) btnBeamPc.setVisibility(!focused && onWeb ? View.VISIBLE : View.GONE);
+        if (btnBeamPc != null) btnBeamPc.setVisibility(View.GONE);
     }
 
     private void updateChromeUi() {
@@ -2690,8 +2912,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         boolean isLight = isEffectiveLightTheme();
         boolean isPriv = t != null && t.isPrivate;
         boolean onWeb = (t != null && !t.isNewTab && "none".equals(activeUiScreen));
-        int inkMuted = isPriv ? 0xFFEADDFF : (isLight ? 0xFF49454F : 0xFFCAC4D0);
-        int accent = resolveAccentInt(isLight);
+        M3Palette p = resolveM3Palette(isLight, isPriv);
 
         if (!urlInput.hasFocus()) {
             updatingUrlText = true;
@@ -2704,37 +2925,46 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (btnShieldIco != null) {
             if (isPriv && !onWeb) {
                 btnShieldIco.setImageResource(R.drawable.ic_private);
-                btnShieldIco.setColorFilter(0xFFD4B8FF);
+                btnShieldIco.setColorFilter(p.primary);
             } else if (!onWeb || urlInput.hasFocus()) {
                 btnShieldIco.setImageResource(R.drawable.ic_search);
-                btnShieldIco.setColorFilter(inkMuted);
+                btnShieldIco.setColorFilter(p.onSurfaceVariant);
             } else if (adBlocker.isEnabled() && t.blockedCount > 0) {
                 btnShieldIco.setImageResource(R.drawable.ic_shield);
-                btnShieldIco.setColorFilter(isPriv ? 0xFFD4B8FF : accent);
+                btnShieldIco.setColorFilter(p.primary);
             } else if (t.url != null && t.url.startsWith("https://")) {
                 btnShieldIco.setImageResource(R.drawable.ic_lock);
-                btnShieldIco.setColorFilter(adBlocker.isEnabled() ? (isPriv ? 0xFFD4B8FF : accent) : inkMuted);
+                btnShieldIco.setColorFilter(adBlocker.isEnabled() ? p.primary : p.onSurfaceVariant);
             } else {
                 btnShieldIco.setImageResource(R.drawable.ic_shield);
-                btnShieldIco.setColorFilter(adBlocker.isEnabled() ? accent : inkMuted);
+                btnShieldIco.setColorFilter(adBlocker.isEnabled() ? p.primary : p.onSurfaceVariant);
             }
         }
 
         btnShieldWrap.setAlpha((!onWeb || adBlocker.isEnabled()) ? 1.0f : 0.45f);
-        if (adBlocker.isEnabled() && onWeb && !urlInput.hasFocus() && t.blockedCount > 0) {
-            btnShieldCount.setText(String.valueOf(t.blockedCount));
-            btnShieldCount.setVisibility(View.VISIBLE);
-        } else {
+        // Keep URL pill clutter-free: never display numeric tracker badge digits inside url_pill_box
+        if (btnShieldCount != null) {
             btnShieldCount.setVisibility(View.GONE);
         }
 
         btnReload.setImageResource(onWeb && t.loading ? R.drawable.ic_close : R.drawable.ic_reload);
         updateUrlInlineButtons();
 
-        boolean canBack = onWeb && t.webView != null && (t.webView.canGoBack() || !t.isNewTab);
+        boolean canBack = (onWeb && t.webView != null && (t.webView.canGoBack() || !t.isNewTab))
+            || (!"none".equals(activeUiScreen) && !"start".equals(activeUiScreen));
         boolean canFwd = onWeb && t.webView != null && t.webView.canGoForward();
-        navBack.setAlpha(canBack || (!"none".equals(activeUiScreen) && !"start".equals(activeUiScreen)) ? 1.0f : 0.30f);
-        navForward.setAlpha(canFwd ? 1.0f : 0.30f);
+        float backAlpha = canBack ? 1.0f : 0.32f;
+        float fwdAlpha = canFwd ? 1.0f : 0.32f;
+        if (navBack != null && lastNavBackAlpha != backAlpha) {
+            lastNavBackAlpha = backAlpha;
+            navBack.animate().cancel();
+            navBack.animate().alpha(backAlpha).setDuration(160).setInterpolator(M3_EMPHASIZED_DECEL).start();
+        }
+        if (navForward != null && lastNavFwdAlpha != fwdAlpha) {
+            lastNavFwdAlpha = fwdAlpha;
+            navForward.animate().cancel();
+            navForward.animate().alpha(fwdAlpha).setDuration(160).setInterpolator(M3_EMPHASIZED_DECEL).start();
+        }
 
         int tabCount = 0;
         for (MobileTab mt : tabs) {
@@ -2742,10 +2972,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
         navTabsBadge.setText(tabCount > 99 ? "∞" : String.valueOf(Math.max(1, tabCount)));
 
-        JSONObject syncSnap = syncManager.getSnapshot();
-        boolean syncReady = syncSnap.optBoolean("connected", false)
-            || ("google".equals(syncSnap.optString("syncMode", "")) && syncSnap.optBoolean("paired", false));
-        navSyncDot.setVisibility(syncReady ? View.VISIBLE : View.GONE);
+        applySyncPillTheme(p, isLight, isSyncActivelyPaired());
     }
 
     private String peekClipboardText() {
@@ -2766,6 +2993,46 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             }
         } catch (Exception ignored) { }
         return "";
+    }
+
+    private int computeVisibleBottomChromeDp() {
+        if (bottomChrome == null || bottomChrome.getVisibility() != View.VISIBLE) return 0;
+        int total = 0;
+        if (bottomUrlSlot != null && bottomUrlSlot.getVisibility() == View.VISIBLE) {
+            total += bottomUrlSlot.getHeight() > 0 ? pxToDp(bottomUrlSlot.getHeight()) : 60;
+        }
+        if (navDockRow != null && navDockRow.getVisibility() == View.VISIBLE) {
+            total += navDockRow.getHeight() > 0 ? pxToDp(navDockRow.getHeight()) : 54;
+        }
+        return total;
+    }
+
+    private int computeVisibleTopChromeDp() {
+        if (topChrome == null || topChrome.getVisibility() != View.VISIBLE) return 0;
+        int total = 0;
+        if (topUrlSlot != null && topUrlSlot.getVisibility() == View.VISIBLE) {
+            total += topUrlSlot.getHeight() > 0 ? pxToDp(topUrlSlot.getHeight()) : 64;
+        }
+        if (findBar != null && findBar.getVisibility() == View.VISIBLE) {
+            total += findBar.getHeight() > 0 ? pxToDp(findBar.getHeight()) : 48;
+        }
+        return total;
+    }
+
+    private void pushSafeInsetsToUi(JSONObject st) throws Exception {
+        int sysTopDp = pxToDp(insetTopPx);
+        int sysBottomDp = pxToDp(insetBottomPx);
+        int imeBottomDp = pxToDp(insetImePx);
+        int effectiveBottomInset = Math.max(sysBottomDp, imeBottomDp);
+
+        int topChromeDp = computeVisibleTopChromeDp();
+        int bottomChromeDp = computeVisibleBottomChromeDp();
+
+        int safeTop = sysTopDp + topChromeDp;
+        int safeBottom = effectiveBottomInset + (bottomChromeDp > 0 ? bottomChromeDp : 12);
+        st.put("safeTop", safeTop);
+        st.put("safeBottom", safeBottom);
+        st.put("sysBottom", sysBottomDp);
     }
 
     private void pushStateToUi() {
@@ -2801,14 +3068,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("mainProfileId", mainProfileId);
                 st.put("activeProfile", getActiveProfileObject());
 
-                boolean isTop = "top".equals(barPosition);
-                int safeTop = pxToDp(insetTopPx) + (isTop && ("start".equals(activeUiScreen) || "omnibox".equals(activeUiScreen)) ? 62 : 0);
-                int bottomBarH = "start".equals(activeUiScreen) ? (isTop ? 52 : 112)
-                    : ("omnibox".equals(activeUiScreen) ? (isTop ? 12 : 64) : 12);
-                int safeBottom = pxToDp(Math.max(insetBottomPx, insetImePx)) + bottomBarH;
-                st.put("safeTop", safeTop);
-                st.put("safeBottom", safeBottom);
-                st.put("sysBottom", pxToDp(insetBottomPx));
+                pushSafeInsetsToUi(st);
 
                 MobileTab active = getActiveTab();
                 st.put("activeUrl", (active != null && !active.isNewTab) ? active.url : "");
@@ -2881,11 +3141,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         MobileTab t = getActiveTab();
         if (t == null || t.isNewTab || t.webView == null) return;
         boolean isLight = isEffectiveLightTheme();
-        String bg = isLight ? "#FEF7FF" : "#141218";
-        String fg = isLight ? "#1D1B20" : "#E6E0E9";
-        String btnBg = isLight ? "#EADDFF" : "#4F378B";
-        String btnFg = isLight ? "#21005D" : "#EADDFF";
-        String accentHex = isLight ? "#6750A4" : "#D0BCFF";
+        M3Palette p = resolveM3Palette(isLight, false);
+        String bg = toCssHex(p.bg);
+        String fg = toCssHex(p.onSurface);
+        String btnBg = toCssHex(p.primaryContainer);
+        String btnFg = toCssHex(p.onPrimaryContainer);
+        String accentHex = toCssHex(p.primary);
         String js = "(function(){var ex=document.getElementById('__djv_m_reader');if(ex){ex.remove();return;}" +
             "var art=document.querySelector('article,main,[role=\"main\"]')||document.body;" +
             "var ps=Array.from(art.querySelectorAll('p,h1,h2,h3,li')).map(function(n){return n.innerText.trim();}).filter(function(s){return s.length>24;}).slice(0,95);" +
@@ -3530,9 +3791,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         public void fillOmnibox(final String text) {
             mainHandler.post(() -> {
                 if (text == null) return;
+                setChromeCollapsed(false);
+                if (!"omnibox".equals(activeUiScreen)) {
+                    openUiScreen("omnibox");
+                }
                 urlInput.requestFocus();
                 urlInput.setText(text);
                 urlInput.setSelection(text.length());
+                omniboxQuery = text.trim();
+                updateUrlInlineButtons();
                 showKeyboard(urlInput);
             });
         }
@@ -3540,8 +3807,16 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         @JavascriptInterface
         public void focusOmnibox() {
             mainHandler.post(() -> {
+                setChromeCollapsed(false);
+                openUiScreen("omnibox");
                 urlInput.requestFocus();
                 showKeyboard(urlInput);
+                urlInput.post(() -> {
+                    if ("omnibox".equals(activeUiScreen)) {
+                        if (!urlInput.hasFocus()) urlInput.requestFocus();
+                        showKeyboard(urlInput);
+                    }
+                });
             });
         }
 
@@ -4008,6 +4283,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 }
                 saveLocalCollections();
                 applyNativeTheme();
+                updateChromeUi();
                 pushStateToUi();
             });
         }

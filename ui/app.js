@@ -1,5 +1,5 @@
 /**
- * dejavu v5.0.0 Native Shell Controller — Authentic Google Material Design 3 Expressive
+ * dejavu v5.1.0 Native Shell Controller — Authentic Google Material Design 3 Expressive
  * Zero-Glitch 120Hz Tab Strip, Diff-Guarded Shell DOM, Lightweight tabDelta IPC,
  * Dynamic M3 Butterfly Logo, Pixel Home, Google Auto-Sync dejavu Link Hub,
  * Real Chrome Extensions Manager, 10-Category Settings, M3 Context Menus & 8x Turbo Downloader.
@@ -516,7 +516,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.0.0 — 16 HD + 1 Live = 17 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.1.0 — 16 HD + 1 Live = 17 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 12 Sculptural / Architectural Material Design 3 HD Wallpapers
@@ -743,7 +743,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.0.0',
+    appVersion: bootData.appVersion || '5.1.0',
     isDefaultBrowser: !!bootData.isDefaultBrowser,
     canReopenClosedTab: !!bootData.canReopenClosedTab,
     updateStatus: bootData.updateStatus || '',
@@ -1738,7 +1738,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.0.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.1.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2009,7 +2009,7 @@
   function syncSettingsUi() {
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
-    const ver = state.appVersion || '5.0.0';
+    const ver = state.appVersion || '5.1.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;

@@ -11,7 +11,7 @@
   <!-- Zero-Idle-CPU Material Design 3 Wallpaper Surface -->
   <canvas id="newtab-canvas"></canvas>
 
-  <!-- Samsung Internet PC × Google Pixel Material Design 3 Top Chrome (88px base / 122px with Quick Access Bar) -->
+  <!-- Google Chrome × Pixel Material Design 3 Top Chrome (88px base / 122px with Quick Access Bar) -->
   <header id="chrome-header">
     <!-- Row 1: Material Design 3 Top Tab Strip + Window Controls (40px) -->
     <div id="tabbar" class="chrome-row tabbar-row">
@@ -69,6 +69,9 @@
           <svg class="icon-reload" viewBox="0 0 18 18" fill="none"><path d="M14.1 9a5.1 5.1 0 1 1-1.35-3.45M14.1 3.9v2.85h-2.85" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <svg class="icon-stop" viewBox="0 0 18 18" fill="none"><path d="M5.2 5.2l7.6 7.6M12.8 5.2l-7.6 7.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
         </button>
+        <button id="btn-toolbar-home" class="icon-btn m3-nav-btn" title="Home (Start Page)">
+          <svg viewBox="0 0 20 20" fill="none"><path d="M3.8 9.6L10 4.3l6.2 5.3v5.9a1.2 1.2 0 0 1-1.2 1.2h-3.4v-4.2H8.4v4.2H5a1.2 1.2 0 0 1-1.2-1.2V9.6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </button>
       </div>
 
       <!-- Center: Google Pixel Material Design 3 Pill Address Bar -->
@@ -122,8 +125,18 @@
         <div id="load-progress" class="load-progress"></div>
       </div>
 
-      <!-- Right: Material Design 3 Utility Action Dock -->
+      <!-- Right: Material Design 3 Utility Action Dock + Profile Pill + Main Menu -->
       <div class="toolbar-right">
+        <div id="private-badge-pill" class="private-badge-pill hidden" title="Private Browsing Window — History and cookies are not saved">
+          <svg viewBox="0 0 18 18" width="14" height="14" fill="none">
+            <path d="M2.5 8.8h13M5 8.8l1.2-4.2a1.2 1.2 0 0 1 1.15-.85h3.3a1.2 1.2 0 0 1 1.15.85L13 8.8" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="6.2" cy="12.3" r="2" stroke="currentColor" stroke-width="1.4"/>
+            <circle cx="11.8" cy="12.3" r="2" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M8.2 12.1h1.6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+          </svg>
+          <span>Private</span>
+        </div>
+
         <div class="util-pill">
           <button id="btn-vpn" class="vpn-trigger" title="dejavu Global VPN (86+ Countries)">
             <svg class="vpn-ico" viewBox="0 0 18 18" fill="none">
@@ -172,9 +185,19 @@
             </svg>
           </button>
 
-          <button id="btn-profile" class="profile-trigger" title="Profiles &amp; Updates">
-            <span id="profile-avatar-slot"></span>
+          <button id="btn-profile" class="profile-trigger profile-pill" title="Profiles &amp; Google Account">
+            <span id="profile-avatar-slot" class="profile-avatar-slot"></span>
+            <span id="profile-pill-name" class="profile-pill-name">Personal</span>
+            <span id="profile-main-chip" class="profile-main-chip hidden">Main</span>
             <span id="profile-update-dot" class="update-dot hidden"></span>
+          </button>
+
+          <button id="btn-menu" class="icon-btn menu-toolbar-btn" title="Customize and control dejavu">
+            <svg viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="4.2" r="1.25" fill="currentColor"/>
+              <circle cx="9" cy="9" r="1.25" fill="currentColor"/>
+              <circle cx="9" cy="13.8" r="1.25" fill="currentColor"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -205,7 +228,7 @@
         </span>
       </button>
 
-      <button type="button" id="rail-downloads" class="m3-rail-item" title="8x Turbo Download Manager (AntDM · Ctrl+J)">
+      <button type="button" id="rail-downloads" class="m3-rail-item" title="8x Turbo Download Manager (Ctrl+J)">
         <span class="m3-rail-pill">
           <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M10 3.6v8.8M6.6 9.2L10 12.6l3.4-3.4M4.2 15.8h11.6" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span id="rail-dl-badge" class="m3-rail-badge hidden">0</span>
@@ -261,7 +284,7 @@
     </div>
   </aside>
 
-  <!-- Main Viewport: Material Design 3 Start Page, Tab Overview, Settings & Turbo Downloads -->
+  <!-- Main Viewport: Material Design 3 Start Page, Tab Overview, Settings, Profile Setup & Turbo Downloads -->
   <main id="viewport">
     <section id="newtab-view">
       <div class="startpage-scroll">
@@ -272,12 +295,23 @@
               <img src="https://dejavu.local/logo-transparent.png" id="newtab-logo" alt="dejavu" draggable="false">
             </div>
             <h1 class="hero-title">dejavu</h1>
-            <button type="button" id="startpage-profile-badge" class="sp-profile-badge" title="Switch Profile &amp; Updates">
-              <span id="sp-badge-avatar" class="sp-badge-avatar"></span>
-              <span id="sp-badge-greeting" class="sp-badge-greeting">Good day</span>
-              <span class="sp-badge-dot" aria-hidden="true"></span>
-              <span id="sp-badge-name" class="sp-badge-name">Default</span>
-            </button>
+            <div class="sp-chip-row">
+              <button type="button" id="startpage-profile-badge" class="sp-profile-badge" title="Switch Profile &amp; Google Account">
+                <span id="sp-badge-avatar" class="sp-badge-avatar"></span>
+                <span id="sp-badge-greeting" class="sp-badge-greeting">Good day</span>
+                <span class="sp-badge-dot" aria-hidden="true"></span>
+                <span id="sp-badge-name" class="sp-badge-name">Personal</span>
+              </button>
+              <button type="button" id="sp-google-cta" class="sp-google-cta hidden" title="Sign in with Google or set up your Main Profile">
+                <svg viewBox="0 0 18 18" width="14" height="14" aria-hidden="true">
+                  <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/>
+                  <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"/>
+                  <path fill="#FBBC05" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z"/>
+                  <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/>
+                </svg>
+                <span>Sign in with Google</span>
+              </button>
+            </div>
           </div>
 
           <!-- Google Pixel Material 3 Pill Search Bar -->
@@ -459,470 +493,1353 @@
       <div class="sp-prefs-bar">
         <label class="sp-pref-chip">
           <span>Quick Access</span>
-          <button type="button" id="pref-favorites" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
+          <button type="button" id="pref-favorites" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
         </label>
         <label class="sp-pref-chip">
           <span>Frequently Visited</span>
-          <button type="button" id="pref-frequent" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
+          <button type="button" id="pref-frequent" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
         </label>
         <label class="sp-pref-chip">
           <span>Privacy Report</span>
-          <button type="button" id="pref-privacy" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
+          <button type="button" id="pref-privacy" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
         </label>
         <label class="sp-pref-chip">
           <span>Reading List</span>
-          <button type="button" id="pref-reading" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
+          <button type="button" id="pref-reading" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
         </label>
       </div>
 
       <div id="wallpaper-grid" class="wallpaper-grid"></div>
     </div>
 
-    <!-- Google Pixel Material Design 3 Settings Window (Ctrl+,) -->
+    <!-- Full-Viewport Google Chrome × Pixel Material Design 3 Settings Workspace (Ctrl+,) -->
     <section id="settings-overlay" class="settings-overlay hidden" aria-label="dejavu Settings">
-      <div id="settings-window" class="settings-window">
-        <aside class="settings-sidebar">
-          <div class="settings-brand">
+      <div id="options-modal" class="settings-window m3-settings-workspace">
+        <!-- Top M3 Settings App Bar -->
+        <header class="m3-settings-appbar">
+          <div class="m3-appbar-brand">
             <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
+            <span class="m3-appbar-title">Settings</span>
+            <span id="settings-version-sub" class="m3-tonal-badge">v4.5.0</span>
+          </div>
+
+          <div class="m3-appbar-search">
+            <svg viewBox="0 0 18 18" width="17" height="17" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M12 12l3.6 3.6" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/>
+            </svg>
+            <input id="settings-search-input" type="text" placeholder="Search settings..." spellcheck="false" autocomplete="off" aria-label="Search settings">
+            <button type="button" id="btn-settings-search-clear" class="m3-search-clear hidden" title="Clear search">
+              <svg viewBox="0 0 14 14" width="12" height="12" fill="none"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+
+          <div class="m3-appbar-actions">
+            <button type="button" id="btn-settings-done" class="m3-btn m3-btn-filled" title="Close Settings (Esc)">Done</button>
+          </div>
+        </header>
+
+        <!-- Body: Left M3 Navigation Drawer + Right Pixel Settings Canvas -->
+        <div class="m3-settings-body">
+          <aside class="settings-sidebar m3-settings-drawer">
+            <nav id="settings-nav" class="settings-nav" role="tablist" aria-label="Settings Categories">
+              <button type="button" class="settings-nav-item active" data-pane="you" role="tab">
+                <span class="snav-ico"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.6" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M4.2 16.4c.7-2.8 2.9-4.4 5.8-4.4s5.1 1.6 5.8 4.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+                <span>You and Google</span>
+              </button>
+              <button type="button" class="settings-nav-item" data-pane="appearance" role="tab">
+                <span class="snav-ico"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="6.4" stroke="currentColor" stroke-width="1.6"/><path d="M10 3.6a6.4 6.4 0 0 1 0 12.8V3.6z" fill="currentColor" opacity="0.72"/></svg></span>
+                <span>Appearance &amp; Material You</span>
+              </button>
+              <button type="button" class="settings-nav-item" data-pane="privacy" role="tab">
+                <span class="snav-ico"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2.6L4 5v4.7c0 3.9 2.5 6.8 6 8.1 3.5-1.3 6-4.2 6-8.1V5l-6-2.4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.3 10.1l1.9 1.9 3.6-3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span>Privacy &amp; Security</span>
+              </button>
+              <button type="button" class="settings-nav-item" data-pane="search" role="tab">
+                <span class="snav-ico"><svg viewBox="0 0 20 20" fill="none"><circle cx="8.8" cy="8.8" r="5.4" stroke="currentColor" stroke-width="1.6"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+                <span>Search Engine</span>
+              </button>
+              <button type="button" class="settings-nav-item" data-pane="tabs" role="tab">
+                <span class="snav-ico"><svg viewBox="0 0 20 20" fill="none"><rect x="2.8" y="4" width="14.4" height="12" rx="2.6" stroke="currentColor" stroke-width="1.6"/><path d="M2.8 8.2h14.4M8.5 4v4.2" stroke="currentColor" stroke-width="1.5"/></svg></span>
+                <span>Tabs &amp; On Startup</span>
+              </button>
+              <button type="button" class="settings-nav-item" data-pane="downloads" role="tab">
+                <span class="snav-ico"><svg viewBox="0 0 20 20" fill="none"><path d="M10 3.6v8.8M6.5 9.2L10 12.7l3.5-3.5M4 16h12" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span>Downloads</span>
+              </button>
+              <button type="button" class="settings-nav-item" data-pane="autofill" role="tab">
+                <span class="snav-ico"><svg viewBox="0 0 20 20" fill="none"><circle cx="7.2" cy="10" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M10.6 10h6.6M14.5 10v2.6M17 10v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+                <span>Passwords &amp; Autofill</span>
+              </button>
+              <button type="button" class="settings-nav-item" data-pane="vpn" role="tab">
+                <span class="snav-ico"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="6.6" stroke="currentColor" stroke-width="1.55"/><ellipse cx="10" cy="10" rx="3.1" ry="6.6" stroke="currentColor" stroke-width="1.4"/><path d="M3.7 8.1h12.6M3.7 11.9h12.6" stroke="currentColor" stroke-width="1.25" opacity="0.72"/></svg></span>
+                <span>Privacy VPN</span>
+              </button>
+              <button type="button" class="settings-nav-item" data-pane="system" role="tab">
+                <span class="snav-ico"><svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="9.5" rx="2" stroke="currentColor" stroke-width="1.55"/><path d="M7 16.4h6M10 13.5v2.9" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg></span>
+                <span>Accessibility &amp; System</span>
+              </button>
+              <button type="button" class="settings-nav-item" data-pane="about" role="tab">
+                <span class="snav-ico"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="6.8" stroke="currentColor" stroke-width="1.55"/><path d="M10 9v4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="10" cy="6.6" r="0.95" fill="currentColor"/></svg></span>
+                <span>About dejavu</span>
+              </button>
+            </nav>
+          </aside>
+
+          <div class="settings-main m3-settings-canvas">
+            <div class="settings-scroll" id="settings-scroll-container">
+              <div class="m3-settings-column">
+                <div class="m3-pane-header" id="settings-pane-header">
+                  <h2 id="settings-pane-title" class="settings-pane-title">You and Google</h2>
+                  <p id="settings-pane-sub" class="settings-pane-sub">Manage your Google Account, Main Profile, and Chrome-style side-by-side profile windows</p>
+                </div>
+
+                <div id="settings-search-banner" class="m3-search-banner hidden">
+                  <span id="settings-search-count">Showing matching settings</span>
+                  <button type="button" id="btn-settings-search-reset" class="m3-btn m3-btn-text sm">Clear filter</button>
+                </div>
+
+                <div id="settings-search-empty" class="m3-search-empty hidden">
+                  <svg viewBox="0 0 28 28" width="32" height="32" fill="none"><circle cx="12.5" cy="12.5" r="7.5" stroke="currentColor" stroke-width="1.8"/><path d="M18.2 18.2l5.6 5.6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+                  <div class="m3-empty-title">No matching settings found</div>
+                  <div class="m3-empty-sub">Try searching for "cookies", "zoom", "Google", "VPN", "downloads", or "wallpaper".</div>
+                </div>
+
+                <!-- =========================================================
+                     Category 1: You and Google
+                     ========================================================= -->
+                <div class="settings-pane" data-pane-body="you" data-cat-label="You and Google">
+                  <!-- Google Account Hero Card -->
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Google Account &amp; Active Profile</div>
+                    <div class="m3-account-hero">
+                      <div class="m3-account-hero-top">
+                        <div id="you-hero-avatar" class="m3-account-avatar"></div>
+                        <div class="m3-account-meta">
+                          <div class="m3-account-name-row">
+                            <span id="you-hero-name" class="m3-account-name">Personal</span>
+                            <span id="you-main-chip" class="m3-status-chip primary">Main Profile</span>
+                            <span id="you-sync-chip" class="m3-status-chip">Local Profile</span>
+                          </div>
+                          <div id="you-hero-email" class="m3-account-email">Sign in with Google to use Gmail, YouTube, Drive &amp; Gemini in this isolated profile</div>
+                        </div>
+                      </div>
+                      <div class="m3-account-actions" id="you-account-actions">
+                        <button type="button" id="btn-you-google-signin" class="m3-btn m3-btn-filled">
+                          <svg viewBox="0 0 18 18" width="16" height="16" aria-hidden="true">
+                            <path fill="currentColor" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/>
+                            <path fill="currentColor" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z" opacity="0.9"/>
+                            <path fill="currentColor" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z" opacity="0.8"/>
+                            <path fill="currentColor" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" opacity="0.95"/>
+                          </svg>
+                          <span>Sign in with Google</span>
+                        </button>
+                        <button type="button" id="btn-you-google-signup" class="m3-btn m3-btn-tonal">Create Google Account</button>
+                        <button type="button" id="btn-you-google-sync" class="m3-btn m3-btn-outlined">Sync Profile</button>
+                        <button type="button" id="btn-you-google-signout" class="m3-btn m3-btn-danger hidden">Sign Out</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Profile Personalization & Windows -->
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Profile &amp; Windows</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Customize your dejavu profile &amp; theme</div>
+                          <div class="opt-desc">Edit display name, avatar emblem, Material You accent color, and Main Profile status</div>
+                        </div>
+                        <button type="button" id="btn-you-customize-profile" class="m3-btn m3-btn-tonal sm">Customize Profile</button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Multi-Window Workspace</div>
+                          <div id="you-window-summary" class="opt-desc">Open multiple simultaneous dejavu windows or an isolated Private window</div>
+                        </div>
+                        <div class="opt-btn-row">
+                          <button type="button" id="btn-you-new-window" class="m3-btn m3-btn-tonal sm">New Window</button>
+                          <button type="button" id="btn-you-private-window" class="m3-btn m3-btn-outlined sm">Private Window</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Other Profiles (Side-by-Side Chrome-Style Windows) -->
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading-row">
+                      <div class="m3-pref-heading">Other Profiles</div>
+                      <button type="button" id="btn-you-add-profile" class="m3-btn m3-btn-filled sm">+ Add Profile</button>
+                    </div>
+                    <div class="m3-pref-card" id="settings-profiles-list">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">No other profiles yet</div>
+                          <div class="opt-desc">Add profiles for Work, School, or Gaming — each opens side-by-side in its own isolated window</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- =========================================================
+                     Category 2: Appearance & Material You
+                     ========================================================= -->
+                <div class="settings-pane hidden" data-pane-body="appearance" data-cat-label="Appearance & Material You">
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Material You Theme &amp; Dynamic Color</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Theme Mode</div>
+                          <div class="opt-desc">Adapts Material Design 3 tonal elevation across tabs, toolbar, Start Page &amp; popovers</div>
+                        </div>
+                        <div class="m3-segmented opt-seg" id="opt-appearance-mode" role="radiogroup" aria-label="Theme Mode">
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="auto">
+                            <svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span>Auto</span>
+                          </button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="light">
+                            <svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span>Light</span>
+                          </button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="dark">
+                            <svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span>Dark</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="opt-row stacked">
+                        <div class="opt-meta">
+                          <div class="opt-title">Material You Dynamic Color Seed</div>
+                          <div class="opt-desc">Generates harmonious primary, tonal container &amp; surface elevation tokens across the entire browser</div>
+                        </div>
+                        <div class="accent-swatches" id="opt-accent-swatches">
+                          <button type="button" class="accent-swatch active" data-accent-choice="amethyst">
+                            <span class="sw-dot" style="--sw:#d0bcff;--sw-ring:#4f378b"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span>Amethyst</span>
+                          </button>
+                          <button type="button" class="accent-swatch" data-accent-choice="sapphire">
+                            <span class="sw-dot" style="--sw:#a8c7fa;--sw-ring:#0842a0"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span>Pixel Blue</span>
+                          </button>
+                          <button type="button" class="accent-swatch" data-accent-choice="aurora">
+                            <span class="sw-dot" style="--sw:#82d5c4;--sw-ring:#005046"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span>Sage</span>
+                          </button>
+                          <button type="button" class="accent-swatch" data-accent-choice="rose">
+                            <span class="sw-dot" style="--sw:#ffb0cc;--sw-ring:#7b294c"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span>Rose</span>
+                          </button>
+                          <button type="button" class="accent-swatch" data-accent-choice="gold">
+                            <span class="sw-dot" style="--sw:#f6bd60;--sw-ring:#633f00"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span>Honey</span>
+                          </button>
+                          <button type="button" class="accent-swatch" data-accent-choice="silver">
+                            <span class="sw-dot" style="--sw:#b8c8e2;--sw-ring:#38485e"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span>Slate</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Pure Material Design 3 Wallpaper Studio (All 17 Themes) -->
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading-row">
+                      <div class="m3-pref-heading">Pure Material Design 3 Wallpaper Studio <span id="settings-wp-count-pill" class="m3-tonal-badge sm">17</span></div>
+                      <button type="button" id="btn-opt-upload-wp" class="m3-btn m3-btn-tonal sm">+ Custom Photo</button>
+                    </div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row stacked">
+                        <div class="opt-wp-toolbar">
+                          <div class="m3-chip-group" id="opt-wp-filter">
+                            <button type="button" class="m3-filter-chip opt-seg-btn active" data-cat="all"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>All (17)</span></button>
+                            <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="butterfly"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Butterfly M3 (4)</span></button>
+                            <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="dark"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Dark (9)</span></button>
+                            <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="light"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Light (7)</span></button>
+                            <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="live"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Live (1)</span></button>
+                          </div>
+                        </div>
+                        <div id="settings-wallpaper-grid" class="wallpaper-grid settings-wp-grid"></div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Wallpaper Contrast Scrim</div>
+                          <div class="opt-desc">Tune tonal contrast behind Start Page tiles &amp; typography</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-wp-dim">
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="vivid"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Vivid</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="balanced"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Balanced</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="calm"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Calm</span></button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Typography & Page Zoom -->
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Typography &amp; Page Zoom</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Font Size</div>
+                          <div class="opt-desc">Default text scaling for web pages</div>
+                        </div>
+                        <div class="m3-select-wrap">
+                          <select id="opt-font-size" class="m3-select" aria-label="Font size">
+                            <option value="very-small">Very Small</option>
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium (Recommended)</option>
+                            <option value="large">Large</option>
+                            <option value="very-large">Very Large</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Font Family</div>
+                          <div class="opt-desc">Preferred typeface style across webpages</div>
+                        </div>
+                        <div class="m3-select-wrap">
+                          <select id="opt-font-family" class="m3-select" aria-label="Font family">
+                            <option value="system" selected>System Default</option>
+                            <option value="sans">Sans-Serif (Google Sans / Inter)</option>
+                            <option value="serif">Serif (Georgia / Merriweather)</option>
+                            <option value="mono">Monospace (Cascadia / Consolas)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Default Page Zoom</div>
+                          <div class="opt-desc">Automatically scales websites from 50% to 200%</div>
+                        </div>
+                        <div class="m3-slider-group">
+                          <input id="opt-default-zoom-slider" class="m3-slider" type="range" min="50" max="200" step="5" value="100" aria-label="Default page zoom">
+                          <span id="opt-default-zoom-val" class="m3-slider-pill">100%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Toolbar & Chrome -->
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Toolbar &amp; Chrome</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Show Home Button</div>
+                          <div class="opt-desc">Display a quick Home button beside the navigation controls</div>
+                        </div>
+                        <button type="button" id="opt-show-home" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Show Bookmarks Bar</div>
+                          <div class="opt-desc">Display pinned Quick Access bookmarks directly below the toolbar (Ctrl+Shift+B)</div>
+                        </div>
+                        <button type="button" id="opt-show-favbar" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Show Left Navigation Rail</div>
+                          <div class="opt-desc">Keep the Google Pixel Material 3 navigation rail docked along the left edge</div>
+                        </div>
+                        <button type="button" id="opt-show-navrail" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Compact Tab Bar</div>
+                          <div class="opt-desc">Sleeker 34px top tab strip for extra vertical webpage viewport</div>
+                        </div>
+                        <button type="button" id="opt-compact-tabs" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Always Show Tab Close Buttons</div>
+                          <div class="opt-desc">Keep × visible on inactive tabs instead of revealing on hover</div>
+                        </div>
+                        <button type="button" id="opt-always-close" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Show Full URLs in Address Bar</div>
+                          <div class="opt-desc">Display the full https:// path instead of the clean domain in the pill omnibox</div>
+                        </div>
+                        <button type="button" id="opt-full-url" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Smooth Scrolling</div>
+                          <div class="opt-desc">Animate wheel and keyboard scrolling across webpages</div>
+                        </div>
+                        <button type="button" id="opt-smooth-scroll" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Reduce Motion</div>
+                          <div class="opt-desc">Minimizes UI transitions and pauses Material You Live wallpaper animation</div>
+                        </div>
+                        <button type="button" id="opt-reduce-motion" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Start Page Sections -->
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Start Page Sections</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Quick Access Grid</div>
+                          <div class="opt-desc">Tonal rounded site tiles on your Start Page</div>
+                        </div>
+                        <button type="button" id="opt-sp-favorites" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Frequently Visited</div>
+                          <div class="opt-desc">Auto-populated sites you visit most often</div>
+                        </div>
+                        <button type="button" id="opt-sp-frequent" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Privacy Report Card</div>
+                          <div class="opt-desc">Live blocked trackers count &amp; VPN status chip</div>
+                        </div>
+                        <button type="button" id="opt-sp-privacy" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Reading List Shelf</div>
+                          <div class="opt-desc">Saved articles waiting to read later</div>
+                        </div>
+                        <button type="button" id="opt-sp-reading" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Profile Greeting Chip</div>
+                          <div class="opt-desc">Shows time-of-day greeting &amp; active profile badge</div>
+                        </div>
+                        <button type="button" id="opt-sp-greeting" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Center Start Page Search Bar</div>
+                          <div class="opt-desc">Turn off for an ultra-minimal Start Page using only the top pill address bar</div>
+                        </div>
+                        <button type="button" id="opt-sp-search" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- =========================================================
+                     Category 3: Privacy & Security
+                     ========================================================= -->
+                <div class="settings-pane hidden" data-pane-body="privacy" data-cat-label="Privacy & Security">
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">dejavu Shield — Ad &amp; Tracker Blocker</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="m3-row-ico primary">
+                          <svg viewBox="0 0 20 20" width="20" height="20" fill="none"><path d="M10 2.5L4 4.9v4.8c0 3.9 2.5 6.8 6 8.1 3.5-1.3 6-4.2 6-8.1V4.9l-6-2.4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.3 10.1l1.9 1.9 3.6-3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                        <div class="opt-meta">
+                          <div class="opt-title">Block ads &amp; trackers everywhere (100/100 Engine)</div>
+                          <div id="opt-adblock-stats" class="opt-desc">Actively blocking network ads, banners &amp; YouTube ad scripts</div>
+                        </div>
+                        <button type="button" id="opt-global-adblock" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row stacked">
+                        <div class="opt-meta">
+                          <div class="opt-title">Paused Sites</div>
+                          <div class="opt-desc">Websites where you manually paused dejavu Shield</div>
+                        </div>
+                        <div id="opt-paused-hosts-list" class="opt-paused-list"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Browsing Data</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row clickable-row" id="row-clear-browsing-data">
+                        <div class="m3-row-ico danger">
+                          <svg viewBox="0 0 20 20" width="20" height="20" fill="none"><path d="M4.5 6h11M7.5 6V4.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V6M6 6l.8 9.8a1.4 1.4 0 0 0 1.4 1.2h3.6a1.4 1.4 0 0 0 1.4-1.2L14 6" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                        <div class="opt-meta">
+                          <div class="opt-title">Clear Browsing Data...</div>
+                          <div class="opt-desc">Clear history, cookies, site data, cached files &amp; download history by time range</div>
+                        </div>
+                        <button type="button" id="btn-open-clear-data" class="m3-btn m3-btn-tonal sm">Clear Data…</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Security &amp; Tracking Protection</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Safe Browsing Protection</div>
+                          <div class="opt-desc">Protects against dangerous websites, phishing links, and malicious downloads</div>
+                        </div>
+                        <button type="button" id="opt-safe-browsing" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Always Use Secure Connections (HTTPS-First)</div>
+                          <div class="opt-desc">Automatically upgrade HTTP connections to encrypted HTTPS when available</div>
+                        </div>
+                        <button type="button" id="opt-https-first" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Send "Do Not Track" Request</div>
+                          <div class="opt-desc">Include a Do Not Track (DNT) privacy header with your browsing traffic</div>
+                        </div>
+                        <button type="button" id="opt-do-not-track" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Block Third-Party Cookies</div>
+                          <div class="opt-desc">Prevent cross-site trackers from reading cookies across different domains</div>
+                        </div>
+                        <button type="button" id="opt-block-3p-cookies" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Block Pop-ups &amp; Redirects</div>
+                          <div class="opt-desc">Stop websites from automatically opening unwanted pop-up windows</div>
+                        </div>
+                        <button type="button" id="opt-block-popups" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Clear Cookies When Closing dejavu</div>
+                          <div class="opt-desc">Automatically wipe session cookies and site storage on exit</div>
+                        </div>
+                        <button type="button" id="opt-clear-cookies-exit" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Site Permissions</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Camera</div>
+                          <div class="opt-desc">Default behavior when websites request webcam access</div>
+                        </div>
+                        <div class="m3-select-wrap compact">
+                          <select id="opt-perm-camera" class="m3-select" aria-label="Camera permission">
+                            <option value="ask">Ask</option>
+                            <option value="allow">Allow</option>
+                            <option value="block">Block</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Microphone</div>
+                          <div class="opt-desc">Default behavior when websites request microphone access</div>
+                        </div>
+                        <div class="m3-select-wrap compact">
+                          <select id="opt-perm-mic" class="m3-select" aria-label="Microphone permission">
+                            <option value="ask">Ask</option>
+                            <option value="allow">Allow</option>
+                            <option value="block">Block</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Location</div>
+                          <div class="opt-desc">Default behavior when websites request geolocation</div>
+                        </div>
+                        <div class="m3-select-wrap compact">
+                          <select id="opt-perm-location" class="m3-select" aria-label="Location permission">
+                            <option value="ask">Ask</option>
+                            <option value="allow">Allow</option>
+                            <option value="block">Block</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Notifications</div>
+                          <div class="opt-desc">Default behavior when websites ask to send desktop notifications</div>
+                        </div>
+                        <div class="m3-select-wrap compact">
+                          <select id="opt-perm-notifications" class="m3-select" aria-label="Notifications permission">
+                            <option value="ask">Ask</option>
+                            <option value="allow">Allow</option>
+                            <option value="block">Block</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Clipboard</div>
+                          <div class="opt-desc">Control read/write access to your system clipboard</div>
+                        </div>
+                        <div class="m3-select-wrap compact">
+                          <select id="opt-perm-clipboard" class="m3-select" aria-label="Clipboard permission">
+                            <option value="ask">Ask</option>
+                            <option value="allow">Allow</option>
+                            <option value="block">Block</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Autoplay Media</div>
+                          <div class="opt-desc">Control whether audio and video can start playing automatically</div>
+                        </div>
+                        <div class="m3-select-wrap compact">
+                          <select id="opt-perm-autoplay" class="m3-select" aria-label="Autoplay permission">
+                            <option value="allow">Allow</option>
+                            <option value="ask">Ask</option>
+                            <option value="block">Block</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- =========================================================
+                     Category 4: Search Engine
+                     ========================================================= -->
+                <div class="settings-pane hidden" data-pane-body="search" data-cat-label="Search Engine">
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Search Engine Used in Address Bar &amp; Start Page</div>
+                    <div class="m3-pref-card m3-radio-list" id="opt-search-engine" role="radiogroup" aria-label="Default Search Engine">
+                      <button type="button" class="m3-radio-row opt-row opt-seg-btn active" data-val="google">
+                        <span class="m3-radio-ring"></span>
+                        <div class="opt-meta">
+                          <div class="opt-title">Google</div>
+                          <div class="opt-desc">google.com — Fast web, images, maps &amp; AI overview</div>
+                        </div>
+                      </button>
+                      <button type="button" class="m3-radio-row opt-row opt-seg-btn" data-val="duckduckgo">
+                        <span class="m3-radio-ring"></span>
+                        <div class="opt-meta">
+                          <div class="opt-title">DuckDuckGo</div>
+                          <div class="opt-desc">duckduckgo.com — Privacy-first search with zero tracking</div>
+                        </div>
+                      </button>
+                      <button type="button" class="m3-radio-row opt-row opt-seg-btn" data-val="bing">
+                        <span class="m3-radio-ring"></span>
+                        <div class="opt-meta">
+                          <div class="opt-title">Microsoft Bing</div>
+                          <div class="opt-desc">bing.com — Visual web search &amp; Copilot answers</div>
+                        </div>
+                      </button>
+                      <button type="button" class="m3-radio-row opt-row opt-seg-btn" data-val="brave">
+                        <span class="m3-radio-ring"></span>
+                        <div class="opt-meta">
+                          <div class="opt-title">Brave Search</div>
+                          <div class="opt-desc">search.brave.com — Independent privacy-preserving search index</div>
+                        </div>
+                      </button>
+                      <button type="button" class="m3-radio-row opt-row opt-seg-btn" data-val="ecosia">
+                        <span class="m3-radio-ring"></span>
+                        <div class="opt-meta">
+                          <div class="opt-title">Ecosia</div>
+                          <div class="opt-desc">ecosia.org — Plants trees around the world while you search</div>
+                        </div>
+                      </button>
+                      <button type="button" class="m3-radio-row opt-row opt-seg-btn" data-val="custom">
+                        <span class="m3-radio-ring"></span>
+                        <div class="opt-meta">
+                          <div class="opt-title">Custom Search Engine</div>
+                          <div class="opt-desc">Use your own custom search URL template with %s placeholder below</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Custom Search &amp; Suggestions</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row stacked">
+                        <div class="opt-meta">
+                          <div class="opt-title">Custom Search Engine URL</div>
+                          <div class="opt-desc">Use <code>%s</code> where your search query should be inserted (e.g. https://kagi.com/search?q=%s)</div>
+                        </div>
+                        <div class="opt-input-wrap full">
+                          <input id="opt-custom-search-url" class="m3-text-input" type="text" placeholder="https://example.com/search?q=%s" spellcheck="false" autocomplete="off">
+                          <button type="button" id="btn-save-custom-search" class="m3-btn m3-btn-tonal sm">Save URL</button>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Address Bar Search Suggestions</div>
+                          <div class="opt-desc">Show live autocomplete queries, bookmarks, and top hits while typing</div>
+                        </div>
+                        <button type="button" id="opt-address-suggestions" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- =========================================================
+                     Category 5: Tabs & On Startup
+                     ========================================================= -->
+                <div class="settings-pane hidden" data-pane-body="tabs" data-cat-label="Tabs & On Startup">
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">On Startup</div>
+                    <div class="m3-pref-card m3-radio-list" id="opt-startup" role="radiogroup" aria-label="On Startup">
+                      <button type="button" class="m3-radio-row opt-row opt-seg-btn active" data-val="startpage">
+                        <span class="m3-radio-ring"></span>
+                        <div class="opt-meta">
+                          <div class="opt-title">Open the dejavu Start Page</div>
+                          <div class="opt-desc">Begin fresh with your Material Design 3 wallpaper &amp; Quick Access grid</div>
+                        </div>
+                      </button>
+                      <button type="button" class="m3-radio-row opt-row opt-seg-btn" data-val="restore">
+                        <span class="m3-radio-ring"></span>
+                        <div class="opt-meta">
+                          <div class="opt-title">Continue where you left off</div>
+                          <div class="opt-desc">Automatically reopen your tabs from your previous session</div>
+                        </div>
+                      </button>
+                      <button type="button" class="m3-radio-row opt-row opt-seg-btn" data-val="homepage">
+                        <span class="m3-radio-ring"></span>
+                        <div class="opt-meta">
+                          <div class="opt-title">Open a specific Homepage</div>
+                          <div class="opt-desc">Launch directly into your chosen Homepage URL below</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Homepage &amp; New Tabs</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">New Tabs Open With</div>
+                          <div class="opt-desc">Choose what opens when pressing Ctrl+T or +</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-newtab-mode">
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="startpage"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Start Page</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="homepage"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Homepage</span></button>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Homepage URL</div>
+                          <div class="opt-desc">Opened by the Home button, Startup Homepage, or New Tab Homepage mode</div>
+                        </div>
+                        <div class="opt-input-wrap">
+                          <input id="opt-homepage-url" class="m3-text-input" type="text" placeholder="https://www.google.com" spellcheck="false" autocomplete="off">
+                          <button type="button" id="btn-save-homepage" class="m3-btn m3-btn-tonal sm">Save</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Performance &amp; Memory Saver</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Memory Saver</div>
+                          <div class="opt-desc">Frees up RAM from inactive background tabs for snappy multi-profile browsing</div>
+                        </div>
+                        <button type="button" id="opt-memory-saver" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Put Inactive Tabs to Sleep After</div>
+                          <div class="opt-desc">Tabs stay visible and reload instantaneously when clicked</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-memory-minutes">
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="15"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>15m</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="30"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>30m</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="60"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>1h</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="120"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>2h</span></button>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Confirm Before Closing Multiple Tabs</div>
+                          <div class="opt-desc">Ask before closing a window that has more than one open tab</div>
+                        </div>
+                        <button type="button" id="opt-confirm-close-tabs" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Tab Hover Previews</div>
+                          <div class="opt-desc">Show full tab title and domain info when hovering over tabs</div>
+                        </div>
+                        <button type="button" id="opt-tab-hover" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Keyboard Shortcuts</div>
+                    <div class="m3-pref-card">
+                      <div class="shortcuts-ref-grid">
+                        <div class="kbd-row"><span>New Window</span><kbd>Ctrl + N</kbd></div>
+                        <div class="kbd-row"><span>New Private Window</span><kbd>Ctrl + Shift + N</kbd></div>
+                        <div class="kbd-row"><span>dejavu Settings</span><kbd>Ctrl + ,</kbd></div>
+                        <div class="kbd-row"><span>New Tab</span><kbd>Ctrl + T</kbd></div>
+                        <div class="kbd-row"><span>Close Tab</span><kbd>Ctrl + W</kbd></div>
+                        <div class="kbd-row"><span>Reopen Closed Tab</span><kbd>Ctrl + Shift + T</kbd></div>
+                        <div class="kbd-row"><span>Tab Overview Grid</span><kbd>Ctrl + Shift + O</kbd></div>
+                        <div class="kbd-row"><span>Side Panel</span><kbd>Ctrl + Shift + L</kbd></div>
+                        <div class="kbd-row"><span>Bookmarks Bar</span><kbd>Ctrl + Shift + B</kbd></div>
+                        <div class="kbd-row"><span>Reader View</span><kbd>Ctrl + Shift + R</kbd></div>
+                        <div class="kbd-row"><span>Turbo Download Manager</span><kbd>Ctrl + J</kbd></div>
+                        <div class="kbd-row"><span>History</span><kbd>Ctrl + H</kbd></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- =========================================================
+                     Category 6: Downloads
+                     ========================================================= -->
+                <div class="settings-pane hidden" data-pane-body="downloads" data-cat-label="Downloads">
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Location &amp; Behavior</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Default Download Location</div>
+                          <div id="opt-download-folder-path" class="opt-desc opt-mono-path">Downloads</div>
+                        </div>
+                        <div class="opt-btn-row">
+                          <button type="button" id="btn-opt-change-dl-folder" class="m3-btn m3-btn-tonal sm">Change Folder</button>
+                          <button type="button" id="btn-opt-open-dl-folder" class="m3-btn m3-btn-outlined sm">Open Folder</button>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Ask Where to Save Each File Before Downloading</div>
+                          <div class="opt-desc">Prompt for destination folder and filename on every download</div>
+                        </div>
+                        <button type="button" id="opt-ask-dl-location" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Auto-Open Download Manager</div>
+                          <div class="opt-desc">Automatically open the Turbo Download Manager when a download starts</div>
+                        </div>
+                        <button type="button" id="opt-auto-open-dl" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Turbo Accelerator &amp; Media Grabber</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Turbo Accelerator Connections</div>
+                          <div class="opt-desc">Parallel byte-range streams used by dejavu Turbo Downloader</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-turbo-threads">
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="4"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>4×</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="8"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>8×</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="16"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>16×</span></button>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Default Video / Audio Quality</div>
+                          <div class="opt-desc">Pre-selected format for YouTube &amp; 1,000+ video sites</div>
+                        </div>
+                        <div class="m3-select-wrap">
+                          <select id="opt-default-video-quality" class="m3-select" aria-label="Default video or audio quality">
+                            <option value="best" selected>Best MP4</option>
+                            <option value="2160">4K (2160p)</option>
+                            <option value="1080">1080p HD</option>
+                            <option value="720">720p HD</option>
+                            <option value="mp3">MP3 320k Audio</option>
+                            <option value="m4a">M4A Audio</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Floating In-Page Video Download Button</div>
+                          <div class="opt-desc">Show a compact one-click MP4 / MP3 download pill on YouTube &amp; webpage videos</div>
+                        </div>
+                        <button type="button" id="opt-floating-media-btn" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- =========================================================
+                     Category 7: Passwords & Autofill
+                     ========================================================= -->
+                <div class="settings-pane hidden" data-pane-body="autofill" data-cat-label="Passwords & Autofill">
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Google Password Manager</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="m3-row-ico primary">
+                          <svg viewBox="0 0 20 20" width="20" height="20" fill="none"><circle cx="7.2" cy="10" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M10.6 10h6.6M14.5 10v2.6M17 10v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                        </div>
+                        <div class="opt-meta">
+                          <div class="opt-title">Google Password Manager</div>
+                          <div class="opt-desc">View, audit, and manage your saved Google Account passwords at passwords.google.com</div>
+                        </div>
+                        <button type="button" id="btn-open-google-passwords" class="m3-btn m3-btn-tonal sm">Open Manager</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Autofill Preferences</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Offer to Save Passwords</div>
+                          <div class="opt-desc">Prompt to save website sign-in credentials inside your active profile</div>
+                        </div>
+                        <button type="button" id="opt-save-passwords" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Autofill Addresses &amp; Forms</div>
+                          <div class="opt-desc">Automatically fill contact names, emails, and shipping forms</div>
+                        </div>
+                        <button type="button" id="opt-autofill-addresses" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Autofill Payment Methods</div>
+                          <div class="opt-desc">Save and fill checkout card details inside this profile</div>
+                        </div>
+                        <button type="button" id="opt-autofill-payments" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- =========================================================
+                     Category 8: Privacy VPN
+                     ========================================================= -->
+                <div class="settings-pane hidden" data-pane-body="vpn" data-cat-label="Privacy VPN">
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">86-Country Global Encrypted VPN</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="m3-row-ico tertiary">
+                          <svg viewBox="0 0 20 20" width="20" height="20" fill="none"><circle cx="10" cy="10" r="6.6" stroke="currentColor" stroke-width="1.55"/><ellipse cx="10" cy="10" rx="3.1" ry="6.6" stroke="currentColor" stroke-width="1.4"/><path d="M3.7 8.1h12.6M3.7 11.9h12.6" stroke="currentColor" stroke-width="1.25" opacity="0.72"/></svg>
+                        </div>
+                        <div class="opt-meta">
+                          <div class="opt-title">Live VPN Tunnel Status</div>
+                          <div id="opt-vpn-summary" class="opt-desc">Disconnected · 86+ global countries including Nepal, US, UK, India &amp; Japan</div>
+                        </div>
+                        <button type="button" id="btn-opt-open-vpn" class="m3-btn m3-btn-filled sm">Open VPN Panel</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">VPN Tunnel &amp; Country Preferences</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Auto-Connect VPN on Startup</div>
+                          <div class="opt-desc">Automatically establish your encrypted tunnel when dejavu launches</div>
+                        </div>
+                        <button type="button" id="opt-vpn-auto" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Routing Mode</div>
+                          <div class="opt-desc">Smart uses clean IPs for Gemini, Google &amp; 86+ countries; Global routes via 3-hop Tor</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-vpn-mode">
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="smart"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Smart</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="tor"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Global (Tor)</span></button>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">WebRTC Leak Protection</div>
+                          <div class="opt-desc">Prevent local IP address leaks during real-time browser connections</div>
+                        </div>
+                        <button type="button" id="opt-vpn-webrtc" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Preferred Exit Country</div>
+                          <div class="opt-desc">Choose your default exit region or browse all 86+ countries in the VPN panel</div>
+                        </div>
+                        <div class="m3-select-wrap">
+                          <select id="opt-vpn-country" class="m3-select" aria-label="Preferred VPN country">
+                            <option value="AUTO" selected>Fastest Location (Auto)</option>
+                            <option value="US">United States (US)</option>
+                            <option value="GB">United Kingdom (UK)</option>
+                            <option value="NP">Nepal (NP)</option>
+                            <option value="IN">India (IN)</option>
+                            <option value="JP">Japan (JP)</option>
+                            <option value="SG">Singapore (SG)</option>
+                            <option value="DE">Germany (DE)</option>
+                            <option value="NL">Netherlands (NL)</option>
+                            <option value="CH">Switzerland (CH)</option>
+                            <option value="CA">Canada (CA)</option>
+                            <option value="AU">Australia (AU)</option>
+                            <option value="FR">France (FR)</option>
+                            <option value="SE">Sweden (SE)</option>
+                            <option value="KR">South Korea (KR)</option>
+                            <option value="BR">Brazil (BR)</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- =========================================================
+                     Category 9: Accessibility & System
+                     ========================================================= -->
+                <div class="settings-pane hidden" data-pane-body="system" data-cat-label="Accessibility & System">
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">System &amp; Developer Tools</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Use Hardware Acceleration When Available</div>
+                          <div class="opt-desc">Offload page compositing and video playback to your GPU</div>
+                        </div>
+                        <button type="button" id="opt-hw-accel" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Spellcheck While Typing</div>
+                          <div class="opt-desc">Underline misspelled words in web forms and text fields</div>
+                        </div>
+                        <button type="button" id="opt-spellcheck" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Developer Tools (F12)</div>
+                          <div class="opt-desc">Allow inspecting DOM, console, network, and performance tools</div>
+                        </div>
+                        <div class="opt-btn-row">
+                          <button type="button" id="btn-opt-open-devtools" class="m3-btn m3-btn-outlined sm">Open DevTools</button>
+                          <button type="button" id="opt-devtools" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Default Browser</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="m3-row-ico primary">
+                          <img src="https://dejavu.local/logo-transparent.png" alt="" width="22" height="22" draggable="false">
+                        </div>
+                        <div class="opt-meta">
+                          <div class="opt-title">Make dejavu your default browser</div>
+                          <div class="opt-desc">Open Windows Default Apps settings to associate HTTP/HTTPS links with dejavu</div>
+                        </div>
+                        <button type="button" id="btn-make-default-browser" class="m3-btn m3-btn-filled sm">Make dejavu Default Browser</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Reset Settings</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Restore settings to their original defaults</div>
+                          <div class="opt-desc">Resets appearance, startup, search engine &amp; privacy toggles without deleting profiles or favorites</div>
+                        </div>
+                        <button type="button" id="btn-settings-reset" class="m3-btn m3-btn-danger sm">Reset Settings…</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- =========================================================
+                     Category 10: About dejavu
+                     ========================================================= -->
+                <div class="settings-pane hidden" data-pane-body="about" data-cat-label="About dejavu">
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-about-hero">
+                      <div class="m3-about-emblem">
+                        <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
+                      </div>
+                      <div class="m3-about-copy">
+                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v4.5.0</span></div>
+                        <div class="m3-about-sub">Pure Material Design 3 Browser · Multi-Window &amp; Chrome-Style Multi-Profile Edition</div>
+                        <div id="about-update-status" class="m3-about-update-line">Checking update status…</div>
+                      </div>
+                      <button type="button" id="btn-about-check-update" class="m3-btn m3-btn-filled sm">Check for Updates</button>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Runtime &amp; Profile Storage</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Chromium WebView2 Runtime</div>
+                          <div id="about-webview-ver" class="opt-desc opt-mono-path">Evergreen WebView2 Runtime</div>
+                        </div>
+                        <span class="m3-status-chip">Active</span>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Active Profile User Data Folder</div>
+                          <div id="about-userdata-dir" class="opt-desc opt-mono-path">%LOCALAPPDATA%\dejavu</div>
+                        </div>
+                        <button type="button" id="btn-about-open-userdata" class="m3-btn m3-btn-tonal sm">Open User Data Folder</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Links &amp; Releases</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">GitHub Releases</div>
+                          <div class="opt-desc">View v4.5.0 release notes, Windows Setup installer, and Android APK</div>
+                        </div>
+                        <button type="button" id="btn-about-github" class="m3-btn m3-btn-outlined sm">Open GitHub</button>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title">Official dejavu Website</div>
+                          <div class="opt-desc">dathevinci.github.io/Dejavu-browser</div>
+                        </div>
+                        <button type="button" id="btn-about-website" class="m3-btn m3-btn-outlined sm">Open Website</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="settings-toast" class="settings-toast hidden"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Material Design 3 Google Account Sign-In & Profile Setup Wizard -->
+    <section id="profile-setup-overlay" class="m3-modal-scrim hidden" aria-label="Google Account and Profile Setup">
+      <div id="profile-setup-modal" class="m3-profile-setup-card" role="dialog" aria-modal="true">
+        <div class="ps-top-bar">
+          <button type="button" id="ps-btn-back" class="icon-btn sm hidden" title="Back">
+            <svg viewBox="0 0 18 18" fill="none"><path d="M11.2 4.4L6.6 9l4.6 4.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <span id="ps-step-pill" class="m3-tonal-badge">Step 1 of 2</span>
+          <button type="button" id="ps-btn-close" class="icon-btn sm" title="Close (Esc)">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <!-- View 1: Google Account Sign-In / Sign-Up -->
+        <div id="ps-view-google" class="ps-view">
+          <div class="ps-google-hero">
+            <div class="ps-google-emblem">
+              <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
+                <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3.01h3.89c2.27-2.09 3.57-5.18 3.57-8.82z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.89-3.01c-1.08.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.72-4.95H1.28v3.11A12 12 0 0 0 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.28A7.22 7.22 0 0 1 4.9 12c0-.79.14-1.56.38-2.28V6.61H1.28A12 12 0 0 0 0 12c0 1.94.46 3.77 1.28 5.39l4-3.11z"/>
+                <path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.58 1.79l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.28 6.61l4 3.11C6.23 6.88 8.88 4.77 12 4.77z"/>
+              </svg>
+            </div>
+            <h2 id="ps-google-title" class="ps-title">Sign in to dejavu</h2>
+            <p id="ps-google-sub" class="ps-sub">Sign in or create a Google Account to use Gmail, YouTube, Drive, and Gemini in an isolated profile window.</p>
+          </div>
+
+          <div class="ps-action-stack">
+            <button type="button" id="ps-btn-google-signin" class="m3-btn m3-btn-filled lg full">
+              <svg viewBox="0 0 18 18" width="16" height="16" aria-hidden="true">
+                <path fill="currentColor" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/>
+                <path fill="currentColor" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z" opacity="0.9"/>
+                <path fill="currentColor" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z" opacity="0.8"/>
+                <path fill="currentColor" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" opacity="0.95"/>
+              </svg>
+              <span>Sign in with Google</span>
+            </button>
+
+            <button type="button" id="ps-btn-google-signup" class="m3-btn m3-btn-tonal lg full">
+              <span>Create a Google Account</span>
+            </button>
+
+            <button type="button" id="ps-btn-continue-local" class="m3-btn m3-btn-outlined lg full">
+              <span>Continue without an account</span>
+            </button>
+          </div>
+
+          <!-- Waiting / Sync Confirmation Panel -->
+          <div id="ps-google-wait" class="ps-wait-card hidden">
+            <div class="ps-wait-head">
+              <span class="ps-wait-dot"></span>
+              <div class="ps-wait-copy">
+                <div id="ps-wait-title" class="ps-wait-title">Waiting for Google sign-in…</div>
+                <div class="ps-wait-sub">Complete sign-in in the Google tab, then click Sync Now or enter your display details below.</div>
+              </div>
+              <button type="button" id="ps-btn-sync-now" class="m3-btn m3-btn-filled sm">Sync Now</button>
+            </div>
+            <div class="ps-manual-grid">
+              <input id="ps-manual-name" class="m3-text-input" type="text" maxlength="40" placeholder="Google Display Name (optional)">
+              <input id="ps-manual-email" class="m3-text-input" type="email" maxlength="64" placeholder="name@gmail.com (optional)">
+            </div>
+            <div class="ps-wait-foot">
+              <button type="button" id="ps-btn-confirm-google" class="m3-btn m3-btn-tonal sm">Confirm &amp; Personalize →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- View 2: Personalize Your Profile (Material You Card) -->
+        <div id="ps-view-customize" class="ps-view hidden">
+          <div id="ps-preview-banner" class="ps-preview-banner" data-preview-accent="amethyst">
+            <div id="ps-preview-avatar" class="ps-preview-avatar"></div>
+            <div class="ps-preview-meta">
+              <div class="ps-preview-name-row">
+                <span id="ps-preview-name" class="ps-preview-name">Personal</span>
+                <span id="ps-preview-main-badge" class="m3-status-chip primary hidden">Main</span>
+              </div>
+              <div id="ps-preview-email" class="ps-preview-email">Isolated dejavu Profile</div>
+            </div>
+          </div>
+
+          <div class="ps-field-group">
+            <label for="ps-name-input" class="ps-label">Profile name</label>
+            <input id="ps-name-input" class="m3-text-input full" type="text" maxlength="28" placeholder="Personal, Work, School, Gaming" autocomplete="off">
+          </div>
+
+          <div class="ps-field-group">
+            <div class="ps-label">Material You Theme Color</div>
+            <div class="ps-color-row" id="ps-color-grid">
+              <button type="button" class="ps-color-dot active" data-seed="amethyst" title="Amethyst" style="--sw:#d0bcff"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button type="button" class="ps-color-dot" data-seed="sapphire" title="Pixel Blue" style="--sw:#a8c7fa"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button type="button" class="ps-color-dot" data-seed="aurora" title="Sage" style="--sw:#82d5c4"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button type="button" class="ps-color-dot" data-seed="rose" title="Rose" style="--sw:#ffb0cc"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button type="button" class="ps-color-dot" data-seed="gold" title="Honey" style="--sw:#f6bd60"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button type="button" class="ps-color-dot" data-seed="silver" title="Slate" style="--sw:#b8c8e2"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+          </div>
+
+          <div class="ps-field-group">
+            <div class="ps-label">Avatar Emblem</div>
+            <div id="ps-avatar-grid" class="ps-avatar-grid"></div>
+          </div>
+
+          <div class="ps-toggles-card">
+            <div class="ps-toggle-row">
+              <div>
+                <div class="ps-toggle-title">Set as Main Profile</div>
+                <div class="ps-toggle-sub">Opens automatically when launching dejavu</div>
+              </div>
+              <button type="button" id="ps-sw-main" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            </div>
+            <div class="ps-toggle-row" id="ps-newwin-row">
+              <div>
+                <div class="ps-toggle-title">Open in a new browser window (Chrome-style)</div>
+                <div class="ps-toggle-sub">Run this profile side-by-side in its own isolated window</div>
+              </div>
+              <button type="button" id="ps-sw-newwin" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            </div>
+          </div>
+
+          <div class="ps-footer">
+            <button type="button" id="ps-btn-cancel" class="m3-btn m3-btn-text">Cancel</button>
+            <button type="button" id="ps-btn-save" class="m3-btn m3-btn-filled">Create &amp; Open Profile</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Material Design 3 Clear Browsing Data Dialog -->
+    <section id="clear-data-overlay" class="m3-modal-scrim hidden" aria-label="Clear Browsing Data">
+      <div id="clear-data-modal" class="m3-dialog-card" role="dialog" aria-modal="true">
+        <div class="m3-dialog-head">
+          <div class="m3-dialog-ico danger">
+            <svg viewBox="0 0 20 20" width="22" height="22" fill="none"><path d="M4.5 6h11M7.5 6V4.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V6M6 6l.8 9.8a1.4 1.4 0 0 0 1.4 1.2h3.6a1.4 1.4 0 0 0 1.4-1.2L14 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <h3 class="m3-dialog-title">Clear Browsing Data</h3>
+            <p class="m3-dialog-sub">Select which data to remove from your active profile</p>
+          </div>
+        </div>
+
+        <div class="m3-dialog-field">
+          <label for="cd-time-range" class="ps-label">Time range</label>
+          <div class="m3-select-wrap full">
+            <select id="cd-time-range" class="m3-select full">
+              <option value="1h">Last hour</option>
+              <option value="24h">Last 24 hours</option>
+              <option value="7d">Last 7 days</option>
+              <option value="all" selected>All time</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="m3-check-list">
+          <label class="m3-check-row">
+            <input type="checkbox" id="cd-chk-history" checked>
+            <span class="m3-check-box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <div>
-              <div class="settings-brand-title">dejavu Settings</div>
-              <div id="settings-version-sub" class="settings-brand-sub">Material You · v4.4.0</div>
+              <div class="m3-check-title">Browsing history</div>
+              <div class="m3-check-sub">Clears visited pages and Frequently Visited tiles</div>
             </div>
-          </div>
-
-          <div class="settings-search-box">
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><circle cx="7.2" cy="7.2" r="4.4" stroke="currentColor" stroke-width="1.45"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <input id="settings-search-input" type="text" placeholder="Search settings…" spellcheck="false" autocomplete="off">
-          </div>
-
-          <nav id="settings-nav" class="settings-nav" role="tablist">
-            <button type="button" class="settings-nav-item active" data-pane="general" role="tab">
-              <span class="snav-ico"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M9 2.6v1.5M9 13.9v1.5M2.6 9h1.5M13.9 9h1.5M4.5 4.5l1.1 1.1M12.4 12.4l1.1 1.1M13.5 4.5l-1.1 1.1M5.6 12.4l-1.1 1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
-              <span>General</span>
-            </button>
-            <button type="button" class="settings-nav-item" data-pane="appearance" role="tab">
-              <span class="snav-ico"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="5.6" stroke="currentColor" stroke-width="1.5"/><path d="M9 3.4a5.6 5.6 0 0 1 0 11.2V3.4z" fill="currentColor" opacity="0.72"/></svg></span>
-              <span>Appearance</span>
-            </button>
-            <button type="button" class="settings-nav-item" data-pane="startpage" role="tab">
-              <span class="snav-ico"><svg viewBox="0 0 18 18" fill="none"><rect x="3" y="3.5" width="12" height="11" rx="2.4" stroke="currentColor" stroke-width="1.45"/><path d="M3 7h12M7.2 7v7.5" stroke="currentColor" stroke-width="1.35"/></svg></span>
-              <span>Start Page</span>
-            </button>
-            <button type="button" class="settings-nav-item" data-pane="wallpapers" role="tab">
-              <span class="snav-ico"><svg viewBox="0 0 18 18" fill="none"><rect x="2.8" y="3.6" width="12.4" height="10.8" rx="2.3" stroke="currentColor" stroke-width="1.45"/><circle cx="6.7" cy="7.3" r="1.2" fill="currentColor"/><path d="M3.4 12.7l3.2-3.1 2.4 2.2 2.2-2.2 3.3 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-              <span>Wallpapers</span>
-              <span id="settings-wp-count-pill" class="settings-nav-pill">17</span>
-            </button>
-            <button type="button" class="settings-nav-item" data-pane="privacy" role="tab">
-              <span class="snav-ico"><svg viewBox="0 0 18 18" fill="none"><path d="M9 2.4L3.6 4.6v4.3c0 3.5 2.3 6.2 5.4 7.3 3.1-1.1 5.4-3.8 5.4-7.3V4.6L9 2.4z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M6.6 9.1l1.7 1.7 3.3-3.5" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-              <span>Privacy &amp; VPN</span>
-            </button>
-            <button type="button" class="settings-nav-item" data-pane="shortcuts" role="tab">
-              <span class="snav-ico"><svg viewBox="0 0 18 18" fill="none"><rect x="2.5" y="4.5" width="13" height="9" rx="2" stroke="currentColor" stroke-width="1.45"/><path d="M5.2 7.6h1.2M8.4 7.6h1.2M11.6 7.6h1.2M6 10.6h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
-              <span>Tabs &amp; Shortcuts</span>
-            </button>
-          </nav>
-
-          <div class="settings-sidebar-foot">
-            <button type="button" id="btn-settings-reset" class="settings-ghost-btn">Reset Defaults</button>
-          </div>
-        </aside>
-
-        <div class="settings-main">
-          <div class="settings-main-head">
+          </label>
+          <label class="m3-check-row">
+            <input type="checkbox" id="cd-chk-cookies" checked>
+            <span class="m3-check-box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <div>
-              <h2 id="settings-pane-title" class="settings-pane-title">General</h2>
-              <p id="settings-pane-sub" class="settings-pane-sub">Search engine, startup tabs, homepage &amp; toolbar behavior</p>
+              <div class="m3-check-title">Cookies and other site data</div>
+              <div class="m3-check-sub">Signs you out of most websites in this profile</div>
             </div>
-            <button type="button" id="btn-settings-done" class="settings-done-btn" title="Close Settings (Esc)">Done</button>
-          </div>
-
-          <div class="settings-scroll">
-            <!-- Pane 1: General -->
-            <div class="settings-pane" data-pane-body="general">
-              <div class="opt-group">
-                <div class="opt-group-label">Search</div>
-                <div class="opt-row stacked">
-                  <div class="opt-meta">
-                    <div class="opt-title">Default Search Engine</div>
-                    <div class="opt-desc">Used by the top address bar and Start Page search bar</div>
-                  </div>
-                  <div class="opt-seg" id="opt-search-engine">
-                    <button type="button" class="opt-seg-btn active" data-val="google">Google</button>
-                    <button type="button" class="opt-seg-btn" data-val="duckduckgo">DuckDuckGo</button>
-                    <button type="button" class="opt-seg-btn" data-val="brave">Brave</button>
-                    <button type="button" class="opt-seg-btn" data-val="bing">Bing</button>
-                    <button type="button" class="opt-seg-btn" data-val="perplexity">Perplexity</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="opt-group">
-                <div class="opt-group-label">Startup &amp; New Tabs</div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">dejavu opens with</div>
-                    <div class="opt-desc">Start fresh or restore all tabs from your previous session</div>
-                  </div>
-                  <div class="opt-seg compact" id="opt-startup">
-                    <button type="button" class="opt-seg-btn active" data-val="startpage">Start Page</button>
-                    <button type="button" class="opt-seg-btn" data-val="restore">Previous Tabs</button>
-                  </div>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">New tabs open with</div>
-                    <div class="opt-desc">Choose what opens when pressing Ctrl+T or +</div>
-                  </div>
-                  <div class="opt-seg compact" id="opt-newtab-mode">
-                    <button type="button" class="opt-seg-btn active" data-val="startpage">Start Page</button>
-                    <button type="button" class="opt-seg-btn" data-val="homepage">Homepage</button>
-                  </div>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Homepage URL</div>
-                    <div class="opt-desc">Used when New Tabs are set to open Homepage</div>
-                  </div>
-                  <div class="opt-input-wrap">
-                    <input id="opt-homepage-url" class="opt-text-input" type="text" placeholder="https://www.google.com" spellcheck="false" autocomplete="off">
-                    <button type="button" id="btn-save-homepage" class="opt-mini-btn">Save</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="opt-group">
-                <div class="opt-group-label">Navigation Rail, Toolbar &amp; Turbo Downloads</div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Show Material 3 Navigation Rail</div>
-                    <div class="opt-desc">Keep the quick-access navigation rail docked along the left edge</div>
-                  </div>
-                  <button type="button" id="opt-show-navrail" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Floating Video &amp; MP3 Download Button (IDM / AntDM)</div>
-                    <div class="opt-desc">Display a compact MP4 quality, MP3 &amp; 8x Turbo Download button on YouTube &amp; webpage videos (no extension needed)</div>
-                  </div>
-                  <button type="button" id="opt-floating-media-btn" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Show Quick Access Favorites Bar</div>
-                    <div class="opt-desc">Display pinned bookmarks directly below the toolbar (Ctrl+Shift+B)</div>
-                  </div>
-                  <button type="button" id="opt-show-favbar" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
-                </div>
-              </div>
+          </label>
+          <label class="m3-check-row">
+            <input type="checkbox" id="cd-chk-cache" checked>
+            <span class="m3-check-box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <div>
+              <div class="m3-check-title">Cached images and files</div>
+              <div class="m3-check-sub">Frees disk space; websites may take a moment to reload</div>
             </div>
-
-            <!-- Pane 2: Material You Appearance -->
-            <div class="settings-pane hidden" data-pane-body="appearance">
-              <div class="opt-group">
-                <div class="opt-group-label">Material You Theme &amp; Dynamic Color</div>
-                <div class="opt-row stacked">
-                  <div class="opt-meta">
-                    <div class="opt-title">Theme Mode</div>
-                    <div class="opt-desc">Instantly adapts Material Design 3 tonal surfaces across tabs, toolbar, Start Page &amp; popovers</div>
-                  </div>
-                  <div class="appearance-cards" id="opt-appearance-mode">
-                    <button type="button" class="appearance-card opt-seg-btn active" data-val="auto">
-                      <div class="ap-preview ap-prev-auto">
-                        <div class="ap-half ap-h-dark"><span class="ap-dots"><i></i><i></i><i></i></span><span class="ap-pill"></span><span class="ap-card"></span></div>
-                        <div class="ap-half ap-h-light"><span class="ap-pill"></span><span class="ap-card"></span></div>
-                      </div>
-                      <span class="ap-label">Auto</span>
-                      <span class="ap-sub">Site-Adaptive</span>
-                    </button>
-                    <button type="button" class="appearance-card opt-seg-btn" data-val="dark">
-                      <div class="ap-preview ap-prev-dark">
-                        <span class="ap-dots"><i></i><i></i><i></i></span>
-                        <span class="ap-pill"></span>
-                        <div class="ap-mini-body"><span class="ap-card"></span><span class="ap-card sm"></span></div>
-                      </div>
-                      <span class="ap-label">Dark</span>
-                      <span class="ap-sub">Material Dark</span>
-                    </button>
-                    <button type="button" class="appearance-card opt-seg-btn" data-val="light">
-                      <div class="ap-preview ap-prev-light">
-                        <span class="ap-dots"><i></i><i></i><i></i></span>
-                        <span class="ap-pill"></span>
-                        <div class="ap-mini-body"><span class="ap-card"></span><span class="ap-card sm"></span></div>
-                      </div>
-                      <span class="ap-label">Light</span>
-                      <span class="ap-sub">Material Light</span>
-                    </button>
-                  </div>
-                </div>
-                <div class="opt-row stacked">
-                  <div class="opt-meta">
-                    <div class="opt-title">Dynamic Color Seed</div>
-                    <div class="opt-desc">Generates Material You primary, tonal container &amp; indicator palettes across the entire browser</div>
-                  </div>
-                  <div class="accent-swatches" id="opt-accent-swatches">
-                    <button type="button" class="accent-swatch active" data-accent-choice="amethyst"><span class="sw-dot" style="--sw:#d0bcff"></span><span>Amethyst</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="sapphire"><span class="sw-dot" style="--sw:#a8c7fa"></span><span>Pixel Blue</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="aurora"><span class="sw-dot" style="--sw:#82d5c4"></span><span>Sage</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="rose"><span class="sw-dot" style="--sw:#ffb0cc"></span><span>Blossom</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="gold"><span class="sw-dot" style="--sw:#f6bd60"></span><span>Honey</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="silver"><span class="sw-dot" style="--sw:#b8c8e2"></span><span>Slate</span></button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="opt-group">
-                <div class="opt-group-label">Address Bar &amp; Tabs</div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Show full website address</div>
-                    <div class="opt-desc">Display the full URL instead of the clean domain in the pill address bar</div>
-                  </div>
-                  <button type="button" id="opt-full-url" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Compact Tab Bar</div>
-                    <div class="opt-desc">Sleeker 34px top tab strip for extra vertical webpage space</div>
-                  </div>
-                  <button type="button" id="opt-compact-tabs" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Always show tab close buttons</div>
-                    <div class="opt-desc">Keep × visible on inactive tabs instead of revealing on hover</div>
-                  </div>
-                  <button type="button" id="opt-always-close" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row stacked">
-                  <div class="opt-meta">
-                    <div class="opt-title">Default Page Zoom</div>
-                    <div class="opt-desc">Automatically scales webpages when loaded</div>
-                  </div>
-                  <div class="opt-seg" id="opt-default-zoom">
-                    <button type="button" class="opt-seg-btn" data-val="80">80%</button>
-                    <button type="button" class="opt-seg-btn" data-val="90">90%</button>
-                    <button type="button" class="opt-seg-btn active" data-val="100">100%</button>
-                    <button type="button" class="opt-seg-btn" data-val="110">110%</button>
-                    <button type="button" class="opt-seg-btn" data-val="125">125%</button>
-                    <button type="button" class="opt-seg-btn" data-val="150">150%</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="opt-group">
-                <div class="opt-group-label">Wallpaper Contrast &amp; Motion</div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Wallpaper Dimming</div>
-                    <div class="opt-desc">Tune scrim contrast behind Start Page tiles &amp; typography</div>
-                  </div>
-                  <div class="opt-seg compact" id="opt-wp-dim">
-                    <button type="button" class="opt-seg-btn" data-val="vivid">Vivid</button>
-                    <button type="button" class="opt-seg-btn active" data-val="balanced">Balanced</button>
-                    <button type="button" class="opt-seg-btn" data-val="calm">Calm</button>
-                  </div>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Reduce Live Wallpaper Motion</div>
-                    <div class="opt-desc">Pauses live theme animations for maximum battery &amp; CPU savings</div>
-                  </div>
-                  <button type="button" id="opt-reduce-motion" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
-                </div>
-              </div>
+          </label>
+          <label class="m3-check-row">
+            <input type="checkbox" id="cd-chk-downloads">
+            <span class="m3-check-box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <div>
+              <div class="m3-check-title">Download history</div>
+              <div class="m3-check-sub">Removes download records without deleting saved files</div>
             </div>
+          </label>
+        </div>
 
-            <!-- Pane 3: Start Page Sections -->
-            <div class="settings-pane hidden" data-pane-body="startpage">
-              <div class="opt-group">
-                <div class="opt-group-label">Visible Start Page Sections</div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Quick Access Grid</div>
-                    <div class="opt-desc">Tonal rounded site tiles on your Start Page</div>
-                  </div>
-                  <button type="button" id="opt-sp-favorites" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Frequently Visited</div>
-                    <div class="opt-desc">Auto-populated sites you visit most often</div>
-                  </div>
-                  <button type="button" id="opt-sp-frequent" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Privacy Report Card</div>
-                    <div class="opt-desc">Shows live blocked trackers &amp; quick VPN status chip</div>
-                  </div>
-                  <button type="button" id="opt-sp-privacy" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Reading List Shelf</div>
-                    <div class="opt-desc">Saved articles waiting to read later</div>
-                  </div>
-                  <button type="button" id="opt-sp-reading" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Profile Greeting Chip</div>
-                    <div class="opt-desc">Shows time-of-day greeting &amp; active profile badge</div>
-                  </div>
-                  <button type="button" id="opt-sp-greeting" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Center Start Page Search Bar</div>
-                    <div class="opt-desc">Turn off for an ultra-minimal Start Page using only the top pill address bar</div>
-                  </div>
-                  <button type="button" id="opt-sp-search" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
-                </div>
-              </div>
+        <div class="m3-dialog-actions">
+          <button type="button" id="btn-cd-cancel" class="m3-btn m3-btn-text">Cancel</button>
+          <button type="button" id="btn-cd-confirm" class="m3-btn m3-btn-filled">Clear Data</button>
+        </div>
+      </div>
+    </section>
 
-              <div class="opt-group">
-                <div class="opt-group-label">Background Artwork</div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Pure Material Design 3 &amp; Butterfly Wallpaper Studio</div>
-                    <div class="opt-desc">12 sculptural Google Pixel ceramic artworks, 4 Butterfly M3 editions, Material You Live, or your own photo</div>
-                  </div>
-                  <div style="display:flex;gap:8px;flex-shrink:0;">
-                    <button type="button" id="btn-sp-goto-wallpapers" class="opt-mini-btn primary">Browse 17 Themes</button>
-                    <button type="button" id="btn-sp-upload-wp" class="opt-mini-btn">+ Upload</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Pane 4: Embedded 17-Theme Pure Material Design 3 & Butterfly Wallpaper Studio -->
-            <div class="settings-pane hidden" data-pane-body="wallpapers">
-              <div class="opt-wp-toolbar">
-                <div class="opt-seg compact" id="opt-wp-filter">
-                  <button type="button" class="opt-seg-btn active" data-cat="all">All (17)</button>
-                  <button type="button" class="opt-seg-btn" data-cat="butterfly">Butterfly M3 (4)</button>
-                  <button type="button" class="opt-seg-btn" data-cat="dark">Dark (9)</button>
-                  <button type="button" class="opt-seg-btn" data-cat="light">Light (7)</button>
-                  <button type="button" class="opt-seg-btn" data-cat="live">Live (1)</button>
-                </div>
-                <button type="button" id="btn-opt-upload-wp" class="opt-mini-btn primary">+ Custom Photo</button>
-              </div>
-              <div id="settings-wallpaper-grid" class="wallpaper-grid settings-wp-grid"></div>
-            </div>
-
-            <!-- Pane 5: Privacy, Ad Blocker & VPN -->
-            <div class="settings-pane hidden" data-pane-body="privacy">
-              <div class="opt-group">
-                <div class="opt-group-label">100/100 Built-in Ad &amp; Tracker Blocker</div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Block ads &amp; trackers everywhere</div>
-                    <div id="opt-adblock-stats" class="opt-desc">Actively blocking network ads, banners &amp; YouTube ad scripts</div>
-                  </div>
-                  <button type="button" id="opt-global-adblock" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row stacked">
-                  <div class="opt-meta">
-                    <div class="opt-title">Paused Websites</div>
-                    <div class="opt-desc">Sites where you manually paused the Ad Blocker</div>
-                  </div>
-                  <div id="opt-paused-hosts-list" class="opt-paused-list"></div>
-                </div>
-              </div>
-
-              <div class="opt-group">
-                <div class="opt-group-label">dejavu Global VPN (86+ Countries · Nepal, US &amp; More)</div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">VPN Routing Engine</div>
-                    <div class="opt-desc">Smart mode uses clean IPs for Gemini, Google &amp; 86+ countries; Tor uses 3-hop onion circuits</div>
-                  </div>
-                  <div class="opt-seg compact" id="opt-vpn-mode">
-                    <button type="button" class="opt-seg-btn active" data-val="smart">Smart · Web &amp; AI</button>
-                    <button type="button" class="opt-seg-btn" data-val="tor">3-Hop Tor</button>
-                  </div>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Auto-connect VPN on startup</div>
-                    <div class="opt-desc">Automatically establish your protected tunnel when dejavu launches</div>
-                  </div>
-                  <button type="button" id="opt-vpn-auto" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Switch VPN Country &amp; Live Status</div>
-                    <div id="opt-vpn-summary" class="opt-desc">Choose from 86+ global countries including Nepal, US, UK, India &amp; Japan</div>
-                  </div>
-                  <button type="button" id="btn-opt-open-vpn" class="opt-mini-btn primary">Open VPN</button>
-                </div>
-              </div>
-
-              <div class="opt-group">
-                <div class="opt-group-label">Clear Browsing Data</div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Browsing History</div>
-                    <div class="opt-desc">Clears visited URLs &amp; Frequently Visited (keeps your favorites &amp; wallpapers)</div>
-                  </div>
-                  <button type="button" id="btn-opt-clear-history" class="opt-mini-btn danger">Clear History</button>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Cookies &amp; Site Cache</div>
-                    <div class="opt-desc">Clears website cookies and disk cache without touching your dejavu settings</div>
-                  </div>
-                  <button type="button" id="btn-opt-clear-cache" class="opt-mini-btn danger">Clear Cache</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Pane 6: Tabs & Keyboard Shortcuts -->
-            <div class="settings-pane hidden" data-pane-body="shortcuts">
-              <div class="opt-group">
-                <div class="opt-group-label">Tab Preferences</div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Compact Tab Bar</div>
-                    <div class="opt-desc">Use a tighter 34px top tab strip</div>
-                  </div>
-                  <button type="button" id="opt-tabs-compact-mirror" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
-                </div>
-                <div class="opt-row">
-                  <div class="opt-meta">
-                    <div class="opt-title">Always show tab close buttons</div>
-                    <div class="opt-desc">Keep × visible on every tab without hovering</div>
-                  </div>
-                  <button type="button" id="opt-tabs-close-mirror" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
-                </div>
-              </div>
-
-              <div class="opt-group">
-                <div class="opt-group-label">Keyboard Shortcuts</div>
-                <div class="shortcuts-ref-grid">
-                  <div class="kbd-row"><span>dejavu Settings</span><kbd>Ctrl + ,</kbd></div>
-                  <div class="kbd-row"><span>New Tab</span><kbd>Ctrl + T</kbd></div>
-                  <div class="kbd-row"><span>Close Tab</span><kbd>Ctrl + W</kbd></div>
-                  <div class="kbd-row"><span>Reopen Closed Tab</span><kbd>Ctrl + Shift + T</kbd></div>
-                  <div class="kbd-row"><span>Tab Overview Grid</span><kbd>Ctrl + Shift + O</kbd></div>
-                  <div class="kbd-row"><span>Side Panel</span><kbd>Ctrl + Shift + L</kbd></div>
-                  <div class="kbd-row"><span>Quick Access Bar</span><kbd>Ctrl + Shift + B</kbd></div>
-                  <div class="kbd-row"><span>Reader View</span><kbd>Ctrl + Shift + R</kbd></div>
-                  <div class="kbd-row"><span>Focus Address Bar</span><kbd>Ctrl + L</kbd></div>
-                  <div class="kbd-row"><span>Mute / Unmute Tab</span><kbd>Ctrl + M</kbd></div>
-                  <div class="kbd-row"><span>Bookmark / Pin Favorite</span><kbd>Ctrl + D</kbd></div>
-                  <div class="kbd-row"><span>Add to Reading List</span><kbd>Ctrl + Shift + D</kbd></div>
-                  <div class="kbd-row"><span>History</span><kbd>Ctrl + H</kbd></div>
-                  <div class="kbd-row"><span>8x Turbo Download Manager</span><kbd>Ctrl + J</kbd></div>
-                  <div class="kbd-row"><span>Find on Page</span><kbd>Ctrl + F</kbd></div>
-                  <div class="kbd-row"><span>New Window</span><kbd>Ctrl + N</kbd></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div id="settings-toast" class="settings-toast hidden"></div>
+    <!-- Material Design 3 Reset Settings Confirmation Dialog -->
+    <section id="reset-confirm-overlay" class="m3-modal-scrim hidden" aria-label="Reset Settings">
+      <div id="reset-confirm-modal" class="m3-dialog-card compact" role="dialog" aria-modal="true">
+        <h3 class="m3-dialog-title">Reset dejavu settings?</h3>
+        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v4.5.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
+        <div class="m3-dialog-actions">
+          <button type="button" id="btn-reset-cancel" class="m3-btn m3-btn-text">Cancel</button>
+          <button type="button" id="btn-reset-confirm" class="m3-btn m3-btn-danger">Reset Settings</button>
         </div>
       </div>
     </section>

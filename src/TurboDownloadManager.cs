@@ -81,13 +81,15 @@ namespace DejavuBrowser
 
     internal sealed class TurboDownloadManager : IDisposable
     {
-        private const int MAX_THREADS = 8;
+        private const int MAX_THREADS = 16;
         private const long MIN_SEGMENTED_BYTES = 256 * 1024;
         private const int MAX_HISTORY = 120;
         private const int MAX_REDIRECTS = 10;
 
         private readonly string _storePath;
-        private readonly string _downloadsDir;
+        private string _downloadsDir;
+        private int _defaultThreads = 8;
+        private string _defaultVideoQuality = "best";
         private readonly JavaScriptSerializer _json = new JavaScriptSerializer { MaxJsonLength = 8 * 1024 * 1024 };
         private readonly object _gate = new object();
         private readonly List<TurboDownloadEntry> _entries = new List<TurboDownloadEntry>();
@@ -201,6 +203,34 @@ namespace DejavuBrowser
 
         public string DownloadsDirectory { get { return _downloadsDir; } }
         public VideoExtractorEngine VideoEngine { get { return _videoEngine; } }
+
+        public int DefaultThreads
+        {
+            get { return _defaultThreads; }
+            set { _defaultThreads = SettingsStore.NormalizeTurboThreads(value); }
+        }
+
+        public string DefaultVideoQuality
+        {
+            get { return _defaultVideoQuality; }
+            set { _defaultVideoQuality = SettingsStore.NormalizeVideoQuality(value); }
+        }
+
+        public void SetDownloadsDirectory(string customDir)
+        {
+            if (!string.IsNullOrWhiteSpace(customDir))
+            {
+                try
+                {
+                    string trimmed = customDir.Trim();
+                    Directory.CreateDirectory(trimmed);
+                    _downloadsDir = trimmed;
+                    return;
+                }
+                catch { }
+            }
+            _downloadsDir = ResolveDownloadsFolder();
+        }
 
         public Task<VideoProbeResult> ProbeVideoFormatsAsync(string pageUrl, Action<string> onStatus, CancellationToken ct)
         {
@@ -333,7 +363,7 @@ namespace DejavuBrowser
             {
                 return EnqueueVideoExtractDownload(
                     cleanUrl,
-                    string.IsNullOrEmpty(normQuality) ? "best" : normQuality,
+                    string.IsNullOrEmpty(normQuality) ? _defaultVideoQuality : normQuality,
                     suggestedName,
                     referer,
                     userAgent);
@@ -382,7 +412,7 @@ namespace DejavuBrowser
                 ProgressPercent = 0,
                 SpeedBps = 0,
                 EtaSeconds = 0,
-                Threads = Math.Max(1, Math.Min(MAX_THREADS, threads > 0 ? threads : MAX_THREADS)),
+                Threads = Math.Max(1, Math.Min(MAX_THREADS, threads > 0 ? threads : _defaultThreads)),
                 RangeSupported = false,
                 HlsTotalSegments = 0,
                 HlsDoneSegments = 0,
@@ -413,8 +443,8 @@ namespace DejavuBrowser
                 cleanUrl = "https://" + cleanUrl;
             }
 
-            string preset = VideoExtractorEngine.NormalizePreset(formatPreset);
-            if (string.IsNullOrEmpty(preset)) preset = "best";
+            string preset = VideoExtractorEngine.NormalizePreset(string.IsNullOrWhiteSpace(formatPreset) ? _defaultVideoQuality : formatPreset);
+            if (string.IsNullOrEmpty(preset)) preset = _defaultVideoQuality;
             string qualityLabel = VideoExtractorEngine.DescribePresetLabel(preset);
             bool isAudio = VideoExtractorEngine.IsAudioPreset(preset);
             string ext = (preset == "mp3") ? ".mp3" : (preset == "m4a" ? ".m4a" : ".mp4");
@@ -434,8 +464,9 @@ namespace DejavuBrowser
                 ? "Preparing Video Engine (yt-dlp)..."
                 : (!_videoEngine.IsFfmpegReady ? "Preparing Audio/MP4 Muxer (ffmpeg)..." : "Extracting video streams...");
 
-            var segs = new List<TurboSegmentState>(MAX_THREADS);
-            for (int i = 0; i < MAX_THREADS; i++)
+            int laneCount = Math.Max(4, Math.Min(MAX_THREADS, _defaultThreads));
+            var segs = new List<TurboSegmentState>(laneCount);
+            for (int i = 0; i < laneCount; i++)
             {
                 segs.Add(new TurboSegmentState { Start = 0, End = 999, Done = 0 });
             }
@@ -465,7 +496,7 @@ namespace DejavuBrowser
                 ProgressPercent = 0,
                 SpeedBps = 0,
                 EtaSeconds = 0,
-                Threads = MAX_THREADS,
+                Threads = laneCount,
                 RangeSupported = true,
                 HlsTotalSegments = 0,
                 HlsDoneSegments = 0,
@@ -1249,12 +1280,13 @@ namespace DejavuBrowser
                 entry.StreamType = "ytdlp";
                 entry.Status = "probing";
                 entry.Error = "";
-                entry.Threads = MAX_THREADS;
+                int laneCount = Math.Max(4, Math.Min(MAX_THREADS, entry.Threads > 0 ? entry.Threads : _defaultThreads));
+                entry.Threads = laneCount;
                 entry.RangeSupported = true;
-                if (entry.Segments == null || entry.Segments.Count != MAX_THREADS)
+                if (entry.Segments == null || entry.Segments.Count != laneCount)
                 {
-                    entry.Segments = new List<TurboSegmentState>(MAX_THREADS);
-                    for (int i = 0; i < MAX_THREADS; i++)
+                    entry.Segments = new List<TurboSegmentState>(laneCount);
+                    for (int i = 0; i < laneCount; i++)
                     {
                         entry.Segments.Add(new TurboSegmentState { Start = 0, End = 999, Done = 0 });
                     }
@@ -1622,7 +1654,8 @@ namespace DejavuBrowser
             }
 
             string hlsDir;
-            int workerCount = Math.Max(1, Math.Min(MAX_THREADS, segSpecs.Count));
+            int targetHlsThreads = entry.Threads > 0 ? entry.Threads : _defaultThreads;
+            int workerCount = Math.Max(1, Math.Min(Math.Min(MAX_THREADS, targetHlsThreads), segSpecs.Count));
             lock (_gate)
             {
                 string newFileName = EnsureVideoExtensionForHls(entry.FileName, targetExt);
@@ -2991,7 +3024,7 @@ namespace DejavuBrowser
 
         public static string GetFloatingDownloadButtonScript()
         {
-            // Zero-Idle-CPU Shadow DOM Material Design 3 IDM/AntDM Floating Download Button (v4.4.0)
+            // Zero-Idle-CPU Shadow DOM Material Design 3 IDM/AntDM Floating Download Button (v4.5.0)
             // - ZERO setInterval polling! Event-driven + filtered MutationObserver + lazy scroll/ResizeObserver
             // - ZERO CSS blur / backdrop-filter (Pure Material Design 3 tonal surfaces)
             // - On YouTube / TikTok / Instagram / X / Vimeo / Reddit / Twitch / SoundCloud / etc.:

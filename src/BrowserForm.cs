@@ -48,6 +48,8 @@ namespace DejavuBrowser
         public bool CoreReady;
         public string PendingNavigateUrl;
         public double ZoomFactor;
+        public DateTime LastActiveUtc;
+        public string UpgradedFromHttpUrl;
 
         public BrowserTab(int id, string groupId)
         {
@@ -66,6 +68,637 @@ namespace DejavuBrowser
             BaseRgb = new int[] { 11, 9, 20 };
             AccentPalette = null;
             ZoomFactor = 1.0;
+            LastActiveUtc = DateTime.UtcNow;
+            UpgradedFromHttpUrl = null;
+        }
+    }
+
+    internal sealed class MultiWindowApplicationContext : ApplicationContext
+    {
+        private const int DIRECT_LAUNCH_DEBOUNCE_MS = 1500;
+
+        public readonly ProfileManager Profiles;
+        public DejavuSettings Settings;
+        public readonly AdBlocker AdBlocker;
+        public readonly AutoUpdater Updater;
+        public readonly LocalProxyBridge ProxyBridge;
+        public readonly VpnManager Vpn;
+        public readonly SyncManager Sync;
+        public readonly TurboDownloadManager TurboDownloads;
+        public readonly int DebugPort;
+        public readonly string PipeName;
+        public readonly DateTime ProcessStartUtc;
+        public string UpdateStatusText = "";
+        public string WebViewVersion = "";
+
+        private readonly object _envGate = new object();
+        private readonly Dictionary<string, Task<CoreWebView2Environment>> _envTasks =
+            new Dictionary<string, Task<CoreWebView2Environment>>(StringComparer.OrdinalIgnoreCase);
+
+        private readonly List<BrowserForm> _windows = new List<BrowserForm>();
+        private BrowserForm _activeWindow;
+        private readonly CancellationTokenSource _pipeCts = new CancellationTokenSource();
+        private int _pipeStarted;
+        private bool _disposed;
+
+        public MultiWindowApplicationContext(
+            string initialUrl,
+            string profileId,
+            int debugPort,
+            string pipeName,
+            bool startPrivate,
+            bool startGoogleSignIn,
+            bool startGoogleSignUp)
+        {
+            ProcessStartUtc = DateTime.UtcNow;
+            DebugPort = debugPort;
+            PipeName = pipeName;
+
+            Profiles = new ProfileManager(profileId);
+            Settings = Profiles.LoadActiveSettings();
+            AdBlocker = new AdBlocker(Settings, Profiles.ActiveSettingsPath);
+            AdBlocker.InitializeAsync();
+
+            Updater = new AutoUpdater();
+            Updater.UpdateReady += OnUpdaterUpdateReady;
+            Updater.StatusChanged += OnUpdaterStatusChanged;
+
+            ProxyBridge = new LocalProxyBridge();
+            Vpn = new VpnManager(ProxyBridge, Settings.vpnCountry, Settings.vpnAutoConnect, Settings.vpnMode);
+            Vpn.StateChanged += OnVpnStateChanged;
+
+            Sync = new SyncManager(Profiles.GetProfileDataDir(Profiles.ActiveProfile.id));
+            Sync.StateChanged += OnSyncStateChanged;
+            Sync.IncomingDrop += OnSyncIncomingDrop;
+            Sync.RemoteBookmarksReceived += OnSyncRemoteBookmarks;
+            Sync.RemoteReadingReceived += OnSyncRemoteReading;
+
+            TurboDownloads = new TurboDownloadManager(SettingsStore.AppDataDir, OnTurboDownloadsChanged, GetTurboDownloadProxy);
+            SyncTurboSettings();
+
+            try
+            {
+                WebViewVersion = CoreWebView2Environment.GetAvailableBrowserVersionString(null) ?? "";
+            }
+            catch
+            {
+                WebViewVersion = "";
+            }
+
+            if (Settings.vpnAutoConnect)
+            {
+                StartVpnAutoConnectAsync();
+            }
+
+            StartBackgroundUpdateCheckAsync();
+            OpenWindow(initialUrl, startPrivate, null, startGoogleSignIn, startGoogleSignUp);
+        }
+
+        public int WindowCount
+        {
+            get { return _windows.Count; }
+        }
+
+        public int NonPrivateWindowCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < _windows.Count; i++)
+                {
+                    if (!_windows[i].IsDisposed && !_windows[i].IsPrivateWindow) count++;
+                }
+                return count;
+            }
+        }
+
+        public void SyncTurboSettings()
+        {
+            if (TurboDownloads == null || Settings == null) return;
+            TurboDownloads.SetDownloadsDirectory(Settings.downloadFolder);
+            TurboDownloads.DefaultThreads = Settings.turboThreads;
+            TurboDownloads.DefaultVideoQuality = Settings.defaultVideoQuality;
+        }
+
+        private IWebProxy GetTurboDownloadProxy()
+        {
+            if (ProxyBridge != null && ProxyBridge.VpnEnabled && ProxyBridge.ListenPort > 0)
+            {
+                return new WebProxy("http://127.0.0.1:" + ProxyBridge.ListenPort, true);
+            }
+            return null;
+        }
+
+        private async void StartVpnAutoConnectAsync()
+        {
+            try
+            {
+                if (!_disposed && Vpn != null && Settings != null && Settings.vpnAutoConnect && !Vpn.IsBusyOrConnected)
+                {
+                    await Vpn.ConnectAsync(Settings.vpnCountry);
+                }
+            }
+            catch { }
+        }
+
+        private async void StartBackgroundUpdateCheckAsync()
+        {
+            try
+            {
+                await Task.Delay(4000);
+                if (!_disposed && Updater != null)
+                {
+                    await Updater.CheckAndDownloadAsync(false);
+                }
+            }
+            catch { }
+        }
+
+        public Task<CoreWebView2Environment> GetOrCreateProfileEnvAsync(string profileId)
+        {
+            string key = string.IsNullOrEmpty(profileId) ? "default" : profileId;
+            lock (_envGate)
+            {
+                Task<CoreWebView2Environment> existing;
+                if (_envTasks.TryGetValue(key, out existing) && existing != null && !existing.IsFaulted && !existing.IsCanceled)
+                {
+                    return existing;
+                }
+                Task<CoreWebView2Environment> created = CreateProfileEnvInternalAsync(key);
+                _envTasks[key] = created;
+                return created;
+            }
+        }
+
+        private async Task<CoreWebView2Environment> CreateProfileEnvInternalAsync(string profileId)
+        {
+            try { Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", null); } catch { }
+
+            string userDataDir = Profiles.GetWebViewUserDataDir(profileId);
+            CoreWebView2EnvironmentOptions opts = new CoreWebView2EnvironmentOptions();
+            string gpuArgs = (Settings == null || Settings.hardwareAcceleration)
+                ? "--enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist "
+                : "--disable-gpu ";
+            string extraArgs =
+                gpuArgs +
+                "--enable-features=ParallelDownloading,BackForwardCache " +
+                "--proxy-server=http://127.0.0.1:" + ProxyBridge.ListenPort + " " +
+                "--proxy-bypass-list=localhost;127.0.0.1;[::1];dejavu.local";
+            if (Settings == null || Settings.vpnWebRtcProtection)
+            {
+                extraArgs += " --force-webrtc-ip-handling-policy=disable_non_proxied_udp";
+            }
+            if (Settings != null && !Settings.spellcheckEnabled)
+            {
+                extraArgs += " --disable-spell-checking";
+            }
+            if (DebugPort > 1024 && DebugPort < 65535)
+            {
+                extraArgs += " --remote-debugging-port=" + DebugPort;
+            }
+            opts.AdditionalBrowserArguments = extraArgs;
+
+            bool firstFailed = false;
+            CoreWebView2Environment env = null;
+            try
+            {
+                env = await CoreWebView2Environment.CreateAsync(null, userDataDir, opts);
+            }
+            catch
+            {
+                firstFailed = true;
+            }
+            if (firstFailed)
+            {
+                await Task.Delay(500);
+                env = await CoreWebView2Environment.CreateAsync(null, userDataDir, opts);
+            }
+            if (env != null && !string.IsNullOrEmpty(env.BrowserVersionString))
+            {
+                WebViewVersion = env.BrowserVersionString;
+            }
+            return env;
+        }
+
+        public void EnsurePipeServerStarted()
+        {
+            if (string.IsNullOrEmpty(PipeName)) return;
+            if (Interlocked.CompareExchange(ref _pipeStarted, 1, 0) == 0)
+            {
+                Task.Run(() => RunSingleInstancePipeLoopAsync(_pipeCts.Token));
+            }
+        }
+
+        private BrowserForm GetBestActiveWindow()
+        {
+            if (_activeWindow != null && !_activeWindow.IsDisposed && _activeWindow.IsHandleCreated)
+            {
+                return _activeWindow;
+            }
+            for (int i = _windows.Count - 1; i >= 0; i--)
+            {
+                if (_windows[i] != null && !_windows[i].IsDisposed && _windows[i].IsHandleCreated)
+                {
+                    return _windows[i];
+                }
+            }
+            return _windows.Count > 0 ? _windows[_windows.Count - 1] : null;
+        }
+
+        public void MarkWindowActive(BrowserForm form)
+        {
+            if (form != null && !form.IsDisposed)
+            {
+                _activeWindow = form;
+            }
+        }
+
+        public BrowserForm OpenWindow(
+            string initialUrl,
+            bool isPrivate,
+            BrowserForm anchorWindow,
+            bool startGoogleSignIn,
+            bool startGoogleSignUp)
+        {
+            BrowserForm anchor = anchorWindow ?? GetBestActiveWindow();
+            BrowserForm form = new BrowserForm(this, initialUrl, isPrivate, anchor, startGoogleSignIn, startGoogleSignUp);
+            _windows.Add(form);
+            _activeWindow = form;
+            form.FormClosed += OnWindowClosed;
+            form.Show();
+            form.BringWindowToFront();
+            BroadcastStateToAllWindows();
+            return form;
+        }
+
+        private void OnWindowClosed(object sender, FormClosedEventArgs e)
+        {
+            BrowserForm closed = sender as BrowserForm;
+            if (closed != null)
+            {
+                _windows.Remove(closed);
+                if (_activeWindow == closed)
+                {
+                    _activeWindow = _windows.Count > 0 ? _windows[_windows.Count - 1] : null;
+                }
+            }
+
+            if (_windows.Count == 0)
+            {
+                CleanupSharedServices();
+                ExitThread();
+            }
+            else
+            {
+                BroadcastStateToAllWindows();
+            }
+        }
+
+        private void CleanupSharedServices()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            try { _pipeCts.Cancel(); } catch { }
+            try { _pipeCts.Dispose(); } catch { }
+            try { AdBlocker.FlushStats(); } catch { }
+            try { if (TurboDownloads != null) TurboDownloads.Dispose(); } catch { }
+            try { if (Sync != null) Sync.Dispose(); } catch { }
+            try { if (Vpn != null) Vpn.Dispose(); } catch { }
+            try { if (ProxyBridge != null) ProxyBridge.Dispose(); } catch { }
+        }
+
+        public bool LaunchOrFocusProfileProcess(string targetProfileId, string extraArgs)
+        {
+            if (string.IsNullOrWhiteSpace(targetProfileId)) return false;
+            string pid = targetProfileId.Trim();
+
+            if (string.Equals(Profiles.ActiveProfile.id, pid, StringComparison.OrdinalIgnoreCase))
+            {
+                BrowserForm active = GetBestActiveWindow();
+                if (!string.IsNullOrEmpty(extraArgs) && extraArgs.IndexOf("--google-signin", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    if (active != null) { active.BringWindowToFront(); active.StartGoogleAuthFlow(false); }
+                    return true;
+                }
+                if (!string.IsNullOrEmpty(extraArgs) && extraArgs.IndexOf("--google-signup", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    if (active != null) { active.BringWindowToFront(); active.StartGoogleAuthFlow(true); }
+                    return true;
+                }
+                if (!string.IsNullOrEmpty(extraArgs) && extraArgs.IndexOf("--new-window", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    OpenWindow(null, false, active, false, false);
+                    return true;
+                }
+                if (active != null) active.BringWindowToFront();
+                return true;
+            }
+
+            string dataDir = SettingsStore.AppDataDir;
+            if (ProfileManager.IsProfileRunning(dataDir, pid))
+            {
+                string targetPipe = ProfileManager.GetProfilePipeName(dataDir, pid);
+                string cmd = "ACTIVATE";
+                if (!string.IsNullOrEmpty(extraArgs))
+                {
+                    if (extraArgs.IndexOf("--google-signin", StringComparison.OrdinalIgnoreCase) >= 0) cmd = "GOOGLE_SIGNIN";
+                    else if (extraArgs.IndexOf("--google-signup", StringComparison.OrdinalIgnoreCase) >= 0) cmd = "GOOGLE_SIGNUP";
+                    else if (extraArgs.IndexOf("--new-window", StringComparison.OrdinalIgnoreCase) >= 0) cmd = "NEW_WINDOW";
+                }
+                if (Program.SendPipeCommand(targetPipe, cmd))
+                {
+                    return true;
+                }
+            }
+
+            try
+            {
+                string exePath = Assembly.GetExecutingAssembly().Location;
+                if (string.IsNullOrEmpty(exePath) || !File.Exists(exePath))
+                {
+                    exePath = Process.GetCurrentProcess().MainModule.FileName;
+                }
+                string cliArgs = "--profile=" + pid;
+                if (!string.IsNullOrWhiteSpace(extraArgs))
+                {
+                    cliArgs += " " + extraArgs.Trim();
+                }
+                ProcessStartInfo psi = new ProcessStartInfo(exePath, cliArgs);
+                psi.UseShellExecute = false;
+                Process.Start(psi);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private async Task RunSingleInstancePipeLoopAsync(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested && !_disposed)
+            {
+                bool failed = false;
+                try
+                {
+                    using (NamedPipeServerStream server = new NamedPipeServerStream(
+                        PipeName,
+                        PipeDirection.In,
+                        4,
+                        PipeTransmissionMode.Byte,
+                        PipeOptions.Asynchronous))
+                    {
+                        using (token.Register(() => { try { server.Dispose(); } catch { } }))
+                        {
+                            await Task.Factory.FromAsync(server.BeginWaitForConnection, server.EndWaitForConnection, null).ConfigureAwait(false);
+                        }
+                        if (token.IsCancellationRequested || _disposed) break;
+
+                        using (StreamReader sr = new StreamReader(server, System.Text.Encoding.UTF8))
+                        {
+                            string line = await sr.ReadLineAsync().ConfigureAwait(false);
+                            if (!string.IsNullOrWhiteSpace(line) && !_disposed)
+                            {
+                                string cmd = line.Trim();
+                                InvokeOnUiThread(() => HandlePipeCommand(cmd));
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    failed = true;
+                }
+                if (failed)
+                {
+                    if (token.IsCancellationRequested || _disposed) break;
+                    try { await Task.Delay(150, token).ConfigureAwait(false); } catch { break; }
+                }
+            }
+        }
+
+        private void HandlePipeCommand(string cmd)
+        {
+            if (_disposed || string.IsNullOrEmpty(cmd)) return;
+            BrowserForm active = GetBestActiveWindow();
+
+            if (string.Equals(cmd, "ACTIVATE", StringComparison.OrdinalIgnoreCase))
+            {
+                if (active != null) active.BringWindowToFront();
+                return;
+            }
+            if (string.Equals(cmd, "NEW_WINDOW_DIRECT", StringComparison.OrdinalIgnoreCase))
+            {
+                // Startup debounce (1500ms) guards accidental rapid double-click on desktop shortcut
+                if ((DateTime.UtcNow - ProcessStartUtc).TotalMilliseconds < DIRECT_LAUNCH_DEBOUNCE_MS)
+                {
+                    if (active != null) active.BringWindowToFront();
+                    return;
+                }
+                OpenWindow(null, false, active, false, false);
+                return;
+            }
+            if (string.Equals(cmd, "NEW_WINDOW", StringComparison.OrdinalIgnoreCase))
+            {
+                OpenWindow(null, false, active, false, false);
+                return;
+            }
+            if (cmd.StartsWith("NEW_WINDOW_URL:", StringComparison.OrdinalIgnoreCase))
+            {
+                string rawUrl = cmd.Substring("NEW_WINDOW_URL:".Length).Trim();
+                OpenWindow(string.IsNullOrEmpty(rawUrl) ? null : rawUrl, false, active, false, false);
+                return;
+            }
+            if (string.Equals(cmd, "NEW_PRIVATE_WINDOW", StringComparison.OrdinalIgnoreCase))
+            {
+                OpenWindow(null, true, active, false, false);
+                return;
+            }
+            if (cmd.StartsWith("NEW_PRIVATE_WINDOW_URL:", StringComparison.OrdinalIgnoreCase))
+            {
+                string rawUrl = cmd.Substring("NEW_PRIVATE_WINDOW_URL:".Length).Trim();
+                OpenWindow(string.IsNullOrEmpty(rawUrl) ? null : rawUrl, true, active, false, false);
+                return;
+            }
+            if (string.Equals(cmd, "GOOGLE_SIGNIN", StringComparison.OrdinalIgnoreCase))
+            {
+                if (active != null)
+                {
+                    active.BringWindowToFront();
+                    active.StartGoogleAuthFlow(false);
+                }
+                return;
+            }
+            if (string.Equals(cmd, "GOOGLE_SIGNUP", StringComparison.OrdinalIgnoreCase))
+            {
+                if (active != null)
+                {
+                    active.BringWindowToFront();
+                    active.StartGoogleAuthFlow(true);
+                }
+                return;
+            }
+            if (cmd.StartsWith("OPEN:", StringComparison.OrdinalIgnoreCase))
+            {
+                string rawUrl = cmd.Substring(5).Trim();
+                if (active != null)
+                {
+                    active.BringWindowToFront();
+                    if (!string.IsNullOrEmpty(rawUrl)) active.HandleExternalOpenUrl(rawUrl);
+                }
+                return;
+            }
+            if (cmd.StartsWith("PROFILE:", StringComparison.OrdinalIgnoreCase))
+            {
+                string pid = cmd.Substring(8).Trim();
+                LaunchOrFocusProfileProcess(pid, "");
+                return;
+            }
+
+            if (active != null) active.BringWindowToFront();
+        }
+
+        private void InvokeOnUiThread(Action action)
+        {
+            if (_disposed || action == null) return;
+            BrowserForm target = GetBestActiveWindow();
+            if (target == null || target.IsDisposed || !target.IsHandleCreated) return;
+            try { target.BeginInvoke(action); } catch { }
+        }
+
+        public void BroadcastStateToAllWindows()
+        {
+            for (int i = 0; i < _windows.Count; i++)
+            {
+                BrowserForm w = _windows[i];
+                if (w != null && !w.IsDisposed) w.PushFullStateToShellPublic();
+            }
+        }
+
+        public void BroadcastSettingsApplied()
+        {
+            SyncTurboSettings();
+            for (int i = 0; i < _windows.Count; i++)
+            {
+                BrowserForm w = _windows[i];
+                if (w != null && !w.IsDisposed) w.ApplyExternalSettingsUpdate();
+            }
+        }
+
+        public void BroadcastProfilesChanged()
+        {
+            Profiles.ReloadManifest();
+            for (int i = 0; i < _windows.Count; i++)
+            {
+                BrowserForm w = _windows[i];
+                if (w != null && !w.IsDisposed) w.HandleProfilesRefreshed();
+            }
+        }
+
+        public void CloseAllWindows()
+        {
+            BrowserForm[] copy = _windows.ToArray();
+            for (int i = 0; i < copy.Length; i++)
+            {
+                if (copy[i] != null && !copy[i].IsDisposed)
+                {
+                    try { copy[i].ForceCloseWithoutPrompt(); } catch { }
+                }
+            }
+        }
+
+        private void OnUpdaterUpdateReady(UpdateInfo info)
+        {
+            InvokeOnUiThread(() =>
+            {
+                BrowserForm active = GetBestActiveWindow();
+                BroadcastStateToAllWindows();
+                if (active != null && !active.IsDisposed) active.HandleAppUpdateReady(info);
+            });
+        }
+
+        private void OnUpdaterStatusChanged(string status)
+        {
+            UpdateStatusText = status ?? "";
+            InvokeOnUiThread(() =>
+            {
+                for (int i = 0; i < _windows.Count; i++)
+                {
+                    if (_windows[i] != null && !_windows[i].IsDisposed)
+                    {
+                        _windows[i].HandleAppUpdaterStatus(UpdateStatusText);
+                    }
+                }
+            });
+        }
+
+        private void OnVpnStateChanged(VpnStatusSnapshot snap)
+        {
+            InvokeOnUiThread(() =>
+            {
+                for (int i = 0; i < _windows.Count; i++)
+                {
+                    if (_windows[i] != null && !_windows[i].IsDisposed)
+                    {
+                        _windows[i].HandleAppVpnStateChanged();
+                    }
+                }
+            });
+        }
+
+        private void OnSyncStateChanged()
+        {
+            InvokeOnUiThread(() =>
+            {
+                for (int i = 0; i < _windows.Count; i++)
+                {
+                    if (_windows[i] != null && !_windows[i].IsDisposed)
+                    {
+                        _windows[i].HandleAppSyncStateChanged();
+                    }
+                }
+            });
+        }
+
+        private void OnSyncIncomingDrop(SyncDropItem item)
+        {
+            InvokeOnUiThread(() =>
+            {
+                BrowserForm active = GetBestActiveWindow();
+                if (active != null && !active.IsDisposed) active.HandleAppSyncIncomingDrop(item);
+            });
+        }
+
+        private void OnSyncRemoteBookmarks(List<RemoteTabItem> incoming)
+        {
+            InvokeOnUiThread(() =>
+            {
+                BrowserForm active = GetBestActiveWindow();
+                if (active != null && !active.IsDisposed) active.HandleAppSyncRemoteBookmarks(incoming);
+            });
+        }
+
+        private void OnSyncRemoteReading(List<RemoteTabItem> incoming)
+        {
+            InvokeOnUiThread(() =>
+            {
+                BrowserForm active = GetBestActiveWindow();
+                if (active != null && !active.IsDisposed) active.HandleAppSyncRemoteReading(incoming);
+            });
+        }
+
+        private void OnTurboDownloadsChanged()
+        {
+            InvokeOnUiThread(() =>
+            {
+                for (int i = 0; i < _windows.Count; i++)
+                {
+                    if (_windows[i] != null && !_windows[i].IsDisposed)
+                    {
+                        _windows[i].HandleAppTurboDownloadsChanged();
+                    }
+                }
+            });
         }
     }
 
@@ -74,7 +707,10 @@ namespace DejavuBrowser
         private const int BASE_CHROME_HEIGHT = 88;
         private const int BASE_FAVBAR_HEIGHT = 34;
         private const int RESIZE_BORDER = 6;
+        private const string GOOGLE_SIGNIN_URL = "https://accounts.google.com/ServiceLogin?hl=en&continue=https%3A%2F%2Fmyaccount.google.com%2F";
+        private const string GOOGLE_SIGNUP_URL = "https://accounts.google.com/signup?hl=en&continue=https%3A%2F%2Fmyaccount.google.com%2F";
 
+        private readonly MultiWindowApplicationContext _appContext;
         private readonly JavaScriptSerializer _json = new JavaScriptSerializer { MaxJsonLength = 32 * 1024 * 1024 };
         private readonly ProfileManager _profiles;
         private DejavuSettings _settings;
@@ -86,17 +722,17 @@ namespace DejavuBrowser
         private readonly TurboDownloadManager _turboDownloads;
         private readonly SuggestEngine _suggest = new SuggestEngine();
         private readonly string _initialUrl;
-        private readonly int _debugPort;
-        private readonly string _singleInstancePipeName;
-        private readonly CancellationTokenSource _pipeCts = new CancellationTokenSource();
-
-        private readonly Dictionary<string, CoreWebView2Environment> _envCache =
-            new Dictionary<string, CoreWebView2Environment>(StringComparer.OrdinalIgnoreCase);
+        private readonly bool _isPrivateWindow;
+        private readonly bool _startGoogleSignIn;
+        private readonly bool _startGoogleSignUp;
+        private readonly HashSet<string> _httpsFallbackHosts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         private CoreWebView2Environment _shellEnv;
         private CoreWebView2Environment _activeProfileEnv;
         private WebView2 _shellView;
         private bool _shellReady;
+        private bool _closingCleanupDone;
+        private bool _forceCloseConfirmed;
 
         // Lightweight reusable Material Design 3 overlay windows (0ms instant open, zero backdrop captures!)
         private OverlayPopup _popoverPopup;   // Auto-dismiss on click outside: Shield, VPN, Profiles, History
@@ -105,6 +741,7 @@ namespace DejavuBrowser
         private System.Windows.Forms.Timer _downloadHideTimer;
         private System.Windows.Forms.Timer _vpnTelemetryTimer;
         private System.Windows.Forms.Timer _statePushTimer;
+        private System.Windows.Forms.Timer _memorySaverTimer;
         private string _activePopoverMode = "";
         private string _activeHudMode = "";
         private string _lastHiddenPopoverMode = "";
@@ -136,7 +773,6 @@ namespace DejavuBrowser
         private string _lastDownloadPath = "";
         private string _activeToastTurboId = "";
         private DateTime _lastToastUpdateUtc = DateTime.MinValue;
-        private string _updateStatusText = "";
         private string _docStartScript;
         private string _floatingMediaScript;
         private readonly Dictionary<int, DateTime> _tabMediaPushUtc = new Dictionary<int, DateTime>();
@@ -154,40 +790,62 @@ namespace DejavuBrowser
             "id.twitch.tv", "www.facebook.com", "api.twitter.com", "x.com"
         };
 
-        public BrowserForm(string initialUrl, string requestedProfileId, int debugPort, string singleInstancePipeName)
+        public bool IsPrivateWindow
         {
+            get { return _isPrivateWindow; }
+        }
+
+        public BrowserForm(
+            MultiWindowApplicationContext appContext,
+            string initialUrl,
+            bool isPrivateWindow,
+            BrowserForm anchorWindow,
+            bool startGoogleSignIn,
+            bool startGoogleSignUp)
+        {
+            _appContext = appContext;
             _initialUrl = initialUrl;
-            _debugPort = debugPort;
-            _singleInstancePipeName = singleInstancePipeName;
-            _profiles = new ProfileManager(requestedProfileId);
-            _settings = _profiles.LoadActiveSettings();
-            _adBlocker = new AdBlocker(_settings, _profiles.ActiveSettingsPath);
-            _adBlocker.InitializeAsync();
+            _isPrivateWindow = isPrivateWindow;
+            _startGoogleSignIn = startGoogleSignIn;
+            _startGoogleSignUp = startGoogleSignUp;
+
+            _profiles = appContext.Profiles;
+            _settings = appContext.Settings;
+            _adBlocker = appContext.AdBlocker;
+            _updater = appContext.Updater;
+            _proxyBridge = appContext.ProxyBridge;
+            _vpn = appContext.Vpn;
+            _sync = appContext.Sync;
+            _turboDownloads = appContext.TurboDownloads;
+
             _docStartScript = AdBlocker.GetDocumentStartScript();
             _floatingMediaScript = TurboDownloadManager.GetFloatingDownloadButtonScript();
 
-            _updater = new AutoUpdater();
-            _updater.UpdateReady += OnUpdateReady;
-            _updater.StatusChanged += OnUpdaterStatusChanged;
-
-            _proxyBridge = new LocalProxyBridge();
-            _vpn = new VpnManager(_proxyBridge, _settings.vpnCountry, _settings.vpnAutoConnect, _settings.vpnMode);
-            _vpn.StateChanged += OnVpnStateChanged;
-
-            _sync = new SyncManager(_profiles.GetProfileDataDir(_profiles.ActiveProfile.id));
-            _sync.StateChanged += OnSyncStateChanged;
-            _sync.IncomingDrop += OnSyncIncomingDrop;
-            _sync.RemoteBookmarksReceived += OnSyncRemoteBookmarks;
-            _sync.RemoteReadingReceived += OnSyncRemoteReading;
-
-            _turboDownloads = new TurboDownloadManager(SettingsStore.AppDataDir, OnTurboDownloadsChanged, GetTurboDownloadProxy);
-
-            Text = "dejavu";
+            Text = _isPrivateWindow ? "dejavu — Private" : ("dejavu — " + _profiles.ActiveProfile.name);
             FormBorderStyle = FormBorderStyle.None;
-            StartPosition = FormStartPosition.CenterScreen;
-            Size = new Size(1380, 880);
             MinimumSize = new Size(760, 520);
-            bool initialLight = (_settings != null && _settings.appearanceMode == "light");
+
+            if (anchorWindow != null && !anchorWindow.IsDisposed)
+            {
+                StartPosition = FormStartPosition.Manual;
+                Size baseSize = (anchorWindow.WindowState == FormWindowState.Normal && anchorWindow.Width >= 760 && anchorWindow.Height >= 520)
+                    ? anchorWindow.Size
+                    : new Size(1380, 880);
+                Size = baseSize;
+                Rectangle wa = Screen.FromControl(anchorWindow).WorkingArea;
+                int nx = anchorWindow.Left + 36;
+                int ny = anchorWindow.Top + 36;
+                if (nx + baseSize.Width > wa.Right) nx = wa.Left + 48;
+                if (ny + baseSize.Height > wa.Bottom) ny = wa.Top + 48;
+                Location = new Point(nx, ny);
+            }
+            else
+            {
+                StartPosition = FormStartPosition.CenterScreen;
+                Size = new Size(1380, 880);
+            }
+
+            bool initialLight = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
             BackColor = initialLight ? Color.FromArgb(247, 242, 250) : Color.FromArgb(20, 18, 24);
             DoubleBuffered = true;
 
@@ -231,6 +889,19 @@ namespace DejavuBrowser
                 SendVpnPanelState(null);
             };
 
+            _memorySaverTimer = new System.Windows.Forms.Timer();
+            _memorySaverTimer.Interval = 60000;
+            _memorySaverTimer.Tick += (s, e) => RunMemorySaverSweep();
+            _memorySaverTimer.Start();
+
+            Activated += (s, e) =>
+            {
+                _appContext.MarkWindowActive(this);
+                if (_shellReady && (_settingsOpen || _activePopoverMode == "profiles"))
+                {
+                    SchedulePushFullStateToShell();
+                }
+            };
             Load += OnFormLoad;
             Resize += (s, e) =>
             {
@@ -254,12 +925,46 @@ namespace DejavuBrowser
                 HideSuggestPopup();
                 RepositionActiveHud();
             };
-            FormClosing += (s, e) =>
+            FormClosing += OnBrowserFormClosing;
+        }
+
+        public void ForceCloseWithoutPrompt()
+        {
+            _forceCloseConfirmed = true;
+            Close();
+        }
+
+        private void OnBrowserFormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (!_forceCloseConfirmed && _settings != null && _settings.confirmCloseMultipleTabs && _tabs.Count > 1)
             {
-                try { _pipeCts.Cancel(); } catch { }
-                try { _pipeCts.Dispose(); } catch { }
-                try { if (_videoProbeCts != null) _videoProbeCts.Cancel(); } catch { }
-                try { if (_videoProbeCts != null) _videoProbeCts.Dispose(); } catch { }
+                DialogResult res = MessageBox.Show(
+                    "Close " + _tabs.Count + " open tabs in this window?",
+                    "dejavu",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+                if (res != DialogResult.Yes)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+                _forceCloseConfirmed = true;
+            }
+
+            if (!_closingCleanupDone && _settings != null && _settings.clearCookiesOnExit &&
+                !_isPrivateWindow && _appContext.NonPrivateWindowCount <= 1)
+            {
+                e.Cancel = true;
+                _closingCleanupDone = true;
+                ClearCookiesOnExitAndCloseAsync();
+                return;
+            }
+
+            try { if (_videoProbeCts != null) _videoProbeCts.Cancel(); } catch { }
+            try { if (_videoProbeCts != null) _videoProbeCts.Dispose(); } catch { }
+
+            if (!_isPrivateWindow)
+            {
                 try
                 {
                     List<string> sessionUrls = new List<string>();
@@ -278,30 +983,60 @@ namespace DejavuBrowser
                     _profiles.SaveActiveSettings(_settings);
                 }
                 catch { }
-                if (_statePushTimer != null)
+            }
+
+            if (_statePushTimer != null) { _statePushTimer.Stop(); _statePushTimer.Dispose(); }
+            if (_vpnTelemetryTimer != null) { _vpnTelemetryTimer.Stop(); _vpnTelemetryTimer.Dispose(); }
+            if (_downloadHideTimer != null) { _downloadHideTimer.Stop(); _downloadHideTimer.Dispose(); }
+            if (_memorySaverTimer != null) { _memorySaverTimer.Stop(); _memorySaverTimer.Dispose(); }
+
+            if (_popoverPopup != null) { try { _popoverPopup.Close(); } catch { } }
+            if (_hudPopup != null) { try { _hudPopup.Close(); } catch { } }
+            if (_suggestPopup != null) { try { _suggestPopup.Close(); } catch { } }
+        }
+
+        private async void ClearCookiesOnExitAndCloseAsync()
+        {
+            try
+            {
+                CoreWebView2 core = GetAnyReadyCoreWebView2();
+                if (core != null && core.Profile != null)
                 {
-                    _statePushTimer.Stop();
-                    _statePushTimer.Dispose();
+                    Task clearTask = core.Profile.ClearBrowsingDataAsync(CoreWebView2BrowsingDataKinds.Cookies);
+                    await Task.WhenAny(clearTask, Task.Delay(1500));
                 }
-                if (_vpnTelemetryTimer != null)
+            }
+            catch { }
+            if (!IsDisposed)
+            {
+                _forceCloseConfirmed = true;
+                try { Close(); } catch { }
+            }
+        }
+
+        private void RunMemorySaverSweep()
+        {
+            if (IsDisposed || _settings == null || !_settings.memorySaverEnabled) return;
+            int thresholdMinutes = (_settings.memorySaverMinutes >= 5 && _settings.memorySaverMinutes <= 240)
+                ? _settings.memorySaverMinutes
+                : 30;
+            DateTime now = DateTime.UtcNow;
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab t = _tabs[i];
+                if (t == null || t.Id == _activeTabId || t.IsNewTab || t.IsPinned) continue;
+                if (!t.CoreReady || t.WebView == null || t.WebView.IsDisposed || t.WebView.CoreWebView2 == null) continue;
+                try
                 {
-                    _vpnTelemetryTimer.Stop();
-                    _vpnTelemetryTimer.Dispose();
+                    CoreWebView2 core = t.WebView.CoreWebView2;
+                    if (core.IsSuspended || core.IsDocumentPlayingAudio) continue;
+                    if ((now - t.LastActiveUtc).TotalMinutes >= thresholdMinutes)
+                    {
+                        Task<bool> ignored = core.TrySuspendAsync();
+                    }
                 }
-                if (_downloadHideTimer != null)
-                {
-                    _downloadHideTimer.Stop();
-                    _downloadHideTimer.Dispose();
-                }
-                _adBlocker.FlushStats();
-                if (_turboDownloads != null) _turboDownloads.Dispose();
-                if (_sync != null) _sync.Dispose();
-                if (_vpn != null) _vpn.Dispose();
-                if (_proxyBridge != null) _proxyBridge.Dispose();
-                if (_popoverPopup != null) _popoverPopup.Close();
-                if (_hudPopup != null) _hudPopup.Close();
-                if (_suggestPopup != null) _suggestPopup.Close();
-            };
+                catch { }
+            }
         }
 
         private bool HasFavoritesBar
@@ -320,6 +1055,7 @@ namespace DejavuBrowser
 
         private bool GetEffectiveIsLight(BrowserTab tab, bool isShellSurface)
         {
+            if (_isPrivateWindow) return false;
             string mode = (_settings != null && !string.IsNullOrEmpty(_settings.appearanceMode))
                 ? _settings.appearanceMode
                 : "auto";
@@ -333,6 +1069,7 @@ namespace DejavuBrowser
             return new Dictionary<string, object>
             {
                 { "searchEngine", _settings.searchEngine ?? "google" },
+                { "globalAdBlockEnabled", _adBlocker.GlobalEnabled },
                 { "appearanceMode", _settings.appearanceMode ?? "auto" },
                 { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "showFullWebsiteAddress", _settings.showFullWebsiteAddress },
@@ -351,7 +1088,55 @@ namespace DejavuBrowser
                 { "hideFloatingMediaButton", _settings.hideFloatingMediaButton },
                 { "vpnAutoConnect", _settings.vpnAutoConnect },
                 { "vpnMode", _settings.vpnMode ?? "smart" },
-                { "vpnCountry", _settings.vpnCountry ?? "AUTO" }
+                { "vpnCountry", _settings.vpnCountry ?? "AUTO" },
+
+                // v4.5.0 Appearance
+                { "fontSize", _settings.fontSize ?? "medium" },
+                { "fontFamily", _settings.fontFamily ?? "system" },
+                { "showHomeButton", _settings.showHomeButton },
+                { "smoothScrolling", _settings.smoothScrolling },
+
+                // v4.5.0 Privacy & Security
+                { "doNotTrack", _settings.doNotTrack },
+                { "httpsFirst", _settings.httpsFirst },
+                { "blockThirdPartyCookies", _settings.blockThirdPartyCookies },
+                { "blockPopups", _settings.blockPopups },
+                { "clearCookiesOnExit", _settings.clearCookiesOnExit },
+                { "safeBrowsing", _settings.safeBrowsing },
+                { "permCamera", _settings.permCamera ?? "ask" },
+                { "permMicrophone", _settings.permMicrophone ?? "ask" },
+                { "permLocation", _settings.permLocation ?? "ask" },
+                { "permNotifications", _settings.permNotifications ?? "ask" },
+                { "permClipboard", _settings.permClipboard ?? "ask" },
+                { "permAutoplay", _settings.permAutoplay ?? "allow" },
+
+                // v4.5.0 Search
+                { "customSearchUrl", _settings.customSearchUrl ?? "" },
+                { "addressBarSuggestions", _settings.addressBarSuggestions },
+
+                // v4.5.0 Tabs & Performance
+                { "memorySaverEnabled", _settings.memorySaverEnabled },
+                { "memorySaverMinutes", _settings.memorySaverMinutes > 0 ? _settings.memorySaverMinutes : 30 },
+                { "confirmCloseMultipleTabs", _settings.confirmCloseMultipleTabs },
+                { "tabHoverPreview", _settings.tabHoverPreview },
+
+                // v4.5.0 Downloads
+                { "downloadFolder", _settings.downloadFolder ?? "" },
+                { "askDownloadLocation", _settings.askDownloadLocation },
+                { "turboThreads", _settings.turboThreads > 0 ? _settings.turboThreads : 8 },
+                { "defaultVideoQuality", _settings.defaultVideoQuality ?? "best" },
+                { "autoOpenDownloads", _settings.autoOpenDownloads },
+
+                // v4.5.0 Passwords & Autofill
+                { "savePasswords", _settings.savePasswords },
+                { "autofillAddresses", _settings.autofillAddresses },
+                { "autofillPayments", _settings.autofillPayments },
+
+                // v4.5.0 VPN & System
+                { "vpnWebRtcProtection", _settings.vpnWebRtcProtection },
+                { "hardwareAcceleration", _settings.hardwareAcceleration },
+                { "spellcheckEnabled", _settings.spellcheckEnabled },
+                { "devToolsEnabled", _settings.devToolsEnabled }
             };
         }
 
@@ -478,82 +1263,63 @@ namespace DejavuBrowser
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            bool lightMode = (_settings != null && _settings.appearanceMode == "light");
+            bool lightMode = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
             NativeWin32.ApplyWindows11Chrome(Handle, true, true);
             NativeWin32.SetImmersiveDarkMode(Handle, !lightMode);
-            if (!string.IsNullOrEmpty(_singleInstancePipeName))
-            {
-                Task.Run(() => RunSingleInstancePipeLoopAsync(_pipeCts.Token));
-            }
+            _appContext.EnsurePipeServerStarted();
         }
 
-        private async Task RunSingleInstancePipeLoopAsync(CancellationToken token)
+        public void HandleExternalOpenUrl(string rawUrl)
         {
-            while (!token.IsCancellationRequested && !IsDisposed)
-            {
-                bool failed = false;
-                try
-                {
-                    using (NamedPipeServerStream server = new NamedPipeServerStream(
-                        _singleInstancePipeName,
-                        PipeDirection.In,
-                        4,
-                        PipeTransmissionMode.Byte,
-                        PipeOptions.Asynchronous))
-                    {
-                        using (token.Register(() => { try { server.Dispose(); } catch { } }))
-                        {
-                            await Task.Factory.FromAsync(server.BeginWaitForConnection, server.EndWaitForConnection, null).ConfigureAwait(false);
-                        }
-                        if (token.IsCancellationRequested || IsDisposed) break;
-
-                        using (StreamReader sr = new StreamReader(server, System.Text.Encoding.UTF8))
-                        {
-                            string line = await sr.ReadLineAsync().ConfigureAwait(false);
-                            if (!string.IsNullOrWhiteSpace(line) && !IsDisposed && IsHandleCreated)
-                            {
-                                string cmd = line.Trim();
-                                BeginInvoke((Action)(() => HandleSecondaryInstanceCommand(cmd)));
-                            }
-                        }
-                    }
-                }
-                catch
-                {
-                    failed = true;
-                }
-                if (failed)
-                {
-                    if (token.IsCancellationRequested || IsDisposed) break;
-                    try { await Task.Delay(150, token).ConfigureAwait(false); } catch { break; }
-                }
-            }
+            if (IsDisposed || string.IsNullOrEmpty(rawUrl)) return;
+            CreateTab(ResolveInputToUrl(rawUrl), true);
         }
 
-        private void HandleSecondaryInstanceCommand(string cmd)
+        public void StartGoogleAuthFlow(bool isSignUp)
         {
             if (IsDisposed) return;
-            BringWindowToFront();
-            if (cmd.StartsWith("OPEN:", StringComparison.OrdinalIgnoreCase))
+            _settingsOpen = false;
+            _tabOverviewOpen = false;
+            _dlManagerOpen = false;
+            HidePopover();
+            HideSuggestPopup();
+            CreateTab(isSignUp ? GOOGLE_SIGNUP_URL : GOOGLE_SIGNIN_URL, true);
+        }
+
+        public void PushFullStateToShellPublic()
+        {
+            if (!IsDisposed && _shellReady) PushFullStateToShell();
+        }
+
+        public void HandleProfilesRefreshed()
+        {
+            if (IsDisposed) return;
+            UpdateWindowTitle();
+            if (_shellReady) PushFullStateToShell();
+            if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "profiles")
             {
-                string rawUrl = cmd.Substring(5).Trim();
-                if (!string.IsNullOrEmpty(rawUrl))
-                {
-                    CreateTab(ResolveInputToUrl(rawUrl), true);
-                }
-            }
-            else if (cmd.StartsWith("PROFILE:", StringComparison.OrdinalIgnoreCase))
-            {
-                string pid = cmd.Substring(8).Trim();
-                if (!string.IsNullOrEmpty(pid) &&
-                    !string.Equals(_profiles.ActiveProfile.id, pid, StringComparison.OrdinalIgnoreCase))
-                {
-                    SwitchActiveProfileAsync(pid);
-                }
+                SendProfilesPanelState(null);
             }
         }
 
-        private void BringWindowToFront()
+        public void ApplyExternalSettingsUpdate()
+        {
+            if (IsDisposed) return;
+            _settings = _appContext.Settings;
+            bool isLightForced = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
+            try { NativeWin32.SetImmersiveDarkMode(Handle, !isLightForced); } catch { }
+            BackColor = isLightForced ? Color.FromArgb(247, 242, 250) : Color.FromArgb(20, 18, 24);
+            if (_shellView != null && !_shellView.IsDisposed) _shellView.DefaultBackgroundColor = BackColor;
+            _favoritesBarHidden = _settings.favoritesBarHidden;
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                ApplySettingsToTab(_tabs[i]);
+            }
+            LayoutViews();
+            if (_shellReady) PushFullStateToShell();
+        }
+
+        public void BringWindowToFront()
         {
             try
             {
@@ -650,63 +1416,38 @@ namespace DejavuBrowser
             base.WndProc(ref m);
         }
 
-        private async Task<CoreWebView2Environment> GetOrCreateProfileEnvAsync(string profileId)
+        private Task<CoreWebView2Environment> GetOrCreateProfileEnvAsync(string profileId)
         {
-            CoreWebView2Environment existing;
-            if (_envCache.TryGetValue(profileId, out existing) && existing != null)
-            {
-                return existing;
-            }
-
-            // Ensure no external WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS env var overrides our VPN proxy args
-            try { Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", null); } catch { }
-
-            string userDataDir = _profiles.GetWebViewUserDataDir(profileId);
-            CoreWebView2EnvironmentOptions opts = new CoreWebView2EnvironmentOptions();
-            string extraArgs =
-                "--enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist " +
-                "--enable-features=ParallelDownloading,BackForwardCache " +
-                "--proxy-server=http://127.0.0.1:" + _proxyBridge.ListenPort + " " +
-                "--proxy-bypass-list=localhost;127.0.0.1;[::1];dejavu.local " +
-                "--force-webrtc-ip-handling-policy=disable_non_proxied_udp";
-            if (_debugPort > 1024 && _debugPort < 65535)
-            {
-                extraArgs += " --remote-debugging-port=" + _debugPort;
-            }
-            opts.AdditionalBrowserArguments = extraArgs;
-
-            CoreWebView2Environment env = await CoreWebView2Environment.CreateAsync(null, userDataDir, opts);
-            _envCache[profileId] = env;
-            return env;
+            return _appContext.GetOrCreateProfileEnvAsync(profileId);
         }
 
         private async void OnFormLoad(object sender, EventArgs e)
         {
             try
             {
-                bool envFailed = false;
-                try
-                {
-                    _activeProfileEnv = await GetOrCreateProfileEnvAsync(_profiles.ActiveProfile.id);
-                }
-                catch
-                {
-                    envFailed = true;
-                }
-                if (envFailed)
-                {
-                    // Transient recovery if an exiting msedgewebview2.exe briefly locked UserDataFolder
-                    await Task.Delay(500);
-                    _envCache.Remove(_profiles.ActiveProfile.id);
-                    _activeProfileEnv = await GetOrCreateProfileEnvAsync(_profiles.ActiveProfile.id);
-                }
+                _activeProfileEnv = await GetOrCreateProfileEnvAsync(_profiles.ActiveProfile.id);
                 _shellEnv = _activeProfileEnv;
 
                 await InitializeShellViewAsync();
                 InitializeOverlaysAsync();
 
-                string startUrl = string.IsNullOrEmpty(_initialUrl) ? null : ResolveInputToUrl(_initialUrl);
+                string startUrl = null;
+                if (_startGoogleSignIn)
+                {
+                    startUrl = GOOGLE_SIGNIN_URL;
+                }
+                else if (_startGoogleSignUp)
+                {
+                    startUrl = GOOGLE_SIGNUP_URL;
+                }
+                else if (!string.IsNullOrEmpty(_initialUrl))
+                {
+                    startUrl = ResolveInputToUrl(_initialUrl);
+                }
+
                 if (string.IsNullOrEmpty(startUrl) &&
+                    !_isPrivateWindow &&
+                    _appContext.WindowCount <= 1 &&
                     _settings.startupBehavior == "restore" &&
                     _settings.lastSessionUrls != null &&
                     _settings.lastSessionUrls.Count > 0)
@@ -720,14 +1461,6 @@ namespace DejavuBrowser
                 {
                     CreateTab(startUrl, true);
                 }
-
-                if (_settings.vpnAutoConnect)
-                {
-                    StartVpnAutoConnectAsync();
-                }
-
-                // Silent background auto-update check 4 seconds after launch
-                StartBackgroundUpdateCheckAsync();
             }
             catch (Exception ex)
             {
@@ -741,67 +1474,32 @@ namespace DejavuBrowser
             }
         }
 
-        private async void StartVpnAutoConnectAsync()
-        {
-            try
-            {
-                if (!IsDisposed && _vpn != null && _settings != null && _settings.vpnAutoConnect && !_vpn.IsBusyOrConnected)
-                {
-                    await _vpn.ConnectAsync(_settings.vpnCountry);
-                }
-            }
-            catch { }
-        }
-
-        private async void StartBackgroundUpdateCheckAsync()
-        {
-            await Task.Delay(4000);
-            if (!IsDisposed)
-            {
-                await _updater.CheckAndDownloadAsync(false);
-            }
-        }
-
-        private void OnUpdateReady(UpdateInfo info)
+        public void HandleAppUpdateReady(UpdateInfo info)
         {
             if (IsDisposed) return;
-            BeginInvoke((Action)(() =>
-            {
-                PushFullStateToShell();
-                ShowUpdateToast(info);
-            }));
+            PushFullStateToShell();
+            ShowUpdateToast(info);
         }
 
-        private void OnUpdaterStatusChanged(string status)
+        public void HandleAppUpdaterStatus(string status)
         {
-            _updateStatusText = status ?? "";
             if (IsDisposed) return;
-            BeginInvoke((Action)(() =>
+            if (_shellReady) PushFullStateToShell();
+            if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "profiles")
             {
-                if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "profiles")
-                {
-                    SendProfilesPanelState(null);
-                }
-            }));
+                SendProfilesPanelState(null);
+            }
         }
 
-        private void OnVpnStateChanged(VpnStatusSnapshot snap)
+        public void HandleAppVpnStateChanged()
         {
-            if (IsDisposed || !IsHandleCreated) return;
-            try
+            if (IsDisposed) return;
+            PushFullStateToShell();
+            if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "vpn")
             {
-                BeginInvoke((Action)(() =>
-                {
-                    if (IsDisposed) return;
-                    PushFullStateToShell();
-                    if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "vpn")
-                    {
-                        SendVpnPanelState(null);
-                    }
-                    SyncVpnTelemetryTimer();
-                }));
+                SendVpnPanelState(null);
             }
-            catch { }
+            SyncVpnTelemetryTimer();
         }
 
         private async Task InitializeShellViewAsync()
@@ -907,11 +1605,27 @@ namespace DejavuBrowser
                         { "hidePrivacyReport", _settings.hidePrivacyReport },
                         { "hideReadingList", _settings.hideReadingList }
                     };
+                    List<string> openProfileIds = _profiles.GetOpenProfileIds();
+                    UpdateInfo bootUpd = _updater.ReadyUpdate;
+                    string effectiveDownloadFolder = _turboDownloads != null ? _turboDownloads.DownloadsDirectory : "";
                     var boot = new Dictionary<string, object>
                     {
                         { "wallpaper", _settings.wallpaper ?? "art:wp-m3-amethyst.jpg" },
                         { "hasCustomWallpaper", !string.IsNullOrEmpty(_settings.customWallpaperPath) && File.Exists(_settings.customWallpaperPath) },
                         { "activeProfile", _profiles.ActiveProfile },
+                        { "profiles", _profiles.Manifest.profiles },
+                        { "mainProfileId", _profiles.Manifest.mainProfileId ?? "default" },
+                        { "onboardingCompleted", _profiles.Manifest.onboardingCompleted },
+                        { "isPrivateWindow", _isPrivateWindow },
+                        { "windowCount", _appContext.WindowCount },
+                        { "openProfileIds", openProfileIds },
+                        { "webviewVersion", _appContext.WebViewVersion ?? "" },
+                        { "downloadFolder", effectiveDownloadFolder },
+                        { "downloadsDir", effectiveDownloadFolder },
+                        { "userDataDir", _profiles.GetProfileDataDir(_profiles.ActiveProfile.id) },
+                        { "appVersion", AutoUpdater.CurrentVersion },
+                        { "updateStatus", _appContext.UpdateStatusText ?? "" },
+                        { "updateReadyVersion", (bootUpd != null && bootUpd.IsReady) ? bootUpd.Version : "" },
                         { "shortcuts", _settings.shortcuts },
                         { "favorites", _profiles.Favorites },
                         { "showFavoritesBar", HasFavoritesBar },
@@ -1010,62 +1724,78 @@ namespace DejavuBrowser
         }
 
         // =====================================================================
-        // Profile Switching (True Chrome-Style Isolated WebView2 Environments!)
+        // Chrome-Style Simultaneous Multi-Profile & Multi-Window Management
         // =====================================================================
-        private async void SwitchActiveProfileAsync(string profileId)
+        private void SwitchProfileRequested(string profileId, bool openInNewWindow)
         {
+            if (string.IsNullOrWhiteSpace(profileId)) return;
             if (string.Equals(_profiles.ActiveProfile.id, profileId, StringComparison.OrdinalIgnoreCase))
             {
                 HidePopover();
+                BringWindowToFront();
                 return;
             }
 
-            _adBlocker.FlushStats();
-            if (!_profiles.SwitchProfile(profileId)) return;
-
             HidePopover();
-            HideSuggestPopup();
-            if (_activeHudMode == "find") HideHud();
-
-            // Dispose previous profile's live tabs cleanly
-            for (int i = 0; i < _tabs.Count; i++)
+            bool launched = _appContext.LaunchOrFocusProfileProcess(profileId, "");
+            if (launched && !openInNewWindow)
             {
-                if (_tabs[i].WebView != null)
-                {
-                    Controls.Remove(_tabs[i].WebView);
-                    _tabs[i].WebView.Dispose();
-                }
+                // User explicitly chose "Switch in this window": close this window cleanly
+                // so per-profile process isolation & WebViewData locks stay 100% intact.
+                ForceCloseWithoutPrompt();
             }
-            _tabs.Clear();
-            _closedTabUrls.Clear();
-            _activeTabId = -1;
-            _activeTabGroupId = "default";
-            _tabOverviewOpen = false;
-            _favoritesBarHidden = false;
-
-            _settings = _profiles.LoadActiveSettings();
-            if (_vpn != null) _vpn.AutoConnect = _settings.vpnAutoConnect;
-            if (_sync != null) _sync.LoadProfile(_profiles.GetProfileDataDir(_profiles.ActiveProfile.id));
-            _adBlocker.SwitchProfileSettings(_settings, _profiles.ActiveSettingsPath);
-            _activeProfileEnv = await GetOrCreateProfileEnvAsync(_profiles.ActiveProfile.id);
-
-            CreateTab(null, true);
+            else
+            {
+                _appContext.BroadcastProfilesChanged();
+            }
         }
 
         private void OpenProfileInNewWindow(string profileId)
         {
-            // Strict Single-Instance: never spawn a duplicate process (which creates a black WebView2 window).
-            // If targeting another profile, switch seamlessly in-window; if same profile, open a clean Start Page tab!
-            if (!string.IsNullOrEmpty(profileId) &&
-                !string.Equals(_profiles.ActiveProfile.id, profileId, StringComparison.OrdinalIgnoreCase))
+            OpenProfileInNewWindow(profileId, "");
+        }
+
+        private void OpenProfileInNewWindow(string profileId, string extraArgs)
+        {
+            if (string.IsNullOrEmpty(profileId) ||
+                string.Equals(_profiles.ActiveProfile.id, profileId, StringComparison.OrdinalIgnoreCase))
             {
-                SwitchActiveProfileAsync(profileId);
+                if (!string.IsNullOrEmpty(extraArgs) && extraArgs.IndexOf("--google-signin", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    StartGoogleAuthFlow(false);
+                }
+                else if (!string.IsNullOrEmpty(extraArgs) && extraArgs.IndexOf("--google-signup", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    StartGoogleAuthFlow(true);
+                }
+                else
+                {
+                    _appContext.OpenWindow(null, false, this, false, false);
+                }
+                return;
+            }
+            _appContext.LaunchOrFocusProfileProcess(profileId, extraArgs);
+            _appContext.BroadcastProfilesChanged();
+        }
+
+        private void UpdateWindowTitle()
+        {
+            BrowserTab tab = GetActiveTab();
+            if (_isPrivateWindow)
+            {
+                Text = (tab == null || tab.IsNewTab)
+                    ? "dejavu — Private"
+                    : ((string.IsNullOrEmpty(tab.Title) ? FormatDisplayUrl(tab.Url) : tab.Title) + " — dejavu Private");
             }
             else
             {
-                CreateDefaultNewTab(true);
+                string profName = (_profiles != null && _profiles.ActiveProfile != null && !string.IsNullOrEmpty(_profiles.ActiveProfile.name))
+                    ? _profiles.ActiveProfile.name
+                    : "Personal";
+                Text = (tab == null || tab.IsNewTab)
+                    ? ("dejavu — " + profName)
+                    : ((string.IsNullOrEmpty(tab.Title) ? FormatDisplayUrl(tab.Url) : tab.Title) + " — dejavu");
             }
-            BringWindowToFront();
         }
 
         // =====================================================================
@@ -1132,6 +1862,7 @@ namespace DejavuBrowser
             if (tab == null) return;
             _activeTabId = tabId;
             _activeTabGroupId = tab.GroupId;
+            tab.LastActiveUtc = DateTime.UtcNow;
             _tabOverviewOpen = false;
             _settingsOpen = false;
             _dlManagerOpen = false;
@@ -1144,10 +1875,16 @@ namespace DejavuBrowser
             {
                 EnsureTabWebViewAsync(tab);
             }
+            else if (tab.CoreReady && tab.WebView != null && !tab.WebView.IsDisposed && tab.WebView.CoreWebView2 != null)
+            {
+                try
+                {
+                    if (tab.WebView.CoreWebView2.IsSuspended) tab.WebView.CoreWebView2.Resume();
+                }
+                catch { }
+            }
 
-            Text = tab.IsNewTab
-                ? ("dejavu — " + _profiles.ActiveProfile.name)
-                : ((string.IsNullOrEmpty(tab.Title) ? FormatDisplayUrl(tab.Url) : tab.Title) + " — dejavu");
+            UpdateWindowTitle();
 
             LayoutViews();
             PushFullStateToShell();
@@ -1333,23 +2070,336 @@ namespace DejavuBrowser
             PushFullStateToShell();
         }
 
+        private static CoreWebView2PermissionState MapPermissionState(string settingVal)
+        {
+            if (settingVal == "allow") return CoreWebView2PermissionState.Allow;
+            if (settingVal == "block") return CoreWebView2PermissionState.Deny;
+            return CoreWebView2PermissionState.Default;
+        }
+
+        private static bool IsLocalOrLanHost(string url)
+        {
+            try
+            {
+                Uri u = new Uri(url);
+                string h = (u.Host ?? "").ToLowerInvariant();
+                if (h == "localhost" || h == "127.0.0.1" || h == "::1" || h == "[::1]" || h.EndsWith(".local"))
+                    return true;
+                if (h.StartsWith("192.168.") || h.StartsWith("10.")) return true;
+                if (h.StartsWith("172."))
+                {
+                    string[] parts = h.Split('.');
+                    int second;
+                    if (parts.Length >= 2 && int.TryParse(parts[1], out second) && second >= 16 && second <= 31)
+                        return true;
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        private void ApplySettingsToTab(BrowserTab tab)
+        {
+            if (tab == null || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed || tab.WebView.CoreWebView2 == null)
+                return;
+            try
+            {
+                CoreWebView2 core = tab.WebView.CoreWebView2;
+                core.Settings.AreDevToolsEnabled = (_settings == null || _settings.devToolsEnabled);
+                core.Settings.IsPasswordAutosaveEnabled = (_settings == null || _settings.savePasswords) && !_isPrivateWindow;
+                core.Settings.IsGeneralAutofillEnabled = (_settings == null || _settings.autofillAddresses) && !_isPrivateWindow;
+                core.Settings.IsReputationCheckingRequired = (_settings == null || _settings.safeBrowsing);
+
+                if (core.Profile != null)
+                {
+                    try { core.Profile.IsPasswordAutosaveEnabled = core.Settings.IsPasswordAutosaveEnabled; } catch { }
+                    try { core.Profile.IsGeneralAutofillEnabled = core.Settings.IsGeneralAutofillEnabled; } catch { }
+                    try
+                    {
+                        core.Profile.PreferredTrackingPreventionLevel = (_settings == null || _settings.blockThirdPartyCookies)
+                            ? CoreWebView2TrackingPreventionLevel.Balanced
+                            : CoreWebView2TrackingPreventionLevel.None;
+                    }
+                    catch { }
+                    try
+                    {
+                        if (_isPrivateWindow || (_settings != null && _settings.appearanceMode == "dark"))
+                            core.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Dark;
+                        else if (_settings != null && _settings.appearanceMode == "light")
+                            core.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Light;
+                        else
+                            core.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Auto;
+                    }
+                    catch { }
+                    try
+                    {
+                        if (!_isPrivateWindow && _turboDownloads != null && !string.IsNullOrEmpty(_turboDownloads.DownloadsDirectory))
+                        {
+                            core.Profile.DefaultDownloadFolderPath = _turboDownloads.DownloadsDirectory;
+                        }
+                    }
+                    catch { }
+                }
+
+                InjectUserStylePrefs(core);
+            }
+            catch { }
+        }
+
+        private void InjectUserStylePrefs(CoreWebView2 core)
+        {
+            if (core == null || _settings == null) return;
+            try
+            {
+                string css = "";
+                string fs = _settings.fontSize ?? "medium";
+                if (fs == "very-small") css += "html{font-size:84% !important;}";
+                else if (fs == "small") css += "html{font-size:92% !important;}";
+                else if (fs == "large") css += "html{font-size:112% !important;}";
+                else if (fs == "very-large") css += "html{font-size:126% !important;}";
+
+                string ff = _settings.fontFamily ?? "system";
+                if (ff == "sans") css += "body{font-family:'Segoe UI',Arial,Helvetica,sans-serif !important;}";
+                else if (ff == "serif") css += "body{font-family:Georgia,'Times New Roman',serif !important;}";
+                else if (ff == "mono") css += "body{font-family:'Cascadia Code',Consolas,'Courier New',monospace !important;}";
+
+                css += _settings.smoothScrolling
+                    ? "html{scroll-behavior:smooth;}"
+                    : "html{scroll-behavior:auto !important;}";
+
+                string jsCss = _json.Serialize(css);
+                string spellJs = _settings.spellcheckEnabled ? "true" : "false";
+                string script =
+                    "(function(){try{" +
+                    "var id='dejavu-user-prefs-style';" +
+                    "var el=document.getElementById(id);" +
+                    "if(!el){el=document.createElement('style');el.id=id;(document.head||document.documentElement).appendChild(el);}" +
+                    "el.textContent=" + jsCss + ";" +
+                    "if(document.documentElement){document.documentElement.spellcheck=" + spellJs + ";}" +
+                    "}catch(e){}})();";
+                core.ExecuteScriptAsync(script);
+            }
+            catch { }
+        }
+
+        private static bool IsGoogleAccountHost(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return false;
+            try
+            {
+                string h = new Uri(url).Host.ToLowerInvariant();
+                return h == "myaccount.google.com" ||
+                       h == "google.com" ||
+                       h == "www.google.com" ||
+                       h == "mail.google.com" ||
+                       h == "drive.google.com" ||
+                       h == "gemini.google.com" ||
+                       h == "youtube.com" ||
+                       h == "www.youtube.com";
+            }
+            catch { return false; }
+        }
+
+        private async void ScheduleGoogleAccountDetection(BrowserTab tab)
+        {
+            if (_isPrivateWindow || tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed)
+                return;
+            if (!IsGoogleAccountHost(tab.Url)) return;
+            try
+            {
+                await Task.Delay(750);
+                if (IsDisposed || tab.WebView == null || tab.WebView.IsDisposed || !tab.CoreReady) return;
+                await DetectGoogleAccountInTabAsync(tab, false);
+            }
+            catch { }
+        }
+
+        private async Task<bool> DetectGoogleAccountInTabAsync(BrowserTab tab, bool showToastOnSuccess)
+        {
+            if (_isPrivateWindow || tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed)
+                return false;
+
+            // Pure read-only, 100% Trusted-Types-safe metadata reader for signed-in Google pages
+            string js =
+                "(function(){try{" +
+                "var email='',name='',avatar='';" +
+                "var emailRe=/[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}/;" +
+                "var btns=document.querySelectorAll('a[aria-label*=\"@\"],button[aria-label*=\"@\"],a.gb_A,a.gb_B,a.gb_d,a[href*=\"SignOutOptions\"]');" +
+                "for(var i=0;i<btns.length;i++){" +
+                "  var al=(btns[i].getAttribute('aria-label')||'').replace(/\\s+/g,' ').trim();" +
+                "  var m=al.match(emailRe);" +
+                "  if(m){" +
+                "    email=m[0];" +
+                "    var before=al.split('(')[0].replace(/^[^:]+:\\s*/,'').trim();" +
+                "    if(before && before.indexOf('@')<0 && before.length<=48) name=before;" +
+                "    var im=btns[i].querySelector('img[src*=\"googleusercontent.com\"]');" +
+                "    if(im && im.src) avatar=im.src;" +
+                "    break;" +
+                "  }" +
+                "}" +
+                "if(!email && location.hostname==='myaccount.google.com'){" +
+                "  var all=document.querySelectorAll('div,span,p,a');" +
+                "  for(var j=0;j<all.length&&j<400;j++){" +
+                "    if(all[j].children.length>0) continue;" +
+                "    var tx=(all[j].textContent||'').trim();" +
+                "    if(tx.length>5 && tx.length<90 && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(tx)){email=tx;break;}" +
+                "  }" +
+                "  var h1=document.querySelector('h1');" +
+                "  if(h1){var ht=(h1.textContent||'').trim();var wm=ht.match(/^Welcome,\\s*(.+)$/i);if(wm&&wm[1])name=wm[1].trim();}" +
+                "}" +
+                "if(email && !avatar){" +
+                "  var imgs=document.querySelectorAll('img[src*=\"lh3.googleusercontent.com\"]');" +
+                "  for(var k=0;k<imgs.length;k++){if((imgs[k].width||0)>=24){avatar=imgs[k].src;break;}}" +
+                "}" +
+                "if(!email) return '';" +
+                "return JSON.stringify({email:email,displayName:name,avatarUrl:avatar});" +
+                "}catch(e){return '';}})();";
+
+            try
+            {
+                string raw = await tab.WebView.CoreWebView2.ExecuteScriptAsync(js);
+                if (string.IsNullOrEmpty(raw) || raw == "null" || raw == "\"\"") return false;
+                string inner = _json.Deserialize<string>(raw);
+                if (string.IsNullOrEmpty(inner)) return false;
+                Dictionary<string, object> info = _json.Deserialize<Dictionary<string, object>>(inner);
+                if (info == null) return false;
+                string email = info.ContainsKey("email") ? (Convert.ToString(info["email"]) ?? "").Trim() : "";
+                string displayName = info.ContainsKey("displayName") ? (Convert.ToString(info["displayName"]) ?? "").Trim() : "";
+                string avatarUrl = info.ContainsKey("avatarUrl") ? (Convert.ToString(info["avatarUrl"]) ?? "").Trim() : "";
+                if (string.IsNullOrEmpty(email)) return false;
+
+                ProfileInfo active = _profiles.ActiveProfile;
+                bool changed = !active.isGoogleSignedIn ||
+                               !string.Equals(active.googleEmail ?? "", email, StringComparison.OrdinalIgnoreCase) ||
+                               (!string.IsNullOrEmpty(displayName) && !string.Equals(active.googleDisplayName ?? "", displayName, StringComparison.Ordinal)) ||
+                               (!string.IsNullOrEmpty(avatarUrl) && !string.Equals(active.googleAvatarUrl ?? "", avatarUrl, StringComparison.Ordinal));
+
+                if (changed || showToastOnSuccess)
+                {
+                    _profiles.UpdateGoogleAccount(active.id, displayName, email, avatarUrl, null);
+                    _appContext.BroadcastProfilesChanged();
+                    if (_shellReady && _shellView != null && _shellView.CoreWebView2 != null)
+                    {
+                        var evt = new Dictionary<string, object>
+                        {
+                            { "type", "googleAccountDetected" },
+                            { "profile", _profiles.ActiveProfile }
+                        };
+                        try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(evt)); } catch { }
+                    }
+                    PushSettingsToast("Google Account synced: " + (string.IsNullOrEmpty(displayName) ? email : displayName));
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private async void SyncGoogleAccountFromOpenTabsAsync()
+        {
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab t = _tabs[i];
+                if (t != null && !t.IsNewTab && t.CoreReady && IsGoogleAccountHost(t.Url))
+                {
+                    bool ok = await DetectGoogleAccountInTabAsync(t, true);
+                    if (ok) return;
+                }
+            }
+            // No open signed-in Google tab detected yet — open Google Account page so detection runs once loaded
+            _settingsOpen = false;
+            CreateTab("https://myaccount.google.com/", true);
+            PushSettingsToast("Opening Google Account to sync profile...");
+        }
+
+        private async void SignOutGoogleAccountAsync(string targetProfileId)
+        {
+            string pid = string.IsNullOrWhiteSpace(targetProfileId) ? _profiles.ActiveProfile.id : targetProfileId.Trim();
+            if (string.Equals(pid, _profiles.ActiveProfile.id, StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    CoreWebView2 core = GetAnyReadyCoreWebView2();
+                    if (core != null && core.CookieManager != null)
+                    {
+                        string[] googleOrigins = new string[]
+                        {
+                            "https://google.com",
+                            "https://accounts.google.com",
+                            "https://myaccount.google.com",
+                            "https://mail.google.com",
+                            "https://youtube.com"
+                        };
+                        for (int u = 0; u < googleOrigins.Length; u++)
+                        {
+                            try
+                            {
+                                List<CoreWebView2Cookie> cookies = await core.CookieManager.GetCookiesAsync(googleOrigins[u]);
+                                if (cookies != null)
+                                {
+                                    for (int c = 0; c < cookies.Count; c++)
+                                    {
+                                        try { core.CookieManager.DeleteCookie(cookies[c]); } catch { }
+                                    }
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            _profiles.ClearGoogleAccount(pid);
+            _appContext.BroadcastProfilesChanged();
+            PushSettingsToast("Signed out of Google Account");
+        }
+
+        private CoreWebView2 GetAnyReadyCoreWebView2()
+        {
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                if (_tabs[i] != null && _tabs[i].CoreReady && _tabs[i].WebView != null &&
+                    !_tabs[i].WebView.IsDisposed && _tabs[i].WebView.CoreWebView2 != null)
+                {
+                    return _tabs[i].WebView.CoreWebView2;
+                }
+            }
+            if (_shellView != null && !_shellView.IsDisposed && _shellView.CoreWebView2 != null)
+            {
+                return _shellView.CoreWebView2;
+            }
+            return null;
+        }
+
         private async void EnsureTabWebViewAsync(BrowserTab tab)
         {
             if (tab.WebView != null || _activeProfileEnv == null) return;
             CoreWebView2Environment envForTab = _activeProfileEnv;
 
             WebView2 wv = new WebView2();
-            bool isLightTheme = (_settings != null && _settings.appearanceMode == "light");
+            bool isLightTheme = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
             wv.DefaultBackgroundColor = isLightTheme ? Color.White : Color.FromArgb(20, 18, 24);
             wv.Visible = (tab.Id == _activeTabId && !tab.IsNewTab);
             int topH = TopBarHeightPx;
-            wv.Bounds = new Rectangle(0, topH, Math.Max(100, ClientSize.Width), Math.Max(100, ClientSize.Height - topH));
+            wv.Bounds = new Rectangle(NavRailWidthPx, topH, Math.Max(100, ClientSize.Width - NavRailWidthPx), Math.Max(100, ClientSize.Height - topH));
             tab.WebView = wv;
             Controls.Add(wv);
 
             try
             {
-                await wv.EnsureCoreWebView2Async(envForTab);
+                if (_isPrivateWindow)
+                {
+                    CoreWebView2ControllerOptions privOpts = envForTab.CreateCoreWebView2ControllerOptions();
+                    privOpts.IsInPrivateModeEnabled = true;
+                    await wv.EnsureCoreWebView2Async(envForTab, privOpts);
+                }
+                else
+                {
+                    await wv.EnsureCoreWebView2Async(envForTab);
+                }
                 if (wv.IsDisposed || tab.WebView != wv) return;
 
                 CoreWebView2 core = wv.CoreWebView2;
@@ -1362,11 +2412,9 @@ namespace DejavuBrowser
 
                 core.Settings.IsStatusBarEnabled = true;
                 core.Settings.AreDefaultContextMenusEnabled = true;
-                core.Settings.AreDevToolsEnabled = true;
                 core.Settings.IsZoomControlEnabled = true;
-                core.Settings.IsGeneralAutofillEnabled = true;
-                core.Settings.IsPasswordAutosaveEnabled = true;
                 core.Settings.IsSwipeNavigationEnabled = true;
+                ApplySettingsToTab(tab);
 
                 core.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
                 core.WebResourceRequested += (s, e) => OnTabWebResourceRequested(tab, envForTab, e);
@@ -1380,6 +2428,33 @@ namespace DejavuBrowser
 
                 core.NavigationStarting += (s, e) =>
                 {
+                    if (_settings != null && _settings.doNotTrack)
+                    {
+                        try { e.RequestHeaders.SetHeader("DNT", "1"); } catch { }
+                    }
+
+                    if (_settings != null && _settings.httpsFirst &&
+                        !string.IsNullOrEmpty(e.Uri) &&
+                        e.Uri.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                        !IsLocalOrLanHost(e.Uri))
+                    {
+                        string httpHost = AdBlocker.ExtractHost(e.Uri);
+                        if (!string.IsNullOrEmpty(httpHost) && !_httpsFallbackHosts.Contains(httpHost))
+                        {
+                            string upgraded = "https://" + e.Uri.Substring(7);
+                            tab.UpgradedFromHttpUrl = e.Uri;
+                            e.Cancel = true;
+                            BeginInvoke((Action)(() =>
+                            {
+                                if (!IsDisposed && tab.CoreReady && tab.WebView != null && !tab.WebView.IsDisposed && tab.WebView.CoreWebView2 != null)
+                                {
+                                    tab.WebView.CoreWebView2.Navigate(upgraded);
+                                }
+                            }));
+                            return;
+                        }
+                    }
+
                     tab.IsLoading = true;
                     tab.Url = e.Uri;
                     tab.BlockedCount = 0;
@@ -1405,18 +2480,38 @@ namespace DejavuBrowser
                 core.DOMContentLoaded += (s, e) =>
                 {
                     InjectSiteCosmetics(core, core.Source);
+                    InjectUserStylePrefs(core);
                 };
 
                 core.NavigationCompleted += (s, e) =>
                 {
+                    if (!e.IsSuccess && !string.IsNullOrEmpty(tab.UpgradedFromHttpUrl))
+                    {
+                        string fallbackUrl = tab.UpgradedFromHttpUrl;
+                        tab.UpgradedFromHttpUrl = null;
+                        string fbHost = AdBlocker.ExtractHost(fallbackUrl);
+                        if (!string.IsNullOrEmpty(fbHost)) _httpsFallbackHosts.Add(fbHost);
+                        try { core.Navigate(fallbackUrl); } catch { }
+                        return;
+                    }
+                    if (e.IsSuccess)
+                    {
+                        tab.UpgradedFromHttpUrl = null;
+                    }
+
                     tab.IsLoading = false;
                     tab.ReaderActive = false;
                     tab.Url = core.Source;
                     if (!string.IsNullOrEmpty(core.DocumentTitle)) tab.Title = core.DocumentTitle;
                     InjectSiteCosmetics(core, core.Source);
-                    if (e.IsSuccess)
+                    InjectUserStylePrefs(core);
+                    if (e.IsSuccess && !_isPrivateWindow)
                     {
                         _profiles.RecordHistory(tab.Url, tab.Title, tab.Favicon);
+                        if (IsGoogleAccountHost(tab.Url))
+                        {
+                            ScheduleGoogleAccountDetection(tab);
+                        }
                     }
                     SchedulePushFullStateToShell();
                     PushSniffedMediaToTabWidget(tab);
@@ -1425,10 +2520,10 @@ namespace DejavuBrowser
                 core.DocumentTitleChanged += (s, e) =>
                 {
                     tab.Title = core.DocumentTitle;
-                    _profiles.UpdateLatestHistoryMeta(tab.Url, tab.Title, tab.Favicon);
+                    if (!_isPrivateWindow) _profiles.UpdateLatestHistoryMeta(tab.Url, tab.Title, tab.Favicon);
                     if (tab.Id == _activeTabId)
                     {
-                        Text = (string.IsNullOrEmpty(tab.Title) ? FormatDisplayUrl(tab.Url) : tab.Title) + " — dejavu";
+                        UpdateWindowTitle();
                     }
                     SchedulePushFullStateToShell();
                 };
@@ -1436,7 +2531,7 @@ namespace DejavuBrowser
                 core.FaviconChanged += (s, e) =>
                 {
                     tab.Favicon = core.FaviconUri ?? "";
-                    _profiles.UpdateLatestHistoryMeta(tab.Url, tab.Title, tab.Favicon);
+                    if (!_isPrivateWindow) _profiles.UpdateLatestHistoryMeta(tab.Url, tab.Title, tab.Favicon);
                     SchedulePushFullStateToShell();
                 };
 
@@ -1451,7 +2546,21 @@ namespace DejavuBrowser
                     if (e.PermissionKind == CoreWebView2PermissionKind.MultipleAutomaticDownloads)
                     {
                         e.State = CoreWebView2PermissionState.Allow;
+                        return;
                     }
+                    if (_settings == null) return;
+                    if (e.PermissionKind == CoreWebView2PermissionKind.Camera)
+                        e.State = MapPermissionState(_settings.permCamera);
+                    else if (e.PermissionKind == CoreWebView2PermissionKind.Microphone)
+                        e.State = MapPermissionState(_settings.permMicrophone);
+                    else if (e.PermissionKind == CoreWebView2PermissionKind.Geolocation)
+                        e.State = MapPermissionState(_settings.permLocation);
+                    else if (e.PermissionKind == CoreWebView2PermissionKind.Notifications)
+                        e.State = MapPermissionState(_settings.permNotifications);
+                    else if (e.PermissionKind == CoreWebView2PermissionKind.ClipboardRead)
+                        e.State = MapPermissionState(_settings.permClipboard);
+                    else if (e.PermissionKind == CoreWebView2PermissionKind.Autoplay)
+                        e.State = MapPermissionState(_settings.permAutoplay);
                 };
 
                 if (!string.IsNullOrEmpty(tab.PendingNavigateUrl))
@@ -1483,6 +2592,10 @@ namespace DejavuBrowser
         {
             try
             {
+                if (_settings != null && _settings.doNotTrack)
+                {
+                    try { e.Request.Headers.SetHeader("DNT", "1"); } catch { }
+                }
                 bool isMainDoc = (e.ResourceContext == CoreWebView2WebResourceContext.Document);
                 if (_adBlocker.ShouldBlockRequest(e.Request.Uri, tab.Url, isMainDoc))
                 {
@@ -1507,6 +2620,11 @@ namespace DejavuBrowser
                 return;
             }
             if (_adBlocker.IsSpamPopup(url))
+            {
+                e.Handled = true;
+                return;
+            }
+            if (_settings != null && _settings.blockPopups && !e.IsUserInitiated && !IsAuthPopupUrl(url))
             {
                 e.Handled = true;
                 return;
@@ -1568,15 +2686,6 @@ namespace DejavuBrowser
             }
             catch { }
             return false;
-        }
-
-        private IWebProxy GetTurboDownloadProxy()
-        {
-            if (_proxyBridge != null && _proxyBridge.VpnEnabled && _proxyBridge.ListenPort > 0)
-            {
-                return new WebProxy("http://127.0.0.1:" + _proxyBridge.ListenPort, true);
-            }
-            return null;
         }
 
         private void OnTabWebResourceResponseReceived(BrowserTab tab, CoreWebView2WebResourceResponseReceivedEventArgs e)
@@ -1758,13 +2867,20 @@ namespace DejavuBrowser
                 try { ua = ctx.WebView.CoreWebView2.Settings.UserAgent ?? ""; } catch { }
             }
 
-            TurboDownloadEntry entry = _turboDownloads.EnqueueVideoExtractDownload(url, quality, title, referer, ua);
+            string effQuality = string.IsNullOrWhiteSpace(quality)
+                ? (_settings != null ? _settings.defaultVideoQuality : "best")
+                : quality;
+            TurboDownloadEntry entry = _turboDownloads.EnqueueVideoExtractDownload(url, effQuality, title, referer, ua);
             if (entry != null)
             {
                 _lastDownloadPath = entry.SavePath;
                 _activeToastTurboId = entry.Id;
                 _lastToastUpdateUtc = DateTime.UtcNow;
-                if (!_dlManagerOpen)
+                if (_settings != null && _settings.autoOpenDownloads && !_dlManagerOpen)
+                {
+                    SetDlManagerOpen(true, "all");
+                }
+                else if (!_dlManagerOpen)
                 {
                     string toastLabel = !string.IsNullOrEmpty(entry.StatusText) ? entry.StatusText : entry.FileName;
                     ShowDownloadToast(toastLabel, entry.SavePath, 0, entry.TotalBytes, "progressing");
@@ -1882,41 +2998,33 @@ namespace DejavuBrowser
             catch { }
         }
 
-        private void OnTurboDownloadsChanged()
+        public void HandleAppTurboDownloadsChanged()
         {
-            if (IsDisposed || !IsHandleCreated) return;
-            try
+            if (IsDisposed) return;
+            PushTurboDownloadsDelta();
+            if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "downloads")
             {
-                BeginInvoke((Action)(() =>
-                {
-                    if (IsDisposed) return;
-                    PushTurboDownloadsDelta();
-                    if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "downloads")
-                    {
-                        _popoverPopup.UpdateState(BuildDownloadsPayloadJson(null));
-                    }
-                    if (!string.IsNullOrEmpty(_activeToastTurboId) && _turboDownloads != null)
-                    {
-                        TurboDownloadEntry te = _turboDownloads.FindEntry(_activeToastTurboId);
-                        if (te != null)
-                        {
-                            _lastDownloadPath = te.SavePath;
-                            bool terminal = (te.Status == "completed" || te.Status == "failed" || te.Status == "cancelled");
-                            if (!_dlManagerOpen && (terminal || (DateTime.UtcNow - _lastToastUpdateUtc).TotalMilliseconds >= 320))
-                            {
-                                _lastToastUpdateUtc = DateTime.UtcNow;
-                                string toastState = te.Status == "completed"
-                                    ? "completed"
-                                    : (te.Status == "failed" || te.Status == "cancelled" ? "interrupted" : "progressing");
-                                string toastName = (!terminal && !string.IsNullOrEmpty(te.StatusText)) ? te.StatusText : te.FileName;
-                                ShowDownloadToast(toastName, te.SavePath, te.ReceivedBytes, te.TotalBytes, toastState);
-                            }
-                            if (terminal) _activeToastTurboId = "";
-                        }
-                    }
-                }));
+                _popoverPopup.UpdateState(BuildDownloadsPayloadJson(null));
             }
-            catch { }
+            if (!string.IsNullOrEmpty(_activeToastTurboId) && _turboDownloads != null)
+            {
+                TurboDownloadEntry te = _turboDownloads.FindEntry(_activeToastTurboId);
+                if (te != null)
+                {
+                    _lastDownloadPath = te.SavePath;
+                    bool terminal = (te.Status == "completed" || te.Status == "failed" || te.Status == "cancelled");
+                    if (!_dlManagerOpen && (terminal || (DateTime.UtcNow - _lastToastUpdateUtc).TotalMilliseconds >= 320))
+                    {
+                        _lastToastUpdateUtc = DateTime.UtcNow;
+                        string toastState = te.Status == "completed"
+                            ? "completed"
+                            : (te.Status == "failed" || te.Status == "cancelled" ? "interrupted" : "progressing");
+                        string toastName = (!terminal && !string.IsNullOrEmpty(te.StatusText)) ? te.StatusText : te.FileName;
+                        ShowDownloadToast(toastName, te.SavePath, te.ReceivedBytes, te.TotalBytes, toastState);
+                    }
+                    if (terminal) _activeToastTurboId = "";
+                }
+            }
         }
 
         private void PushTurboDownloadsDelta()
@@ -2078,13 +3186,21 @@ namespace DejavuBrowser
                     catch { }
                 }
             }
-            TurboDownloadEntry entry = _turboDownloads.EnqueueDownload(url, suggestedName, referer, ua, cookieHeader, 8, qualityPreset);
+            int threads = (_settings != null && _settings.turboThreads > 0) ? _settings.turboThreads : 8;
+            string effQuality = string.IsNullOrWhiteSpace(qualityPreset)
+                ? (_settings != null ? _settings.defaultVideoQuality : "best")
+                : qualityPreset;
+            TurboDownloadEntry entry = _turboDownloads.EnqueueDownload(url, suggestedName, referer, ua, cookieHeader, threads, effQuality);
             if (entry != null)
             {
                 _lastDownloadPath = entry.SavePath;
                 _activeToastTurboId = entry.Id;
                 _lastToastUpdateUtc = DateTime.UtcNow;
-                if (!_dlManagerOpen)
+                if (_settings != null && _settings.autoOpenDownloads && !_dlManagerOpen)
+                {
+                    SetDlManagerOpen(true, "all");
+                }
+                else if (!_dlManagerOpen)
                 {
                     string toastLabel = !string.IsNullOrEmpty(entry.StatusText) ? entry.StatusText : entry.FileName;
                     ShowDownloadToast(toastLabel, entry.SavePath, 0, entry.TotalBytes, "progressing");
@@ -2100,7 +3216,33 @@ namespace DejavuBrowser
                 string origName = Path.GetFileName(e.ResultFilePath);
                 if (string.IsNullOrEmpty(origName)) origName = "download";
 
-                // Route all HTTP/HTTPS downloads through our 8-thread AntDM-style Turbo Download Manager!
+                if (_settings != null && _settings.askDownloadLocation)
+                {
+                    string initDir = (_turboDownloads != null && !string.IsNullOrEmpty(_turboDownloads.DownloadsDirectory))
+                        ? _turboDownloads.DownloadsDirectory
+                        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+                    using (SaveFileDialog sfd = new SaveFileDialog())
+                    {
+                        sfd.Title = "Save Download As";
+                        sfd.InitialDirectory = Directory.Exists(initDir) ? initDir : "";
+                        sfd.FileName = origName;
+                        if (sfd.ShowDialog(this) != DialogResult.OK || string.IsNullOrEmpty(sfd.FileName))
+                        {
+                            e.Cancel = true;
+                            e.Handled = true;
+                            return;
+                        }
+                        string chosenDir = Path.GetDirectoryName(sfd.FileName);
+                        if (_turboDownloads != null && !string.IsNullOrEmpty(chosenDir))
+                        {
+                            _turboDownloads.SetDownloadsDirectory(chosenDir);
+                        }
+                        origName = Path.GetFileName(sfd.FileName);
+                        e.ResultFilePath = sfd.FileName;
+                    }
+                }
+
+                // Route all HTTP/HTTPS downloads through our multi-thread AntDM-style Turbo Download Manager!
                 // (blob: and data: downloads stay on native WebView2 so browser-generated files never break.)
                 if (_turboDownloads != null &&
                     (dlUri.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
@@ -2233,8 +3375,9 @@ namespace DejavuBrowser
             HideSuggestPopup();
             _activePopoverMode = "profiles";
             float sc = DpiScale;
-            int popW = (int)Math.Round(396 * sc);
-            int popH = (int)Math.Round(526 * sc);
+            int popW = (int)Math.Round(410 * sc);
+            int maxPopH = Math.Max((int)Math.Round(360 * sc), ClientSize.Height - (int)Math.Round(66 * sc));
+            int popH = Math.Min(maxPopH, (int)Math.Round(596 * sc));
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
@@ -2246,6 +3389,7 @@ namespace DejavuBrowser
 
         private string BuildProfilesPayloadJson(string backdrop)
         {
+            List<string> openProfileIds = _profiles.GetOpenProfileIds();
             BrowserTab tab = GetActiveTab();
             UpdateInfo upd = _updater.ReadyUpdate;
             var payload = new Dictionary<string, object>
@@ -2254,9 +3398,15 @@ namespace DejavuBrowser
                 { "isLight", GetEffectiveIsLight(tab, tab == null || tab.IsNewTab) },
                 { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "activeProfileId", _profiles.ActiveProfile.id },
+                { "activeProfile", _profiles.ActiveProfile },
+                { "mainProfileId", _profiles.Manifest.mainProfileId ?? "default" },
+                { "onboardingCompleted", _profiles.Manifest.onboardingCompleted },
+                { "isPrivateWindow", _isPrivateWindow },
+                { "windowCount", _appContext.WindowCount },
+                { "openProfileIds", openProfileIds },
                 { "profiles", _profiles.Manifest.profiles },
                 { "appVersion", AutoUpdater.CurrentVersion },
-                { "updateStatus", _updateStatusText },
+                { "updateStatus", _appContext.UpdateStatusText ?? "" },
                 { "updateReadyVersion", (upd != null && upd.IsReady) ? upd.Version : "" }
             };
             if (backdrop != null) payload["backdrop"] = backdrop;
@@ -2395,87 +3545,55 @@ namespace DejavuBrowser
             PublishOpenTabsToSync();
         }
 
-        private void OnSyncStateChanged()
+        public void HandleAppSyncStateChanged()
         {
-            if (IsDisposed || !IsHandleCreated) return;
-            try
-            {
-                BeginInvoke((Action)(() =>
-                {
-                    if (IsDisposed) return;
-                    PushFullStateToShell();
-                    SendSyncPanelState(null);
-                }));
-            }
-            catch { }
+            if (IsDisposed) return;
+            PushFullStateToShell();
+            SendSyncPanelState(null);
         }
 
-        private void OnSyncIncomingDrop(SyncDropItem item)
+        public void HandleAppSyncIncomingDrop(SyncDropItem item)
         {
-            if (IsDisposed || !IsHandleCreated || item == null) return;
-            try
-            {
-                BeginInvoke((Action)(() =>
-                {
-                    if (IsDisposed) return;
-                    ShowIncomingSyncHud(item);
-                }));
-            }
-            catch { }
+            if (IsDisposed || item == null) return;
+            ShowIncomingSyncHud(item);
         }
 
-        private void OnSyncRemoteBookmarks(List<RemoteTabItem> incoming)
+        public void HandleAppSyncRemoteBookmarks(List<RemoteTabItem> incoming)
         {
-            if (IsDisposed || !IsHandleCreated || incoming == null || incoming.Count == 0) return;
-            try
+            if (IsDisposed || incoming == null || incoming.Count == 0) return;
+            bool hadBar = HasFavoritesBar;
+            bool added = false;
+            for (int i = 0; i < incoming.Count; i++)
             {
-                BeginInvoke((Action)(() =>
-                {
-                    if (IsDisposed) return;
-                    bool hadBar = HasFavoritesBar;
-                    bool added = false;
-                    for (int i = 0; i < incoming.Count; i++)
-                    {
-                        string u = incoming[i].url;
-                        if (string.IsNullOrWhiteSpace(u) || _profiles.IsFavorite(u)) continue;
-                        _profiles.ToggleFavorite(u, incoming[i].title, "");
-                        added = true;
-                    }
-                    if (added)
-                    {
-                        if (hadBar != HasFavoritesBar) LayoutViews();
-                        PushFullStateToShell();
-                        RefreshSidebarIfOpen();
-                    }
-                }));
+                string u = incoming[i].url;
+                if (string.IsNullOrWhiteSpace(u) || _profiles.IsFavorite(u)) continue;
+                _profiles.ToggleFavorite(u, incoming[i].title, "");
+                added = true;
             }
-            catch { }
+            if (added)
+            {
+                if (hadBar != HasFavoritesBar) LayoutViews();
+                _appContext.BroadcastStateToAllWindows();
+                RefreshSidebarIfOpen();
+            }
         }
 
-        private void OnSyncRemoteReading(List<RemoteTabItem> incoming)
+        public void HandleAppSyncRemoteReading(List<RemoteTabItem> incoming)
         {
-            if (IsDisposed || !IsHandleCreated || incoming == null || incoming.Count == 0) return;
-            try
+            if (IsDisposed || incoming == null || incoming.Count == 0) return;
+            bool added = false;
+            for (int i = 0; i < incoming.Count; i++)
             {
-                BeginInvoke((Action)(() =>
-                {
-                    if (IsDisposed) return;
-                    bool added = false;
-                    for (int i = 0; i < incoming.Count; i++)
-                    {
-                        string u = incoming[i].url;
-                        if (string.IsNullOrWhiteSpace(u) || _profiles.IsInReadingList(u)) continue;
-                        _profiles.ToggleReadingList(u, incoming[i].title, "");
-                        added = true;
-                    }
-                    if (added)
-                    {
-                        PushFullStateToShell();
-                        RefreshSidebarIfOpen();
-                    }
-                }));
+                string u = incoming[i].url;
+                if (string.IsNullOrWhiteSpace(u) || _profiles.IsInReadingList(u)) continue;
+                _profiles.ToggleReadingList(u, incoming[i].title, "");
+                added = true;
             }
-            catch { }
+            if (added)
+            {
+                _appContext.BroadcastStateToAllWindows();
+                RefreshSidebarIfOpen();
+            }
         }
 
         private void ShowIncomingSyncHud(SyncDropItem item)
@@ -2564,6 +3682,12 @@ namespace DejavuBrowser
 
         private async void HandleSuggestQueryAsync(string source, string query, int leftCss, int topCss, int widthCss)
         {
+            if (_settings != null && !_settings.addressBarSuggestions)
+            {
+                HideSuggestPopup();
+                if (source != "omnibox") PushNewTabSuggestionsToShell(++_suggestSeq, new List<SuggestItem>());
+                return;
+            }
             if (_suggestCts != null)
             {
                 try { _suggestCts.Cancel(); } catch { }
@@ -2866,6 +3990,7 @@ namespace DejavuBrowser
             bool alt = (keyData & Keys.Alt) == Keys.Alt;
 
             if (key == Keys.F11) { SetHtmlFullscreen(!_isHtmlFullscreen); return true; }
+            if (key == Keys.F12) { OpenDevToolsActiveTab(); return true; }
             if (key == Keys.F5) { ReloadActiveTab(); return true; }
             if (!ctrl && !alt && !shift && key == Keys.F6) { FocusShellOmnibox(); return true; }
             if (alt && !ctrl && key == Keys.D) { FocusShellOmnibox(); return true; }
@@ -2875,6 +4000,8 @@ namespace DejavuBrowser
 
             if (ctrl && !alt)
             {
+                if (shift && key == Keys.I) { OpenDevToolsActiveTab(); return true; }
+                if (shift && key == Keys.N) { _appContext.OpenWindow(null, true, this, false, false); return true; }
                 if (shift && key == Keys.T) { ReopenLastClosedTab(); return true; }
                 if (shift && key == Keys.B) { ToggleFavoritesBarVisibility(); return true; }
                 if (shift && key == Keys.L) { ShowSidebarPopover(); return true; }
@@ -2884,7 +4011,7 @@ namespace DejavuBrowser
                 if (!shift && key == Keys.Oemcomma) { SetSettingsOpen(!_settingsOpen, _settingsPane); return true; }
                 if (key == Keys.T) { CreateDefaultNewTab(true); return true; }
                 if (key == Keys.W || (!shift && key == Keys.F4)) { CloseTab(_activeTabId); return true; }
-                if (!shift && key == Keys.N) { OpenProfileInNewWindow(_profiles.ActiveProfile.id); return true; }
+                if (!shift && key == Keys.N) { _appContext.OpenWindow(null, false, this, false, false); return true; }
                 if (!shift && key == Keys.J) { SetDlManagerOpen(!_dlManagerOpen, "all"); return true; }
                 if (key == Keys.L) { FocusShellOmnibox(); return true; }
                 if (key == Keys.R) { ReloadActiveTab(); return true; }
@@ -2976,11 +4103,13 @@ namespace DejavuBrowser
         {
             bool needLayout = false;
             bool needZoomApply = false;
+            bool needTabSettingsApply = false;
+            bool needTurboSync = false;
 
             if (msg.ContainsKey("searchEngine"))
             {
                 string eng = Convert.ToString(msg["searchEngine"]);
-                if (eng == "google" || eng == "duckduckgo" || eng == "brave" || eng == "bing" || eng == "perplexity")
+                if (eng == "google" || eng == "duckduckgo" || eng == "brave" || eng == "bing" || eng == "perplexity" || eng == "ecosia" || eng == "custom")
                 {
                     _settings.searchEngine = eng;
                 }
@@ -2991,13 +4120,14 @@ namespace DejavuBrowser
                 if (am == "auto" || am == "dark" || am == "light")
                 {
                     _settings.appearanceMode = am;
-                    bool isLightForced = (am == "light");
+                    bool isLightForced = (am == "light" && !_isPrivateWindow);
                     NativeWin32.SetImmersiveDarkMode(Handle, !isLightForced);
                     BackColor = isLightForced ? Color.FromArgb(247, 242, 250) : Color.FromArgb(20, 18, 24);
                     if (_shellView != null && !_shellView.IsDisposed)
                     {
                         _shellView.DefaultBackgroundColor = BackColor;
                     }
+                    needTabSettingsApply = true;
                 }
             }
             if (msg.ContainsKey("accentColor"))
@@ -3006,6 +4136,7 @@ namespace DejavuBrowser
                 if (ac == "amethyst" || ac == "sapphire" || ac == "aurora" || ac == "rose" || ac == "gold" || ac == "silver")
                 {
                     _settings.accentColor = ac;
+                    _profiles.UpdateProfile(_profiles.ActiveProfile.id, null, null, ProfileManager.ColorForAccent(ac), ac, null);
                 }
             }
             if (msg.ContainsKey("showFullWebsiteAddress"))
@@ -3124,7 +4255,136 @@ namespace DejavuBrowser
                 }
             }
 
+            // v4.5.0 Appearance
+            if (msg.ContainsKey("fontSize"))
+            {
+                _settings.fontSize = SettingsStore.NormalizeFontSize(Convert.ToString(msg["fontSize"]));
+                needTabSettingsApply = true;
+            }
+            if (msg.ContainsKey("fontFamily"))
+            {
+                _settings.fontFamily = SettingsStore.NormalizeFontFamily(Convert.ToString(msg["fontFamily"]));
+                needTabSettingsApply = true;
+            }
+            if (msg.ContainsKey("showHomeButton"))
+                _settings.showHomeButton = Convert.ToBoolean(msg["showHomeButton"]);
+            if (msg.ContainsKey("smoothScrolling"))
+            {
+                _settings.smoothScrolling = Convert.ToBoolean(msg["smoothScrolling"]);
+                needTabSettingsApply = true;
+            }
+
+            // v4.5.0 Privacy & Security
+            if (msg.ContainsKey("doNotTrack"))
+                _settings.doNotTrack = Convert.ToBoolean(msg["doNotTrack"]);
+            if (msg.ContainsKey("httpsFirst"))
+            {
+                _settings.httpsFirst = Convert.ToBoolean(msg["httpsFirst"]);
+                if (_settings.httpsFirst) _httpsFallbackHosts.Clear();
+            }
+            if (msg.ContainsKey("blockThirdPartyCookies"))
+            {
+                _settings.blockThirdPartyCookies = Convert.ToBoolean(msg["blockThirdPartyCookies"]);
+                needTabSettingsApply = true;
+            }
+            if (msg.ContainsKey("blockPopups"))
+                _settings.blockPopups = Convert.ToBoolean(msg["blockPopups"]);
+            if (msg.ContainsKey("clearCookiesOnExit"))
+                _settings.clearCookiesOnExit = Convert.ToBoolean(msg["clearCookiesOnExit"]);
+            if (msg.ContainsKey("safeBrowsing"))
+            {
+                _settings.safeBrowsing = Convert.ToBoolean(msg["safeBrowsing"]);
+                needTabSettingsApply = true;
+            }
+            if (msg.ContainsKey("permCamera"))
+                _settings.permCamera = SettingsStore.NormalizePermission(Convert.ToString(msg["permCamera"]), "ask");
+            if (msg.ContainsKey("permMicrophone"))
+                _settings.permMicrophone = SettingsStore.NormalizePermission(Convert.ToString(msg["permMicrophone"]), "ask");
+            if (msg.ContainsKey("permLocation"))
+                _settings.permLocation = SettingsStore.NormalizePermission(Convert.ToString(msg["permLocation"]), "ask");
+            if (msg.ContainsKey("permNotifications"))
+                _settings.permNotifications = SettingsStore.NormalizePermission(Convert.ToString(msg["permNotifications"]), "ask");
+            if (msg.ContainsKey("permClipboard"))
+                _settings.permClipboard = SettingsStore.NormalizePermission(Convert.ToString(msg["permClipboard"]), "ask");
+            if (msg.ContainsKey("permAutoplay"))
+                _settings.permAutoplay = SettingsStore.NormalizePermission(Convert.ToString(msg["permAutoplay"]), "allow");
+
+            // v4.5.0 Search
+            if (msg.ContainsKey("customSearchUrl"))
+                _settings.customSearchUrl = (Convert.ToString(msg["customSearchUrl"]) ?? "").Trim();
+            if (msg.ContainsKey("addressBarSuggestions"))
+            {
+                _settings.addressBarSuggestions = Convert.ToBoolean(msg["addressBarSuggestions"]);
+                if (!_settings.addressBarSuggestions) HideSuggestPopup();
+            }
+
+            // v4.5.0 Tabs & Performance
+            if (msg.ContainsKey("memorySaverEnabled"))
+                _settings.memorySaverEnabled = Convert.ToBoolean(msg["memorySaverEnabled"]);
+            if (msg.ContainsKey("memorySaverMinutes"))
+            {
+                int mins = Convert.ToInt32(msg["memorySaverMinutes"]);
+                if (mins >= 5 && mins <= 240) _settings.memorySaverMinutes = mins;
+            }
+            if (msg.ContainsKey("confirmCloseMultipleTabs"))
+                _settings.confirmCloseMultipleTabs = Convert.ToBoolean(msg["confirmCloseMultipleTabs"]);
+            if (msg.ContainsKey("tabHoverPreview"))
+                _settings.tabHoverPreview = Convert.ToBoolean(msg["tabHoverPreview"]);
+
+            // v4.5.0 Downloads
+            if (msg.ContainsKey("downloadFolder"))
+            {
+                _settings.downloadFolder = (Convert.ToString(msg["downloadFolder"]) ?? "").Trim();
+                needTurboSync = true;
+                needTabSettingsApply = true;
+            }
+            if (msg.ContainsKey("askDownloadLocation"))
+                _settings.askDownloadLocation = Convert.ToBoolean(msg["askDownloadLocation"]);
+            if (msg.ContainsKey("turboThreads"))
+            {
+                _settings.turboThreads = SettingsStore.NormalizeTurboThreads(Convert.ToInt32(msg["turboThreads"]));
+                needTurboSync = true;
+            }
+            if (msg.ContainsKey("defaultVideoQuality"))
+            {
+                _settings.defaultVideoQuality = SettingsStore.NormalizeVideoQuality(Convert.ToString(msg["defaultVideoQuality"]));
+                needTurboSync = true;
+            }
+            if (msg.ContainsKey("autoOpenDownloads"))
+                _settings.autoOpenDownloads = Convert.ToBoolean(msg["autoOpenDownloads"]);
+
+            // v4.5.0 Passwords & Autofill
+            if (msg.ContainsKey("savePasswords"))
+            {
+                _settings.savePasswords = Convert.ToBoolean(msg["savePasswords"]);
+                needTabSettingsApply = true;
+            }
+            if (msg.ContainsKey("autofillAddresses"))
+            {
+                _settings.autofillAddresses = Convert.ToBoolean(msg["autofillAddresses"]);
+                needTabSettingsApply = true;
+            }
+            if (msg.ContainsKey("autofillPayments"))
+                _settings.autofillPayments = Convert.ToBoolean(msg["autofillPayments"]);
+
+            // v4.5.0 VPN & System
+            if (msg.ContainsKey("vpnWebRtcProtection"))
+                _settings.vpnWebRtcProtection = Convert.ToBoolean(msg["vpnWebRtcProtection"]);
+            if (msg.ContainsKey("hardwareAcceleration"))
+                _settings.hardwareAcceleration = Convert.ToBoolean(msg["hardwareAcceleration"]);
+            if (msg.ContainsKey("spellcheckEnabled"))
+            {
+                _settings.spellcheckEnabled = Convert.ToBoolean(msg["spellcheckEnabled"]);
+                needTabSettingsApply = true;
+            }
+            if (msg.ContainsKey("devToolsEnabled"))
+            {
+                _settings.devToolsEnabled = Convert.ToBoolean(msg["devToolsEnabled"]);
+                needTabSettingsApply = true;
+            }
+
             _profiles.SaveActiveSettings(_settings);
+            if (needTurboSync) _appContext.SyncTurboSettings();
 
             if (needZoomApply)
             {
@@ -3140,69 +4400,176 @@ namespace DejavuBrowser
                 }
             }
 
+            if (needTabSettingsApply)
+            {
+                for (int i = 0; i < _tabs.Count; i++)
+                {
+                    ApplySettingsToTab(_tabs[i]);
+                }
+            }
+
             if (needLayout) LayoutViews();
-            PushFullStateToShell();
+            _appContext.BroadcastSettingsApplied();
         }
 
-        private async void ClearWebViewBrowsingDataAsync()
+        private async void ClearBrowsingDataAsync(bool history, bool cookies, bool cache, bool downloads, string range)
+        {
+            string normRange = string.IsNullOrEmpty(range) ? "all" : range.Trim().ToLowerInvariant();
+            DateTime nowUtc = DateTime.UtcNow;
+            DateTime startUtc = DateTime.MinValue;
+            long cutoffUnixMs = 0;
+            if (normRange == "1h")
+            {
+                startUtc = nowUtc.AddHours(-1);
+                cutoffUnixMs = (long)(startUtc - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+            }
+            else if (normRange == "24h")
+            {
+                startUtc = nowUtc.AddHours(-24);
+                cutoffUnixMs = (long)(startUtc - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+            }
+            else if (normRange == "7d")
+            {
+                startUtc = nowUtc.AddDays(-7);
+                cutoffUnixMs = (long)(startUtc - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+            }
+
+            try
+            {
+                CoreWebView2BrowsingDataKinds kinds = (CoreWebView2BrowsingDataKinds)0;
+                if (cookies) kinds |= CoreWebView2BrowsingDataKinds.Cookies | CoreWebView2BrowsingDataKinds.AllDomStorage;
+                if (cache) kinds |= CoreWebView2BrowsingDataKinds.DiskCache | CoreWebView2BrowsingDataKinds.CacheStorage;
+                if (history) kinds |= CoreWebView2BrowsingDataKinds.BrowsingHistory;
+                if (downloads) kinds |= CoreWebView2BrowsingDataKinds.DownloadHistory;
+
+                CoreWebView2 core = GetAnyReadyCoreWebView2();
+                if (core != null && core.Profile != null && kinds != (CoreWebView2BrowsingDataKinds)0)
+                {
+                    if (normRange == "all")
+                    {
+                        await core.Profile.ClearBrowsingDataAsync(kinds);
+                    }
+                    else
+                    {
+                        await core.Profile.ClearBrowsingDataAsync(kinds, startUtc, nowUtc);
+                    }
+                }
+            }
+            catch { }
+
+            if (history)
+            {
+                _profiles.ClearHistorySince(cutoffUnixMs);
+            }
+            if (downloads)
+            {
+                _downloads.RemoveAll(d => d.state != "progressing");
+                if (_turboDownloads != null) _turboDownloads.ClearCompleted();
+            }
+
+            _appContext.BroadcastStateToAllWindows();
+            if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "history")
+            {
+                _popoverPopup.UpdateState(BuildHistoryPayloadJson(null));
+            }
+            PushSettingsToast("Selected browsing data cleared");
+        }
+
+        private void ClearWebViewBrowsingDataAsync()
+        {
+            ClearBrowsingDataAsync(false, true, true, false, "all");
+        }
+
+        private void PickDownloadFolder()
         {
             try
             {
-                CoreWebView2 core = null;
-                for (int i = 0; i < _tabs.Count; i++)
+                using (FolderBrowserDialog fbd = new FolderBrowserDialog())
                 {
-                    if (_tabs[i].CoreReady && _tabs[i].WebView != null && _tabs[i].WebView.CoreWebView2 != null)
+                    fbd.Description = "Choose default downloads folder for dejavu";
+                    fbd.ShowNewFolderButton = true;
+                    string cur = (_turboDownloads != null && Directory.Exists(_turboDownloads.DownloadsDirectory))
+                        ? _turboDownloads.DownloadsDirectory
+                        : "";
+                    if (!string.IsNullOrEmpty(cur)) fbd.SelectedPath = cur;
+                    if (fbd.ShowDialog(this) == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
                     {
-                        core = _tabs[i].WebView.CoreWebView2;
-                        break;
+                        _settings.downloadFolder = fbd.SelectedPath.Trim();
+                        _profiles.SaveActiveSettings(_settings);
+                        _appContext.BroadcastSettingsApplied();
+                        PushSettingsToast("Downloads folder updated");
                     }
                 }
-                if (core == null && _shellView != null && _shellView.CoreWebView2 != null)
-                {
-                    core = _shellView.CoreWebView2;
-                }
-                if (core != null && core.Profile != null)
-                {
-                    await core.Profile.ClearBrowsingDataAsync(
-                        CoreWebView2BrowsingDataKinds.Cookies |
-                        CoreWebView2BrowsingDataKinds.DiskCache |
-                        CoreWebView2BrowsingDataKinds.CacheStorage);
-                }
-                PushSettingsToast("Cookies & site cache cleared");
             }
-            catch
+            catch { }
+        }
+
+        private void OpenDefaultBrowserSettings()
+        {
+            try
             {
-                PushSettingsToast("Cleared cached site data");
+                Process.Start(new ProcessStartInfo("ms-settings:defaultapps") { UseShellExecute = true });
+            }
+            catch { }
+        }
+
+        private void OpenUserDataFolder()
+        {
+            try
+            {
+                string dir = _profiles.GetProfileDataDir(_profiles.ActiveProfile.id);
+                if (Directory.Exists(dir))
+                {
+                    Process.Start("explorer.exe", "\"" + dir + "\"");
+                }
+            }
+            catch { }
+        }
+
+        private void OpenDevToolsActiveTab()
+        {
+            if (_settings != null && !_settings.devToolsEnabled)
+            {
+                PushSettingsToast("Developer Tools are disabled in Settings");
+                return;
+            }
+            BrowserTab tab = GetActiveTab();
+            if (tab != null && !tab.IsNewTab && tab.CoreReady && tab.WebView != null && !tab.WebView.IsDisposed && tab.WebView.CoreWebView2 != null)
+            {
+                try { tab.WebView.CoreWebView2.OpenDevToolsWindow(); } catch { }
+            }
+            else if (_shellReady && _shellView != null && !_shellView.IsDisposed && _shellView.CoreWebView2 != null)
+            {
+                try
+                {
+                    _shellView.CoreWebView2.Settings.AreDevToolsEnabled = true;
+                    _shellView.CoreWebView2.OpenDevToolsWindow();
+                }
+                catch { }
             }
         }
 
         private void ResetBrowserOptions()
         {
-            _settings.searchEngine = "google";
-            _settings.appearanceMode = "auto";
+            DejavuSettings fresh = new DejavuSettings();
+            // Keep user's blocked stats, paused hosts, shortcuts, wallpaper & session intact; reset all browser options!
+            fresh.totalBlocked = _settings.totalBlocked;
+            fresh.pausedHosts = _settings.pausedHosts ?? new List<string>();
+            fresh.shortcuts = _settings.shortcuts ?? fresh.shortcuts;
+            fresh.wallpaper = _settings.wallpaper ?? fresh.wallpaper;
+            fresh.customWallpaperPath = _settings.customWallpaperPath ?? "";
+            fresh.lastSessionUrls = _settings.lastSessionUrls ?? new List<string>();
+
+            _settings = fresh;
+            _appContext.Settings = fresh;
+            _adBlocker.SwitchProfileSettings(_settings, _profiles.ActiveSettingsPath);
+            if (_vpn != null) _vpn.AutoConnect = _settings.vpnAutoConnect;
+
             NativeWin32.SetImmersiveDarkMode(Handle, true);
             BackColor = Color.FromArgb(20, 18, 24);
             if (_shellView != null && !_shellView.IsDisposed) _shellView.DefaultBackgroundColor = BackColor;
-            _settings.accentColor = "amethyst";
-            _settings.showFullWebsiteAddress = false;
-            _settings.alwaysShowTabClose = false;
-            _settings.compactTabBar = false;
-            _settings.defaultZoomPercent = 100;
-            _settings.newTabMode = "startpage";
-            _settings.homepageUrl = "https://www.google.com";
-            _settings.startupBehavior = "startpage";
-            _settings.reduceWallpaperMotion = false;
-            _settings.wallpaperDim = "balanced";
-            _settings.hideFavorites = false;
-            _settings.hideFrequentlyVisited = false;
-            _settings.hidePrivacyReport = false;
-            _settings.hideReadingList = false;
-            _settings.hideGreetingBadge = false;
-            _settings.hideStartPageSearch = false;
-            _settings.favoritesBarHidden = false;
-            _settings.hideNavRail = false;
-            _settings.hideFloatingMediaButton = false;
             _favoritesBarHidden = false;
+            _httpsFallbackHosts.Clear();
             _profiles.SaveActiveSettings(_settings);
 
             for (int i = 0; i < _tabs.Count; i++)
@@ -3214,8 +4581,7 @@ namespace DejavuBrowser
                     try { _tabs[i].WebView.CoreWebView2.ExecuteScriptAsync("if(window.__dejavuSetFloatingBtnEnabled)window.__dejavuSetFloatingBtnEnabled(true);"); } catch { }
                 }
             }
-            LayoutViews();
-            PushFullStateToShell();
+            _appContext.BroadcastSettingsApplied();
             PushSettingsToast("dejavu settings restored to defaults");
         }
 
@@ -3506,19 +4872,30 @@ namespace DejavuBrowser
 
         private void ShowSharePopoverAt(int anchorRightCss)
         {
+            ShowActionMenuPopoverAt("share", anchorRightCss, 292, 430);
+        }
+
+        private void ShowMenuPopoverAt(int anchorRightCss)
+        {
+            ShowActionMenuPopoverAt("menu", anchorRightCss, 304, 464);
+        }
+
+        private void ShowActionMenuPopoverAt(string modeName, int anchorRightCss, int widthCss, int heightCss)
+        {
             if (_popoverPopup == null) return;
-            if (_popoverPopup.IsPopupOpen && _activePopoverMode == "share")
+            if (_popoverPopup.IsPopupOpen && _activePopoverMode == modeName)
             {
                 HidePopover();
                 return;
             }
-            if (ShouldSkipToggleReopen("share")) return;
+            if (ShouldSkipToggleReopen(modeName)) return;
 
             HideSuggestPopup();
-            _activePopoverMode = "share";
+            _activePopoverMode = modeName;
             float sc = DpiScale;
-            int popW = (int)Math.Round(268 * sc);
-            int popH = (int)Math.Round(368 * sc);
+            int popW = (int)Math.Round(widthCss * sc);
+            int maxH = Math.Max((int)Math.Round(280 * sc), ClientSize.Height - (int)Math.Round(66 * sc));
+            int popH = Math.Min(maxH, (int)Math.Round(heightCss * sc));
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
@@ -3526,10 +4903,11 @@ namespace DejavuBrowser
             BrowserTab tab = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
             bool isLight = GetEffectiveIsLight(tab, captureShell);
+            int zoomPct = tab != null ? (int)Math.Round(tab.ZoomFactor * 100.0) : 100;
 
             var payload = new Dictionary<string, object>
             {
-                { "mode", "share" },
+                { "mode", modeName },
                 { "isLight", isLight },
                 { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "backdrop", "" },
@@ -3541,7 +4919,12 @@ namespace DejavuBrowser
                 { "isFavorite", tab != null && !tab.IsNewTab && _profiles.IsFavorite(tab.Url) },
                 { "isReadingList", tab != null && !tab.IsNewTab && _profiles.IsInReadingList(tab.Url) },
                 { "readerActive", tab != null && tab.ReaderActive },
-                { "isPinned", tab != null && tab.IsPinned }
+                { "isPinned", tab != null && tab.IsPinned },
+                { "zoomPercent", zoomPct },
+                { "appVersion", AutoUpdater.CurrentVersion },
+                { "isPrivateWindow", _isPrivateWindow },
+                { "windowCount", _appContext.WindowCount },
+                { "activeProfile", _profiles.ActiveProfile }
             };
 
             Point screenPt = PointToScreen(new Point(x, y));
@@ -3687,7 +5070,7 @@ namespace DejavuBrowser
         // =====================================================================
         // IPC Bridge: Shell & Overlay Popups <-> Native C# Engine
         // =====================================================================
-        private void OnShellWebMessage(object sender, CoreWebView2WebMessageReceivedEventArgs e)
+        private async void OnShellWebMessage(object sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
             try
             {
@@ -4010,12 +5393,261 @@ namespace DejavuBrowser
                     case "clearBrowsingCache":
                         ClearWebViewBrowsingDataAsync();
                         break;
+                    case "clearBrowsingData":
+                        HandleClearBrowsingDataMessage(msg);
+                        break;
                     case "resetBrowserOptions":
+                    case "resetSettings":
                         ResetBrowserOptions();
+                        break;
+                    case "pickDownloadFolder":
+                        PickDownloadFolder();
+                        break;
+                    case "openDefaultBrowserSettings":
+                        OpenDefaultBrowserSettings();
+                        break;
+                    case "openUserDataFolder":
+                        OpenUserDataFolder();
+                        break;
+                    case "openDevTools":
+                        OpenDevToolsActiveTab();
+                        break;
+                    case "openMenu":
+                        ShowMenuPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1120);
+                        break;
+                    case "adjustZoom":
+                        if (msg.ContainsKey("delta")) AdjustZoom(Convert.ToDouble(msg["delta"]));
+                        break;
+                    default:
+                        await HandleSharedProfileOrWindowMessageAsync(type, msg, false);
                         break;
                 }
             }
             catch { }
+        }
+
+        private void HandleClearBrowsingDataMessage(Dictionary<string, object> msg)
+        {
+            bool history = msg.ContainsKey("history") && Convert.ToBoolean(msg["history"]);
+            bool cookies = msg.ContainsKey("cookies") && Convert.ToBoolean(msg["cookies"]);
+            bool cache = msg.ContainsKey("cache") && Convert.ToBoolean(msg["cache"]);
+            bool downloads = msg.ContainsKey("downloads") && Convert.ToBoolean(msg["downloads"]);
+            string range = msg.ContainsKey("range") ? Convert.ToString(msg["range"]) : "all";
+            if (!history && !cookies && !cache && !downloads)
+            {
+                cookies = true;
+                cache = true;
+            }
+            ClearBrowsingDataAsync(history, cookies, cache, downloads, range);
+        }
+
+        private async Task<bool> HandleSharedProfileOrWindowMessageAsync(string type, Dictionary<string, object> msg, bool fromOverlay)
+        {
+            if (type == "openNewWindow")
+            {
+                if (fromOverlay) HidePopover();
+                string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : null;
+                _appContext.OpenWindow(string.IsNullOrWhiteSpace(u) ? null : u, false, this, false, false);
+                return true;
+            }
+            if (type == "openPrivateWindow")
+            {
+                if (fromOverlay) HidePopover();
+                string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : null;
+                _appContext.OpenWindow(string.IsNullOrWhiteSpace(u) ? null : u, true, this, false, false);
+                return true;
+            }
+            if (type == "openProfileWindow")
+            {
+                string pid = msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : (msg.ContainsKey("profileId") ? Convert.ToString(msg["profileId"]) : "");
+                bool forceNewWin = msg.ContainsKey("newWindow") && Convert.ToBoolean(msg["newWindow"]);
+                if (fromOverlay) HidePopover();
+                OpenProfileInNewWindow(pid, forceNewWin ? "--new-window" : "");
+                return true;
+            }
+            if (type == "switchProfile")
+            {
+                string pid = msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : (msg.ContainsKey("profileId") ? Convert.ToString(msg["profileId"]) : "");
+                bool openInNewWindow = !msg.ContainsKey("openInNewWindow") || Convert.ToBoolean(msg["openInNewWindow"]);
+                SwitchProfileRequested(pid, openInNewWindow);
+                return true;
+            }
+            if (type == "createProfile")
+            {
+                string name = msg.ContainsKey("name") ? Convert.ToString(msg["name"]) : "New Profile";
+                string av = msg.ContainsKey("avatar") ? Convert.ToString(msg["avatar"]) : "blue-morpho";
+                string col = msg.ContainsKey("color") ? Convert.ToString(msg["color"]) : "";
+                string accent = msg.ContainsKey("themeAccent") ? Convert.ToString(msg["themeAccent"]) : (msg.ContainsKey("accentColor") ? Convert.ToString(msg["accentColor"]) : "");
+                bool setAsMain = msg.ContainsKey("setAsMain") && Convert.ToBoolean(msg["setAsMain"]);
+                bool openInNewWindow = !msg.ContainsKey("openInNewWindow") || Convert.ToBoolean(msg["openInNewWindow"]);
+                bool wantGoogleSignIn = msg.ContainsKey("googleSignIn") && Convert.ToBoolean(msg["googleSignIn"]);
+                bool wantGoogleSignUp = msg.ContainsKey("googleSignUp") && Convert.ToBoolean(msg["googleSignUp"]);
+
+                ProfileInfo created = _profiles.CreateProfile(name, av, col, accent, setAsMain);
+                string gEmail = msg.ContainsKey("googleEmail") ? Convert.ToString(msg["googleEmail"]) : "";
+                string gName = msg.ContainsKey("googleDisplayName") ? Convert.ToString(msg["googleDisplayName"]) : "";
+                string gAvatar = msg.ContainsKey("googleAvatarUrl") ? Convert.ToString(msg["googleAvatarUrl"]) : "";
+                if (!string.IsNullOrWhiteSpace(gEmail) || !string.IsNullOrWhiteSpace(gName))
+                {
+                    _profiles.UpdateGoogleAccount(created.id, gName, gEmail, gAvatar, setAsMain ? (bool?)true : null);
+                }
+
+                if (fromOverlay) HidePopover();
+                string extra = wantGoogleSignUp ? "--google-signup" : (wantGoogleSignIn ? "--google-signin" : "");
+                if (openInNewWindow)
+                {
+                    OpenProfileInNewWindow(created.id, extra);
+                }
+                else
+                {
+                    bool launched = _appContext.LaunchOrFocusProfileProcess(created.id, extra);
+                    if (launched) ForceCloseWithoutPrompt();
+                }
+                _appContext.BroadcastProfilesChanged();
+                return true;
+            }
+            if (type == "updateProfile")
+            {
+                string id = msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : (msg.ContainsKey("profileId") ? Convert.ToString(msg["profileId"]) : _profiles.ActiveProfile.id);
+                string name = msg.ContainsKey("name") ? Convert.ToString(msg["name"]) : "";
+                string av = msg.ContainsKey("avatar") ? Convert.ToString(msg["avatar"]) : "";
+                string col = msg.ContainsKey("color") ? Convert.ToString(msg["color"]) : "";
+                string accent = msg.ContainsKey("themeAccent") ? Convert.ToString(msg["themeAccent"]) : (msg.ContainsKey("accentColor") ? Convert.ToString(msg["accentColor"]) : "");
+                bool? setAsMain = msg.ContainsKey("setAsMain") ? (bool?)Convert.ToBoolean(msg["setAsMain"]) : null;
+                _profiles.UpdateProfile(id, name, av, col, accent, setAsMain);
+                if (!string.IsNullOrEmpty(accent) && string.Equals(id, _profiles.ActiveProfile.id, StringComparison.OrdinalIgnoreCase))
+                {
+                    string normAcc = ProfileManager.NormalizeAccent(accent, col);
+                    _settings.accentColor = normAcc;
+                    _profiles.SaveActiveSettings(_settings);
+                    _appContext.BroadcastSettingsApplied();
+                }
+                _appContext.BroadcastProfilesChanged();
+                PushSettingsToast("Profile updated");
+                return true;
+            }
+            if (type == "deleteProfile")
+            {
+                string id = msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : (msg.ContainsKey("profileId") ? Convert.ToString(msg["profileId"]) : "");
+                if (_profiles.DeleteProfile(id))
+                {
+                    _appContext.BroadcastProfilesChanged();
+                    PushSettingsToast("Profile removed");
+                }
+                return true;
+            }
+            if (type == "setMainProfile")
+            {
+                string id = msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : (msg.ContainsKey("profileId") ? Convert.ToString(msg["profileId"]) : _profiles.ActiveProfile.id);
+                if (_profiles.SetMainProfile(id))
+                {
+                    _appContext.BroadcastProfilesChanged();
+                    PushSettingsToast("Main profile updated");
+                }
+                return true;
+            }
+            if (type == "completeOnboarding")
+            {
+                _profiles.SetOnboardingCompleted(true);
+                _appContext.BroadcastProfilesChanged();
+                return true;
+            }
+            if (type == "openProfileSetup")
+            {
+                if (fromOverlay) HidePopover();
+                string setupMode = msg.ContainsKey("mode") ? Convert.ToString(msg["mode"]) : "setup";
+                string pid = msg.ContainsKey("profileId") ? Convert.ToString(msg["profileId"]) : (msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : _profiles.ActiveProfile.id);
+                if (_shellReady && _shellView != null && _shellView.CoreWebView2 != null)
+                {
+                    var fwd = new Dictionary<string, object>
+                    {
+                        { "type", "openProfileSetup" },
+                        { "mode", setupMode },
+                        { "profileId", pid }
+                    };
+                    try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(fwd)); } catch { }
+                }
+                return true;
+            }
+            if (type == "googleSignIn")
+            {
+                if (fromOverlay) HidePopover();
+                string pid = msg.ContainsKey("profileId") ? Convert.ToString(msg["profileId"]) : (msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : "");
+                if (!string.IsNullOrWhiteSpace(pid) && !string.Equals(pid, _profiles.ActiveProfile.id, StringComparison.OrdinalIgnoreCase))
+                {
+                    OpenProfileInNewWindow(pid, "--google-signin");
+                }
+                else
+                {
+                    StartGoogleAuthFlow(false);
+                }
+                return true;
+            }
+            if (type == "googleSignUp")
+            {
+                if (fromOverlay) HidePopover();
+                string pid = msg.ContainsKey("profileId") ? Convert.ToString(msg["profileId"]) : (msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : "");
+                if (!string.IsNullOrWhiteSpace(pid) && !string.Equals(pid, _profiles.ActiveProfile.id, StringComparison.OrdinalIgnoreCase))
+                {
+                    OpenProfileInNewWindow(pid, "--google-signup");
+                }
+                else
+                {
+                    StartGoogleAuthFlow(true);
+                }
+                return true;
+            }
+            if (type == "googleSyncProfile")
+            {
+                string pid = msg.ContainsKey("profileId") ? Convert.ToString(msg["profileId"]) : (msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : _profiles.ActiveProfile.id);
+                string gEmail = msg.ContainsKey("googleEmail") ? (Convert.ToString(msg["googleEmail"]) ?? "").Trim() : "";
+                string gName = msg.ContainsKey("googleDisplayName") ? (Convert.ToString(msg["googleDisplayName"]) ?? "").Trim() : "";
+                string gAvatar = msg.ContainsKey("googleAvatarUrl") ? (Convert.ToString(msg["googleAvatarUrl"]) ?? "").Trim() : "";
+                bool? setAsMain = msg.ContainsKey("setAsMain") ? (bool?)Convert.ToBoolean(msg["setAsMain"]) : null;
+                if (!string.IsNullOrEmpty(gEmail) || !string.IsNullOrEmpty(gName))
+                {
+                    _profiles.UpdateGoogleAccount(pid, gName, gEmail, gAvatar, setAsMain);
+                    _appContext.BroadcastProfilesChanged();
+                    if (_shellReady && _shellView != null && _shellView.CoreWebView2 != null)
+                    {
+                        var evt = new Dictionary<string, object>
+                        {
+                            { "type", "googleAccountDetected" },
+                            { "profile", _profiles.FindProfile(pid) ?? _profiles.ActiveProfile }
+                        };
+                        try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(evt)); } catch { }
+                    }
+                    PushSettingsToast("Google profile saved");
+                }
+                else
+                {
+                    if (fromOverlay) HidePopover();
+                    SyncGoogleAccountFromOpenTabsAsync();
+                }
+                return true;
+            }
+            if (type == "googleSignOut")
+            {
+                string pid = msg.ContainsKey("profileId") ? Convert.ToString(msg["profileId"]) : (msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : _profiles.ActiveProfile.id);
+                SignOutGoogleAccountAsync(pid);
+                return true;
+            }
+            if (type == "checkUpdate")
+            {
+                await _updater.CheckAndDownloadAsync(true);
+                SendProfilesPanelState(null);
+                PushFullStateToShell();
+                return true;
+            }
+            if (type == "applyUpdate")
+            {
+                if (_updater.ApplyStagedUpdateAndRestart(_profiles.ActiveProfile.id))
+                {
+                    _appContext.CloseAllWindows();
+                }
+                return true;
+            }
+            return false;
         }
 
         private async void OnOverlayWebMessage(string json)
@@ -4053,11 +5685,11 @@ namespace DejavuBrowser
                 else if (type == "setSearchEngine")
                 {
                     string eng = Convert.ToString(msg["engine"]);
-                    if (eng == "google" || eng == "duckduckgo" || eng == "brave" || eng == "bing" || eng == "perplexity")
+                    if (eng == "google" || eng == "duckduckgo" || eng == "brave" || eng == "bing" || eng == "perplexity" || eng == "ecosia" || eng == "custom")
                     {
                         _settings.searchEngine = eng;
                         _profiles.SaveActiveSettings(_settings);
-                        PushFullStateToShell();
+                        _appContext.BroadcastStateToAllWindows();
                     }
                 }
                 else if (type == "openSettings")
@@ -4066,51 +5698,47 @@ namespace DejavuBrowser
                     string pane = msg.ContainsKey("pane") ? Convert.ToString(msg["pane"]) : "general";
                     SetSettingsOpen(true, pane);
                 }
-                else if (type == "switchProfile")
+                else if (type == "switchProfile" || type == "openProfileWindow" || type == "openNewWindow" ||
+                         type == "openPrivateWindow" || type == "createProfile" || type == "updateProfile" ||
+                         type == "deleteProfile" || type == "setMainProfile" || type == "completeOnboarding" ||
+                         type == "openProfileSetup" || type == "googleSignIn" || type == "googleSignUp" ||
+                         type == "googleSyncProfile" || type == "googleSignOut" || type == "checkUpdate" ||
+                         type == "applyUpdate")
                 {
-                    SwitchActiveProfileAsync(Convert.ToString(msg["id"]));
+                    await HandleSharedProfileOrWindowMessageAsync(type, msg, true);
                 }
-                else if (type == "openProfileWindow")
+                else if (type == "openDevTools")
                 {
-                    OpenProfileInNewWindow(Convert.ToString(msg["id"]));
                     HidePopover();
+                    OpenDevToolsActiveTab();
                 }
-                else if (type == "createProfile")
+                else if (type == "adjustZoom")
                 {
-                    string name = msg.ContainsKey("name") ? Convert.ToString(msg["name"]) : "New Profile";
-                    string av = msg.ContainsKey("avatar") ? Convert.ToString(msg["avatar"]) : "blue-morpho";
-                    string col = msg.ContainsKey("color") ? Convert.ToString(msg["color"]) : "#7cc4ff";
-                    ProfileInfo created = _profiles.CreateProfile(name, av, col);
-                    SwitchActiveProfileAsync(created.id);
-                }
-                else if (type == "updateProfile")
-                {
-                    string id = Convert.ToString(msg["id"]);
-                    string name = msg.ContainsKey("name") ? Convert.ToString(msg["name"]) : "";
-                    string av = msg.ContainsKey("avatar") ? Convert.ToString(msg["avatar"]) : "";
-                    string col = msg.ContainsKey("color") ? Convert.ToString(msg["color"]) : "";
-                    _profiles.UpdateProfile(id, name, av, col);
-                    PushFullStateToShell();
-                    SendProfilesPanelState(null);
-                }
-                else if (type == "deleteProfile")
-                {
-                    string id = Convert.ToString(msg["id"]);
-                    bool wasActive = string.Equals(_profiles.ActiveProfile.id, id, StringComparison.OrdinalIgnoreCase);
-                    if (_profiles.DeleteProfile(id))
+                    if (msg.ContainsKey("delta")) AdjustZoom(Convert.ToDouble(msg["delta"]));
+                    if (_popoverPopup != null && _popoverPopup.IsPopupOpen && (_activePopoverMode == "share" || _activePopoverMode == "menu"))
                     {
-                        if (wasActive) SwitchActiveProfileAsync(_profiles.ActiveProfile.id);
-                        else { PushFullStateToShell(); SendProfilesPanelState(null); }
+                        BrowserTab zt = GetActiveTab();
+                        int zpct = zt != null ? (int)Math.Round(zt.ZoomFactor * 100.0) : 100;
+                        _popoverPopup.UpdateState(_json.Serialize(new Dictionary<string, object> { { "mode", "zoomUpdate" }, { "zoomPercent", zpct } }));
                     }
                 }
-                else if (type == "checkUpdate")
+                else if (type == "resetZoom")
                 {
-                    await _updater.CheckAndDownloadAsync(true);
-                    SendProfilesPanelState(null);
+                    ResetZoom();
+                    if (_popoverPopup != null && _popoverPopup.IsPopupOpen && (_activePopoverMode == "share" || _activePopoverMode == "menu"))
+                    {
+                        _popoverPopup.UpdateState(_json.Serialize(new Dictionary<string, object> { { "mode", "zoomUpdate" }, { "zoomPercent", 100 } }));
+                    }
                 }
-                else if (type == "applyUpdate")
+                else if (type == "openHistory")
                 {
-                    if (_updater.ApplyStagedUpdateAndRestart(_profiles.ActiveProfile.id)) Close();
+                    HidePopover();
+                    ShowHistoryPopoverAt((int)(ClientSize.Width / DpiScale) - 110);
+                }
+                else if (type == "openProfiles")
+                {
+                    HidePopover();
+                    ShowProfilesPopoverAt((int)(ClientSize.Width / DpiScale) - 108);
                 }
                 else if (type == "dismissUpdate")
                 {
@@ -4121,7 +5749,12 @@ namespace DejavuBrowser
                     string url = Convert.ToString(msg["url"]);
                     bool newTab = msg.ContainsKey("newTab") && Convert.ToBoolean(msg["newTab"]);
                     HidePopover();
-                    if (newTab) CreateTab(url, true);
+                    if (string.Equals(url, "dejavu://newtab", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (newTab) CreateDefaultNewTab(true);
+                        else GoHomeActiveTab();
+                    }
+                    else if (newTab) CreateTab(url, true);
                     else NavigateActiveTab(url);
                 }
                 else if (type == "deleteHistoryItem")
@@ -4278,7 +5911,12 @@ namespace DejavuBrowser
                 else if (type == "shareNewWindow")
                 {
                     HidePopover();
-                    OpenProfileInNewWindow(_profiles.ActiveProfile.id);
+                    _appContext.OpenWindow(null, false, this, false, false);
+                }
+                else if (type == "sharePrivateWindow")
+                {
+                    HidePopover();
+                    _appContext.OpenWindow(null, true, this, false, false);
                 }
                 else if (type == "openDownloadPath")
                 {
@@ -4314,6 +5952,10 @@ namespace DejavuBrowser
                 else if (type == "turboResume")
                 {
                     if (_turboDownloads != null && msg.ContainsKey("id")) _turboDownloads.Resume(Convert.ToString(msg["id"]));
+                }
+                else if (type == "turboCancel")
+                {
+                    if (_turboDownloads != null && msg.ContainsKey("id")) _turboDownloads.Cancel(Convert.ToString(msg["id"]));
                 }
                 else if (type == "tabMenuAction")
                 {
@@ -4555,6 +6197,7 @@ namespace DejavuBrowser
                     { "isLight", t.IsLight },
                     { "isAudible", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.IsDocumentPlayingAudio },
                     { "isMuted", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.IsMuted },
+                    { "isSuspended", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.IsSuspended },
                     { "zoomPercent", (int)Math.Round(t.ZoomFactor * 100.0) },
                     { "canGoBack", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.CanGoBack },
                     { "canGoForward", t.CoreReady && t.WebView != null && t.WebView.CoreWebView2.CanGoForward }
@@ -4564,6 +6207,8 @@ namespace DejavuBrowser
             BrowserTab active = GetActiveTab();
             string host = (active != null && !active.IsNewTab) ? AdBlocker.ExtractHost(active.Url) : "";
             UpdateInfo upd = _updater.ReadyUpdate;
+            List<string> openProfileIds = _profiles.GetOpenProfileIds();
+            string effectiveDownloadFolder = _turboDownloads != null ? _turboDownloads.DownloadsDirectory : "";
             string activeGroupName = "Start Tabs";
             for (int i = 0; i < _profiles.TabGroups.Count; i++)
             {
@@ -4594,7 +6239,16 @@ namespace DejavuBrowser
                 { "dlManagerTab", _dlManagerTab },
                 { "turboDownloads", _turboDownloads != null ? _turboDownloads.BuildDownloadPayloadList() : new List<Dictionary<string, object>>() },
                 { "pageMedia", (_turboDownloads != null && active != null && !active.IsNewTab) ? _turboDownloads.BuildMediaPayloadList(active.Id) : new List<Dictionary<string, object>>() },
-                { "downloadsDir", _turboDownloads != null ? _turboDownloads.DownloadsDirectory : "" },
+                { "downloadFolder", effectiveDownloadFolder },
+                { "downloadsDir", effectiveDownloadFolder },
+                { "userDataDir", _profiles.GetProfileDataDir(_profiles.ActiveProfile.id) },
+                { "isPrivateWindow", _isPrivateWindow },
+                { "windowCount", _appContext.WindowCount },
+                { "openProfileIds", openProfileIds },
+                { "webviewVersion", _appContext.WebViewVersion ?? "" },
+                { "profiles", _profiles.Manifest.profiles },
+                { "mainProfileId", _profiles.Manifest.mainProfileId ?? "default" },
+                { "onboardingCompleted", _profiles.Manifest.onboardingCompleted },
                 { "browserOptions", BuildBrowserOptionsPayload() },
                 { "pausedHosts", _adBlocker.GetPausedHosts() },
                 { "activeTabGroupId", _activeTabGroupId },
@@ -4615,6 +6269,8 @@ namespace DejavuBrowser
                 { "activeProfile", _profiles.ActiveProfile },
                 { "appVersion", AutoUpdater.CurrentVersion },
                 { "updateAvailable", upd != null && upd.IsReady },
+                { "updateStatus", _appContext.UpdateStatusText ?? "" },
+                { "updateReadyVersion", (upd != null && upd.IsReady) ? upd.Version : "" },
                 { "searchEngine", _settings.searchEngine },
                 { "globalAdBlockEnabled", _adBlocker.GlobalEnabled },
                 { "activeForSite", _adBlocker.IsActiveForHost(host) },
@@ -4665,10 +6321,25 @@ namespace DejavuBrowser
                 return "https://" + s;
             }
             string q = Uri.EscapeDataString(s);
+            if (_settings.searchEngine == "custom" && !string.IsNullOrWhiteSpace(_settings.customSearchUrl))
+            {
+                string tpl = _settings.customSearchUrl.Trim();
+                if (!tpl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                    !tpl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                {
+                    tpl = "https://" + tpl;
+                }
+                if (tpl.IndexOf("%s", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return tpl.Replace("%s", q).Replace("%S", q);
+                }
+                return tpl + q;
+            }
             if (_settings.searchEngine == "duckduckgo") return "https://duckduckgo.com/?q=" + q;
             if (_settings.searchEngine == "brave") return "https://search.brave.com/search?q=" + q;
             if (_settings.searchEngine == "bing") return "https://www.bing.com/search?q=" + q;
             if (_settings.searchEngine == "perplexity") return "https://www.perplexity.ai/search?q=" + q;
+            if (_settings.searchEngine == "ecosia") return "https://www.ecosia.org/search?q=" + q;
             return "https://www.google.com/search?q=" + q;
         }
 

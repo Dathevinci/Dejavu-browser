@@ -1,11 +1,12 @@
 /**
- * dejavu Official Website — Simple Material Design 3 Interactive Engine (v4.4.0)
- * 6 Material You Dynamic Color Seeds · 4-View Dual-Device Showcase
+ * dejavu Official Website — Simple Material Design 3 Interactive Engine (v4.5.0)
+ * 6 Material You Dynamic Color Seeds · 5-View Dual-Device Showcase
+ * Chrome-Style Multi-Profile & Google Studio · 52x32 M3 Switches
  * Interactive Multi-Quality Video & MP3 Downloader Demo · 16-Wallpaper Harmonizer · GitHub Releases API
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v4.4.0';
+  const FALLBACK_VERSION = 'v4.5.0';
   const root = document.documentElement;
 
   const THEME_META_COLORS = {
@@ -83,12 +84,13 @@
     });
   }
 
-  // 2. Clean 4-View Dual-Device Browser Showcase
+  // 2. Clean 5-View Dual-Device Browser Showcase
   const VIEW_META = {
-    start: { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
-    video: { url: 'youtube.com/watch?v=material-you-4k', title: 'Material You 4K Film' },
-    vpn:   { url: 'gemini.google.com/app', title: 'Google Gemini · Smart VPN' },
-    sync:  { url: 'dejavu://link · Paired with Pixel', title: 'dejavu Link · E2EE Sync' }
+    start:    { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
+    profiles: { url: 'dejavu://profiles · Personal + Work Windows', title: 'Multi-Profile · 2 Windows' },
+    video:    { url: 'youtube.com/watch?v=material-you-4k', title: 'Material You 4K Film' },
+    vpn:      { url: 'gemini.google.com/app', title: 'Google Gemini · Smart VPN' },
+    sync:     { url: 'dejavu://link · Paired with Pixel', title: 'dejavu Link · E2EE Sync' }
   };
 
   let activeView = 'start';
@@ -417,10 +419,141 @@
     });
   });
 
-  // 7. GitHub Releases API Dynamic Hydration (Fallback: v4.4.0)
+  // 7. Interactive Multi-Profile & Google Account Studio + Official 52x32 M3 Switches
+  const demoWinCards = Array.from(document.querySelectorAll('[data-demo-profile]'));
+  const toolbarAvatar = document.getElementById('dk-toolbar-avatar');
+  const toolbarProfileName = document.getElementById('dk-toolbar-profile-name');
+  const profWinBadge = document.getElementById('prof-win-badge');
+  const profHeading = document.getElementById('prof-g-heading');
+  const profSub = document.getElementById('prof-g-sub');
+  const profStatusPill = document.getElementById('prof-g-status-pill');
+  const personalEmailEl = document.getElementById('mini-personal-email');
+  const personalMainPill = document.getElementById('mini-personal-main-pill');
+
+  let activeDemoProfile = 'personal';
+  let openWindowCount = 2;
+  let privateWindowOpen = false;
+
+  function renderWindowBadge() {
+    if (!profWinBadge) return;
+    const textSpan = profWinBadge.querySelector('span:last-child');
+    if (!textSpan) return;
+    textSpan.textContent = privateWindowOpen
+      ? `${openWindowCount} Windows + Private`
+      : `${openWindowCount} Windows Open`;
+  }
+
+  function focusDemoProfile(key) {
+    activeDemoProfile = key === 'work' ? 'work' : 'personal';
+    demoWinCards.forEach((card) => {
+      const isMatch = card.dataset.demoProfile === activeDemoProfile;
+      card.classList.toggle('active', isMatch);
+      card.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
+    });
+
+    if (activeDemoProfile === 'work') {
+      if (toolbarAvatar) toolbarAvatar.textContent = 'W';
+      if (toolbarProfileName) toolbarProfileName.textContent = 'Work';
+      if (profHeading) profHeading.textContent = 'Work · Google Workspace';
+      if (profSub) profSub.textContent = 'Signed in as alex@studio.dev · Isolated';
+      if (profStatusPill) profStatusPill.textContent = 'Isolated';
+    } else {
+      if (toolbarAvatar) toolbarAvatar.textContent = 'A';
+      if (toolbarProfileName) toolbarProfileName.textContent = 'Personal';
+      if (profHeading) profHeading.textContent = 'Google Profile Studio';
+      if (profSub) profSub.textContent = 'Signed in as alex@gmail.com';
+      if (profStatusPill) profStatusPill.textContent = 'Synced';
+    }
+  }
+
+  demoWinCards.forEach((card) => {
+    card.addEventListener('click', () => focusDemoProfile(card.dataset.demoProfile));
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        focusDemoProfile(card.dataset.demoProfile);
+      }
+    });
+  });
+
+  document.getElementById('demo-new-window-btn')?.addEventListener('click', () => {
+    openWindowCount = openWindowCount >= 4 ? 2 : openWindowCount + 1;
+    renderWindowBadge();
+    const profLabel = activeDemoProfile === 'work' ? 'Work' : 'Personal';
+    showSnackbar(`Opened New Window (Ctrl+N) · ${openWindowCount} active (${profLabel})`);
+  });
+
+  document.getElementById('demo-private-win-btn')?.addEventListener('click', () => {
+    privateWindowOpen = !privateWindowOpen;
+    renderWindowBadge();
+    showSnackbar(
+      privateWindowOpen
+        ? 'Opened Private Window (Ctrl+Shift+N) · Isolated session'
+        : 'Closed Private Window · Personal & Work stay open'
+    );
+  });
+
+  document.getElementById('demo-google-signin')?.addEventListener('click', () => {
+    focusDemoProfile('personal');
+    if (profHeading) profHeading.textContent = 'Google Profile Studio';
+    if (profSub) profSub.textContent = 'Signed in as alex@gmail.com';
+    if (profStatusPill) profStatusPill.textContent = 'Synced';
+    if (personalEmailEl) personalEmailEl.textContent = 'alex@gmail.com · Google Signed-In';
+    showSnackbar('Google Account active · Main Profile synced');
+  });
+
+  document.getElementById('demo-google-create')?.addEventListener('click', () => {
+    if (profHeading) profHeading.textContent = 'Create Google Account';
+    if (profSub) profSub.textContent = 'Opens native Google Sign-Up in dejavu';
+    if (profStatusPill) profStatusPill.textContent = 'New Account';
+    showSnackbar('Ready to create a new Google Account for your Main Profile');
+  });
+
+  document.getElementById('demo-google-guest')?.addEventListener('click', () => {
+    if (profHeading) profHeading.textContent = 'Local Offline Profile';
+    if (profSub) profSub.textContent = 'Private local storage · Zero cloud account';
+    if (profStatusPill) profStatusPill.textContent = 'Local Only';
+    if (personalEmailEl) personalEmailEl.textContent = 'Local Profile · Private Storage';
+    showSnackbar('Continuing without an account · 100% local profile');
+  });
+
+  // Official Crisp 52x32 Material Design 3 Switches
+  document.querySelectorAll('.m3-switch').forEach((sw) => {
+    sw.addEventListener('click', () => {
+      const next = !sw.classList.contains('is-on');
+      sw.classList.toggle('is-on', next);
+      sw.setAttribute('aria-checked', next ? 'true' : 'false');
+
+      if (sw.id === 'demo-sw-main' && personalMainPill) {
+        personalMainPill.textContent = next ? 'Main' : 'Standard';
+      } else if (sw.id === 'demo-sw-side') {
+        showSnackbar(
+          next
+            ? 'Side-by-side multi-profile windows enabled'
+            : 'Profiles switch in current window'
+        );
+      }
+    });
+  });
+
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v4.5.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function parseSemver(tag) {
+    const m = String(tag || '').match(/(\d+)\.(\d+)\.(\d+)/);
+    return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [0, 0, 0];
+  }
+
+  function isNewerOrEqual(remoteTag, minTag) {
+    const a = parseSemver(remoteTag);
+    const b = parseSemver(minTag);
+    for (let i = 0; i < 3; i++) {
+      if (a[i] !== b[i]) return a[i] > b[i];
+    }
+    return true;
   }
 
   fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
@@ -428,13 +561,16 @@
   })
     .then((r) => (r.ok ? r.json() : null))
     .then((rel) => {
-      const ver = (rel && rel.tag_name) || FALLBACK_VERSION;
+      if (!rel || !rel.tag_name || !isNewerOrEqual(rel.tag_name, FALLBACK_VERSION)) {
+        return;
+      }
+      const ver = rel.tag_name;
       const verBadge = document.getElementById('release-version-badge');
       if (verBadge) verBadge.textContent = ver;
       const dlEyebrow = document.getElementById('dl-ver-eyebrow');
       if (dlEyebrow) dlEyebrow.textContent = `Latest Official Release · ${ver}`;
 
-      if (!rel || !Array.isArray(rel.assets)) return;
+      if (!Array.isArray(rel.assets)) return;
       const setup = rel.assets.find((a) => /setup\.exe$/i.test(a.name));
       const port = rel.assets.find((a) => /^dejavu\.exe$/i.test(a.name));
       const apk = rel.assets.find((a) => /\.apk$/i.test(a.name));

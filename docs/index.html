@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>dejavu — Simple Material Design 3 Browser for Windows &amp; Android</title>
-  <meta name="description" content="A native Windows &amp; Android browser built with Google Material Design 3 — featuring a built-in YouTube &amp; 1,000+ site 4K/1080p/720p/MP3 Video Downloader, 16 Pure Material 3 &amp; Butterfly wallpapers, 86-country AI-ready VPN, 100/100 Ad Blocker, E2EE PC-to-Phone sync, and 0.85% idle CPU.">
+  <meta name="description" content="A native Windows &amp; Android browser built with Google Material Design 3 — featuring Chrome-style Multi-Window &amp; Multi-Profile Google Sign-In, 10-category Material 3 Settings with Live Search, built-in YouTube &amp; 1,000+ site 4K/1080p/720p/MP3 Video Downloader, 16 Pure Material 3 &amp; Butterfly wallpapers, 86-country AI-ready VPN, 100/100 Ad Blocker, E2EE PC-to-Phone sync, and 0.85% idle CPU.">
   <meta name="theme-color" content="#141218">
 
   <link rel="icon" href="assets/dejavu.ico" sizes="any">
@@ -14,7 +14,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="dejavu browser">
   <meta property="og:title" content="dejavu — Simple Material You Browser for Windows &amp; Android">
-  <meta property="og:description" content="A-to-Z Google Material Design 3 browser with built-in YouTube &amp; 1,000+ Site 4K/MP3 Video Downloader, 16 Pure Material 3 &amp; Butterfly Wallpapers, 86-Country AI-Ready VPN, 100/100 Ad Blocker, and 0.85% Idle CPU.">
+  <meta property="og:description" content="A-to-Z Google Material Design 3 browser with Chrome-style Multi-Window &amp; Multi-Profile Google Sign-In, 10-Category Material 3 Settings, built-in YouTube 4K/MP3 Video Downloader, 16 Pure Material 3 &amp; Butterfly Wallpapers, 86-Country AI-Ready VPN, and 0.85% Idle CPU.">
   <meta property="og:url" content="https://dathevinci.github.io/Dejavu-browser/">
   <meta property="og:image" content="https://dathevinci.github.io/Dejavu-browser/assets/wallpapers/wp-m3-amethyst.jpg">
 
@@ -111,8 +111,8 @@
         <div class="hero-copy">
           <a id="release-pill" class="version-chip" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest" target="_blank" rel="noopener noreferrer">
             <span class="status-dot" aria-hidden="true"></span>
-            <strong id="release-version-badge">v4.4.0</strong>
-            <span>· Windows &amp; Android</span>
+            <strong id="release-version-badge">v4.5.0</strong>
+            <span>· Multi-Profile &amp; M3 Settings</span>
           </a>
 
           <h1 class="hero-title">
@@ -121,7 +121,7 @@
           </h1>
 
           <p class="hero-subtitle">
-            A calm native browser crafted A to Z in Google Material Design 3 — with a built-in YouTube &amp; 1,000+ site 4K/MP3 video downloader, 16 Material 3 &amp; Butterfly wallpapers, 86-country AI-ready VPN, and E2EE PC ↔ phone sync.
+            A calm native browser crafted A to Z in Google Material Design 3 — with Chrome-style simultaneous Multi-Window &amp; Google Profiles, 10-category M3 Settings with Live Search, a built-in YouTube 4K/MP3 downloader, 16 Material 3 &amp; Butterfly wallpapers, and an 86-country AI-ready VPN.
           </p>
 
           <div class="hero-cta-row">
@@ -157,12 +157,28 @@
 
       <!-- INTERACTIVE DUAL-DEVICE BROWSER SHOWCASE -->
       <div id="showcase" class="showcase-block">
-        <!-- Clean 4-Pill Material 3 Segmented Switcher -->
+        <!-- Material 3 Connected Segmented Switcher with Active Checkmarks -->
         <div class="m3-segmented" role="tablist" aria-label="Interactive browser views">
-          <button type="button" class="m3-seg-btn active" role="tab" aria-selected="true" data-showcase="start">Start Page</button>
-          <button type="button" class="m3-seg-btn" role="tab" aria-selected="false" data-showcase="video">8× Video Downloader</button>
-          <button type="button" class="m3-seg-btn" role="tab" aria-selected="false" data-showcase="vpn">86-Country VPN</button>
-          <button type="button" class="m3-seg-btn" role="tab" aria-selected="false" data-showcase="sync">PC ↔ Phone Sync</button>
+          <button type="button" class="m3-seg-btn active" role="tab" aria-selected="true" data-showcase="start">
+            <svg class="m3-seg-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Start Page</span>
+          </button>
+          <button type="button" class="m3-seg-btn" role="tab" aria-selected="false" data-showcase="profiles">
+            <svg class="m3-seg-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Multi-Profile &amp; Google</span>
+          </button>
+          <button type="button" class="m3-seg-btn" role="tab" aria-selected="false" data-showcase="video">
+            <svg class="m3-seg-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>8× Video Downloader</span>
+          </button>
+          <button type="button" class="m3-seg-btn" role="tab" aria-selected="false" data-showcase="vpn">
+            <svg class="m3-seg-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>86-Country VPN</span>
+          </button>
+          <button type="button" class="m3-seg-btn" role="tab" aria-selected="false" data-showcase="sync">
+            <svg class="m3-seg-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>PC ↔ Phone Sync</span>
+          </button>
         </div>
 
         <div class="dual-stage">
@@ -177,16 +193,20 @@
                   <span class="dk-tab-dot" style="background:var(--md-primary)"></span>
                   <span>Start Page</span>
                 </button>
+                <button type="button" class="dk-tab" data-showcase="profiles">
+                  <span class="dk-tab-dot" style="background:#a8c7fa"></span>
+                  <span>Profiles &amp; Google</span>
+                </button>
                 <button type="button" class="dk-tab" data-showcase="video">
                   <span class="dk-tab-dot" style="background:#ef5350"></span>
-                  <span>YouTube 4K · MP4 / MP3</span>
+                  <span>YouTube 4K · MP3</span>
                 </button>
                 <button type="button" class="dk-tab" data-showcase="vpn">
                   <span class="dk-tab-dot" style="background:var(--md-tertiary)"></span>
-                  <span>Gemini · US VPN</span>
+                  <span>Gemini · VPN</span>
                 </button>
                 <button type="button" class="dk-tab" data-showcase="sync">
-                  <span class="dk-tab-dot" style="background:#7caeff"></span>
+                  <span class="dk-tab-dot" style="background:#82d5c7"></span>
                   <span>dejavu Link</span>
                 </button>
               </div>
@@ -229,8 +249,12 @@
                   <span class="status-dot" aria-hidden="true"></span>
                   <span id="dk-vpn-code">US</span>
                 </button>
-                <button type="button" class="dk-icon-btn" data-showcase="video" title="8x Turbo Downloader">
+                <button type="button" class="dk-icon-btn" data-showcase="video" title="8x Turbo Downloader" aria-label="8x Turbo Downloader">
                   <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><path d="M9 3.2v8.2M5.8 8.4L9 11.6l3.2-3.2M3.6 14.4h10.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button type="button" class="dk-profile-chip" id="dk-toolbar-profile" data-showcase="profiles" title="Multi-Profile &amp; Google Account">
+                  <span class="dk-profile-avatar" id="dk-toolbar-avatar">A</span>
+                  <span id="dk-toolbar-profile-name">Personal</span>
                 </button>
               </div>
             </div>
@@ -243,6 +267,10 @@
                 </button>
                 <button type="button" class="dk-rail-btn active" data-showcase="start" title="Start Page" aria-label="Start Page">
                   <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><path d="M3 8.6L9 3.6l6 5v5.6a1 1 0 0 1-1 1h-3.2v-4H7.2v4H4a1 1 0 0 1-1-1V8.6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                </button>
+                <button type="button" class="dk-rail-btn" data-showcase="profiles" title="Multi-Profile &amp; Google" aria-label="Multi-Profile and Google">
+                  <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><circle cx="7" cy="6.6" r="2.5" stroke="currentColor" stroke-width="1.45"/><path d="M2.6 14c.6-2.2 2.2-3.3 4.4-3.3s3.8 1.1 4.4 3.3" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/><circle cx="12.6" cy="7.4" r="1.9" stroke="currentColor" stroke-width="1.35"/><path d="M12.2 10.9c1.5.2 2.6 1.1 3.1 2.7" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+                  <span class="dk-rail-badge">2</span>
                 </button>
                 <button type="button" class="dk-rail-btn" id="dk-rail-side" title="Side Panel" aria-label="Toggle Side Panel">
                   <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><path d="M4.6 3.4h8.8a1.2 1.2 0 0 1 1.2 1.2v10.2L9 11.8l-5.6 3V4.6a1.2 1.2 0 0 1 1.2-1.2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
@@ -302,6 +330,134 @@
                     <div class="dk-sp-status">
                       <span><strong>14,820</strong> ads &amp; trackers blocked</span>
                       <span class="dk-sp-vpn-tag" id="dk-sp-vpn-tag">VPN · United States (Smart)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- VIEW 2: MULTI-PROFILE & GOOGLE (Chrome-Style Side-by-Side Windows + M3 Google Sign-In) -->
+                <div class="dk-page hidden" data-page="profiles">
+                  <div class="dk-profiles-stage">
+                    <!-- Left: Simultaneous Chrome-Style Side-by-Side Browser Windows -->
+                    <div class="prof-windows-pane">
+                      <div class="prof-pane-head">
+                        <div>
+                          <span class="prof-eyebrow">Chrome-Style Isolation</span>
+                          <h3>Two browsers. Side by side.</h3>
+                        </div>
+                        <span id="prof-win-badge" class="prof-live-badge">
+                          <span class="status-dot" aria-hidden="true"></span>
+                          <span>2 Windows Open</span>
+                        </span>
+                      </div>
+
+                      <div class="prof-win-stack">
+                        <!-- Mini Window 1: Personal (Amethyst Seed + Google Signed-In) -->
+                        <div class="mini-win is-personal active" id="mini-win-personal" data-demo-profile="personal" role="button" tabindex="0" aria-pressed="true">
+                          <div class="mini-win-chrome">
+                            <span class="mini-win-avatar is-amethyst">A</span>
+                            <div class="mini-win-title">
+                              <strong>dejavu — Personal</strong>
+                              <small id="mini-personal-email">alex@gmail.com · Google Signed-In</small>
+                            </div>
+                            <span id="mini-personal-main-pill" class="mini-win-pill is-main">Main</span>
+                          </div>
+                          <div class="mini-win-body">
+                            <span class="mini-tab-pill active">YouTube 4K</span>
+                            <span class="mini-tab-pill">Gmail</span>
+                            <span class="mini-tab-pill">Amethyst Seed</span>
+                          </div>
+                          <div class="mini-win-foot">
+                            <code>WebViewData/default</code>
+                            <span>Isolated Session</span>
+                          </div>
+                        </div>
+
+                        <!-- Mini Window 2: Work (Pixel Blue / Sapphire Seed) -->
+                        <div class="mini-win is-work" id="mini-win-work" data-demo-profile="work" role="button" tabindex="0" aria-pressed="false">
+                          <div class="mini-win-chrome">
+                            <span class="mini-win-avatar is-sapphire">W</span>
+                            <div class="mini-win-title">
+                              <strong>dejavu — Work</strong>
+                              <small>alex@studio.dev · Isolated Process</small>
+                            </div>
+                            <span class="mini-win-pill is-blue">Running</span>
+                          </div>
+                          <div class="mini-win-body">
+                            <span class="mini-tab-pill active">GitHub PRs</span>
+                            <span class="mini-tab-pill">Docs</span>
+                            <span class="mini-tab-pill">Pixel Blue Seed</span>
+                          </div>
+                          <div class="mini-win-foot">
+                            <code>WebViewData/work</code>
+                            <span>Separate Cookies</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="prof-win-actions">
+                        <button type="button" id="demo-new-window-btn" class="m3-btn m3-btn-tonal m3-btn-sm">
+                          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true"><rect x="2.2" y="3" width="11.6" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 5.8v4.4M5.8 8h4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                          <span>+ New Window</span>
+                        </button>
+                        <button type="button" id="demo-private-win-btn" class="m3-btn m3-btn-outlined m3-btn-sm">
+                          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true"><path d="M8 2.4l5 2v3.6c0 3-2.1 5.2-5 6.1-2.9-.9-5-3.1-5-6.1V4.4l5-2z" stroke="currentColor" stroke-width="1.45"/></svg>
+                          <span>Private Window</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Right: Material Design 3 Google Account Sign-In & Profile Setup Card -->
+                    <div class="prof-google-card">
+                      <div class="prof-g-head">
+                        <span class="prof-g-mark" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+                            <path d="M21.8 12.23c0-.68-.06-1.36-.18-2.02H12v3.83h5.5a4.7 4.7 0 0 1-2.04 3.09v2.57h3.3c1.93-1.78 3.04-4.4 3.04-7.47z" fill="#4285F4"/>
+                            <path d="M12 22c2.76 0 5.08-.91 6.77-2.47l-3.3-2.57c-.92.62-2.09.99-3.47.99-2.67 0-4.93-1.8-5.74-4.22H2.85v2.65A10 10 0 0 0 12 22z" fill="#34A853"/>
+                            <path d="M6.26 13.73A6 6 0 0 1 5.95 12c0-.6.11-1.18.31-1.73V7.62H2.85A10 10 0 0 0 2 12c0 1.61.39 3.14 1.07 4.38l3.19-2.65z" fill="#FBBC05"/>
+                            <path d="M12 6.05c1.5 0 2.85.52 3.91 1.53l2.93-2.93C17.07 3 14.76 2 12 2A10 10 0 0 0 2.85 7.62l3.41 2.65C7.07 7.85 9.33 6.05 12 6.05z" fill="#EA4335"/>
+                          </svg>
+                        </span>
+                        <div class="prof-g-title">
+                          <strong id="prof-g-heading">Google Profile Studio</strong>
+                          <small id="prof-g-sub">Signed in as alex@gmail.com</small>
+                        </div>
+                      </div>
+
+                      <div class="prof-g-actions">
+                        <button type="button" id="demo-google-signin" class="m3-btn m3-btn-filled m3-btn-sm">Sign in with Google</button>
+                        <button type="button" id="demo-google-create" class="m3-btn m3-btn-tonal m3-btn-sm">Create Google Account</button>
+                      </div>
+
+                      <div class="prof-g-switches">
+                        <div class="m3-switch-row">
+                          <div class="m3-switch-copy">
+                            <strong>Set as Main Profile</strong>
+                            <small>Default launch profile on startup</small>
+                          </div>
+                          <button type="button" id="demo-sw-main" class="m3-switch is-on" role="switch" aria-checked="true" aria-label="Set as Main Profile">
+                            <span class="m3-switch-thumb">
+                              <svg viewBox="0 0 14 14" width="12" height="12" fill="none" aria-hidden="true"><path d="M2.8 7.3L5.6 10.1L11.2 4.1" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                          </button>
+                        </div>
+
+                        <div class="m3-switch-row">
+                          <div class="m3-switch-copy">
+                            <strong>Open in Own Window</strong>
+                            <small>Side-by-side multi-profile mode</small>
+                          </div>
+                          <button type="button" id="demo-sw-side" class="m3-switch is-on" role="switch" aria-checked="true" aria-label="Open profiles in own window">
+                            <span class="m3-switch-thumb">
+                              <svg viewBox="0 0 14 14" width="12" height="12" fill="none" aria-hidden="true"><path d="M2.8 7.3L5.6 10.1L11.2 4.1" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="prof-g-footer">
+                        <button type="button" id="demo-google-guest" class="prof-text-btn">Continue without an account</button>
+                        <span class="prof-g-badge" id="prof-g-status-pill">Synced</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -549,24 +705,24 @@
       <!-- SIMPLE 4-STAT TONAL STRIP -->
       <div class="stats-strip">
         <div class="stat-card">
+          <strong>2+</strong>
+          <span>Simultaneous Windows</span>
+          <small>Side-by-side Google profiles &amp; Private mode</small>
+        </div>
+        <div class="stat-card">
+          <strong>10</strong>
+          <span>M3 Settings Categories</span>
+          <small>Live Search, Privacy, Memory Saver &amp; Zoom</small>
+        </div>
+        <div class="stat-card">
           <strong>8×</strong>
-          <span>Video &amp; MP3 Downloader</span>
-          <small>YouTube &amp; 1,000+ sites · 4K/1080p/720p/MP3</small>
-        </div>
-        <div class="stat-card">
-          <strong>86+</strong>
-          <span>VPN Countries</span>
-          <small>Nepal, US Gemini &amp; 3-Hop Tor mode</small>
-        </div>
-        <div class="stat-card">
-          <strong>279k+</strong>
-          <span>Blocked Trackers</span>
-          <small>100/100 native ad shield, zero extensions</small>
+          <span>4K &amp; MP3 Downloader</span>
+          <small>YouTube &amp; 1,000+ sites · Zero extensions</small>
         </div>
         <div class="stat-card">
           <strong>0.85%</strong>
-          <span>Idle CPU Overhead</span>
-          <small>Pure native C# Win32 + Android SDK</small>
+          <span>Idle CPU · 86+ VPN</span>
+          <small>279k+ ad shield · Pure native Win32 &amp; Android</small>
         </div>
       </div>
     </section>
@@ -576,37 +732,113 @@
          ================================================================= -->
     <section id="features" class="section container">
       <div class="section-head">
-        <span class="eyebrow">Engineered A to Z</span>
+        <span class="eyebrow">Engineered A to Z · v4.5.0</span>
         <h2>Calm design. Flagship capabilities.</h2>
-        <p>Every tool you rely on daily — built natively with Material Design 3 clarity and zero bloat.</p>
+        <p>Every tool you rely on daily — Chrome-style Multi-Window profiles, 10-category Material Design 3 Settings, and built-in 4K/MP3 downloading with zero bloat.</p>
       </div>
 
       <div class="bento-grid">
+        <!-- Row 1: Span 2 + Span 1 -->
         <article class="bento-card span-2 tone-primary">
           <div class="bento-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-              <path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M4 19.5h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="3" y="4.5" width="11" height="10.5" rx="2.5" stroke="currentColor" stroke-width="1.9"/>
+              <path d="M10 15v2a2.5 2.5 0 0 0 2.5 2.5h6A2.5 2.5 0 0 0 21 17V11a2.5 2.5 0 0 0-2.5-2.5H14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
             </svg>
           </div>
-          <h3>YouTube &amp; 1,000+ Site Video &amp; MP3 Downloader</h3>
-          <p>Download 4K, 1080p HD, and 720p HD MP4 videos or extract 320 kbps MP3 audio straight from YouTube and 1,000+ sites using the floating Material 3 button — zero browser extensions needed. Combines native multi-quality extraction with 8× parallel byte-range acceleration and native HLS <code>.m3u8</code> assembly on both Windows and Android.</p>
+          <h3>True Multi-Window &amp; Simultaneous Multi-Profile Windows</h3>
+          <p>Open 2+ <strong>dejavu</strong> browser windows in the same profile (<code>Ctrl+N</code> or Private <code>Ctrl+Shift+N</code>) or run Personal and Work Google profiles side-by-side in isolated processes just like Chrome — each with its own cookies, WebView2 storage, and Material You color seed.</p>
           <div class="bento-pills">
-            <span>4K / 1080p / 720p MP4</span>
-            <span>MP3 Audio (320k)</span>
-            <span>1,000+ Sites · Zero Extensions</span>
-            <span>8× Threads &amp; HLS .m3u8</span>
+            <span>2+ Simultaneous Windows</span>
+            <span>Chrome-Style Profile Isolation</span>
+            <span>Private Mode (Ctrl+Shift+N)</span>
+            <span>Per-Profile Material You</span>
           </div>
         </article>
 
         <article class="bento-card tone-surface">
           <div class="bento-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-              <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.9"/>
-              <path d="M12 7.5v4.5l3 2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="10" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.9"/>
+              <path d="M4 19c.9-3.1 3.1-4.7 6-4.7s5.1 1.6 6 4.7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+              <path d="M18.5 7.5v5M16 10h5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
             </svg>
           </div>
-          <h3>Pure Material Design 3 &amp; 0.85% Idle CPU</h3>
-          <p>Authentic Google Pixel Material Design 3 tonal hierarchy, 6 Material You color seeds, strictly zero CSS blur, zero Electron bloat, and verified 0.85% idle CPU.</p>
+          <h3>Material Design 3 Google Sign-In &amp; Profile Studio</h3>
+          <p>Sign in with or create a Google Account as your Main Profile right from our clean M3 welcome flow, customize avatars and color tones, and add extra isolated profiles anytime.</p>
+        </article>
+
+        <!-- Row 2: Span 1 + Span 2 -->
+        <article class="bento-card tone-surface bento-settings-card">
+          <div class="bento-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+              <path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h12M20 17h0" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+              <circle cx="16" cy="7" r="2" stroke="currentColor" stroke-width="1.8"/>
+              <circle cx="10" cy="12" r="2" stroke="currentColor" stroke-width="1.8"/>
+              <circle cx="18" cy="17" r="2" stroke="currentColor" stroke-width="1.8"/>
+            </svg>
+          </div>
+          <h3>Full 10-Category Material Design 3 Settings</h3>
+          <p>Redesigned Settings (<code>Ctrl+,</code>) with <strong>Live Settings Search</strong>, Privacy &amp; Site Permissions, Clear Browsing Data, Memory Saver, Passwords &amp; Autofill, Custom Zoom &amp; Fonts, Turbo Downloads, and VPN.</p>
+          <div class="bento-m3-toggles" aria-label="Interactive Material 3 Settings preview">
+            <div class="m3-switch-row compact">
+              <span>Memory Saver</span>
+              <button type="button" class="m3-switch is-on" role="switch" aria-checked="true" aria-label="Memory Saver preview switch">
+                <span class="m3-switch-thumb">
+                  <svg viewBox="0 0 14 14" width="12" height="12" fill="none" aria-hidden="true"><path d="M2.8 7.3L5.6 10.1L11.2 4.1" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+              </button>
+            </div>
+            <div class="m3-switch-row compact">
+              <span>100/100 Ad &amp; Tracker Shield</span>
+              <button type="button" class="m3-switch is-on" role="switch" aria-checked="true" aria-label="Ad and Tracker Shield preview switch">
+                <span class="m3-switch-thumb">
+                  <svg viewBox="0 0 14 14" width="12" height="12" fill="none" aria-hidden="true"><path d="M2.8 7.3L5.6 10.1L11.2 4.1" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="bento-card span-2 tone-tertiary">
+          <div class="bento-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+              <path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M4 19.5h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Built-in YouTube 4K/1080p/720p &amp; MP3 Downloader</h3>
+          <p>Download 4K, 1080p HD, and 720p HD MP4 videos or extract 320 kbps MP3 audio straight from YouTube and 1,000+ sites using the floating Material 3 button — zero browser extensions needed. Combines native multi-quality extraction with 8× parallel byte-range acceleration and native HLS <code>.m3u8</code> assembly on both Windows and Android.</p>
+          <div class="bento-pills">
+            <span>4K / 1080p / 720p MP4</span>
+            <span>MP3 Audio (320k)</span>
+            <span>Zero Browser Extensions</span>
+            <span>8× Threads &amp; HLS .m3u8</span>
+          </div>
+        </article>
+
+        <!-- Row 3: Span 1 + Span 1 + Span 1 -->
+        <article class="bento-card tone-secondary">
+          <div class="bento-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+              <rect x="4" y="5" width="16" height="14" rx="3" stroke="currentColor" stroke-width="1.9"/>
+              <circle cx="9.2" cy="10.2" r="1.5" fill="currentColor"/>
+              <path d="M5.8 17l4.2-4.2 3 3 2.4-2.4L18.5 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>16 Pure Material 3 &amp; 4 Butterfly M3 Wallpapers</h3>
+          <p>12 sculptural Google Pixel compositions plus 4 Material Design 3 Butterfly wallpapers across Dark and Light modes — zero legacy clutter, automatic Material You seed harmony, and strictly zero CSS blur.</p>
+        </article>
+
+        <article class="bento-card tone-surface">
+          <div class="bento-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+              <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.9"/>
+              <ellipse cx="12" cy="12" rx="4" ry="8.5" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M4 9.5h16M4 14.5h16" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <h3>86-Country AI-Ready VPN &amp; 100/100 Ad Shield</h3>
+          <p>Clean-IP Smart routing (verified for Google Gemini over US VPN plus Nepal, Japan, Switzerland, India &amp; 80+ more) with 1-tap 3-Hop Tor mode and 279,000+ native ad-blocking rules.</p>
         </article>
 
         <article class="bento-card tone-surface">
@@ -616,62 +848,8 @@
               <path d="M8.8 12.2l2.2 2.2 4.4-4.6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <h3>100/100 Built-In Ad &amp; Tracker Blocker</h3>
-          <p>Blocks 279,000+ ad, telemetry, and video-ad domains right inside the browser engine on both Windows and Android — no extensions needed.</p>
-        </article>
-
-        <article class="bento-card span-2 tone-tertiary">
-          <div class="bento-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-              <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.9"/>
-              <ellipse cx="12" cy="12" rx="4" ry="8.5" stroke="currentColor" stroke-width="1.6"/>
-              <path d="M4 9.5h16M4 14.5h16" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
-          </div>
-          <h3>86-Country AI-Ready Smart VPN + 3-Hop Tor</h3>
-          <p>Switch seamlessly between Smart clean-IP routing (verified for Google Gemini over US VPN plus Nepal, India, Japan, Europe &amp; Americas with hot failover) and 3-Hop Tor Onion mode for private browsing.</p>
-          <div class="bento-pills">
-            <span>United States · AI-Ready</span>
-            <span>Nepal</span>
-            <span>Japan</span>
-            <span>Switzerland</span>
-            <span>United Kingdom</span>
-            <span>India</span>
-            <span>+80 more</span>
-          </div>
-        </article>
-
-        <article class="bento-card tone-secondary">
-          <div class="bento-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-              <rect x="4" y="5" width="16" height="14" rx="3" stroke="currentColor" stroke-width="1.9"/>
-              <circle cx="9.2" cy="10.2" r="1.5" fill="currentColor"/>
-              <path d="M5.8 17l4.2-4.2 3 3 2.4-2.4L18.5 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <h3>16 Pure Material 3 &amp; Butterfly Wallpapers</h3>
-          <p>12 sculptural Google Pixel surfaces plus 4 brand-new Material Design 3 Butterfly wallpapers across Dark and Light modes — zero legacy clutter, automatic Material You seed harmony.</p>
-        </article>
-
-        <article class="bento-card tone-surface">
-          <div class="bento-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-              <path d="M4.5 8.5h15M15.5 4.5l4 4-4 4M19.5 15.5h-15M8.5 11.5l-4 4 4 4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <h3>E2EE PC ↔ Phone Sync &amp; Permanent Signing</h3>
-          <p>Pair Windows and Android in one QR scan with AES-256 encryption and zero accounts. Permanent V1+V2+V3 Android release signing keeps future updates automatic in-place.</p>
-        </article>
-
-        <article class="bento-card tone-surface">
-          <div class="bento-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-              <rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="currentColor" stroke-width="1.9"/>
-              <path d="M9 4.5v15" stroke="currentColor" stroke-width="1.9"/>
-            </svg>
-          </div>
-          <h3>Samsung Navigation Rail &amp; One-Hand Mobile</h3>
-          <p>Persistent Material 3 Left Navigation Rail and instant Side Panel on Windows, paired with an effortless thumb-friendly bottom bar on Android.</p>
+          <h3>E2EE PC ↔ Phone Sync &amp; Permanent V1–V3 Signing</h3>
+          <p>Pair Windows and Android in one QR scan with AES-256 encryption and zero cloud accounts. Permanent V1+V2+V3 Android release signing keeps every future update automatic in-place.</p>
         </article>
       </div>
     </section>
@@ -684,13 +862,25 @@
         <div class="section-head">
           <span class="eyebrow">16 Pure Material You Editions</span>
           <h2>Material Design 3 &amp; Butterfly wallpapers.</h2>
-          <p>12 sculptural Google Pixel compositions plus 4 brand-new Material Design 3 Butterfly wallpapers — click any card to harmonize the page's color seed and polarity.</p>
+          <p>12 sculptural Google Pixel compositions plus 4 Material Design 3 Butterfly wallpapers — click any card to harmonize the page's color seed and polarity.</p>
         </div>
         <div class="wp-filters" role="group" aria-label="Filter wallpapers">
-          <button type="button" class="m3-chip active" data-wp-filter="all">All (16)</button>
-          <button type="button" class="m3-chip" data-wp-filter="butterfly">Butterfly M3 (4)</button>
-          <button type="button" class="m3-chip" data-wp-filter="dark">Dark (9)</button>
-          <button type="button" class="m3-chip" data-wp-filter="light">Light (7)</button>
+          <button type="button" class="m3-chip active" data-wp-filter="all">
+            <svg class="m3-chip-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>All (16)</span>
+          </button>
+          <button type="button" class="m3-chip" data-wp-filter="butterfly">
+            <svg class="m3-chip-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Butterfly M3 (4)</span>
+          </button>
+          <button type="button" class="m3-chip" data-wp-filter="dark">
+            <svg class="m3-chip-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Dark (9)</span>
+          </button>
+          <button type="button" class="m3-chip" data-wp-filter="light">
+            <svg class="m3-chip-check" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M3.2 8.4L6.4 11.6L12.8 4.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Light (7)</span>
+          </button>
         </div>
       </div>
 
@@ -934,14 +1124,14 @@
         <h2>Essential keyboard shortcuts.</h2>
       </div>
       <div class="kbd-grid">
+        <div class="kbd-card"><span>New Window</span><kbd>Ctrl + N</kbd></div>
+        <div class="kbd-card"><span>Private Window</span><kbd>Ctrl + Shift + N</kbd></div>
+        <div class="kbd-card"><span>M3 Settings</span><kbd>Ctrl + ,</kbd></div>
         <div class="kbd-card"><span>8× Downloads</span><kbd>Ctrl + J</kbd></div>
         <div class="kbd-card"><span>Side Panel</span><kbd>Ctrl + Shift + L</kbd></div>
         <div class="kbd-card"><span>Tab Overview</span><kbd>Ctrl + Shift + O</kbd></div>
-        <div class="kbd-card"><span>Settings</span><kbd>Ctrl + ,</kbd></div>
         <div class="kbd-card"><span>Address Bar</span><kbd>Ctrl + L</kbd></div>
         <div class="kbd-card"><span>Reader View</span><kbd>Ctrl + Shift + R</kbd></div>
-        <div class="kbd-card"><span>New Tab</span><kbd>Ctrl + T</kbd></div>
-        <div class="kbd-card"><span>Reopen Tab</span><kbd>Ctrl + Shift + T</kbd></div>
       </div>
     </section>
 
@@ -951,7 +1141,7 @@
     <section id="download" class="section container">
       <div class="dl-panel">
         <div class="section-head">
-          <span class="eyebrow" id="dl-ver-eyebrow">Latest Official Release · v4.4.0</span>
+          <span class="eyebrow" id="dl-ver-eyebrow">Latest Official Release · v4.5.0</span>
           <h2>Get dejavu on Windows &amp; Android.</h2>
           <p>Permanently signed GitHub Releases with built-in automatic updates across desktop and mobile.</p>
         </div>
@@ -960,7 +1150,7 @@
           <a id="card-dl-setup" class="dl-card featured" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-Setup.exe">
             <span class="dl-tag">Recommended · Windows 10/11</span>
             <h3>Windows Installer</h3>
-            <p>Guided Material You installer with Start Menu shortcut, YouTube 4K &amp; MP3 downloader, 16 Pure M3 wallpapers, and automatic updates.</p>
+            <p>Guided Material You installer with Chrome-style Multi-Window &amp; Google Profiles, 10-category M3 Settings, YouTube 4K/MP3 downloader, and automatic updates.</p>
             <div class="dl-foot">
               <span class="dl-file-meta" id="card-setup-size">dejavu-Setup.exe</span>
               <span class="m3-btn m3-btn-filled m3-btn-sm">Download</span>
@@ -968,11 +1158,11 @@
           </a>
 
           <a id="card-dl-android" class="dl-card" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-mobile.apk">
-            <span class="dl-tag">Android 8.0+ · Permanent Release Signing</span>
+            <span class="dl-tag">Android 8.0+ · Permanent V1–V3 Signing</span>
             <h3>Android Mobile (.apk)</h3>
-            <p>Full Material Design 3 UI, Samsung bottom bar, YouTube multi-quality &amp; audio downloader, 16 Pure M3 &amp; Butterfly wallpapers, PC sync, and in-app updates.</p>
+            <p>Full Material Design 3 UI, Google Account &amp; 10-category Settings, Samsung bottom bar, YouTube multi-quality &amp; audio downloader, 16 Pure M3 &amp; Butterfly wallpapers, and PC sync.</p>
             <div class="dl-upgrade-note">
-              Upgrading from v4.2.0 or earlier? Uninstall once before installing v4.4.0 — all future updates install automatically in-place.
+              Upgrading from v4.2.0 or earlier? Uninstall once before installing v4.5.0 — all future updates install automatically in-place.
             </div>
             <div class="dl-foot">
               <span class="dl-file-meta" id="card-android-size">dejavu-mobile.apk</span>
@@ -983,7 +1173,7 @@
           <a id="card-dl-portable" class="dl-card" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu.exe">
             <span class="dl-tag">Zero Install · Windows x64</span>
             <h3>Portable (.exe)</h3>
-            <p>Single-file native Windows executable with full 4K/MP3 video downloader &amp; 0.85% idle CPU — runs from any folder or USB drive.</p>
+            <p>Single-file native Windows executable with simultaneous Multi-Window &amp; Multi-Profile support, 4K/MP3 downloader &amp; 0.85% idle CPU — runs from any folder or USB drive.</p>
             <div class="dl-foot">
               <span class="dl-file-meta" id="card-portable-size">dejavu.exe</span>
               <span class="m3-btn m3-btn-outlined m3-btn-sm">Download</span>

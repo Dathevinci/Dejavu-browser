@@ -8,6 +8,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -16,6 +17,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Base64;
@@ -37,6 +39,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
+import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
@@ -71,7 +74,10 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -79,6 +85,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private static final String PREFS = "dejavu_mobile_prefs_v1";
     private static final String DESKTOP_UA =
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15";
+    private static final String GOOGLE_SIGNIN_URL =
+        "https://accounts.google.com/ServiceLogin?continue=https://myaccount.google.com/";
+    private static final String GOOGLE_SIGNUP_URL =
+        "https://accounts.google.com/signup";
+    private static final String GOOGLE_ACCOUNT_URL =
+        "https://myaccount.google.com/";
 
     private interface ScrollListener {
         void onScroll(int scrollY, int deltaY);
@@ -206,6 +218,18 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
     }
 
+    private final class MobileGoogleBridge {
+        private final MobileTab tab;
+        MobileGoogleBridge(MobileTab tab) {
+            this.tab = tab;
+        }
+        @JavascriptInterface
+        public void onGoogleAccountDetected(final String displayName, final String email, final String avatarUrl) {
+            if (tab == null || tab.isPrivate || !isGoogleHost(tab.url)) return;
+            mainHandler.post(() -> applyDetectedGoogleAccount(displayName, email, avatarUrl));
+        }
+    }
+
     private static final Interpolator M3_EMPHASIZED_DECEL = new PathInterpolator(0.05f, 0.7f, 0.1f, 1.0f);
 
     private static final class MobileTab {
@@ -242,12 +266,26 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private String searchEngine = "google";
     private String wallpaper = "wp-m3-amethyst.jpg";
     private String accentColor = "amethyst";
-    private String themeMode = "dark";
+    private String themeMode = "dark"; // "dark" | "light" | "auto"
     private String barPosition = "bottom"; // "bottom" (Safari/Samsung) | "top" (Chrome)
     private boolean autoHideBar = true;
     private boolean darkWebPages = false;
     private int pageZoom = 100;
+    private boolean desktopSiteDefault = false;
+    private boolean httpsFirst = true;
+    private boolean doNotTrack = true;
+    private boolean blockPopups = true;
+    private boolean blockThirdPartyCookies = true;
+    private boolean pullToRefresh = true;
+    private boolean openLinksInBackground = false;
+    private String defaultYoutubeQuality = "auto"; // "auto" | "1080p" | "720p" | "360p" | "m4a"
+    private boolean floatingDownloadButton = true;
+    private String mobileUserAgent = null;
     private boolean chromeCollapsed = false;
+
+    private JSONArray profiles = new JSONArray();
+    private String activeProfileId = "default";
+    private String mainProfileId = "default";
 
     private int insetTopPx = 0;
     private int insetBottomPx = 0;
@@ -400,6 +438,35 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     protected void onResume() {
         super.onResume();
         if (autoUpdater != null) autoUpdater.onActivityResumed(this);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if ("auto".equals(themeMode)) {
+            applyNativeTheme();
+            updateChromeUi();
+            pushStateToUi();
+        }
+    }
+
+    private boolean isEffectiveLightTheme() {
+        if ("light".equalsIgnoreCase(themeMode)) return true;
+        if ("dark".equalsIgnoreCase(themeMode)) return false;
+        int mask = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        return mask != Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    private String resolveMobileUserAgent() {
+        if (mobileUserAgent != null) return mobileUserAgent;
+        try {
+            String defUa = WebSettings.getDefaultUserAgent(this);
+            if (defUa != null && !defUa.isEmpty()) {
+                mobileUserAgent = defUa.replace("; wv)", ")").replace("Version/4.0 ", "");
+                return mobileUserAgent;
+            }
+        } catch (Exception ignored) { }
+        return null;
     }
 
     private int dp(int value) {
@@ -557,7 +624,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     private void applyNativeTheme() {
-        boolean isLight = "light".equals(themeMode);
+        boolean isLight = isEffectiveLightTheme();
         MobileTab active = getActiveTab();
         boolean isPriv = active != null && active.isPrivate;
 
@@ -681,6 +748,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         swipeRefresh.setDistanceToTriggerSync(dp(118));
         swipeRefresh.setSlingshotDistance(dp(145));
         swipeRefresh.setOnChildScrollUpCallback((parent, child) -> {
+            if (!pullToRefresh) return true;
             MobileTab t = getActiveTab();
             if (t == null || t.isNewTab || t.webView == null || !"none".equals(activeUiScreen)) {
                 return true;
@@ -1183,10 +1251,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     private void createTab(String rawUrl, boolean activate, boolean isPrivate) {
+        createTabInternal(rawUrl, activate, isPrivate, false);
+    }
+
+    private MobileTab createTabInternal(String rawUrl, boolean activate, boolean isPrivate, boolean forceWebTab) {
         captureActiveTabThumbnail();
         MobileTab tab = new MobileTab();
         tab.id = nextTabId++;
         tab.isPrivate = isPrivate;
+        tab.desktopMode = desktopSiteDefault;
         tab.title = isPrivate ? "Private Tab" : "Start Page";
         tabs.add(tab);
         if (rawUrl != null && !rawUrl.trim().isEmpty()) {
@@ -1195,15 +1268,22 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             tab.url = resolved;
             tab.title = formatHost(resolved);
             ensureTabWebView(tab);
-            tab.webView.loadUrl(resolved);
+            loadTabUrl(tab, resolved);
+        } else if (forceWebTab) {
+            tab.isNewTab = false;
+            tab.url = "";
+            tab.title = "Loading...";
+            ensureTabWebView(tab);
         }
         if (activate) {
             activateTab(tab.id);
         } else {
+            if (tab.webView != null) tab.webView.setVisibility(View.GONE);
             updateChromeUi();
             pushStateToUi();
         }
         if (!isPrivate) publishOpenTabsToPc();
+        return tab;
     }
 
     private void activateTab(int tabId) {
@@ -1222,7 +1302,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         } else {
             activeUiScreen = "none";
             uiWebView.setVisibility(View.GONE);
-            swipeRefresh.setEnabled(true);
+            swipeRefresh.setEnabled(pullToRefresh);
             ensureTabWebView(active);
             active.webView.setVisibility(View.VISIBLE);
         }
@@ -1299,14 +1379,112 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         ensureTabWebView(tab);
         activeUiScreen = "none";
         uiWebView.setVisibility(View.GONE);
-        swipeRefresh.setEnabled(true);
+        swipeRefresh.setEnabled(pullToRefresh);
         for (MobileTab t : tabs) {
             if (t.webView != null) t.webView.setVisibility(t == tab ? View.VISIBLE : View.GONE);
         }
-        tab.webView.loadUrl(url);
+        loadTabUrl(tab, url);
         updateChromeVisibility();
         updateChromeUi();
         pushStateToUi();
+    }
+
+    private static boolean isLocalHttpHost(String host) {
+        if (host == null || host.isEmpty()) return true;
+        String h = host.toLowerCase(Locale.US);
+        return "localhost".equals(h) || "127.0.0.1".equals(h) || "::1".equals(h)
+            || h.startsWith("192.168.") || h.startsWith("10.")
+            || h.endsWith(".local") || h.endsWith(".lan");
+    }
+
+    private String maybeUpgradeHttps(String url) {
+        if (!httpsFirst || url == null || !url.startsWith("http://")) return url;
+        try {
+            String host = Uri.parse(url).getHost();
+            if (!isLocalHttpHost(host)) {
+                return "https://" + url.substring(7);
+            }
+        } catch (Exception ignored) { }
+        return url;
+    }
+
+    private void loadTabUrl(MobileTab tab, String rawUrl) {
+        if (tab == null || tab.webView == null || rawUrl == null || rawUrl.isEmpty()) return;
+        String target = maybeUpgradeHttps(rawUrl);
+        tab.url = target;
+        if (doNotTrack && (target.startsWith("http://") || target.startsWith("https://"))) {
+            Map<String, String> headers = new HashMap<>();
+            headers.put("DNT", "1");
+            headers.put("Sec-GPC", "1");
+            tab.webView.loadUrl(target, headers);
+        } else {
+            tab.webView.loadUrl(target);
+        }
+    }
+
+    private static boolean isGoogleHost(String url) {
+        if (url == null || url.isEmpty()) return false;
+        try {
+            String host = Uri.parse(url).getHost();
+            if (host == null) return false;
+            String h = host.toLowerCase(Locale.US);
+            return "google.com".equals(h) || h.endsWith(".google.com");
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private void injectGoogleAccountSyncScript(WebView view) {
+        if (view == null) return;
+        String js = "(function(){if(!window.__djvGoogle)return;" +
+            "function scan(){" +
+            "try{" +
+            "var name='',email='',avatar='';" +
+            "var rx=/[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}/;" +
+            "var accBtn=document.querySelector('a[aria-label*=\"Google Account\"],button[aria-label*=\"Google Account\"]');" +
+            "if(accBtn){" +
+            "var lbl=accBtn.getAttribute('aria-label')||'';" +
+            "var em=lbl.match(rx);" +
+            "if(em){email=em[0];" +
+            "var cleaned=lbl.replace(/^Google Account:?\\s*/i,'').replace(email,'').replace(/[()\\n\\r]+/g,' ').trim();" +
+            "if(cleaned&&cleaned.length<=64)name=cleaned;}" +
+            "var aImg=accBtn.querySelector('img[src]');if(aImg&&aImg.src)avatar=aImg.src;" +
+            "}" +
+            "if(!email){" +
+            "var de=document.querySelector('[data-email]');" +
+            "if(de){var ev=de.getAttribute('data-email')||'';if(rx.test(ev))email=ev.match(rx)[0];}" +
+            "}" +
+            "if(!email&&location.hostname.indexOf('myaccount.google.com')>=0){" +
+            "var txt=(document.body&&document.body.innerText)||'';" +
+            "var m2=txt.match(rx);if(m2)email=m2[0];" +
+            "var h1=document.querySelector('h1');if(h1&&h1.textContent){" +
+            "var ht=h1.textContent.replace(/^Welcome,?\\s*/i,'').trim();" +
+            "if(ht&&ht.length<=64&&ht.indexOf('@')<0&&!/^Google Account$/i.test(ht))name=ht;}" +
+            "}" +
+            "if(!avatar){" +
+            "var gImg=document.querySelector('img[src*=\"googleusercontent.com\"],img[src*=\"lh3.google\"]');" +
+            "if(gImg&&gImg.src)avatar=gImg.src;" +
+            "}" +
+            "if(email){window.__djvGoogle.onGoogleAccountDetected(name||'',email,avatar||'');}" +
+            "}catch(e){}}" +
+            "scan();setTimeout(scan,1200);" +
+            "})();";
+        view.evaluateJavascript(js, null);
+    }
+
+    private void applyWebViewSettingsToAllTabs() {
+        CookieManager cm = CookieManager.getInstance();
+        cm.setAcceptCookie(true);
+        for (MobileTab t : tabs) {
+            if (t.webView == null) continue;
+            WebSettings ws = t.webView.getSettings();
+            ws.setTextZoom(pageZoom);
+            ws.setJavaScriptCanOpenWindowsAutomatically(!blockPopups);
+            ws.setUserAgentString(t.desktopMode ? DESKTOP_UA : resolveMobileUserAgent());
+            cm.setAcceptThirdPartyCookies(t.webView, !t.isPrivate && !blockThirdPartyCookies);
+            applyDarkWebToTab(t);
+        }
+        try { cm.flush(); } catch (Exception ignored) { }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -1326,14 +1504,24 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         ws.setBuiltInZoomControls(true);
         ws.setDisplayZoomControls(false);
         ws.setTextZoom(pageZoom);
+        ws.setJavaScriptCanOpenWindowsAutomatically(!blockPopups);
+        ws.setSupportMultipleWindows(true);
         ws.setMediaPlaybackRequiresUserGesture(false);
         ws.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
-        if (tab.desktopMode) ws.setUserAgentString(DESKTOP_UA);
+        if (tab.desktopMode) {
+            ws.setUserAgentString(DESKTOP_UA);
+        } else {
+            String mua = resolveMobileUserAgent();
+            if (mua != null && !mua.isEmpty()) ws.setUserAgentString(mua);
+        }
 
         CookieManager.getInstance().setAcceptCookie(true);
-        CookieManager.getInstance().setAcceptThirdPartyCookies(wv, !tab.isPrivate);
+        CookieManager.getInstance().setAcceptThirdPartyCookies(wv, !tab.isPrivate && !blockThirdPartyCookies);
         wv.addJavascriptInterface(new ScrollTrackBridge(wv), "__djvScroll");
         wv.addJavascriptInterface(new MobileMediaBridge(tab), "__djvMedia");
+        if (!tab.isPrivate) {
+            wv.addJavascriptInterface(new MobileGoogleBridge(tab), "__djvGoogle");
+        }
 
         wv.setScrollListener((scrollY, deltaY) -> {
             if (tab.id != activeTabId || !"none".equals(activeUiScreen) || urlInput.hasFocus()) return;
@@ -1346,6 +1534,26 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         });
 
         wv.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                if (request == null || request.getUrl() == null) return false;
+                String reqUrl = request.getUrl().toString();
+                if (httpsFirst && request.isForMainFrame() && reqUrl.startsWith("http://") && !isLocalHttpHost(request.getUrl().getHost())) {
+                    String upgraded = "https://" + reqUrl.substring(7);
+                    loadTabUrl(tab, upgraded);
+                    return true;
+                }
+                if (doNotTrack && request.isForMainFrame() && !request.isRedirect() && request.hasGesture()
+                    && (reqUrl.startsWith("http://") || reqUrl.startsWith("https://"))) {
+                    Map<String, String> reqHdrs = request.getRequestHeaders();
+                    if (reqHdrs == null || !"1".equals(reqHdrs.get("DNT"))) {
+                        loadTabUrl(tab, reqUrl);
+                        return true;
+                    }
+                }
+                return false;
+            }
+
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 String reqUrl = request.getUrl() != null ? request.getUrl().toString() : "";
@@ -1397,12 +1605,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (adBlocker.isEnabled()) {
                     view.evaluateJavascript(MobileAdBlocker.getCosmeticScript(), null);
                 }
-                view.evaluateJavascript(MobileDownloadManager.getFloatingDownloadButtonScript(), null);
+                if (floatingDownloadButton) {
+                    view.evaluateJavascript(MobileDownloadManager.getFloatingDownloadButtonScript(), null);
+                }
                 if (downloadManager != null) {
                     JSONArray mediaSnap = downloadManager.getMediaSnapshot(tab.id);
                     if (mediaSnap != null && mediaSnap.length() > 0) {
                         view.evaluateJavascript("if(window.__djvUpdateMobileSniffed)window.__djvUpdateMobileSniffed(" + mediaSnap.toString() + ");", null);
                     }
+                }
+                if (!tab.isPrivate && isGoogleHost(url)) {
+                    injectGoogleAccountSyncScript(view);
                 }
                 injectScrollTopTracker(view);
                 applyDarkWebToTab(tab);
@@ -1421,6 +1634,33 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         });
 
         wv.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
+                if (blockPopups && !isUserGesture) {
+                    return false;
+                }
+                WebView.HitTestResult hit = view.getHitTestResult();
+                String extra = hit != null ? hit.getExtra() : null;
+                boolean activate = !openLinksInBackground;
+                if (extra != null && (extra.startsWith("http://") || extra.startsWith("https://"))) {
+                    createTab(extra, activate, tab.isPrivate);
+                    if (!activate) {
+                        Toast.makeText(MainActivity.this, "Opened in background tab", Toast.LENGTH_SHORT).show();
+                    }
+                    return false;
+                }
+                MobileTab child = createTabInternal(null, activate, tab.isPrivate, true);
+                if (!activate) {
+                    Toast.makeText(MainActivity.this, "Opened in background tab", Toast.LENGTH_SHORT).show();
+                }
+                if (resultMsg != null && resultMsg.obj instanceof WebView.WebViewTransport && child.webView != null) {
+                    ((WebView.WebViewTransport) resultMsg.obj).setWebView(child.webView);
+                    resultMsg.sendToTarget();
+                    return true;
+                }
+                return false;
+            }
+
             @Override
             public void onProgressChanged(WebView view, int newProgress) {
                 if (tab.id == activeTabId) {
@@ -1539,7 +1779,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     private boolean isModalSheetScreen(String scr) {
-        return "menu".equals(scr) || "sync".equals(scr) || "settings".equals(scr) || "wallpapers".equals(scr) || "downloads".equals(scr);
+        return "menu".equals(scr) || "sync".equals(scr) || "settings".equals(scr)
+            || "wallpapers".equals(scr) || "downloads".equals(scr)
+            || "profile".equals(scr) || "clear-data".equals(scr);
     }
 
     private void updateChromeVisibility() {
@@ -1598,7 +1840,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         } else {
             activeUiScreen = "none";
             uiWebView.setVisibility(View.GONE);
-            swipeRefresh.setEnabled(true);
+            swipeRefresh.setEnabled(pullToRefresh);
         }
         if (urlInput.hasFocus()) {
             hideKeyboard();
@@ -1630,7 +1872,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
     private void updateChromeUi() {
         MobileTab t = getActiveTab();
-        boolean isLight = "light".equals(themeMode);
+        boolean isLight = isEffectiveLightTheme();
         boolean isPriv = t != null && t.isPrivate;
         boolean onWeb = (t != null && !t.isNewTab && "none".equals(activeUiScreen));
         int inkMuted = isPriv ? 0xFFEADDFF : (isLight ? 0xFF49454F : 0xFFCAC4D0);
@@ -1716,12 +1958,26 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("wallpaper", wallpaper);
                 st.put("accentColor", accentColor);
                 st.put("themeMode", themeMode);
+                st.put("effectiveTheme", isEffectiveLightTheme() ? "light" : "dark");
                 st.put("barPosition", barPosition);
                 st.put("autoHideBar", autoHideBar);
                 st.put("darkWebPages", darkWebPages);
                 st.put("pageZoom", pageZoom);
+                st.put("desktopSiteDefault", desktopSiteDefault);
+                st.put("httpsFirst", httpsFirst);
+                st.put("doNotTrack", doNotTrack);
+                st.put("blockPopups", blockPopups);
+                st.put("blockThirdPartyCookies", blockThirdPartyCookies);
+                st.put("pullToRefresh", pullToRefresh);
+                st.put("openLinksInBackground", openLinksInBackground);
+                st.put("defaultYoutubeQuality", defaultYoutubeQuality);
+                st.put("floatingDownloadButton", floatingDownloadButton);
                 st.put("adBlockEnabled", adBlocker.isEnabled());
                 st.put("totalBlocked", adBlocker.getTotalBlocked());
+                st.put("profiles", profiles);
+                st.put("activeProfileId", activeProfileId);
+                st.put("mainProfileId", mainProfileId);
+                st.put("activeProfile", getActiveProfileObject());
 
                 boolean isTop = "top".equals(barPosition);
                 int safeTop = pxToDp(insetTopPx) + (isTop && ("start".equals(activeUiScreen) || "omnibox".equals(activeUiScreen)) ? 62 : 0);
@@ -1797,7 +2053,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private void injectReaderMode() {
         MobileTab t = getActiveTab();
         if (t == null || t.isNewTab || t.webView == null) return;
-        boolean isLight = "light".equals(themeMode);
+        boolean isLight = isEffectiveLightTheme();
         String bg = isLight ? "#FEF7FF" : "#141218";
         String fg = isLight ? "#1D1B20" : "#E6E0E9";
         String btnBg = isLight ? "#EADDFF" : "#4F378B";
@@ -1827,15 +2083,137 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         return "wp-m3-amethyst.jpg";
     }
 
+    private static String normalizeAccent(String raw) {
+        if (raw == null) return "amethyst";
+        String a = raw.trim().toLowerCase(Locale.US);
+        if ("sapphire".equals(a) || "aurora".equals(a) || "rose".equals(a) || "gold".equals(a) || "silver".equals(a)) {
+            return a;
+        }
+        return "amethyst";
+    }
+
+    private static String normalizeYoutubeQuality(String raw) {
+        if (raw == null) return "auto";
+        String q = raw.trim().toLowerCase(Locale.US);
+        if ("1080p".equals(q) || "720p".equals(q) || "480p".equals(q) || "360p".equals(q) || "m4a".equals(q) || "webm".equals(q)) {
+            return q;
+        }
+        return "auto";
+    }
+
+    private JSONObject createProfileObject(String id, String name, String accent, boolean isMain) {
+        JSONObject p = new JSONObject();
+        try {
+            p.put("id", id);
+            p.put("name", (name == null || name.trim().isEmpty()) ? "Personal" : name.trim());
+            p.put("accentColor", normalizeAccent(accent));
+            p.put("isMainProfile", isMain);
+            p.put("isGoogleSignedIn", false);
+            p.put("googleEmail", "");
+            p.put("googleDisplayName", "");
+            p.put("googleAvatarUrl", "");
+        } catch (Exception ignored) { }
+        return p;
+    }
+
+    private void ensureValidProfiles() {
+        if (profiles == null || profiles.length() == 0) {
+            profiles = new JSONArray();
+            profiles.put(createProfileObject("default", "Personal", accentColor, true));
+            activeProfileId = "default";
+            mainProfileId = "default";
+            return;
+        }
+        boolean foundActive = false;
+        boolean foundMain = false;
+        for (int i = 0; i < profiles.length(); i++) {
+            JSONObject p = profiles.optJSONObject(i);
+            if (p == null) continue;
+            String id = p.optString("id", "");
+            if (id.equals(activeProfileId)) foundActive = true;
+            if (id.equals(mainProfileId) || p.optBoolean("isMainProfile", false)) {
+                if (!foundMain) {
+                    mainProfileId = id;
+                    foundMain = true;
+                }
+            }
+        }
+        if (!foundActive && profiles.length() > 0) {
+            JSONObject first = profiles.optJSONObject(0);
+            if (first != null) activeProfileId = first.optString("id", "default");
+        }
+        if (!foundMain && profiles.length() > 0) {
+            JSONObject first = profiles.optJSONObject(0);
+            if (first != null) mainProfileId = first.optString("id", "default");
+        }
+        for (int i = 0; i < profiles.length(); i++) {
+            JSONObject p = profiles.optJSONObject(i);
+            if (p == null) continue;
+            try {
+                p.put("isMainProfile", mainProfileId.equals(p.optString("id", "")));
+            } catch (Exception ignored) { }
+        }
+    }
+
+    private JSONObject getActiveProfileObject() {
+        ensureValidProfiles();
+        for (int i = 0; i < profiles.length(); i++) {
+            JSONObject p = profiles.optJSONObject(i);
+            if (p != null && activeProfileId.equals(p.optString("id", ""))) return p;
+        }
+        return profiles.optJSONObject(0);
+    }
+
+    private void applyDetectedGoogleAccount(String displayName, String email, String avatarUrl) {
+        if (email == null || !email.contains("@")) return;
+        String cleanEmail = email.trim();
+        String cleanName = displayName != null ? displayName.trim() : "";
+        String cleanAvatar = avatarUrl != null ? avatarUrl.trim() : "";
+        JSONObject p = getActiveProfileObject();
+        if (p == null) return;
+        String prevEmail = p.optString("googleEmail", "");
+        boolean wasSignedIn = p.optBoolean("isGoogleSignedIn", false);
+        try {
+            p.put("isGoogleSignedIn", true);
+            p.put("googleEmail", cleanEmail);
+            if (!cleanName.isEmpty()) p.put("googleDisplayName", cleanName);
+            if (!cleanAvatar.isEmpty()) p.put("googleAvatarUrl", cleanAvatar);
+        } catch (Exception ignored) { }
+        saveLocalCollections();
+        pushStateToUi();
+        if (!wasSignedIn || !cleanEmail.equalsIgnoreCase(prevEmail)) {
+            Toast.makeText(this, "Signed in with Google: " + cleanEmail, Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void loadLocalCollections() {
         searchEngine = prefs.getString("searchEngine", "google");
         wallpaper = normalizeM3WallpaperId(prefs.getString("wallpaper", "wp-m3-amethyst.jpg"));
-        accentColor = prefs.getString("accentColor", "amethyst");
-        themeMode = prefs.getString("themeMode", "dark");
-        barPosition = prefs.getString("barPosition", "bottom");
+        accentColor = normalizeAccent(prefs.getString("accentColor", "amethyst"));
+        String tm = prefs.getString("themeMode", "dark");
+        themeMode = ("light".equals(tm) || "auto".equals(tm)) ? tm : "dark";
+        barPosition = "top".equals(prefs.getString("barPosition", "bottom")) ? "top" : "bottom";
         autoHideBar = prefs.getBoolean("autoHideBar", true);
         darkWebPages = prefs.getBoolean("darkWebPages", false);
-        pageZoom = prefs.getInt("pageZoom", 100);
+        pageZoom = Math.max(80, Math.min(150, prefs.getInt("pageZoom", 100)));
+        desktopSiteDefault = prefs.getBoolean("desktopSiteDefault", false);
+        httpsFirst = prefs.getBoolean("httpsFirst", true);
+        doNotTrack = prefs.getBoolean("doNotTrack", true);
+        blockPopups = prefs.getBoolean("blockPopups", true);
+        blockThirdPartyCookies = prefs.getBoolean("blockThirdPartyCookies", true);
+        pullToRefresh = prefs.getBoolean("pullToRefresh", true);
+        openLinksInBackground = prefs.getBoolean("openLinksInBackground", false);
+        defaultYoutubeQuality = normalizeYoutubeQuality(prefs.getString("defaultYoutubeQuality", "auto"));
+        floatingDownloadButton = prefs.getBoolean("floatingDownloadButton", true);
+        activeProfileId = prefs.getString("activeProfileId", "default");
+        mainProfileId = prefs.getString("mainProfileId", "default");
+        try {
+            String pRaw = prefs.getString("profiles", "");
+            profiles = (pRaw != null && !pRaw.isEmpty()) ? new JSONArray(pRaw) : new JSONArray();
+        } catch (Exception e) {
+            profiles = new JSONArray();
+        }
+        ensureValidProfiles();
         try { bookmarks = new JSONArray(prefs.getString("bookmarks", "")); } catch (Exception e) { bookmarks = defaultBookmarks(); }
         if (bookmarks.length() == 0) bookmarks = defaultBookmarks();
         try { readingList = new JSONArray(prefs.getString("readingList", "[]")); } catch (Exception e) { readingList = new JSONArray(); }
@@ -1874,6 +2252,18 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putBoolean("autoHideBar", autoHideBar)
             .putBoolean("darkWebPages", darkWebPages)
             .putInt("pageZoom", pageZoom)
+            .putBoolean("desktopSiteDefault", desktopSiteDefault)
+            .putBoolean("httpsFirst", httpsFirst)
+            .putBoolean("doNotTrack", doNotTrack)
+            .putBoolean("blockPopups", blockPopups)
+            .putBoolean("blockThirdPartyCookies", blockThirdPartyCookies)
+            .putBoolean("pullToRefresh", pullToRefresh)
+            .putBoolean("openLinksInBackground", openLinksInBackground)
+            .putString("defaultYoutubeQuality", defaultYoutubeQuality)
+            .putBoolean("floatingDownloadButton", floatingDownloadButton)
+            .putString("profiles", profiles.toString())
+            .putString("activeProfileId", activeProfileId)
+            .putString("mainProfileId", mainProfileId)
             .putBoolean("adBlockEnabled", adBlocker != null && adBlocker.isEnabled())
             .putLong("totalBlocked", adBlocker != null ? adBlocker.getTotalBlocked() : 0)
             .putString("bookmarks", bookmarks.toString())
@@ -1949,7 +2339,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (raw == null) return "";
         String s = raw.trim();
         if (s.isEmpty()) return "";
-        if (s.startsWith("http://") || s.startsWith("https://")) return s;
+        if (s.startsWith("http://") || s.startsWith("https://")) return maybeUpgradeHttps(s);
         if (!s.contains(" ") && s.contains(".") && !s.startsWith(".") && !s.endsWith(".")) {
             return "https://" + s;
         }
@@ -1958,6 +2348,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             if ("duckduckgo".equals(searchEngine)) return "https://duckduckgo.com/?q=" + q;
             if ("brave".equals(searchEngine)) return "https://search.brave.com/search?q=" + q;
             if ("bing".equals(searchEngine)) return "https://www.bing.com/search?q=" + q;
+            if ("ecosia".equals(searchEngine)) return "https://www.ecosia.org/search?q=" + q;
             if ("perplexity".equals(searchEngine)) return "https://www.perplexity.ai/search?q=" + q;
             return "https://www.google.com/search?q=" + q;
         } catch (Exception e) {
@@ -2306,7 +2697,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         @JavascriptInterface
         public void turboAddUrl(final String rawUrl, final String suggestedName) {
-            turboAddUrlWithQuality(rawUrl, "auto", suggestedName);
+            turboAddUrlWithQuality(rawUrl, defaultYoutubeQuality, suggestedName);
         }
 
         @JavascriptInterface
@@ -2572,7 +2963,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 MobileTab t = getActiveTab();
                 if (t == null || t.isNewTab || t.webView == null) return;
                 t.desktopMode = !t.desktopMode;
-                t.webView.getSettings().setUserAgentString(t.desktopMode ? DESKTOP_UA : null);
+                t.webView.getSettings().setUserAgentString(t.desktopMode ? DESKTOP_UA : resolveMobileUserAgent());
                 t.webView.reload();
                 closeOverlayScreen();
                 Toast.makeText(MainActivity.this, t.desktopMode ? "Desktop Site Enabled" : "Mobile Site Enabled", Toast.LENGTH_SHORT).show();
@@ -2632,7 +3023,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         @JavascriptInterface
         public void setAccent(final String ac) {
             mainHandler.post(() -> {
-                accentColor = ac;
+                accentColor = normalizeAccent(ac);
+                JSONObject p = getActiveProfileObject();
+                if (p != null) {
+                    try { p.put("accentColor", accentColor); } catch (Exception ignored) { }
+                }
                 saveLocalCollections();
                 applyNativeTheme();
                 pushStateToUi();
@@ -2642,9 +3037,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         @JavascriptInterface
         public void setThemeMode(final String mode) {
             mainHandler.post(() -> {
-                themeMode = "light".equalsIgnoreCase(mode) ? "light" : "dark";
+                if ("light".equalsIgnoreCase(mode)) themeMode = "light";
+                else if ("auto".equalsIgnoreCase(mode)) themeMode = "auto";
+                else themeMode = "dark";
                 saveLocalCollections();
                 applyNativeTheme();
+                updateChromeUi();
                 pushStateToUi();
             });
         }
@@ -2683,9 +3081,24 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         @JavascriptInterface
         public void setPageZoom(final int zoom) {
             mainHandler.post(() -> {
-                pageZoom = Math.max(75, Math.min(150, zoom));
+                pageZoom = Math.max(80, Math.min(150, zoom));
                 for (MobileTab t : tabs) {
                     if (t.webView != null) t.webView.getSettings().setTextZoom(pageZoom);
+                }
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleDesktopSiteDefault() {
+            mainHandler.post(() -> {
+                desktopSiteDefault = !desktopSiteDefault;
+                for (MobileTab t : tabs) {
+                    t.desktopMode = desktopSiteDefault;
+                    if (t.webView != null) {
+                        t.webView.getSettings().setUserAgentString(t.desktopMode ? DESKTOP_UA : resolveMobileUserAgent());
+                    }
                 }
                 saveLocalCollections();
                 pushStateToUi();
@@ -2703,12 +3116,373 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
 
         @JavascriptInterface
-        public void clearHistory() {
+        public void toggleHttpsFirst() {
             mainHandler.post(() -> {
-                history = new JSONArray();
+                httpsFirst = !httpsFirst;
                 saveLocalCollections();
                 pushStateToUi();
-                Toast.makeText(MainActivity.this, "Mobile history cleared", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleDoNotTrack() {
+            mainHandler.post(() -> {
+                doNotTrack = !doNotTrack;
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleBlockPopups() {
+            mainHandler.post(() -> {
+                blockPopups = !blockPopups;
+                applyWebViewSettingsToAllTabs();
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleBlockThirdPartyCookies() {
+            mainHandler.post(() -> {
+                blockThirdPartyCookies = !blockThirdPartyCookies;
+                applyWebViewSettingsToAllTabs();
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void togglePullToRefresh() {
+            mainHandler.post(() -> {
+                pullToRefresh = !pullToRefresh;
+                MobileTab active = getActiveTab();
+                boolean onWeb = active != null && !active.isNewTab && "none".equals(activeUiScreen);
+                if (swipeRefresh != null) swipeRefresh.setEnabled(pullToRefresh && onWeb);
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleOpenLinksInBackground() {
+            mainHandler.post(() -> {
+                openLinksInBackground = !openLinksInBackground;
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void openLinkInBackground(final String url) {
+            mainHandler.post(() -> {
+                if (url == null || url.trim().isEmpty()) return;
+                MobileTab active = getActiveTab();
+                createTab(url.trim(), false, active != null && active.isPrivate);
+                Toast.makeText(MainActivity.this, "Opened in background tab", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void setDefaultYoutubeQuality(final String quality) {
+            mainHandler.post(() -> {
+                defaultYoutubeQuality = normalizeYoutubeQuality(quality);
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleFloatingDownloadButton() {
+            mainHandler.post(() -> {
+                floatingDownloadButton = !floatingDownloadButton;
+                for (MobileTab t : tabs) {
+                    if (t.webView == null || t.isNewTab) continue;
+                    if (floatingDownloadButton) {
+                        t.webView.evaluateJavascript(MobileDownloadManager.getFloatingDownloadButtonScript(), null);
+                    } else {
+                        t.webView.evaluateJavascript("(function(){var h=document.getElementById('__djv_m_antdm__');if(h)h.remove();window.__djvMobileAntDm=false;})();", null);
+                    }
+                }
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void clearBrowsingData(final boolean clearHistory, final boolean clearCookies, final boolean clearCache, final boolean clearDownloads) {
+            mainHandler.post(() -> {
+                List<String> cleared = new ArrayList<>();
+                if (clearHistory) {
+                    history = new JSONArray();
+                    cleared.add("History");
+                }
+                if (clearCookies) {
+                    try {
+                        CookieManager cm = CookieManager.getInstance();
+                        cm.removeAllCookies(null);
+                        cm.flush();
+                    } catch (Exception ignored) { }
+                    try {
+                        WebStorage.getInstance().deleteAllData();
+                    } catch (Exception ignored) { }
+                    cleared.add("Cookies");
+                }
+                if (clearCache) {
+                    boolean clearedAny = false;
+                    for (MobileTab t : tabs) {
+                        if (t.webView != null) {
+                            t.webView.clearCache(true);
+                            clearedAny = true;
+                        }
+                    }
+                    if (!clearedAny && uiWebView != null) {
+                        uiWebView.clearCache(true);
+                    }
+                    cleared.add("Cache");
+                }
+                if (clearDownloads) {
+                    if (downloadManager != null) downloadManager.clearCompleted();
+                    cleared.add("Downloads");
+                }
+                saveLocalCollections();
+                pushStateToUi();
+                if (!cleared.isEmpty()) {
+                    StringBuilder sb = new StringBuilder("Cleared ");
+                    for (int i = 0; i < cleared.size(); i++) {
+                        if (i > 0) sb.append(i == cleared.size() - 1 ? " & " : ", ");
+                        sb.append(cleared.get(i));
+                    }
+                    Toast.makeText(MainActivity.this, sb.toString(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void clearHistory() {
+            clearBrowsingData(true, false, false, false);
+        }
+
+        @JavascriptInterface
+        public void googleSignIn() {
+            mainHandler.post(() -> {
+                MobileTab active = getActiveTab();
+                if (active != null && active.isPrivate) {
+                    createTab(GOOGLE_SIGNIN_URL, true, false);
+                } else {
+                    navigateActiveTab(GOOGLE_SIGNIN_URL);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void googleSignUp() {
+            mainHandler.post(() -> {
+                MobileTab active = getActiveTab();
+                if (active != null && active.isPrivate) {
+                    createTab(GOOGLE_SIGNUP_URL, true, false);
+                } else {
+                    navigateActiveTab(GOOGLE_SIGNUP_URL);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void googleManageAccount() {
+            mainHandler.post(() -> {
+                MobileTab active = getActiveTab();
+                if (active != null && active.isPrivate) {
+                    createTab(GOOGLE_ACCOUNT_URL, true, false);
+                } else {
+                    navigateActiveTab(GOOGLE_ACCOUNT_URL);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void googleSyncProfile() {
+            mainHandler.post(() -> {
+                MobileTab active = getActiveTab();
+                if (active != null && !active.isPrivate && !active.isNewTab && active.webView != null && isGoogleHost(active.url)) {
+                    injectGoogleAccountSyncScript(active.webView);
+                    Toast.makeText(MainActivity.this, "Syncing Google Account info...", Toast.LENGTH_SHORT).show();
+                } else {
+                    createTab(GOOGLE_ACCOUNT_URL, true, false);
+                    Toast.makeText(MainActivity.this, "Opening Google Account to sync...", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void googleSignOut() {
+            mainHandler.post(() -> {
+                JSONObject p = getActiveProfileObject();
+                if (p != null) {
+                    try {
+                        p.put("isGoogleSignedIn", false);
+                        p.put("googleEmail", "");
+                        p.put("googleDisplayName", "");
+                        p.put("googleAvatarUrl", "");
+                    } catch (Exception ignored) { }
+                }
+                saveLocalCollections();
+                pushStateToUi();
+                Toast.makeText(MainActivity.this, "Signed out of Google Account", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void createProfile(final String name, final String accent, final boolean switchNow) {
+            mainHandler.post(() -> {
+                ensureValidProfiles();
+                String cleanName = (name == null || name.trim().isEmpty()) ? ("Profile " + (profiles.length() + 1)) : name.trim();
+                String cleanAccent = normalizeAccent(accent);
+                String id = "profile-" + System.currentTimeMillis();
+                JSONObject np = createProfileObject(id, cleanName, cleanAccent, false);
+                profiles.put(np);
+                if (switchNow) {
+                    activeProfileId = id;
+                    accentColor = cleanAccent;
+                    applyNativeTheme();
+                }
+                saveLocalCollections();
+                pushStateToUi();
+                Toast.makeText(MainActivity.this, "Created profile " + cleanName, Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void switchProfile(final String profileId) {
+            mainHandler.post(() -> {
+                ensureValidProfiles();
+                for (int i = 0; i < profiles.length(); i++) {
+                    JSONObject p = profiles.optJSONObject(i);
+                    if (p != null && profileId != null && profileId.equals(p.optString("id", ""))) {
+                        activeProfileId = profileId;
+                        accentColor = normalizeAccent(p.optString("accentColor", accentColor));
+                        saveLocalCollections();
+                        applyNativeTheme();
+                        updateChromeUi();
+                        pushStateToUi();
+                        Toast.makeText(MainActivity.this, "Switched to " + p.optString("name", "Profile"), Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void updateActiveProfile(final String name, final String accent) {
+            mainHandler.post(() -> {
+                JSONObject p = getActiveProfileObject();
+                if (p == null) return;
+                String cleanName = (name == null || name.trim().isEmpty()) ? p.optString("name", "Personal") : name.trim();
+                String cleanAccent = normalizeAccent(accent);
+                try {
+                    p.put("name", cleanName);
+                    p.put("accentColor", cleanAccent);
+                } catch (Exception ignored) { }
+                accentColor = cleanAccent;
+                saveLocalCollections();
+                applyNativeTheme();
+                updateChromeUi();
+                pushStateToUi();
+                Toast.makeText(MainActivity.this, "Profile saved", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void setMainProfile(final String profileId) {
+            mainHandler.post(() -> {
+                ensureValidProfiles();
+                boolean found = false;
+                for (int i = 0; i < profiles.length(); i++) {
+                    JSONObject p = profiles.optJSONObject(i);
+                    if (p != null && profileId != null && profileId.equals(p.optString("id", ""))) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) return;
+                mainProfileId = profileId;
+                for (int i = 0; i < profiles.length(); i++) {
+                    JSONObject p = profiles.optJSONObject(i);
+                    if (p != null) {
+                        try { p.put("isMainProfile", mainProfileId.equals(p.optString("id", ""))); } catch (Exception ignored) { }
+                    }
+                }
+                saveLocalCollections();
+                pushStateToUi();
+                Toast.makeText(MainActivity.this, "Main profile updated", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void deleteProfile(final String profileId) {
+            mainHandler.post(() -> {
+                ensureValidProfiles();
+                if (profiles.length() <= 1) {
+                    Toast.makeText(MainActivity.this, "Keep at least one profile", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                JSONArray next = new JSONArray();
+                for (int i = 0; i < profiles.length(); i++) {
+                    JSONObject p = profiles.optJSONObject(i);
+                    if (p != null && !p.optString("id", "").equals(profileId)) {
+                        next.put(p);
+                    }
+                }
+                if (next.length() == 0) return;
+                profiles = next;
+                ensureValidProfiles();
+                JSONObject active = getActiveProfileObject();
+                if (active != null) {
+                    accentColor = normalizeAccent(active.optString("accentColor", "amethyst"));
+                }
+                saveLocalCollections();
+                applyNativeTheme();
+                updateChromeUi();
+                pushStateToUi();
+                Toast.makeText(MainActivity.this, "Profile removed", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void resetSettings() {
+            mainHandler.post(() -> {
+                themeMode = "dark";
+                accentColor = "amethyst";
+                wallpaper = "wp-m3-amethyst.jpg";
+                barPosition = "bottom";
+                autoHideBar = true;
+                darkWebPages = false;
+                pageZoom = 100;
+                desktopSiteDefault = false;
+                searchEngine = "google";
+                pullToRefresh = true;
+                openLinksInBackground = false;
+                httpsFirst = true;
+                doNotTrack = true;
+                blockPopups = true;
+                blockThirdPartyCookies = true;
+                defaultYoutubeQuality = "auto";
+                floatingDownloadButton = true;
+                if (adBlocker != null) adBlocker.setEnabled(true);
+                for (MobileTab t : tabs) {
+                    t.desktopMode = false;
+                }
+                JSONObject activeProf = getActiveProfileObject();
+                if (activeProf != null) {
+                    try { activeProf.put("accentColor", "amethyst"); } catch (Exception ignored) { }
+                }
+                applyWebViewSettingsToAllTabs();
+                applyBarPosition();
+                applyNativeTheme();
+                updateChromeUi();
+                saveLocalCollections();
+                pushStateToUi();
+                Toast.makeText(MainActivity.this, "Settings reset to defaults", Toast.LENGTH_SHORT).show();
             });
         }
 

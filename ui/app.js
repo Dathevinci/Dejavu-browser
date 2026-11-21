@@ -1,6 +1,7 @@
 /**
- * dejavu v4.4.0 Native Shell Controller — A-to-Z Google Pixel Material Design 3
- * Pure M3 tonal surfaces, 17 Pure M3 & Butterfly wallpapers, YouTube MP4/MP3 Turbo Downloader.
+ * dejavu v4.5.0 Native Shell Controller — Authentic Google Material Design 3
+ * Full 10-Category Pixel/Chrome Settings, Multi-Window & Chrome-Style Profiles,
+ * Google Account Sign-In Wizard, 17 Pure M3 Wallpapers & 8x Turbo Downloader.
  */
 (function () {
   const send = (msg) => {
@@ -17,6 +18,7 @@
   const dragSpacer = document.getElementById('drag-spacer');
 
   const btnHome = document.getElementById('btn-home');
+  const btnToolbarHome = document.getElementById('btn-toolbar-home');
   const btnSidebar = document.getElementById('btn-sidebar');
   const btnGroupPill = document.getElementById('btn-group-pill');
   const groupBadgeDot = document.getElementById('group-badge-dot');
@@ -39,6 +41,7 @@
   const tabsStrip = document.getElementById('tabs-strip');
   const btnNewTab = document.getElementById('btn-new-tab');
 
+  const privateBadgePill = document.getElementById('private-badge-pill');
   const btnDownloads = document.getElementById('btn-downloads');
   const dlDot = document.getElementById('dl-dot');
   const btnVpn = document.getElementById('btn-vpn');
@@ -48,9 +51,13 @@
   const btnShare = document.getElementById('btn-share');
   const btnTabOverview = document.getElementById('btn-tab-overview');
   const btnHistory = document.getElementById('btn-history');
+  const btnSettings = document.getElementById('btn-settings');
   const btnProfile = document.getElementById('btn-profile');
   const profileAvatarSlot = document.getElementById('profile-avatar-slot');
+  const profilePillName = document.getElementById('profile-pill-name');
+  const profileMainChip = document.getElementById('profile-main-chip');
   const profileUpdateDot = document.getElementById('profile-update-dot');
+  const btnMenu = document.getElementById('btn-menu');
   const winMaxBtn = document.getElementById('win-max');
   const favbar = document.getElementById('favbar');
   const favbarList = document.getElementById('favbar-list');
@@ -59,6 +66,7 @@
   const spBadgeAvatar = document.getElementById('sp-badge-avatar');
   const spBadgeGreeting = document.getElementById('sp-badge-greeting');
   const spBadgeName = document.getElementById('sp-badge-name');
+  const spGoogleCta = document.getElementById('sp-google-cta');
   const startpageStatusPill = document.getElementById('startpage-status-pill');
   const spStatusLock = document.getElementById('sp-status-lock');
   const startpageStatusText = document.getElementById('startpage-status-text');
@@ -70,6 +78,7 @@
   const shortcutsGrid = document.getElementById('shortcuts-grid');
   const frequentGrid = document.getElementById('frequent-grid');
   const readingGrid = document.getElementById('reading-grid');
+  const heroSearchWrap = document.querySelector('.hero-search-wrap');
 
   const spSecFavorites = document.getElementById('sp-sec-favorites');
   const spSecFrequent = document.getElementById('sp-sec-frequent');
@@ -110,32 +119,13 @@
   const btnCustomWp = document.getElementById('btn-custom-wp');
   const storeTabs = document.getElementById('store-tabs');
   const wallpaperGrid = document.getElementById('wallpaper-grid');
-  const btnSettings = document.getElementById('btn-settings');
-  const heroSearchWrap = document.querySelector('.hero-search-wrap');
 
-  const settingsOverlay = document.getElementById('settings-overlay');
-  const settingsSearchInput = document.getElementById('settings-search-input');
-  const settingsNav = document.getElementById('settings-nav');
-  const settingsPaneTitle = document.getElementById('settings-pane-title');
-  const settingsPaneSub = document.getElementById('settings-pane-sub');
-  const settingsVersionSub = document.getElementById('settings-version-sub');
-  const btnSettingsDone = document.getElementById('btn-settings-done');
-  const btnSettingsReset = document.getElementById('btn-settings-reset');
-  const settingsToast = document.getElementById('settings-toast');
-  const settingsWallpaperGrid = document.getElementById('settings-wallpaper-grid');
-  const optWpFilter = document.getElementById('opt-wp-filter');
-  const btnOptUploadWp = document.getElementById('btn-opt-upload-wp');
-  const btnSpGotoWallpapers = document.getElementById('btn-sp-goto-wallpapers');
-  const btnSpUploadWp = document.getElementById('btn-sp-upload-wp');
-  const optSearchEngine = document.getElementById('opt-search-engine');
-  const optStartup = document.getElementById('opt-startup');
-  const optNewtabMode = document.getElementById('opt-newtab-mode');
-  const optHomepageUrl = document.getElementById('opt-homepage-url');
-  const btnSaveHomepage = document.getElementById('btn-save-homepage');
-  const optShowFavbar = document.getElementById('opt-show-favbar');
-  const optShowNavRail = document.getElementById('opt-show-navrail');
-  const optFloatingMediaBtn = document.getElementById('opt-floating-media-btn');
+  const prefFavorites = document.getElementById('pref-favorites');
+  const prefFrequent = document.getElementById('pref-frequent');
+  const prefPrivacy = document.getElementById('pref-privacy');
+  const prefReading = document.getElementById('pref-reading');
 
+  // Left Navigation Rail
   const railNewtab = document.getElementById('rail-newtab');
   const railHome = document.getElementById('rail-home');
   const railSidebar = document.getElementById('rail-sidebar');
@@ -152,13 +142,60 @@
   const railSettings = document.getElementById('rail-settings');
   const railCollapse = document.getElementById('rail-collapse');
 
+  // Settings Workspace (10 Categories)
+  const settingsOverlay = document.getElementById('settings-overlay');
+  const settingsScrollContainer = document.getElementById('settings-scroll-container');
+  const settingsSearchInput = document.getElementById('settings-search-input');
+  const btnSettingsSearchClear = document.getElementById('btn-settings-search-clear');
+  const settingsSearchBanner = document.getElementById('settings-search-banner');
+  const settingsSearchCount = document.getElementById('settings-search-count');
+  const btnSettingsSearchReset = document.getElementById('btn-settings-search-reset');
+  const settingsSearchEmpty = document.getElementById('settings-search-empty');
+  const settingsNav = document.getElementById('settings-nav');
+  const settingsPaneHeader = document.getElementById('settings-pane-header');
+  const settingsPaneTitle = document.getElementById('settings-pane-title');
+  const settingsPaneSub = document.getElementById('settings-pane-sub');
+  const settingsVersionSub = document.getElementById('settings-version-sub');
+  const btnSettingsDone = document.getElementById('btn-settings-done');
+  const btnSettingsReset = document.getElementById('btn-settings-reset');
+  const settingsToast = document.getElementById('settings-toast');
+
+  // Category 1: You and Google
+  const youHeroAvatar = document.getElementById('you-hero-avatar');
+  const youHeroName = document.getElementById('you-hero-name');
+  const youMainChip = document.getElementById('you-main-chip');
+  const youSyncChip = document.getElementById('you-sync-chip');
+  const youHeroEmail = document.getElementById('you-hero-email');
+  const btnYouGoogleSignin = document.getElementById('btn-you-google-signin');
+  const btnYouGoogleSignup = document.getElementById('btn-you-google-signup');
+  const btnYouGoogleSync = document.getElementById('btn-you-google-sync');
+  const btnYouGoogleSignout = document.getElementById('btn-you-google-signout');
+  const btnYouCustomizeProfile = document.getElementById('btn-you-customize-profile');
+  const youWindowSummary = document.getElementById('you-window-summary');
+  const btnYouNewWindow = document.getElementById('btn-you-new-window');
+  const btnYouPrivateWindow = document.getElementById('btn-you-private-window');
+  const btnYouAddProfile = document.getElementById('btn-you-add-profile');
+  const settingsProfilesList = document.getElementById('settings-profiles-list');
+
+  // Category 2: Appearance & Material You
   const optAppearanceMode = document.getElementById('opt-appearance-mode');
   const optAccentSwatches = document.getElementById('opt-accent-swatches');
-  const optFullUrl = document.getElementById('opt-full-url');
+  const settingsWpCountPill = document.getElementById('settings-wp-count-pill');
+  const optWpFilter = document.getElementById('opt-wp-filter');
+  const btnOptUploadWp = document.getElementById('btn-opt-upload-wp');
+  const settingsWallpaperGrid = document.getElementById('settings-wallpaper-grid');
+  const optWpDim = document.getElementById('opt-wp-dim');
+  const optFontSize = document.getElementById('opt-font-size');
+  const optFontFamily = document.getElementById('opt-font-family');
+  const optDefaultZoomSlider = document.getElementById('opt-default-zoom-slider');
+  const optDefaultZoomVal = document.getElementById('opt-default-zoom-val');
+  const optShowHome = document.getElementById('opt-show-home');
+  const optShowFavbar = document.getElementById('opt-show-favbar');
+  const optShowNavRail = document.getElementById('opt-show-navrail');
   const optCompactTabs = document.getElementById('opt-compact-tabs');
   const optAlwaysClose = document.getElementById('opt-always-close');
-  const optDefaultZoom = document.getElementById('opt-default-zoom');
-  const optWpDim = document.getElementById('opt-wp-dim');
+  const optFullUrl = document.getElementById('opt-full-url');
+  const optSmoothScroll = document.getElementById('opt-smooth-scroll');
   const optReduceMotion = document.getElementById('opt-reduce-motion');
   const optSpFavorites = document.getElementById('opt-sp-favorites');
   const optSpFrequent = document.getElementById('opt-sp-frequent');
@@ -166,26 +203,168 @@
   const optSpReading = document.getElementById('opt-sp-reading');
   const optSpGreeting = document.getElementById('opt-sp-greeting');
   const optSpSearch = document.getElementById('opt-sp-search');
+
+  // Category 3: Privacy & Security
   const optGlobalAdblock = document.getElementById('opt-global-adblock');
   const optAdblockStats = document.getElementById('opt-adblock-stats');
   const optPausedHostsList = document.getElementById('opt-paused-hosts-list');
-  const optVpnMode = document.getElementById('opt-vpn-mode');
-  const optVpnAuto = document.getElementById('opt-vpn-auto');
+  const rowClearBrowsingData = document.getElementById('row-clear-browsing-data');
+  const btnOpenClearData = document.getElementById('btn-open-clear-data');
+  const optSafeBrowsing = document.getElementById('opt-safe-browsing');
+  const optHttpsFirst = document.getElementById('opt-https-first');
+  const optDoNotTrack = document.getElementById('opt-do-not-track');
+  const optBlock3pCookies = document.getElementById('opt-block-3p-cookies');
+  const optBlockPopups = document.getElementById('opt-block-popups');
+  const optClearCookiesExit = document.getElementById('opt-clear-cookies-exit');
+  const optPermCamera = document.getElementById('opt-perm-camera');
+  const optPermMic = document.getElementById('opt-perm-mic');
+  const optPermLocation = document.getElementById('opt-perm-location');
+  const optPermNotifications = document.getElementById('opt-perm-notifications');
+  const optPermClipboard = document.getElementById('opt-perm-clipboard');
+  const optPermAutoplay = document.getElementById('opt-perm-autoplay');
+
+  // Category 4: Search Engine
+  const optSearchEngine = document.getElementById('opt-search-engine');
+  const optCustomSearchUrl = document.getElementById('opt-custom-search-url');
+  const btnSaveCustomSearch = document.getElementById('btn-save-custom-search');
+  const optAddressSuggestions = document.getElementById('opt-address-suggestions');
+
+  // Category 5: Tabs & On Startup
+  const optStartup = document.getElementById('opt-startup');
+  const optNewtabMode = document.getElementById('opt-newtab-mode');
+  const optHomepageUrl = document.getElementById('opt-homepage-url');
+  const btnSaveHomepage = document.getElementById('btn-save-homepage');
+  const optMemorySaver = document.getElementById('opt-memory-saver');
+  const optMemoryMinutes = document.getElementById('opt-memory-minutes');
+  const optConfirmCloseTabs = document.getElementById('opt-confirm-close-tabs');
+  const optTabHover = document.getElementById('opt-tab-hover');
+
+  // Category 6: Downloads
+  const optDownloadFolderPath = document.getElementById('opt-download-folder-path');
+  const btnOptChangeDlFolder = document.getElementById('btn-opt-change-dl-folder');
+  const btnOptOpenDlFolder = document.getElementById('btn-opt-open-dl-folder');
+  const optAskDlLocation = document.getElementById('opt-ask-dl-location');
+  const optAutoOpenDl = document.getElementById('opt-auto-open-dl');
+  const optTurboThreads = document.getElementById('opt-turbo-threads');
+  const optDefaultVideoQuality = document.getElementById('opt-default-video-quality');
+  const optFloatingMediaBtn = document.getElementById('opt-floating-media-btn');
+
+  // Category 7: Passwords & Autofill
+  const btnOpenGooglePasswords = document.getElementById('btn-open-google-passwords');
+  const optSavePasswords = document.getElementById('opt-save-passwords');
+  const optAutofillAddresses = document.getElementById('opt-autofill-addresses');
+  const optAutofillPayments = document.getElementById('opt-autofill-payments');
+
+  // Category 8: Privacy VPN
   const optVpnSummary = document.getElementById('opt-vpn-summary');
   const btnOptOpenVpn = document.getElementById('btn-opt-open-vpn');
-  const btnOptClearHistory = document.getElementById('btn-opt-clear-history');
-  const btnOptClearCache = document.getElementById('btn-opt-clear-cache');
-  const optTabsCompactMirror = document.getElementById('opt-tabs-compact-mirror');
-  const optTabsCloseMirror = document.getElementById('opt-tabs-close-mirror');
+  const optVpnAuto = document.getElementById('opt-vpn-auto');
+  const optVpnMode = document.getElementById('opt-vpn-mode');
+  const optVpnWebRtc = document.getElementById('opt-vpn-webrtc');
+  const optVpnCountry = document.getElementById('opt-vpn-country');
 
-  const prefFavorites = document.getElementById('pref-favorites');
-  const prefFrequent = document.getElementById('pref-frequent');
-  const prefPrivacy = document.getElementById('pref-privacy');
-  const prefReading = document.getElementById('pref-reading');
+  // Category 9: Accessibility & System
+  const optHwAccel = document.getElementById('opt-hw-accel');
+  const optSpellcheck = document.getElementById('opt-spellcheck');
+  const optDevtools = document.getElementById('opt-devtools');
+  const btnOptOpenDevtools = document.getElementById('btn-opt-open-devtools');
+  const btnMakeDefaultBrowser = document.getElementById('btn-make-default-browser');
 
-  const settingsWpCountPill = document.getElementById('settings-wp-count-pill');
+  // Category 10: About dejavu
+  const aboutVerBadge = document.getElementById('about-ver-badge');
+  const aboutUpdateStatus = document.getElementById('about-update-status');
+  const btnAboutCheckUpdate = document.getElementById('btn-about-check-update');
+  const aboutWebviewVer = document.getElementById('about-webview-ver');
+  const aboutUserdataDir = document.getElementById('about-userdata-dir');
+  const btnAboutOpenUserdata = document.getElementById('btn-about-open-userdata');
+  const btnAboutGithub = document.getElementById('btn-about-github');
+  const btnAboutWebsite = document.getElementById('btn-about-website');
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v4.4.0 — 16 HD + 1 Live = 17 Themes)
+  // Profile Setup / Google Sign-In Wizard Modal
+  const profileSetupOverlay = document.getElementById('profile-setup-overlay');
+  const psBtnBack = document.getElementById('ps-btn-back');
+  const psStepPill = document.getElementById('ps-step-pill');
+  const psBtnClose = document.getElementById('ps-btn-close');
+  const psViewGoogle = document.getElementById('ps-view-google');
+  const psGoogleTitle = document.getElementById('ps-google-title');
+  const psGoogleSub = document.getElementById('ps-google-sub');
+  const psBtnGoogleSignin = document.getElementById('ps-btn-google-signin');
+  const psBtnGoogleSignup = document.getElementById('ps-btn-google-signup');
+  const psBtnContinueLocal = document.getElementById('ps-btn-continue-local');
+  const psGoogleWait = document.getElementById('ps-google-wait');
+  const psWaitTitle = document.getElementById('ps-wait-title');
+  const psBtnSyncNow = document.getElementById('ps-btn-sync-now');
+  const psManualName = document.getElementById('ps-manual-name');
+  const psManualEmail = document.getElementById('ps-manual-email');
+  const psBtnConfirmGoogle = document.getElementById('ps-btn-confirm-google');
+  const psViewCustomize = document.getElementById('ps-view-customize');
+  const psPreviewBanner = document.getElementById('ps-preview-banner');
+  const psPreviewAvatar = document.getElementById('ps-preview-avatar');
+  const psPreviewName = document.getElementById('ps-preview-name');
+  const psPreviewMainBadge = document.getElementById('ps-preview-main-badge');
+  const psPreviewEmail = document.getElementById('ps-preview-email');
+  const psNameInput = document.getElementById('ps-name-input');
+  const psColorGrid = document.getElementById('ps-color-grid');
+  const psAvatarGrid = document.getElementById('ps-avatar-grid');
+  const psSwMain = document.getElementById('ps-sw-main');
+  const psNewwinRow = document.getElementById('ps-newwin-row');
+  const psSwNewwin = document.getElementById('ps-sw-newwin');
+  const psBtnCancel = document.getElementById('ps-btn-cancel');
+  const psBtnSave = document.getElementById('ps-btn-save');
+
+  // Clear Browsing Data & Reset Settings Dialogs
+  const clearDataOverlay = document.getElementById('clear-data-overlay');
+  const cdTimeRange = document.getElementById('cd-time-range');
+  const cdChkHistory = document.getElementById('cd-chk-history');
+  const cdChkCookies = document.getElementById('cd-chk-cookies');
+  const cdChkCache = document.getElementById('cd-chk-cache');
+  const cdChkDownloads = document.getElementById('cd-chk-downloads');
+  const btnCdCancel = document.getElementById('btn-cd-cancel');
+  const btnCdConfirm = document.getElementById('btn-cd-confirm');
+
+  const resetConfirmOverlay = document.getElementById('reset-confirm-overlay');
+  const btnResetCancel = document.getElementById('btn-reset-cancel');
+  const btnResetConfirm = document.getElementById('btn-reset-confirm');
+
+  // Turbo Download Manager
+  const dlManagerOverlay = document.getElementById('dl-manager-overlay');
+  const dlmNav = document.getElementById('dlm-nav');
+  const dlmTitle = document.getElementById('dlm-title');
+  const dlmSub = document.getElementById('dlm-sub');
+  const dlmUrlInput = document.getElementById('dlm-url-input');
+  const dlmQualitySelect = document.getElementById('dlm-quality-select');
+  const btnDlmAddUrl = document.getElementById('btn-dlm-add-url');
+  const btnDlmScanMedia = document.getElementById('btn-dlm-scan-media');
+  const btnDlmPauseAll = document.getElementById('btn-dlm-pause-all');
+  const btnDlmResumeAll = document.getElementById('btn-dlm-resume-all');
+  const btnDlmClearDone = document.getElementById('btn-dlm-clear-done');
+  const btnDlmClose = document.getElementById('btn-dlm-close');
+  const btnDlmOpenDir = document.getElementById('btn-dlm-open-dir');
+  const dlmSaveDir = document.getElementById('dlm-save-dir');
+  const dlmVideoCard = document.getElementById('dlm-video-card');
+  const dlmVideoTitle = document.getElementById('dlm-video-title');
+  const dlmVideoStatus = document.getElementById('dlm-video-status');
+  const dlmVideoChips = document.getElementById('dlm-video-chips');
+  const btnDlmProbeVideo = document.getElementById('btn-dlm-probe-video');
+  const dlmMediaBanner = document.getElementById('dlm-media-banner');
+  const dlmMbSub = document.getElementById('dlm-mb-sub');
+  const btnDlmRescan = document.getElementById('btn-dlm-rescan');
+  const btnDlmGrabAll = document.getElementById('btn-dlm-grab-all');
+  const dlmList = document.getElementById('dlm-list');
+  const dlmCntAll = document.getElementById('dlm-cnt-all');
+  const dlmCntActive = document.getElementById('dlm-cnt-active');
+  const dlmCntMedia = document.getElementById('dlm-cnt-media');
+
+  const SEED_COLORS = {
+    amethyst: '#d0bcff',
+    sapphire: '#a8c7fa',
+    aurora: '#82d5c4',
+    rose: '#ffb0cc',
+    gold: '#f6bd60',
+    silver: '#b8c8e2'
+  };
+
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v4.5.0 — 16 HD + 1 Live = 17 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 12 Sculptural / Architectural Material Design 3 HD Wallpapers
@@ -220,8 +399,10 @@
 
   let storeFilterCat = 'all';
   let settingsWpFilterCat = 'all';
-  let activeSettingsPane = 'general';
+  let activeSettingsPane = 'you';
   let toastTimer = null;
+  let activeDlTab = 'all';
+  let lastAutoProbedUrl = '';
 
   function syncWallpaperFilterCounts() {
     const total = WALLPAPER_CATALOG.length;
@@ -237,15 +418,48 @@
       live: `Live (${liveCnt})`
     };
     if (settingsWpCountPill) settingsWpCountPill.textContent = String(total);
-    [storeTabs, optWpFilter].forEach((bar) => {
-      if (!bar) return;
-      bar.querySelectorAll('[data-cat]').forEach((btn) => {
+    if (storeTabs) {
+      storeTabs.querySelectorAll('[data-cat]').forEach((btn) => {
         const key = btn.dataset.cat;
         if (labels[key]) btn.textContent = labels[key];
       });
-    });
+    }
+    if (optWpFilter) {
+      optWpFilter.querySelectorAll('[data-cat]').forEach((btn) => {
+        const key = btn.dataset.cat;
+        const span = btn.querySelector('span');
+        if (labels[key]) {
+          if (span) span.textContent = labels[key];
+          else btn.textContent = labels[key];
+        }
+      });
+    }
   }
   syncWallpaperFilterCounts();
+
+  function setSwitchState(el, on) {
+    if (!el) return;
+    const active = !!on;
+    el.classList.toggle('on', active);
+    el.setAttribute('aria-checked', active ? 'true' : 'false');
+  }
+
+  function escapeSugHtml(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function renderProfileAvatarHtml(profile, size) {
+    const sz = size || 24;
+    if (profile && profile.googleAvatarUrl) {
+      const initial = escapeSugHtml(((profile.googleDisplayName || profile.name || 'D')[0] || 'D').toUpperCase());
+      return `<span class="google-photo-avatar" style="width:${sz}px;height:${sz}px;font-size:${Math.round(sz * 0.44)}px;"><img src="${escapeSugHtml(profile.googleAvatarUrl)}" alt="" draggable="false" onerror="this.remove();this.parentElement.textContent='${initial}'"></span>`;
+    }
+    if (window.DejavuAvatars) {
+      return window.DejavuAvatars.renderHtml((profile && profile.avatar) || 'dejavu-halftone', sz);
+    }
+    const ch = escapeSugHtml(((profile && (profile.googleDisplayName || profile.name)) || 'P')[0].toUpperCase());
+    return `<span class="google-photo-avatar" style="width:${sz}px;height:${sz}px;font-size:${Math.round(sz * 0.44)}px;">${ch}</span>`;
+  }
 
   // Boot Zero-CPU Wallpaper Canvas Engine
   window.DejavuNewTabCanvas.init(newtabCanvas);
@@ -268,10 +482,16 @@
       hidePrivacyReport: false,
       hideReadingList: false
     },
-    browserOptions: bootData.browserOptions || {
+    browserOptions: Object.assign({
       searchEngine: 'google',
+      customSearchUrl: '',
+      addressBarSuggestions: true,
       appearanceMode: 'auto',
       accentColor: 'amethyst',
+      fontSize: 'medium',
+      fontFamily: 'system',
+      showHomeButton: true,
+      smoothScrolling: true,
       showFullWebsiteAddress: false,
       alwaysShowTabClose: false,
       compactTabBar: false,
@@ -284,12 +504,43 @@
       hideGreetingBadge: false,
       hideStartPageSearch: false,
       favoritesBarHidden: false,
+      hideNavRail: false,
+      hideFloatingMediaButton: false,
+      doNotTrack: true,
+      httpsFirst: false,
+      blockThirdPartyCookies: true,
+      blockPopups: true,
+      clearCookiesOnExit: false,
+      safeBrowsing: true,
+      permCamera: 'ask',
+      permMicrophone: 'ask',
+      permLocation: 'ask',
+      permNotifications: 'ask',
+      permClipboard: 'ask',
+      permAutoplay: 'allow',
+      memorySaverEnabled: true,
+      memorySaverMinutes: 30,
+      confirmCloseMultipleTabs: false,
+      tabHoverPreview: true,
+      downloadFolder: '',
+      askDownloadLocation: false,
+      turboThreads: 8,
+      defaultVideoQuality: 'best',
+      autoOpenDownloads: false,
+      savePasswords: true,
+      autofillAddresses: true,
+      autofillPayments: false,
       vpnAutoConnect: false,
-      vpnCountry: 'AUTO'
-    },
+      vpnMode: 'smart',
+      vpnCountry: 'AUTO',
+      vpnWebRtcProtection: true,
+      hardwareAcceleration: true,
+      spellcheckEnabled: true,
+      devToolsEnabled: true
+    }, bootData.browserOptions || {}),
     pausedHosts: bootData.pausedHosts || [],
     settingsOpen: false,
-    settingsPane: 'general',
+    settingsPane: 'you',
     dlManagerOpen: false,
     dlManagerTab: 'all',
     turboDownloads: [],
@@ -302,7 +553,19 @@
     videoProbeLoading: false,
     videoProbeStatus: '',
     videoFormats: [],
-    downloadsDir: '',
+    downloadFolder: bootData.downloadFolder || bootData.downloadsDir || '',
+    downloadsDir: bootData.downloadsDir || bootData.downloadFolder || '',
+    userDataDir: bootData.userDataDir || '',
+    webviewVersion: bootData.webviewVersion || '',
+    isPrivateWindow: !!bootData.isPrivateWindow,
+    windowCount: bootData.windowCount || 1,
+    openProfileIds: bootData.openProfileIds || [],
+    profiles: bootData.profiles || [],
+    mainProfileId: bootData.mainProfileId || 'default',
+    onboardingCompleted: !!bootData.onboardingCompleted,
+    appVersion: bootData.appVersion || '4.5.0',
+    updateStatus: bootData.updateStatus || '',
+    updateReadyVersion: bootData.updateReadyVersion || '',
     downloadsCount: 0,
     hasActiveDownload: false,
     readerActive: false,
@@ -339,6 +602,15 @@
       body.classList.remove('app-booting');
     }
   }, 550);
+
+  function syncModalBodyClass() {
+    const anyModal =
+      (profileSetupOverlay && !profileSetupOverlay.classList.contains('hidden')) ||
+      (clearDataOverlay && !clearDataOverlay.classList.contains('hidden')) ||
+      (resetConfirmOverlay && !resetConfirmOverlay.classList.contains('hidden'));
+    body.classList.toggle('modal-open', anyModal);
+    if (anyModal) window.DejavuNewTabCanvas.start();
+  }
 
   // =========================================================================
   // Native Win32 Frameless Window Drag, Resize & Controls
@@ -420,6 +692,7 @@
   // Top Chrome Toolbar Interactions
   // =========================================================================
   btnHome.addEventListener('click', () => send({ type: 'home' }));
+  if (btnToolbarHome) btnToolbarHome.addEventListener('click', () => send({ type: 'home' }));
   btnSidebar.addEventListener('click', () => send({ type: 'openSidebar' }));
   btnGroupPill.addEventListener('click', () => send({ type: 'openSidebar' }));
   btnBack.addEventListener('click', () => send({ type: 'back' }));
@@ -485,11 +758,22 @@
     send({ type: 'openProfiles', anchorRight: Math.round(r.right + 6) });
   });
 
+  if (btnMenu) {
+    btnMenu.addEventListener('click', () => {
+      const r = btnMenu.getBoundingClientRect();
+      send({ type: 'openMenu', anchorRight: Math.round(r.right + 6) });
+    });
+  }
+
   if (startpageProfileBadge) {
     startpageProfileBadge.addEventListener('click', () => {
       const r = btnProfile.getBoundingClientRect();
       send({ type: 'openProfiles', anchorRight: Math.round(r.right + 6) });
     });
+  }
+
+  if (spGoogleCta) {
+    spGoogleCta.addEventListener('click', () => openProfileSetupModal('setup'));
   }
 
   function getTimeGreeting() {
@@ -505,13 +789,16 @@
     if (!startpageProfileBadge) return;
     if (spBadgeGreeting) spBadgeGreeting.textContent = getTimeGreeting();
     if (!profile) return;
-    const key = `${profile.avatar}_${profile.name}`;
+    const dispName = profile.googleDisplayName || profile.name || 'Personal';
+    const key = `${profile.avatar}_${profile.googleAvatarUrl || ''}_${dispName}`;
     if (key !== lastSpBadgeKey) {
       lastSpBadgeKey = key;
-      if (spBadgeName) spBadgeName.textContent = profile.name || 'Default';
-      if (spBadgeAvatar && window.DejavuAvatars) {
-        spBadgeAvatar.innerHTML = window.DejavuAvatars.renderHtml(profile.avatar, 16);
-      }
+      if (spBadgeName) spBadgeName.textContent = dispName;
+      if (spBadgeAvatar) spBadgeAvatar.innerHTML = renderProfileAvatarHtml(profile, 18);
+    }
+    if (spGoogleCta) {
+      const showCta = !state.isPrivateWindow && !profile.isGoogleSignedIn && !state.onboardingCompleted;
+      spGoogleCta.classList.toggle('hidden', !showCta);
     }
   }
 
@@ -574,13 +861,9 @@
       omniboxDomain.textContent = domain || active.displayUrl || '';
       omniboxDomain.classList.remove('is-placeholder');
     } else {
-      omniboxDomain.textContent = 'Search or enter website name';
+      omniboxDomain.textContent = state.isPrivateWindow ? 'Search privately or enter website' : 'Search or enter website name';
       omniboxDomain.classList.add('is-placeholder');
     }
-  }
-
-  function escapeSugHtml(s) {
-    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   function sugIconSvg(item) {
@@ -593,7 +876,7 @@
 
   function requestOmniboxSuggest() {
     const q = omniboxInput.value.trim();
-    if (!q) {
+    if (!q || (state.browserOptions && state.browserOptions.addressBarSuggestions === false)) {
       pendingOmniboxValue = null;
       send({ type: 'suggestClose' });
       return;
@@ -730,13 +1013,14 @@
 
   newtabSearchInput.addEventListener('input', () => {
     const q = newtabSearchInput.value.trim();
-    if (!q) { hideNewtabSuggestions(); return; }
+    if (!q || (state.browserOptions && state.browserOptions.addressBarSuggestions === false)) {
+      hideNewtabSuggestions();
+      return;
+    }
     send({ type: 'suggestQuery', source: 'newtab', query: q });
   });
 
-  newtabSearchInput.addEventListener('blur', () => {
-    setTimeout(hideNewtabSuggestions, 120);
-  });
+  newtabSearchInput.addEventListener('blur', () => setTimeout(hideNewtabSuggestions, 120));
 
   newtabSearchInput.addEventListener('keydown', (e) => {
     if (!ntSuggestItems.length) return;
@@ -955,16 +1239,17 @@
     const p = prefs || {};
     spSecFavorites.classList.toggle('hidden', !!p.hideFavorites);
     spSecPrivacy.classList.toggle('hidden', !!p.hidePrivacyReport);
-    prefFavorites.classList.toggle('on', !p.hideFavorites);
-    prefFrequent.classList.toggle('on', !p.hideFrequentlyVisited);
-    prefPrivacy.classList.toggle('on', !p.hidePrivacyReport);
-    prefReading.classList.toggle('on', !p.hideReadingList);
+    setSwitchState(prefFavorites, !p.hideFavorites);
+    setSwitchState(prefFrequent, !p.hideFrequentlyVisited);
+    setSwitchState(prefPrivacy, !p.hidePrivacyReport);
+    setSwitchState(prefReading, !p.hideReadingList);
   }
 
   function bindStartPagePrefSwitch(btn, field) {
+    if (!btn) return;
     btn.addEventListener('click', () => {
       const nextShow = !btn.classList.contains('on');
-      btn.classList.toggle('on', nextShow);
+      setSwitchState(btn, nextShow);
       state.startPagePrefs = state.startPagePrefs || {};
       state.startPagePrefs[field] = !nextShow;
       applyStartPagePrefs(state.startPagePrefs);
@@ -992,7 +1277,7 @@
   scUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') scSave.click(); });
 
   // =========================================================================
-  // Material Design 3 Wallpaper Gallery & Settings Window
+  // Material Design 3 Wallpaper Gallery (17 Pure M3 Themes)
   // =========================================================================
   function renderWallpaperCardsInto(gridEl, catFilter) {
     if (!gridEl) return;
@@ -1068,7 +1353,7 @@
         state.wallpaper = item.id;
         window.DejavuNewTabCanvas.setWallpaper(item.id);
         renderWallpaperGrid();
-        if (state.settingsOpen && activeSettingsPane === 'wallpapers') renderSettingsWallpaperGrid();
+        if (state.settingsOpen && activeSettingsPane === 'appearance') renderSettingsWallpaperGrid();
         send({ type: 'setWallpaper', wallpaper: item.id });
       });
 
@@ -1076,22 +1361,32 @@
     });
   }
 
-  function renderWallpaperGrid() {
-    renderWallpaperCardsInto(wallpaperGrid, storeFilterCat);
-  }
+  function renderWallpaperGrid() { renderWallpaperCardsInto(wallpaperGrid, storeFilterCat); }
+  function renderSettingsWallpaperGrid() { renderWallpaperCardsInto(settingsWallpaperGrid, settingsWpFilterCat); }
 
-  function renderSettingsWallpaperGrid() {
-    renderWallpaperCardsInto(settingsWallpaperGrid, settingsWpFilterCat);
-  }
-
+  // =========================================================================
+  // Full-Viewport 10-Category Material Design 3 Settings Workspace
+  // =========================================================================
   const SETTINGS_PANE_META = {
-    general: { title: 'General', sub: 'Search engine, startup tabs, homepage & toolbar behavior' },
-    appearance: { title: 'Material You Appearance', sub: 'Theme mode, Dynamic Color seed, address bar & tab layout' },
-    startpage: { title: 'Start Page & Quick Access', sub: 'Choose which Material Design 3 sections appear on new tabs' },
-    wallpapers: { title: 'Pure Material Design 3 Wallpapers', sub: '12 sculptural Google Pixel ceramic artworks, 4 Butterfly M3 editions, Material You Live & custom photos' },
-    privacy: { title: 'Privacy, Ad Blocker & VPN', sub: '100/100 ad shield, paused sites, 86+ country Smart & Tor VPN' },
-    shortcuts: { title: 'Tabs & Keyboard Shortcuts', sub: 'Tab behavior preferences & desktop browser hotkeys' }
+    you: { title: 'You and Google', sub: 'Manage your Google Account, Main Profile, and simultaneous Chrome-style profile windows' },
+    appearance: { title: 'Appearance & Material You', sub: 'Theme mode, Dynamic Color seeds, 17 Pure M3 wallpapers, typography, zoom & chrome' },
+    privacy: { title: 'Privacy & Security', sub: 'dejavu Shield 100/100 Ad Blocker, Clear Browsing Data, tracking defense & site permissions' },
+    search: { title: 'Search Engine', sub: 'Choose your default search provider, custom search template & address bar suggestions' },
+    tabs: { title: 'Tabs & On Startup', sub: 'Startup session restore, Homepage, Memory Saver inactivity timer & keyboard shortcuts' },
+    downloads: { title: 'Downloads', sub: 'Save folder, Turbo multi-thread accelerator connections & default video / MP3 quality' },
+    autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
+    vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
+    system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
+    about: { title: 'About dejavu', sub: 'Version v4.5.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
+
+  function normalizePaneKey(pane) {
+    if (SETTINGS_PANE_META[pane]) return pane;
+    if (pane === 'general') return 'you';
+    if (pane === 'startpage' || pane === 'wallpapers') return 'appearance';
+    if (pane === 'shortcuts') return 'tabs';
+    return 'you';
+  }
 
   function showSettingsToast(text) {
     if (!settingsToast || !text) return;
@@ -1102,21 +1397,26 @@
   }
 
   function setActiveSettingsPane(pane) {
-    const key = SETTINGS_PANE_META[pane] ? pane : 'general';
+    const key = normalizePaneKey(pane);
     activeSettingsPane = key;
     if (settingsNav) {
       settingsNav.querySelectorAll('.settings-nav-item').forEach((b) => {
         b.classList.toggle('active', b.dataset.pane === key);
       });
     }
+    if (settingsPaneHeader) settingsPaneHeader.classList.remove('hidden');
+    if (settingsSearchBanner) settingsSearchBanner.classList.add('hidden');
+    if (settingsSearchEmpty) settingsSearchEmpty.classList.add('hidden');
+
     document.querySelectorAll('.settings-pane').forEach((el) => {
       el.classList.toggle('hidden', el.dataset.paneBody !== key);
+      el.querySelectorAll('.opt-group, .opt-row').forEach((node) => node.classList.remove('search-hidden', 'search-hit'));
     });
     if (settingsPaneTitle) settingsPaneTitle.textContent = SETTINGS_PANE_META[key].title;
     if (settingsPaneSub) settingsPaneSub.textContent = SETTINGS_PANE_META[key].sub;
-    const scroller = settingsOverlay ? settingsOverlay.querySelector('.settings-scroll') : null;
-    if (scroller) scroller.scrollTop = 0;
-    if (key === 'wallpapers') renderSettingsWallpaperGrid();
+    if (settingsScrollContainer) settingsScrollContainer.scrollTop = 0;
+    if (key === 'appearance') renderSettingsWallpaperGrid();
+    if (key === 'you') renderYouAndGooglePane();
   }
 
   function setSegmentedVal(container, val) {
@@ -1124,6 +1424,90 @@
     const str = String(val);
     container.querySelectorAll('.opt-seg-btn').forEach((b) => {
       b.classList.toggle('active', String(b.dataset.val) === str);
+    });
+  }
+
+  function renderYouAndGooglePane() {
+    const ap = state.activeProfile || { id: 'default', name: 'Personal', avatar: 'dejavu-halftone', isMainProfile: true };
+    const signedIn = !!ap.isGoogleSignedIn;
+    const isMain = !!ap.isMainProfile || ap.id === state.mainProfileId;
+
+    if (youHeroAvatar) youHeroAvatar.innerHTML = renderProfileAvatarHtml(ap, 64);
+    if (youHeroName) youHeroName.textContent = ap.googleDisplayName || ap.name || 'Personal';
+    if (youMainChip) youMainChip.classList.toggle('hidden', !isMain);
+    if (youSyncChip) {
+      youSyncChip.textContent = signedIn ? 'Google Signed In' : 'Local Profile';
+      youSyncChip.classList.toggle('tertiary', signedIn);
+    }
+    if (youHeroEmail) {
+      youHeroEmail.textContent = signedIn
+        ? `${ap.googleEmail || 'Connected Google Account'} · Isolated profile cookies & data`
+        : 'Sign in or create a Google Account to use Gmail, YouTube, Drive & Gemini in this isolated profile';
+    }
+    if (btnYouGoogleSignin) btnYouGoogleSignin.classList.toggle('hidden', signedIn);
+    if (btnYouGoogleSignup) btnYouGoogleSignup.classList.toggle('hidden', signedIn);
+    if (btnYouGoogleSignout) btnYouGoogleSignout.classList.toggle('hidden', !signedIn);
+    if (youWindowSummary) {
+      const wc = Number(state.windowCount || 1);
+      youWindowSummary.textContent = `${wc} open ${wc === 1 ? 'window' : 'windows'} in this profile · Launch additional windows or Private browsing anytime`;
+    }
+
+    if (!settingsProfilesList) return;
+    const allProfiles = Array.isArray(state.profiles) ? state.profiles : [];
+    const others = allProfiles.filter((p) => !ap || p.id !== ap.id);
+    settingsProfilesList.innerHTML = '';
+
+    if (!others.length) {
+      settingsProfilesList.innerHTML = `
+        <div class="opt-row">
+          <div class="opt-meta">
+            <div class="opt-title">No other profiles yet</div>
+            <div class="opt-desc">Create separate profiles for Work, School, or Gaming — each opens side-by-side in its own isolated dejavu window.</div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const openSet = new Set(Array.isArray(state.openProfileIds) ? state.openProfileIds : []);
+    others.forEach((p) => {
+      const row = document.createElement('div');
+      row.className = 'prof-settings-row opt-row';
+      const running = !!p.isRunning || openSet.has(p.id);
+      const isProfMain = !!p.isMainProfile || p.id === state.mainProfileId;
+      const disp = p.googleDisplayName || p.name || 'Profile';
+      const sub = p.isGoogleSignedIn
+        ? (p.googleEmail || 'Google Account')
+        : (running ? 'Running in separate window' : 'Isolated WebView2 profile');
+
+      row.innerHTML = `
+        <div style="position:relative;flex-shrink:0;">
+          ${renderProfileAvatarHtml(p, 40)}
+        </div>
+        <div class="opt-meta">
+          <div class="opt-title" style="display:flex;align-items:center;gap:7px;">
+            <span class="p-disp"></span>
+            ${running ? '<span class="prof-running-dot" title="Currently open in its own window"></span>' : ''}
+            ${isProfMain ? '<span class="m3-status-chip primary" style="height:20px;font-size:10px;">Main</span>' : ''}
+          </div>
+          <div class="opt-desc p-sub"></div>
+        </div>
+        <div class="opt-btn-row">
+          <button type="button" class="m3-btn m3-btn-tonal sm act-open-win">Open in New Window</button>
+          ${!isProfMain ? '<button type="button" class="m3-btn m3-btn-outlined sm act-set-main">Set as Main</button>' : ''}
+          <button type="button" class="m3-btn m3-btn-text sm act-edit-prof">Edit</button>
+          ${p.id !== 'default' ? '<button type="button" class="m3-btn m3-btn-danger sm act-del-prof">Delete</button>' : ''}
+        </div>
+      `;
+      row.querySelector('.p-disp').textContent = disp;
+      row.querySelector('.p-sub').textContent = sub;
+      row.querySelector('.act-open-win').addEventListener('click', () => send({ type: 'openProfileWindow', id: p.id }));
+      const mainBtn = row.querySelector('.act-set-main');
+      if (mainBtn) mainBtn.addEventListener('click', () => send({ type: 'setMainProfile', id: p.id }));
+      row.querySelector('.act-edit-prof').addEventListener('click', () => openProfileSetupModal('edit', p.id));
+      const delBtn = row.querySelector('.act-del-prof');
+      if (delBtn) delBtn.addEventListener('click', () => send({ type: 'deleteProfile', id: p.id }));
+      settingsProfilesList.appendChild(row);
     });
   }
 
@@ -1150,6 +1534,8 @@
     body.classList.toggle('compact-tabs', !!o.compactTabBar);
     body.classList.toggle('always-show-tab-close', !!o.alwaysShowTabClose);
     body.classList.toggle('nav-rail-hidden', !!o.hideNavRail);
+    body.classList.toggle('reduce-motion', !!o.reduceWallpaperMotion);
+    if (btnToolbarHome) btnToolbarHome.classList.toggle('hidden', o.showHomeButton === false);
     if (startpageProfileBadge) startpageProfileBadge.classList.toggle('hidden', !!o.hideGreetingBadge);
     if (heroSearchWrap) heroSearchWrap.classList.toggle('hidden', !!o.hideStartPageSearch);
 
@@ -1170,19 +1556,15 @@
   function syncSettingsUi() {
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
-    if (settingsVersionSub) {
-      settingsVersionSub.textContent = `Material You · v${state.appVersion || '4.4.0'}`;
-    }
-    setSegmentedVal(optSearchEngine, o.searchEngine || state.searchEngine || 'google');
-    setSegmentedVal(optStartup, o.startupBehavior || 'startpage');
-    setSegmentedVal(optNewtabMode, o.newTabMode || 'startpage');
-    if (optHomepageUrl && document.activeElement !== optHomepageUrl) {
-      optHomepageUrl.value = o.homepageUrl || 'https://www.google.com';
-    }
-    if (optShowFavbar) optShowFavbar.classList.toggle('on', !o.favoritesBarHidden);
-    if (optShowNavRail) optShowNavRail.classList.toggle('on', !o.hideNavRail);
-    if (optFloatingMediaBtn) optFloatingMediaBtn.classList.toggle('on', !o.hideFloatingMediaButton);
+    const ver = state.appVersion || '4.5.0';
 
+    if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
+    if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
+
+    // Category 1
+    renderYouAndGooglePane();
+
+    // Category 2: Appearance & Material You
     setSegmentedVal(optAppearanceMode, o.appearanceMode || 'auto');
     if (optAccentSwatches) {
       const ac = o.accentColor || 'amethyst';
@@ -1190,23 +1572,29 @@
         b.classList.toggle('active', b.dataset.accentChoice === ac);
       });
     }
-    if (optFullUrl) optFullUrl.classList.toggle('on', !!o.showFullWebsiteAddress);
-    if (optCompactTabs) optCompactTabs.classList.toggle('on', !!o.compactTabBar);
-    if (optAlwaysClose) optAlwaysClose.classList.toggle('on', !!o.alwaysShowTabClose);
-    if (optTabsCompactMirror) optTabsCompactMirror.classList.toggle('on', !!o.compactTabBar);
-    if (optTabsCloseMirror) optTabsCloseMirror.classList.toggle('on', !!o.alwaysShowTabClose);
-    setSegmentedVal(optDefaultZoom, o.defaultZoomPercent || 100);
     setSegmentedVal(optWpDim, o.wallpaperDim || 'balanced');
-    if (optReduceMotion) optReduceMotion.classList.toggle('on', !!o.reduceWallpaperMotion);
+    if (optFontSize) optFontSize.value = o.fontSize || 'medium';
+    if (optFontFamily) optFontFamily.value = o.fontFamily || 'system';
+    const zoomPct = Number(o.defaultZoomPercent || 100);
+    if (optDefaultZoomSlider) optDefaultZoomSlider.value = String(zoomPct);
+    if (optDefaultZoomVal) optDefaultZoomVal.textContent = `${zoomPct}%`;
+    setSwitchState(optShowHome, o.showHomeButton !== false);
+    setSwitchState(optShowFavbar, !o.favoritesBarHidden);
+    setSwitchState(optShowNavRail, !o.hideNavRail);
+    setSwitchState(optCompactTabs, !!o.compactTabBar);
+    setSwitchState(optAlwaysClose, !!o.alwaysShowTabClose);
+    setSwitchState(optFullUrl, !!o.showFullWebsiteAddress);
+    setSwitchState(optSmoothScroll, o.smoothScrolling !== false);
+    setSwitchState(optReduceMotion, !!o.reduceWallpaperMotion);
+    setSwitchState(optSpFavorites, !sp.hideFavorites);
+    setSwitchState(optSpFrequent, !sp.hideFrequentlyVisited);
+    setSwitchState(optSpPrivacy, !sp.hidePrivacyReport);
+    setSwitchState(optSpReading, !sp.hideReadingList);
+    setSwitchState(optSpGreeting, !o.hideGreetingBadge);
+    setSwitchState(optSpSearch, !o.hideStartPageSearch);
 
-    if (optSpFavorites) optSpFavorites.classList.toggle('on', !sp.hideFavorites);
-    if (optSpFrequent) optSpFrequent.classList.toggle('on', !sp.hideFrequentlyVisited);
-    if (optSpPrivacy) optSpPrivacy.classList.toggle('on', !sp.hidePrivacyReport);
-    if (optSpReading) optSpReading.classList.toggle('on', !sp.hideReadingList);
-    if (optSpGreeting) optSpGreeting.classList.toggle('on', !o.hideGreetingBadge);
-    if (optSpSearch) optSpSearch.classList.toggle('on', !o.hideStartPageSearch);
-
-    if (optGlobalAdblock) optGlobalAdblock.classList.toggle('on', state.globalAdBlockEnabled !== false);
+    // Category 3: Privacy & Security
+    setSwitchState(optGlobalAdblock, state.globalAdBlockEnabled !== false);
     if (optAdblockStats) {
       const cnt = Number(state.totalBlocked || 0).toLocaleString();
       optAdblockStats.textContent = `${cnt} ads & trackers blocked across your browsing`;
@@ -1217,7 +1605,7 @@
       if (!hosts.length) {
         const empty = document.createElement('div');
         empty.className = 'opt-paused-empty';
-        empty.textContent = 'No paused sites — Ad Blocker is protecting every website.';
+        empty.textContent = 'No paused sites — dejavu Shield is protecting every website.';
         optPausedHostsList.appendChild(empty);
       } else {
         hosts.forEach((h) => {
@@ -1235,14 +1623,87 @@
         });
       }
     }
+    setSwitchState(optSafeBrowsing, o.safeBrowsing !== false);
+    setSwitchState(optHttpsFirst, !!o.httpsFirst);
+    setSwitchState(optDoNotTrack, o.doNotTrack !== false);
+    setSwitchState(optBlock3pCookies, o.blockThirdPartyCookies !== false);
+    setSwitchState(optBlockPopups, o.blockPopups !== false);
+    setSwitchState(optClearCookiesExit, !!o.clearCookiesOnExit);
+    if (optPermCamera) optPermCamera.value = o.permCamera || 'ask';
+    if (optPermMic) optPermMic.value = o.permMicrophone || 'ask';
+    if (optPermLocation) optPermLocation.value = o.permLocation || 'ask';
+    if (optPermNotifications) optPermNotifications.value = o.permNotifications || 'ask';
+    if (optPermClipboard) optPermClipboard.value = o.permClipboard || 'ask';
+    if (optPermAutoplay) optPermAutoplay.value = o.permAutoplay || 'allow';
+
+    // Category 4: Search Engine
+    setSegmentedVal(optSearchEngine, o.searchEngine || state.searchEngine || 'google');
+    if (optCustomSearchUrl && document.activeElement !== optCustomSearchUrl) {
+      optCustomSearchUrl.value = o.customSearchUrl || '';
+    }
+    setSwitchState(optAddressSuggestions, o.addressBarSuggestions !== false);
+
+    // Category 5: Tabs & On Startup
+    setSegmentedVal(optStartup, o.startupBehavior || 'startpage');
+    setSegmentedVal(optNewtabMode, o.newTabMode || 'startpage');
+    if (optHomepageUrl && document.activeElement !== optHomepageUrl) {
+      optHomepageUrl.value = o.homepageUrl || 'https://www.google.com';
+    }
+    setSwitchState(optMemorySaver, o.memorySaverEnabled !== false);
+    setSegmentedVal(optMemoryMinutes, o.memorySaverMinutes || 30);
+    setSwitchState(optConfirmCloseTabs, !!o.confirmCloseMultipleTabs);
+    setSwitchState(optTabHover, o.tabHoverPreview !== false);
+
+    // Category 6: Downloads
+    if (optDownloadFolderPath) {
+      const dir = o.downloadFolder || state.downloadFolder || state.downloadsDir || 'Downloads';
+      optDownloadFolderPath.textContent = dir;
+      optDownloadFolderPath.title = dir;
+    }
+    setSwitchState(optAskDlLocation, !!o.askDownloadLocation);
+    setSwitchState(optAutoOpenDl, !!o.autoOpenDownloads);
+    setSegmentedVal(optTurboThreads, o.turboThreads || 8);
+    if (optDefaultVideoQuality) optDefaultVideoQuality.value = o.defaultVideoQuality || 'best';
+    if (dlmQualitySelect && o.defaultVideoQuality && !state.dlManagerOpen) {
+      dlmQualitySelect.value = o.defaultVideoQuality;
+    }
+    setSwitchState(optFloatingMediaBtn, !o.hideFloatingMediaButton);
+
+    // Category 7: Passwords & Autofill
+    setSwitchState(optSavePasswords, o.savePasswords !== false);
+    setSwitchState(optAutofillAddresses, o.autofillAddresses !== false);
+    setSwitchState(optAutofillPayments, !!o.autofillPayments);
+
+    // Category 8: Privacy VPN
     setSegmentedVal(optVpnMode, (state.vpn && state.vpn.mode) || o.vpnMode || 'smart');
-    if (optVpnAuto) optVpnAuto.classList.toggle('on', !!o.vpnAutoConnect);
+    setSwitchState(optVpnAuto, !!o.vpnAutoConnect);
+    setSwitchState(optVpnWebRtc, o.vpnWebRtcProtection !== false);
+    if (optVpnCountry) optVpnCountry.value = (state.vpn && state.vpn.countryCode) || o.vpnCountry || 'AUTO';
     if (optVpnSummary && state.vpn) {
       const st = state.vpn.state || 'disconnected';
       const totalLoc = state.vpn.countriesCount || (Array.isArray(state.vpn.countries) && state.vpn.countries.length ? state.vpn.countries.length : 86);
       optVpnSummary.textContent = st === 'connected'
         ? `Connected via ${state.vpn.exitCountry || state.vpn.countryName || 'VPN'} (${state.vpn.exitIp || 'Encrypted'})`
         : `Disconnected · ${totalLoc} global countries (Nepal, US, UK, India, Japan…)`;
+    }
+
+    // Category 9: Accessibility & System
+    setSwitchState(optHwAccel, o.hardwareAcceleration !== false);
+    setSwitchState(optSpellcheck, o.spellcheckEnabled !== false);
+    setSwitchState(optDevtools, o.devToolsEnabled !== false);
+
+    // Category 10: About dejavu
+    if (aboutWebviewVer) aboutWebviewVer.textContent = state.webviewVersion || 'Evergreen Chromium WebView2 Runtime';
+    if (aboutUserdataDir) aboutUserdataDir.textContent = state.userDataDir || '%LOCALAPPDATA%\\dejavu';
+    if (aboutUpdateStatus) {
+      if (state.updateReadyVersion) {
+        aboutUpdateStatus.textContent = `dejavu v${state.updateReadyVersion} is downloaded and ready to install`;
+      } else {
+        aboutUpdateStatus.textContent = state.updateStatus || `dejavu v${ver} is up to date`;
+      }
+    }
+    if (btnAboutCheckUpdate) {
+      btnAboutCheckUpdate.textContent = state.updateReadyVersion ? 'Restart & Install Update' : 'Check for Updates';
     }
   }
 
@@ -1254,6 +1715,55 @@
     send(Object.assign({ type: 'updateBrowserOptions' }, patch));
   }
 
+  // Live Cross-Category Settings Search (filters across ALL 10 categories!)
+  function filterSettingsOptions(rawQ) {
+    const q = (rawQ || '').trim().toLowerCase();
+    if (btnSettingsSearchClear) btnSettingsSearchClear.classList.toggle('hidden', !q);
+    const panes = document.querySelectorAll('.settings-pane');
+
+    if (!q) {
+      setActiveSettingsPane(activeSettingsPane);
+      return;
+    }
+
+    if (settingsPaneHeader) settingsPaneHeader.classList.add('hidden');
+    let matchRows = 0;
+    let matchPanes = 0;
+
+    panes.forEach((p) => {
+      let paneHit = false;
+      p.querySelectorAll('.opt-group').forEach((grp) => {
+        let grpHit = false;
+        const rows = grp.querySelectorAll('.opt-row');
+        if (rows.length === 0) {
+          const hit = grp.textContent.toLowerCase().includes(q);
+          grp.classList.toggle('search-hidden', !hit);
+          if (hit) { grpHit = true; matchRows++; }
+        } else {
+          rows.forEach((row) => {
+            const hit = row.textContent.toLowerCase().includes(q);
+            row.classList.toggle('search-hidden', !hit);
+            row.classList.toggle('search-hit', hit);
+            if (hit) { grpHit = true; matchRows++; }
+          });
+          grp.classList.toggle('search-hidden', !grpHit);
+        }
+        if (grpHit) paneHit = true;
+      });
+      p.classList.toggle('hidden', !paneHit);
+      if (paneHit) matchPanes++;
+    });
+
+    if (settingsSearchBanner) {
+      settingsSearchBanner.classList.toggle('hidden', matchRows === 0);
+      if (settingsSearchCount) {
+        settingsSearchCount.textContent = `Found ${matchRows} ${matchRows === 1 ? 'setting' : 'settings'} across ${matchPanes} ${matchPanes === 1 ? 'category' : 'categories'} for "${rawQ.trim()}"`;
+      }
+    }
+    if (settingsSearchEmpty) settingsSearchEmpty.classList.toggle('hidden', matchRows > 0);
+    if (settingsScrollContainer) settingsScrollContainer.scrollTop = 0;
+  }
+
   if (btnSettings) {
     btnSettings.addEventListener('click', () => {
       wallpaperStore.classList.add('hidden');
@@ -1263,12 +1773,10 @@
   if (btnStoreMoreOptions) {
     btnStoreMoreOptions.addEventListener('click', () => {
       wallpaperStore.classList.add('hidden');
-      send({ type: 'toggleSettings', open: true, pane: 'general' });
+      send({ type: 'toggleSettings', open: true, pane: 'appearance' });
     });
   }
-  if (btnSettingsDone) {
-    btnSettingsDone.addEventListener('click', () => send({ type: 'toggleSettings', open: false }));
-  }
+  if (btnSettingsDone) btnSettingsDone.addEventListener('click', () => send({ type: 'toggleSettings', open: false }));
   if (settingsOverlay) {
     settingsOverlay.addEventListener('click', (e) => {
       if (e.target === settingsOverlay) send({ type: 'toggleSettings', open: false });
@@ -1280,49 +1788,9 @@
       if (!btn) return;
       if (settingsSearchInput && settingsSearchInput.value) {
         settingsSearchInput.value = '';
-        filterSettingsOptions('');
       }
-      setActiveSettingsPane(btn.dataset.pane || 'general');
+      setActiveSettingsPane(btn.dataset.pane || 'you');
     });
-  }
-  function filterSettingsOptions(rawQ) {
-    const q = (rawQ || '').trim().toLowerCase();
-    const panes = document.querySelectorAll('.settings-pane');
-    if (!q) {
-      panes.forEach((p) => {
-        p.querySelectorAll('.opt-row, .opt-group').forEach((el) => el.classList.remove('search-hidden', 'search-hit'));
-      });
-      setActiveSettingsPane(activeSettingsPane);
-      return;
-    }
-    let firstMatchPane = null;
-    panes.forEach((p) => {
-      const pKey = p.dataset.paneBody;
-      let paneHasHit = false;
-      p.querySelectorAll('.opt-group').forEach((grp) => {
-        let grpHit = false;
-        const rows = grp.querySelectorAll('.opt-row');
-        if (rows.length === 0) {
-          const hit = grp.textContent.toLowerCase().includes(q);
-          grp.classList.toggle('search-hidden', !hit);
-          if (hit) grpHit = true;
-        } else {
-          rows.forEach((row) => {
-            const hit = row.textContent.toLowerCase().includes(q);
-            row.classList.toggle('search-hidden', !hit);
-            row.classList.toggle('search-hit', hit);
-            if (hit) grpHit = true;
-          });
-          grp.classList.toggle('search-hidden', !grpHit);
-        }
-        if (grpHit) paneHasHit = true;
-      });
-      if (pKey === 'wallpapers' && ('wallpaper background photo art live theme butterfly material ceramic'.includes(q) || q.includes('wall') || q.includes('butter'))) {
-        paneHasHit = true;
-      }
-      if (paneHasHit && !firstMatchPane) firstMatchPane = pKey;
-    });
-    if (firstMatchPane) setActiveSettingsPane(firstMatchPane);
   }
   if (settingsSearchInput) {
     settingsSearchInput.addEventListener('input', () => filterSettingsOptions(settingsSearchInput.value));
@@ -1334,10 +1802,21 @@
       }
     });
   }
-  if (btnSettingsReset) {
-    btnSettingsReset.addEventListener('click', () => send({ type: 'resetBrowserOptions' }));
+  if (btnSettingsSearchClear) {
+    btnSettingsSearchClear.addEventListener('click', () => {
+      settingsSearchInput.value = '';
+      filterSettingsOptions('');
+      settingsSearchInput.focus();
+    });
+  }
+  if (btnSettingsSearchReset) {
+    btnSettingsSearchReset.addEventListener('click', () => {
+      settingsSearchInput.value = '';
+      filterSettingsOptions('');
+    });
   }
 
+  // Settings Event Bindings
   function bindSeg(container, key, parseVal) {
     if (!container) return;
     container.addEventListener('click', (e) => {
@@ -1347,14 +1826,27 @@
       updateOpt({ [key]: v });
     });
   }
-  bindSeg(optSearchEngine, 'searchEngine');
-  bindSeg(optStartup, 'startupBehavior');
-  bindSeg(optNewtabMode, 'newTabMode');
-  bindSeg(optAppearanceMode, 'appearanceMode');
-  bindSeg(optDefaultZoom, 'defaultZoomPercent', Number);
-  bindSeg(optWpDim, 'wallpaperDim');
-  bindSeg(optVpnMode, 'vpnMode');
+  function bindBoolSwitch(el, key, invert) {
+    if (!el) return;
+    el.addEventListener('click', () => {
+      const nextOn = !el.classList.contains('on');
+      updateOpt({ [key]: invert ? !nextOn : nextOn });
+    });
+  }
 
+  // Category 1 bindings
+  if (btnYouGoogleSignin) btnYouGoogleSignin.addEventListener('click', () => send({ type: 'googleSignIn' }));
+  if (btnYouGoogleSignup) btnYouGoogleSignup.addEventListener('click', () => send({ type: 'googleSignUp' }));
+  if (btnYouGoogleSync) btnYouGoogleSync.addEventListener('click', () => send({ type: 'googleSyncProfile' }));
+  if (btnYouGoogleSignout) btnYouGoogleSignout.addEventListener('click', () => send({ type: 'googleSignOut' }));
+  if (btnYouCustomizeProfile) btnYouCustomizeProfile.addEventListener('click', () => openProfileSetupModal('edit', state.activeProfile && state.activeProfile.id));
+  if (btnYouNewWindow) btnYouNewWindow.addEventListener('click', () => send({ type: 'openNewWindow' }));
+  if (btnYouPrivateWindow) btnYouPrivateWindow.addEventListener('click', () => send({ type: 'openPrivateWindow' }));
+  if (btnYouAddProfile) btnYouAddProfile.addEventListener('click', () => openProfileSetupModal('add'));
+
+  // Category 2 bindings
+  bindSeg(optAppearanceMode, 'appearanceMode');
+  bindSeg(optWpDim, 'wallpaperDim');
   if (optAccentSwatches) {
     optAccentSwatches.addEventListener('click', (e) => {
       const btn = e.target.closest('.accent-swatch');
@@ -1362,6 +1854,110 @@
       updateOpt({ accentColor: btn.dataset.accentChoice || 'amethyst' });
     });
   }
+  if (optWpFilter) {
+    optWpFilter.addEventListener('click', (e) => {
+      const btn = e.target.closest('.opt-seg-btn');
+      if (!btn) return;
+      settingsWpFilterCat = btn.dataset.cat || 'all';
+      optWpFilter.querySelectorAll('.opt-seg-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      renderSettingsWallpaperGrid();
+    });
+  }
+  if (btnOptUploadWp) btnOptUploadWp.addEventListener('click', () => send({ type: 'pickCustomWallpaper' }));
+  if (optFontSize) optFontSize.addEventListener('change', () => updateOpt({ fontSize: optFontSize.value }));
+  if (optFontFamily) optFontFamily.addEventListener('change', () => updateOpt({ fontFamily: optFontFamily.value }));
+  if (optDefaultZoomSlider) {
+    optDefaultZoomSlider.addEventListener('input', () => {
+      if (optDefaultZoomVal) optDefaultZoomVal.textContent = `${optDefaultZoomSlider.value}%`;
+    });
+    optDefaultZoomSlider.addEventListener('change', () => {
+      updateOpt({ defaultZoomPercent: Number(optDefaultZoomSlider.value) || 100 });
+    });
+  }
+  bindBoolSwitch(optShowHome, 'showHomeButton', false);
+  bindBoolSwitch(optShowFavbar, 'favoritesBarHidden', true);
+  bindBoolSwitch(optShowNavRail, 'hideNavRail', true);
+  bindBoolSwitch(optCompactTabs, 'compactTabBar', false);
+  bindBoolSwitch(optAlwaysClose, 'alwaysShowTabClose', false);
+  bindBoolSwitch(optFullUrl, 'showFullWebsiteAddress', false);
+  bindBoolSwitch(optSmoothScroll, 'smoothScrolling', false);
+  bindBoolSwitch(optReduceMotion, 'reduceWallpaperMotion', false);
+
+  function toggleSpPref(key) {
+    const next = Object.assign({}, state.startPagePrefs || {});
+    next[key] = !next[key];
+    state.startPagePrefs = next;
+    applyStartPagePrefs(next);
+    syncSettingsUi();
+    send({ type: 'updateStartPagePrefs', [key]: next[key] });
+  }
+  if (optSpFavorites) optSpFavorites.addEventListener('click', () => toggleSpPref('hideFavorites'));
+  if (optSpFrequent) optSpFrequent.addEventListener('click', () => toggleSpPref('hideFrequentlyVisited'));
+  if (optSpPrivacy) optSpPrivacy.addEventListener('click', () => toggleSpPref('hidePrivacyReport'));
+  if (optSpReading) optSpReading.addEventListener('click', () => toggleSpPref('hideReadingList'));
+  bindBoolSwitch(optSpGreeting, 'hideGreetingBadge', true);
+  bindBoolSwitch(optSpSearch, 'hideStartPageSearch', true);
+
+  // Category 3 bindings
+  bindBoolSwitch(optGlobalAdblock, 'globalAdBlockEnabled', false);
+  bindBoolSwitch(optSafeBrowsing, 'safeBrowsing', false);
+  bindBoolSwitch(optHttpsFirst, 'httpsFirst', false);
+  bindBoolSwitch(optDoNotTrack, 'doNotTrack', false);
+  bindBoolSwitch(optBlock3pCookies, 'blockThirdPartyCookies', false);
+  bindBoolSwitch(optBlockPopups, 'blockPopups', false);
+  bindBoolSwitch(optClearCookiesExit, 'clearCookiesOnExit', false);
+  if (optPermCamera) optPermCamera.addEventListener('change', () => updateOpt({ permCamera: optPermCamera.value }));
+  if (optPermMic) optPermMic.addEventListener('change', () => updateOpt({ permMicrophone: optPermMic.value }));
+  if (optPermLocation) optPermLocation.addEventListener('change', () => updateOpt({ permLocation: optPermLocation.value }));
+  if (optPermNotifications) optPermNotifications.addEventListener('change', () => updateOpt({ permNotifications: optPermNotifications.value }));
+  if (optPermClipboard) optPermClipboard.addEventListener('change', () => updateOpt({ permClipboard: optPermClipboard.value }));
+  if (optPermAutoplay) optPermAutoplay.addEventListener('change', () => updateOpt({ permAutoplay: optPermAutoplay.value }));
+
+  function openClearDataModal() {
+    if (!clearDataOverlay) return;
+    clearDataOverlay.classList.remove('hidden');
+    syncModalBodyClass();
+  }
+  function closeClearDataModal() {
+    if (!clearDataOverlay) return;
+    clearDataOverlay.classList.add('hidden');
+    syncModalBodyClass();
+  }
+  if (rowClearBrowsingData) rowClearBrowsingData.addEventListener('click', (e) => { if (!e.target.closest('button')) openClearDataModal(); });
+  if (btnOpenClearData) btnOpenClearData.addEventListener('click', openClearDataModal);
+  if (btnCdCancel) btnCdCancel.addEventListener('click', closeClearDataModal);
+  if (clearDataOverlay) clearDataOverlay.addEventListener('click', (e) => { if (e.target === clearDataOverlay) closeClearDataModal(); });
+  if (btnCdConfirm) {
+    btnCdConfirm.addEventListener('click', () => {
+      send({
+        type: 'clearBrowsingData',
+        history: !!(cdChkHistory && cdChkHistory.checked),
+        cookies: !!(cdChkCookies && cdChkCookies.checked),
+        cache: !!(cdChkCache && cdChkCache.checked),
+        downloads: !!(cdChkDownloads && cdChkDownloads.checked),
+        range: (cdTimeRange && cdTimeRange.value) || 'all'
+      });
+      closeClearDataModal();
+      showSettingsToast('Selected browsing data cleared');
+    });
+  }
+
+  // Category 4 bindings
+  bindSeg(optSearchEngine, 'searchEngine');
+  if (btnSaveCustomSearch && optCustomSearchUrl) {
+    const saveCs = () => {
+      const v = optCustomSearchUrl.value.trim();
+      updateOpt({ customSearchUrl: v, searchEngine: v ? 'custom' : (state.browserOptions.searchEngine || 'google') });
+      showSettingsToast('Custom search URL saved');
+    };
+    btnSaveCustomSearch.addEventListener('click', saveCs);
+    optCustomSearchUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveCs(); });
+  }
+  bindBoolSwitch(optAddressSuggestions, 'addressBarSuggestions', false);
+
+  // Category 5 bindings
+  bindSeg(optStartup, 'startupBehavior');
+  bindSeg(optNewtabMode, 'newTabMode');
   if (btnSaveHomepage && optHomepageUrl) {
     const saveHp = () => {
       const val = optHomepageUrl.value.trim();
@@ -1372,11 +1968,387 @@
     btnSaveHomepage.addEventListener('click', saveHp);
     optHomepageUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveHp(); });
   }
-  if (optShowFavbar) optShowFavbar.addEventListener('click', () => updateOpt({ favoritesBarHidden: optShowFavbar.classList.contains('on') }));
-  if (optShowNavRail) optShowNavRail.addEventListener('click', () => updateOpt({ hideNavRail: optShowNavRail.classList.contains('on') }));
-  if (optFloatingMediaBtn) optFloatingMediaBtn.addEventListener('click', () => updateOpt({ hideFloatingMediaButton: optFloatingMediaBtn.classList.contains('on') }));
+  bindBoolSwitch(optMemorySaver, 'memorySaverEnabled', false);
+  bindSeg(optMemoryMinutes, 'memorySaverMinutes', Number);
+  bindBoolSwitch(optConfirmCloseTabs, 'confirmCloseMultipleTabs', false);
+  bindBoolSwitch(optTabHover, 'tabHoverPreview', false);
 
+  // Category 6 bindings
+  if (btnOptChangeDlFolder) btnOptChangeDlFolder.addEventListener('click', () => send({ type: 'pickDownloadFolder' }));
+  if (btnOptOpenDlFolder) btnOptOpenDlFolder.addEventListener('click', () => send({ type: 'turboOpenFolder' }));
+  bindBoolSwitch(optAskDlLocation, 'askDownloadLocation', false);
+  bindBoolSwitch(optAutoOpenDl, 'autoOpenDownloads', false);
+  bindSeg(optTurboThreads, 'turboThreads', Number);
+  if (optDefaultVideoQuality) optDefaultVideoQuality.addEventListener('change', () => updateOpt({ defaultVideoQuality: optDefaultVideoQuality.value }));
+  bindBoolSwitch(optFloatingMediaBtn, 'hideFloatingMediaButton', true);
+
+  // Category 7 bindings
+  if (btnOpenGooglePasswords) {
+    btnOpenGooglePasswords.addEventListener('click', () => {
+      send({ type: 'toggleSettings', open: false });
+      send({ type: 'newTab', url: 'https://passwords.google.com' });
+    });
+  }
+  bindBoolSwitch(optSavePasswords, 'savePasswords', false);
+  bindBoolSwitch(optAutofillAddresses, 'autofillAddresses', false);
+  bindBoolSwitch(optAutofillPayments, 'autofillPayments', false);
+
+  // Category 8 bindings
+  if (btnOptOpenVpn) btnOptOpenVpn.addEventListener('click', () => { send({ type: 'toggleSettings', open: false }); setTimeout(openVpnPopover, 60); });
+  bindBoolSwitch(optVpnAuto, 'vpnAutoConnect', false);
+  bindSeg(optVpnMode, 'vpnMode');
+  bindBoolSwitch(optVpnWebRtc, 'vpnWebRtcProtection', false);
+  if (optVpnCountry) optVpnCountry.addEventListener('change', () => updateOpt({ vpnCountry: optVpnCountry.value }));
+
+  // Category 9 bindings
+  bindBoolSwitch(optHwAccel, 'hardwareAcceleration', false);
+  bindBoolSwitch(optSpellcheck, 'spellcheckEnabled', false);
+  bindBoolSwitch(optDevtools, 'devToolsEnabled', false);
+  if (btnOptOpenDevtools) btnOptOpenDevtools.addEventListener('click', () => send({ type: 'openDevTools' }));
+  if (btnMakeDefaultBrowser) btnMakeDefaultBrowser.addEventListener('click', () => send({ type: 'openDefaultBrowserSettings' }));
+
+  function openResetConfirmModal() {
+    if (!resetConfirmOverlay) return;
+    resetConfirmOverlay.classList.remove('hidden');
+    syncModalBodyClass();
+  }
+  function closeResetConfirmModal() {
+    if (!resetConfirmOverlay) return;
+    resetConfirmOverlay.classList.add('hidden');
+    syncModalBodyClass();
+  }
+  if (btnSettingsReset) btnSettingsReset.addEventListener('click', openResetConfirmModal);
+  if (btnResetCancel) btnResetCancel.addEventListener('click', closeResetConfirmModal);
+  if (resetConfirmOverlay) resetConfirmOverlay.addEventListener('click', (e) => { if (e.target === resetConfirmOverlay) closeResetConfirmModal(); });
+  if (btnResetConfirm) {
+    btnResetConfirm.addEventListener('click', () => {
+      send({ type: 'resetSettings' });
+      closeResetConfirmModal();
+      showSettingsToast('Settings restored to defaults');
+    });
+  }
+
+  // Category 10 bindings
+  if (btnAboutCheckUpdate) {
+    btnAboutCheckUpdate.addEventListener('click', () => {
+      if (state.updateReadyVersion) send({ type: 'applyUpdate' });
+      else {
+        if (aboutUpdateStatus) aboutUpdateStatus.textContent = 'Checking for updates…';
+        send({ type: 'checkUpdate' });
+      }
+    });
+  }
+  if (btnAboutOpenUserdata) btnAboutOpenUserdata.addEventListener('click', () => send({ type: 'openUserDataFolder' }));
+  if (btnAboutGithub) {
+    btnAboutGithub.addEventListener('click', () => {
+      send({ type: 'toggleSettings', open: false });
+      send({ type: 'newTab', url: 'https://github.com/Dathevinci/Dejavu-browser/releases' });
+    });
+  }
+  if (btnAboutWebsite) {
+    btnAboutWebsite.addEventListener('click', () => {
+      send({ type: 'toggleSettings', open: false });
+      send({ type: 'newTab', url: 'https://dathevinci.github.io/Dejavu-browser/' });
+    });
+  }
+
+  // =========================================================================
+  // Material Design 3 Google Account Sign-In & Profile Setup Modal
+  // =========================================================================
+  let psState = {
+    mode: 'setup', // 'setup' | 'add' | 'edit'
+    step: 1,
+    editingProfileId: null,
+    selectedAvatar: 'dejavu-halftone',
+    selectedSeed: 'amethyst',
+    googleDisplayName: '',
+    googleEmail: '',
+    googleAvatarUrl: '',
+    setAsMain: false,
+    openInNewWindow: true,
+    wantGoogleSignIn: false,
+    wantGoogleSignUp: false
+  };
+
+  function updatePsPreview() {
+    if (psPreviewBanner) psPreviewBanner.dataset.previewAccent = psState.selectedSeed || 'amethyst';
+    const previewProf = {
+      name: (psNameInput && psNameInput.value.trim()) || psState.googleDisplayName || 'Personal',
+      avatar: psState.selectedAvatar,
+      googleAvatarUrl: psState.selectedAvatar === '__google__' ? psState.googleAvatarUrl : '',
+      googleDisplayName: psState.googleDisplayName
+    };
+    if (psPreviewAvatar) psPreviewAvatar.innerHTML = renderProfileAvatarHtml(previewProf, 52);
+    if (psPreviewName) psPreviewName.textContent = previewProf.name;
+    if (psPreviewMainBadge) psPreviewMainBadge.classList.toggle('hidden', !psState.setAsMain);
+    if (psPreviewEmail) {
+      psPreviewEmail.textContent = psState.googleEmail || 'Isolated WebView2 dejavu Profile';
+    }
+  }
+
+  function renderPsAvatarGrid() {
+    if (!psAvatarGrid) return;
+    psAvatarGrid.innerHTML = '';
+    if (psState.googleAvatarUrl) {
+      const gBtn = document.createElement('button');
+      gBtn.type = 'button';
+      gBtn.className = 'ps-av-btn' + (psState.selectedAvatar === '__google__' ? ' active' : '');
+      gBtn.title = 'Google Account Photo';
+      gBtn.innerHTML = renderProfileAvatarHtml({ googleAvatarUrl: psState.googleAvatarUrl, googleDisplayName: psState.googleDisplayName }, 34);
+      gBtn.addEventListener('click', () => {
+        psState.selectedAvatar = '__google__';
+        renderPsAvatarGrid();
+        updatePsPreview();
+      });
+      psAvatarGrid.appendChild(gBtn);
+    }
+    if (window.DejavuAvatars && Array.isArray(window.DejavuAvatars.list)) {
+      window.DejavuAvatars.list.forEach((av) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ps-av-btn' + (psState.selectedAvatar === av.id ? ' active' : '');
+        btn.title = av.name;
+        btn.innerHTML = window.DejavuAvatars.renderHtml(av.id, 34);
+        btn.addEventListener('click', () => {
+          psState.selectedAvatar = av.id;
+          renderPsAvatarGrid();
+          updatePsPreview();
+        });
+        psAvatarGrid.appendChild(btn);
+      });
+    }
+  }
+
+  function syncPsColorDots() {
+    if (!psColorGrid) return;
+    psColorGrid.querySelectorAll('.ps-color-dot').forEach((d) => {
+      d.classList.toggle('active', d.dataset.seed === psState.selectedSeed);
+    });
+  }
+
+  function setPsStep(step) {
+    psState.step = step;
+    const isStep1 = (step === 1);
+    if (psViewGoogle) psViewGoogle.classList.toggle('hidden', !isStep1);
+    if (psViewCustomize) psViewCustomize.classList.toggle('hidden', isStep1);
+    if (psBtnBack) psBtnBack.classList.toggle('hidden', isStep1 || psState.mode === 'edit');
+    if (psStepPill) {
+      psStepPill.textContent = psState.mode === 'edit' ? 'Customize Profile' : (isStep1 ? 'Step 1 of 2' : 'Step 2 of 2');
+    }
+    if (!isStep1) {
+      syncPsColorDots();
+      renderPsAvatarGrid();
+      setSwitchState(psSwMain, psState.setAsMain);
+      setSwitchState(psSwNewwin, psState.openInNewWindow);
+      if (psNewwinRow) psNewwinRow.classList.toggle('hidden', psState.mode !== 'add');
+      if (psBtnSave) {
+        psBtnSave.textContent = psState.mode === 'add'
+          ? (psState.openInNewWindow ? 'Create & Open Profile' : 'Create Profile')
+          : 'Save Profile';
+      }
+      updatePsPreview();
+      setTimeout(() => { if (psNameInput) psNameInput.focus(); }, 40);
+    }
+  }
+
+  function openProfileSetupModal(mode, profileId) {
+    const m = mode || 'setup';
+    const profiles = Array.isArray(state.profiles) ? state.profiles : [];
+    const target = profileId
+      ? profiles.find((p) => p.id === profileId)
+      : (m === 'add' ? null : (state.activeProfile || profiles[0] || null));
+
+    const usedAvatars = new Set(profiles.map((p) => p.avatar));
+    const nextAv = (window.DejavuAvatars && window.DejavuAvatars.list.find((a) => !usedAvatars.has(a.id))) || { id: 'blue-morpho' };
+
+    psState = {
+      mode: m,
+      step: m === 'edit' ? 2 : 1,
+      editingProfileId: target ? target.id : null,
+      selectedAvatar: target ? (target.googleAvatarUrl ? '__google__' : (target.avatar || 'dejavu-halftone')) : nextAv.id,
+      selectedSeed: (target && target.themeAccent) || (m === 'add' ? 'sapphire' : ((state.browserOptions && state.browserOptions.accentColor) || 'amethyst')),
+      googleDisplayName: (target && target.googleDisplayName) || '',
+      googleEmail: (target && target.googleEmail) || '',
+      googleAvatarUrl: (target && target.googleAvatarUrl) || '',
+      setAsMain: target ? (!!target.isMainProfile || target.id === state.mainProfileId) : false,
+      openInNewWindow: m === 'add',
+      wantGoogleSignIn: false,
+      wantGoogleSignUp: false
+    };
+
+    if (psGoogleTitle) {
+      psGoogleTitle.textContent = m === 'add' ? 'Add a new dejavu Profile' : 'Set up your Main Profile';
+    }
+    if (psGoogleSub) {
+      psGoogleSub.textContent = 'Sign in or create a Google Account to use Gmail, YouTube, Drive, and Gemini in an isolated profile window.';
+    }
+    if (psGoogleWait) psGoogleWait.classList.add('hidden');
+    if (psManualName) psManualName.value = psState.googleDisplayName || '';
+    if (psManualEmail) psManualEmail.value = psState.googleEmail || '';
+    if (psNameInput) psNameInput.value = target ? (target.name || '') : '';
+
+    setPsStep(psState.step);
+    if (profileSetupOverlay) profileSetupOverlay.classList.remove('hidden');
+    syncModalBodyClass();
+  }
+
+  function closeProfileSetupModal() {
+    if (profileSetupOverlay) profileSetupOverlay.classList.add('hidden');
+    syncModalBodyClass();
+  }
+
+  window.openProfileSetupModal = openProfileSetupModal;
+  window.closeProfileSetupModal = closeProfileSetupModal;
+
+  if (psBtnClose) psBtnClose.addEventListener('click', closeProfileSetupModal);
+  if (psBtnCancel) psBtnCancel.addEventListener('click', closeProfileSetupModal);
+  if (profileSetupOverlay) profileSetupOverlay.addEventListener('click', (e) => { if (e.target === profileSetupOverlay) closeProfileSetupModal(); });
+  if (psBtnBack) psBtnBack.addEventListener('click', () => setPsStep(1));
+
+  if (psBtnGoogleSignin) {
+    psBtnGoogleSignin.addEventListener('click', () => {
+      psState.wantGoogleSignIn = true;
+      psState.wantGoogleSignUp = false;
+      if (psState.mode === 'add') {
+        if (psWaitTitle) psWaitTitle.textContent = 'Google Sign-In will open automatically in the new profile window';
+        if (psGoogleWait) psGoogleWait.classList.remove('hidden');
+      } else {
+        send({ type: 'googleSignIn', profileId: psState.editingProfileId || undefined });
+        if (psWaitTitle) psWaitTitle.textContent = 'Waiting for Google sign-in…';
+        if (psGoogleWait) psGoogleWait.classList.remove('hidden');
+      }
+    });
+  }
+  if (psBtnGoogleSignup) {
+    psBtnGoogleSignup.addEventListener('click', () => {
+      psState.wantGoogleSignUp = true;
+      psState.wantGoogleSignIn = false;
+      if (psState.mode === 'add') {
+        if (psWaitTitle) psWaitTitle.textContent = 'Google Account Sign-Up will open automatically in the new profile window';
+        if (psGoogleWait) psGoogleWait.classList.remove('hidden');
+      } else {
+        send({ type: 'googleSignUp', profileId: psState.editingProfileId || undefined });
+        if (psWaitTitle) psWaitTitle.textContent = 'Waiting for Google Account creation…';
+        if (psGoogleWait) psGoogleWait.classList.remove('hidden');
+      }
+    });
+  }
+  if (psBtnContinueLocal) {
+    psBtnContinueLocal.addEventListener('click', () => {
+      psState.wantGoogleSignIn = false;
+      psState.wantGoogleSignUp = false;
+      setPsStep(2);
+    });
+  }
+  if (psBtnSyncNow) {
+    psBtnSyncNow.addEventListener('click', () => {
+      const mn = psManualName ? psManualName.value.trim() : '';
+      const me = psManualEmail ? psManualEmail.value.trim() : '';
+      if (mn) psState.googleDisplayName = mn;
+      if (me) psState.googleEmail = me;
+      send({
+        type: 'googleSyncProfile',
+        profileId: psState.editingProfileId || undefined,
+        googleDisplayName: mn || undefined,
+        googleEmail: me || undefined,
+        setAsMain: psState.setAsMain || undefined
+      });
+      if (mn && psNameInput && !psNameInput.value.trim()) psNameInput.value = mn;
+      setPsStep(2);
+    });
+  }
+  if (psBtnConfirmGoogle) {
+    psBtnConfirmGoogle.addEventListener('click', () => {
+      const mn = psManualName ? psManualName.value.trim() : '';
+      const me = psManualEmail ? psManualEmail.value.trim() : '';
+      if (mn) psState.googleDisplayName = mn;
+      if (me) psState.googleEmail = me;
+      if (mn && psNameInput && !psNameInput.value.trim()) psNameInput.value = mn;
+      if (psState.mode !== 'add' && (mn || me)) {
+        send({
+          type: 'googleSyncProfile',
+          profileId: psState.editingProfileId || undefined,
+          googleDisplayName: mn || undefined,
+          googleEmail: me || undefined
+        });
+      }
+      setPsStep(2);
+    });
+  }
+
+  if (psNameInput) psNameInput.addEventListener('input', updatePsPreview);
+  if (psColorGrid) {
+    psColorGrid.addEventListener('click', (e) => {
+      const dot = e.target.closest('.ps-color-dot');
+      if (!dot || !dot.dataset.seed) return;
+      psState.selectedSeed = dot.dataset.seed;
+      syncPsColorDots();
+      updatePsPreview();
+    });
+  }
+  if (psSwMain) {
+    psSwMain.addEventListener('click', () => {
+      psState.setAsMain = !psState.setAsMain;
+      setSwitchState(psSwMain, psState.setAsMain);
+      updatePsPreview();
+    });
+  }
+  if (psSwNewwin) {
+    psSwNewwin.addEventListener('click', () => {
+      psState.openInNewWindow = !psState.openInNewWindow;
+      setSwitchState(psSwNewwin, psState.openInNewWindow);
+      if (psBtnSave && psState.mode === 'add') {
+        psBtnSave.textContent = psState.openInNewWindow ? 'Create & Open Profile' : 'Create Profile';
+      }
+    });
+  }
+
+  if (psBtnSave) {
+    psBtnSave.addEventListener('click', () => {
+      const name = (psNameInput && psNameInput.value.trim()) || psState.googleDisplayName || 'Profile';
+      const avatarId = psState.selectedAvatar === '__google__' ? 'dejavu-halftone' : (psState.selectedAvatar || 'dejavu-halftone');
+      const seed = psState.selectedSeed || 'amethyst';
+      const col = SEED_COLORS[seed] || '#d0bcff';
+
+      if (psState.mode === 'add') {
+        send({
+          type: 'createProfile',
+          name,
+          avatar: avatarId,
+          color: col,
+          themeAccent: seed,
+          setAsMain: psState.setAsMain,
+          openInNewWindow: psState.openInNewWindow,
+          googleSignIn: psState.wantGoogleSignIn,
+          googleSignUp: psState.wantGoogleSignUp,
+          googleDisplayName: psState.googleDisplayName || undefined,
+          googleEmail: psState.googleEmail || undefined,
+          googleAvatarUrl: psState.googleAvatarUrl || undefined
+        });
+      } else {
+        const pid = psState.editingProfileId || (state.activeProfile && state.activeProfile.id) || 'default';
+        send({
+          type: 'updateProfile',
+          id: pid,
+          name,
+          avatar: avatarId,
+          color: col,
+          themeAccent: seed,
+          setAsMain: psState.setAsMain
+        });
+        if (state.activeProfile && pid === state.activeProfile.id) {
+          updateOpt({ accentColor: seed });
+        }
+        send({ type: 'completeOnboarding' });
+      }
+      closeProfileSetupModal();
+      showSettingsToast(psState.mode === 'add' ? `Profile "${name}" created` : `Profile "${name}" saved`);
+    });
+  }
+
+  // =========================================================================
   // Material Design 3 Left Navigation Rail
+  // =========================================================================
   function updateRailIndicators() {
     const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
     const onNewTab = !active || active.isNewTab;
@@ -1432,50 +2404,10 @@
     const r = btnVpn ? btnVpn.getBoundingClientRect() : { right: window.innerWidth - 150 };
     send({ type: 'openVpn', anchorRight: Math.round(r.right) });
   });
-  if (railSettings) railSettings.addEventListener('click', () => send({ type: 'toggleSettings', open: !state.settingsOpen }));
+  if (railSettings) railSettings.addEventListener('click', () => send({ type: 'toggleSettings', open: !state.settingsOpen, pane: activeSettingsPane }));
   if (railCollapse) railCollapse.addEventListener('click', () => send({ type: 'toggleNavRail' }));
 
-  if (optFullUrl) optFullUrl.addEventListener('click', () => updateOpt({ showFullWebsiteAddress: !optFullUrl.classList.contains('on') }));
-  if (optCompactTabs) optCompactTabs.addEventListener('click', () => updateOpt({ compactTabBar: !optCompactTabs.classList.contains('on') }));
-  if (optAlwaysClose) optAlwaysClose.addEventListener('click', () => updateOpt({ alwaysShowTabClose: !optAlwaysClose.classList.contains('on') }));
-  if (optTabsCompactMirror) optTabsCompactMirror.addEventListener('click', () => updateOpt({ compactTabBar: !optTabsCompactMirror.classList.contains('on') }));
-  if (optTabsCloseMirror) optTabsCloseMirror.addEventListener('click', () => updateOpt({ alwaysShowTabClose: !optTabsCloseMirror.classList.contains('on') }));
-  if (optReduceMotion) optReduceMotion.addEventListener('click', () => updateOpt({ reduceWallpaperMotion: !optReduceMotion.classList.contains('on') }));
-
-  function toggleSpPref(key) {
-    const next = Object.assign({}, state.startPagePrefs || {});
-    next[key] = !next[key];
-    state.startPagePrefs = next;
-    applyStartPagePrefs(next);
-    syncSettingsUi();
-    send({ type: 'updateStartPagePrefs', [key]: next[key] });
-  }
-  if (optSpFavorites) optSpFavorites.addEventListener('click', () => toggleSpPref('hideFavorites'));
-  if (optSpFrequent) optSpFrequent.addEventListener('click', () => toggleSpPref('hideFrequentlyVisited'));
-  if (optSpPrivacy) optSpPrivacy.addEventListener('click', () => toggleSpPref('hidePrivacyReport'));
-  if (optSpReading) optSpReading.addEventListener('click', () => toggleSpPref('hideReadingList'));
-  if (optSpGreeting) optSpGreeting.addEventListener('click', () => updateOpt({ hideGreetingBadge: optSpGreeting.classList.contains('on') }));
-  if (optSpSearch) optSpSearch.addEventListener('click', () => updateOpt({ hideStartPageSearch: optSpSearch.classList.contains('on') }));
-
-  if (btnSpGotoWallpapers) btnSpGotoWallpapers.addEventListener('click', () => setActiveSettingsPane('wallpapers'));
-  if (btnSpUploadWp) btnSpUploadWp.addEventListener('click', () => send({ type: 'pickCustomWallpaper' }));
-  if (btnOptUploadWp) btnOptUploadWp.addEventListener('click', () => send({ type: 'pickCustomWallpaper' }));
-  if (optWpFilter) {
-    optWpFilter.addEventListener('click', (e) => {
-      const btn = e.target.closest('.opt-seg-btn');
-      if (!btn) return;
-      settingsWpFilterCat = btn.dataset.cat || 'all';
-      optWpFilter.querySelectorAll('.opt-seg-btn').forEach((b) => b.classList.toggle('active', b === btn));
-      renderSettingsWallpaperGrid();
-    });
-  }
-
-  if (optGlobalAdblock) optGlobalAdblock.addEventListener('click', () => updateOpt({ globalAdBlockEnabled: !optGlobalAdblock.classList.contains('on') }));
-  if (optVpnAuto) optVpnAuto.addEventListener('click', () => updateOpt({ vpnAutoConnect: !optVpnAuto.classList.contains('on') }));
-  if (btnOptOpenVpn) btnOptOpenVpn.addEventListener('click', () => { send({ type: 'toggleSettings', open: false }); setTimeout(openVpnPopover, 60); });
-  if (btnOptClearHistory) btnOptClearHistory.addEventListener('click', () => send({ type: 'clearHistory' }));
-  if (btnOptClearCache) btnOptClearCache.addEventListener('click', () => send({ type: 'clearBrowsingCache' }));
-
+  // Customize Start Page Wallpaper Modal
   btnWallpaperStore.addEventListener('click', () => {
     shortcutModal.classList.add('hidden');
     const opening = wallpaperStore.classList.contains('hidden');
@@ -1485,10 +2417,8 @@
       renderWallpaperGrid();
     }
   });
-
   btnStoreClose.addEventListener('click', () => wallpaperStore.classList.add('hidden'));
   btnCustomWp.addEventListener('click', () => send({ type: 'pickCustomWallpaper' }));
-
   storeTabs.addEventListener('click', (e) => {
     const btn = e.target.closest('.store-tab');
     if (!btn) return;
@@ -1510,7 +2440,13 @@
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (!tabContextMenu.classList.contains('hidden')) {
+      if (resetConfirmOverlay && !resetConfirmOverlay.classList.contains('hidden')) {
+        closeResetConfirmModal();
+      } else if (clearDataOverlay && !clearDataOverlay.classList.contains('hidden')) {
+        closeClearDataModal();
+      } else if (profileSetupOverlay && !profileSetupOverlay.classList.contains('hidden')) {
+        closeProfileSetupModal();
+      } else if (!tabContextMenu.classList.contains('hidden')) {
         hideTabContextMenu();
       } else if (state.settingsOpen) {
         send({ type: 'toggleSettings', open: false });
@@ -1562,16 +2498,11 @@
         <div class="ov-card-preview">${previewHtml}</div>
       `;
       card.querySelector('.ov-card-title').textContent = titleText;
-
       card.querySelector('.ov-card-close').addEventListener('click', (e) => {
         e.stopPropagation();
         send({ type: 'closeTab', id: tab.id });
       });
-
-      card.addEventListener('click', () => {
-        send({ type: 'activateTab', id: tab.id });
-      });
-
+      card.addEventListener('click', () => send({ type: 'activateTab', id: tab.id }));
       overviewGrid.appendChild(card);
     });
   }
@@ -1585,12 +2516,7 @@
   }
 
   function showTabContextMenu(tab, clientX, clientY) {
-    send({
-      type: 'openTabMenu',
-      id: tab.id,
-      x: Math.round(clientX),
-      y: Math.round(clientY)
-    });
+    send({ type: 'openTabMenu', id: tab.id, x: Math.round(clientX), y: Math.round(clientY) });
   }
 
   tabContextMenu.addEventListener('click', (e) => {
@@ -1606,19 +2532,13 @@
   });
 
   document.addEventListener('mousedown', (e) => {
-    if (!tabContextMenu.classList.contains('hidden') && !tabContextMenu.contains(e.target)) {
-      hideTabContextMenu();
-    }
-    if (!shortcutModal.classList.contains('hidden') && !shortcutModal.contains(e.target) && !e.target.closest('.shortcut-add')) {
-      shortcutModal.classList.add('hidden');
-    }
-    if (!wallpaperStore.classList.contains('hidden') && !wallpaperStore.contains(e.target) && !btnWallpaperStore.contains(e.target)) {
-      wallpaperStore.classList.add('hidden');
-    }
+    if (!tabContextMenu.classList.contains('hidden') && !tabContextMenu.contains(e.target)) hideTabContextMenu();
+    if (!shortcutModal.classList.contains('hidden') && !shortcutModal.contains(e.target) && !e.target.closest('.shortcut-add')) shortcutModal.classList.add('hidden');
+    if (!wallpaperStore.classList.contains('hidden') && !wallpaperStore.contains(e.target) && !btnWallpaperStore.contains(e.target)) wallpaperStore.classList.add('hidden');
   });
 
   // =========================================================================
-  // Top Tab Strip (Material Design 3 Connected Tabs)
+  // Top Tab Strip (Chrome Material Design 3 Connected Tabs)
   // =========================================================================
   const tabEls = new Map();
   const closingTabIds = new Set();
@@ -1656,6 +2576,8 @@
         closingTabIds.delete(id);
       }
     }
+
+    const showHover = !(state.browserOptions && state.browserOptions.tabHoverPreview === false);
 
     tabs.forEach((tab, idx) => {
       let el = tabEls.get(tab.id);
@@ -1713,7 +2635,9 @@
       const wasActive = el.classList.contains('active');
       const nowActive = tab.id === activeId;
       el.classList.toggle('active', nowActive);
-      el.title = tab.isPinned ? `${tab.title || 'Pinned Tab'} (Pinned — Right-click to unpin)` : (tab.title || 'Start Page');
+      el.title = showHover
+        ? (tab.isPinned ? `${tab.title || 'Pinned Tab'} (Pinned — Right-click to unpin)` : ((tab.title || 'Start Page') + (tab.displayUrl ? ` · ${tab.displayUrl}` : '')))
+        : '';
 
       const spinner = el.querySelector('.tab-spinner');
       const fav = el.querySelector('.tab-favicon');
@@ -1833,17 +2757,29 @@
       chip.appendChild(ico);
       chip.appendChild(label);
       chip.appendChild(rm);
-
       chip.addEventListener('click', () => send({ type: 'navigate', input: fav.url }));
       chip.addEventListener('auxclick', (e) => {
-        if (e.button === 1) {
-          e.preventDefault();
-          send({ type: 'newTab', url: fav.url });
-        }
+        if (e.button === 1) { e.preventDefault(); send({ type: 'newTab', url: fav.url }); }
       });
-
       favbarList.appendChild(chip);
     });
+  }
+
+  function syncTopProfilePill(profile) {
+    if (!profile) return;
+    const disp = profile.googleDisplayName || profile.name || 'Personal';
+    const isMain = !!profile.isMainProfile || profile.id === state.mainProfileId;
+    const avKey = `${profile.avatar}_${profile.googleAvatarUrl || ''}_${disp}_${isMain ? 1 : 0}_${state.isPrivateWindow ? 1 : 0}`;
+    if (avKey !== lastAvatarRendered) {
+      lastAvatarRendered = avKey;
+      profileAvatarSlot.innerHTML = renderProfileAvatarHtml(profile, 24);
+      if (profilePillName) profilePillName.textContent = state.isPrivateWindow ? 'Private' : disp;
+      if (profileMainChip) profileMainChip.classList.toggle('hidden', state.isPrivateWindow || !isMain);
+      btnProfile.title = profile.isGoogleSignedIn
+        ? `${disp} (${profile.googleEmail || 'Google'}) · Profiles & Windows`
+        : `${disp} · Profiles & Google Account`;
+    }
+    syncStartPageProfileBadge(profile);
   }
 
   function applyState(next) {
@@ -1853,7 +2789,7 @@
     const prevVideoProbeTitle = state.videoProbeTitle;
     const prevVideoProbeStatus = state.videoProbeStatus;
     const prevVideoProbeLoading = state.videoProbeLoading;
-    state = next;
+    state = Object.assign({}, state, next);
     state.wallpaper = normalizeWallpaperId(next.wallpaper);
     if (typeof next.videoFormats === 'undefined' && Array.isArray(prevVideoFormats) && prevVideoFormats.length && (!next.activeTabUrl || next.activeTabUrl === prevVideoProbeUrl)) {
       state.videoFormats = prevVideoFormats;
@@ -1862,6 +2798,9 @@
       state.videoProbeStatus = prevVideoProbeStatus;
       state.videoProbeLoading = prevVideoProbeLoading;
     }
+
+    body.classList.toggle('is-private', !!state.isPrivateWindow);
+    if (privateBadgePill) privateBadgePill.classList.toggle('hidden', !state.isPrivateWindow);
 
     syncTabs(next.tabs || [], next.activeTabId);
     if (!bootTabsReady && next.tabs && next.tabs.length > 0) {
@@ -1885,8 +2824,7 @@
     btnGroupPill.classList.toggle('hidden', !isCustomGroup);
     if (isCustomGroup) {
       const grp = (next.tabGroups || []).find((g) => g.id === next.activeTabGroupId);
-      const col = grp ? grp.color : '#d0bcff';
-      groupBadgeDot.style.background = col;
+      groupBadgeDot.style.background = grp ? grp.color : '#d0bcff';
       groupBadgeName.textContent = next.activeTabGroupName || 'Tab Group';
     }
 
@@ -1925,22 +2863,15 @@
     applyBrowserOptions(next.browserOptions || state.browserOptions);
     if (optOpen) {
       if (!wasOptOpen) {
-        setActiveSettingsPane(next.settingsPane || activeSettingsPane || 'general');
-      } else if (activeSettingsPane === 'wallpapers') {
+        if (settingsSearchInput) settingsSearchInput.value = '';
+        setActiveSettingsPane(next.settingsPane || activeSettingsPane || 'you');
+      } else if (activeSettingsPane === 'appearance') {
         renderSettingsWallpaperGrid();
       }
       window.DejavuNewTabCanvas.start();
     }
 
-    if (next.activeProfile && window.DejavuAvatars) {
-      const avKey = `${next.activeProfile.avatar}_${next.activeProfile.name}`;
-      if (avKey !== lastAvatarRendered) {
-        lastAvatarRendered = avKey;
-        profileAvatarSlot.innerHTML = window.DejavuAvatars.renderHtml(next.activeProfile.avatar, 24);
-        btnProfile.title = `${next.activeProfile.name} · Profiles & Updates`;
-      }
-      syncStartPageProfileBadge(next.activeProfile);
-    }
+    if (next.activeProfile) syncTopProfilePill(next.activeProfile);
     profileUpdateDot.classList.toggle('hidden', !next.updateAvailable);
 
     window.DejavuNewTabCanvas.setWallpaper(state.wallpaper);
@@ -1974,14 +2905,14 @@
       body.classList.add('on-newtab');
       window.DejavuNewTabCanvas.start();
       if (ovOpen || optOpen || dlOpen) hideStartPageStatus();
-      if (!ovOpen && !optOpen && !dlOpen && lastActiveId !== next.activeTabId) {
+      if (!ovOpen && !optOpen && !dlOpen && !body.classList.contains('modal-open') && lastActiveId !== next.activeTabId) {
         newtabSearchInput.value = '';
         setTimeout(() => newtabSearchInput.focus(), 40);
       }
     } else {
       hideStartPageStatus();
       body.classList.remove('on-newtab');
-      if (!ovOpen && !optOpen && !dlOpen) window.DejavuNewTabCanvas.stop();
+      if (!ovOpen && !optOpen && !dlOpen && !body.classList.contains('modal-open')) window.DejavuNewTabCanvas.stop();
     }
     lastActiveId = next.activeTabId;
 
@@ -2045,38 +2976,8 @@
   }
 
   // =========================================================================
-  // AntDM-Class Material Design 3 Turbo Download Manager (YT MP4/MP3 + 8x + HLS)
+  // AntDM-Class Material Design 3 Turbo Download Manager
   // =========================================================================
-  const dlManagerOverlay = document.getElementById('dl-manager-overlay');
-  const dlmNav = document.getElementById('dlm-nav');
-  const dlmTitle = document.getElementById('dlm-title');
-  const dlmSub = document.getElementById('dlm-sub');
-  const dlmUrlInput = document.getElementById('dlm-url-input');
-  const dlmQualitySelect = document.getElementById('dlm-quality-select');
-  const btnDlmAddUrl = document.getElementById('btn-dlm-add-url');
-  const btnDlmScanMedia = document.getElementById('btn-dlm-scan-media');
-  const btnDlmPauseAll = document.getElementById('btn-dlm-pause-all');
-  const btnDlmResumeAll = document.getElementById('btn-dlm-resume-all');
-  const btnDlmClearDone = document.getElementById('btn-dlm-clear-done');
-  const btnDlmClose = document.getElementById('btn-dlm-close');
-  const btnDlmOpenDir = document.getElementById('btn-dlm-open-dir');
-  const dlmSaveDir = document.getElementById('dlm-save-dir');
-  const dlmVideoCard = document.getElementById('dlm-video-card');
-  const dlmVideoTitle = document.getElementById('dlm-video-title');
-  const dlmVideoStatus = document.getElementById('dlm-video-status');
-  const dlmVideoChips = document.getElementById('dlm-video-chips');
-  const btnDlmProbeVideo = document.getElementById('btn-dlm-probe-video');
-  const dlmMediaBanner = document.getElementById('dlm-media-banner');
-  const dlmMbSub = document.getElementById('dlm-mb-sub');
-  const btnDlmRescan = document.getElementById('btn-dlm-rescan');
-  const btnDlmGrabAll = document.getElementById('btn-dlm-grab-all');
-  const dlmList = document.getElementById('dlm-list');
-  const dlmCntAll = document.getElementById('dlm-cnt-all');
-  const dlmCntActive = document.getElementById('dlm-cnt-active');
-  const dlmCntMedia = document.getElementById('dlm-cnt-media');
-  let activeDlTab = 'all';
-  let lastAutoProbedUrl = '';
-
   const DEFAULT_VIDEO_CHIPS = [
     { id: '1080', shortLabel: '1080p MP4', label: '1080p HD · MP4', isAudio: false, height: 1080 },
     { id: '720', shortLabel: '720p MP4', label: '720p HD · MP4', isAudio: false, height: 720 },
@@ -2159,12 +3060,7 @@
       const sizeTxt = (f.sizeText || '').trim();
       chip.innerHTML = `<span>${escapeSugHtml(lbl)}</span>${sizeTxt ? `<span class="q-size">· ${escapeSugHtml(sizeTxt)}</span>` : ''}`;
       chip.addEventListener('click', () => {
-        send({
-          type: 'turboDownloadVideo',
-          url: ctx.url,
-          quality: f.id,
-          title: ctx.title || ''
-        });
+        send({ type: 'turboDownloadVideo', url: ctx.url, quality: f.id, title: ctx.title || '' });
         chip.classList.add('queued');
         chip.textContent = 'Started ✓';
         chip.disabled = true;
@@ -2221,15 +3117,14 @@
     if (dlmCntAll) dlmCntAll.textContent = String(items.length);
     if (dlmCntActive) dlmCntActive.textContent = String(activeItems.length);
     if (dlmCntMedia) dlmCntMedia.textContent = String(media.length + (videoCtx.isVideoSite ? 1 : 0));
-    if (dlmSaveDir && state.downloadsDir) {
-      dlmSaveDir.textContent = state.downloadsDir;
-      dlmSaveDir.title = state.downloadsDir;
+    const saveDir = state.downloadFolder || state.downloadsDir;
+    if (dlmSaveDir && saveDir) {
+      dlmSaveDir.textContent = saveDir;
+      dlmSaveDir.title = saveDir;
     }
 
     if (dlmNav) {
-      dlmNav.querySelectorAll('.settings-nav-item').forEach((b) => {
-        b.classList.toggle('active', b.dataset.dltab === activeDlTab);
-      });
+      dlmNav.querySelectorAll('.settings-nav-item').forEach((b) => b.classList.toggle('active', b.dataset.dltab === activeDlTab));
     }
     const meta = DLM_TAB_META[activeDlTab] || DLM_TAB_META.all;
     if (dlmTitle) dlmTitle.textContent = meta.title;
@@ -2257,7 +3152,7 @@
             <div class="dlm-empty">
               <div class="dlm-empty-ico"><svg viewBox="0 0 22 22" width="24" height="24" fill="none"><circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.6"/><path d="M9.2 8.2L14.5 11l-5.3 2.8V8.2z" fill="currentColor"/></svg></div>
               <div class="dlm-empty-title">No Page Media Detected Yet</div>
-              <div class="dlm-empty-sub">Open YouTube, TikTok, Vimeo, SoundCloud, or any site with videos, HLS streams, music, PDFs or images — or paste a link with your chosen quality / MP3 above.</div>
+              <div class="dlm-empty-sub">Open YouTube, TikTok, Vimeo, SoundCloud, or any site with videos, HLS streams, music, PDFs or images — or paste a link above.</div>
             </div>`;
         }
         return;
@@ -2338,16 +3233,12 @@
       const qBadge = (d.quality || '').trim();
       const statusText = (isRun && d.statusText) ? String(d.statusText).trim() : '';
 
-      const segs = Array.isArray(d.segments) && d.segments.length > 0
-        ? d.segments
-        : [{ pct: isDone ? 100 : (d.percent || 0) }];
+      const segs = Array.isArray(d.segments) && d.segments.length > 0 ? d.segments : [{ pct: isDone ? 100 : (d.percent || 0) }];
       const segHtml = segs.map((s) => `<div class="dlm-seg"><div class="dlm-seg-fill" style="width:${Math.max(0, Math.min(100, isDone ? 100 : (s.pct || 0)))}%"></div></div>`).join('');
 
       const speedStr = (isRun && d.speedBps > 0) ? `${fmtBytes(d.speedBps)}/s` : '';
       const etaStr = (isRun && d.etaSeconds > 0) ? fmtEta(d.etaSeconds) : '';
-      const hlsSegStr = (isHls && d.hlsTotalSegments > 0)
-        ? (isDone ? `${d.hlsTotalSegments} segments` : `${d.hlsDoneSegments || 0}/${d.hlsTotalSegments} segments`)
-        : '';
+      const hlsSegStr = (isHls && d.hlsTotalSegments > 0) ? (isDone ? `${d.hlsTotalSegments} segments` : `${d.hlsDoneSegments || 0}/${d.hlsTotalSegments} segments`) : '';
       const sizeStr = d.totalBytes > 0
         ? (isDone ? fmtBytes(d.totalBytes) : `${fmtBytes(d.receivedBytes)} / ${fmtBytes(d.totalBytes)} (${Number(d.percent || 0).toFixed(0)}%)`)
         : (d.receivedBytes > 0 ? fmtBytes(d.receivedBytes) : (statusText ? '' : (d.status === 'probing' ? 'Connecting…' : '')));
@@ -2387,7 +3278,6 @@
         ${!isDone ? `<div class="dlm-seg-wrap"><div class="dlm-seg-strip ${segs.length <= 1 ? 'single' : ''}" style="grid-template-columns:repeat(${segs.length}, 1fr)">${segHtml}</div></div>` : ''}
       `;
       card.querySelector('.dlm-card-name').textContent = d.fileName || 'Download';
-
       const bPause = card.querySelector('.act-pause');
       const bResume = card.querySelector('.act-resume');
       const bCancel = card.querySelector('.act-cancel');
@@ -2479,7 +3369,9 @@
     if (e.key === 'Escape' && state.dlManagerOpen) send({ type: 'closeDlManager' });
   });
 
-  // Receive messages from native C# BrowserForm
+  // =========================================================================
+  // Native C# BrowserForm Message Receiver
+  // =========================================================================
   if (window.chrome && window.chrome.webview) {
     window.chrome.webview.addEventListener('message', (ev) => {
       const msg = ev.data;
@@ -2487,6 +3379,21 @@
 
       if (msg.type === 'state') {
         applyState(msg);
+      } else if (msg.type === 'openProfileSetup') {
+        openProfileSetupModal(msg.mode || 'setup', msg.profileId || null);
+      } else if (msg.type === 'googleAccountDetected' && msg.profile) {
+        const p = msg.profile;
+        psState.googleDisplayName = p.googleDisplayName || psState.googleDisplayName;
+        psState.googleEmail = p.googleEmail || psState.googleEmail;
+        psState.googleAvatarUrl = p.googleAvatarUrl || psState.googleAvatarUrl;
+        if (psManualName && p.googleDisplayName) psManualName.value = p.googleDisplayName;
+        if (psManualEmail && p.googleEmail) psManualEmail.value = p.googleEmail;
+        if (psNameInput && !psNameInput.value.trim() && p.googleDisplayName) psNameInput.value = p.googleDisplayName;
+        if (psState.googleAvatarUrl) psState.selectedAvatar = '__google__';
+        if (profileSetupOverlay && !profileSetupOverlay.classList.contains('hidden')) {
+          setPsStep(2);
+        }
+        showSettingsToast(`Google Account synced: ${p.googleEmail || p.googleDisplayName || 'Connected'}`);
       } else if (msg.type === 'turboDownloadsUpdate') {
         state.turboDownloads = msg.turboDownloads || [];
         state.pageMedia = msg.pageMedia || [];
@@ -2507,7 +3414,7 @@
       } else if (msg.type === 'settingsToast') {
         showSettingsToast(msg.text || '');
       } else if (msg.type === 'palette') {
-        if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open') && !body.classList.contains('settings-open') && !body.classList.contains('dl-manager-open')) {
+        if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open') && !body.classList.contains('settings-open') && !body.classList.contains('dl-manager-open') && !body.classList.contains('modal-open')) {
           const apMode = (state.browserOptions && state.browserOptions.appearanceMode) || 'auto';
           const effLight = (apMode === 'light') ? true : (apMode === 'dark' ? false : !!msg.isLight);
           body.classList.toggle('theme-light', effLight);
@@ -2535,6 +3442,8 @@
   }
 
   // Hydrate boot state synchronously BEFORE first paint
+  body.classList.toggle('is-private', !!state.isPrivateWindow);
+  if (privateBadgePill) privateBadgePill.classList.toggle('hidden', !state.isPrivateWindow);
   applyStartPagePrefs(state.startPagePrefs);
   applyBrowserOptions(state.browserOptions);
   if (bootData.shortcuts) renderShortcuts(bootData.shortcuts);
@@ -2542,10 +3451,5 @@
   if (bootData.readingList) renderReadingListSection(bootData.readingList, state.startPagePrefs.hideReadingList);
   if (bootData.favorites) renderFavoritesBar(bootData.favorites, bootData.showFavoritesBar);
   updateStatText(state.globalAdBlockEnabled, state.totalBlocked);
-  if (bootData.activeProfile && window.DejavuAvatars) {
-    lastAvatarRendered = `${bootData.activeProfile.avatar}_${bootData.activeProfile.name}`;
-    profileAvatarSlot.innerHTML = window.DejavuAvatars.renderHtml(bootData.activeProfile.avatar, 24);
-    btnProfile.title = `${bootData.activeProfile.name} · Profiles & Updates`;
-    syncStartPageProfileBadge(bootData.activeProfile);
-  }
+  if (bootData.activeProfile) syncTopProfilePill(bootData.activeProfile);
 })();

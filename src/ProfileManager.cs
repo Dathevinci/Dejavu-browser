@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
 using System.Web.Script.Serialization;
 
 namespace DejavuBrowser
@@ -11,14 +15,28 @@ namespace DejavuBrowser
         public string name { get; set; }
         public string avatar { get; set; }
         public string color { get; set; }
+        public string themeAccent { get; set; }
+        public string googleEmail { get; set; }
+        public string googleDisplayName { get; set; }
+        public string googleAvatarUrl { get; set; }
+        public bool isGoogleSignedIn { get; set; }
+        public bool isMainProfile { get; set; }
+        public bool isRunning { get; set; }
         public long createdAt { get; set; }
 
         public ProfileInfo()
         {
             id = "default";
-            name = "Default";
+            name = "Personal";
             avatar = "dejavu-halftone";
             color = "#b688ff";
+            themeAccent = "amethyst";
+            googleEmail = "";
+            googleDisplayName = "";
+            googleAvatarUrl = "";
+            isGoogleSignedIn = false;
+            isMainProfile = false;
+            isRunning = false;
             createdAt = DateTime.UtcNow.Ticks;
         }
     }
@@ -26,11 +44,15 @@ namespace DejavuBrowser
     public class ProfilesManifest
     {
         public string activeProfileId { get; set; }
+        public string mainProfileId { get; set; }
+        public bool onboardingCompleted { get; set; }
         public List<ProfileInfo> profiles { get; set; }
 
         public ProfilesManifest()
         {
             activeProfileId = "default";
+            mainProfileId = "default";
+            onboardingCompleted = false;
             profiles = new List<ProfileInfo>
             {
                 new ProfileInfo
@@ -38,7 +60,9 @@ namespace DejavuBrowser
                     id = "default",
                     name = "Personal",
                     avatar = "dejavu-halftone",
-                    color = "#b688ff"
+                    color = "#b688ff",
+                    themeAccent = "amethyst",
+                    isMainProfile = true
                 }
             };
         }
@@ -90,81 +114,347 @@ namespace DejavuBrowser
         public List<ReadingListItem> ReadingList { get; private set; }
         public List<TabGroupItem> TabGroups { get; private set; }
 
+        private static string GetManifestPath()
+        {
+            return Path.Combine(SettingsStore.AppDataDir, "profiles.json");
+        }
+
         private string ManifestPath
         {
-            get { return Path.Combine(SettingsStore.AppDataDir, "profiles.json"); }
+            get { return GetManifestPath(); }
+        }
+
+        // =====================================================================
+        // Static Per-Profile Isolation Helpers (Chrome-Style Simultaneous Windows)
+        // =====================================================================
+        public static string ResolveStartupProfileId(string requestedProfileId)
+        {
+            ProfilesManifest m = LoadManifestFromDiskStatic();
+            if (!string.IsNullOrWhiteSpace(requestedProfileId))
+            {
+                string req = requestedProfileId.Trim();
+                ProfileInfo found = FindInManifest(m, req);
+                if (found != null) return found.id;
+                if (m.profiles != null)
+                {
+                    for (int i = 0; i < m.profiles.Count; i++)
+                    {
+                        if (m.profiles[i] != null && string.Equals(m.profiles[i].name, req, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return m.profiles[i].id;
+                        }
+                    }
+                }
+            }
+            if (!string.IsNullOrWhiteSpace(m.mainProfileId))
+            {
+                ProfileInfo mainP = FindInManifest(m, m.mainProfileId);
+                if (mainP != null) return mainP.id;
+            }
+            if (!string.IsNullOrWhiteSpace(m.activeProfileId))
+            {
+                ProfileInfo activeP = FindInManifest(m, m.activeProfileId);
+                if (activeP != null) return activeP.id;
+            }
+            if (m.profiles != null && m.profiles.Count > 0 && !string.IsNullOrEmpty(m.profiles[0].id))
+            {
+                return m.profiles[0].id;
+            }
+            return "default";
+        }
+
+        public static string ComputeInstanceHash(string dataDir, string profileId)
+        {
+            string normDir = (dataDir ?? "").TrimEnd('\\', '/').ToLowerInvariant();
+            string normProf = string.IsNullOrWhiteSpace(profileId) ? "default" : profileId.Trim().ToLowerInvariant();
+            string key = normDir + "|" + normProf;
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(key));
+                StringBuilder sb = new StringBuilder(16);
+                for (int i = 0; i < 8; i++)
+                {
+                    sb.Append(bytes[i].ToString("x2"));
+                }
+                return sb.ToString();
+            }
+        }
+
+        public static string GetProfileLockFilePath(string dataDir, string profileId)
+        {
+            string hash = ComputeInstanceHash(dataDir, profileId);
+            return Path.Combine(dataDir, ".instance." + hash + ".lock");
+        }
+
+        public static string GetProfilePipeName(string dataDir, string profileId)
+        {
+            return "DejavuBrowser_Pipe_" + ComputeInstanceHash(dataDir, profileId);
+        }
+
+        public static string GetProfileMutexName(string dataDir, string profileId)
+        {
+            return "Local\\DejavuBrowser_SingleInstance_" + ComputeInstanceHash(dataDir, profileId);
+        }
+
+        public static bool IsProfileRunning(string dataDir, string profileId)
+        {
+            try
+            {
+                string lockPath = GetProfileLockFilePath(dataDir, profileId);
+                if (!File.Exists(lockPath)) return false;
+                try
+                {
+                    using (FileStream fs = new FileStream(lockPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                    {
+                        return false;
+                    }
+                }
+                catch (IOException)
+                {
+                    return true;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static string NormalizeAccent(string accent, string colorFallback)
+        {
+            if (accent == "amethyst" || accent == "sapphire" || accent == "aurora" ||
+                accent == "rose" || accent == "gold" || accent == "silver")
+            {
+                return accent;
+            }
+            string c = (colorFallback ?? "").Trim().ToLowerInvariant();
+            if (c.Contains("7cc4ff") || c.Contains("60a5fa") || c.Contains("3b82f6") || c.Contains("a8c7fa")) return "sapphire";
+            if (c.Contains("34d399") || c.Contains("5eead4") || c.Contains("10b981") || c.Contains("86efac")) return "aurora";
+            if (c.Contains("fb7185") || c.Contains("f472b6") || c.Contains("ec4899") || c.Contains("fda4af")) return "rose";
+            if (c.Contains("fbbf24") || c.Contains("f59e0b") || c.Contains("facc15") || c.Contains("fde68a")) return "gold";
+            if (c.Contains("cbd5e1") || c.Contains("94a3b8") || c.Contains("a1a1aa")) return "silver";
+            return "amethyst";
+        }
+
+        public static string ColorForAccent(string accent)
+        {
+            if (accent == "sapphire") return "#7cc4ff";
+            if (accent == "aurora") return "#5eead4";
+            if (accent == "rose") return "#fb7185";
+            if (accent == "gold") return "#fbbf24";
+            if (accent == "silver") return "#cbd5e1";
+            return "#b688ff";
+        }
+
+        private static ProfileInfo FindInManifest(ProfilesManifest m, string id)
+        {
+            if (string.IsNullOrEmpty(id) || m == null || m.profiles == null) return null;
+            for (int i = 0; i < m.profiles.Count; i++)
+            {
+                if (m.profiles[i] != null && string.Equals(m.profiles[i].id, id, StringComparison.OrdinalIgnoreCase))
+                {
+                    return m.profiles[i];
+                }
+            }
+            return null;
+        }
+
+        private static ProfilesManifest NormalizeManifest(ProfilesManifest m)
+        {
+            if (m == null || m.profiles == null || m.profiles.Count == 0)
+            {
+                m = new ProfilesManifest();
+            }
+
+            if (string.IsNullOrEmpty(m.mainProfileId) || FindInManifest(m, m.mainProfileId) == null)
+            {
+                ProfileInfo def = FindInManifest(m, "default");
+                m.mainProfileId = def != null ? def.id : m.profiles[0].id;
+            }
+            if (string.IsNullOrEmpty(m.activeProfileId) || FindInManifest(m, m.activeProfileId) == null)
+            {
+                m.activeProfileId = m.mainProfileId;
+            }
+
+            string dataDir = SettingsStore.AppDataDir;
+            for (int i = 0; i < m.profiles.Count; i++)
+            {
+                ProfileInfo p = m.profiles[i];
+                if (p == null) continue;
+                if (string.IsNullOrEmpty(p.avatar)) p.avatar = "dejavu-halftone";
+                if (string.IsNullOrEmpty(p.color)) p.color = "#b688ff";
+                p.themeAccent = NormalizeAccent(p.themeAccent, p.color);
+                if (p.googleEmail == null) p.googleEmail = "";
+                if (p.googleDisplayName == null) p.googleDisplayName = "";
+                if (p.googleAvatarUrl == null) p.googleAvatarUrl = "";
+                if (!string.IsNullOrEmpty(p.googleEmail)) p.isGoogleSignedIn = true;
+                p.isMainProfile = string.Equals(p.id, m.mainProfileId, StringComparison.OrdinalIgnoreCase);
+                p.isRunning = IsProfileRunning(dataDir, p.id);
+            }
+            return m;
+        }
+
+        private static ProfilesManifest LoadManifestFromDiskStatic()
+        {
+            lock (Sync)
+            {
+                string path = GetManifestPath();
+                for (int attempt = 0; attempt < 4; attempt++)
+                {
+                    try
+                    {
+                        if (File.Exists(path))
+                        {
+                            string raw = File.ReadAllText(path);
+                            ProfilesManifest m = Json.Deserialize<ProfilesManifest>(raw);
+                            if (m != null && m.profiles != null && m.profiles.Count > 0)
+                            {
+                                return NormalizeManifest(m);
+                            }
+                        }
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        Thread.Sleep(25);
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
+                return NormalizeManifest(new ProfilesManifest());
+            }
         }
 
         public ProfileManager(string requestedProfileId)
         {
-            Manifest = LoadManifest();
-            if (!string.IsNullOrEmpty(requestedProfileId))
-            {
-                ProfileInfo found = FindProfile(requestedProfileId);
-                if (found != null) Manifest.activeProfileId = found.id;
-            }
-            ActiveProfile = FindProfile(Manifest.activeProfileId);
+            Manifest = LoadManifestFromDiskStatic();
+            string targetId = !string.IsNullOrWhiteSpace(requestedProfileId)
+                ? requestedProfileId.Trim()
+                : (!string.IsNullOrEmpty(Manifest.mainProfileId) ? Manifest.mainProfileId : Manifest.activeProfileId);
+
+            ActiveProfile = FindProfile(targetId);
             if (ActiveProfile == null)
             {
                 if (Manifest.profiles.Count == 0)
                 {
-                    Manifest.profiles.Add(new ProfileInfo { id = "default", name = "Personal", avatar = "dejavu-halftone", color = "#b688ff" });
+                    Manifest.profiles.Add(new ProfileInfo
+                    {
+                        id = "default",
+                        name = "Personal",
+                        avatar = "dejavu-halftone",
+                        color = "#b688ff",
+                        themeAccent = "amethyst",
+                        isMainProfile = true
+                    });
                 }
                 ActiveProfile = Manifest.profiles[0];
-                Manifest.activeProfileId = ActiveProfile.id;
             }
+            Manifest.activeProfileId = ActiveProfile.id;
+            ActiveProfile.isRunning = true;
             SaveManifest();
             LoadActiveProfileCollections();
         }
 
-        private ProfilesManifest LoadManifest()
+        public void ReloadManifest()
         {
             lock (Sync)
             {
-                try
+                string currentActiveId = ActiveProfile != null ? ActiveProfile.id : "default";
+                ProfilesManifest fresh = LoadManifestFromDiskStatic();
+                Manifest = fresh;
+                ProfileInfo matched = FindInManifest(Manifest, currentActiveId);
+                if (matched != null)
                 {
-                    if (File.Exists(ManifestPath))
-                    {
-                        ProfilesManifest m = Json.Deserialize<ProfilesManifest>(File.ReadAllText(ManifestPath));
-                        if (m != null && m.profiles != null && m.profiles.Count > 0)
-                        {
-                            return m;
-                        }
-                    }
+                    ActiveProfile = matched;
                 }
-                catch { }
-                return new ProfilesManifest();
+                else if (Manifest.profiles.Count > 0)
+                {
+                    ActiveProfile = Manifest.profiles[0];
+                }
+                if (ActiveProfile != null)
+                {
+                    ActiveProfile.isRunning = true;
+                }
             }
+        }
+
+        public List<string> GetOpenProfileIds()
+        {
+            ReloadManifest();
+            List<string> openIds = new List<string>();
+            string dataDir = SettingsStore.AppDataDir;
+            lock (Sync)
+            {
+                for (int i = 0; i < Manifest.profiles.Count; i++)
+                {
+                    ProfileInfo p = Manifest.profiles[i];
+                    if (p == null) continue;
+                    bool running = (ActiveProfile != null && string.Equals(p.id, ActiveProfile.id, StringComparison.OrdinalIgnoreCase))
+                        || IsProfileRunning(dataDir, p.id);
+                    p.isRunning = running;
+                    if (running) openIds.Add(p.id);
+                }
+            }
+            return openIds;
         }
 
         public void SaveManifest()
         {
             lock (Sync)
             {
-                try
+                string path = ManifestPath;
+                string tmp = path + "." + Process.GetCurrentProcess().Id + ".tmp";
+                string payload = Json.Serialize(Manifest);
+                for (int attempt = 0; attempt < 5; attempt++)
                 {
-                    File.WriteAllText(ManifestPath, Json.Serialize(Manifest));
+                    try
+                    {
+                        File.WriteAllText(tmp, payload);
+                        if (File.Exists(path))
+                        {
+                            try
+                            {
+                                File.Replace(tmp, path, null);
+                            }
+                            catch
+                            {
+                                File.Delete(path);
+                                File.Move(tmp, path);
+                            }
+                        }
+                        else
+                        {
+                            File.Move(tmp, path);
+                        }
+                        return;
+                    }
+                    catch (IOException)
+                    {
+                        Thread.Sleep(25);
+                    }
+                    catch
+                    {
+                        break;
+                    }
                 }
-                catch { }
+                try { if (File.Exists(tmp)) File.Delete(tmp); } catch { }
             }
         }
 
         public ProfileInfo FindProfile(string id)
         {
-            if (string.IsNullOrEmpty(id) || Manifest == null || Manifest.profiles == null) return null;
-            for (int i = 0; i < Manifest.profiles.Count; i++)
-            {
-                if (string.Equals(Manifest.profiles[i].id, id, StringComparison.OrdinalIgnoreCase))
-                {
-                    return Manifest.profiles[i];
-                }
-            }
-            return null;
+            return FindInManifest(Manifest, id);
         }
 
         public string GetProfileDataDir(string profileId)
         {
-            // Keep "default" profile directly in AppData\dejavu so v2.0 users migrate seamlessly with zero data loss
+            // Keep "default" profile directly in AppData\dejavu so existing users migrate seamlessly with zero data loss
             if (string.IsNullOrEmpty(profileId) || string.Equals(profileId, "default", StringComparison.OrdinalIgnoreCase))
             {
                 return SettingsStore.AppDataDir;
@@ -307,39 +597,183 @@ namespace DejavuBrowser
 
         public ProfileInfo CreateProfile(string name, string avatar, string color)
         {
+            return CreateProfile(name, avatar, color, null, false);
+        }
+
+        public ProfileInfo CreateProfile(string name, string avatar, string color, string themeAccent, bool setAsMain)
+        {
+            ReloadManifest();
             string cleanName = string.IsNullOrWhiteSpace(name) ? "Profile " + (Manifest.profiles.Count + 1) : name.Trim();
             if (cleanName.Length > 28) cleanName = cleanName.Substring(0, 28);
             string id = "p-" + DateTime.UtcNow.Ticks.ToString("x");
+            string accent = NormalizeAccent(themeAccent, color);
+            string resolvedColor = string.IsNullOrEmpty(color) ? ColorForAccent(accent) : color;
+
             ProfileInfo info = new ProfileInfo
             {
                 id = id,
                 name = cleanName,
                 avatar = string.IsNullOrEmpty(avatar) ? "blue-morpho" : avatar,
-                color = string.IsNullOrEmpty(color) ? "#7cc4ff" : color,
+                color = resolvedColor,
+                themeAccent = accent,
+                googleEmail = "",
+                googleDisplayName = "",
+                googleAvatarUrl = "",
+                isGoogleSignedIn = false,
+                isMainProfile = setAsMain,
+                isRunning = false,
                 createdAt = DateTime.UtcNow.Ticks
             };
-            Manifest.profiles.Add(info);
+
+            lock (Sync)
+            {
+                if (setAsMain)
+                {
+                    Manifest.mainProfileId = id;
+                    for (int i = 0; i < Manifest.profiles.Count; i++)
+                    {
+                        Manifest.profiles[i].isMainProfile = false;
+                    }
+                }
+                Manifest.profiles.Add(info);
+            }
+
+            // Seed initial settings with the chosen Material You accent so the new profile window opens themed!
+            try
+            {
+                string profSettingsPath = Path.Combine(GetProfileDataDir(id), "settings.json");
+                DejavuSettings initSettings = new DejavuSettings();
+                initSettings.accentColor = accent;
+                SettingsStore.SaveToPath(profSettingsPath, initSettings);
+            }
+            catch { }
+
             SaveManifest();
             return info;
         }
 
         public bool UpdateProfile(string id, string name, string avatar, string color)
         {
+            return UpdateProfile(id, name, avatar, color, null, null);
+        }
+
+        public bool UpdateProfile(string id, string name, string avatar, string color, string themeAccent, bool? setAsMain)
+        {
+            ReloadManifest();
             ProfileInfo p = FindProfile(id);
             if (p == null) return false;
-            if (!string.IsNullOrWhiteSpace(name))
+            lock (Sync)
             {
-                string c = name.Trim();
-                p.name = c.Length > 28 ? c.Substring(0, 28) : c;
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    string c = name.Trim();
+                    p.name = c.Length > 28 ? c.Substring(0, 28) : c;
+                }
+                if (!string.IsNullOrEmpty(avatar)) p.avatar = avatar;
+                if (!string.IsNullOrEmpty(themeAccent))
+                {
+                    p.themeAccent = NormalizeAccent(themeAccent, color);
+                    if (string.IsNullOrEmpty(color)) p.color = ColorForAccent(p.themeAccent);
+                }
+                if (!string.IsNullOrEmpty(color))
+                {
+                    p.color = color;
+                    if (string.IsNullOrEmpty(themeAccent)) p.themeAccent = NormalizeAccent(p.themeAccent, color);
+                }
+                if (setAsMain.HasValue && setAsMain.Value)
+                {
+                    Manifest.mainProfileId = p.id;
+                    for (int i = 0; i < Manifest.profiles.Count; i++)
+                    {
+                        Manifest.profiles[i].isMainProfile = string.Equals(Manifest.profiles[i].id, p.id, StringComparison.OrdinalIgnoreCase);
+                    }
+                }
             }
-            if (!string.IsNullOrEmpty(avatar)) p.avatar = avatar;
-            if (!string.IsNullOrEmpty(color)) p.color = color;
             SaveManifest();
             return true;
         }
 
+        public bool SetMainProfile(string id)
+        {
+            ReloadManifest();
+            ProfileInfo p = FindProfile(id);
+            if (p == null) return false;
+            lock (Sync)
+            {
+                Manifest.mainProfileId = p.id;
+                for (int i = 0; i < Manifest.profiles.Count; i++)
+                {
+                    Manifest.profiles[i].isMainProfile = string.Equals(Manifest.profiles[i].id, p.id, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+            SaveManifest();
+            return true;
+        }
+
+        public bool UpdateGoogleAccount(string id, string displayName, string email, string avatarUrl, bool? setAsMain)
+        {
+            ReloadManifest();
+            ProfileInfo p = FindProfile(string.IsNullOrEmpty(id) ? ActiveProfile.id : id);
+            if (p == null) return false;
+            lock (Sync)
+            {
+                if (!string.IsNullOrWhiteSpace(email)) p.googleEmail = email.Trim();
+                if (!string.IsNullOrWhiteSpace(displayName))
+                {
+                    string dn = displayName.Trim();
+                    p.googleDisplayName = dn.Length > 48 ? dn.Substring(0, 48) : dn;
+                    if (string.Equals(p.name, "Personal", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(p.name, "Default", StringComparison.OrdinalIgnoreCase) ||
+                        p.name.StartsWith("Profile ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string shortName = dn.Length > 28 ? dn.Substring(0, 28) : dn;
+                        p.name = shortName;
+                    }
+                }
+                if (!string.IsNullOrWhiteSpace(avatarUrl)) p.googleAvatarUrl = avatarUrl.Trim();
+                p.isGoogleSignedIn = !string.IsNullOrEmpty(p.googleEmail) || !string.IsNullOrEmpty(p.googleDisplayName);
+                if (setAsMain.HasValue && setAsMain.Value)
+                {
+                    Manifest.mainProfileId = p.id;
+                    for (int i = 0; i < Manifest.profiles.Count; i++)
+                    {
+                        Manifest.profiles[i].isMainProfile = string.Equals(Manifest.profiles[i].id, p.id, StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+            }
+            SaveManifest();
+            return true;
+        }
+
+        public bool ClearGoogleAccount(string id)
+        {
+            ReloadManifest();
+            ProfileInfo p = FindProfile(string.IsNullOrEmpty(id) ? ActiveProfile.id : id);
+            if (p == null) return false;
+            lock (Sync)
+            {
+                p.googleEmail = "";
+                p.googleDisplayName = "";
+                p.googleAvatarUrl = "";
+                p.isGoogleSignedIn = false;
+            }
+            SaveManifest();
+            return true;
+        }
+
+        public void SetOnboardingCompleted(bool completed)
+        {
+            ReloadManifest();
+            lock (Sync)
+            {
+                Manifest.onboardingCompleted = completed;
+            }
+            SaveManifest();
+        }
+
         public bool SwitchProfile(string id)
         {
+            ReloadManifest();
             ProfileInfo p = FindProfile(id);
             if (p == null) return false;
             ActiveProfile = p;
@@ -351,6 +785,7 @@ namespace DejavuBrowser
 
         public bool DeleteProfile(string id)
         {
+            ReloadManifest();
             if (Manifest.profiles.Count <= 1) return false;
             if (string.Equals(id, "default", StringComparison.OrdinalIgnoreCase)) return false;
             int idx = -1;
@@ -363,12 +798,24 @@ namespace DejavuBrowser
                 }
             }
             if (idx < 0) return false;
-            Manifest.profiles.RemoveAt(idx);
-            if (string.Equals(ActiveProfile.id, id, StringComparison.OrdinalIgnoreCase))
+            lock (Sync)
             {
-                ActiveProfile = Manifest.profiles[0];
-                Manifest.activeProfileId = ActiveProfile.id;
-                LoadActiveProfileCollections();
+                Manifest.profiles.RemoveAt(idx);
+                if (string.Equals(Manifest.mainProfileId, id, StringComparison.OrdinalIgnoreCase))
+                {
+                    ProfileInfo def = FindInManifest(Manifest, "default") ?? Manifest.profiles[0];
+                    Manifest.mainProfileId = def.id;
+                    for (int i = 0; i < Manifest.profiles.Count; i++)
+                    {
+                        Manifest.profiles[i].isMainProfile = string.Equals(Manifest.profiles[i].id, Manifest.mainProfileId, StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+                if (string.Equals(ActiveProfile.id, id, StringComparison.OrdinalIgnoreCase))
+                {
+                    ActiveProfile = Manifest.profiles[0];
+                    Manifest.activeProfileId = ActiveProfile.id;
+                    LoadActiveProfileCollections();
+                }
             }
             SaveManifest();
             return true;
@@ -420,7 +867,6 @@ namespace DejavuBrowser
         private static string CleanFavoriteTitle(string rawTitle, string url)
         {
             string s = (rawTitle ?? "").Trim();
-            // Strip leading notification counters like "(1) YouTube" or "(12) X"
             if (s.StartsWith("("))
             {
                 int close = s.IndexOf(')');
@@ -434,7 +880,6 @@ namespace DejavuBrowser
                     if (allDigits) s = s.Substring(close + 1).Trim();
                 }
             }
-            // Trim verbose tagline suffixes ("GitHub · Change is constant...", "YouTube - Home")
             string[] seps = new string[] { " · ", " | ", " — ", " – ", " - " };
             for (int i = 0; i < seps.Length; i++)
             {
@@ -483,7 +928,6 @@ namespace DejavuBrowser
 
             lock (Sync)
             {
-                // Avoid back-to-back duplicate entries for same URL within 10 minutes
                 if (History.Count > 0 &&
                     string.Equals(History[0].url, url, StringComparison.OrdinalIgnoreCase) &&
                     (nowMs - History[0].visitedAtMs) < 600000)
@@ -556,15 +1000,27 @@ namespace DejavuBrowser
 
         public void ClearHistory()
         {
+            ClearHistorySince(0);
+        }
+
+        public void ClearHistorySince(long cutoffUnixMs)
+        {
             lock (Sync)
             {
-                History.Clear();
+                if (cutoffUnixMs <= 0)
+                {
+                    History.Clear();
+                }
+                else
+                {
+                    History.RemoveAll(h => h != null && h.visitedAtMs >= cutoffUnixMs);
+                }
             }
             SaveHistory();
         }
 
         // =====================================================================
-        // Safari Reading List, Tab Groups & Frequently Visited
+        // Reading List, Tab Groups & Frequently Visited
         // =====================================================================
         public bool IsInReadingList(string url)
         {

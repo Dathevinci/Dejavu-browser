@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Pipes;
 using System.Net;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -28,8 +27,14 @@ namespace DejavuBrowser
             }
 
             string initialUrl = null;
-            string profileId = null;
+            string requestedProfileId = null;
             int debugPort = 0;
+            bool newWindow = false;
+            bool isPrivate = false;
+            bool activateOnly = false;
+            bool googleSignIn = false;
+            bool googleSignUp = false;
+
             if (args != null)
             {
                 for (int i = 0; i < args.Length; i++)
@@ -37,27 +42,49 @@ namespace DejavuBrowser
                     string a = args[i] ?? "";
                     if (a.StartsWith("--profile=", StringComparison.OrdinalIgnoreCase))
                     {
-                        profileId = a.Substring("--profile=".Length).Trim();
+                        requestedProfileId = a.Substring("--profile=".Length).Trim();
                     }
                     else if (a.StartsWith("--debug-port=", StringComparison.OrdinalIgnoreCase))
                     {
                         int.TryParse(a.Substring("--debug-port=".Length).Trim(), out debugPort);
                     }
-                    else if (!a.StartsWith("--") && initialUrl == null)
+                    else if (string.Equals(a, "--new-window", StringComparison.OrdinalIgnoreCase))
+                    {
+                        newWindow = true;
+                    }
+                    else if (string.Equals(a, "--private", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(a, "--incognito", StringComparison.OrdinalIgnoreCase))
+                    {
+                        isPrivate = true;
+                    }
+                    else if (string.Equals(a, "--activate-only", StringComparison.OrdinalIgnoreCase))
+                    {
+                        activateOnly = true;
+                    }
+                    else if (string.Equals(a, "--google-signin", StringComparison.OrdinalIgnoreCase))
+                    {
+                        googleSignIn = true;
+                    }
+                    else if (string.Equals(a, "--google-signup", StringComparison.OrdinalIgnoreCase))
+                    {
+                        googleSignUp = true;
+                    }
+                    else if (!a.StartsWith("--") && !string.IsNullOrWhiteSpace(a) && initialUrl == null)
                     {
                         initialUrl = a;
                     }
                 }
             }
 
-            // Bulletproof Dual-Layer Single-Instance Lock keyed by Data Directory:
-            // Layer 1: Exclusive kernel FileStream lock (.instance.lock, works across elevation levels!)
-            // Layer 2: Named Mutex (UnauthorizedAccessException = already held by elevated instance -> NEVER bypass!)
+            // Chrome-Style Per-Profile Process Isolation:
+            // Resolve target profile ID FIRST, then key Mutex, .instance.<hash>.lock, and Named Pipe
+            // by (dataDir + "|" + resolvedProfileId) so different profiles run simultaneously in
+            // separate processes with 100% isolated WebView2 data, cookies, themes, and windows!
             string dataDir = SettingsStore.AppDataDir;
-            string instanceHash = ComputeShortHash(dataDir.TrimEnd('\\', '/').ToLowerInvariant());
-            string mutexName = "Local\\DejavuBrowser_SingleInstance_" + instanceHash;
-            string pipeName = "DejavuBrowser_Pipe_" + instanceHash;
-            string lockFilePath = Path.Combine(dataDir, ".instance.lock");
+            string resolvedProfileId = ProfileManager.ResolveStartupProfileId(requestedProfileId);
+            string mutexName = ProfileManager.GetProfileMutexName(dataDir, resolvedProfileId);
+            string pipeName = ProfileManager.GetProfilePipeName(dataDir, resolvedProfileId);
+            string lockFilePath = ProfileManager.GetProfileLockFilePath(dataDir, resolvedProfileId);
 
             bool createdNew = false;
             Mutex singleMutex = null;
@@ -68,7 +95,7 @@ namespace DejavuBrowser
             }
             catch (UnauthorizedAccessException)
             {
-                // Mutex already exists with different elevation/ACL — another instance IS running!
+                // Mutex already exists with different elevation/ACL — this profile IS running!
                 createdNew = false;
             }
             catch
@@ -88,7 +115,7 @@ namespace DejavuBrowser
                 }
                 catch (IOException)
                 {
-                    // Another dejavu process already holds the exclusive file lock on this DataDir!
+                    // Another dejavu process already holds the exclusive file lock for this profile!
                     createdNew = false;
                 }
                 catch (UnauthorizedAccessException)
@@ -100,7 +127,16 @@ namespace DejavuBrowser
 
             if (!createdNew)
             {
-                bool notified = NotifyRunningInstance(pipeName, initialUrl, profileId);
+                string payload = BuildSecondaryPayload(
+                    initialUrl,
+                    requestedProfileId,
+                    newWindow,
+                    isPrivate,
+                    activateOnly,
+                    googleSignIn,
+                    googleSignUp);
+
+                bool notified = SendPipeCommand(pipeName, payload);
                 if (!notified)
                 {
                     ActivateExistingProcessWindow();
@@ -122,7 +158,7 @@ namespace DejavuBrowser
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
 
-                RunApp(initialUrl, profileId, debugPort, pipeName);
+                RunApp(initialUrl, resolvedProfileId, debugPort, pipeName, isPrivate, googleSignIn, googleSignUp);
             }
             finally
             {
@@ -140,33 +176,47 @@ namespace DejavuBrowser
             }
         }
 
-        private static string ComputeShortHash(string input)
+        private static string BuildSecondaryPayload(
+            string initialUrl,
+            string requestedProfileId,
+            bool newWindow,
+            bool isPrivate,
+            bool activateOnly,
+            bool googleSignIn,
+            bool googleSignUp)
         {
-            using (SHA256 sha = SHA256.Create())
+            if (activateOnly) return "ACTIVATE";
+            if (googleSignIn) return "GOOGLE_SIGNIN";
+            if (googleSignUp) return "GOOGLE_SIGNUP";
+            if (isPrivate)
             {
-                byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(input ?? "dejavu"));
-                StringBuilder sb = new StringBuilder(16);
-                for (int i = 0; i < 8; i++)
-                {
-                    sb.Append(bytes[i].ToString("x2"));
-                }
-                return sb.ToString();
+                return string.IsNullOrWhiteSpace(initialUrl)
+                    ? "NEW_PRIVATE_WINDOW"
+                    : ("NEW_PRIVATE_WINDOW_URL:" + initialUrl.Trim());
             }
-        }
-
-        private static bool NotifyRunningInstance(string pipeName, string initialUrl, string profileId)
-        {
-            string payload = "ACTIVATE";
+            if (newWindow)
+            {
+                return string.IsNullOrWhiteSpace(initialUrl)
+                    ? "NEW_WINDOW"
+                    : ("NEW_WINDOW_URL:" + initialUrl.Trim());
+            }
             if (!string.IsNullOrWhiteSpace(initialUrl))
             {
-                payload = "OPEN:" + initialUrl.Trim();
+                return "OPEN:" + initialUrl.Trim();
             }
-            else if (!string.IsNullOrWhiteSpace(profileId))
+            if (!string.IsNullOrWhiteSpace(requestedProfileId))
             {
-                payload = "PROFILE:" + profileId.Trim();
+                return "ACTIVATE";
             }
+            // Launched directly with no args while this profile is already running:
+            // ask running instance to open a brand-new window (subject to 1500ms startup debounce).
+            return "NEW_WINDOW_DIRECT";
+        }
 
-            for (int attempt = 0; attempt < 4; attempt++)
+        public static bool SendPipeCommand(string pipeName, string payload)
+        {
+            if (string.IsNullOrEmpty(pipeName) || string.IsNullOrEmpty(payload)) return false;
+            for (int attempt = 0; attempt < 8; attempt++)
             {
                 try
                 {
@@ -181,7 +231,7 @@ namespace DejavuBrowser
                 }
                 catch
                 {
-                    Thread.Sleep(120);
+                    Thread.Sleep(150);
                 }
             }
             return false;
@@ -224,13 +274,27 @@ namespace DejavuBrowser
             catch { }
         }
 
-        private static void RunApp(string initialUrl, string profileId, int debugPort, string pipeName)
+        private static void RunApp(
+            string initialUrl,
+            string profileId,
+            int debugPort,
+            string pipeName,
+            bool isPrivate,
+            bool googleSignIn,
+            bool googleSignUp)
         {
-            // Keep BrowserForm in a separate method so CLR doesn't JIT WebView2 types
-            // before AssemblyResolve and WebView2Loader.dll are registered.
-            using (BrowserForm form = new BrowserForm(initialUrl, profileId, debugPort, pipeName))
+            // Keep MultiWindowApplicationContext / BrowserForm in a separate method so CLR doesn't
+            // JIT WebView2 types before AssemblyResolve and WebView2Loader.dll are registered.
+            using (MultiWindowApplicationContext ctx = new MultiWindowApplicationContext(
+                initialUrl,
+                profileId,
+                debugPort,
+                pipeName,
+                isPrivate,
+                googleSignIn,
+                googleSignUp))
             {
-                Application.Run(form);
+                Application.Run(ctx);
             }
         }
 
@@ -285,7 +349,23 @@ namespace DejavuBrowser
                     FileInfo fi = new FileInfo(targetPath);
                     if (fi.Length == bytes.Length) return;
                 }
-                File.WriteAllBytes(targetPath, bytes);
+                string tmp = targetPath + "." + Process.GetCurrentProcess().Id + ".tmp";
+                File.WriteAllBytes(tmp, bytes);
+                try
+                {
+                    if (!File.Exists(targetPath))
+                    {
+                        File.Move(tmp, targetPath);
+                    }
+                    else
+                    {
+                        File.Delete(tmp);
+                    }
+                }
+                catch
+                {
+                    try { File.Delete(tmp); } catch { }
+                }
             }
             catch { }
         }

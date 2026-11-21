@@ -950,6 +950,319 @@
       text-shadow: none;
       font-weight: 600;
     }
+
+    /* =====================================================================
+       V4.5 GOOGLE PIXEL ANDROID 15 MATERIAL DESIGN 3 — YOU & GOOGLE,
+       SEARCHABLE SETTINGS, MULTI-PROFILE SETUP & CLEAR BROWSING DATA
+       (Pure HCT Tonal Surfaces — Zero Compositor Overhead)
+       ===================================================================== */
+    .sp-prof-btn {
+      position: relative;
+      height: 40px; padding: 3px 12px 3px 4px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--card);
+      color: var(--ink); font-family: inherit; font-size: 12.5px; font-weight: 640;
+      display: inline-flex; align-items: center; gap: 7px;
+      cursor: pointer; flex-shrink: 0;
+      transition: transform 0.16s var(--m3-decel), border-color 0.16s ease;
+    }
+    .sp-prof-btn:active { transform: scale(0.94); }
+    .sp-prof-av {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: #1d1b20;
+      position: relative; overflow: hidden;
+    }
+    .sp-prof-av img {
+      width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%;
+    }
+    .sp-prof-name {
+      max-width: 72px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sp-g-mini {
+      position: absolute; right: -2px; bottom: -2px;
+      width: 15px; height: 15px; border-radius: 50%;
+      background: #ffffff; border: 1.5px solid var(--sheet-bg);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    /* Live "Search settings..." Material 3 Search Pill Bar */
+    .set-search-bar {
+      height: 44px; border-radius: 999px;
+      background: var(--input-bg); border: 1px solid var(--border);
+      padding: 0 10px 0 14px;
+      display: flex; align-items: center; gap: 9px;
+      transition: border-color 0.16s ease;
+    }
+    .set-search-bar:focus-within { border-color: var(--accent); }
+    .set-search-bar input {
+      flex: 1; min-width: 0; height: 100%; border: none; background: transparent;
+      color: var(--ink); font-family: inherit; font-size: 14px; font-weight: 500;
+      outline: none;
+    }
+    .set-search-bar input::placeholder { color: var(--muted); }
+    .set-search-clr {
+      width: 26px; height: 26px; border-radius: 50%; border: none;
+      background: var(--group-bg); color: var(--muted);
+      display: none; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 700; cursor: pointer; padding: 0; flex-shrink: 0;
+    }
+    .set-search-clr.show { display: inline-flex; }
+
+    /* Google Pixel Material Design 3 "You & Google" Hero Card */
+    .yg-hero {
+      background: var(--group-bg);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .yg-hero-main {
+      padding: 16px 16px 14px;
+      display: flex; flex-direction: column; gap: 13px;
+    }
+    .yg-identity-row {
+      display: flex; align-items: center; gap: 13px;
+    }
+    .yg-avatar {
+      width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 21px; font-weight: 800; color: #1d1b20;
+      position: relative; border: 2px solid var(--accent);
+    }
+    .yg-avatar img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;
+    }
+    .yg-avatar-g {
+      position: absolute; right: -2px; bottom: -2px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: #ffffff; border: 2px solid var(--group-bg);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .yg-id-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .yg-name {
+      font-size: 16.5px; font-weight: 700; letter-spacing: -0.01em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .yg-email {
+      font-size: 12.5px; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .yg-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+    .yg-badge {
+      height: 22px; padding: 0 9px; border-radius: 999px;
+      font-size: 10.5px; font-weight: 700;
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--input-bg); color: var(--muted);
+    }
+    .yg-badge.google {
+      background: rgba(123, 216, 198, 0.18); color: var(--mint);
+    }
+    .yg-badge.main {
+      background: var(--accent-soft); color: var(--accent-bright);
+    }
+    body.theme-light .yg-badge.main { color: var(--accent); }
+
+    .yg-actions {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .yg-google-btn {
+      width: 100%; height: 42px; padding: 0 16px; border-radius: 999px;
+      border: 1px solid transparent; background: var(--accent); color: var(--accent-ink);
+      font-family: inherit; font-size: 13.5px; font-weight: 700; white-space: nowrap;
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      cursor: pointer; transition: transform 0.15s var(--m3-decel);
+    }
+    .yg-google-btn:active { transform: scale(0.97); }
+    .yg-google-g-pill {
+      width: 22px; height: 22px; border-radius: 50%; background: #ffffff;
+      display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .yg-tonal-btn {
+      width: 100%; height: 40px; padding: 0 16px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--sheet-elev); color: var(--ink);
+      font-family: inherit; font-size: 13px; font-weight: 640; white-space: nowrap;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      cursor: pointer; transition: transform 0.15s var(--m3-decel);
+    }
+    .yg-tonal-btn:active { transform: scale(0.97); }
+    .yg-actions-row {
+      display: flex; gap: 8px; width: 100%;
+    }
+    .yg-actions-row > button { flex: 1; }
+    .accent-stack {
+      display: flex; flex-direction: column; gap: 10px;
+      padding: 12px 14px 14px; border-top: 1px solid var(--divider);
+    }
+    .accent-stack-top {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .accent-stack .orb-group {
+      justify-content: space-between; width: 100%;
+    }
+
+    .yg-prof-strip {
+      border-top: 1px solid var(--divider);
+      background: var(--sheet-bg);
+      padding: 10px 14px;
+      display: flex; align-items: center; gap: 7px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
+    .yg-prof-chip {
+      height: 32px; padding: 0 11px 0 6px; border-radius: 999px; flex-shrink: 0;
+      border: 1px solid var(--border); background: var(--group-bg); color: var(--ink);
+      font-family: inherit; font-size: 12px; font-weight: 620;
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    }
+    .yg-prof-chip.active {
+      background: var(--accent-soft); border-color: var(--accent); color: var(--accent-bright);
+    }
+    body.theme-light .yg-prof-chip.active { color: var(--accent); }
+    .yg-prof-dot {
+      width: 18px; height: 18px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800; color: #1d1b20; flex-shrink: 0;
+    }
+
+    /* Authentic Google Pixel Material 3 3-Way Segmented Button */
+    .m3-seg-3 {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      border-radius: 999px; border: 1px solid var(--border);
+      background: var(--sheet-bg); overflow: hidden;
+      margin: 12px 14px 10px;
+    }
+    .m3-seg-3 button {
+      height: 40px; border: none; border-right: 1px solid var(--border);
+      background: transparent; color: var(--muted);
+      font-family: inherit; font-size: 13px; font-weight: 650;
+      display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+      cursor: pointer; transition: background 0.16s ease, color 0.16s ease;
+    }
+    .m3-seg-3 button:last-child { border-right: none; }
+    .m3-seg-3 button.active {
+      background: var(--accent-soft); color: var(--accent-bright);
+    }
+    body.theme-light .m3-seg-3 button.active { color: var(--accent); }
+    .m3-seg-3 button.active::before {
+      content: '✓'; font-size: 12px; font-weight: 800;
+    }
+
+    /* Active Checkmark Inside Selected Material You Color Swatch */
+    .acc-orb {
+      width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent;
+      padding: 0; position: relative; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: transform 0.14s ease;
+    }
+    .acc-orb.active::after {
+      content: '✓'; font-size: 13px; font-weight: 900; color: #1d1b20;
+      line-height: 1;
+    }
+
+    /* Material 3 Text Zoom Range Slider */
+    .m3-slider-wrap {
+      padding: 12px 14px 14px;
+      border-top: 1px solid var(--divider);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .m3-slider-top {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .m3-zoom-pill {
+      height: 26px; padding: 0 11px; border-radius: 999px; border: none;
+      background: var(--accent-soft); color: var(--accent-bright);
+      font-family: inherit; font-size: 12px; font-weight: 750; cursor: pointer;
+    }
+    body.theme-light .m3-zoom-pill { color: var(--accent); }
+    .m3-slider-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .m3-slider-lbl {
+      font-size: 12px; font-weight: 700; color: var(--muted); flex-shrink: 0;
+    }
+    .m3-slider {
+      flex: 1; -webkit-appearance: none; appearance: none;
+      height: 6px; border-radius: 999px; background: var(--input-bg);
+      outline: none; cursor: pointer; accent-color: var(--accent);
+    }
+    .m3-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--accent); border: 3px solid var(--sheet-bg);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.34); cursor: pointer;
+    }
+
+    /* Wallpaper Studio Mini Thumbnail in Settings */
+    .set-wp-thumb {
+      width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+      background-size: cover; background-position: center;
+      border: 1px solid var(--border);
+    }
+
+    /* Profile Setup & Multi-Profile Sheet Styles */
+    .prof-hero {
+      background: var(--group-bg); border: 1px solid var(--border);
+      border-radius: 28px; padding: 20px 16px 16px;
+      display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
+    }
+    .prof-hero .yg-avatar { width: 68px; height: 68px; font-size: 27px; }
+    .prof-hero .yg-badges { justify-content: center; }
+    .prof-hero .yg-actions { width: 100%; margin-top: 4px; }
+    .prof-note {
+      font-size: 11.5px; color: var(--muted); line-height: 1.45; margin-top: 2px;
+    }
+    .prof-field-box {
+      padding: 14px; display: flex; flex-direction: column; gap: 11px;
+    }
+    .prof-input {
+      width: 100%; height: 46px; padding: 0 14px; border-radius: 14px;
+      border: 1px solid var(--border); background: var(--input-bg);
+      color: var(--ink); font-family: inherit; font-size: 14.5px; font-weight: 560;
+      outline: none;
+    }
+    .prof-input:focus { border-color: var(--accent); }
+    .prof-row-av {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 800; color: #1d1b20; overflow: hidden;
+      border: 2px solid transparent;
+    }
+    .prof-row-av.active { border-color: var(--ink); }
+    .prof-row-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+    /* Clear Browsing Data Material 3 Checkbox Sheet */
+    .cbd-banner {
+      padding: 13px 15px; border-radius: 20px;
+      background: var(--group-bg); border: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 11px;
+      font-size: 12.5px; line-height: 1.45; color: var(--muted);
+    }
+    .cbd-chk {
+      width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+      border: 2px solid var(--subtle); background: transparent;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--accent-ink); transition: background 0.14s ease, border-color 0.14s ease;
+    }
+    .cbd-chk.on {
+      background: var(--accent); border-color: var(--accent);
+    }
+    .cbd-danger-btn {
+      width: 100%; height: 48px; border-radius: 999px; border: none;
+      background: var(--danger); color: #3b0907;
+      font-family: inherit; font-size: 14px; font-weight: 750;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      cursor: pointer; transition: transform 0.15s var(--m3-decel), opacity 0.15s ease;
+    }
+    body.theme-light .cbd-danger-btn { color: #ffffff; }
+    .cbd-danger-btn:active { transform: scale(0.98); }
+    .cbd-danger-btn:disabled { opacity: 0.42; pointer-events: none; }
+
+    .set-section { display: flex; flex-direction: column; gap: 10px; }
+    .set-section.search-hide, .set-item.search-hide { display: none !important; }
+    .set-search-empty {
+      display: none; flex-direction: column; align-items: center; gap: 10px;
+      padding: 36px 18px; text-align: center; color: var(--muted); font-size: 13.5px;
+    }
+    .set-search-empty.show { display: flex; }
   </style>
 </head>
 <body>
@@ -978,6 +1291,10 @@
         <button type="button" id="sp-opt-btn" class="icon-circle" style="position:relative;" aria-label="Options" onclick="call('openScreen','settings')">
           <svg viewBox="0 0 20 20" width="17" height="17" fill="none"><path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/><circle cx="7.5" cy="6" r="1.9" fill="var(--sheet-bg)" stroke="currentColor" stroke-width="1.6"/><circle cx="13" cy="10" r="1.9" fill="var(--sheet-bg)" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="14" r="1.9" fill="var(--sheet-bg)" stroke="currentColor" stroke-width="1.6"/></svg>
           <span id="sp-upd-dot" style="display:none;position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);"></span>
+        </button>
+        <button type="button" id="sp-profile-btn" class="sp-prof-btn" aria-label="You and Google Profile" onclick="call('openScreen','profile')">
+          <span id="sp-profile-av" class="sp-prof-av" style="background:#d0bcff;">P</span>
+          <span id="sp-profile-name" class="sp-prof-name">Personal</span>
         </button>
       </div>
     </div>
@@ -1231,11 +1548,19 @@
               <span id="m-cnt-dl" class="g-row-val">0</span>
               <span class="g-chev">›</span>
             </button>
+            <button type="button" class="g-row" onclick="call('openScreen','profile')">
+              <span class="sq-ico ic-violet"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6.4" r="3" stroke="currentColor" stroke-width="1.55"/><path d="M3.6 15c.9-2.5 2.9-3.8 5.4-3.8s4.5 1.3 5.4 3.8" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg></span>
+              <span class="g-row-meta">
+                <span id="m-prof-title" class="g-row-title">You &amp; Google</span>
+                <span id="m-prof-sub" class="g-row-sub">Sign in with Google · Switch profiles</span>
+              </span>
+              <span class="g-chev">›</span>
+            </button>
             <button type="button" class="g-row" onclick="call('openScreen','settings')">
               <span class="sq-ico ic-plum"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 2.8v1.5M9 13.7v1.5M2.8 9h1.5M13.7 9h1.5M4.6 4.6l1.1 1.1M12.3 12.3l1.1 1.1M13.4 4.6l-1.1 1.1M5.7 12.3l-1.1 1.1" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg></span>
               <span class="g-row-meta">
-                <span class="g-row-title">Settings &amp; Appearance</span>
-                <span class="g-row-sub">Theme, address bar, search engine, shield</span>
+                <span class="g-row-title">Settings &amp; Privacy</span>
+                <span class="g-row-sub">Material You, shield, search, downloads</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -1311,7 +1636,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET C: SETTINGS / OPTIONS (iOS 18 x OneUI Grouped Settings)
+       SHEET C: GOOGLE PIXEL ANDROID 15 MATERIAL DESIGN 3 SETTINGS
        =================================================================== -->
   <div id="scr-settings" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -1321,111 +1646,421 @@
           <h2 class="sheet-title">Settings</h2>
           <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
         </div>
+        <!-- Live Material Design 3 Search Settings Pill Bar -->
+        <div class="set-search-bar">
+          <svg viewBox="0 0 20 20" width="17" height="17" fill="none" style="color:var(--muted);flex-shrink:0;"><circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.8"/><path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+          <input id="settings-search-in" type="search" placeholder="Search settings..." autocomplete="off" oninput="filterSettingsList()">
+          <button type="button" id="settings-search-clr" class="set-search-clr" aria-label="Clear search" onclick="clearSettingsSearch()">×</button>
+        </div>
       </div>
 
-      <div class="sheet-body">
-        <!-- Appearance Card -->
-        <div class="sec-hdr"><span>Appearance</span></div>
-        <div class="g-group">
-          <div class="theme-cards">
-            <button type="button" id="m-th-dark-btn" class="theme-card active" onclick="call('setThemeMode','dark')">
-              <div class="mini-phone mp-dark">
-                <div class="mp-dots"><span></span><span></span><span></span><span></span></div>
-                <div class="mp-pill"></div>
+      <div id="settings-sheet-body" class="sheet-body">
+        <!-- 1. GOOGLE PIXEL M3 "YOU & GOOGLE" HERO CARD -->
+        <div class="set-section" data-search="you google account sign in create profile main avatar switch sync">
+          <div class="sec-hdr">
+            <span>You &amp; Google</span>
+            <button type="button" class="sec-act" onclick="openProfileFromSettings()">Manage Profiles</button>
+          </div>
+          <div class="yg-hero set-item" data-search="you google account sign in create profile main avatar switch">
+            <div class="yg-hero-main">
+              <div class="yg-identity-row" onclick="openProfileFromSettings()" style="cursor:pointer;">
+                <div id="set-yg-avatar" class="yg-avatar" style="background:#d0bcff;">P</div>
+                <div class="yg-id-meta">
+                  <div id="set-yg-name" class="yg-name">Personal</div>
+                  <div id="set-yg-email" class="yg-email">Sign in with your Google Account</div>
+                  <div id="set-yg-badges" class="yg-badges"></div>
+                </div>
+                <span class="g-chev" style="font-size:18px;">›</span>
               </div>
-              <span style="font-size:12.5px;font-weight:640;">Material Dark</span>
-            </button>
-            <button type="button" id="m-th-light-btn" class="theme-card" onclick="call('setThemeMode','light')">
-              <div class="mini-phone mp-light">
-                <div class="mp-dots"><span></span><span></span><span></span><span></span></div>
-                <div class="mp-pill"></div>
+              <div id="set-yg-actions" class="yg-actions"></div>
+            </div>
+            <div id="set-yg-prof-strip" class="yg-prof-strip"></div>
+          </div>
+        </div>
+
+        <!-- 2. APPEARANCE & MATERIAL YOU -->
+        <div class="set-section" data-search="appearance material you theme light dark auto color seed swatch wallpaper studio text zoom slider desktop site address bar bottom top autohide">
+          <div class="sec-hdr"><span>Appearance &amp; Material You</span></div>
+          <div class="g-group">
+            <div class="set-item" data-search="theme mode light dark auto system appearance">
+              <div style="padding:13px 14px 2px;font-size:13.5px;font-weight:600;">Theme Mode</div>
+              <div class="m3-seg-3" role="group" aria-label="Theme mode">
+                <button type="button" id="m-th-light-btn" onclick="call('setThemeMode','light')">Light</button>
+                <button type="button" id="m-th-dark-btn" class="active" onclick="call('setThemeMode','dark')">Dark</button>
+                <button type="button" id="m-th-auto-btn" onclick="call('setThemeMode','auto')">Auto</button>
               </div>
-              <span style="font-size:12.5px;font-weight:640;">Material Light</span>
+            </div>
+
+            <div class="accent-stack set-item" data-search="material you dynamic color seed swatch amethyst sapphire aurora rose gold silver">
+              <div class="accent-stack-top">
+                <span style="font-size:14px;font-weight:600;">Material You Color Seed</span>
+                <span id="opt-m-accent-lbl" class="yg-badge main" style="height:24px;font-size:11px;">Amethyst</span>
+              </div>
+              <div id="opt-m-accents" class="orb-group"></div>
+            </div>
+
+            <button type="button" class="g-row set-item" data-search="wallpaper studio butterfly 17 themes background material you live" onclick="call('openScreen','wallpapers')">
+              <span id="set-wp-thumb" class="set-wp-thumb"></span>
+              <span class="g-row-meta">
+                <span class="g-row-title">Wallpaper Studio (17 Themes)</span>
+                <span id="set-wp-sub" class="g-row-sub">Obsidian Monolith · 16 Pure M3 &amp; Butterfly</span>
+              </span>
+              <span class="g-chev">›</span>
+            </button>
+
+            <div class="m3-slider-wrap set-item" data-search="text zoom font size accessibility scale 80 150 slider">
+              <div class="m3-slider-top">
+                <div>
+                  <div style="font-size:14px;font-weight:600;">Text Zoom</div>
+                  <div style="font-size:11.5px;color:var(--muted);">Adjust web page text scaling (80%–150%)</div>
+                </div>
+                <button type="button" id="opt-zoom-pill" class="m3-zoom-pill" title="Tap to reset to 100%" onclick="call('setPageZoom',100)">100%</button>
+              </div>
+              <div class="m3-slider-row">
+                <span class="m3-slider-lbl">A-</span>
+                <input id="opt-zoom-slider" class="m3-slider" type="range" min="80" max="150" step="5" value="100" oninput="onSettingsZoomInput(this.value)" onchange="call('setPageZoom', Number(this.value))">
+                <span class="m3-slider-lbl" style="font-size:14px;">A+</span>
+              </div>
+            </div>
+
+            <div class="g-row plain set-item" data-search="request desktop site default user agent pc mode" onclick="call('toggleDesktopSiteDefault')">
+              <div class="g-row-meta">
+                <div class="g-row-title">Request Desktop Site by Default</div>
+                <div class="g-row-sub">Load full desktop layouts automatically in new tabs</div>
+              </div>
+              <button type="button" id="sw-desktop-def" class="sw" aria-label="Request desktop site by default"></button>
+            </div>
+
+            <div class="g-row plain set-item" data-search="dark mode websites night reading invert" onclick="call('toggleDarkWebPages')">
+              <div class="g-row-meta">
+                <div class="g-row-title">Dark Mode for Websites</div>
+                <div class="g-row-sub">Adapt bright web pages for comfortable night reading</div>
+              </div>
+              <button type="button" id="sw-darkweb" class="sw" aria-label="Dark web pages"></button>
+            </div>
+
+            <div class="set-item" style="border-top:1px solid var(--divider);" data-search="address bar position bottom top navigation toolbar chrome samsung">
+              <div style="padding:12px 14px 8px;font-size:13.5px;font-weight:600;">Address Bar Position</div>
+              <div class="bar-seg">
+                <button type="button" id="opt-bar-bottom" class="active" onclick="call('setBarPosition','bottom')">Bottom (Pixel / OneUI)</button>
+                <button type="button" id="opt-bar-top" onclick="call('setBarPosition','top')">Top (Classic)</button>
+              </div>
+            </div>
+
+            <div class="g-row plain set-item" data-search="auto hide bar scroll fullscreen reading toolbar" onclick="call('toggleAutoHideBar')">
+              <div class="g-row-meta">
+                <div class="g-row-title">Auto-Hide Bar on Scroll</div>
+                <div class="g-row-sub">Tuck toolbar into sleek domain pill while reading</div>
+              </div>
+              <button type="button" id="sw-autohide" class="sw on" aria-label="Auto hide toolbar"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. PRIVACY & SECURITY -->
+        <div class="set-section" data-search="privacy security shield ad tracker blocker https first do not track dnt popups third party cookies clear browsing data history cache">
+          <div class="sec-hdr"><span>Privacy &amp; Security</span></div>
+          <div class="g-group">
+            <div class="g-row set-item" data-search="dejavu shield ad tracker blocker privacy protection" onclick="call('toggleAdBlock')">
+              <span class="sq-ico ic-teal"><svg viewBox="0 0 18 18" fill="none"><path d="M9 2.2L3.4 4.5v4.3c0 3.6 2.4 6.2 5.6 7.2 3.2-1 5.6-3.6 5.6-7.2V4.5L9 2.2z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M6.6 9.1l1.7 1.7 3.2-3.3" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <div class="g-row-meta">
+                <div class="g-row-title">dejavu Shield Ad Blocker</div>
+                <div id="opt-m-ab-sub" class="g-row-sub">Active · Ads &amp; trackers blocked</div>
+              </div>
+              <button type="button" id="sw-adblock" class="sw on" aria-label="Ad blocker"></button>
+            </div>
+
+            <div class="g-row plain set-item" data-search="https first secure encrypted upgrade connections ssl" onclick="call('toggleHttpsFirst')">
+              <div class="g-row-meta">
+                <div class="g-row-title">HTTPS-First Mode</div>
+                <div class="g-row-sub">Upgrade insecure HTTP links to HTTPS</div>
+              </div>
+              <button type="button" id="sw-https" class="sw on" aria-label="HTTPS-First"></button>
+            </div>
+
+            <div class="g-row plain set-item" data-search="do not track dnt gpc header privacy" onclick="call('toggleDoNotTrack')">
+              <div class="g-row-meta">
+                <div class="g-row-title">Send "Do Not Track" Header</div>
+                <div class="g-row-sub">Send DNT &amp; GPC privacy headers</div>
+              </div>
+              <button type="button" id="sw-dnt" class="sw on" aria-label="Do Not Track"></button>
+            </div>
+
+            <div class="g-row plain set-item" data-search="block popups pop-ups windows redirects javascript" onclick="call('toggleBlockPopups')">
+              <div class="g-row-meta">
+                <div class="g-row-title">Block Pop-ups &amp; Redirects</div>
+                <div class="g-row-sub">Stop sites opening unwanted pop-ups</div>
+              </div>
+              <button type="button" id="sw-popups" class="sw on" aria-label="Block pop-ups"></button>
+            </div>
+
+            <div class="g-row plain set-item" data-search="block third party cookies tracking cross site" onclick="call('toggleBlockThirdPartyCookies')">
+              <div class="g-row-meta">
+                <div class="g-row-title">Block Third-Party Cookies</div>
+                <div class="g-row-sub">Prevent cross-site tracking cookies</div>
+              </div>
+              <button type="button" id="sw-3pcookies" class="sw on" aria-label="Block third-party cookies"></button>
+            </div>
+
+            <button type="button" class="g-row set-item" data-search="clear browsing data history cookies cache downloads delete wipe" onclick="openClearDataFromSettings()">
+              <span class="sq-ico ic-rose"><svg viewBox="0 0 18 18" fill="none"><path d="M3.5 5.2h11M7 5.2V3.8a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.4M5 5.2l.7 9a1.4 1.4 0 0 0 1.4 1.3h3.8a1.4 1.4 0 0 0 1.4-1.3l.7-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <div class="g-row-meta">
+                <div class="g-row-title" style="color:var(--danger);">Clear Browsing Data...</div>
+                <div id="opt-cbd-sub" class="g-row-sub">History, cookies, cache &amp; downloads</div>
+              </div>
+              <span class="g-chev">›</span>
             </button>
           </div>
-          <div class="accent-row">
-            <span style="font-size:14px;font-weight:580;">Dynamic Color</span>
-            <div id="opt-m-accents" class="orb-group"></div>
+        </div>
+
+        <!-- 4. SEARCH & TABS -->
+        <div class="set-section" data-search="search engine google duckduckgo bing brave ecosia tabs pull to refresh background links">
+          <div class="sec-hdr"><span>Search &amp; Tabs</span></div>
+          <div id="opt-m-engines" class="g-group set-item" data-search="default search engine google duckduckgo bing brave ecosia"></div>
+          <div class="g-group">
+            <div class="g-row plain set-item" data-search="pull to refresh swipe down reload tabs" onclick="call('togglePullToRefresh')">
+              <div class="g-row-meta">
+                <div class="g-row-title">Pull-to-Refresh</div>
+                <div class="g-row-sub">Swipe down at the top of a page to reload</div>
+              </div>
+              <button type="button" id="sw-ptr" class="sw on" aria-label="Pull to refresh"></button>
+            </div>
+            <div class="g-row plain set-item" data-search="open links background tab keep current" onclick="call('toggleOpenLinksInBackground')">
+              <div class="g-row-meta">
+                <div class="g-row-title">Open Links in Background</div>
+                <div class="g-row-sub">Keep active tab focused when opening new link tabs</div>
+              </div>
+              <button type="button" id="sw-bglinks" class="sw" aria-label="Open links in background"></button>
+            </div>
           </div>
         </div>
 
-        <!-- Layout & Navigation Card -->
-        <div class="sec-hdr"><span>Browser Layout</span></div>
-        <div class="g-group">
-          <div style="padding:12px 14px 8px;font-size:13.5px;font-weight:580;">Address Bar Position</div>
-          <div class="bar-seg">
-            <button type="button" id="opt-bar-bottom" class="active" onclick="call('setBarPosition','bottom')">Bottom (Samsung)</button>
-            <button type="button" id="opt-bar-top" onclick="call('setBarPosition','top')">Top (Chrome)</button>
-          </div>
-          <div class="g-row plain" onclick="call('toggleAutoHideBar')">
-            <div class="g-row-meta">
-              <div class="g-row-title">Auto-Hide Bar on Scroll</div>
-              <div class="g-row-sub">Tuck toolbar into sleek domain pill while reading</div>
+        <!-- 5. DOWNLOADS -->
+        <div class="set-section" data-search="downloads youtube quality auto 1080p 720p 360p audio m4a floating video button turbo 8x">
+          <div class="sec-hdr"><span>Downloads</span></div>
+          <div class="g-group">
+            <div class="set-item" style="padding:13px 14px 12px;display:flex;flex-direction:column;gap:9px;" data-search="default youtube quality preference auto 1080p 720p 360p audio m4a">
+              <div>
+                <div style="font-size:14px;font-weight:600;">Default YouTube Quality</div>
+                <div style="font-size:11.5px;color:var(--muted);">Preferred resolution for one-tap 8x Turbo Downloads</div>
+              </div>
+              <div id="opt-yt-qual-strip" class="m3-chip-strip">
+                <button type="button" class="m3-chip active" data-ytq="auto" onclick="call('setDefaultYoutubeQuality','auto')">Auto</button>
+                <button type="button" class="m3-chip" data-ytq="1080p" onclick="call('setDefaultYoutubeQuality','1080p')">1080p</button>
+                <button type="button" class="m3-chip" data-ytq="720p" onclick="call('setDefaultYoutubeQuality','720p')">720p</button>
+                <button type="button" class="m3-chip" data-ytq="360p" onclick="call('setDefaultYoutubeQuality','360p')">360p</button>
+                <button type="button" class="m3-chip audio" data-ytq="m4a" onclick="call('setDefaultYoutubeQuality','m4a')">Audio M4A</button>
+              </div>
             </div>
-            <button type="button" id="sw-autohide" class="sw on" aria-label="Auto hide toolbar"></button>
-          </div>
-          <div class="g-row plain" onclick="call('toggleDarkWebPages')">
-            <div class="g-row-meta">
-              <div class="g-row-title">Dark Mode for Websites</div>
-              <div class="g-row-sub">Adapt bright web pages for comfortable night reading</div>
+
+            <div class="g-row plain set-item" data-search="floating video download button youtube overlay pill" onclick="call('toggleFloatingDownloadButton')">
+              <div class="g-row-meta">
+                <div class="g-row-title">Floating Video Download Button</div>
+                <div class="g-row-sub">Show Material 3 8x quality picker on video pages</div>
+              </div>
+              <button type="button" id="sw-floatdl" class="sw on" aria-label="Floating video download button"></button>
             </div>
-            <button type="button" id="sw-darkweb" class="sw" aria-label="Dark web pages"></button>
+
+            <button type="button" class="g-row set-item" data-search="turbo download manager 8x files media" onclick="call('openDownloads')">
+              <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 3.2v8.2M5.8 8.4L9 11.6l3.2-3.2M3.6 14.4h10.8" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <div class="g-row-meta">
+                <div class="g-row-title">Open Turbo Downloads (8x)</div>
+                <div id="opt-dl-sub" class="g-row-sub">Downloads/dejavu/ · Multi-quality MP4 &amp; Audio M4A</div>
+              </div>
+              <span class="g-chev">›</span>
+            </button>
           </div>
         </div>
 
-        <!-- Search Engine Grouped Radio List (Zero Awkward Wrapping!) -->
-        <div class="sec-hdr"><span>Default Search Engine</span></div>
-        <div id="opt-m-engines" class="g-group"></div>
+        <!-- 6. SYNC & ABOUT v4.5.0 -->
+        <div class="set-section" data-search="sync dejavu link pc mobile software update auto updater apk version 4.5.0 about reset defaults">
+          <div class="sec-hdr"><span>Sync &amp; About v4.5.0</span></div>
+          <div class="g-group">
+            <button type="button" class="g-row set-item" data-search="dejavu link pc mobile sync qr pairing e2ee" onclick="call('openScreen','sync')">
+              <span class="sq-ico ic-violet"><svg viewBox="0 0 18 18" fill="none"><rect x="2.2" y="3.5" width="10" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 13.5h3.4M7.2 11v2.5M11.5 9.5L16 5M16 5h-3.4M16 5v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <div class="g-row-meta">
+                <div class="g-row-title">dejavu Link PC↔Mobile Sync</div>
+                <div id="opt-sync-sub" class="g-row-sub">Pair with Windows PC · AES-256 E2EE</div>
+              </div>
+              <span class="g-chev">›</span>
+            </button>
 
-        <!-- Privacy & Shield -->
-        <div class="sec-hdr"><span>Privacy &amp; Shield</span></div>
-        <div class="g-group">
-          <div class="g-row plain" onclick="call('toggleAdBlock')">
-            <div class="g-row-meta">
-              <div class="g-row-title">Ad &amp; Tracker Blocker</div>
-              <div id="opt-m-ab-sub" class="g-row-sub">Active</div>
+            <div class="g-row set-item" data-search="software update auto updater github releases apk version 4.5.0">
+              <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 14V4M5.6 7.4L9 4l3.4 3.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.8 14.5h10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+              <div class="g-row-meta">
+                <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.5.0</div>
+                <div id="opt-upd-sub" class="g-row-sub">Permanent V1-V3 signing · Auto-checks GitHub Releases</div>
+              </div>
+              <button type="button" id="opt-upd-btn" class="pill-btn" onclick="handleUpdateBtn()">Check</button>
             </div>
-            <button type="button" id="sw-adblock" class="sw on" aria-label="Ad blocker"></button>
+
+            <div id="opt-upd-prog-wrap" style="display:none;padding:0 14px 13px;">
+              <div style="height:5px;border-radius:99px;background:var(--input-bg);overflow:hidden;">
+                <div id="opt-upd-prog-fill" style="height:100%;width:0%;background:var(--accent);transition:width 0.18s ease;"></div>
+              </div>
+            </div>
+
+            <div id="opt-upd-files-row" class="upd-fallback-row" style="display:none;">
+              <div class="g-row-meta">
+                <div class="g-row-title" style="font-size:13px;">Manual Install Fallback</div>
+                <div id="opt-upd-files-sub" class="g-row-sub">Tap downloaded APK directly in Files or Share</div>
+              </div>
+              <button type="button" class="pill-btn" onclick="call('openUpdateApkInFiles')">Open APK in Files / Share APK</button>
+            </div>
+
+            <div id="opt-upd-note" class="upd-signing-note">
+              Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.5.0 &mdash; all future updates will install automatically in-place!
+            </div>
+
+            <button type="button" class="g-row plain set-item" data-search="reset settings defaults restore factory preferences" onclick="openResetSettingsModal()">
+              <div class="g-row-meta">
+                <div class="g-row-title" style="color:var(--danger);">Reset Settings to Defaults</div>
+                <div class="g-row-sub">Restores browser preferences · Keeps Favorites &amp; Profiles</div>
+              </div>
+              <span class="g-chev">›</span>
+            </button>
           </div>
-          <button type="button" class="g-row plain" onclick="call('clearHistory')">
-            <div class="g-row-meta">
-              <div class="g-row-title" style="color:var(--danger);">Clear Browsing History</div>
-              <div class="g-row-sub">Keeps your Favorites, Wallpapers &amp; PC Link</div>
-            </div>
-          </button>
         </div>
 
-        <!-- Software Update (GitHub Releases Auto-Updater) -->
-        <div class="sec-hdr"><span>Software Update</span></div>
-        <div class="g-group">
-          <div class="g-row">
-            <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 14V4M5.6 7.4L9 4l3.4 3.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.8 14.5h10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-            <div class="g-row-meta">
-              <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.4.0</div>
-              <div id="opt-upd-sub" class="g-row-sub">V1-V3 permanent signing · Auto-checks GitHub Releases</div>
-            </div>
-            <button type="button" id="opt-upd-btn" class="pill-btn" onclick="handleUpdateBtn()">Check</button>
-          </div>
-          <div id="opt-upd-prog-wrap" style="display:none;padding:0 14px 13px;">
-            <div style="height:5px;border-radius:99px;background:var(--input-bg);overflow:hidden;">
-              <div id="opt-upd-prog-fill" style="height:100%;width:0%;background:var(--accent);transition:width 0.18s ease;"></div>
-            </div>
-          </div>
-          <div id="opt-upd-files-row" class="upd-fallback-row" style="display:none;">
-            <div class="g-row-meta">
-              <div class="g-row-title" style="font-size:13px;">Manual Install Fallback</div>
-              <div id="opt-upd-files-sub" class="g-row-sub">Tap downloaded APK directly in Files or Share</div>
-            </div>
-            <button type="button" class="pill-btn" onclick="call('openUpdateApkInFiles')">Open APK in Files / Share APK</button>
-          </div>
-          <div id="opt-upd-note" class="upd-signing-note">
-            Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.4.0 &mdash; all future updates will install automatically in-place!
-          </div>
+        <div id="settings-search-empty" class="set-search-empty">
+          <div id="settings-search-empty-txt">No settings match your search.</div>
+          <button type="button" class="pill-btn" onclick="clearSettingsSearch()">Clear Search</button>
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:11.5px;color:var(--subtle);padding:4px 0 8px;">
-          dejavu Mobile v4.4.0 · Material Design 3
+          dejavu Mobile v4.5.0 · Google Pixel Material Design 3
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       SHEET C2: YOU & GOOGLE ACCOUNT + MULTI-PROFILE SETUP SHEET
+       =================================================================== -->
+  <div id="scr-profile" class="sheet-backdrop hidden" onclick="backdropClose(event)">
+    <div class="sheet-panel" onclick="event.stopPropagation()">
+      <div class="sheet-head" data-swipe-dismiss="1">
+        <div class="sheet-grab"></div>
+        <div class="sheet-title-row">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" id="prof-back-btn" class="pill-btn ghost" style="display:none;padding-left:0;" onclick="backToSettings()">‹ Settings</button>
+            <h2 class="sheet-title">You &amp; Google</h2>
+          </div>
+          <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
+        </div>
+      </div>
+
+      <div class="sheet-body">
+        <!-- Google Account Hero Card -->
+        <div class="prof-hero">
+          <div id="prof-hero-avatar" class="yg-avatar" style="background:#d0bcff;">P</div>
+          <div id="prof-hero-name" class="yg-name" style="font-size:19px;">Personal</div>
+          <div id="prof-hero-email" class="yg-email">Sign in with your Google Account</div>
+          <div id="prof-hero-badges" class="yg-badges"></div>
+          <div id="prof-hero-actions" class="yg-actions"></div>
+          <div class="prof-note">Opens official accounts.google.com directly in Android WebView and auto-syncs your Google name, email &amp; avatar locally.</div>
+        </div>
+
+        <!-- Customize Active Profile Card -->
+        <div class="sec-hdr"><span>Customize Active Profile</span></div>
+        <div class="g-group">
+          <div class="prof-field-box">
+            <label for="prof-name-in" style="font-size:12px;font-weight:660;color:var(--muted);">Profile Display Name</label>
+            <input id="prof-name-in" class="prof-input" type="text" maxlength="32" placeholder="e.g. Personal, Work, Study">
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:2px;">
+              <span style="font-size:12.5px;font-weight:660;color:var(--muted);">Profile Color Seed</span>
+              <div id="prof-edit-accents" class="orb-group" style="justify-content:space-between;width:100%;"></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <button type="button" id="prof-set-main-btn" class="pill-btn" style="flex:1;height:40px;" onclick="setActiveAsMainProfile()">Set as Main Profile</button>
+              <button type="button" class="pill-btn primary" style="flex:1;height:40px;" onclick="saveActiveProfileEdit()">Save Profile</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Switch & Create Multi-Profiles Card -->
+        <div class="sec-hdr">
+          <span>Browser Profiles</span>
+          <span id="prof-count-lbl" style="font-size:11.5px;color:var(--muted);text-transform:none;letter-spacing:0;">1 Profile</span>
+        </div>
+        <div id="prof-list" class="g-group"></div>
+
+        <!-- Create New Profile Card -->
+        <div class="sec-hdr"><span>Create New Profile</span></div>
+        <div class="g-group">
+          <div class="prof-field-box">
+            <input id="prof-new-name" class="prof-input" type="text" maxlength="32" placeholder="New profile name (e.g. Work, Gaming)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+              <span style="font-size:13px;font-weight:600;">Theme Color</span>
+              <div id="prof-new-accents" class="orb-group"></div>
+            </div>
+            <button type="button" class="cta-btn" style="height:42px;margin-top:2px;" onclick="submitCreateProfile()">
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><path d="M9 3.5v11M3.5 9h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <span>Create &amp; Switch Profile</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       SHEET C3: MATERIAL DESIGN 3 CLEAR BROWSING DATA SHEET
+       =================================================================== -->
+  <div id="scr-clear-data" class="sheet-backdrop hidden" onclick="backdropClose(event)">
+    <div class="sheet-panel" onclick="event.stopPropagation()">
+      <div class="sheet-head" data-swipe-dismiss="1">
+        <div class="sheet-grab"></div>
+        <div class="sheet-title-row">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" class="pill-btn ghost" style="padding-left:0;" onclick="backToSettings()">‹ Settings</button>
+            <h2 class="sheet-title">Clear Browsing Data</h2>
+          </div>
+          <button type="button" class="pill-btn" onclick="call('closeScreen')">Cancel</button>
+        </div>
+      </div>
+
+      <div class="sheet-body">
+        <div class="cbd-banner">
+          <span class="sq-ico ic-teal" style="width:32px;height:32px;"><svg viewBox="0 0 18 18" fill="none"><path d="M9 2.2L3.4 4.5v4.3c0 3.6 2.4 6.2 5.6 7.2 3.2-1 5.6-3.6 5.6-7.2V4.5L9 2.2z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg></span>
+          <span>Select which local browsing data to remove. Your <b>Favorites</b>, <b>Wallpapers</b>, <b>Profiles</b>, and <b>PC Link</b> pairing stay untouched.</span>
+        </div>
+
+        <div class="g-group">
+          <button type="button" class="g-row plain" onclick="toggleCbdOpt('history')">
+            <span id="cbd-chk-history" class="cbd-chk on"></span>
+            <span class="g-row-meta">
+              <span class="g-row-title">Browsing History</span>
+              <span id="cbd-sub-history" class="g-row-sub">Clears visited URLs and omnibox history</span>
+            </span>
+          </button>
+          <button type="button" class="g-row plain" onclick="toggleCbdOpt('cookies')">
+            <span id="cbd-chk-cookies" class="cbd-chk on"></span>
+            <span class="g-row-meta">
+              <span class="g-row-title">Cookies &amp; Site Data</span>
+              <span class="g-row-sub">Clears cookies &amp; WebStorage (signs out)</span>
+            </span>
+          </button>
+          <button type="button" class="g-row plain" onclick="toggleCbdOpt('cache')">
+            <span id="cbd-chk-cache" class="cbd-chk on"></span>
+            <span class="g-row-meta">
+              <span class="g-row-title">Cached Images &amp; Files</span>
+              <span class="g-row-sub">Clears WebView HTTP cache to free space</span>
+            </span>
+          </button>
+          <button type="button" class="g-row plain" onclick="toggleCbdOpt('downloads')">
+            <span id="cbd-chk-downloads" class="cbd-chk"></span>
+            <span class="g-row-meta">
+              <span class="g-row-title">Downloads History</span>
+              <span id="cbd-sub-downloads" class="g-row-sub">Clears list only · Files stay on device</span>
+            </span>
+          </button>
+        </div>
+
+        <button type="button" id="cbd-confirm-btn" class="cbd-danger-btn" onclick="executeClearBrowsingData()">
+          <svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M3.5 5.2h11M7 5.2V3.8a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.4M5 5.2l.7 9a1.4 1.4 0 0 0 1.4 1.3h3.8a1.4 1.4 0 0 0 1.4-1.3l.7-9" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="cbd-confirm-lbl">Clear Browsing Data (3 selected)</span>
+        </button>
       </div>
     </div>
   </div>
@@ -1523,6 +2158,20 @@
     </div>
   </div>
 
+  <!-- Reset Settings Confirmation Modal (Material Design 3 Dialog) -->
+  <div id="reset-settings-modal" class="mini-modal hidden" onclick="closeResetSettingsModal()">
+    <div class="mini-modal-card" style="border-radius:28px;padding:22px;" onclick="event.stopPropagation()">
+      <h3 style="margin:0;font-size:18px;font-weight:700;">Reset Settings to Defaults?</h3>
+      <div style="font-size:13px;line-height:1.5;color:var(--muted);">
+        This restores Appearance, Privacy, Search, Tabs, and Downloads settings to dejavu v4.5.0 defaults. Your Favorites, Profiles, and PC Link stay safe.
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
+        <button type="button" class="pill-btn" onclick="closeResetSettingsModal()">Cancel</button>
+        <button type="button" class="pill-btn danger" onclick="confirmResetSettings()">Reset Defaults</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const WALLPAPERS = [
       { id: 'wp-m3-amethyst.jpg',           name: 'Obsidian Monolith',  m3: true, mode: 'dark',  seed: 'amethyst', butterfly: false, desc: 'Deep plum-obsidian ceramic monoliths & sweeping lavender arch' },
@@ -1556,28 +2205,57 @@
     const ENGINES = [
       ['google',     'Google',     'G', '#4285f4'],
       ['duckduckgo', 'DuckDuckGo', 'D', '#de5833'],
-      ['brave',      'Brave',      'B', '#fb542b'],
       ['bing',       'Bing',       'b', '#008373'],
-      ['perplexity', 'Perplexity', 'P', '#20b2aa']
+      ['brave',      'Brave',      'B', '#fb542b'],
+      ['ecosia',     'Ecosia',     'E', '#36a64f']
     ];
     const ACCENTS = [
-      ['amethyst', '#d0bcff'],
-      ['sapphire', '#a8c7fa'],
-      ['aurora',   '#7bd8c6'],
-      ['rose',     '#ffb0ce'],
-      ['gold',     '#ffb951'],
-      ['silver',   '#b8c8e2']
+      ['amethyst', '#d0bcff', 'Amethyst'],
+      ['sapphire', '#a8c7fa', 'Sapphire'],
+      ['aurora',   '#7bd8c6', 'Aurora'],
+      ['rose',     '#ffb0ce', 'Rose'],
+      ['gold',     '#ffb951', 'Gold'],
+      ['silver',   '#b8c8e2', 'Silver']
     ];
+    const ACCENT_HEX = {};
+    const ACCENT_LABEL = {};
+    ACCENTS.forEach(([id, hex, lbl]) => { ACCENT_HEX[id] = hex; ACCENT_LABEL[id] = lbl; });
+
+    const GOOGLE_G_SVG = '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>';
 
     let state = {};
     let favEditMode = false;
     let tabViewPrivate = false;
     let menuSubView = 'main'; // 'main' | 'bookmarks' | 'reading' | 'history'
+    let returnToSettings = false;
+    let profEditAccent = 'amethyst';
+    let profNewAccent = 'sapphire';
+    const cbdSelection = { history: true, cookies: true, cache: true, downloads: false };
+
+    function getActiveProfile() {
+      if (state.activeProfile && typeof state.activeProfile === 'object') return state.activeProfile;
+      const list = Array.isArray(state.profiles) ? state.profiles : [];
+      const found = list.find((p) => p && p.id === state.activeProfileId) || list[0];
+      return found || {
+        id: 'default',
+        name: 'Personal',
+        accentColor: state.accentColor || 'amethyst',
+        isMainProfile: true,
+        isGoogleSignedIn: false,
+        googleEmail: '',
+        googleDisplayName: '',
+        googleAvatarUrl: ''
+      };
+    }
 
     function call(fn, ...args) {
       try {
         if (window.DejavuMobile && typeof window.DejavuMobile[fn] === 'function') {
           window.DejavuMobile[fn](...args);
+          return;
+        }
+        if (typeof window.DejavuMobile === 'undefined' && typeof window.__previewBridgeCall === 'function') {
+          window.__previewBridgeCall(fn, args);
         }
       } catch (e) {}
     }
@@ -1734,7 +2412,104 @@
     }
     function stepZoom(delta) {
       const cur = Number(state.pageZoom || 100);
-      call('setPageZoom', Math.max(75, Math.min(150, cur + delta)));
+      call('setPageZoom', Math.max(80, Math.min(150, cur + delta)));
+    }
+    function openProfileFromSettings() {
+      returnToSettings = true;
+      call('openScreen', 'profile');
+    }
+    function openClearDataFromSettings() {
+      returnToSettings = true;
+      call('openScreen', 'clear-data');
+    }
+    function backToSettings() {
+      returnToSettings = false;
+      call('openScreen', 'settings');
+    }
+    function openResetSettingsModal() {
+      const m = document.getElementById('reset-settings-modal');
+      if (m) m.classList.remove('hidden');
+    }
+    function closeResetSettingsModal() {
+      const m = document.getElementById('reset-settings-modal');
+      if (m) m.classList.add('hidden');
+    }
+    function confirmResetSettings() {
+      closeResetSettingsModal();
+      call('resetSettings');
+    }
+    function onSettingsZoomInput(val) {
+      const pill = document.getElementById('opt-zoom-pill');
+      if (pill) pill.textContent = `${val}%`;
+    }
+    function clearSettingsSearch() {
+      const inp = document.getElementById('settings-search-in');
+      if (inp) inp.value = '';
+      filterSettingsList();
+    }
+    function filterSettingsList() {
+      const inp = document.getElementById('settings-search-in');
+      const clr = document.getElementById('settings-search-clr');
+      const empty = document.getElementById('settings-search-empty');
+      const emptyTxt = document.getElementById('settings-search-empty-txt');
+      const raw = inp ? inp.value.trim() : '';
+      const q = raw.toLowerCase();
+      if (clr) clr.classList.toggle('show', q.length > 0);
+      let visibleSections = 0;
+      document.querySelectorAll('#settings-sheet-body .set-section').forEach((sec) => {
+        if (!q) {
+          sec.classList.remove('search-hide');
+          sec.querySelectorAll('.set-item').forEach((it) => it.classList.remove('search-hide'));
+          visibleSections++;
+          return;
+        }
+        const secMeta = ((sec.dataset.search || '') + ' ' + (sec.querySelector('.sec-hdr') ? sec.querySelector('.sec-hdr').textContent : '')).toLowerCase();
+        const items = sec.querySelectorAll('.set-item');
+        let anyItem = false;
+        items.forEach((it) => {
+          const hay = ((it.dataset.search || '') + ' ' + (it.textContent || '')).toLowerCase();
+          const hit = hay.includes(q);
+          it.classList.toggle('search-hide', !hit);
+          if (hit) anyItem = true;
+        });
+        if (!anyItem && secMeta.includes(q)) {
+          items.forEach((it) => it.classList.remove('search-hide'));
+          anyItem = true;
+        }
+        sec.classList.toggle('search-hide', !anyItem);
+        if (anyItem) visibleSections++;
+      });
+      if (empty) {
+        const showEmpty = q.length > 0 && visibleSections === 0;
+        empty.classList.toggle('show', showEmpty);
+        if (showEmpty && emptyTxt) emptyTxt.textContent = `No settings match "${raw}"`;
+      }
+    }
+    function toggleCbdOpt(key) {
+      if (!(key in cbdSelection)) return;
+      cbdSelection[key] = !cbdSelection[key];
+      renderClearDataSheet();
+    }
+    function executeClearBrowsingData() {
+      const { history, cookies, cache, downloads } = cbdSelection;
+      if (!history && !cookies && !cache && !downloads) return;
+      call('clearBrowsingData', !!history, !!cookies, !!cache, !!downloads);
+      backToSettings();
+    }
+    function saveActiveProfileEdit() {
+      const inp = document.getElementById('prof-name-in');
+      const nm = inp ? inp.value.trim() : '';
+      call('updateActiveProfile', nm, profEditAccent);
+    }
+    function setActiveAsMainProfile() {
+      const prof = getActiveProfile();
+      if (prof && prof.id) call('setMainProfile', prof.id);
+    }
+    function submitCreateProfile() {
+      const inp = document.getElementById('prof-new-name');
+      const nm = inp ? inp.value.trim() : '';
+      if (inp) inp.value = '';
+      call('createProfile', nm || ('Profile ' + ((state.profiles || []).length + 1)), profNewAccent, true);
     }
     function handleUpdateBtn() {
       const u = state.update || {};
@@ -1810,6 +2585,21 @@
       const shStatus = document.getElementById('sp-shield-status');
       shStatus.textContent = state.adBlockEnabled ? 'Active' : 'Paused';
       shStatus.style.color = state.adBlockEnabled ? 'var(--mint)' : 'var(--muted)';
+
+      // Start Page Profile Avatar Pill
+      const prof = getActiveProfile();
+      const spProfAv = document.getElementById('sp-profile-av');
+      const spProfName = document.getElementById('sp-profile-name');
+      if (spProfAv && prof) {
+        const pHex = ACCENT_HEX[prof.accentColor] || '#d0bcff';
+        const dispName = (prof.isGoogleSignedIn && prof.googleDisplayName) ? prof.googleDisplayName : (prof.name || 'Personal');
+        const initial = esc((dispName.trim().charAt(0) || 'P').toUpperCase());
+        spProfAv.style.background = pHex;
+        spProfAv.innerHTML = prof.isGoogleSignedIn && prof.googleAvatarUrl
+          ? `<img src="${esc(prof.googleAvatarUrl)}" alt="" onerror="this.remove()">`
+          : `${initial}`;
+        if (spProfName) spProfName.textContent = dispName.split(' ')[0];
+      }
 
       document.getElementById('sp-fav-edit-btn').textContent = favEditMode ? 'Done' : 'Edit';
 
@@ -2087,6 +2877,18 @@
       document.getElementById('m-cnt-hi').textContent = String((state.history || []).length);
       const dlCntEl = document.getElementById('m-cnt-dl');
       if (dlCntEl) dlCntEl.textContent = String((state.turboDownloads || []).length);
+      const prof = getActiveProfile();
+      const mProfTitle = document.getElementById('m-prof-title');
+      const mProfSub = document.getElementById('m-prof-sub');
+      if (mProfTitle && prof) {
+        const nm = (prof.isGoogleSignedIn && prof.googleDisplayName) ? prof.googleDisplayName : (prof.name || 'Personal');
+        mProfTitle.textContent = `You & Google · ${nm}`;
+      }
+      if (mProfSub && prof) {
+        mProfSub.textContent = prof.isGoogleSignedIn && prof.googleEmail
+          ? `${prof.googleEmail} · Switch profiles`
+          : 'Sign in with Google · Customize & switch profiles';
+      }
       if (menuSubView !== 'main') renderMenuSubList();
     }
 
@@ -2137,33 +2939,174 @@
       }
     }
 
-    function renderSettingsSheet() {
-      const isLight = state.themeMode === 'light';
-      document.getElementById('m-th-dark-btn').classList.toggle('active', !isLight);
-      document.getElementById('m-th-light-btn').classList.toggle('active', isLight);
+    function renderAvatarContent(el, prof, showGoogleDot) {
+      if (!el || !prof) return;
+      const pHex = ACCENT_HEX[prof.accentColor] || '#d0bcff';
+      const dispName = (prof.isGoogleSignedIn && prof.googleDisplayName) ? prof.googleDisplayName : (prof.name || 'Personal');
+      const initial = esc((dispName.trim().charAt(0) || 'P').toUpperCase());
+      el.style.background = pHex;
+      const imgHtml = (prof.isGoogleSignedIn && prof.googleAvatarUrl)
+        ? `<img src="${esc(prof.googleAvatarUrl)}" alt="" onerror="this.remove()">`
+        : initial;
+      const gDot = (showGoogleDot && prof.isGoogleSignedIn)
+        ? `<span class="yg-avatar-g">${GOOGLE_G_SVG}</span>`
+        : '';
+      el.innerHTML = imgHtml + gDot;
+    }
 
+    function renderProfileBadgesHtml(prof) {
+      const parts = [];
+      if (prof.isGoogleSignedIn) {
+        parts.push(`<span class="yg-badge google">${GOOGLE_G_SVG} Signed in with Google</span>`);
+      } else {
+        parts.push('<span class="yg-badge">Local Profile</span>');
+      }
+      if (prof.isMainProfile || prof.id === state.mainProfileId) {
+        parts.push('<span class="yg-badge main">★ Main Profile</span>');
+      }
+      return parts.join('');
+    }
+
+    function renderSettingsSheet() {
+      // 1. You & Google Hero Card
+      const prof = getActiveProfile();
+      const dispName = (prof.isGoogleSignedIn && prof.googleDisplayName) ? prof.googleDisplayName : (prof.name || 'Personal');
+      renderAvatarContent(document.getElementById('set-yg-avatar'), prof, true);
+      const ygName = document.getElementById('set-yg-name');
+      const ygEmail = document.getElementById('set-yg-email');
+      const ygBadges = document.getElementById('set-yg-badges');
+      const ygActs = document.getElementById('set-yg-actions');
+      if (ygName) ygName.textContent = dispName;
+      if (ygEmail) {
+        ygEmail.textContent = (prof.isGoogleSignedIn && prof.googleEmail)
+          ? prof.googleEmail
+          : 'Sign in with Google or switch profiles';
+      }
+      if (ygBadges) ygBadges.innerHTML = renderProfileBadgesHtml(prof);
+      if (ygActs) {
+        if (prof.isGoogleSignedIn) {
+          ygActs.innerHTML = `
+            <button type="button" class="yg-google-btn" onclick="call('googleManageAccount')">
+              <span class="yg-google-g-pill">${GOOGLE_G_SVG}</span>
+              <span>Manage Google Account</span>
+            </button>
+            <button type="button" class="yg-tonal-btn" onclick="openProfileFromSettings()">Switch Profile</button>
+          `;
+        } else {
+          ygActs.innerHTML = `
+            <button type="button" class="yg-google-btn" onclick="call('googleSignIn')">
+              <span class="yg-google-g-pill">${GOOGLE_G_SVG}</span>
+              <span>Sign in with Google</span>
+            </button>
+            <button type="button" class="yg-tonal-btn" onclick="call('googleSignUp')">Create Google Account</button>
+          `;
+        }
+      }
+
+      // Quick Multi-Profile Switcher Strip inside Hero Card
+      const strip = document.getElementById('set-yg-prof-strip');
+      if (strip) {
+        strip.innerHTML = '';
+        const list = Array.isArray(state.profiles) && state.profiles.length ? state.profiles : [prof];
+        list.forEach((p) => {
+          const isAct = p.id === prof.id;
+          const isMain = p.isMainProfile || p.id === state.mainProfileId;
+          const pName = (p.isGoogleSignedIn && p.googleDisplayName) ? p.googleDisplayName : (p.name || 'Personal');
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'yg-prof-chip' + (isAct ? ' active' : '');
+          b.innerHTML = `
+            <span class="yg-prof-dot" style="background:${ACCENT_HEX[p.accentColor] || '#d0bcff'};">${esc((pName.trim().charAt(0) || 'P').toUpperCase())}</span>
+            <span>${esc(pName)}${isMain ? ' ★' : ''}</span>
+          `;
+          b.onclick = () => {
+            if (isAct) openProfileFromSettings();
+            else call('switchProfile', p.id);
+          };
+          strip.appendChild(b);
+        });
+        const addChip = document.createElement('button');
+        addChip.type = 'button';
+        addChip.className = 'yg-prof-chip';
+        addChip.style.paddingLeft = '11px';
+        addChip.textContent = '+ Add Profile';
+        addChip.onclick = openProfileFromSettings;
+        strip.appendChild(addChip);
+      }
+
+      // 2. Appearance & Material You
+      const mode = state.themeMode || 'dark';
+      document.getElementById('m-th-light-btn').classList.toggle('active', mode === 'light');
+      document.getElementById('m-th-dark-btn').classList.toggle('active', mode === 'dark');
+      const autoBtn = document.getElementById('m-th-auto-btn');
+      if (autoBtn) autoBtn.classList.toggle('active', mode === 'auto');
+
+      const curAcc = state.accentColor || 'amethyst';
+      const accLbl = document.getElementById('opt-m-accent-lbl');
+      if (accLbl) accLbl.textContent = ACCENT_LABEL[curAcc] || 'Amethyst';
       const accBox = document.getElementById('opt-m-accents');
       accBox.innerHTML = '';
-      ACCENTS.forEach(([id, hex]) => {
+      ACCENTS.forEach(([id, hex, lbl]) => {
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = 'acc-orb' + ((state.accentColor || 'amethyst') === id ? ' active' : '');
+        b.className = 'acc-orb' + (curAcc === id ? ' active' : '');
         b.style.background = hex;
-        b.setAttribute('aria-label', id);
+        b.title = lbl;
+        b.setAttribute('aria-label', lbl);
         b.onclick = () => call('setAccent', id);
         accBox.appendChild(b);
       });
+
+      const curWp = normalizeWallpaperId(state.wallpaper);
+      const wpMeta = VALID_WP_MAP[curWp] || WALLPAPERS[0];
+      const wpThumb = document.getElementById('set-wp-thumb');
+      const wpSub = document.getElementById('set-wp-sub');
+      if (wpThumb) {
+        wpThumb.style.backgroundImage = curWp === 'obsidian'
+          ? 'linear-gradient(135deg,#4f378b 0%,#141218 55%,#633b48 100%)'
+          : `url("wallpapers/${curWp}")`;
+      }
+      if (wpSub && wpMeta) {
+        wpSub.textContent = `${wpMeta.name} · 16 Pure M3 & Butterfly + Live`;
+      }
+
+      const zoom = Math.max(80, Math.min(150, Number(state.pageZoom || 100)));
+      const zSlider = document.getElementById('opt-zoom-slider');
+      const zPill = document.getElementById('opt-zoom-pill');
+      if (zSlider) zSlider.value = String(zoom);
+      if (zPill) zPill.textContent = `${zoom}%`;
+
+      const swDeskDef = document.getElementById('sw-desktop-def');
+      if (swDeskDef) swDeskDef.classList.toggle('on', !!state.desktopSiteDefault);
 
       const isTop = state.barPosition === 'top';
       document.getElementById('opt-bar-bottom').classList.toggle('active', !isTop);
       document.getElementById('opt-bar-top').classList.toggle('active', isTop);
       document.getElementById('sw-autohide').classList.toggle('on', state.autoHideBar !== false);
       document.getElementById('sw-darkweb').classList.toggle('on', !!state.darkWebPages);
+
+      // 3. Privacy & Security
       document.getElementById('sw-adblock').classList.toggle('on', state.adBlockEnabled !== false);
       document.getElementById('opt-m-ab-sub').textContent = state.adBlockEnabled !== false
         ? `Active · ${Number(state.totalBlocked || 0).toLocaleString()} blocked`
         : 'Paused';
+      const swHttps = document.getElementById('sw-https');
+      if (swHttps) swHttps.classList.toggle('on', state.httpsFirst !== false);
+      const swDnt = document.getElementById('sw-dnt');
+      if (swDnt) swDnt.classList.toggle('on', state.doNotTrack !== false);
+      const swPop = document.getElementById('sw-popups');
+      if (swPop) swPop.classList.toggle('on', state.blockPopups !== false);
+      const sw3p = document.getElementById('sw-3pcookies');
+      if (sw3p) sw3p.classList.toggle('on', state.blockThirdPartyCookies !== false);
+      const cbdSub = document.getElementById('opt-cbd-sub');
+      if (cbdSub) {
+        const hLen = (state.history || []).length;
+        cbdSub.textContent = hLen > 0
+          ? `${hLen} history items · Cookies, cache & downloads`
+          : 'History, cookies, cache & downloads';
+      }
 
+      // 4. Search & Tabs
       const engBox = document.getElementById('opt-m-engines');
       engBox.innerHTML = '';
       ENGINES.forEach(([id, label, glyph, bg]) => {
@@ -2171,17 +3114,44 @@
         const r = document.createElement('button');
         r.type = 'button'; r.className = 'g-row';
         r.innerHTML = `
-          <span class="sq-ico" style="background:${bg};font-size:13px;font-weight:700;">${glyph}</span>
+          <span class="sq-ico" style="background:${bg};color:#ffffff;font-size:13px;font-weight:700;">${glyph}</span>
           <span class="g-row-meta"><span class="g-row-title">${label}</span></span>
           <span class="radio-dot${on ? ' on' : ''}">${on ? '<svg viewBox="0 0 14 14" width="11" height="11" fill="none"><path d="M3 7.2l2.6 2.6L11 4.2" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</span>
         `;
         r.onclick = () => call('setSearchEngine', id);
         engBox.appendChild(r);
       });
+      const swPtr = document.getElementById('sw-ptr');
+      if (swPtr) swPtr.classList.toggle('on', state.pullToRefresh !== false);
+      const swBg = document.getElementById('sw-bglinks');
+      if (swBg) swBg.classList.toggle('on', !!state.openLinksInBackground);
 
-      // Software Update Card
+      // 5. Downloads
+      const ytq = state.defaultYoutubeQuality || 'auto';
+      document.querySelectorAll('#opt-yt-qual-strip .m3-chip').forEach((chip) => {
+        chip.classList.toggle('active', chip.dataset.ytq === ytq);
+      });
+      const swFdl = document.getElementById('sw-floatdl');
+      if (swFdl) swFdl.classList.toggle('on', state.floatingDownloadButton !== false);
+      const dlSub = document.getElementById('opt-dl-sub');
+      if (dlSub) {
+        const cnt = (state.turboDownloads || []).length;
+        dlSub.textContent = cnt > 0
+          ? `${cnt} items · Downloads/dejavu/ · MP4 & Audio M4A`
+          : 'Downloads/dejavu/ · Multi-quality MP4 & Audio M4A';
+      }
+
+      // 6. Sync & Software Update Card
+      const sync = state.sync || {};
+      const syncSub = document.getElementById('opt-sync-sub');
+      if (syncSub) {
+        syncSub.textContent = sync.connected
+          ? `Connected to ${sync.peerName || 'Windows PC'} · Real-time E2EE`
+          : 'Pair with Windows PC · AES-256 E2EE';
+      }
+
       const u = state.update || {};
-      const curV = u.currentVersion || '4.4.0';
+      const curV = u.currentVersion || '4.5.0';
       const uTitle = document.getElementById('opt-upd-title');
       const uSub = document.getElementById('opt-upd-sub');
       const uBtn = document.getElementById('opt-upd-btn');
@@ -2191,7 +3161,7 @@
       const uFilesSub = document.getElementById('opt-upd-files-sub');
       const uFoot = document.getElementById('opt-ver-footer');
       const uNote = document.getElementById('opt-upd-note');
-      if (uFoot) uFoot.textContent = `dejavu Mobile v${curV} · Material Design 3`;
+      if (uFoot) uFoot.textContent = `dejavu Mobile v${curV} · Google Pixel Material Design 3`;
       if (uNote) {
         if (u.upgradeNote) uNote.textContent = u.upgradeNote;
         uNote.classList.toggle('warn', !!u.signatureMismatch);
@@ -2235,7 +3205,7 @@
         } else if (u.status === 'ready') {
           uTitle.textContent = `v${u.latestVersion} Ready to Install`;
           uSub.textContent = u.signatureMismatch
-            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '4.4.0')
+            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '4.5.0')
             : 'Verified V1-V3 permanent signature · Tap Install to upgrade';
           uBtn.textContent = 'Install';
           uBtn.classList.add('primary');
@@ -2260,6 +3230,171 @@
           uProgW.style.display = 'none';
         }
       }
+
+      filterSettingsList();
+    }
+
+    function renderProfileSheet() {
+      const prof = getActiveProfile();
+      const list = Array.isArray(state.profiles) && state.profiles.length ? state.profiles : [prof];
+      const backBtn = document.getElementById('prof-back-btn');
+      if (backBtn) backBtn.style.display = returnToSettings ? 'inline-flex' : 'none';
+
+      renderAvatarContent(document.getElementById('prof-hero-avatar'), prof, true);
+      const dispName = (prof.isGoogleSignedIn && prof.googleDisplayName) ? prof.googleDisplayName : (prof.name || 'Personal');
+      const heroName = document.getElementById('prof-hero-name');
+      const heroEmail = document.getElementById('prof-hero-email');
+      const heroBadges = document.getElementById('prof-hero-badges');
+      const heroActs = document.getElementById('prof-hero-actions');
+      if (heroName) heroName.textContent = dispName;
+      if (heroEmail) {
+        heroEmail.textContent = (prof.isGoogleSignedIn && prof.googleEmail)
+          ? prof.googleEmail
+          : 'Sign in with Google to sync your account identity';
+      }
+      if (heroBadges) heroBadges.innerHTML = renderProfileBadgesHtml(prof);
+      if (heroActs) {
+        if (prof.isGoogleSignedIn) {
+          heroActs.innerHTML = `
+            <button type="button" class="yg-google-btn" onclick="call('googleManageAccount')">
+              <span class="yg-google-g-pill">${GOOGLE_G_SVG}</span>
+              <span>Manage Google Account</span>
+            </button>
+            <button type="button" class="yg-tonal-btn" onclick="call('googleSyncProfile')">Sync Google Info</button>
+            <button type="button" class="pill-btn danger" style="width:100%;height:40px;" onclick="call('googleSignOut')">Sign Out of Google</button>
+          `;
+        } else {
+          heroActs.innerHTML = `
+            <button type="button" class="yg-google-btn" onclick="call('googleSignIn')">
+              <span class="yg-google-g-pill">${GOOGLE_G_SVG}</span>
+              <span>Sign in with Google</span>
+            </button>
+            <button type="button" class="yg-tonal-btn" onclick="call('googleSignUp')">Create Google Account</button>
+          `;
+        }
+      }
+
+      const nameIn = document.getElementById('prof-name-in');
+      if (nameIn && document.activeElement !== nameIn) nameIn.value = prof.name || 'Personal';
+      profEditAccent = prof.accentColor || state.accentColor || 'amethyst';
+
+      const editAccBox = document.getElementById('prof-edit-accents');
+      if (editAccBox) {
+        editAccBox.innerHTML = '';
+        ACCENTS.forEach(([id, hex, lbl]) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'acc-orb' + (profEditAccent === id ? ' active' : '');
+          b.style.background = hex;
+          b.title = lbl;
+          b.setAttribute('aria-label', lbl);
+          b.onclick = () => {
+            profEditAccent = id;
+            editAccBox.querySelectorAll('.acc-orb').forEach((n) => n.classList.remove('active'));
+            b.classList.add('active');
+          };
+          editAccBox.appendChild(b);
+        });
+      }
+
+      const mainBtn = document.getElementById('prof-set-main-btn');
+      if (mainBtn) {
+        const isMain = prof.isMainProfile || prof.id === state.mainProfileId;
+        mainBtn.textContent = isMain ? '★ Main Profile' : 'Set as Main Profile';
+        mainBtn.disabled = isMain;
+        mainBtn.style.opacity = isMain ? '0.68' : '1';
+      }
+
+      const cntLbl = document.getElementById('prof-count-lbl');
+      if (cntLbl) cntLbl.textContent = `${list.length} ${list.length === 1 ? 'Profile' : 'Profiles'}`;
+
+      const listEl = document.getElementById('prof-list');
+      if (listEl) {
+        listEl.innerHTML = '';
+        list.forEach((p) => {
+          const isAct = p.id === prof.id;
+          const isMain = p.isMainProfile || p.id === state.mainProfileId;
+          const pName = (p.isGoogleSignedIn && p.googleDisplayName) ? p.googleDisplayName : (p.name || 'Personal');
+          const pHex = ACCENT_HEX[p.accentColor] || '#d0bcff';
+          const row = document.createElement('div');
+          row.className = 'g-row';
+          row.style.cursor = 'pointer';
+          const avContent = (p.isGoogleSignedIn && p.googleAvatarUrl)
+            ? `<img src="${esc(p.googleAvatarUrl)}" alt="" onerror="this.remove()">`
+            : esc((pName.trim().charAt(0) || 'P').toUpperCase());
+          const subTxt = (p.isGoogleSignedIn && p.googleEmail)
+            ? p.googleEmail
+            : `Local Profile · ${ACCENT_LABEL[p.accentColor] || 'Amethyst'}`;
+          row.innerHTML = `
+            <span class="prof-row-av${isAct ? ' active' : ''}" style="background:${pHex};">${avContent}</span>
+            <div class="g-row-meta">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="g-row-title">${esc(pName)}</span>
+                ${isMain ? '<span class="yg-badge main" style="height:19px;font-size:10px;padding:0 7px;">Main</span>' : ''}
+                ${isAct ? '<span class="yg-badge google" style="height:19px;font-size:10px;padding:0 7px;">Active</span>' : ''}
+              </div>
+              <div class="g-row-sub">${esc(subTxt)}</div>
+            </div>
+            ${!isMain ? '<button type="button" class="pill-btn p-main-btn" style="height:28px;padding:0 10px;font-size:11px;">Set Main</button>' : ''}
+            ${list.length > 1 ? '<button type="button" class="tab-card-x p-del-btn" aria-label="Remove profile">×</button>' : ''}
+          `;
+          row.onclick = () => { if (!isAct) call('switchProfile', p.id); };
+          const mb = row.querySelector('.p-main-btn');
+          if (mb) mb.onclick = (e) => { e.stopPropagation(); call('setMainProfile', p.id); };
+          const db = row.querySelector('.p-del-btn');
+          if (db) db.onclick = (e) => { e.stopPropagation(); call('deleteProfile', p.id); };
+          listEl.appendChild(row);
+        });
+      }
+
+      const newAccBox = document.getElementById('prof-new-accents');
+      if (newAccBox) {
+        newAccBox.innerHTML = '';
+        ACCENTS.forEach(([id, hex, lbl]) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'acc-orb' + (profNewAccent === id ? ' active' : '');
+          b.style.background = hex;
+          b.title = lbl;
+          b.setAttribute('aria-label', lbl);
+          b.onclick = () => {
+            profNewAccent = id;
+            newAccBox.querySelectorAll('.acc-orb').forEach((n) => n.classList.remove('active'));
+            b.classList.add('active');
+          };
+          newAccBox.appendChild(b);
+        });
+      }
+    }
+
+    function renderClearDataSheet() {
+      const chkSvg = '<svg viewBox="0 0 14 14" width="13" height="13" fill="none"><path d="M2.8 7.2l2.8 2.8L11.2 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      let selectedCount = 0;
+      ['history', 'cookies', 'cache', 'downloads'].forEach((k) => {
+        const el = document.getElementById('cbd-chk-' + k);
+        const on = !!cbdSelection[k];
+        if (on) selectedCount++;
+        if (el) {
+          el.classList.toggle('on', on);
+          el.innerHTML = on ? chkSvg : '';
+        }
+      });
+      const hSub = document.getElementById('cbd-sub-history');
+      if (hSub) {
+        const hCnt = (state.history || []).length;
+        hSub.textContent = hCnt > 0 ? `${hCnt} visited sites & omnibox history` : 'Clears visited URLs and omnibox history';
+      }
+      const dSub = document.getElementById('cbd-sub-downloads');
+      if (dSub) {
+        const dCnt = (state.turboDownloads || []).length;
+        dSub.textContent = dCnt > 0
+          ? `${dCnt} entries · Saved files stay on device`
+          : 'Clears list only · Files stay on device';
+      }
+      const btn = document.getElementById('cbd-confirm-btn');
+      const lbl = document.getElementById('cbd-confirm-lbl');
+      if (btn) btn.disabled = selectedCount === 0;
+      if (lbl) lbl.textContent = selectedCount > 0 ? `Clear Browsing Data (${selectedCount} selected)` : 'Select data to clear';
     }
 
     let wpFilter = 'all'; // 'all' | 'butterfly' | 'dark' | 'light'
@@ -2275,7 +3410,7 @@
       const wg = document.getElementById('m-wp-grid');
       if (!wg) return;
       wg.innerHTML = '';
-      const isLight = state.themeMode === 'light';
+      const isLight = (state.effectiveTheme || state.themeMode) === 'light';
       const activeWp = normalizeWallpaperId(state.wallpaper);
       const filtered = WALLPAPERS.filter((w) => {
         if (wpFilter === 'butterfly') return !!w.butterfly;
@@ -2557,13 +3692,22 @@
     };
 
     let lastScreen = '';
+    let lastDefaultYtq = '';
     window.__onDejavuState = function (st) {
       state = st || {};
       const accent = state.accentColor || 'amethyst';
-      const isLight = state.themeMode === 'light';
+      const resolvedTheme = state.effectiveTheme || (state.themeMode === 'auto'
+        ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+        : (state.themeMode || 'dark'));
+      const isLight = resolvedTheme === 'light';
       document.documentElement.dataset.accent = accent;
       document.body.dataset.accent = accent;
       document.body.classList.toggle('theme-light', isLight);
+
+      if (state.defaultYoutubeQuality && state.defaultYoutubeQuality !== lastDefaultYtq) {
+        lastDefaultYtq = state.defaultYoutubeQuality;
+        setMobileDlQuality(state.defaultYoutubeQuality);
+      }
 
       // Safe-area insets pushed live from Android WindowInsets
       if (typeof state.safeTop === 'number') document.documentElement.style.setProperty('--safe-top', state.safeTop + 'px');
@@ -2585,13 +3729,14 @@
       }
 
       const scr = state.screen || 'start';
-      const isModal = scr === 'menu' || scr === 'sync' || scr === 'settings' || scr === 'wallpapers' || scr === 'downloads';
+      const isModal = scr === 'menu' || scr === 'sync' || scr === 'settings' || scr === 'profile' || scr === 'clear-data' || scr === 'wallpapers' || scr === 'downloads';
       const showStartBehind = scr === 'start' || (isModal && !state.activeUrl);
 
       if (scr !== lastScreen) {
         if (scr === 'menu') setMenuSubView('main');
         if (scr === 'tabs') tabViewPrivate = !!state.activePrivate;
         if (scr !== 'start') favEditMode = false;
+        if (scr !== 'profile' && scr !== 'clear-data') returnToSettings = false;
         lastScreen = scr;
       }
 
@@ -2602,6 +3747,10 @@
       document.getElementById('scr-menu').classList.toggle('hidden', scr !== 'menu');
       document.getElementById('scr-sync').classList.toggle('hidden', scr !== 'sync');
       document.getElementById('scr-settings').classList.toggle('hidden', scr !== 'settings');
+      const scrProf = document.getElementById('scr-profile');
+      if (scrProf) scrProf.classList.toggle('hidden', scr !== 'profile');
+      const scrCbd = document.getElementById('scr-clear-data');
+      if (scrCbd) scrCbd.classList.toggle('hidden', scr !== 'clear-data');
       document.getElementById('scr-wallpapers').classList.toggle('hidden', scr !== 'wallpapers');
       const scrDl = document.getElementById('scr-downloads');
       if (scrDl) scrDl.classList.toggle('hidden', scr !== 'downloads');
@@ -2612,12 +3761,69 @@
       if (scr === 'menu') renderMenuSheet();
       if (scr === 'sync') renderSyncSheet();
       if (scr === 'settings') renderSettingsSheet();
+      if (scr === 'profile') renderProfileSheet();
+      if (scr === 'clear-data') renderClearDataSheet();
       if (scr === 'wallpapers') renderWallpapersSheet();
       if (scr === 'downloads') renderDownloadsSheet();
     };
 
     // Standalone browser preview fallback (no-op inside Android WebView where DejavuMobile bridge exists)
     if (typeof window.DejavuMobile === 'undefined') {
+      window.__previewBridgeCall = function (fn, args) {
+        if (!state) return;
+        const st = Object.assign({}, state);
+        if (fn === 'openScreen') st.screen = args[0] || 'start';
+        else if (fn === 'closeScreen') st.screen = 'start';
+        else if (fn === 'setThemeMode') { st.themeMode = args[0] || 'dark'; st.effectiveTheme = st.themeMode === 'light' ? 'light' : 'dark'; }
+        else if (fn === 'setAccent') {
+          st.accentColor = args[0] || 'amethyst';
+          if (st.activeProfile) st.activeProfile.accentColor = st.accentColor;
+        }
+        else if (fn === 'setWallpaper') st.wallpaper = args[0] || DEFAULT_M3_WP;
+        else if (fn === 'setBarPosition') st.barPosition = args[0] || 'bottom';
+        else if (fn === 'toggleAutoHideBar') st.autoHideBar = !st.autoHideBar;
+        else if (fn === 'toggleDarkWebPages') st.darkWebPages = !st.darkWebPages;
+        else if (fn === 'setPageZoom') st.pageZoom = Math.max(80, Math.min(150, Number(args[0] || 100)));
+        else if (fn === 'toggleDesktopSiteDefault') st.desktopSiteDefault = !st.desktopSiteDefault;
+        else if (fn === 'toggleAdBlock') st.adBlockEnabled = !st.adBlockEnabled;
+        else if (fn === 'toggleHttpsFirst') st.httpsFirst = !st.httpsFirst;
+        else if (fn === 'toggleDoNotTrack') st.doNotTrack = !st.doNotTrack;
+        else if (fn === 'toggleBlockPopups') st.blockPopups = !st.blockPopups;
+        else if (fn === 'toggleBlockThirdPartyCookies') st.blockThirdPartyCookies = !st.blockThirdPartyCookies;
+        else if (fn === 'setSearchEngine') st.searchEngine = args[0] || 'google';
+        else if (fn === 'togglePullToRefresh') st.pullToRefresh = !st.pullToRefresh;
+        else if (fn === 'toggleOpenLinksInBackground') st.openLinksInBackground = !st.openLinksInBackground;
+        else if (fn === 'setDefaultYoutubeQuality') st.defaultYoutubeQuality = args[0] || 'auto';
+        else if (fn === 'toggleFloatingDownloadButton') st.floatingDownloadButton = !st.floatingDownloadButton;
+        else if (fn === 'clearBrowsingData') {
+          if (args[0]) st.history = [];
+          if (args[3]) st.turboDownloads = [];
+        }
+        else if (fn === 'switchProfile') {
+          const hit = (st.profiles || []).find((p) => p.id === args[0]);
+          if (hit) { st.activeProfileId = hit.id; st.activeProfile = hit; st.accentColor = hit.accentColor || 'amethyst'; }
+        }
+        else if (fn === 'setMainProfile') {
+          st.mainProfileId = args[0];
+          (st.profiles || []).forEach((p) => { p.isMainProfile = p.id === args[0]; });
+        }
+        else if (fn === 'createProfile') {
+          const np = { id: 'profile-' + Date.now(), name: args[0] || 'Work', accentColor: args[1] || 'sapphire', isMainProfile: false, isGoogleSignedIn: false, googleEmail: '', googleDisplayName: '', googleAvatarUrl: '' };
+          st.profiles = [...(st.profiles || []), np];
+          if (args[2]) { st.activeProfileId = np.id; st.activeProfile = np; st.accentColor = np.accentColor; }
+        }
+        else if (fn === 'updateActiveProfile') {
+          if (st.activeProfile) { st.activeProfile.name = args[0] || st.activeProfile.name; st.activeProfile.accentColor = args[1] || st.activeProfile.accentColor; st.accentColor = st.activeProfile.accentColor; }
+        }
+        else if (fn === 'resetSettings') {
+          st.themeMode = 'dark'; st.effectiveTheme = 'dark'; st.accentColor = 'amethyst'; st.pageZoom = 100;
+          st.desktopSiteDefault = false; st.httpsFirst = true; st.doNotTrack = true; st.blockPopups = true;
+          st.blockThirdPartyCookies = true; st.searchEngine = 'google'; st.pullToRefresh = true;
+          st.openLinksInBackground = false; st.defaultYoutubeQuality = 'auto'; st.floatingDownloadButton = true;
+        }
+        window.__onDejavuState(st);
+      };
+
       window.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           if (!state || !state.screen) {
@@ -2627,6 +3833,27 @@
             const initMode = qp.get('theme') || initMeta.mode || 'dark';
             const initSeed = qp.get('accent') || initMeta.seed || 'amethyst';
             const initScreen = qp.get('screen') || 'start';
+            const signedIn = qp.get('signedin') === '1';
+            const prof1 = {
+              id: 'default',
+              name: 'Personal',
+              accentColor: initSeed,
+              isMainProfile: true,
+              isGoogleSignedIn: signedIn,
+              googleEmail: signedIn ? 'alex.pixel@gmail.com' : '',
+              googleDisplayName: signedIn ? 'Alex Rivera' : '',
+              googleAvatarUrl: ''
+            };
+            const prof2 = {
+              id: 'work',
+              name: 'Work',
+              accentColor: 'sapphire',
+              isMainProfile: false,
+              isGoogleSignedIn: false,
+              googleEmail: '',
+              googleDisplayName: '',
+              googleAvatarUrl: ''
+            };
             window.__onDejavuState({
               screen: initScreen,
               activeTabId: 1,
@@ -2634,12 +3861,26 @@
               wallpaper: initWp,
               accentColor: initSeed,
               themeMode: initMode,
+              effectiveTheme: initMode === 'light' ? 'light' : 'dark',
               barPosition: 'bottom',
               autoHideBar: true,
               darkWebPages: false,
               pageZoom: 100,
+              desktopSiteDefault: false,
+              httpsFirst: true,
+              doNotTrack: true,
+              blockPopups: true,
+              blockThirdPartyCookies: true,
+              pullToRefresh: true,
+              openLinksInBackground: false,
+              defaultYoutubeQuality: '1080p',
+              floatingDownloadButton: true,
               adBlockEnabled: true,
-              totalBlocked: 128,
+              totalBlocked: 248,
+              profiles: [prof1, prof2],
+              activeProfileId: 'default',
+              mainProfileId: 'default',
+              activeProfile: prof1,
               safeTop: 28,
               safeBottom: 24,
               sysBottom: 16,
@@ -2654,9 +3895,13 @@
                 { title: 'dejavu', url: 'https://dathevinci.github.io/Dejavu-browser/' }
               ],
               readingList: [],
-              history: [],
-              sync: { connected: false, pairingCode: 'DJV-4400-M3UI', remoteTabs: [], drops: [] },
-              update: { currentVersion: '4.4.0', status: 'uptodate', latestVersion: '4.4.0', available: false, hasDownloadedApk: false },
+              history: [
+                { title: 'Material Design 3', url: 'https://m3.material.io' },
+                { title: 'GitHub — Dathevinci/Dejavu-browser', url: 'https://github.com/Dathevinci/Dejavu-browser' },
+                { title: 'YouTube', url: 'https://m.youtube.com' }
+              ],
+              sync: { connected: false, pairingCode: 'DJV-4500-M3UI', remoteTabs: [], drops: [] },
+              update: { currentVersion: '4.5.0', status: 'uptodate', latestVersion: '4.5.0', available: false, hasDownloadedApk: false },
               turboDownloads: [],
               pageMedia: []
             });

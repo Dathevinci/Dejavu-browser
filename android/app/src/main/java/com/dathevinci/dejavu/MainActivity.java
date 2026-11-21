@@ -153,6 +153,31 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
     }
 
+    private final class MobileMediaBridge {
+        private final MobileTab tab;
+        MobileMediaBridge(MobileTab tab) {
+            this.tab = tab;
+        }
+        @JavascriptInterface
+        public void downloadMedia(final String rawUrl, final String suggestedName) {
+            mainHandler.post(() -> {
+                if (downloadManager == null || rawUrl == null || rawUrl.trim().isEmpty()) return;
+                String ref = (tab != null && !tab.isNewTab) ? tab.url : "";
+                String ua = (tab != null && tab.webView != null) ? tab.webView.getSettings().getUserAgentString() : "";
+                String ck = CookieManager.getInstance().getCookie(rawUrl.trim());
+                String fn = downloadManager.enqueueDownload(rawUrl.trim(), suggestedName, ref, ua, ck, 8);
+                Toast.makeText(MainActivity.this, "8x Turbo Download: " + fn, Toast.LENGTH_SHORT).show();
+            });
+        }
+        @JavascriptInterface
+        public void openMediaManager() {
+            mainHandler.post(() -> {
+                scanActivePageMedia();
+                openUiScreen("downloads");
+            });
+        }
+    }
+
     private static final class MobileTab {
         int id;
         String url = "dejavu://newtab";
@@ -1272,6 +1297,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(wv, !tab.isPrivate);
         wv.addJavascriptInterface(new ScrollTrackBridge(wv), "__djvScroll");
+        wv.addJavascriptInterface(new MobileMediaBridge(tab), "__djvMedia");
 
         wv.setScrollListener((scrollY, deltaY) -> {
             if (tab.id != activeTabId || !"none".equals(activeUiScreen) || urlInput.hasFocus()) return;
@@ -1296,6 +1322,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 }
                 if (downloadManager != null && !request.isForMainFrame()) {
                     downloadManager.recordSniffedMedia(tab.id, reqUrl, "", "");
+                    final JSONArray mediaSnap = downloadManager.getMediaSnapshot(tab.id);
+                    if (mediaSnap != null && mediaSnap.length() > 0) {
+                        final String snapJson = mediaSnap.toString();
+                        mainHandler.post(() -> {
+                            if (tab.webView != null) {
+                                tab.webView.evaluateJavascript("if(window.__djvUpdateMobileSniffed)window.__djvUpdateMobileSniffed(" + snapJson + ");", null);
+                            }
+                        });
+                    }
                 }
                 return super.shouldInterceptRequest(view, request);
             }
@@ -1323,6 +1358,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (view.getTitle() != null && !view.getTitle().isEmpty()) tab.title = view.getTitle();
                 if (adBlocker.isEnabled()) {
                     view.evaluateJavascript(MobileAdBlocker.getCosmeticScript(), null);
+                }
+                view.evaluateJavascript(MobileDownloadManager.getFloatingDownloadButtonScript(), null);
+                if (downloadManager != null) {
+                    JSONArray mediaSnap = downloadManager.getMediaSnapshot(tab.id);
+                    if (mediaSnap != null && mediaSnap.length() > 0) {
+                        view.evaluateJavascript("if(window.__djvUpdateMobileSniffed)window.__djvUpdateMobileSniffed(" + mediaSnap.toString() + ");", null);
+                    }
                 }
                 injectScrollTopTracker(view);
                 applyDarkWebToTab(tab);

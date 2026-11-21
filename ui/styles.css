@@ -6294,3 +6294,280 @@ body.force-light .dlm-url-pill {
   max-width: 420px;
   line-height: 1.5;
 }
+
+/* ==========================================================================
+   V4.2 SAMSUNG INTERNET PC × GOOGLE PIXEL MATERIAL DESIGN 3 NAVIGATION RAIL
+   Pure M3 Tonal Surface Containers · ZERO CSS blur · Crisp Active Pills
+   ========================================================================== */
+:root {
+  --nav-rail-w: 56px;
+}
+
+body.nav-rail-hidden,
+body.is-fullscreen {
+  --nav-rail-w: 0px;
+}
+
+#m3-nav-rail.m3-nav-rail {
+  position: fixed;
+  top: var(--chrome-h);
+  left: 0;
+  bottom: 0;
+  width: var(--nav-rail-w);
+  z-index: 38;
+  background: var(--md-surface-container-low);
+  border-right: 1px solid var(--md-outline-variant);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0 10px;
+  overflow: hidden;
+  transition: opacity 0.20s ease, background-color 0.20s ease, border-color 0.20s ease;
+}
+
+body.nav-rail-hidden #m3-nav-rail,
+body.is-fullscreen #m3-nav-rail {
+  display: none !important;
+}
+
+body.app-booting #m3-nav-rail {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+.m3-rail-top,
+.m3-rail-bottom {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.m3-rail-bottom {
+  padding-top: 8px;
+  border-top: 1px solid var(--md-outline-variant);
+  width: 36px;
+}
+
+.m3-rail-fab {
+  width: 38px;
+  height: 38px;
+  margin-bottom: 6px;
+  border-radius: 14px;
+  border: none;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.20);
+  transition: border-radius 0.20s cubic-bezier(0.2, 0, 0, 1), transform 0.16s ease, filter 0.16s ease;
+}
+
+.m3-rail-fab:hover {
+  border-radius: 19px;
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.m3-rail-fab:active {
+  transform: scale(0.93);
+}
+
+.m3-rail-item {
+  width: 48px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  outline: none;
+  transition: color 0.16s ease;
+}
+
+.m3-rail-pill {
+  position: relative;
+  width: 42px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.14s ease;
+}
+
+.m3-rail-item:hover {
+  color: var(--md-on-surface);
+}
+
+.m3-rail-item:hover .m3-rail-pill {
+  background: var(--md-surface-container-high);
+}
+
+.m3-rail-item:active .m3-rail-pill {
+  transform: scale(0.92);
+}
+
+.m3-rail-item.active {
+  color: var(--md-on-secondary-container);
+}
+
+.m3-rail-item.active .m3-rail-pill {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+
+.m3-rail-item.is-accent .m3-rail-pill {
+  background: var(--md-tertiary-container);
+  color: var(--md-on-tertiary-container);
+}
+
+.m3-rail-item.m3-rail-collapse {
+  opacity: 0.72;
+}
+.m3-rail-item.m3-rail-collapse:hover {
+  opacity: 1;
+}
+
+.m3-rail-badge {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 15px;
+  text-align: center;
+}
+
+.m3-rail-badge.is-running {
+  background: var(--md-tertiary);
+  color: var(--md-on-tertiary);
+}
+
+.m3-rail-dot {
+  position: absolute;
+  top: 4px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--md-tertiary);
+  border: 1.5px solid var(--md-surface-container-low);
+}
+
+/* Offset viewport & full-window overlays cleanly to the right of the Samsung M3 Navigation Rail */
+#viewport,
+#newtab-view,
+#tab-overview,
+#settings-overlay,
+#dl-manager-overlay {
+  left: var(--nav-rail-w) !important;
+  width: calc(100% - var(--nav-rail-w)) !important;
+}
+
+/* When browsing a live webpage, keep #newtab-view unrendered so _shellView behind active.WebView uses ~0% GPU */
+body:not(.on-newtab):not(.tab-overview-open):not(.settings-open):not(.dl-manager-open) #newtab-view {
+  display: none !important;
+}
+
+/* Samsung Internet × Material 3 Unified Quick Access Board on Start Page */
+#sp-sec-favorites {
+  background: var(--md-surface-container);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 28px;
+  padding: 18px 20px 20px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+}
+
+body.theme-light #sp-sec-favorites,
+body.force-light #sp-sec-favorites {
+  background: var(--md-surface-container-low);
+  box-shadow: 0 6px 22px rgba(24, 18, 48, 0.08);
+}
+
+#sp-sec-favorites .sp-section-head {
+  margin-bottom: 14px;
+}
+
+#sp-sec-favorites .sp-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--md-on-surface);
+  text-shadow: none;
+}
+
+#sp-sec-favorites .safari-fav-label {
+  color: var(--md-on-surface);
+  text-shadow: none;
+  font-weight: 600;
+}
+
+#sp-sec-favorites .safari-fav-squircle {
+  background: var(--md-surface-container-high) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  box-shadow: none !important;
+}
+
+body.theme-light #sp-sec-favorites .safari-fav-squircle,
+body.force-light #sp-sec-favorites .safari-fav-squircle {
+  background: var(--md-surface-container-lowest) !important;
+}
+
+#sp-sec-favorites .safari-fav-item:hover .safari-fav-squircle {
+  background: var(--md-secondary-container) !important;
+  border-color: var(--md-primary) !important;
+}
+
+/* Crisp M3 Tonal Polish for Start Page Search Pill & Privacy Report Card */
+#newtab-search-form.hero-search {
+  border-radius: 999px !important;
+  background: var(--md-surface-container-high) !important;
+  border: 1.5px solid var(--md-outline-variant) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22) !important;
+}
+
+body.theme-light #newtab-search-form.hero-search,
+body.force-light #newtab-search-form.hero-search {
+  background: var(--md-surface-container-lowest) !important;
+  box-shadow: 0 6px 20px rgba(24, 18, 48, 0.09) !important;
+}
+
+#newtab-search-form.hero-search:focus-within {
+  border-color: var(--md-primary) !important;
+  box-shadow: 0 0 0 2px var(--md-primary-container), 0 10px 28px rgba(0, 0, 0, 0.24) !important;
+}
+
+.hero-go-btn {
+  background: var(--md-primary) !important;
+  color: var(--md-on-primary) !important;
+  border-radius: 999px !important;
+}
+
+#privacy-report-card.safari-privacy-card {
+  border-radius: 26px !important;
+  background: var(--md-surface-container) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16) !important;
+}
+
+body.theme-light #privacy-report-card.safari-privacy-card,
+body.force-light #privacy-report-card.safari-privacy-card {
+  background: var(--md-surface-container-low) !important;
+  box-shadow: 0 4px 16px rgba(24, 18, 48, 0.07) !important;
+}

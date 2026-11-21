@@ -24,7 +24,7 @@ namespace DejavuBrowser
 
     internal sealed class AutoUpdater
     {
-        public const string CurrentVersion = "4.1.0";
+        public const string CurrentVersion = "4.2.0";
         private const string LatestReleaseApi = "https://api.github.com/repos/Dathevinci/Dejavu-browser/releases/latest";
 
         private static readonly JavaScriptSerializer Json = new JavaScriptSerializer();
@@ -170,7 +170,8 @@ namespace DejavuBrowser
 
                 string profileArg = string.IsNullOrEmpty(activeProfileId) ? "" : (" --profile=" + activeProfileId);
 
-                // Atomic background updater: waits for current PID to exit, swaps exe in-place, relaunches updated dejavu!
+                // Atomic background updater: genuinely waits ~1s per check (ping -n 2) for old PID
+                // to exit completely before swapping binary in-place and relaunching cleanly!
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("@echo off");
                 sb.AppendLine("setlocal enabledelayedexpansion");
@@ -181,12 +182,22 @@ namespace DejavuBrowser
                 sb.AppendLine("tasklist /FI \"PID eq " + pid + "\" 2>NUL | find /I \"" + pid + "\" >NUL");
                 sb.AppendLine("if \"%ERRORLEVEL%\"==\"0\" (");
                 sb.AppendLine("  set /a tries+=1");
-                sb.AppendLine("  if !tries! GTR 40 goto swap");
-                sb.AppendLine("  ping -n 1 -w 200 127.0.0.1 >NUL");
+                sb.AppendLine("  if !tries! GTR 30 goto swap");
+                sb.AppendLine("  ping -n 2 127.0.0.1 >NUL");
                 sb.AppendLine("  goto waitloop");
                 sb.AppendLine(")");
+                sb.AppendLine("ping -n 2 127.0.0.1 >NUL");
                 sb.AppendLine(":swap");
-                sb.AppendLine("copy /Y \"%STAGED%\" \"%TARGET%\" >NUL");
+                sb.AppendLine("set /a ctries=0");
+                sb.AppendLine(":copyloop");
+                sb.AppendLine("copy /Y \"%STAGED%\" \"%TARGET%\" >NUL 2>&1");
+                sb.AppendLine("if errorlevel 1 (");
+                sb.AppendLine("  set /a ctries+=1");
+                sb.AppendLine("  if !ctries! LEQ 10 (");
+                sb.AppendLine("    ping -n 2 127.0.0.1 >NUL");
+                sb.AppendLine("    goto copyloop");
+                sb.AppendLine("  )");
+                sb.AppendLine(")");
                 sb.AppendLine("if exist \"%TARGET%\" start \"\" \"%TARGET%\"" + profileArg);
                 sb.AppendLine("del /F /Q \"%STAGED%\" >NUL 2>&1");
                 sb.AppendLine("del /F /Q \"%~f0\" >NUL 2>&1");

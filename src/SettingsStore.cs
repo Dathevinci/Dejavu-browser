@@ -44,6 +44,8 @@ namespace DejavuBrowser
         public bool hideGreetingBadge { get; set; }
         public bool hideStartPageSearch { get; set; }
         public bool favoritesBarHidden { get; set; }
+        public bool hideNavRail { get; set; }
+        public bool hideFloatingMediaButton { get; set; }
 
         public DejavuSettings()
         {
@@ -71,6 +73,8 @@ namespace DejavuBrowser
             hideGreetingBadge = false;
             hideStartPageSearch = false;
             favoritesBarHidden = false;
+            hideNavRail = false;
+            hideFloatingMediaButton = false;
             shortcuts = new List<ShortcutItem>
             {
                 new ShortcutItem { name = "YouTube", url = "https://www.youtube.com" },

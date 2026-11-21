@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Net;
@@ -49,27 +50,62 @@ namespace DejavuBrowser
                 }
             }
 
-            // Bulletproof Single-Instance Lock keyed by Data Directory:
-            // Prevents spawning a duplicate window (which causes WebView2 proxy-port black windows)
-            // and instead activates the running instance and opens any passed URL in a new tab!
-            string instanceHash = ComputeShortHash(SettingsStore.AppDataDir.TrimEnd('\\', '/').ToLowerInvariant());
+            // Bulletproof Dual-Layer Single-Instance Lock keyed by Data Directory:
+            // Layer 1: Exclusive kernel FileStream lock (.instance.lock, works across elevation levels!)
+            // Layer 2: Named Mutex (UnauthorizedAccessException = already held by elevated instance -> NEVER bypass!)
+            string dataDir = SettingsStore.AppDataDir;
+            string instanceHash = ComputeShortHash(dataDir.TrimEnd('\\', '/').ToLowerInvariant());
             string mutexName = "Local\\DejavuBrowser_SingleInstance_" + instanceHash;
             string pipeName = "DejavuBrowser_Pipe_" + instanceHash;
+            string lockFilePath = Path.Combine(dataDir, ".instance.lock");
 
             bool createdNew = false;
             Mutex singleMutex = null;
+            FileStream lockStream = null;
             try
             {
                 singleMutex = new Mutex(true, mutexName, out createdNew);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Mutex already exists with different elevation/ACL — another instance IS running!
+                createdNew = false;
             }
             catch
             {
                 createdNew = true;
             }
 
+            if (createdNew)
+            {
+                try
+                {
+                    lockStream = new FileStream(lockFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                    byte[] pidBytes = Encoding.UTF8.GetBytes(Process.GetCurrentProcess().Id.ToString());
+                    lockStream.SetLength(0);
+                    lockStream.Write(pidBytes, 0, pidBytes.Length);
+                    lockStream.Flush();
+                }
+                catch (IOException)
+                {
+                    // Another dejavu process already holds the exclusive file lock on this DataDir!
+                    createdNew = false;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    createdNew = false;
+                }
+                catch { }
+            }
+
             if (!createdNew)
             {
-                NotifyRunningInstance(pipeName, initialUrl, profileId);
+                bool notified = NotifyRunningInstance(pipeName, initialUrl, profileId);
+                if (!notified)
+                {
+                    ActivateExistingProcessWindow();
+                }
+                try { if (lockStream != null) lockStream.Dispose(); } catch { }
                 try { if (singleMutex != null) singleMutex.Dispose(); } catch { }
                 return;
             }
@@ -90,6 +126,12 @@ namespace DejavuBrowser
             }
             finally
             {
+                GC.KeepAlive(lockStream);
+                GC.KeepAlive(singleMutex);
+                if (lockStream != null)
+                {
+                    try { lockStream.Dispose(); } catch { }
+                }
                 if (singleMutex != null)
                 {
                     try { singleMutex.ReleaseMutex(); } catch { }
@@ -112,7 +154,7 @@ namespace DejavuBrowser
             }
         }
 
-        private static void NotifyRunningInstance(string pipeName, string initialUrl, string profileId)
+        private static bool NotifyRunningInstance(string pipeName, string initialUrl, string profileId)
         {
             string payload = "ACTIVATE";
             if (!string.IsNullOrWhiteSpace(initialUrl))
@@ -124,7 +166,7 @@ namespace DejavuBrowser
                 payload = "PROFILE:" + profileId.Trim();
             }
 
-            for (int attempt = 0; attempt < 3; attempt++)
+            for (int attempt = 0; attempt < 4; attempt++)
             {
                 try
                 {
@@ -134,7 +176,7 @@ namespace DejavuBrowser
                         byte[] data = Encoding.UTF8.GetBytes(payload + "\n");
                         client.Write(data, 0, data.Length);
                         client.Flush();
-                        return;
+                        return true;
                     }
                 }
                 catch
@@ -142,6 +184,44 @@ namespace DejavuBrowser
                     Thread.Sleep(120);
                 }
             }
+            return false;
+        }
+
+        private static void ActivateExistingProcessWindow()
+        {
+            try
+            {
+                Process me = Process.GetCurrentProcess();
+                Process[] peers = Process.GetProcessesByName(me.ProcessName);
+                for (int i = 0; i < peers.Length; i++)
+                {
+                    Process p = peers[i];
+                    try
+                    {
+                        if (p.Id == me.Id || p.SessionId != me.SessionId) continue;
+                        IntPtr hwnd = p.MainWindowHandle;
+                        if (hwnd != IntPtr.Zero)
+                        {
+                            if (NativeWin32.IsIconic(hwnd))
+                            {
+                                NativeWin32.ShowWindow(hwnd, NativeWin32.SW_RESTORE);
+                            }
+                            else
+                            {
+                                NativeWin32.ShowWindow(hwnd, NativeWin32.SW_SHOW);
+                            }
+                            NativeWin32.SetForegroundWindow(hwnd);
+                            break;
+                        }
+                    }
+                    catch { }
+                    finally
+                    {
+                        try { p.Dispose(); } catch { }
+                    }
+                }
+            }
+            catch { }
         }
 
         private static void RunApp(string initialUrl, string profileId, int debugPort, string pipeName)

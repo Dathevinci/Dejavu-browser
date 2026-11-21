@@ -135,6 +135,24 @@
   const optHomepageUrl = document.getElementById('opt-homepage-url');
   const btnSaveHomepage = document.getElementById('btn-save-homepage');
   const optShowFavbar = document.getElementById('opt-show-favbar');
+  const optShowNavRail = document.getElementById('opt-show-navrail');
+  const optFloatingMediaBtn = document.getElementById('opt-floating-media-btn');
+  const m3NavRail = document.getElementById('m3-nav-rail');
+  const railNewtab = document.getElementById('rail-newtab');
+  const railHome = document.getElementById('rail-home');
+  const railSidebar = document.getElementById('rail-sidebar');
+  const railDownloads = document.getElementById('rail-downloads');
+  const railDlBadge = document.getElementById('rail-dl-badge');
+  const railMedia = document.getElementById('rail-media');
+  const railMediaDot = document.getElementById('rail-media-dot');
+  const railSync = document.getElementById('rail-sync');
+  const railSyncDot = document.getElementById('rail-sync-dot');
+  const railHistory = document.getElementById('rail-history');
+  const railTabs = document.getElementById('rail-tabs');
+  const railVpn = document.getElementById('rail-vpn');
+  const railVpnDot = document.getElementById('rail-vpn-dot');
+  const railSettings = document.getElementById('rail-settings');
+  const railCollapse = document.getElementById('rail-collapse');
   const optAppearanceMode = document.getElementById('opt-appearance-mode');
   const optAccentSwatches = document.getElementById('opt-accent-swatches');
   const optFullUrl = document.getElementById('opt-full-url');
@@ -1163,6 +1181,7 @@
     body.dataset.accent = ac;
     body.classList.toggle('compact-tabs', !!o.compactTabBar);
     body.classList.toggle('always-show-tab-close', !!o.alwaysShowTabClose);
+    body.classList.toggle('nav-rail-hidden', !!o.hideNavRail);
     if (startpageProfileBadge) {
       startpageProfileBadge.classList.toggle('hidden', !!o.hideGreetingBadge);
     }
@@ -1188,7 +1207,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     if (settingsVersionSub) {
-      settingsVersionSub.textContent = `Material You · v${state.appVersion || '4.1.0'}`;
+      settingsVersionSub.textContent = `Material You · v${state.appVersion || '4.2.0'}`;
     }
     setSegmentedVal(optSearchEngine, o.searchEngine || state.searchEngine || 'google');
     setSegmentedVal(optStartup, o.startupBehavior || 'startpage');
@@ -1197,6 +1216,8 @@
       optHomepageUrl.value = o.homepageUrl || 'https://www.google.com';
     }
     if (optShowFavbar) optShowFavbar.classList.toggle('on', !o.favoritesBarHidden);
+    if (optShowNavRail) optShowNavRail.classList.toggle('on', !o.hideNavRail);
+    if (optFloatingMediaBtn) optFloatingMediaBtn.classList.toggle('on', !o.hideFloatingMediaButton);
 
     setSegmentedVal(optAppearanceMode, o.appearanceMode || 'auto');
     if (optAccentSwatches) {
@@ -1390,6 +1411,67 @@
     optHomepageUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveHp(); });
   }
   if (optShowFavbar) optShowFavbar.addEventListener('click', () => updateOpt({ favoritesBarHidden: optShowFavbar.classList.contains('on') }));
+  if (optShowNavRail) optShowNavRail.addEventListener('click', () => updateOpt({ hideNavRail: optShowNavRail.classList.contains('on') }));
+  if (optFloatingMediaBtn) optFloatingMediaBtn.addEventListener('click', () => updateOpt({ hideFloatingMediaButton: optFloatingMediaBtn.classList.contains('on') }));
+
+  // Samsung Internet PC × Google Pixel Material 3 Left Navigation Rail actions
+  function updateRailIndicators() {
+    const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
+    const onNewTab = !active || active.isNewTab;
+    const ovOpen = !!state.tabOverviewOpen;
+    const optOpen = !!state.settingsOpen;
+    const dlOpen = !!state.dlManagerOpen;
+    if (railHome) railHome.classList.toggle('active', onNewTab && !ovOpen && !optOpen && !dlOpen);
+    if (railDownloads) railDownloads.classList.toggle('active', dlOpen && activeDlTab !== 'media');
+    if (railMedia) railMedia.classList.toggle('active', dlOpen && activeDlTab === 'media');
+    if (railTabs) railTabs.classList.toggle('active', ovOpen);
+    if (railSettings) railSettings.classList.toggle('active', optOpen);
+    const dlCnt = Number(state.downloadsCount || 0);
+    if (railDlBadge) {
+      railDlBadge.classList.toggle('hidden', dlCnt <= 0);
+      railDlBadge.classList.toggle('is-running', !!state.hasActiveDownload);
+      railDlBadge.textContent = dlCnt > 99 ? '99' : String(dlCnt);
+    }
+    const mCnt = Array.isArray(state.pageMedia) ? state.pageMedia.length : 0;
+    if (railMediaDot) railMediaDot.classList.toggle('hidden', mCnt <= 0);
+    const syncConn = !!(state.sync && state.sync.connected);
+    if (railSyncDot) railSyncDot.classList.toggle('hidden', !syncConn);
+    const vpnConn = !!(state.vpn && state.vpn.state === 'connected');
+    if (railVpnDot) railVpnDot.classList.toggle('hidden', !vpnConn);
+    if (railVpn) railVpn.classList.toggle('is-accent', vpnConn);
+  }
+
+  if (railNewtab) railNewtab.addEventListener('click', () => send({ type: 'newTab' }));
+  if (railHome) railHome.addEventListener('click', () => {
+    if (state.dlManagerOpen) send({ type: 'closeDlManager' });
+    if (state.settingsOpen) send({ type: 'toggleSettings', open: false });
+    if (state.tabOverviewOpen) send({ type: 'toggleTabOverview', open: false });
+    send({ type: 'home' });
+  });
+  if (railSidebar) railSidebar.addEventListener('click', () => send({ type: 'openSidebar' }));
+  if (railDownloads) railDownloads.addEventListener('click', () => {
+    if (state.dlManagerOpen && activeDlTab !== 'media') send({ type: 'closeDlManager' });
+    else { activeDlTab = 'all'; send({ type: 'openDlManager', tab: 'all' }); }
+  });
+  if (railMedia) railMedia.addEventListener('click', () => {
+    if (state.dlManagerOpen && activeDlTab === 'media') send({ type: 'closeDlManager' });
+    else { activeDlTab = 'media'; send({ type: 'openDlManager', tab: 'media' }); }
+  });
+  if (railSync) railSync.addEventListener('click', () => {
+    const r = btnSync ? btnSync.getBoundingClientRect() : { right: window.innerWidth - 120 };
+    send({ type: 'openSync', anchorRight: Math.round(r.right) });
+  });
+  if (railHistory) railHistory.addEventListener('click', () => {
+    const r = btnHistory ? btnHistory.getBoundingClientRect() : { right: window.innerWidth - 96 };
+    send({ type: 'openHistory', anchorRight: Math.round(r.right) });
+  });
+  if (railTabs) railTabs.addEventListener('click', () => send({ type: 'toggleTabOverview', open: !state.tabOverviewOpen }));
+  if (railVpn) railVpn.addEventListener('click', () => {
+    const r = btnVpn ? btnVpn.getBoundingClientRect() : { right: window.innerWidth - 150 };
+    send({ type: 'openVpn', anchorRight: Math.round(r.right) });
+  });
+  if (railSettings) railSettings.addEventListener('click', () => send({ type: 'toggleSettings', open: !state.settingsOpen }));
+  if (railCollapse) railCollapse.addEventListener('click', () => send({ type: 'toggleNavRail' }));
   if (optFullUrl) optFullUrl.addEventListener('click', () => updateOpt({ showFullWebsiteAddress: !optFullUrl.classList.contains('on') }));
   if (optCompactTabs) optCompactTabs.addEventListener('click', () => updateOpt({ compactTabBar: !optCompactTabs.classList.contains('on') }));
   if (optAlwaysClose) optAlwaysClose.addEventListener('click', () => updateOpt({ alwaysShowTabClose: !optAlwaysClose.classList.contains('on') }));
@@ -2065,6 +2147,7 @@
         btnVpn.title = 'dejavu VPN · Disconnected (Click to connect)';
       }
     }
+    updateRailIndicators();
   }
 
   // =========================================================================
@@ -2371,6 +2454,7 @@
         state.hasActiveDownload = !!msg.hasActiveDownload;
         dlDot.classList.toggle('hidden', state.downloadsCount <= 0);
         btnDownloads.classList.toggle('downloading', state.hasActiveDownload);
+        updateRailIndicators();
         if (state.dlManagerOpen) renderDlManager();
       } else if (msg.type === 'settingsToast') {
         showSettingsToast(msg.text || '');

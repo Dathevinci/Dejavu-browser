@@ -1,18 +1,22 @@
 # dejavu
 
-An A-to-Z **Apple MacBook macOS Safari (Sequoia / Tahoe)** inspired native Windows browser built with **real physics-based Liquid Glass** (strictly zero Gaussian blur), a **dedicated Safari Options & Customization suite (`Ctrl+,`)**, a **built-in 100/100 Ad Blocker**, a **46-country encrypted VPN**, and **26 high-resolution Butterfly Studio wallpapers** — powered natively by Windows' Chromium WebView2 engine (**no Electron, no Node.js**).
+A native **Google Pixel Material Design 3 Expressive × Samsung Internet** browser for **Windows 10/11** and **Android 8.0+**, featuring a **Samsung Left Navigation Rail**, an **IDM / AntDM-style Floating Video Download Button + 8-Thread Turbo Download Manager (`Ctrl+J`)**, an **86-country AI-ready VPN (Nepal & US Gemini)**, a **100/100 built-in Ad Blocker**, **E2EE PC ↔ Android Sync**, and **35 Material You & HD wallpapers** — powered natively by C# Win32 + WebView2 and Android SDK (**zero Electron, zero CSS blur**).
 
 🌐 **Official Website:** **[dathevinci.github.io/Dejavu-browser](https://dathevinci.github.io/Dejavu-browser/)**
 
-## Download (Windows 10 / 11 x64)
+## Download (Windows 10/11 x64 & Android 8.0+)
 
 Visit the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or grab the latest release directly from **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
-- **`dejavu-Setup.exe`** — Butterfly-themed Liquid Glass setup wizard (adds Desktop & Start Menu shortcuts, registers in Windows Installed Apps, no admin required).
+- **`dejavu-Setup.exe`** — Guided Material You Windows installer (adds Desktop & Start Menu shortcuts, registers in Windows Installed Apps, silent auto-updates).
 - **`dejavu.exe`** — Standalone portable single-file executable (double-click to run directly).
-- **`dejavu-mobile.apk`** — Native Android Mobile Browser (Android 8.0+) with thumb-friendly Samsung Internet × Safari Liquid Glass bottom bar, built-in Ad Blocker, 6 HD wallpapers, QR scanner, Share-to-PC, and real-time E2EE PC ↔ Phone sync!
+- **`dejavu-mobile.apk`** — Signed Android Mobile Browser with Google Pixel Material Design 3 Expressive UI, Samsung bottom bar, Floating 8x Video Download Button, built-in 100/100 Ad Blocker, Material You wallpapers, QR scanner, Share-to-PC, in-app auto-updater, and real-time E2EE PC ↔ Phone sync.
 
-## Features (v4.1.0 — Material Design 3 Expressive + 8x Turbo Download Manager)
-- **AntDM-Style 8x Turbo Download Manager & Page Media Sniffer** (Windows & Android): Splits HTTP/HTTPS downloads into up to 8 parallel byte-range threads with live 8-segment progress bars, MB/s speed, ETA, Pause/Resume across restarts, manual batch URL paste, and 1-click Page Media grabbing (videos, audio, PDFs, ZIPs, APKs & HD images).
+## What's New in v4.2.0
+- **IDM / AntDM-Style Floating Video Download Button (Windows & Android)**: Isolated Shadow DOM Material 3 pill (`⬇ Download · 1080p · 8x ▾`) automatically attaches to the top-right corner of webpage `<video>` and `<audio>` players, lists captured formats (`MP4`, `WEBM`, `HLS`, `MP3`), starts instant 8-thread Turbo Downloads, and auto-hides in fullscreen.
+- **Samsung Internet PC × Google Pixel Material Design 3 Left Navigation Rail**: Persistent 56px Material 3 Navigation Rail with tonal `+` FAB, Quick Access, Samsung Side Panel, 8x Turbo Downloads (with live badge), Page Media Grabber, dejavu Link, History, Tab Overview, VPN status, Settings, and 1-click collapse toggle.
+- **Bulletproof Dual-Layer Single-Instance & Black-Window Fix**: Combines kernel-level `.instance.lock` exclusive file locking, ACL-safe named Mutex, Win32 foreground fallback, fixed 1s auto-updater wait loop, and WebView2 init recovery so duplicate black browser windows can never occur.
+- **Android Mobile Material 3 Polish**: Unified Samsung Internet × Pixel M3 Quick Access card board, Start Page Search Pill (`8x` quick jump), and `Grab 8x` inside the 4×2 Quick Actions Menu grid.
+- **AntDM-Style 8x Turbo Download Manager & Page Media Sniffer** (Windows & Android): Splits HTTP/HTTPS downloads into up to 8 parallel byte-range threads with live 8-segment progress bars, MB/s speed, ETA, Pause/Resume across restarts, manual batch URL paste, and 1-click Page Media grabbing.
 - **A-to-Z Material Design 3 Expressive Wallpapers**: 8 bespoke Google Pixel Material You matte ceramic/paper butterfly artworks (Dark & Light) + adaptive `Material You Live` canvas reacting to all 6 Dynamic Color Seeds.
 
 - **Dual-Engine Global VPN (86+ Countries, incl. Nepal & AI-Ready US)**: Smart Clean-IP TLS tunnel (works cleanly with Google Gemini, ChatGPT, YouTube & 86+ countries including Nepal, India, Bangladesh, US, UK, Japan, Singapore) + 3-Hop Tor Onion privacy mode, hot multi-node failover, and 1-click IP rotation.

@@ -4,7 +4,7 @@
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v4.1.0';
+  const FALLBACK_VERSION = 'v4.2.0';
   const root = document.documentElement;
 
   // 1. Material You Theme & 6 Dynamic Color Seeds (Persisted)
@@ -154,6 +154,22 @@
     setTimeout(() => { btn.textContent = 'Grab All (8x)'; }, 2600);
   });
 
+  // Live Interactive IDM / AntDM Floating Download Button inside Video Tab Preview
+  document.getElementById('demo-float-dl-btn')?.addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    const lbl = document.getElementById('demo-float-dl-lbl');
+    btn.classList.add('queued');
+    if (lbl) lbl.textContent = 'Queued 8x ✓';
+    setTimeout(() => {
+      selectDemoTab('turbo');
+      startTurboDemo(true);
+      setTimeout(() => {
+        btn.classList.remove('queued');
+        if (lbl) lbl.textContent = 'Download · 4K';
+      }, 900);
+    }, 520);
+  });
+
   // Samsung Side Panel Toggle
   const sidePanel = document.getElementById('dk-sidepanel');
   const toggleSide = () => {
@@ -161,9 +177,12 @@
     const open = sidePanel.classList.toggle('open');
     const chip = document.getElementById('demo-toggle-side');
     if (chip) chip.classList.toggle('active', open);
+    const railSide = document.getElementById('dk-rail-side');
+    if (railSide) railSide.classList.toggle('active', open);
   };
   document.getElementById('demo-toggle-side')?.addEventListener('click', toggleSide);
   document.getElementById('dk-btn-side')?.addEventListener('click', toggleSide);
+  document.getElementById('dk-rail-side')?.addEventListener('click', toggleSide);
   document.getElementById('dk-side-close')?.addEventListener('click', toggleSide);
 
   // 86-Country VPN Switcher Popover
@@ -176,6 +195,7 @@
   };
   document.getElementById('demo-toggle-vpn')?.addEventListener('click', toggleVpn);
   document.getElementById('dk-vpn-btn')?.addEventListener('click', toggleVpn);
+  document.getElementById('dk-rail-vpn')?.addEventListener('click', toggleVpn);
 
   let vpnMode = 'Smart · Web & AI';
   let vpnCity = 'Miami, United States';
@@ -216,8 +236,19 @@
   document.getElementById('demo-send-phone')?.addEventListener('click', beamToPixel);
   document.getElementById('dk-beam-btn')?.addEventListener('click', beamToPixel);
 
-  // 3. Live Interactive Material Design 3 Wallpaper Switcher (Harmonizes Seed + Mode!)
+  // 3. Live Interactive Material Design 3 Wallpaper Switcher + Filter Chips (Harmonizes Seed + Mode!)
   const wpCards = Array.from(document.querySelectorAll('.wp-card'));
+  const wpFilters = Array.from(document.querySelectorAll('[data-wp-filter]'));
+  wpFilters.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const f = btn.dataset.wpFilter || 'all';
+      wpFilters.forEach((x) => x.classList.toggle('active', x === btn));
+      wpCards.forEach((c) => {
+        c.classList.toggle('is-hidden', f !== 'all' && c.dataset.mode !== f);
+      });
+    });
+  });
+
   wpCards.forEach((card) => {
     card.addEventListener('click', () => {
       wpCards.forEach((c) => c.classList.toggle('active', c === card));

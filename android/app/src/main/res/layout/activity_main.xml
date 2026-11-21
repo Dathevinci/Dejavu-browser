@@ -487,6 +487,89 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- Layer 7b: Floating Liquid-Glass In-App Auto-Update Banner -->
+    <LinearLayout
+        android:id="@+id/update_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="14dp"
+        android:background="@drawable/bg_toast_banner"
+        android:elevation="19dp"
+        android:orientation="vertical"
+        android:padding="14dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/update_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Update Available"
+            android:textColor="@color/ink_primary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/update_body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="A new version of dejavu Mobile is ready to install"
+            android:textColor="@color/ink_muted"
+            android:textSize="12.5sp" />
+
+        <ProgressBar
+            android:id="@+id/update_progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="9dp"
+            android:max="100"
+            android:progress="0"
+            android:progressBackgroundTint="#22FFFFFF"
+            android:progressTint="@color/amethyst"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/btn_update_later"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="Later"
+                android:textColor="@color/ink_muted"
+                android:textSize="12.5sp" />
+
+            <TextView
+                android:id="@+id/btn_update_now"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_center_action"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="Update Now"
+                android:textColor="@color/amethyst_bright"
+                android:textSize="12.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
     <!-- Layer 8: HTML5 Fullscreen Video Container -->
     <FrameLayout
         android:id="@+id/fullscreen_container"

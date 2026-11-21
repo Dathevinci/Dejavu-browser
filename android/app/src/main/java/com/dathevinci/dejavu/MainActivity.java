@@ -74,7 +74,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity implements SyncManager.Listener {
+public class MainActivity extends AppCompatActivity implements SyncManager.Listener, MobileAutoUpdater.Listener {
     private static final String PREFS = "dejavu_mobile_prefs_v1";
     private static final String DESKTOP_UA =
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15";
@@ -174,6 +174,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private SharedPreferences prefs;
     private MobileAdBlocker adBlocker;
     private SyncManager syncManager;
+    private MobileAutoUpdater autoUpdater;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService suggestPool = Executors.newSingleThreadExecutor();
     private volatile int suggestSeq = 0;
@@ -251,6 +252,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private TextView btnIncomingCopy;
     private TextView btnIncomingDismiss;
     private JSONObject latestIncomingDrop;
+
+    private LinearLayout updateBanner;
+    private TextView updateTitle;
+    private TextView updateBody;
+    private ProgressBar updateProgress;
+    private TextView btnUpdateLater;
+    private TextView btnUpdateNow;
     private final Runnable hideBannerTask = () -> {
         if (incomingBanner != null) {
             incomingBanner.animate().alpha(0f).translationY(-dp(20)).setDuration(180)
@@ -312,6 +320,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             prefs.getBoolean("adBlockEnabled", true)
         );
         syncManager = new SyncManager(this, this);
+        autoUpdater = new MobileAutoUpdater(this, this);
 
         bindViews();
         setupInsets();
@@ -323,6 +332,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         createTab(null, true, false);
         handleIncomingIntent(getIntent());
+
+        // Automatically check GitHub Releases silently 3.5s after app launch
+        mainHandler.postDelayed(() -> {
+            if (autoUpdater != null) autoUpdater.checkForUpdates(false);
+        }, 3500);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (autoUpdater != null) autoUpdater.onActivityResumed(this);
     }
 
     private int dp(int value) {
@@ -383,6 +403,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         btnIncomingOpen = findViewById(R.id.btn_incoming_open);
         btnIncomingCopy = findViewById(R.id.btn_incoming_copy);
         btnIncomingDismiss = findViewById(R.id.btn_incoming_dismiss);
+        updateBanner = findViewById(R.id.update_banner);
+        updateTitle = findViewById(R.id.update_title);
+        updateBody = findViewById(R.id.update_body);
+        updateProgress = findViewById(R.id.update_progress);
+        btnUpdateLater = findViewById(R.id.btn_update_later);
+        btnUpdateNow = findViewById(R.id.btn_update_now);
         fullscreenContainer = findViewById(R.id.fullscreen_container);
     }
 
@@ -425,6 +451,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) incomingBanner.getLayoutParams();
             lp.topMargin = insetTopPx + dp(10);
             incomingBanner.setLayoutParams(lp);
+        }
+        if (updateBanner != null) {
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) updateBanner.getLayoutParams();
+            lp.topMargin = insetTopPx + dp(10);
+            updateBanner.setLayoutParams(lp);
         }
         updateViewportPadding();
     }
@@ -548,6 +579,14 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (btnIncomingOpen != null) {
             btnIncomingOpen.setBackgroundResource(isLight ? R.drawable.bg_center_action_light : R.drawable.bg_center_action);
             btnIncomingOpen.setTextColor(accent);
+        }
+        if (updateBanner != null) updateBanner.setBackgroundResource(isLight ? R.drawable.bg_toast_banner_light : R.drawable.bg_toast_banner);
+        if (updateTitle != null) updateTitle.setTextColor(inkPrimary);
+        if (updateBody != null) updateBody.setTextColor(inkMuted);
+        if (btnUpdateLater != null) btnUpdateLater.setTextColor(inkMuted);
+        if (btnUpdateNow != null) {
+            btnUpdateNow.setBackgroundResource(isLight ? R.drawable.bg_center_action_light : R.drawable.bg_center_action);
+            btnUpdateNow.setTextColor(accent);
         }
         if (swipeRefresh != null) {
             swipeRefresh.setProgressBackgroundColorSchemeColor(isLight ? 0xFFFFFFFF : 0xFF18142C);
@@ -830,6 +869,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (!u.isEmpty()) createTab(u, true, false);
             }
             incomingBanner.setVisibility(View.GONE);
+        });
+
+        // Floating In-App Auto-Update Banner
+        btnUpdateLater.setOnClickListener(v -> {
+            if (autoUpdater != null) autoUpdater.dismissBannerForCurrentRelease();
+            if (updateBanner != null) updateBanner.setVisibility(View.GONE);
+        });
+        btnUpdateNow.setOnClickListener(v -> {
+            if (autoUpdater != null) autoUpdater.startDownloadOrInstall(MainActivity.this);
         });
     }
 
@@ -1618,6 +1666,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("readingList", readingList);
                 st.put("history", history);
                 st.put("sync", syncManager.getSnapshot());
+                if (autoUpdater != null) st.put("update", autoUpdater.getSnapshot());
 
                 String js = "window.__onDejavuState && window.__onDejavuState(" + st.toString() + ");";
                 uiWebView.evaluateJavascript(js, null);
@@ -1913,11 +1962,75 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         });
     }
 
+    // =========================================================================
+    // MobileAutoUpdater.Listener (In-App GitHub Releases Auto-Updater)
+    // =========================================================================
+    private void refreshUpdateBanner() {
+        if (autoUpdater == null || updateBanner == null) return;
+        String st = autoUpdater.getStatus();
+        String ver = autoUpdater.getLatestVersion();
+        String sz = autoUpdater.formatSize();
+        int pct = autoUpdater.getDownloadPercent();
+        if ("downloading".equals(st)) {
+            updateBanner.setVisibility(View.VISIBLE);
+            updateTitle.setText("Downloading dejavu v" + ver + "...");
+            updateBody.setText(pct > 0 ? ("Downloading update · " + pct + "%") : "Connecting to GitHub Releases...");
+            updateProgress.setVisibility(View.VISIBLE);
+            updateProgress.setProgress(Math.max(4, pct));
+            btnUpdateNow.setText(pct + "%");
+            btnUpdateNow.setEnabled(false);
+        } else if ("ready".equals(st)) {
+            updateBanner.setVisibility(View.VISIBLE);
+            updateTitle.setText("dejavu v" + ver + " Ready to Install");
+            updateBody.setText("Tap Install Now to upgrade without losing tabs or PC sync");
+            updateProgress.setVisibility(View.GONE);
+            btnUpdateNow.setText("Install Now");
+            btnUpdateNow.setEnabled(true);
+        } else if ("available".equals(st)) {
+            updateTitle.setText("Update Available · v" + ver);
+            updateBody.setText((sz.isEmpty() ? "New release ready" : ("New release ready · " + sz)) + " · Tap to download & install");
+            updateProgress.setVisibility(View.GONE);
+            btnUpdateNow.setText("Update Now");
+            btnUpdateNow.setEnabled(true);
+        } else if ("error".equals(st)) {
+            updateProgress.setVisibility(View.GONE);
+            btnUpdateNow.setText("Retry");
+            btnUpdateNow.setEnabled(true);
+        }
+    }
+
+    @Override
+    public void onUpdateStateChanged() {
+        mainHandler.post(() -> {
+            refreshUpdateBanner();
+            pushStateToUi();
+        });
+    }
+
+    @Override
+    public void onUpdateBannerPrompt(final String version, final String sizeLabel, final String notes) {
+        mainHandler.post(() -> {
+            if (updateBanner == null) return;
+            refreshUpdateBanner();
+            updateBanner.setVisibility(View.VISIBLE);
+            updateBanner.setAlpha(0f);
+            updateBanner.setTranslationY(-dp(24));
+            updateBanner.animate().alpha(1f).translationY(0f).setDuration(240)
+                .setInterpolator(new DecelerateInterpolator()).start();
+        });
+    }
+
+    @Override
+    public void onUpdateMessage(final String message) {
+        mainHandler.post(() -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show());
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         saveLocalCollections();
         if (syncManager != null) syncManager.shutdown();
+        if (autoUpdater != null) autoUpdater.shutdown();
         suggestPool.shutdownNow();
     }
 
@@ -2302,6 +2415,20 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 saveLocalCollections();
                 pushStateToUi();
                 Toast.makeText(MainActivity.this, "Mobile history cleared", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void checkForUpdates() {
+            mainHandler.post(() -> {
+                if (autoUpdater != null) autoUpdater.checkForUpdates(true);
+            });
+        }
+
+        @JavascriptInterface
+        public void downloadOrInstallUpdate() {
+            mainHandler.post(() -> {
+                if (autoUpdater != null) autoUpdater.startDownloadOrInstall(MainActivity.this);
             });
         }
     }

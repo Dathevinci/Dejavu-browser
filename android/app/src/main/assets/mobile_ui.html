@@ -801,8 +801,9 @@
         <button type="button" class="icon-circle" aria-label="Wallpapers" onclick="call('openScreen','wallpapers')">
           <svg viewBox="0 0 20 20" width="17" height="17" fill="none"><rect x="2.8" y="3.8" width="14.4" height="12.4" rx="2.6" stroke="currentColor" stroke-width="1.65"/><circle cx="7.2" cy="7.8" r="1.35" fill="currentColor"/><path d="M3.4 14.2l3.8-3.6 2.8 2.5 2.4-2.4 4.2 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <button type="button" class="icon-circle" aria-label="Options" onclick="call('openScreen','settings')">
+        <button type="button" id="sp-opt-btn" class="icon-circle" style="position:relative;" aria-label="Options" onclick="call('openScreen','settings')">
           <svg viewBox="0 0 20 20" width="17" height="17" fill="none"><path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/><circle cx="7.5" cy="6" r="1.9" fill="var(--sheet-bg)" stroke="currentColor" stroke-width="1.6"/><circle cx="13" cy="10" r="1.9" fill="var(--sheet-bg)" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="14" r="1.9" fill="var(--sheet-bg)" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span id="sp-upd-dot" style="display:none;position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);"></span>
         </button>
       </div>
     </div>
@@ -1206,8 +1207,26 @@
           </button>
         </div>
 
-        <div style="text-align:center;font-size:11.5px;color:var(--subtle);padding:4px 0 8px;">
-          dejavu Mobile v3.3.1 · Butterfly Edition
+        <!-- Software Update (GitHub Releases Auto-Updater) -->
+        <div class="sec-hdr"><span>Software Update</span></div>
+        <div class="g-group">
+          <div class="g-row">
+            <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 14V4M5.6 7.4L9 4l3.4 3.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.8 14.5h10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            <div class="g-row-meta">
+              <div id="opt-upd-title" class="g-row-title">dejavu Mobile v3.4.0</div>
+              <div id="opt-upd-sub" class="g-row-sub">Automatic updates via GitHub Releases</div>
+            </div>
+            <button type="button" id="opt-upd-btn" class="pill-btn" onclick="handleUpdateBtn()">Check</button>
+          </div>
+          <div id="opt-upd-prog-wrap" style="display:none;padding:0 14px 13px;">
+            <div style="height:5px;border-radius:99px;background:var(--input-bg);overflow:hidden;">
+              <div id="opt-upd-prog-fill" style="height:100%;width:0%;background:var(--accent);transition:width 0.18s ease;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="opt-ver-footer" style="text-align:center;font-size:11.5px;color:var(--subtle);padding:4px 0 8px;">
+          dejavu Mobile v3.4.0 · Butterfly Edition
         </div>
       </div>
     </div>
@@ -1442,6 +1461,14 @@
       const cur = Number(state.pageZoom || 100);
       call('setPageZoom', Math.max(75, Math.min(150, cur + delta)));
     }
+    function handleUpdateBtn() {
+      const u = state.update || {};
+      if (u.status === 'available' || u.status === 'ready') {
+        call('downloadOrInstallUpdate');
+      } else {
+        call('checkForUpdates');
+      }
+    }
     function setMenuSubView(mode) {
       menuSubView = mode;
       const isMain = mode === 'main';
@@ -1501,6 +1528,8 @@
         : 'Link PC';
 
       document.getElementById('sp-blocked').textContent = Number(state.totalBlocked || 0).toLocaleString();
+      const updDot = document.getElementById('sp-upd-dot');
+      if (updDot) updDot.style.display = (state.update && state.update.available) ? 'block' : 'none';
       const shStatus = document.getElementById('sp-shield-status');
       shStatus.textContent = state.adBlockEnabled ? 'Active' : 'Paused';
       shStatus.style.color = state.adBlockEnabled ? 'var(--mint)' : 'var(--muted)';
@@ -1869,6 +1898,63 @@
         r.onclick = () => call('setSearchEngine', id);
         engBox.appendChild(r);
       });
+
+      // Software Update Card
+      const u = state.update || {};
+      const curV = u.currentVersion || '3.4.0';
+      const uTitle = document.getElementById('opt-upd-title');
+      const uSub = document.getElementById('opt-upd-sub');
+      const uBtn = document.getElementById('opt-upd-btn');
+      const uProgW = document.getElementById('opt-upd-prog-wrap');
+      const uProgF = document.getElementById('opt-upd-prog-fill');
+      const uFoot = document.getElementById('opt-ver-footer');
+      if (uFoot) uFoot.textContent = `dejavu Mobile v${curV} · Butterfly Edition`;
+      if (uTitle && uSub && uBtn) {
+        if (u.status === 'checking') {
+          uTitle.textContent = 'Checking for updates...';
+          uSub.textContent = `Installed: v${curV}`;
+          uBtn.textContent = '...';
+          uBtn.classList.remove('primary');
+          uProgW.style.display = 'none';
+        } else if (u.status === 'available') {
+          uTitle.textContent = `Update Available · v${u.latestVersion}`;
+          uSub.textContent = u.sizeLabel ? `Ready to download · ${u.sizeLabel}` : 'Tap Update to download & install';
+          uBtn.textContent = 'Update';
+          uBtn.classList.add('primary');
+          uProgW.style.display = 'none';
+        } else if (u.status === 'downloading') {
+          uTitle.textContent = `Downloading v${u.latestVersion}...`;
+          uSub.textContent = `${u.percent || 0}% complete`;
+          uBtn.textContent = `${u.percent || 0}%`;
+          uBtn.classList.add('primary');
+          uProgW.style.display = 'block';
+          uProgF.style.width = `${Math.max(4, u.percent || 0)}%`;
+        } else if (u.status === 'ready') {
+          uTitle.textContent = `v${u.latestVersion} Ready to Install`;
+          uSub.textContent = 'Tap Install to upgrade cleanly';
+          uBtn.textContent = 'Install';
+          uBtn.classList.add('primary');
+          uProgW.style.display = 'none';
+        } else if (u.status === 'uptodate') {
+          uTitle.textContent = `Up to date · v${curV}`;
+          uSub.textContent = 'You have the latest dejavu Mobile release';
+          uBtn.textContent = 'Check';
+          uBtn.classList.remove('primary');
+          uProgW.style.display = 'none';
+        } else if (u.status === 'error') {
+          uTitle.textContent = `dejavu Mobile v${curV}`;
+          uSub.textContent = u.error || 'Could not check right now';
+          uBtn.textContent = 'Retry';
+          uBtn.classList.remove('primary');
+          uProgW.style.display = 'none';
+        } else {
+          uTitle.textContent = `dejavu Mobile v${curV}`;
+          uSub.textContent = 'Checks GitHub Releases automatically';
+          uBtn.textContent = 'Check';
+          uBtn.classList.remove('primary');
+          uProgW.style.display = 'none';
+        }
+      }
     }
 
     function renderWallpapersSheet() {

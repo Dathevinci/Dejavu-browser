@@ -342,14 +342,26 @@
   btnForward.addEventListener('click', () => send({ type: 'forward' }));
   btnReload.addEventListener('click', () => send({ type: 'reload' }));
   btnNewTab.addEventListener('click', () => send({ type: 'newTab' }));
-  btnFavStar.addEventListener('click', () => send({ type: 'toggleFavorite' }));
-  if (btnZoomPill) btnZoomPill.addEventListener('click', () => send({ type: 'resetZoom' }));
-  btnReader.addEventListener('click', () => send({ type: 'toggleReaderMode' }));
+  // Prevent buttons inside #omnibox-pill from triggering address-bar focus/edit collapse on mousedown
+  [btnShield, btnReader, btnZoomPill, btnFavStar, btnReload].forEach((btn) => {
+    if (!btn) return;
+    btn.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+    });
+  });
+
+  btnFavStar.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'toggleFavorite' }); });
+  if (btnZoomPill) btnZoomPill.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'resetZoom' }); });
+  btnReader.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'toggleReaderMode' }); });
   btnTabOverview.addEventListener('click', () => send({ type: 'toggleTabOverview', open: !state.tabOverviewOpen }));
 
-  function openShieldPopover() {
+  function openShieldPopover(e) {
+    if (e) e.stopPropagation();
     const r = btnShield.getBoundingClientRect();
-    send({ type: 'openShield', anchorRight: Math.round(r.left + 296) });
+    const anchor = (r && r.width > 0) ? Math.round(r.left + 296) : 520;
+    send({ type: 'openShield', anchorRight: anchor });
   }
 
   function openVpnPopover() {

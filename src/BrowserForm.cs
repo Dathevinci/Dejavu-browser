@@ -1053,6 +1053,8 @@ namespace DejavuBrowser
         {
             string url = ResolveInputToUrl(rawInput);
             if (string.IsNullOrEmpty(url)) return;
+            HidePopover();
+            HideSuggestPopup();
 
             BrowserTab tab = GetActiveTab();
             if (tab == null)
@@ -1572,16 +1574,16 @@ namespace DejavuBrowser
             HideSuggestPopup();
             _activePopoverMode = "shield";
             float sc = DpiScale;
+            BrowserTab tab = GetActiveTab();
+            bool captureShell = (tab == null || tab.IsNewTab);
             int popW = (int)Math.Round(300 * sc);
-            int popH = (int)Math.Round(292 * sc);
+            int popH = (int)Math.Round((captureShell ? 232 : 292) * sc);
 
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
 
             Rectangle clientRect = new Rectangle(x, y, popW, popH);
-            BrowserTab tab = GetActiveTab();
-            bool captureShell = (tab == null || tab.IsNewTab);
             bool isLight = !captureShell && tab.IsLight;
             string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, isLight);
 

@@ -2,7 +2,7 @@
  * dejavu Official Website — Interactive Engine
  * Living 60fps Butterfly Optical Canvas, Real Snell's Law SVG Refraction Lens,
  * Interactive Safari Hero Window Mockup, 46-Country VPN Explorer,
- * 10-Wallpaper Butterfly Studio Previewer, 16 Collectible Butterfly Avatars,
+ * 16-Wallpaper Butterfly Studio Previewer, 16 Collectible Butterfly Avatars,
  * and Dynamic GitHub Releases Hydration.
  *
  * Strictly zero Gaussian softening anywhere.
@@ -11,7 +11,7 @@
   'use strict';
 
   const REPO_API = 'https://api.github.com/repos/Dathevinci/Dejavu-browser/releases/latest';
-  const FALLBACK_VERSION = 'v2.9.0';
+  const FALLBACK_VERSION = 'v3.0.0';
   const FALLBACK_SETUP_URL = 'https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-Setup.exe';
   const FALLBACK_PORTABLE_URL = 'https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu.exe';
 

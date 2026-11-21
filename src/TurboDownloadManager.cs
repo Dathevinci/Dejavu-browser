@@ -3024,7 +3024,7 @@ namespace DejavuBrowser
 
         public static string GetFloatingDownloadButtonScript()
         {
-            // Zero-Idle-CPU Shadow DOM Material Design 3 IDM/AntDM Floating Download Button (v4.5.0)
+            // Zero-Idle-CPU Shadow DOM Material Design 3 IDM/AntDM Floating Download Button (v4.6.0)
             // - ZERO setInterval polling! Event-driven + filtered MutationObserver + lazy scroll/ResizeObserver
             // - ZERO CSS blur / backdrop-filter (Pure Material Design 3 tonal surfaces)
             // - On YouTube / TikTok / Instagram / X / Vimeo / Reddit / Twitch / SoundCloud / etc.:

@@ -1,12 +1,12 @@
 /**
- * dejavu Official Website — Simple Material Design 3 Interactive Engine (v4.5.0)
- * 6 Material You Dynamic Color Seeds · 5-View Dual-Device Showcase
- * Chrome-Style Multi-Profile & Google Studio · 52x32 M3 Switches
- * Interactive Multi-Quality Video & MP3 Downloader Demo · 16-Wallpaper Harmonizer · GitHub Releases API
+ * dejavu Official Website — Google Material Design 3 Interactive Engine (v4.6.0)
+ * 6 Harmonized HCT Dynamic Color Seeds · Dark/Light Segmented Polarity · Scroll-Spy M3 Top Bar
+ * Decluttered Zero-Duplicate Chrome + Navigation Rail 5-View Dual-Device Showcase
+ * Live Multi-Profile & Google Studio · 52x32 M3 Switches · 4K->MP3 Video Demo · 16-Wallpaper Harmonizer
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v4.5.0';
+  const FALLBACK_VERSION = 'v4.6.0';
   const root = document.documentElement;
 
   const THEME_META_COLORS = {
@@ -36,14 +36,19 @@
     meta.content = (THEME_META_COLORS[mode] && THEME_META_COLORS[mode][seed]) || THEME_META_COLORS[mode].amethyst;
   }
 
-  // 1. Material You Polarity & Dynamic Color Seed Picker
-  const themeBtn = document.getElementById('theme-toggle-btn');
+  // 1. Material You Polarity Segmented Pill & 6-Seed Dynamic Color Picker
+  const themeSegBtns = Array.from(document.querySelectorAll('[data-theme-set]'));
   const seedDots = Array.from(document.querySelectorAll('.seed-dot'));
 
   function setTheme(mode) {
     const next = mode === 'light' ? 'light' : 'dark';
     root.dataset.theme = next;
     try { localStorage.setItem('djv_web_theme', next); } catch {}
+    themeSegBtns.forEach((btn) => {
+      const isMatch = btn.dataset.themeSet === next;
+      btn.classList.toggle('active', isMatch);
+      btn.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
+    });
     syncThemeColorMeta();
   }
 
@@ -51,7 +56,11 @@
     const next = seed || 'amethyst';
     root.dataset.accent = next;
     try { localStorage.setItem('djv_web_seed', next); } catch {}
-    seedDots.forEach((b) => b.classList.toggle('active', b.dataset.seed === next));
+    seedDots.forEach((b) => {
+      const isMatch = b.dataset.seed === next;
+      b.classList.toggle('active', isMatch);
+      b.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
+    });
     syncThemeColorMeta();
   }
 
@@ -59,17 +68,61 @@
     const savedTheme = localStorage.getItem('djv_web_theme');
     const savedSeed = localStorage.getItem('djv_web_seed');
     if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
+    else setTheme('dark');
     if (savedSeed) setSeed(savedSeed);
-  } catch {}
-
-  if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
-      setTheme(root.dataset.theme === 'light' ? 'dark' : 'light');
-    });
+    else setSeed('amethyst');
+  } catch {
+    setTheme('dark');
+    setSeed('amethyst');
   }
+
+  themeSegBtns.forEach((btn) => {
+    btn.addEventListener('click', () => setTheme(btn.dataset.themeSet));
+  });
 
   seedDots.forEach((dot) => {
     dot.addEventListener('click', () => setSeed(dot.dataset.seed));
+  });
+
+  // Top App Bar Scroll Elevation + Active Section Pill Scroll-Spy
+  const topbar = document.getElementById('m3-topbar');
+  const navSectionLinks = Array.from(document.querySelectorAll('[data-nav-section]'));
+  const observedSections = ['overview', 'features', 'wallpapers', 'download']
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+
+  function setActiveNavSection(sectionId) {
+    if (!sectionId) return;
+    navSectionLinks.forEach((link) => {
+      link.classList.toggle('active', link.dataset.navSection === sectionId);
+    });
+  }
+
+  function syncTopbarScroll() {
+    if (topbar) topbar.classList.toggle('is-scrolled', window.scrollY > 10);
+  }
+  window.addEventListener('scroll', syncTopbarScroll, { passive: true });
+  syncTopbarScroll();
+
+  if ('IntersectionObserver' in window && observedSections.length) {
+    const sectionObserver = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible.length > 0 && visible[0].target && visible[0].target.id) {
+          setActiveNavSection(visible[0].target.id);
+        }
+      },
+      { rootMargin: '-18% 0px -58% 0px', threshold: [0.05, 0.25, 0.5] }
+    );
+    observedSections.forEach((sec) => sectionObserver.observe(sec));
+  }
+
+  navSectionLinks.forEach((link) => {
+    link.addEventListener('click', () => {
+      if (link.dataset.navSection) setActiveNavSection(link.dataset.navSection);
+    });
   });
 
   // Mobile Menu Drawer
@@ -77,14 +130,19 @@
   const mobDrawer = document.getElementById('mobile-drawer');
   if (mobBtn && mobDrawer) {
     mobBtn.addEventListener('click', () => {
-      mobDrawer.hidden = !mobDrawer.hidden;
+      const willOpen = mobDrawer.hidden;
+      mobDrawer.hidden = !willOpen;
+      mobBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
     });
     mobDrawer.querySelectorAll('a').forEach((link) => {
-      link.addEventListener('click', () => { mobDrawer.hidden = true; });
+      link.addEventListener('click', () => {
+        mobDrawer.hidden = true;
+        mobBtn.setAttribute('aria-expanded', 'false');
+      });
     });
   }
 
-  // 2. Clean 5-View Dual-Device Browser Showcase
+  // 2. Clean 5-View Dual-Device Browser Showcase (Decluttered v4.6.0 Chrome + Rail)
   const VIEW_META = {
     start:    { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
     profiles: { url: 'dejavu://profiles · Personal + Work Windows', title: 'Multi-Profile · 2 Windows' },
@@ -118,17 +176,53 @@
     el.addEventListener('click', () => selectShowcase(el.dataset.showcase));
   });
 
-  // Samsung M3 Slide-Out Side Panel
+  // Decluttered Chrome Reload, 3-Dot Menu, Rail History & Single Bottom Settings Icon
   const sidePanel = document.getElementById('dk-sidepanel');
-  function toggleSidePanel() {
+  const sideTitle = document.getElementById('dk-side-title');
+  const btnMenu = document.getElementById('dk-btn-menu');
+  const btnRailHistory = document.getElementById('dk-rail-history');
+  const btnRailSettings = document.getElementById('dk-rail-settings');
+  const btnReload = document.getElementById('dk-btn-reload');
+
+  function toggleSidePanel(panelLabel, triggerEl) {
     if (!sidePanel) return;
-    const isOpen = sidePanel.classList.toggle('open');
-    document.getElementById('dk-btn-side')?.classList.toggle('active', isOpen);
-    document.getElementById('dk-rail-side')?.classList.toggle('active', isOpen);
+    const alreadyOpen = sidePanel.classList.contains('open');
+    const sameTrigger = triggerEl && triggerEl.classList.contains('active');
+    const shouldOpen = !alreadyOpen || !sameTrigger;
+    sidePanel.classList.toggle('open', shouldOpen);
+    if (sideTitle && panelLabel) sideTitle.textContent = panelLabel;
+    [btnMenu, btnRailHistory].forEach((b) => {
+      if (b) b.classList.toggle('active', shouldOpen && b === triggerEl);
+    });
   }
-  document.getElementById('dk-btn-side')?.addEventListener('click', toggleSidePanel);
-  document.getElementById('dk-rail-side')?.addEventListener('click', toggleSidePanel);
-  document.getElementById('dk-side-close')?.addEventListener('click', toggleSidePanel);
+
+  if (btnMenu) {
+    btnMenu.addEventListener('click', () => toggleSidePanel('Side Panel & Menu', btnMenu));
+  }
+  if (btnRailHistory) {
+    btnRailHistory.addEventListener('click', () => toggleSidePanel('History & Tab Groups', btnRailHistory));
+  }
+  document.getElementById('dk-side-close')?.addEventListener('click', () => {
+    if (!sidePanel) return;
+    sidePanel.classList.remove('open');
+    btnMenu?.classList.remove('active');
+    btnRailHistory?.classList.remove('active');
+  });
+
+  if (btnReload) {
+    btnReload.addEventListener('click', () => {
+      btnReload.classList.remove('spin');
+      void btnReload.offsetWidth;
+      btnReload.classList.add('spin');
+      setTimeout(() => btnReload.classList.remove('spin'), 480);
+    });
+  }
+
+  if (btnRailSettings) {
+    btnRailSettings.addEventListener('click', () => {
+      showSnackbar('Single Settings entry anchored in Left Rail · Ctrl+, (Zero duplicates)');
+    });
+  }
 
   // 3. Interactive Floating Video & MP3 Quality Menu + Live 8-Segment Accelerator Demo
   const QUALITY_PRESETS = {
@@ -372,7 +466,7 @@
   document.getElementById('demo-send-phone')?.addEventListener('click', beamToPixel);
   document.getElementById('dk-beam-btn')?.addEventListener('click', beamToPixel);
 
-  // 6. Interactive Material Design 3 Wallpaper Gallery + Harmonizer
+  // 6. Interactive Material Design 3 Wallpaper Gallery + Live Seed/Polarity Harmonizer
   const wpCards = Array.from(document.querySelectorAll('.wp-card'));
   const wpFilters = Array.from(document.querySelectorAll('[data-wp-filter]'));
   const snackbar = document.getElementById('m3-snackbar');
@@ -499,7 +593,7 @@
     if (profSub) profSub.textContent = 'Signed in as alex@gmail.com';
     if (profStatusPill) profStatusPill.textContent = 'Synced';
     if (personalEmailEl) personalEmailEl.textContent = 'alex@gmail.com · Google Signed-In';
-    showSnackbar('Google Account active · Main Profile synced');
+    showSnackbar('Google Account active · Main Profile synced across windows');
   });
 
   document.getElementById('demo-google-create')?.addEventListener('click', () => {
@@ -536,7 +630,7 @@
     });
   });
 
-  // 8. GitHub Releases API Dynamic Hydration (Fallback: v4.5.0)
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v4.6.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

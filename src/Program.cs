@@ -105,24 +105,38 @@ namespace DejavuBrowser
 
             if (createdNew)
             {
-                try
+                bool lockedFile = false;
+                for (int lockTry = 0; lockTry < 3; lockTry++)
                 {
-                    lockStream = new FileStream(lockFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-                    byte[] pidBytes = Encoding.UTF8.GetBytes(Process.GetCurrentProcess().Id.ToString());
-                    lockStream.SetLength(0);
-                    lockStream.Write(pidBytes, 0, pidBytes.Length);
-                    lockStream.Flush();
+                    try
+                    {
+                        lockStream = new FileStream(lockFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                        byte[] pidBytes = Encoding.UTF8.GetBytes(Process.GetCurrentProcess().Id.ToString());
+                        lockStream.SetLength(0);
+                        lockStream.Write(pidBytes, 0, pidBytes.Length);
+                        lockStream.Flush();
+                        lockedFile = true;
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        if (lockTry < 2) Thread.Sleep(25);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        break;
+                    }
+                    catch
+                    {
+                        lockedFile = true;
+                        break;
+                    }
                 }
-                catch (IOException)
+                if (!lockedFile)
                 {
                     // Another dejavu process already holds the exclusive file lock for this profile!
                     createdNew = false;
                 }
-                catch (UnauthorizedAccessException)
-                {
-                    createdNew = false;
-                }
-                catch { }
             }
 
             if (!createdNew)
@@ -168,11 +182,19 @@ namespace DejavuBrowser
                 {
                     try { lockStream.Dispose(); } catch { }
                 }
+                try { if (File.Exists(lockFilePath)) File.Delete(lockFilePath); } catch { }
                 if (singleMutex != null)
                 {
                     try { singleMutex.ReleaseMutex(); } catch { }
                     try { singleMutex.Dispose(); } catch { }
                 }
+                // Notify all other running dejavu profile windows AFTER releasing lock & mutex
+                // so openProfileIds / green isRunning dots update immediately on shutdown!
+                try
+                {
+                    ProfileManager.NotifyOtherRunningProfiles(dataDir, resolvedProfileId, 250, true);
+                }
+                catch { }
             }
         }
 
@@ -235,6 +257,27 @@ namespace DejavuBrowser
                 }
             }
             return false;
+        }
+
+        public static bool SendPipeCommandFast(string pipeName, string payload, int timeoutMs)
+        {
+            if (string.IsNullOrEmpty(pipeName) || string.IsNullOrEmpty(payload)) return false;
+            int timeout = timeoutMs > 0 ? timeoutMs : 250;
+            try
+            {
+                using (NamedPipeClientStream client = new NamedPipeClientStream(".", pipeName, PipeDirection.Out))
+                {
+                    client.Connect(timeout);
+                    byte[] data = Encoding.UTF8.GetBytes(payload + "\n");
+                    client.Write(data, 0, data.Length);
+                    client.Flush();
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static void ActivateExistingProcessWindow()

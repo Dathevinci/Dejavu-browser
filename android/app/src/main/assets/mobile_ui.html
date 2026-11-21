@@ -13,16 +13,17 @@
       /* Google Pixel Material Design 3 — Official Dark HCT Surface Container Tokens */
       --bg: #141218;
       --canvas-bg: #141218;
-      --sheet-bg: #1d1b20;
-      --sheet-elev: #2b2930;
-      --group-bg: #211f26;
-      --group-press: #2b2930;
-      --card: #211f26;
-      --card-hi: #2b2930;
+      --sheet-bg: #16141a;
+      --sheet-elev: #2c2a33;
+      --group-bg: #222028;
+      --group-press: #2c2a33;
+      --card: #222028;
+      --card-hi: #2c2a33;
       --scrim: rgba(10, 9, 14, 0.56);
-      --input-bg: #36343b;
-      --divider: #36343b;
+      --input-bg: #323039;
+      --divider: #35323d;
       --border: #49454f;
+      --border-subtle: rgba(202, 196, 208, 0.12);
       --rim-top: transparent;
 
       --ink: #e6e0e9;
@@ -36,26 +37,27 @@
       --accent-ink: #381e72;
       --mint: #7bd8c6;
       --danger: #ffb4ab;
-      --shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.24);
       --m3-decel: cubic-bezier(0.05, 0.7, 0.1, 1.0);
       --m3-std: cubic-bezier(0.2, 0, 0, 1);
       --font: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     body.theme-light {
-      /* Google Pixel Material Design 3 — Official Light HCT Surface Container Tokens */
+      /* Google Pixel Android 15 Material Design 3 — Official Light HCT Surface Container Tokens */
       --bg: #fef7ff;
       --canvas-bg: #fef7ff;
-      --sheet-bg: #f7f2fa;
-      --sheet-elev: #ffffff;
-      --group-bg: #f3edf7;
-      --group-press: #ece6f0;
-      --card: #f3edf7;
+      --sheet-bg: #f3edf7;
+      --sheet-elev: #ece6f0;
+      --group-bg: #ffffff;
+      --group-press: #f5eff9;
+      --card: #ffffff;
       --card-hi: #ffffff;
-      --scrim: rgba(29, 27, 32, 0.32);
-      --input-bg: #e6e0e9;
-      --divider: #e6e0e9;
-      --border: #cac4d0;
+      --scrim: rgba(29, 27, 32, 0.34);
+      --input-bg: #e7e0ec;
+      --divider: #ebe5f0;
+      --border: #c5bfd0;
+      --border-subtle: rgba(73, 69, 79, 0.09);
       --rim-top: transparent;
 
       --ink: #1d1b20;
@@ -69,20 +71,20 @@
       --accent-ink: #ffffff;
       --mint: #006a60;
       --danger: #b3261e;
-      --shadow: 0 2px 10px rgba(29, 27, 32, 0.08);
+      --shadow: 0 1px 4px rgba(29, 27, 32, 0.06), 0 4px 12px rgba(29, 27, 32, 0.04);
     }
 
-    :root[data-accent="sapphire"] { --accent: #a8c7fa; --accent-bright: #d3e3fd; --accent-soft: #2b3a55; --accent-ink: #062e6f; --accent-glow: rgba(168,199,250,0.22); }
-    :root[data-accent="aurora"]   { --accent: #7bd8c6; --accent-bright: #a3f2e5; --accent-soft: #26423d; --accent-ink: #003731; --accent-glow: rgba(123,216,198,0.22); }
-    :root[data-accent="rose"]     { --accent: #ffb0ce; --accent-bright: #ffd8e6; --accent-soft: #532c3d; --accent-ink: #5e1135; --accent-glow: rgba(255,176,206,0.22); }
-    :root[data-accent="gold"]     { --accent: #ffb951; --accent-bright: #ffddb3; --accent-soft: #4a391e; --accent-ink: #452b00; --accent-glow: rgba(255,185,81,0.22); }
-    :root[data-accent="silver"]   { --accent: #b8c8e2; --accent-bright: #d8e4f8; --accent-soft: #343d4c; --accent-ink: #223146; --accent-glow: rgba(184,200,226,0.22); }
+    :root[data-accent="sapphire"] { --bg: #111318; --canvas-bg: #111318; --sheet-bg: #14171d; --group-bg: #1e222a; --group-press: #282c36; --card: #1e222a; --card-hi: #282c36; --sheet-elev: #282c36; --input-bg: #313641; --divider: #313641; --border: #44474f; --accent: #a8c7fa; --accent-bright: #d3e3fd; --accent-soft: #263b5e; --accent-ink: #062e6f; --accent-glow: rgba(168,199,250,0.22); }
+    :root[data-accent="aurora"]   { --bg: #0f1513; --canvas-bg: #0f1513; --sheet-bg: #121816; --group-bg: #1c2421; --group-press: #252e2b; --card: #1c2421; --card-hi: #252e2b; --sheet-elev: #252e2b; --input-bg: #2e3835; --divider: #2e3835; --border: #3f4946; --accent: #7bd8c6; --accent-bright: #a3f2e5; --accent-soft: #1f4841; --accent-ink: #003731; --accent-glow: rgba(123,216,198,0.22); }
+    :root[data-accent="rose"]     { --bg: #181114; --canvas-bg: #181114; --sheet-bg: #1b1417; --group-bg: #271e22; --group-press: #31272b; --card: #271e22; --card-hi: #31272b; --sheet-elev: #31272b; --input-bg: #3b3035; --divider: #3b3035; --border: #514348; --accent: #ffb0ce; --accent-bright: #ffd8e6; --accent-soft: #5c2a40; --accent-ink: #5e1135; --accent-glow: rgba(255,176,206,0.22); }
+    :root[data-accent="gold"]     { --bg: #17130d; --canvas-bg: #17130d; --sheet-bg: #1a1610; --group-bg: #262119; --group-press: #302a21; --card: #262119; --card-hi: #302a21; --sheet-elev: #302a21; --input-bg: #3a3329; --divider: #3a3329; --border: #4e463a; --accent: #ffb951; --accent-bright: #ffddb3; --accent-soft: #523b18; --accent-ink: #452b00; --accent-glow: rgba(255,185,81,0.22); }
+    :root[data-accent="silver"]   { --bg: #121316; --canvas-bg: #121316; --sheet-bg: #15171b; --group-bg: #202328; --group-press: #2a2d33; --card: #202328; --card-hi: #2a2d33; --sheet-elev: #2a2d33; --input-bg: #33373e; --divider: #33373e; --border: #44474e; --accent: #b8c8e2; --accent-bright: #d8e4f8; --accent-soft: #344154; --accent-ink: #223146; --accent-glow: rgba(184,200,226,0.22); }
 
-    body.theme-light[data-accent="sapphire"] { --accent: #1b6ef3; --accent-bright: #1b6ef3; --accent-soft: #d3e3fd; --accent-ink: #ffffff; }
-    body.theme-light[data-accent="aurora"]   { --accent: #006a60; --accent-bright: #006a60; --accent-soft: #a3f2e5; --accent-ink: #ffffff; }
-    body.theme-light[data-accent="rose"]     { --accent: #a83268; --accent-bright: #a83268; --accent-soft: #ffd8e6; --accent-ink: #ffffff; }
-    body.theme-light[data-accent="gold"]     { --accent: #8a5600; --accent-bright: #8a5600; --accent-soft: #ffddb3; --accent-ink: #ffffff; }
-    body.theme-light[data-accent="silver"]   { --accent: #455a77; --accent-bright: #455a77; --accent-soft: #d8e4f8; --accent-ink: #ffffff; }
+    body.theme-light[data-accent="sapphire"] { --bg: #faf9ff; --canvas-bg: #faf9ff; --sheet-bg: #eef0f9; --sheet-elev: #e4e7f2; --input-bg: #e1e4f0; --divider: #e4e7f0; --border: #c2c6d4; --accent: #1b6ef3; --accent-bright: #0842a0; --accent-soft: #d3e3fd; --accent-ink: #ffffff; }
+    body.theme-light[data-accent="aurora"]   { --bg: #f4fbf8; --canvas-bg: #f4fbf8; --sheet-bg: #e9f2ef; --sheet-elev: #dfe9e6; --input-bg: #dce7e3; --divider: #dfeae6; --border: #bac9c4; --accent: #006a60; --accent-bright: #004f47; --accent-soft: #a3f2e5; --accent-ink: #ffffff; }
+    body.theme-light[data-accent="rose"]     { --bg: #fff8f8; --canvas-bg: #fff8f8; --sheet-bg: #f8ecef; --sheet-elev: #f0e3e7; --input-bg: #ece0e4; --divider: #efe3e7; --border: #d5c1c7; --accent: #a83268; --accent-bright: #6f153f; --accent-soft: #ffd8e6; --accent-ink: #ffffff; }
+    body.theme-light[data-accent="gold"]     { --bg: #fff8f2; --canvas-bg: #fff8f2; --sheet-bg: #f6efe6; --sheet-elev: #ede5db; --input-bg: #eae1d6; --divider: #ede5db; --border: #d2c5b6; --accent: #8a5600; --accent-bright: #5e3800; --accent-soft: #ffddb3; --accent-ink: #ffffff; }
+    body.theme-light[data-accent="silver"]   { --bg: #f9f9fc; --canvas-bg: #f9f9fc; --sheet-bg: #eef0f5; --sheet-elev: #e5e8ee; --input-bg: #e2e5ec; --divider: #e5e7ee; --border: #c3c7d0; --accent: #455a77; --accent-bright: #233752; --accent-soft: #d8e4f8; --accent-ink: #ffffff; }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; scrollbar-width: none; }
     *::-webkit-scrollbar { display: none; }
@@ -226,13 +228,14 @@
     /* Material Design 3 Tonal Container Groups & List Items */
     .g-group {
       background: var(--group-bg);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-subtle);
       border-radius: 24px;
       overflow: hidden;
+      box-shadow: var(--shadow);
     }
     .g-card {
       background: var(--card);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-subtle);
       border-radius: 24px;
       box-shadow: var(--shadow);
       padding: 16px;
@@ -240,15 +243,15 @@
     .g-row {
       width: 100%; background: transparent; border: none; color: var(--ink);
       font-family: inherit; text-align: left;
-      padding: 13px 14px;
-      display: flex; align-items: center; gap: 12px;
-      position: relative; transition: background 0.12s ease;
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 13px;
+      position: relative; transition: background 0.14s var(--m3-std);
     }
     .g-row + .g-row::before {
-      content: ''; position: absolute; left: 54px; right: 0; top: 0;
+      content: ''; position: absolute; left: 16px; right: 16px; top: 0;
       height: 1px; background: var(--divider);
     }
-    .g-row.plain + .g-row.plain::before { left: 14px; }
+    .g-row.search-first::before { display: none; }
     .g-row:active { background: var(--group-press); }
     .g-row-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
     .g-row-title { font-size: 14.5px; font-weight: 560; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -260,7 +263,7 @@
     .sw {
       width: 52px; height: 32px; border-radius: 99px; flex-shrink: 0;
       background: var(--input-bg); border: 2px solid var(--subtle);
-      position: relative; transition: background 0.2s ease, border-color 0.2s ease;
+      position: relative; transition: background 0.2s var(--m3-std), border-color 0.2s var(--m3-std);
       cursor: pointer; padding: 0;
     }
     .sw::after {
@@ -268,8 +271,8 @@
       width: 16px; height: 16px; border-radius: 50%;
       background: var(--subtle);
       display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 800; color: var(--accent);
-      transition: transform 0.22s cubic-bezier(0.2, 0, 0, 1), width 0.18s ease, height 0.18s ease, top 0.18s ease, background 0.18s ease;
+      font-size: 12px; font-weight: 800; line-height: 1; color: var(--accent);
+      transition: transform 0.22s var(--m3-std), width 0.18s var(--m3-std), height 0.18s var(--m3-std), top 0.18s var(--m3-std), left 0.18s var(--m3-std), background 0.18s var(--m3-std);
     }
     .sw.on { background: var(--accent); border-color: var(--accent); }
     .sw.on::after {
@@ -987,11 +990,12 @@
 
     /* Live "Search settings..." Material 3 Search Pill Bar */
     .set-search-bar {
-      height: 44px; border-radius: 999px;
-      background: var(--input-bg); border: 1px solid var(--border);
-      padding: 0 10px 0 14px;
-      display: flex; align-items: center; gap: 9px;
-      transition: border-color 0.16s ease;
+      height: 46px; border-radius: 999px;
+      background: var(--group-bg); border: 1px solid var(--border-subtle);
+      padding: 0 10px 0 16px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: var(--shadow);
+      transition: border-color 0.18s var(--m3-std), background 0.18s var(--m3-std);
     }
     .set-search-bar:focus-within { border-color: var(--accent); }
     .set-search-bar input {
@@ -1001,32 +1005,52 @@
     }
     .set-search-bar input::placeholder { color: var(--muted); }
     .set-search-clr {
-      width: 26px; height: 26px; border-radius: 50%; border: none;
-      background: var(--group-bg); color: var(--muted);
+      width: 28px; height: 28px; border-radius: 50%; border: none;
+      background: var(--input-bg); color: var(--ink);
       display: none; align-items: center; justify-content: center;
       font-size: 15px; font-weight: 700; cursor: pointer; padding: 0; flex-shrink: 0;
     }
     .set-search-clr.show { display: inline-flex; }
+    .set-search-meta {
+      display: none; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 8px 14px; border-radius: 999px;
+      background: var(--accent-soft); color: var(--accent-bright);
+      font-size: 12px; font-weight: 700;
+    }
+    body.theme-light .set-search-meta { color: var(--accent); }
+    .set-search-meta.show { display: flex; }
+    .set-match-pill {
+      display: none; align-items: center; justify-content: center;
+      min-width: 22px; height: 20px; padding: 0 7px; border-radius: 999px;
+      background: var(--accent-soft); color: var(--accent-bright);
+      font-size: 10.5px; font-weight: 750; letter-spacing: 0; text-transform: none;
+    }
+    body.theme-light .set-match-pill { color: var(--accent); }
+    .set-match-pill.show { display: inline-flex; }
 
-    /* Google Pixel Material Design 3 "You & Google" Hero Card */
+    /* Google Pixel Material Design 3 "You & Google" Account Card */
     .yg-hero {
       background: var(--group-bg);
-      border: 1px solid var(--border);
-      border-radius: 28px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
       overflow: hidden;
       display: flex; flex-direction: column;
     }
     .yg-hero-main {
       padding: 16px 16px 14px;
-      display: flex; flex-direction: column; gap: 13px;
+      display: flex; flex-direction: column; gap: 14px;
     }
     .yg-identity-row {
       display: flex; align-items: center; gap: 13px;
+      padding: 2px; border-radius: 16px;
+      transition: background 0.14s var(--m3-std);
     }
+    .yg-identity-row:active { background: var(--group-press); }
     .yg-avatar {
-      width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0;
+      width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
       display: inline-flex; align-items: center; justify-content: center;
-      font-size: 21px; font-weight: 800; color: #1d1b20;
+      font-size: 20px; font-weight: 800; color: #1d1b20;
       position: relative; border: 2px solid var(--accent);
     }
     .yg-avatar img {
@@ -1040,7 +1064,7 @@
     }
     .yg-id-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
     .yg-name {
-      font-size: 16.5px; font-weight: 700; letter-spacing: -0.01em;
+      font-size: 16.5px; font-weight: 700; letter-spacing: -0.015em;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .yg-email {
@@ -1057,6 +1081,7 @@
     .yg-badge.google {
       background: rgba(123, 216, 198, 0.18); color: var(--mint);
     }
+    body.theme-light .yg-badge.google { background: #d4f4ec; color: #006a60; }
     .yg-badge.main {
       background: var(--accent-soft); color: var(--accent-bright);
     }
@@ -1070,7 +1095,7 @@
       border: 1px solid transparent; background: var(--accent); color: var(--accent-ink);
       font-family: inherit; font-size: 13.5px; font-weight: 700; white-space: nowrap;
       display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-      cursor: pointer; transition: transform 0.15s var(--m3-decel);
+      cursor: pointer; transition: transform 0.16s var(--m3-decel);
     }
     .yg-google-btn:active { transform: scale(0.97); }
     .yg-google-g-pill {
@@ -1079,10 +1104,10 @@
     }
     .yg-tonal-btn {
       width: 100%; height: 40px; padding: 0 16px; border-radius: 999px;
-      border: 1px solid var(--border); background: var(--sheet-elev); color: var(--ink);
-      font-family: inherit; font-size: 13px; font-weight: 640; white-space: nowrap;
+      border: none; background: var(--sheet-elev); color: var(--ink);
+      font-family: inherit; font-size: 13px; font-weight: 650; white-space: nowrap;
       display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      cursor: pointer; transition: transform 0.15s var(--m3-decel);
+      cursor: pointer; transition: transform 0.16s var(--m3-decel), background 0.14s var(--m3-std);
     }
     .yg-tonal-btn:active { transform: scale(0.97); }
     .yg-actions-row {
@@ -1091,7 +1116,7 @@
     .yg-actions-row > button { flex: 1; }
     .accent-stack {
       display: flex; flex-direction: column; gap: 10px;
-      padding: 12px 14px 14px; border-top: 1px solid var(--divider);
+      padding: 14px 16px; border-top: 1px solid var(--divider);
     }
     .accent-stack-top {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -1109,14 +1134,18 @@
     }
     .yg-prof-chip {
       height: 32px; padding: 0 11px 0 6px; border-radius: 999px; flex-shrink: 0;
-      border: 1px solid var(--border); background: var(--group-bg); color: var(--ink);
-      font-family: inherit; font-size: 12px; font-weight: 620;
+      border: 1px solid var(--border-subtle); background: var(--group-bg); color: var(--ink);
+      font-family: inherit; font-size: 12px; font-weight: 630;
       display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+      transition: background 0.14s var(--m3-std), border-color 0.14s var(--m3-std);
     }
     .yg-prof-chip.active {
-      background: var(--accent-soft); border-color: var(--accent); color: var(--accent-bright);
+      background: var(--accent-soft); border-color: transparent; color: var(--accent-bright);
     }
     body.theme-light .yg-prof-chip.active { color: var(--accent); }
+    .yg-prof-chip.add-pill {
+      padding: 0 12px; background: transparent; border: 1px solid var(--border); color: var(--muted);
+    }
     .yg-prof-dot {
       width: 18px; height: 18px; border-radius: 50%;
       display: inline-flex; align-items: center; justify-content: center;
@@ -1200,8 +1229,9 @@
 
     /* Profile Setup & Multi-Profile Sheet Styles */
     .prof-hero {
-      background: var(--group-bg); border: 1px solid var(--border);
-      border-radius: 28px; padding: 20px 16px 16px;
+      background: var(--group-bg); border: 1px solid var(--border-subtle);
+      border-radius: 24px; padding: 20px 16px 16px;
+      box-shadow: var(--shadow);
       display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
     }
     .prof-hero .yg-avatar { width: 68px; height: 68px; font-size: 27px; }
@@ -1282,14 +1312,11 @@
         <span id="sp-link-txt">Link PC</span>
       </button>
       <div class="sp-top-acts">
-        <button type="button" class="icon-circle" aria-label="Turbo Downloads" onclick="call('openDownloads')">
-          <svg viewBox="0 0 20 20" width="17" height="17" fill="none"><path d="M10 3.6v8.8M6.6 9.2L10 12.6l3.4-3.4M4.2 15.6h11.6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
         <button type="button" class="icon-circle" aria-label="Wallpapers" onclick="call('openScreen','wallpapers')">
           <svg viewBox="0 0 20 20" width="17" height="17" fill="none"><rect x="2.8" y="3.8" width="14.4" height="12.4" rx="2.6" stroke="currentColor" stroke-width="1.65"/><circle cx="7.2" cy="7.8" r="1.35" fill="currentColor"/><path d="M3.4 14.2l3.8-3.6 2.8 2.5 2.4-2.4 4.2 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <button type="button" id="sp-opt-btn" class="icon-circle" style="position:relative;" aria-label="Options" onclick="call('openScreen','settings')">
-          <svg viewBox="0 0 20 20" width="17" height="17" fill="none"><path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/><circle cx="7.5" cy="6" r="1.9" fill="var(--sheet-bg)" stroke="currentColor" stroke-width="1.6"/><circle cx="13" cy="10" r="1.9" fill="var(--sheet-bg)" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="14" r="1.9" fill="var(--sheet-bg)" stroke="currentColor" stroke-width="1.6"/></svg>
+        <button type="button" id="sp-opt-btn" class="icon-circle" style="position:relative;" aria-label="Settings" onclick="call('openScreen','settings')">
+          <svg viewBox="0 0 20 20" width="17" height="17" fill="none"><circle cx="10" cy="10" r="2.7" stroke="currentColor" stroke-width="1.65"/><path d="M10 3.2v1.7M10 15.1v1.7M3.2 10h1.7M15.1 10h1.7M5.2 5.2l1.2 1.2M13.6 13.6l1.2 1.2M14.8 5.2l-1.2 1.2M6.4 13.6l-1.2 1.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <span id="sp-upd-dot" style="display:none;position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);"></span>
         </button>
         <button type="button" id="sp-profile-btn" class="sp-prof-btn" aria-label="You and Google Profile" onclick="call('openScreen','profile')">
@@ -1501,7 +1528,7 @@
             </button>
             <button type="button" class="q-tile" onclick="mobileDlTab='media';call('openDownloads')">
               <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 3.2v8.2M5.8 8.4L9 11.6l3.2-3.2M3.6 14.4h10.8" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-              <span>Grab 8x</span>
+              <span>Page Media</span>
             </button>
             <button type="button" class="q-tile" onclick="call('openScreen','wallpapers')">
               <span class="sq-ico ic-rose"><svg viewBox="0 0 18 18" fill="none"><rect x="2.6" y="3.5" width="12.8" height="11" rx="2.2" stroke="currentColor" stroke-width="1.5"/><circle cx="6.6" cy="7.2" r="1.2" fill="currentColor"/><path d="M3.2 12.8l3.2-3.1 2.4 2.2 2.2-2.2 3.5 3.1" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -1559,8 +1586,8 @@
             <button type="button" class="g-row" onclick="call('openScreen','settings')">
               <span class="sq-ico ic-plum"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 2.8v1.5M9 13.7v1.5M2.8 9h1.5M13.7 9h1.5M4.6 4.6l1.1 1.1M12.3 12.3l1.1 1.1M13.4 4.6l-1.1 1.1M5.7 12.3l-1.1 1.1" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg></span>
               <span class="g-row-meta">
-                <span class="g-row-title">Settings &amp; Privacy</span>
-                <span class="g-row-sub">Material You, shield, search, downloads</span>
+                <span class="g-row-title">Settings</span>
+                <span class="g-row-sub">Appearance, privacy, search, downloads &amp; about</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -1655,11 +1682,16 @@
       </div>
 
       <div id="settings-sheet-body" class="sheet-body">
-        <!-- 1. GOOGLE PIXEL M3 "YOU & GOOGLE" HERO CARD -->
+        <div id="set-search-meta" class="set-search-meta" role="status" aria-live="polite">
+          <span id="set-search-meta-txt">0 settings matched</span>
+          <button type="button" class="sec-act" style="color:inherit;padding:0 4px;" onclick="clearSettingsSearch()">Clear</button>
+        </div>
+
+        <!-- 1. GOOGLE PIXEL M3 "YOU & GOOGLE" ACCOUNT CARD (Streamlined, Zero Redundant Controls) -->
         <div class="set-section" data-search="you google account sign in create profile main avatar switch sync">
           <div class="sec-hdr">
             <span>You &amp; Google</span>
-            <button type="button" class="sec-act" onclick="openProfileFromSettings()">Manage Profiles</button>
+            <span class="set-match-pill"></span>
           </div>
           <div class="yg-hero set-item" data-search="you google account sign in create profile main avatar switch">
             <div class="yg-hero-main">
@@ -1680,7 +1712,10 @@
 
         <!-- 2. APPEARANCE & MATERIAL YOU -->
         <div class="set-section" data-search="appearance material you theme light dark auto color seed swatch wallpaper studio text zoom slider desktop site address bar bottom top autohide">
-          <div class="sec-hdr"><span>Appearance &amp; Material You</span></div>
+          <div class="sec-hdr">
+            <span>Appearance &amp; Material You</span>
+            <span class="set-match-pill"></span>
+          </div>
           <div class="g-group">
             <div class="set-item" data-search="theme mode light dark auto system appearance">
               <div style="padding:13px 14px 2px;font-size:13.5px;font-weight:600;">Theme Mode</div>
@@ -1759,7 +1794,10 @@
 
         <!-- 3. PRIVACY & SECURITY -->
         <div class="set-section" data-search="privacy security shield ad tracker blocker https first do not track dnt popups third party cookies clear browsing data history cache">
-          <div class="sec-hdr"><span>Privacy &amp; Security</span></div>
+          <div class="sec-hdr">
+            <span>Privacy &amp; Security</span>
+            <span class="set-match-pill"></span>
+          </div>
           <div class="g-group">
             <div class="g-row set-item" data-search="dejavu shield ad tracker blocker privacy protection" onclick="call('toggleAdBlock')">
               <span class="sq-ico ic-teal"><svg viewBox="0 0 18 18" fill="none"><path d="M9 2.2L3.4 4.5v4.3c0 3.6 2.4 6.2 5.6 7.2 3.2-1 5.6-3.6 5.6-7.2V4.5L9 2.2z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M6.6 9.1l1.7 1.7 3.2-3.3" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -1815,8 +1853,14 @@
 
         <!-- 4. SEARCH & TABS -->
         <div class="set-section" data-search="search engine google duckduckgo bing brave ecosia tabs pull to refresh background links">
-          <div class="sec-hdr"><span>Search &amp; Tabs</span></div>
-          <div id="opt-m-engines" class="g-group set-item" data-search="default search engine google duckduckgo bing brave ecosia"></div>
+          <div class="sec-hdr">
+            <span>Search &amp; Tabs</span>
+            <span class="set-match-pill"></span>
+          </div>
+          <div class="g-group set-item" data-search="default search engine google duckduckgo bing brave ecosia">
+            <div style="padding:13px 16px 4px;font-size:12.5px;font-weight:700;color:var(--muted);">Default Search Engine</div>
+            <div id="opt-m-engines"></div>
+          </div>
           <div class="g-group">
             <div class="g-row plain set-item" data-search="pull to refresh swipe down reload tabs" onclick="call('togglePullToRefresh')">
               <div class="g-row-meta">
@@ -1837,7 +1881,10 @@
 
         <!-- 5. DOWNLOADS -->
         <div class="set-section" data-search="downloads youtube quality auto 1080p 720p 360p audio m4a floating video button turbo 8x">
-          <div class="sec-hdr"><span>Downloads</span></div>
+          <div class="sec-hdr">
+            <span>Downloads</span>
+            <span class="set-match-pill"></span>
+          </div>
           <div class="g-group">
             <div class="set-item" style="padding:13px 14px 12px;display:flex;flex-direction:column;gap:9px;" data-search="default youtube quality preference auto 1080p 720p 360p audio m4a">
               <div>
@@ -1872,9 +1919,12 @@
           </div>
         </div>
 
-        <!-- 6. SYNC & ABOUT v4.5.0 -->
-        <div class="set-section" data-search="sync dejavu link pc mobile software update auto updater apk version 4.5.0 about reset defaults">
-          <div class="sec-hdr"><span>Sync &amp; About v4.5.0</span></div>
+        <!-- 6. SYNC & ABOUT v4.6.0 -->
+        <div class="set-section" data-search="sync dejavu link pc mobile software update auto updater apk version 4.6.0 about reset defaults">
+          <div class="sec-hdr">
+            <span>Sync &amp; About v4.6.0</span>
+            <span class="set-match-pill"></span>
+          </div>
           <div class="g-group">
             <button type="button" class="g-row set-item" data-search="dejavu link pc mobile sync qr pairing e2ee" onclick="call('openScreen','sync')">
               <span class="sq-ico ic-violet"><svg viewBox="0 0 18 18" fill="none"><rect x="2.2" y="3.5" width="10" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 13.5h3.4M7.2 11v2.5M11.5 9.5L16 5M16 5h-3.4M16 5v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -1885,10 +1935,10 @@
               <span class="g-chev">›</span>
             </button>
 
-            <div class="g-row set-item" data-search="software update auto updater github releases apk version 4.5.0">
+            <div class="g-row set-item" data-search="software update auto updater github releases apk version 4.6.0">
               <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 14V4M5.6 7.4L9 4l3.4 3.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.8 14.5h10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
               <div class="g-row-meta">
-                <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.5.0</div>
+                <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.6.0</div>
                 <div id="opt-upd-sub" class="g-row-sub">Permanent V1-V3 signing · Auto-checks GitHub Releases</div>
               </div>
               <button type="button" id="opt-upd-btn" class="pill-btn" onclick="handleUpdateBtn()">Check</button>
@@ -1909,7 +1959,7 @@
             </div>
 
             <div id="opt-upd-note" class="upd-signing-note">
-              Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.5.0 &mdash; all future updates will install automatically in-place!
+              Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.6.0 &mdash; all future updates will install automatically in-place!
             </div>
 
             <button type="button" class="g-row plain set-item" data-search="reset settings defaults restore factory preferences" onclick="openResetSettingsModal()">
@@ -1928,7 +1978,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:11.5px;color:var(--subtle);padding:4px 0 8px;">
-          dejavu Mobile v4.5.0 · Google Pixel Material Design 3
+          dejavu Mobile v4.6.0 · Google Pixel Material Design 3
         </div>
       </div>
     </div>
@@ -1990,11 +2040,11 @@
         <div class="g-group">
           <div class="prof-field-box">
             <input id="prof-new-name" class="prof-input" type="text" maxlength="32" placeholder="New profile name (e.g. Work, Gaming)">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-              <span style="font-size:13px;font-weight:600;">Theme Color</span>
-              <div id="prof-new-accents" class="orb-group"></div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:2px;">
+              <span style="font-size:12.5px;font-weight:660;color:var(--muted);">Theme Color Seed</span>
+              <div id="prof-new-accents" class="orb-group" style="justify-content:space-between;width:100%;"></div>
             </div>
-            <button type="button" class="cta-btn" style="height:42px;margin-top:2px;" onclick="submitCreateProfile()">
+            <button type="button" class="cta-btn" style="height:42px;margin-top:4px;" onclick="submitCreateProfile()">
               <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><path d="M9 3.5v11M3.5 9h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
               <span>Create &amp; Switch Profile</span>
             </button>
@@ -2163,7 +2213,7 @@
     <div class="mini-modal-card" style="border-radius:28px;padding:22px;" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:700;">Reset Settings to Defaults?</h3>
       <div style="font-size:13px;line-height:1.5;color:var(--muted);">
-        This restores Appearance, Privacy, Search, Tabs, and Downloads settings to dejavu v4.5.0 defaults. Your Favorites, Profiles, and PC Link stay safe.
+        This restores Appearance, Privacy, Search, Tabs, and Downloads settings to dejavu v4.6.0 defaults. Your Favorites, Profiles, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn" onclick="closeResetSettingsModal()">Cancel</button>
@@ -2450,35 +2500,60 @@
     function filterSettingsList() {
       const inp = document.getElementById('settings-search-in');
       const clr = document.getElementById('settings-search-clr');
+      const meta = document.getElementById('set-search-meta');
+      const metaTxt = document.getElementById('set-search-meta-txt');
       const empty = document.getElementById('settings-search-empty');
       const emptyTxt = document.getElementById('settings-search-empty-txt');
       const raw = inp ? inp.value.trim() : '';
       const q = raw.toLowerCase();
       if (clr) clr.classList.toggle('show', q.length > 0);
       let visibleSections = 0;
+      let totalMatches = 0;
       document.querySelectorAll('#settings-sheet-body .set-section').forEach((sec) => {
+        const badge = sec.querySelector('.set-match-pill');
+        sec.querySelectorAll('.g-row.search-first').forEach((r) => r.classList.remove('search-first'));
         if (!q) {
           sec.classList.remove('search-hide');
           sec.querySelectorAll('.set-item').forEach((it) => it.classList.remove('search-hide'));
+          if (badge) { badge.classList.remove('show'); badge.textContent = ''; }
           visibleSections++;
           return;
         }
-        const secMeta = ((sec.dataset.search || '') + ' ' + (sec.querySelector('.sec-hdr') ? sec.querySelector('.sec-hdr').textContent : '')).toLowerCase();
+        const secTitle = sec.querySelector('.sec-hdr span') ? sec.querySelector('.sec-hdr span').textContent : '';
+        const secMeta = ((sec.dataset.search || '') + ' ' + secTitle).toLowerCase();
         const items = sec.querySelectorAll('.set-item');
-        let anyItem = false;
+        let secHits = 0;
         items.forEach((it) => {
           const hay = ((it.dataset.search || '') + ' ' + (it.textContent || '')).toLowerCase();
           const hit = hay.includes(q);
           it.classList.toggle('search-hide', !hit);
-          if (hit) anyItem = true;
+          if (hit) secHits++;
         });
-        if (!anyItem && secMeta.includes(q)) {
+        if (secHits === 0 && secMeta.includes(q)) {
           items.forEach((it) => it.classList.remove('search-hide'));
-          anyItem = true;
+          secHits = items.length;
         }
-        sec.classList.toggle('search-hide', !anyItem);
-        if (anyItem) visibleSections++;
+        sec.querySelectorAll('.g-group').forEach((grp) => {
+          const firstVis = grp.querySelector('.g-row:not(.search-hide)');
+          if (firstVis) firstVis.classList.add('search-first');
+        });
+        sec.classList.toggle('search-hide', secHits === 0);
+        if (badge) {
+          badge.classList.toggle('show', secHits > 0);
+          badge.textContent = secHits === 1 ? '1 match' : `${secHits} matches`;
+        }
+        if (secHits > 0) {
+          visibleSections++;
+          totalMatches += secHits;
+        }
       });
+      if (meta && metaTxt) {
+        const showMeta = q.length > 0 && totalMatches > 0;
+        meta.classList.toggle('show', showMeta);
+        if (showMeta) {
+          metaTxt.textContent = `${totalMatches} ${totalMatches === 1 ? 'setting' : 'settings'} in ${visibleSections} ${visibleSections === 1 ? 'section' : 'sections'}`;
+        }
+      }
       if (empty) {
         const showEmpty = q.length > 0 && visibleSections === 0;
         empty.classList.toggle('show', showEmpty);
@@ -2986,11 +3061,10 @@
       if (ygActs) {
         if (prof.isGoogleSignedIn) {
           ygActs.innerHTML = `
-            <button type="button" class="yg-google-btn" onclick="call('googleManageAccount')">
+            <button type="button" class="yg-tonal-btn" onclick="call('googleManageAccount')">
               <span class="yg-google-g-pill">${GOOGLE_G_SVG}</span>
-              <span>Manage Google Account</span>
+              <span>Manage your Google Account</span>
             </button>
-            <button type="button" class="yg-tonal-btn" onclick="openProfileFromSettings()">Switch Profile</button>
           `;
         } else {
           ygActs.innerHTML = `
@@ -3003,7 +3077,7 @@
         }
       }
 
-      // Quick Multi-Profile Switcher Strip inside Hero Card
+      // Quick Multi-Profile Switcher Strip inside Account Card (Single clean row + "+ Add")
       const strip = document.getElementById('set-yg-prof-strip');
       if (strip) {
         strip.innerHTML = '';
@@ -3027,9 +3101,8 @@
         });
         const addChip = document.createElement('button');
         addChip.type = 'button';
-        addChip.className = 'yg-prof-chip';
-        addChip.style.paddingLeft = '11px';
-        addChip.textContent = '+ Add Profile';
+        addChip.className = 'yg-prof-chip add-pill';
+        addChip.textContent = '+ Add';
         addChip.onclick = openProfileFromSettings;
         strip.appendChild(addChip);
       }
@@ -3151,7 +3224,7 @@
       }
 
       const u = state.update || {};
-      const curV = u.currentVersion || '4.5.0';
+      const curV = u.currentVersion || '4.6.0';
       const uTitle = document.getElementById('opt-upd-title');
       const uSub = document.getElementById('opt-upd-sub');
       const uBtn = document.getElementById('opt-upd-btn');
@@ -3205,7 +3278,7 @@
         } else if (u.status === 'ready') {
           uTitle.textContent = `v${u.latestVersion} Ready to Install`;
           uSub.textContent = u.signatureMismatch
-            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '4.5.0')
+            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '4.6.0')
             : 'Verified V1-V3 permanent signature · Tap Install to upgrade';
           uBtn.textContent = 'Install';
           uBtn.classList.add('primary');
@@ -3900,8 +3973,8 @@
                 { title: 'GitHub — Dathevinci/Dejavu-browser', url: 'https://github.com/Dathevinci/Dejavu-browser' },
                 { title: 'YouTube', url: 'https://m.youtube.com' }
               ],
-              sync: { connected: false, pairingCode: 'DJV-4500-M3UI', remoteTabs: [], drops: [] },
-              update: { currentVersion: '4.5.0', status: 'uptodate', latestVersion: '4.5.0', available: false, hasDownloadedApk: false },
+              sync: { connected: false, pairingCode: 'DJV-4600-M3UI', remoteTabs: [], drops: [] },
+              update: { currentVersion: '4.6.0', status: 'uptodate', latestVersion: '4.6.0', available: false, hasDownloadedApk: false },
               turboDownloads: [],
               pageMedia: []
             });

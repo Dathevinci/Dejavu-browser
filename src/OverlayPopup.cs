@@ -26,6 +26,7 @@ namespace DejavuBrowser
 
         public event Action<string> MessageReceived;
         public event Action PopupHidden;
+        public event Func<Keys, bool> PreviewShortcut;
 
         public OverlayPopup(Form owner, bool dismissOnDeactivate)
             : this(owner, dismissOnDeactivate, false)
@@ -47,6 +48,16 @@ namespace DejavuBrowser
             _wv = new WebView2();
             _wv.Dock = DockStyle.Fill;
             _wv.DefaultBackgroundColor = Color.FromArgb(12, 10, 22);
+            _wv.KeyDown += (s, e) =>
+            {
+                if (e == null || e.Handled) return;
+                Func<Keys, bool> handler = PreviewShortcut;
+                if (handler != null && handler(e.KeyData))
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                }
+            };
             Controls.Add(_wv);
         }
 

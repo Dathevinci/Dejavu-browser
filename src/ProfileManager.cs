@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 
 namespace DejavuBrowser
@@ -196,11 +198,28 @@ namespace DejavuBrowser
             return "Local\\DejavuBrowser_SingleInstance_" + ComputeInstanceHash(dataDir, profileId);
         }
 
-        public static bool IsProfileRunning(string dataDir, string profileId)
+        private static bool IsInstanceHashRunning(string dataDir, string hash)
         {
+            if (string.IsNullOrEmpty(hash)) return false;
             try
             {
-                string lockPath = GetProfileLockFilePath(dataDir, profileId);
+                string mutexName = "Local\\DejavuBrowser_SingleInstance_" + hash;
+                try
+                {
+                    Mutex existing;
+                    if (Mutex.TryOpenExisting(mutexName, out existing))
+                    {
+                        existing.Dispose();
+                        return true;
+                    }
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return true;
+                }
+                catch { }
+
+                string lockPath = Path.Combine(dataDir, ".instance." + hash + ".lock");
                 if (!File.Exists(lockPath)) return false;
                 try
                 {
@@ -222,6 +241,173 @@ namespace DejavuBrowser
             {
                 return false;
             }
+        }
+
+        public static bool IsProfileRunning(string dataDir, string profileId)
+        {
+            try
+            {
+                string hash = ComputeInstanceHash(dataDir, profileId);
+                return IsInstanceHashRunning(dataDir, hash);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static List<string> GetOtherRunningProfilePipes(string dataDir, string currentProfileId)
+        {
+            List<string> pipes = new List<string>();
+            HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                string resolvedDir = string.IsNullOrEmpty(dataDir) ? SettingsStore.AppDataDir : dataDir;
+                string selfHash = ComputeInstanceHash(resolvedDir, currentProfileId);
+                string selfPipe = "DejavuBrowser_Pipe_" + selfHash;
+                seen.Add(selfPipe);
+
+                ProfilesManifest m = LoadManifestFromDiskStatic();
+                if (m != null && m.profiles != null)
+                {
+                    for (int i = 0; i < m.profiles.Count; i++)
+                    {
+                        ProfileInfo p = m.profiles[i];
+                        if (p == null || string.IsNullOrEmpty(p.id)) continue;
+                        if (string.Equals(p.id, currentProfileId, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (!IsProfileRunning(resolvedDir, p.id)) continue;
+                        string pipe = GetProfilePipeName(resolvedDir, p.id);
+                        if (seen.Add(pipe)) pipes.Add(pipe);
+                    }
+                }
+
+                // Also scan live .instance.<hash>.lock files so even a just-deleted running profile gets notified
+                if (Directory.Exists(resolvedDir))
+                {
+                    string[] lockFiles = Directory.GetFiles(resolvedDir, ".instance.*.lock");
+                    for (int i = 0; i < lockFiles.Length; i++)
+                    {
+                        string name = Path.GetFileName(lockFiles[i]);
+                        if (string.IsNullOrEmpty(name)) continue;
+                        if (!name.StartsWith(".instance.", StringComparison.OrdinalIgnoreCase) ||
+                            !name.EndsWith(".lock", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+                        int hashLen = name.Length - ".instance.".Length - ".lock".Length;
+                        if (hashLen <= 0) continue;
+                        string hash = name.Substring(".instance.".Length, hashLen);
+                        if (string.Equals(hash, selfHash, StringComparison.OrdinalIgnoreCase)) continue;
+                        string pipe = "DejavuBrowser_Pipe_" + hash;
+                        if (seen.Contains(pipe)) continue;
+                        if (IsInstanceHashRunning(resolvedDir, hash))
+                        {
+                            seen.Add(pipe);
+                            pipes.Add(pipe);
+                        }
+                    }
+                }
+            }
+            catch { }
+            return pipes;
+        }
+
+        public static void NotifyOtherRunningProfiles(string dataDir, string currentProfileId, int timeoutMs, bool waitForCompletion)
+        {
+            string resolvedDir = string.IsNullOrEmpty(dataDir) ? SettingsStore.AppDataDir : dataDir;
+            int timeout = timeoutMs > 0 ? timeoutMs : 250;
+            Action broadcast = () =>
+            {
+                try
+                {
+                    List<string> pipes = GetOtherRunningProfilePipes(resolvedDir, currentProfileId);
+                    if (pipes.Count == 0) return;
+                    Task[] tasks = new Task[pipes.Count];
+                    for (int i = 0; i < pipes.Count; i++)
+                    {
+                        string targetPipe = pipes[i];
+                        tasks[i] = Task.Run(() =>
+                        {
+                            Program.SendPipeCommandFast(targetPipe, "REFRESH_PROFILES", timeout);
+                        });
+                    }
+                    Task.WaitAll(tasks, Math.Max(timeout + 150, 400));
+                }
+                catch { }
+            };
+
+            if (waitForCompletion)
+            {
+                broadcast();
+            }
+            else
+            {
+                Task.Run(broadcast);
+            }
+        }
+
+        public static bool IsDefaultProfileName(string name)
+        {
+            string n = (name ?? "").Trim();
+            if (string.IsNullOrEmpty(n)) return true;
+            if (string.Equals(n, "Personal", StringComparison.OrdinalIgnoreCase)) return true;
+            if (string.Equals(n, "Default", StringComparison.OrdinalIgnoreCase)) return true;
+            if (string.Equals(n, "Profile", StringComparison.OrdinalIgnoreCase)) return true;
+            if (string.Equals(n, "New Profile", StringComparison.OrdinalIgnoreCase)) return true;
+            if (n.StartsWith("Profile ", StringComparison.OrdinalIgnoreCase)) return true;
+            return false;
+        }
+
+        public static string NormalizeGoogleAvatarUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return "";
+            string u = url.Trim();
+            if (!u.StartsWith("https://", StringComparison.OrdinalIgnoreCase) &&
+                !u.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+            {
+                return "";
+            }
+            try
+            {
+                Uri parsed = new Uri(u);
+                string host = (parsed.Host ?? "").ToLowerInvariant();
+                if (host.EndsWith("googleusercontent.com", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Upgrade small avatar thumbnails (s32/s48/s64/s96/w32-h32/?sz=32) to crisp 192px
+                    // while preserving crop/monogram suffixes (-c, -c-mo, -rp-mo) and never downgrading >=128px.
+                    u = Regex.Replace(u, @"([=\-])s(\d{1,3})(?=[=\-]|$)", m =>
+                    {
+                        int sz;
+                        if (int.TryParse(m.Groups[2].Value, out sz) && sz > 0 && sz < 128)
+                        {
+                            return m.Groups[1].Value + "s192";
+                        }
+                        return m.Value;
+                    }, RegexOptions.IgnoreCase);
+
+                    u = Regex.Replace(u, @"=w(\d{1,3})-h(\d{1,3})", m =>
+                    {
+                        int w;
+                        if (int.TryParse(m.Groups[1].Value, out w) && w > 0 && w < 128)
+                        {
+                            return "=w192-h192";
+                        }
+                        return m.Value;
+                    }, RegexOptions.IgnoreCase);
+
+                    u = Regex.Replace(u, @"([?&]sz=)(\d{1,3})", m =>
+                    {
+                        int sz;
+                        if (int.TryParse(m.Groups[2].Value, out sz) && sz > 0 && sz < 128)
+                        {
+                            return m.Groups[1].Value + "192";
+                        }
+                        return m.Value;
+                    }, RegexOptions.IgnoreCase);
+                }
+            }
+            catch { }
+            return u;
         }
 
         public static string NormalizeAccent(string accent, string colorFallback)
@@ -290,7 +476,7 @@ namespace DejavuBrowser
                 p.themeAccent = NormalizeAccent(p.themeAccent, p.color);
                 if (p.googleEmail == null) p.googleEmail = "";
                 if (p.googleDisplayName == null) p.googleDisplayName = "";
-                if (p.googleAvatarUrl == null) p.googleAvatarUrl = "";
+                p.googleAvatarUrl = string.IsNullOrEmpty(p.googleAvatarUrl) ? "" : NormalizeGoogleAvatarUrl(p.googleAvatarUrl);
                 if (!string.IsNullOrEmpty(p.googleEmail)) p.isGoogleSignedIn = true;
                 p.isMainProfile = string.Equals(p.id, m.mainProfileId, StringComparison.OrdinalIgnoreCase);
                 p.isRunning = IsProfileRunning(dataDir, p.id);
@@ -722,15 +908,18 @@ namespace DejavuBrowser
                 {
                     string dn = displayName.Trim();
                     p.googleDisplayName = dn.Length > 48 ? dn.Substring(0, 48) : dn;
-                    if (string.Equals(p.name, "Personal", StringComparison.OrdinalIgnoreCase) ||
-                        string.Equals(p.name, "Default", StringComparison.OrdinalIgnoreCase) ||
-                        p.name.StartsWith("Profile ", StringComparison.OrdinalIgnoreCase))
+                    // Preserve user's custom profile name if renamed away from defaults ("Personal"/"Default"/"Profile")
+                    if (IsDefaultProfileName(p.name))
                     {
                         string shortName = dn.Length > 28 ? dn.Substring(0, 28) : dn;
                         p.name = shortName;
                     }
                 }
-                if (!string.IsNullOrWhiteSpace(avatarUrl)) p.googleAvatarUrl = avatarUrl.Trim();
+                if (!string.IsNullOrWhiteSpace(avatarUrl))
+                {
+                    string normalizedAvatar = NormalizeGoogleAvatarUrl(avatarUrl);
+                    if (!string.IsNullOrEmpty(normalizedAvatar)) p.googleAvatarUrl = normalizedAvatar;
+                }
                 p.isGoogleSignedIn = !string.IsNullOrEmpty(p.googleEmail) || !string.IsNullOrEmpty(p.googleDisplayName);
                 if (setAsMain.HasValue && setAsMain.Value)
                 {

@@ -1,5 +1,5 @@
 /**
- * dejavu v4.5.0 Native Shell Controller — Authentic Google Material Design 3
+ * dejavu v4.6.0 Native Shell Controller — Authentic Google Material Design 3
  * Full 10-Category Pixel/Chrome Settings, Multi-Window & Chrome-Style Profiles,
  * Google Account Sign-In Wizard, 17 Pure M3 Wallpapers & 8x Turbo Downloader.
  */
@@ -62,6 +62,7 @@
   const favbar = document.getElementById('favbar');
   const favbarList = document.getElementById('favbar-list');
 
+  const spPrivateChip = document.getElementById('sp-private-chip');
   const startpageProfileBadge = document.getElementById('startpage-profile-badge');
   const spBadgeAvatar = document.getElementById('sp-badge-avatar');
   const spBadgeGreeting = document.getElementById('sp-badge-greeting');
@@ -126,7 +127,6 @@
   const prefReading = document.getElementById('pref-reading');
 
   // Left Navigation Rail
-  const railNewtab = document.getElementById('rail-newtab');
   const railHome = document.getElementById('rail-home');
   const railSidebar = document.getElementById('rail-sidebar');
   const railDownloads = document.getElementById('rail-downloads');
@@ -137,13 +137,12 @@
   const railSyncDot = document.getElementById('rail-sync-dot');
   const railHistory = document.getElementById('rail-history');
   const railTabs = document.getElementById('rail-tabs');
-  const railVpn = document.getElementById('rail-vpn');
-  const railVpnDot = document.getElementById('rail-vpn-dot');
   const railSettings = document.getElementById('rail-settings');
   const railCollapse = document.getElementById('rail-collapse');
 
   // Settings Workspace (10 Categories)
   const settingsOverlay = document.getElementById('settings-overlay');
+  const optionsModal = document.getElementById('options-modal');
   const settingsScrollContainer = document.getElementById('settings-scroll-container');
   const settingsSearchInput = document.getElementById('settings-search-input');
   const btnSettingsSearchClear = document.getElementById('btn-settings-search-clear');
@@ -151,6 +150,7 @@
   const settingsSearchCount = document.getElementById('settings-search-count');
   const btnSettingsSearchReset = document.getElementById('btn-settings-search-reset');
   const settingsSearchEmpty = document.getElementById('settings-search-empty');
+  const btnSettingsEmptyClear = document.getElementById('btn-settings-empty-clear');
   const settingsNav = document.getElementById('settings-nav');
   const settingsPaneHeader = document.getElementById('settings-pane-header');
   const settingsPaneTitle = document.getElementById('settings-pane-title');
@@ -158,7 +158,10 @@
   const settingsVersionSub = document.getElementById('settings-version-sub');
   const btnSettingsDone = document.getElementById('btn-settings-done');
   const btnSettingsReset = document.getElementById('btn-settings-reset');
-  const settingsToast = document.getElementById('settings-toast');
+
+  // Global Material Design 3 Snackbar / Toast
+  const m3Toast = document.getElementById('m3-toast');
+  const m3ToastMsg = document.getElementById('m3-toast-msg');
 
   // Category 1: You and Google
   const youHeroAvatar = document.getElementById('you-hero-avatar');
@@ -284,6 +287,8 @@
   const profileSetupOverlay = document.getElementById('profile-setup-overlay');
   const psBtnBack = document.getElementById('ps-btn-back');
   const psStepPill = document.getElementById('ps-step-pill');
+  const psStep1 = document.getElementById('ps-step-1');
+  const psStep2 = document.getElementById('ps-step-2');
   const psBtnClose = document.getElementById('ps-btn-close');
   const psViewGoogle = document.getElementById('ps-view-google');
   const psGoogleTitle = document.getElementById('ps-google-title');
@@ -292,7 +297,13 @@
   const psBtnGoogleSignup = document.getElementById('ps-btn-google-signup');
   const psBtnContinueLocal = document.getElementById('ps-btn-continue-local');
   const psGoogleWait = document.getElementById('ps-google-wait');
+  const psWaitDot = document.getElementById('ps-wait-dot');
   const psWaitTitle = document.getElementById('ps-wait-title');
+  const psWaitSub = document.getElementById('ps-wait-sub');
+  const psSyncedPreview = document.getElementById('ps-synced-preview');
+  const psSyncedAvatar = document.getElementById('ps-synced-avatar');
+  const psSyncedName = document.getElementById('ps-synced-name');
+  const psSyncedEmail = document.getElementById('ps-synced-email');
   const psBtnSyncNow = document.getElementById('ps-btn-sync-now');
   const psManualName = document.getElementById('ps-manual-name');
   const psManualEmail = document.getElementById('ps-manual-email');
@@ -364,7 +375,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v4.5.0 — 16 HD + 1 Live = 17 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v4.6.0 — 16 HD + 1 Live = 17 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 12 Sculptural / Architectural Material Design 3 HD Wallpapers
@@ -563,7 +574,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '4.5.0',
+    appVersion: bootData.appVersion || '4.6.0',
     updateStatus: bootData.updateStatus || '',
     updateReadyVersion: bootData.updateReadyVersion || '',
     downloadsCount: 0,
@@ -1255,6 +1266,7 @@
       applyStartPagePrefs(state.startPagePrefs);
       renderFrequentlyVisited(state.frequentlyVisited, state.startPagePrefs.hideFrequentlyVisited);
       renderReadingListSection(state.readingList, state.startPagePrefs.hideReadingList);
+      syncSettingsUi();
       send({ type: 'updateStartPagePrefs', [field]: !nextShow });
     });
   }
@@ -1377,7 +1389,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v4.5.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v4.6.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -1388,17 +1400,54 @@
     return 'you';
   }
 
-  function showSettingsToast(text) {
-    if (!settingsToast || !text) return;
-    settingsToast.textContent = text;
-    settingsToast.classList.remove('hidden');
+  function showToast(message, tone) {
+    const txt = String(message || '').trim();
+    if (!m3Toast || !m3ToastMsg || !txt) return;
+    const t = (tone === 'warning' || tone === 'info' || tone === 'success') ? tone : 'success';
+    m3ToastMsg.textContent = txt;
+    m3Toast.classList.remove('hidden', 'tone-success', 'tone-info', 'tone-warning');
+    m3Toast.classList.add(`tone-${t}`);
+    // Restart M3 snackbar enter animation smoothly on back-to-back updates
+    m3Toast.style.animation = 'none';
+    void m3Toast.offsetWidth;
+    m3Toast.style.animation = '';
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => settingsToast.classList.add('hidden'), 2600);
+    toastTimer = setTimeout(() => m3Toast.classList.add('hidden'), 3200);
   }
+
+  function showSettingsToast(text, tone) {
+    showToast(text, tone || 'success');
+  }
+
+  // Inject crisp M3 tonal category pill badges into every Settings section for cross-category live search
+  (function initSettingsSearchCategoryBadges() {
+    document.querySelectorAll('.settings-pane').forEach((paneEl) => {
+      const paneKey = paneEl.dataset.paneBody || '';
+      const catLabel = paneEl.dataset.catLabel || (SETTINGS_PANE_META[paneKey] && SETTINGS_PANE_META[paneKey].title) || '';
+      if (!catLabel) return;
+      paneEl.querySelectorAll('.m3-pref-section').forEach((sec) => {
+        const heading = sec.querySelector('.m3-pref-heading');
+        if (!heading || heading.querySelector('.m3-search-cat-pill')) return;
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = 'm3-search-cat-pill';
+        pill.textContent = catLabel;
+        pill.title = `Jump to ${catLabel}`;
+        pill.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (settingsSearchInput) settingsSearchInput.value = '';
+          if (btnSettingsSearchClear) btnSettingsSearchClear.classList.add('hidden');
+          setActiveSettingsPane(paneKey);
+        });
+        heading.appendChild(pill);
+      });
+    });
+  })();
 
   function setActiveSettingsPane(pane) {
     const key = normalizePaneKey(pane);
     activeSettingsPane = key;
+    if (optionsModal) optionsModal.classList.remove('is-searching');
     if (settingsNav) {
       settingsNav.querySelectorAll('.settings-nav-item').forEach((b) => {
         b.classList.toggle('active', b.dataset.pane === key);
@@ -1461,7 +1510,7 @@
       settingsProfilesList.innerHTML = `
         <div class="opt-row">
           <div class="opt-meta">
-            <div class="opt-title">No other profiles yet</div>
+            <div class="opt-title opt-row-title">No other profiles yet</div>
             <div class="opt-desc">Create separate profiles for Work, School, or Gaming — each opens side-by-side in its own isolated dejavu window.</div>
           </div>
         </div>
@@ -1485,7 +1534,7 @@
           ${renderProfileAvatarHtml(p, 40)}
         </div>
         <div class="opt-meta">
-          <div class="opt-title" style="display:flex;align-items:center;gap:7px;">
+          <div class="opt-title opt-row-title" style="display:flex;align-items:center;gap:7px;">
             <span class="p-disp"></span>
             ${running ? '<span class="prof-running-dot" title="Currently open in its own window"></span>' : ''}
             ${isProfMain ? '<span class="m3-status-chip primary" style="height:20px;font-size:10px;">Main</span>' : ''}
@@ -1511,7 +1560,21 @@
     });
   }
 
+  function syncZoomSliderFill(pctVal) {
+    if (!optDefaultZoomSlider) return;
+    const min = Number(optDefaultZoomSlider.min || 50);
+    const max = Number(optDefaultZoomSlider.max || 200);
+    const clamped = Math.max(min, Math.min(max, Number(pctVal || 100)));
+    const ratio = ((clamped - min) / Math.max(1, max - min)) * 100;
+    optDefaultZoomSlider.style.setProperty('--slider-pct', `${ratio.toFixed(2)}%`);
+  }
+
   function applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen) {
+    if (state.isPrivateWindow) {
+      body.classList.remove('force-light', 'theme-light');
+      body.classList.add('force-dark', 'theme-dark');
+      return false;
+    }
     const mode = apMode || 'auto';
     const forceLight = (mode === 'light');
     const forceDark = (mode === 'dark');
@@ -1536,7 +1599,8 @@
     body.classList.toggle('nav-rail-hidden', !!o.hideNavRail);
     body.classList.toggle('reduce-motion', !!o.reduceWallpaperMotion);
     if (btnToolbarHome) btnToolbarHome.classList.toggle('hidden', o.showHomeButton === false);
-    if (startpageProfileBadge) startpageProfileBadge.classList.toggle('hidden', !!o.hideGreetingBadge);
+    if (spPrivateChip) spPrivateChip.classList.toggle('hidden', !state.isPrivateWindow);
+    if (startpageProfileBadge) startpageProfileBadge.classList.toggle('hidden', !!o.hideGreetingBadge || !!state.isPrivateWindow);
     if (heroSearchWrap) heroSearchWrap.classList.toggle('hidden', !!o.hideStartPageSearch);
 
     const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
@@ -1546,7 +1610,7 @@
       window.DejavuNewTabCanvas.setOptions({
         reduceMotion: !!o.reduceWallpaperMotion,
         dim: o.wallpaperDim || 'balanced',
-        lightMode: (o.appearanceMode === 'light'),
+        lightMode: !state.isPrivateWindow && (o.appearanceMode === 'light'),
         accentColor: ac
       });
     }
@@ -1556,7 +1620,7 @@
   function syncSettingsUi() {
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
-    const ver = state.appVersion || '4.5.0';
+    const ver = state.appVersion || '4.6.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -1576,7 +1640,10 @@
     if (optFontSize) optFontSize.value = o.fontSize || 'medium';
     if (optFontFamily) optFontFamily.value = o.fontFamily || 'system';
     const zoomPct = Number(o.defaultZoomPercent || 100);
-    if (optDefaultZoomSlider) optDefaultZoomSlider.value = String(zoomPct);
+    if (optDefaultZoomSlider) {
+      optDefaultZoomSlider.value = String(zoomPct);
+      syncZoomSliderFill(zoomPct);
+    }
     if (optDefaultZoomVal) optDefaultZoomVal.textContent = `${zoomPct}%`;
     setSwitchState(optShowHome, o.showHomeButton !== false);
     setSwitchState(optShowFavbar, !o.favoritesBarHidden);
@@ -1726,6 +1793,7 @@
       return;
     }
 
+    if (optionsModal) optionsModal.classList.add('is-searching');
     if (settingsPaneHeader) settingsPaneHeader.classList.add('hidden');
     let matchRows = 0;
     let matchPanes = 0;
@@ -1757,7 +1825,10 @@
     if (settingsSearchBanner) {
       settingsSearchBanner.classList.toggle('hidden', matchRows === 0);
       if (settingsSearchCount) {
-        settingsSearchCount.textContent = `Found ${matchRows} ${matchRows === 1 ? 'setting' : 'settings'} across ${matchPanes} ${matchPanes === 1 ? 'category' : 'categories'} for "${rawQ.trim()}"`;
+        const countLabel = `${matchRows} ${matchRows === 1 ? 'setting' : 'settings'} found`;
+        settingsSearchCount.textContent = matchPanes > 1
+          ? `${countLabel} across ${matchPanes} categories`
+          : countLabel;
       }
     }
     if (settingsSearchEmpty) settingsSearchEmpty.classList.toggle('hidden', matchRows > 0);
@@ -1767,12 +1838,14 @@
   if (btnSettings) {
     btnSettings.addEventListener('click', () => {
       wallpaperStore.classList.add('hidden');
+      shortcutModal.classList.add('hidden');
       send({ type: 'toggleSettings', open: !state.settingsOpen, pane: activeSettingsPane });
     });
   }
   if (btnStoreMoreOptions) {
     btnStoreMoreOptions.addEventListener('click', () => {
       wallpaperStore.classList.add('hidden');
+      shortcutModal.classList.add('hidden');
       send({ type: 'toggleSettings', open: true, pane: 'appearance' });
     });
   }
@@ -1789,6 +1862,7 @@
       if (settingsSearchInput && settingsSearchInput.value) {
         settingsSearchInput.value = '';
       }
+      if (btnSettingsSearchClear) btnSettingsSearchClear.classList.add('hidden');
       setActiveSettingsPane(btn.dataset.pane || 'you');
     });
   }
@@ -1802,19 +1876,14 @@
       }
     });
   }
-  if (btnSettingsSearchClear) {
-    btnSettingsSearchClear.addEventListener('click', () => {
-      settingsSearchInput.value = '';
-      filterSettingsOptions('');
-      settingsSearchInput.focus();
-    });
-  }
-  if (btnSettingsSearchReset) {
-    btnSettingsSearchReset.addEventListener('click', () => {
-      settingsSearchInput.value = '';
-      filterSettingsOptions('');
-    });
-  }
+  const clearSettingsSearch = (refocus) => {
+    if (settingsSearchInput) settingsSearchInput.value = '';
+    filterSettingsOptions('');
+    if (refocus && settingsSearchInput) settingsSearchInput.focus();
+  };
+  if (btnSettingsSearchClear) btnSettingsSearchClear.addEventListener('click', () => clearSettingsSearch(true));
+  if (btnSettingsSearchReset) btnSettingsSearchReset.addEventListener('click', () => clearSettingsSearch(false));
+  if (btnSettingsEmptyClear) btnSettingsEmptyClear.addEventListener('click', () => clearSettingsSearch(true));
 
   // Settings Event Bindings
   function bindSeg(container, key, parseVal) {
@@ -1868,6 +1937,7 @@
   if (optFontFamily) optFontFamily.addEventListener('change', () => updateOpt({ fontFamily: optFontFamily.value }));
   if (optDefaultZoomSlider) {
     optDefaultZoomSlider.addEventListener('input', () => {
+      syncZoomSliderFill(optDefaultZoomSlider.value);
       if (optDefaultZoomVal) optDefaultZoomVal.textContent = `${optDefaultZoomSlider.value}%`;
     });
     optDefaultZoomSlider.addEventListener('change', () => {
@@ -1888,6 +1958,8 @@
     next[key] = !next[key];
     state.startPagePrefs = next;
     applyStartPagePrefs(next);
+    renderFrequentlyVisited(state.frequentlyVisited, next.hideFrequentlyVisited);
+    renderReadingListSection(state.readingList, next.hideReadingList);
     syncSettingsUi();
     send({ type: 'updateStartPagePrefs', [key]: next[key] });
   }
@@ -2126,15 +2198,55 @@
     });
   }
 
+  function updatePsSyncedPreview() {
+    const hasSynced = !!(psState.googleEmail || psState.googleAvatarUrl || psState.googleDisplayName);
+    if (psWaitDot) psWaitDot.classList.toggle('synced', hasSynced);
+    if (psSyncedPreview) psSyncedPreview.classList.toggle('hidden', !hasSynced);
+    if (hasSynced) {
+      if (psWaitTitle) psWaitTitle.textContent = 'Google Account connected';
+      if (psSyncedAvatar) {
+        psSyncedAvatar.innerHTML = renderProfileAvatarHtml({
+          googleAvatarUrl: psState.googleAvatarUrl,
+          googleDisplayName: psState.googleDisplayName || 'Google',
+          avatar: psState.selectedAvatar
+        }, 38);
+      }
+      if (psSyncedName) psSyncedName.textContent = psState.googleDisplayName || 'Google Account';
+      if (psSyncedEmail) psSyncedEmail.textContent = psState.googleEmail || 'Signed in';
+    }
+  }
+
   function setPsStep(step) {
     psState.step = step;
     const isStep1 = (step === 1);
+    const isEdit = (psState.mode === 'edit');
     if (psViewGoogle) psViewGoogle.classList.toggle('hidden', !isStep1);
     if (psViewCustomize) psViewCustomize.classList.toggle('hidden', isStep1);
-    if (psBtnBack) psBtnBack.classList.toggle('hidden', isStep1 || psState.mode === 'edit');
-    if (psStepPill) {
-      psStepPill.textContent = psState.mode === 'edit' ? 'Customize Profile' : (isStep1 ? 'Step 1 of 2' : 'Step 2 of 2');
+    if (psBtnBack) psBtnBack.classList.toggle('hidden', isStep1 || isEdit);
+
+    if (psStep1 && psStep2) {
+      const conn = psStepPill ? psStepPill.querySelector('.ps-step-connector') : null;
+      if (isEdit) {
+        psStep1.classList.add('hidden');
+        if (conn) conn.classList.add('hidden');
+        psStep2.classList.add('active');
+        psStep2.classList.remove('done');
+        const num2 = psStep2.querySelector('.ps-step-num');
+        if (num2) num2.textContent = '✓';
+      } else {
+        psStep1.classList.remove('hidden');
+        if (conn) conn.classList.remove('hidden');
+        psStep1.classList.toggle('active', isStep1);
+        psStep1.classList.toggle('done', !isStep1);
+        psStep2.classList.toggle('active', !isStep1);
+        psStep2.classList.remove('done');
+        const num1 = psStep1.querySelector('.ps-step-num');
+        const num2 = psStep2.querySelector('.ps-step-num');
+        if (num1) num1.textContent = isStep1 ? '1' : '✓';
+        if (num2) num2.textContent = '2';
+      }
     }
+
     if (!isStep1) {
       syncPsColorDots();
       renderPsAvatarGrid();
@@ -2148,10 +2260,20 @@
       }
       updatePsPreview();
       setTimeout(() => { if (psNameInput) psNameInput.focus(); }, 40);
+    } else {
+      updatePsSyncedPreview();
     }
   }
 
+  if (psStep1) {
+    psStep1.addEventListener('click', () => {
+      if (psState.mode !== 'edit' && psState.step !== 1) setPsStep(1);
+    });
+  }
+
   function openProfileSetupModal(mode, profileId) {
+    if (wallpaperStore) wallpaperStore.classList.add('hidden');
+    if (shortcutModal) shortcutModal.classList.add('hidden');
     const m = mode || 'setup';
     const profiles = Array.isArray(state.profiles) ? state.profiles : [];
     const target = profileId
@@ -2183,11 +2305,17 @@
       psGoogleSub.textContent = 'Sign in or create a Google Account to use Gmail, YouTube, Drive, and Gemini in an isolated profile window.';
     }
     if (psGoogleWait) psGoogleWait.classList.add('hidden');
+    if (psWaitDot) psWaitDot.classList.remove('synced');
+    if (psSyncedPreview) psSyncedPreview.classList.add('hidden');
     if (psManualName) psManualName.value = psState.googleDisplayName || '';
     if (psManualEmail) psManualEmail.value = psState.googleEmail || '';
     if (psNameInput) psNameInput.value = target ? (target.name || '') : '';
 
     setPsStep(psState.step);
+    if (psState.step === 1 && (psState.googleEmail || psState.googleAvatarUrl)) {
+      if (psGoogleWait) psGoogleWait.classList.remove('hidden');
+      updatePsSyncedPreview();
+    }
     if (profileSetupOverlay) profileSetupOverlay.classList.remove('hidden');
     syncModalBodyClass();
   }
@@ -2370,13 +2498,11 @@
     if (railMediaDot) railMediaDot.classList.toggle('hidden', mCnt <= 0);
     const syncConn = !!(state.sync && state.sync.connected);
     if (railSyncDot) railSyncDot.classList.toggle('hidden', !syncConn);
-    const vpnConn = !!(state.vpn && state.vpn.state === 'connected');
-    if (railVpnDot) railVpnDot.classList.toggle('hidden', !vpnConn);
-    if (railVpn) railVpn.classList.toggle('is-accent', vpnConn);
   }
 
-  if (railNewtab) railNewtab.addEventListener('click', () => send({ type: 'newTab' }));
   if (railHome) railHome.addEventListener('click', () => {
+    wallpaperStore.classList.add('hidden');
+    shortcutModal.classList.add('hidden');
     if (state.dlManagerOpen) send({ type: 'closeDlManager' });
     if (state.settingsOpen) send({ type: 'toggleSettings', open: false });
     if (state.tabOverviewOpen) send({ type: 'toggleTabOverview', open: false });
@@ -2384,27 +2510,35 @@
   });
   if (railSidebar) railSidebar.addEventListener('click', () => send({ type: 'openSidebar' }));
   if (railDownloads) railDownloads.addEventListener('click', () => {
+    wallpaperStore.classList.add('hidden');
+    shortcutModal.classList.add('hidden');
     if (state.dlManagerOpen && activeDlTab !== 'media') send({ type: 'closeDlManager' });
     else { activeDlTab = 'all'; send({ type: 'openDlManager', tab: 'all' }); }
   });
   if (railMedia) railMedia.addEventListener('click', () => {
+    wallpaperStore.classList.add('hidden');
+    shortcutModal.classList.add('hidden');
     if (state.dlManagerOpen && activeDlTab === 'media') send({ type: 'closeDlManager' });
     else { activeDlTab = 'media'; send({ type: 'openDlManager', tab: 'media' }); }
   });
   if (railSync) railSync.addEventListener('click', () => {
-    const r = btnSync ? btnSync.getBoundingClientRect() : { right: window.innerWidth - 120 };
-    send({ type: 'openSync', anchorRight: Math.round(r.right) });
+    // Anchor Sync popover (412px wide) cleanly right next to the 56px Left Navigation Rail
+    send({ type: 'openSync', anchorRight: 480 });
   });
   if (railHistory) railHistory.addEventListener('click', () => {
-    const r = btnHistory ? btnHistory.getBoundingClientRect() : { right: window.innerWidth - 96 };
-    send({ type: 'openHistory', anchorRight: Math.round(r.right) });
+    // Anchor History popover (396px wide) cleanly right next to the 56px Left Navigation Rail
+    send({ type: 'openHistory', anchorRight: 464 });
   });
-  if (railTabs) railTabs.addEventListener('click', () => send({ type: 'toggleTabOverview', open: !state.tabOverviewOpen }));
-  if (railVpn) railVpn.addEventListener('click', () => {
-    const r = btnVpn ? btnVpn.getBoundingClientRect() : { right: window.innerWidth - 150 };
-    send({ type: 'openVpn', anchorRight: Math.round(r.right) });
+  if (railTabs) railTabs.addEventListener('click', () => {
+    wallpaperStore.classList.add('hidden');
+    shortcutModal.classList.add('hidden');
+    send({ type: 'toggleTabOverview', open: !state.tabOverviewOpen });
   });
-  if (railSettings) railSettings.addEventListener('click', () => send({ type: 'toggleSettings', open: !state.settingsOpen, pane: activeSettingsPane }));
+  if (railSettings) railSettings.addEventListener('click', () => {
+    wallpaperStore.classList.add('hidden');
+    shortcutModal.classList.add('hidden');
+    send({ type: 'toggleSettings', open: !state.settingsOpen, pane: activeSettingsPane });
+  });
   if (railCollapse) railCollapse.addEventListener('click', () => send({ type: 'toggleNavRail' }));
 
   // Customize Start Page Wallpaper Modal
@@ -2769,15 +2903,17 @@
     if (!profile) return;
     const disp = profile.googleDisplayName || profile.name || 'Personal';
     const isMain = !!profile.isMainProfile || profile.id === state.mainProfileId;
-    const avKey = `${profile.avatar}_${profile.googleAvatarUrl || ''}_${disp}_${isMain ? 1 : 0}_${state.isPrivateWindow ? 1 : 0}`;
+    const isGooglePhoto = !!(profile.isGoogleSignedIn && profile.googleAvatarUrl && !state.isPrivateWindow);
+    const avKey = `${profile.avatar}_${profile.googleAvatarUrl || ''}_${disp}_${isMain ? 1 : 0}_${state.isPrivateWindow ? 1 : 0}_${isGooglePhoto ? 1 : 0}`;
     if (avKey !== lastAvatarRendered) {
       lastAvatarRendered = avKey;
       profileAvatarSlot.innerHTML = renderProfileAvatarHtml(profile, 24);
+      btnProfile.classList.toggle('is-google-signed', isGooglePhoto);
       if (profilePillName) profilePillName.textContent = state.isPrivateWindow ? 'Private' : disp;
       if (profileMainChip) profileMainChip.classList.toggle('hidden', state.isPrivateWindow || !isMain);
       btnProfile.title = profile.isGoogleSignedIn
-        ? `${disp} (${profile.googleEmail || 'Google'}) · Profiles & Windows`
-        : `${disp} · Profiles & Google Account`;
+        ? `${disp} (${profile.googleEmail || 'Google'}) · Profiles & Windows (Ctrl+Shift+M)`
+        : `${disp} · Profiles & Google Account (Ctrl+Shift+M)`;
     }
     syncStartPageProfileBadge(profile);
   }
@@ -2801,6 +2937,7 @@
 
     body.classList.toggle('is-private', !!state.isPrivateWindow);
     if (privateBadgePill) privateBadgePill.classList.toggle('hidden', !state.isPrivateWindow);
+    if (spPrivateChip) spPrivateChip.classList.toggle('hidden', !state.isPrivateWindow);
 
     syncTabs(next.tabs || [], next.activeTabId);
     if (!bootTabsReady && next.tabs && next.tabs.length > 0) {
@@ -2837,6 +2974,8 @@
     tabOverview.classList.toggle('hidden', !ovOpen);
     btnTabOverview.classList.toggle('is-active', ovOpen);
     if (ovOpen) {
+      wallpaperStore.classList.add('hidden');
+      shortcutModal.classList.add('hidden');
       if (!wasOverview) ovSearchInput.value = '';
       renderTabOverview();
       window.DejavuNewTabCanvas.start();
@@ -2854,6 +2993,8 @@
     if (dlManagerOverlay) dlManagerOverlay.classList.toggle('hidden', !dlOpen);
     if (btnDownloads) btnDownloads.classList.toggle('is-active', dlOpen);
     if (dlOpen) {
+      wallpaperStore.classList.add('hidden');
+      shortcutModal.classList.add('hidden');
       if (!wasDlOpen && next.dlManagerTab) activeDlTab = next.dlManagerTab;
       if (!wasDlOpen) maybeAutoProbeActiveVideo();
       renderDlManager();
@@ -2862,8 +3003,11 @@
 
     applyBrowserOptions(next.browserOptions || state.browserOptions);
     if (optOpen) {
+      wallpaperStore.classList.add('hidden');
+      shortcutModal.classList.add('hidden');
       if (!wasOptOpen) {
         if (settingsSearchInput) settingsSearchInput.value = '';
+        if (btnSettingsSearchClear) btnSettingsSearchClear.classList.add('hidden');
         setActiveSettingsPane(next.settingsPane || activeSettingsPane || 'you');
       } else if (activeSettingsPane === 'appearance') {
         renderSettingsWallpaperGrid();
@@ -3390,10 +3534,11 @@
         if (psManualEmail && p.googleEmail) psManualEmail.value = p.googleEmail;
         if (psNameInput && !psNameInput.value.trim() && p.googleDisplayName) psNameInput.value = p.googleDisplayName;
         if (psState.googleAvatarUrl) psState.selectedAvatar = '__google__';
+        updatePsSyncedPreview();
         if (profileSetupOverlay && !profileSetupOverlay.classList.contains('hidden')) {
           setPsStep(2);
         }
-        showSettingsToast(`Google Account synced: ${p.googleEmail || p.googleDisplayName || 'Connected'}`);
+        showToast(`Signed in as ${p.googleDisplayName || p.googleEmail || 'Google Account'}`, 'success');
       } else if (msg.type === 'turboDownloadsUpdate') {
         state.turboDownloads = msg.turboDownloads || [];
         state.pageMedia = msg.pageMedia || [];
@@ -3411,8 +3556,10 @@
         btnDownloads.classList.toggle('downloading', state.hasActiveDownload);
         updateRailIndicators();
         if (state.dlManagerOpen) renderDlManager();
+      } else if (msg.type === 'toast') {
+        showToast(msg.message || msg.text || '', msg.tone || 'success');
       } else if (msg.type === 'settingsToast') {
-        showSettingsToast(msg.text || '');
+        showToast(msg.text || msg.message || '', msg.tone || 'info');
       } else if (msg.type === 'palette') {
         if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open') && !body.classList.contains('settings-open') && !body.classList.contains('dl-manager-open') && !body.classList.contains('modal-open')) {
           const apMode = (state.browserOptions && state.browserOptions.appearanceMode) || 'auto';

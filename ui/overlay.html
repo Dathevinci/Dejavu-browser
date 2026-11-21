@@ -254,6 +254,32 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      padding: 6px;
+      margin: -6px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background-color var(--md-dur-short) ease;
+    }
+
+    .prof-hero-top:hover {
+      background: var(--md-state-hover);
+    }
+
+    .prof-hero-edit-ico {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--md-shape-full);
+      color: var(--md-on-surface-variant);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background-color var(--md-dur-short) ease, color var(--md-dur-short) ease;
+    }
+
+    .prof-hero-top:hover .prof-hero-edit-ico {
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
     }
 
     .active-prof-meta { flex: 1; min-width: 0; }
@@ -1530,7 +1556,9 @@
     <div id="prof-view-list" class="panel-box">
       <div class="panel-head">
         <div class="panel-title">Profiles &amp; Google Account</div>
-        <button id="btn-prof-settings" class="pill-btn" title="You and Google Settings (Ctrl+,)">Settings</button>
+        <button id="btn-prof-close" class="icon-btn sm" title="Close">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
       </div>
 
       <div id="active-prof-card" class="prof-hero-card"></div>
@@ -1555,7 +1583,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v4.5.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v4.6.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -1985,6 +2013,7 @@
       <button id="mn-profiles" class="menu-item" type="button">
         <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="2.9" stroke="currentColor" stroke-width="1.45"/><path d="M3.8 14.8c.7-2.6 2.6-4 5.2-4s4.5 1.4 5.2 4" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>
         <span class="menu-item-label">Profiles &amp; Google Account</span>
+        <span class="menu-kbd">Ctrl+Shift+M</span>
       </button>
       <button id="mn-downloads" class="menu-item" type="button">
         <svg viewBox="0 0 18 18" fill="none"><path d="M9 3.4v8.2M5.8 8.4L9 11.6l3.2-3.2M3.6 14.6h10.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2020,7 +2049,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v4.5.0</span>
+        <span id="mn-version-lbl">dejavu v4.6.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -2194,9 +2223,9 @@
         send({ type: 'checkUpdate' });
       }
     });
-    const btnProfSettings = document.getElementById('btn-prof-settings');
-    if (btnProfSettings) {
-      btnProfSettings.addEventListener('click', () => send({ type: 'openSettings', pane: 'you' }));
+    const btnProfClose = document.getElementById('btn-prof-close');
+    if (btnProfClose) {
+      btnProfClose.addEventListener('click', () => send({ type: 'closePanel' }));
     }
 
     function renderProfilesHub(d) {
@@ -2215,12 +2244,13 @@
         const disp = active.googleDisplayName || active.name || 'Personal';
         const subText = signedIn
           ? (active.googleEmail || 'Signed in with Google')
-          : (d.isPrivateWindow ? 'Private Browsing Window' : 'Isolated local profile · Sign in to link Google');
+          : (d.isPrivateWindow ? 'Private Browsing Window' : 'Isolated local profile · Click to customize');
 
         const googleIconSvg = '<svg viewBox="0 0 18 18" width="13" height="13" aria-hidden="true"><path fill="currentColor" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/><path fill="currentColor" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z" opacity="0.9"/><path fill="currentColor" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z" opacity="0.8"/><path fill="currentColor" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" opacity="0.95"/></svg>';
+        const editPenSvg = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M11.4 2.6l2 2L5.6 12.4 3 13l.6-2.6 7.8-7.8z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/></svg>';
 
         activeProfCard.innerHTML = `
-          <div class="prof-hero-top">
+          <div class="prof-hero-top js-edit-active" role="button" tabindex="0" title="Click to customize profile name, avatar &amp; theme">
             ${renderOvAvatar(active, 50)}
             <div class="active-prof-meta">
               <div class="active-prof-name-row">
@@ -2230,21 +2260,28 @@
               </div>
               <div class="active-prof-sub"></div>
             </div>
+            <span class="prof-hero-edit-ico" aria-hidden="true">${editPenSvg}</span>
           </div>
           <div class="prof-hero-actions">
             ${signedIn
-              ? `<button id="btn-manage-google" class="pill-btn primary" type="button">Manage Google Account</button>
-                 <button class="pill-btn outlined js-edit-active" type="button">Customize Profile</button>`
+              ? `<button id="btn-manage-google" class="pill-btn primary" type="button">Manage Google Account</button>`
               : `<button id="btn-prof-google-in" class="pill-btn primary" type="button">${googleIconSvg}<span>Sign in with Google</span></button>
-                 <button id="btn-prof-google-up" class="pill-btn" type="button">Create Google Account</button>
-                 <button class="pill-btn outlined js-edit-active" type="button">Customize</button>`
+                 <button id="btn-prof-google-up" class="pill-btn" type="button">Create Google Account</button>`
             }
           </div>
         `;
         activeProfCard.querySelector('.active-prof-name').textContent = disp;
         activeProfCard.querySelector('.active-prof-sub').textContent = subText;
         const bEdit = activeProfCard.querySelector('.js-edit-active');
-        if (bEdit) bEdit.addEventListener('click', () => send({ type: 'openProfileSetup', mode: 'edit', profileId: active.id }));
+        if (bEdit) {
+          bEdit.addEventListener('click', () => send({ type: 'openProfileSetup', mode: 'edit', profileId: active.id }));
+          bEdit.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              send({ type: 'openProfileSetup', mode: 'edit', profileId: active.id });
+            }
+          });
+        }
         const bIn = activeProfCard.querySelector('#btn-prof-google-in');
         if (bIn) bIn.addEventListener('click', () => send({ type: 'googleSignIn', profileId: active.id }));
         const bUp = activeProfCard.querySelector('#btn-prof-google-up');
@@ -2324,7 +2361,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.5.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.6.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -2448,11 +2485,12 @@
         return;
       }
 
-      const wantLight = !!d.isLight;
+      const wantLight = !d.isPrivateWindow && !!d.isLight;
       if (d.accentColor) {
         document.documentElement.dataset.accent = d.accentColor;
         document.body.dataset.accent = d.accentColor;
       }
+      document.body.classList.toggle('is-private', !!d.isPrivateWindow);
       document.body.classList.toggle('theme-light', wantLight);
       document.body.classList.toggle('theme-dark', !wantLight);
 
@@ -3496,7 +3534,7 @@
     function renderMenuPanel(d) {
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '4.5.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '4.6.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');

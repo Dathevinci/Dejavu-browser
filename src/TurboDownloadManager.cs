@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -32,11 +33,15 @@ namespace DejavuBrowser
         public string SavePath { get; set; }
         public string PartPath { get; set; }
         public string Category { get; set; } // "video" | "audio" | "image" | "document" | "archive" | "other"
-        public string StreamType { get; set; } // "http" | "hls"
+        public string StreamType { get; set; } // "http" | "hls" | "ytdlp"
+        public string Quality { get; set; }    // "best" | "2160" | "1440" | "1080" | "720" | "480" | "360" | "mp3" | "m4a" | ""
+        public string QualityLabel { get; set; }
         public string Status { get; set; }   // "queued" | "probing" | "downloading" | "paused" | "completed" | "failed" | "cancelled"
+        public string StatusText { get; set; }
         public string Error { get; set; }
         public long TotalBytes { get; set; }
         public long ReceivedBytes { get; set; }
+        public double ProgressPercent { get; set; }
         public double SpeedBps { get; set; }
         public int EtaSeconds { get; set; }
         public int Threads { get; set; }
@@ -89,6 +94,7 @@ namespace DejavuBrowser
         private readonly Dictionary<int, List<SniffedMediaItem>> _tabMedia = new Dictionary<int, List<SniffedMediaItem>>();
         private readonly Action _onChanged;
         private readonly Func<IWebProxy> _proxyProvider;
+        private readonly VideoExtractorEngine _videoEngine;
         private DateTime _lastEmitUtc = DateTime.MinValue;
         private bool _disposed;
 
@@ -177,6 +183,7 @@ namespace DejavuBrowser
         {
             _onChanged = onChanged;
             _proxyProvider = proxyProvider;
+            _videoEngine = new VideoExtractorEngine(dataDir, proxyProvider);
             _storePath = Path.Combine(dataDir, "turbo_downloads.json");
             _downloadsDir = ResolveDownloadsFolder();
             try
@@ -193,6 +200,12 @@ namespace DejavuBrowser
         }
 
         public string DownloadsDirectory { get { return _downloadsDir; } }
+        public VideoExtractorEngine VideoEngine { get { return _videoEngine; } }
+
+        public Task<VideoProbeResult> ProbeVideoFormatsAsync(string pageUrl, Action<string> onStatus, CancellationToken ct)
+        {
+            return _videoEngine.ProbeVideoFormatsAsync(pageUrl, onStatus, ct);
+        }
 
         private static string ResolveDownloadsFolder()
         {
@@ -297,6 +310,11 @@ namespace DejavuBrowser
 
         public TurboDownloadEntry EnqueueDownload(string url, string suggestedName, string referer, string userAgent, string cookies, int threads)
         {
+            return EnqueueDownload(url, suggestedName, referer, userAgent, cookies, threads, "");
+        }
+
+        public TurboDownloadEntry EnqueueDownload(string url, string suggestedName, string referer, string userAgent, string cookies, int threads, string qualityPreset)
+        {
             if (string.IsNullOrWhiteSpace(url)) return null;
             string cleanUrl = NormalizeDownloadUrl(url.Trim());
             if (!cleanUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
@@ -305,7 +323,22 @@ namespace DejavuBrowser
                 cleanUrl = "https://" + cleanUrl;
             }
 
+            // Auto-route YouTube / TikTok / Instagram / X / Vimeo / Reddit / Twitch / SoundCloud / video-site URLs
+            // through our native yt-dlp + ffmpeg VideoExtractorEngine instead of downloading an HTML webpage!
+            string normQuality = VideoExtractorEngine.NormalizePreset(qualityPreset);
             bool looksHls = IsHlsUrl(cleanUrl, "");
+            bool looksDirectFile = looksHls || IsLikelyDirectFileUrl(cleanUrl) || IsGoogleVideoPlaybackUrl(cleanUrl) || IsLoopbackUrl(cleanUrl);
+            if (VideoExtractorEngine.IsSupportedVideoSiteUrl(cleanUrl) ||
+                (!looksDirectFile && (normQuality == "mp3" || normQuality == "m4a")))
+            {
+                return EnqueueVideoExtractDownload(
+                    cleanUrl,
+                    string.IsNullOrEmpty(normQuality) ? "best" : normQuality,
+                    suggestedName,
+                    referer,
+                    userAgent);
+            }
+
             string rawName = string.IsNullOrWhiteSpace(suggestedName) ? GuessFileNameFromUrl(cleanUrl) : suggestedName;
             string name = SanitizeFileName(rawName);
             if (looksHls)
@@ -339,10 +372,14 @@ namespace DejavuBrowser
                 PartPath = savePath + ".djvpart",
                 Category = looksHls ? "video" : ClassifyCategory(finalName, ExtractQueryParam(cleanUrl, "mime")),
                 StreamType = looksHls ? "hls" : "http",
+                Quality = "",
+                QualityLabel = "",
                 Status = "probing",
+                StatusText = "",
                 Error = "",
                 TotalBytes = 0,
                 ReceivedBytes = 0,
+                ProgressPercent = 0,
                 SpeedBps = 0,
                 EtaSeconds = 0,
                 Threads = Math.Max(1, Math.Min(MAX_THREADS, threads > 0 ? threads : MAX_THREADS)),
@@ -366,6 +403,108 @@ namespace DejavuBrowser
             return entry;
         }
 
+        public TurboDownloadEntry EnqueueVideoExtractDownload(string pageUrl, string formatPreset, string titleHint, string referer, string userAgent)
+        {
+            if (string.IsNullOrWhiteSpace(pageUrl)) return null;
+            string cleanUrl = pageUrl.Trim();
+            if (!cleanUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !cleanUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                cleanUrl = "https://" + cleanUrl;
+            }
+
+            string preset = VideoExtractorEngine.NormalizePreset(formatPreset);
+            if (string.IsNullOrEmpty(preset)) preset = "best";
+            string qualityLabel = VideoExtractorEngine.DescribePresetLabel(preset);
+            bool isAudio = VideoExtractorEngine.IsAudioPreset(preset);
+            string ext = (preset == "mp3") ? ".mp3" : (preset == "m4a" ? ".m4a" : ".mp4");
+
+            string cleanTitle = CleanMediaTitle(titleHint);
+            if (string.IsNullOrWhiteSpace(cleanTitle))
+            {
+                string host = ExtractHostSafe(cleanUrl);
+                cleanTitle = string.IsNullOrEmpty(host) ? "dejavu-video" : (host + " video");
+            }
+            string tag = (preset == "mp3") ? " [MP3]" : (preset == "m4a" ? " [M4A]" : (preset != "best" ? (" [" + preset + "p]") : ""));
+            string displayName = SanitizeFileName(cleanTitle + tag + ext);
+
+            Directory.CreateDirectory(_downloadsDir);
+            string initialSavePath = Path.Combine(_downloadsDir, displayName);
+            string initialStatus = !_videoEngine.IsYtDlpReady
+                ? "Preparing Video Engine (yt-dlp)..."
+                : (!_videoEngine.IsFfmpegReady ? "Preparing Audio/MP4 Muxer (ffmpeg)..." : "Extracting video streams...");
+
+            var segs = new List<TurboSegmentState>(MAX_THREADS);
+            for (int i = 0; i < MAX_THREADS; i++)
+            {
+                segs.Add(new TurboSegmentState { Start = 0, End = 999, Done = 0 });
+            }
+
+            var entry = new TurboDownloadEntry
+            {
+                Id = "tdl_" + Guid.NewGuid().ToString("N").Substring(0, 12),
+                Url = cleanUrl,
+                Referer = referer ?? cleanUrl,
+                Origin = ExtractOriginFromUrl(referer ?? cleanUrl),
+                UserAgent = string.IsNullOrWhiteSpace(userAgent)
+                    ? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+                    : userAgent,
+                Cookies = "",
+                FileName = displayName,
+                SavePath = initialSavePath,
+                PartPath = "",
+                Category = isAudio ? "audio" : "video",
+                StreamType = "ytdlp",
+                Quality = preset,
+                QualityLabel = qualityLabel,
+                Status = "probing",
+                StatusText = initialStatus,
+                Error = "",
+                TotalBytes = 0,
+                ReceivedBytes = 0,
+                ProgressPercent = 0,
+                SpeedBps = 0,
+                EtaSeconds = 0,
+                Threads = MAX_THREADS,
+                RangeSupported = true,
+                HlsTotalSegments = 0,
+                HlsDoneSegments = 0,
+                CreatedMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                Segments = segs,
+                FileLock = new object()
+            };
+
+            lock (_gate)
+            {
+                _entries.Insert(0, entry);
+                if (_entries.Count > MAX_HISTORY) _entries.RemoveRange(MAX_HISTORY, _entries.Count - MAX_HISTORY);
+            }
+
+            SavePersisted();
+            EmitChanged(true);
+            StartEntryWorker(entry);
+            return entry;
+        }
+
+        private static bool IsLikelyDirectFileUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return false;
+            string p = url.Split('?')[0].Split('#')[0].ToLowerInvariant();
+            string[] exts = new string[]
+            {
+                ".mp4", ".webm", ".mkv", ".mov", ".m4v", ".avi", ".ts", ".m3u8", ".m3u",
+                ".mp3", ".m4a", ".wav", ".flac", ".ogg", ".aac",
+                ".zip", ".rar", ".7z", ".tar", ".gz", ".exe", ".msi", ".apk", ".iso", ".dmg",
+                ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".epub", ".csv",
+                ".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".bin"
+            };
+            for (int i = 0; i < exts.Length; i++)
+            {
+                if (p.EndsWith(exts[i], StringComparison.OrdinalIgnoreCase)) return true;
+            }
+            return false;
+        }
+
         public void Pause(string id)
         {
             TurboDownloadEntry e = FindEntry(id);
@@ -374,6 +513,7 @@ namespace DejavuBrowser
             {
                 if (e.Status != "downloading" && e.Status != "probing" && e.Status != "queued") return;
                 e.Status = "paused";
+                e.StatusText = "";
                 e.SpeedBps = 0;
                 e.EtaSeconds = 0;
                 try { if (e.Cts != null) e.Cts.Cancel(); } catch { }
@@ -390,9 +530,17 @@ namespace DejavuBrowser
             {
                 if (e.Status == "downloading" || e.Status == "probing" || e.Status == "completed") return;
                 e.Status = "probing";
+                e.StatusText = string.Equals(e.StreamType, "ytdlp", StringComparison.OrdinalIgnoreCase)
+                    ? "Restarting video extraction..."
+                    : "";
                 e.Error = "";
                 e.SpeedBps = 0;
                 e.EtaSeconds = 0;
+                if (string.Equals(e.StreamType, "ytdlp", StringComparison.OrdinalIgnoreCase))
+                {
+                    e.ProgressPercent = 0;
+                    e.ReceivedBytes = 0;
+                }
             }
             EmitChanged(true);
             StartEntryWorker(e);
@@ -425,6 +573,7 @@ namespace DejavuBrowser
             lock (_gate)
             {
                 e.Status = "cancelled";
+                e.StatusText = "";
                 e.SpeedBps = 0;
                 e.EtaSeconds = 0;
                 try { if (e.Cts != null) e.Cts.Cancel(); } catch { }
@@ -725,6 +874,15 @@ namespace DejavuBrowser
                     {
                         pct = 100.0;
                     }
+                    else if (string.Equals(e.StreamType, "ytdlp", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (e.ProgressPercent > 0)
+                            pct = Math.Max(0, Math.Min(99.9, e.ProgressPercent));
+                        else if (e.TotalBytes > 0)
+                            pct = Math.Max(0, Math.Min(99.9, (e.ReceivedBytes * 100.0) / e.TotalBytes));
+                        else
+                            pct = 0.0;
+                    }
                     else if (string.Equals(e.StreamType, "hls", StringComparison.OrdinalIgnoreCase) && e.HlsTotalSegments > 0)
                     {
                         pct = Math.Max(0, Math.Min(99.9, (e.HlsDoneSegments * 100.0) / e.HlsTotalSegments));
@@ -741,7 +899,9 @@ namespace DejavuBrowser
                     string host = "";
                     try { host = new Uri(e.Url).Host; } catch { }
 
-                    bool isMulti = e.RangeSupported || string.Equals(e.StreamType, "hls", StringComparison.OrdinalIgnoreCase);
+                    bool isMulti = e.RangeSupported ||
+                                   string.Equals(e.StreamType, "hls", StringComparison.OrdinalIgnoreCase) ||
+                                   string.Equals(e.StreamType, "ytdlp", StringComparison.OrdinalIgnoreCase);
 
                     outList.Add(new Dictionary<string, object>
                     {
@@ -752,7 +912,10 @@ namespace DejavuBrowser
                         { "savePath", e.SavePath },
                         { "category", e.Category ?? "other" },
                         { "streamType", e.StreamType ?? "http" },
+                        { "quality", !string.IsNullOrEmpty(e.QualityLabel) ? e.QualityLabel : (e.Quality ?? "") },
+                        { "qualityId", e.Quality ?? "" },
                         { "status", e.Status ?? "queued" },
+                        { "statusText", e.StatusText ?? "" },
                         { "error", e.Error ?? "" },
                         { "totalBytes", e.TotalBytes },
                         { "receivedBytes", e.ReceivedBytes },
@@ -817,6 +980,12 @@ namespace DejavuBrowser
         {
             try
             {
+                if (string.Equals(entry.StreamType, "ytdlp", StringComparison.OrdinalIgnoreCase))
+                {
+                    await RunYtDlpDownloadAsync(entry, ct).ConfigureAwait(false);
+                    return;
+                }
+
                 if (string.Equals(entry.StreamType, "hls", StringComparison.OrdinalIgnoreCase) || IsHlsUrl(entry.Url, ""))
                 {
                     await RunHlsDownloadAsync(entry, entry.Url, ct).ConfigureAwait(false);
@@ -1032,6 +1201,7 @@ namespace DejavuBrowser
             {
                 lock (_gate)
                 {
+                    entry.StatusText = "";
                     entry.SpeedBps = 0;
                     entry.EtaSeconds = 0;
                 }
@@ -1046,6 +1216,7 @@ namespace DejavuBrowser
                     if (entry.Status != "paused" && entry.Status != "cancelled")
                     {
                         entry.Status = "failed";
+                        entry.StatusText = "";
                         entry.Error = CleanErrorMessage(ex);
                         entry.SpeedBps = 0;
                         entry.EtaSeconds = 0;
@@ -1055,6 +1226,328 @@ namespace DejavuBrowser
                 if (shouldCleanup) CleanupPartArtifacts(entry.PartPath);
                 SavePersisted();
                 EmitChanged(true);
+            }
+        }
+
+        // =====================================================================
+        // Native YouTube / Multi-Site Video & MP3 Engine (yt-dlp + ffmpeg)
+        // =====================================================================
+        private void UpdateEntryStatusText(TurboDownloadEntry entry, string text)
+        {
+            lock (_gate)
+            {
+                if (entry.Status == "cancelled" || entry.Status == "paused") return;
+                entry.StatusText = text ?? "";
+            }
+            EmitChanged(false);
+        }
+
+        private async Task RunYtDlpDownloadAsync(TurboDownloadEntry entry, CancellationToken ct)
+        {
+            lock (_gate)
+            {
+                entry.StreamType = "ytdlp";
+                entry.Status = "probing";
+                entry.Error = "";
+                entry.Threads = MAX_THREADS;
+                entry.RangeSupported = true;
+                if (entry.Segments == null || entry.Segments.Count != MAX_THREADS)
+                {
+                    entry.Segments = new List<TurboSegmentState>(MAX_THREADS);
+                    for (int i = 0; i < MAX_THREADS; i++)
+                    {
+                        entry.Segments.Add(new TurboSegmentState { Start = 0, End = 999, Done = 0 });
+                    }
+                }
+            }
+            EmitChanged(true);
+
+            // Step 1: Zero-bloat auto-bootstrap official yt-dlp.exe & ffmpeg.exe on first use
+            string ytDlpExe = await _videoEngine.EnsureYtDlpAsync(
+                status => UpdateEntryStatusText(entry, status),
+                ct).ConfigureAwait(false);
+            ct.ThrowIfCancellationRequested();
+
+            await _videoEngine.EnsureFfmpegAsync(
+                status => UpdateEntryStatusText(entry, status),
+                ct).ConfigureAwait(false);
+            ct.ThrowIfCancellationRequested();
+
+            Directory.CreateDirectory(_downloadsDir);
+            UpdateEntryStatusText(entry, "Extracting streams...");
+
+            string args = _videoEngine.BuildDownloadArguments(
+                entry.Url,
+                entry.Quality,
+                _downloadsDir,
+                entry.Referer,
+                entry.UserAgent);
+
+            var psi = new ProcessStartInfo(ytDlpExe, args);
+            psi.UseShellExecute = false;
+            psi.CreateNoWindow = true;
+            psi.RedirectStandardOutput = true;
+            psi.RedirectStandardError = true;
+            psi.StandardOutputEncoding = Encoding.UTF8;
+            psi.StandardErrorEncoding = Encoding.UTF8;
+            psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+
+            string printedFinalPath = null;
+            string mergedPath = null;
+            string extractedAudioPath = null;
+            string destPath = null;
+            var stderrLines = new List<string>();
+            object ioGate = new object();
+
+            using (var proc = new Process())
+            {
+                proc.StartInfo = psi;
+                if (!proc.Start())
+                {
+                    throw new IOException("Could not start yt-dlp.exe");
+                }
+
+                using (ct.Register(() =>
+                {
+                    try { if (!proc.HasExited) proc.Kill(); } catch { }
+                }))
+                {
+                    Task stdoutTask = Task.Run(() =>
+                    {
+                        try
+                        {
+                            string line;
+                            while ((line = proc.StandardOutput.ReadLine()) != null)
+                            {
+                                string trimmed = line.Trim();
+                                if (string.IsNullOrEmpty(trimmed)) continue;
+
+                                if (trimmed.StartsWith("__DEJAVU_FILEPATH__:", StringComparison.Ordinal))
+                                {
+                                    string fp = trimmed.Substring("__DEJAVU_FILEPATH__:".Length).Trim();
+                                    if (!string.IsNullOrEmpty(fp))
+                                    {
+                                        lock (ioGate) { printedFinalPath = fp; }
+                                    }
+                                    continue;
+                                }
+
+                                if (trimmed.StartsWith("[download] Destination:", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string dp = trimmed.Substring("[download] Destination:".Length).Trim();
+                                    if (!string.IsNullOrEmpty(dp))
+                                    {
+                                        lock (ioGate) { destPath = dp; }
+                                        string fn = Path.GetFileName(dp);
+                                        if (!string.IsNullOrEmpty(fn))
+                                        {
+                                            lock (_gate)
+                                            {
+                                                entry.FileName = fn;
+                                                entry.SavePath = dp;
+                                            }
+                                            EmitChanged(false);
+                                        }
+                                    }
+                                    continue;
+                                }
+
+                                if (trimmed.StartsWith("[Merger] Merging formats into ", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string mp = trimmed.Substring("[Merger] Merging formats into ".Length).Trim().Trim('"');
+                                    if (!string.IsNullOrEmpty(mp))
+                                    {
+                                        lock (ioGate) { mergedPath = mp; }
+                                        lock (_gate)
+                                        {
+                                            entry.FileName = Path.GetFileName(mp);
+                                            entry.SavePath = mp;
+                                            entry.StatusText = "Merging video & audio into MP4...";
+                                            entry.ProgressPercent = Math.Max(entry.ProgressPercent, 95.0);
+                                            UpdateYtDlpVisualSegmentsLocked(entry, entry.ProgressPercent);
+                                        }
+                                        EmitChanged(false);
+                                    }
+                                    continue;
+                                }
+
+                                if (trimmed.StartsWith("[ExtractAudio] Destination:", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string ap = trimmed.Substring("[ExtractAudio] Destination:".Length).Trim();
+                                    if (!string.IsNullOrEmpty(ap))
+                                    {
+                                        lock (ioGate) { extractedAudioPath = ap; }
+                                        lock (_gate)
+                                        {
+                                            entry.FileName = Path.GetFileName(ap);
+                                            entry.SavePath = ap;
+                                            entry.StatusText = string.Equals(entry.Quality, "m4a", StringComparison.OrdinalIgnoreCase)
+                                                ? "Extracting M4A audio..."
+                                                : "Converting audio to MP3 (320 kbps)...";
+                                            entry.ProgressPercent = Math.Max(entry.ProgressPercent, 95.0);
+                                            UpdateYtDlpVisualSegmentsLocked(entry, entry.ProgressPercent);
+                                        }
+                                        EmitChanged(false);
+                                    }
+                                    continue;
+                                }
+
+                                YtDlpProgressInfo prog;
+                                if (VideoExtractorEngine.TryParseProgressLine(trimmed, out prog) && prog != null)
+                                {
+                                    lock (_gate)
+                                    {
+                                        entry.Status = "downloading";
+                                        entry.StatusText = "";
+                                        // Cap raw stream percentage at 94% until postprocessing/move finishes
+                                        double displayPct = prog.Percent >= 100.0 ? 94.0 : Math.Min(94.0, prog.Percent);
+                                        entry.ProgressPercent = displayPct;
+                                        if (prog.TotalBytes > 0)
+                                        {
+                                            entry.TotalBytes = prog.TotalBytes;
+                                            entry.ReceivedBytes = prog.ReceivedBytes;
+                                        }
+                                        if (prog.SpeedBps > 0) entry.SpeedBps = prog.SpeedBps;
+                                        entry.EtaSeconds = prog.EtaSeconds;
+                                        UpdateYtDlpVisualSegmentsLocked(entry, displayPct);
+                                    }
+                                    EmitChanged(false);
+                                    continue;
+                                }
+
+                                string stHint = VideoExtractorEngine.ExtractStatusFromOutputLine(trimmed, entry.Quality);
+                                if (!string.IsNullOrEmpty(stHint))
+                                {
+                                    lock (_gate)
+                                    {
+                                        entry.StatusText = stHint;
+                                        if (trimmed.IndexOf("[Metadata]", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                            trimmed.IndexOf("[Fixup", StringComparison.OrdinalIgnoreCase) >= 0)
+                                        {
+                                            entry.ProgressPercent = Math.Max(entry.ProgressPercent, 97.5);
+                                            UpdateYtDlpVisualSegmentsLocked(entry, entry.ProgressPercent);
+                                        }
+                                    }
+                                    EmitChanged(false);
+                                }
+                            }
+                        }
+                        catch { }
+                    });
+
+                    Task stderrTask = Task.Run(() =>
+                    {
+                        try
+                        {
+                            string line;
+                            while ((line = proc.StandardError.ReadLine()) != null)
+                            {
+                                string trimmed = line.Trim();
+                                if (!string.IsNullOrEmpty(trimmed))
+                                {
+                                    lock (ioGate)
+                                    {
+                                        if (stderrLines.Count < 40) stderrLines.Add(trimmed);
+                                    }
+                                }
+                            }
+                        }
+                        catch { }
+                    });
+
+                    await Task.Run(() => proc.WaitForExit()).ConfigureAwait(false);
+                    await Task.WhenAll(stdoutTask, stderrTask).ConfigureAwait(false);
+
+                    ct.ThrowIfCancellationRequested();
+
+                    if (proc.ExitCode != 0)
+                    {
+                        string errDetail = "Video extraction failed (exit code " + proc.ExitCode + ")";
+                        lock (ioGate)
+                        {
+                            for (int i = stderrLines.Count - 1; i >= 0; i--)
+                            {
+                                string l = stderrLines[i];
+                                if (l.StartsWith("ERROR:", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    errDetail = l.Substring(6).Trim();
+                                    break;
+                                }
+                            }
+                            if (errDetail.StartsWith("Video extraction failed", StringComparison.Ordinal) && stderrLines.Count > 0)
+                            {
+                                errDetail = stderrLines[stderrLines.Count - 1];
+                            }
+                        }
+                        throw new IOException(errDetail);
+                    }
+                }
+            }
+
+            string finalPath = null;
+            string[] candidates = new string[] { printedFinalPath, extractedAudioPath, mergedPath, destPath };
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(candidates[i]) && File.Exists(candidates[i]))
+                {
+                    finalPath = candidates[i];
+                    break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(finalPath) || !File.Exists(finalPath))
+            {
+                throw new IOException("Downloaded media file could not be located on disk");
+            }
+
+            long finalBytes = new FileInfo(finalPath).Length;
+            if (finalBytes <= 0)
+            {
+                throw new IOException("Downloaded media file is 0 bytes");
+            }
+
+            lock (_gate)
+            {
+                entry.SavePath = finalPath;
+                entry.FileName = Path.GetFileName(finalPath);
+                entry.Category = VideoExtractorEngine.IsAudioPreset(entry.Quality)
+                    ? "audio"
+                    : ClassifyCategory(entry.FileName, "");
+                entry.Status = "completed";
+                entry.StatusText = "";
+                entry.Error = "";
+                entry.TotalBytes = finalBytes;
+                entry.ReceivedBytes = finalBytes;
+                entry.ProgressPercent = 100.0;
+                entry.SpeedBps = 0;
+                entry.EtaSeconds = 0;
+                UpdateYtDlpVisualSegmentsLocked(entry, 100.0);
+            }
+            SavePersisted();
+            EmitChanged(true);
+        }
+
+        private static void UpdateYtDlpVisualSegmentsLocked(TurboDownloadEntry entry, double pct)
+        {
+            if (entry.Segments == null || entry.Segments.Count == 0) return;
+            int n = entry.Segments.Count;
+            for (int i = 0; i < n; i++)
+            {
+                double segPct;
+                if (pct >= 99.9)
+                {
+                    segPct = 100.0;
+                }
+                else if (pct <= 0.0)
+                {
+                    segPct = 0.0;
+                }
+                else
+                {
+                    // Stagger slightly across 8 concurrent fragment lanes while tracking overall pct
+                    segPct = Math.Max(2.0, Math.Min(100.0, pct * 1.08 - (i * 1.4)));
+                }
+                entry.Segments[i].Done = (long)Math.Round((segPct / 100.0) * 1000.0);
             }
         }
 
@@ -2498,10 +2991,12 @@ namespace DejavuBrowser
 
         public static string GetFloatingDownloadButtonScript()
         {
-            // Zero-Idle-CPU Shadow DOM Material Design 3 IDM/AntDM Floating Download Button
+            // Zero-Idle-CPU Shadow DOM Material Design 3 IDM/AntDM Floating Download Button (v4.4.0)
             // - ZERO setInterval polling! Event-driven + filtered MutationObserver + lazy scroll/ResizeObserver
-            // - Lightweight URL-only fetch()/XHR sniffer (zero body buffering)
-            // - Extracts HTML5 <video>/<audio>, YouTube player formats/adaptiveFormats/HLS, HLS .m3u8, & native sniffed streams
+            // - ZERO CSS blur / backdrop-filter (Pure Material Design 3 tonal surfaces)
+            // - On YouTube / TikTok / Instagram / X / Vimeo / Reddit / Twitch / SoundCloud / etc.:
+            //   Shows native Multi-Quality MP4 (4K/2K/1080p/720p/480p/360p) + MP3/M4A picker backed by VideoExtractorEngine (zero extension!)
+            // - On direct HTML5 <video>/<audio> & HLS .m3u8 sites: keeps 1-click 8x byte-range & HLS assembler!
             return @"(function(){
 if(window!==window.top)return;
 if(window.__dejavuAntDmInstalled)return;
@@ -2520,6 +3015,9 @@ var badgeEl=null;
 var dropBtn=null;
 var closeBtn=null;
 var menuEl=null;
+var menuHeadTitle=null;
+var menuHeadSub=null;
+var menuStatusEl=null;
 var menuListEl=null;
 var currentTarget=null;
 var feedbackUntil=0;
@@ -2529,6 +3027,12 @@ var trackingActive=false;
 var resizeObs=null;
 var observedTarget=null;
 var lastPageUrl=location.href;
+var probedForUrl='';
+var probeRequestedUrl='';
+var probedFormats=null;
+var probedTitle='';
+var probeLoading=false;
+var probeStatus='';
 var MEDIA_URL_RX=/\.(m3u8|mp4|webm|m4v|mkv|mov|mp3|m4a|ogg|wav|flac)(\?|#|$)|\/videoplayback\b/i;
 var CHUNK_RX=/\.(ts|m4s|cmfv|cmfa|vtt|srt|key)(\?|#|$)/i;
 
@@ -2539,6 +3043,101 @@ function postNative(payload){
       window.chrome.webview.postMessage(payload);
     }
   }catch(e){}
+}
+
+function isSupportedVideoSite(rawUrl){
+  try{
+    var u=new URL(rawUrl||location.href);
+    if(u.protocol!=='http:'&&u.protocol!=='https:')return false;
+    var h=u.hostname.toLowerCase().replace(/^www\./,'');
+    var p=u.pathname.toLowerCase();
+    var q=u.search.toLowerCase();
+    if(h==='localhost'||h==='127.0.0.1'||h.indexOf('googlevideo.com')>=0)return false;
+    if(/\.(mp4|webm|mkv|mov|m3u8|mp3|m4a|wav|flac|ogg|zip|pdf|jpg|png)$/i.test(p))return false;
+    if(h==='youtube.com'||h==='m.youtube.com'||h==='music.youtube.com'||h==='youtube-nocookie.com'){
+      if(p==='/watch'&&q.indexOf('v=')>=0)return true;
+      if(p.indexOf('/shorts/')===0&&p.length>8)return true;
+      if(p.indexOf('/live/')===0&&p.length>6)return true;
+      if(p.indexOf('/embed/')===0&&p.length>7)return true;
+      if(p.indexOf('/clip/')===0&&p.length>6)return true;
+      return false;
+    }
+    if(h==='youtu.be')return p.length>1;
+    if(h==='tiktok.com'||h==='m.tiktok.com'||h==='vm.tiktok.com'||h==='vt.tiktok.com'){
+      return h==='vm.tiktok.com'||h==='vt.tiktok.com'?p.length>1:(p.indexOf('/video/')>=0||p.indexOf('/photo/')>=0);
+    }
+    if(h==='instagram.com'||h==='m.instagram.com'){
+      return /^\/(reel|reels|p|tv|stories)\//.test(p);
+    }
+    if(h==='x.com'||h==='twitter.com'||h==='mobile.twitter.com'||h==='mobile.x.com'){
+      return p.indexOf('/status/')>=0||p.indexOf('/i/broadcasts/')>=0;
+    }
+    if(h==='vimeo.com'||h==='player.vimeo.com'){
+      return h==='player.vimeo.com'?p.indexOf('/video/')===0:/^\/(?:channels\/[^/]+\/|groups\/[^/]+\/videos\/|album\/\d+\/video\/|manage\/videos\/)?\d+/.test(p);
+    }
+    if(h==='reddit.com'||h==='old.reddit.com'||h==='m.reddit.com'||h==='v.redd.it'){
+      return h==='v.redd.it'?p.length>1:p.indexOf('/comments/')>=0;
+    }
+    if(h==='twitch.tv'||h==='m.twitch.tv'||h==='clips.twitch.tv'){
+      return h==='clips.twitch.tv'?p.length>1:(p.indexOf('/videos/')===0||p.indexOf('/clip/')>=0);
+    }
+    if(h==='dailymotion.com'||h==='dai.ly'){
+      return h==='dai.ly'?p.length>1:p.indexOf('/video/')===0;
+    }
+    if(h==='facebook.com'||h==='m.facebook.com'||h==='web.facebook.com'||h==='fb.watch'){
+      return h==='fb.watch'?p.length>1:(p.indexOf('/watch')===0||p.indexOf('/reel/')===0||p.indexOf('/videos/')>=0||p.indexOf('/share/v/')===0||p.indexOf('/share/r/')===0);
+    }
+    if(h==='soundcloud.com'||h==='m.soundcloud.com'||h==='on.soundcloud.com'){
+      if(h==='on.soundcloud.com')return p.length>1;
+      var segs=p.replace(/^\/+|\/+$/g,'').split('/');
+      if(segs.length<2)return false;
+      return !/^(discover|feed|search|stream|you|charts|settings|messages)$/.test(segs[0]);
+    }
+    if(h==='bilibili.com'||h==='m.bilibili.com'||h==='b23.tv'){
+      return h==='b23.tv'?p.length>1:(p.indexOf('/video/')===0||p.indexOf('/bangumi/play/')===0);
+    }
+    if(h==='rumble.com')return p.indexOf('/v')===0&&p.slice(-5)==='.html';
+    if(h==='kick.com')return p.indexOf('/video/')>=0||p.indexOf('/clip')>=0;
+    if(h.slice(-13)==='.bandcamp.com')return p.indexOf('/track/')===0||p.indexOf('/album/')===0;
+    if(h==='loom.com')return p.indexOf('/share/')===0;
+    if(h==='streamable.com')return p.length>1&&p.indexOf('/',1)<0;
+    if(h==='ted.com')return p.indexOf('/talks/')===0;
+    return false;
+  }catch(e){return false;}
+}
+
+function isAudioOnlySite(rawUrl){
+  try{
+    var h=new URL(rawUrl||location.href).hostname.toLowerCase().replace(/^www\./,'');
+    return h==='soundcloud.com'||h==='m.soundcloud.com'||h==='on.soundcloud.com'||h.slice(-13)==='.bandcamp.com';
+  }catch(e){return false;}
+}
+
+function getInstantVideoPresets(rawUrl){
+  if(isAudioOnlySite(rawUrl)){
+    return [
+      {id:'mp3',label:'MP3 Audio (320 kbps)',shortLabel:'MP3 320k',ext:'mp3',category:'audio',isAudio:true,badge:'MP3',sizeText:'',probed:false},
+      {id:'m4a',label:'M4A Audio (Best)',shortLabel:'M4A Audio',ext:'m4a',category:'audio',isAudio:true,badge:'M4A',sizeText:'',probed:false}
+    ];
+  }
+  return [
+    {id:'1080',label:'1080p HD · MP4',shortLabel:'1080p MP4',ext:'mp4',category:'video',isAudio:false,badge:'HD',sizeText:'',probed:false},
+    {id:'720',label:'720p HD · MP4',shortLabel:'720p MP4',ext:'mp4',category:'video',isAudio:false,badge:'HD',sizeText:'',probed:false},
+    {id:'480',label:'480p · MP4',shortLabel:'480p MP4',ext:'mp4',category:'video',isAudio:false,badge:'MP4',sizeText:'',probed:false},
+    {id:'360',label:'360p · MP4',shortLabel:'360p MP4',ext:'mp4',category:'video',isAudio:false,badge:'MP4',sizeText:'',probed:false},
+    {id:'mp3',label:'MP3 Audio (320 kbps)',shortLabel:'MP3 320k',ext:'mp3',category:'audio',isAudio:true,badge:'MP3',sizeText:'',probed:false},
+    {id:'m4a',label:'M4A Audio (Best)',shortLabel:'M4A Audio',ext:'m4a',category:'audio',isAudio:true,badge:'M4A',sizeText:'',probed:false}
+  ];
+}
+
+function requestProbeIfNeeded(){
+  var cur=location.href;
+  if(!isSupportedVideoSite(cur))return;
+  if(probeRequestedUrl===cur)return;
+  probeRequestedUrl=cur;
+  probeLoading=true;
+  probeStatus='Probing available qualities...';
+  postNative({action:'probeFormats',url:cur});
 }
 
 function normalizeUrl(u){
@@ -2633,7 +3232,7 @@ function guessFmt(u,mime){
 }
 
 function cleanDocTitle(){
-  var t=(document.title||'video').replace(/\s*[-|·]\s*(YouTube|Vimeo|Twitch|X|Twitter)\s*$/i,'').replace(/^\(\d+\)\s*/,'').trim();
+  var t=(document.title||'video').replace(/\s*[-|·]\s*(YouTube|Vimeo|Twitch|X|Twitter|TikTok|Instagram|Dailymotion|SoundCloud)\s*$/i,'').replace(/^\(\d+\)\s*/,'').trim();
   return t||'dejavu-video';
 }
 
@@ -2646,48 +3245,6 @@ function safeNameFromDoc(ext,suffix){
 function isGenericName(seg){
   var s=(seg||'').toLowerCase();
   return !s||s.indexOf('.')<=0||/^(master|index|playlist|chunklist|manifest|videoplayback|video|stream|media)(\.[a-z0-9]+)?$/i.test(s);
-}
-
-function extractYoutubeStreams(){
-  var res=[];
-  try{
-    var pr=null;
-    var mp=document.getElementById('movie_player');
-    if(mp&&typeof mp.getPlayerResponse==='function'){pr=mp.getPlayerResponse();}
-    if(!pr&&window.ytInitialPlayerResponse){pr=window.ytInitialPlayerResponse;}
-    if(!pr||!pr.streamingData)return res;
-    // Verify SPA video ID matches current watch?v= param on YouTube
-    if(/youtube\.com$/i.test(location.hostname)){
-      var curVid=new URLSearchParams(location.search).get('v')||'';
-      var prVid=(pr.videoDetails&&pr.videoDetails.videoId)||'';
-      if(curVid&&prVid&&curVid!==prVid)return res;
-    }
-    var title=(pr.videoDetails&&pr.videoDetails.title)||cleanDocTitle();
-    var sd=pr.streamingData;
-    if(Array.isArray(sd.formats)){
-      for(var i=0;i<sd.formats.length;i++){
-        var f=sd.formats[i];
-        if(f&&f.url&&/^https?:\/\//i.test(f.url)){
-          var q=f.qualityLabel||(f.height?(f.height+'p'):'MP4');
-          res.push({url:f.url,title:title+' ('+q+')',mime:f.mimeType||'video/mp4',size:Number(f.contentLength||0),cat:'video',res:q,pri:100});
-        }
-      }
-    }
-    if(sd.hlsManifestUrl&&/^https?:\/\//i.test(sd.hlsManifestUrl)){
-      res.push({url:sd.hlsManifestUrl,title:title+' (HLS Stream)',mime:'application/vnd.apple.mpegurl',size:0,cat:'video',res:'HLS',pri:94});
-    }
-    if(Array.isArray(sd.adaptiveFormats)){
-      for(var j=0;j<sd.adaptiveFormats.length;j++){
-        var af=sd.adaptiveFormats[j];
-        if(!af||!af.url||!/^https?:\/\//i.test(af.url))continue;
-        var mt=(af.mimeType||'').toLowerCase();
-        var isAud=mt.indexOf('audio/')===0;
-        var aq=isAud?(mt.indexOf('mp4')>=0?'M4A Audio':'Opus Audio'):(af.qualityLabel||(af.height?(af.height+'p'):'Video'));
-        res.push({url:af.url,title:title+' ('+aq+')',mime:af.mimeType||'',size:Number(af.contentLength||0),cat:isAud?'audio':'video',res:aq,pri:isAud?55:(af.height>=1080?84:(af.height>=720?80:74))});
-      }
-    }
-  }catch(e){}
-  return res;
 }
 
 function collectSources(mediaEl){
@@ -2722,7 +3279,6 @@ function collectSources(mediaEl){
     });
   }
 
-  // 1. Direct HTML5 <video>/<audio>/<source> URLs
   if(mediaEl){
     var res=(mediaEl.tagName==='VIDEO'&&mediaEl.videoHeight>=240)?(mediaEl.videoHeight+'p'):'';
     var cs=mediaEl.currentSrc||mediaEl.src||'';
@@ -2738,21 +3294,12 @@ function collectSources(mediaEl){
     }
   }
 
-  // 2. YouTube direct player formats (muxed MP4, HLS, adaptive)
-  var ytList=extractYoutubeStreams();
-  for(var y=0;y<ytList.length;y++){
-    var yi=ytList[y];
-    pushItem(yi.url,yi.title,yi.mime,yi.size,yi.cat,yi.res,yi.pri);
-  }
-
-  // 3. In-page intercepted fetch/XHR streams (.m3u8, .mp4, videoplayback)
   for(var k=0;k<intercepted.length;k++){
     var ic=intercepted[k];
     var isHls=guessFmt(ic.url,ic.mime)==='HLS';
     pushItem(ic.url,ic.title||cleanDocTitle(),ic.mime||'',0,'video',ic.quality||(isHls?'HLS':''),isHls?93:86);
   }
 
-  // 4. Native WebView2 network-sniffed media streams
   for(var j=0;j<sniffed.length;j++){
     var m=sniffed[j];
     if(!m||!m.url)continue;
@@ -2769,6 +3316,30 @@ function collectSources(mediaEl){
   return out;
 }
 
+function mkEl(tag,cls,txt){
+  var el=document.createElement(tag);
+  if(cls)el.className=cls;
+  if(txt)el.textContent=txt;
+  return el;
+}
+
+function mkSvg(vb,w,h,d,sw){
+  var ns='http://www.w3.org/2000/svg';
+  var svg=document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox',vb);
+  svg.setAttribute('width',String(w));
+  svg.setAttribute('height',String(h));
+  svg.setAttribute('fill','none');
+  var p=document.createElementNS(ns,'path');
+  p.setAttribute('d',d);
+  p.setAttribute('stroke','currentColor');
+  p.setAttribute('stroke-width',String(sw));
+  p.setAttribute('stroke-linecap','round');
+  p.setAttribute('stroke-linejoin','round');
+  svg.appendChild(p);
+  return svg;
+}
+
 function ensureHost(){
   if(hostEl&&hostEl.isConnected)return true;
   var root=document.documentElement||document.body;
@@ -2777,32 +3348,39 @@ function ensureHost(){
   hostEl.id='__djv_antdm_host__';
   hostEl.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:2147483640;display:block;';
   var sh=hostEl.attachShadow({mode:'open'});
-  sh.innerHTML='<style>'+
+
+  var st=document.createElement('style');
+  st.textContent=
     ':host{all:initial;font-family:""Segoe UI Variable"",""Segoe UI"",system-ui,-apple-system,sans-serif;}'+
     '.wrap{position:fixed;pointer-events:auto;display:none;flex-direction:column;align-items:flex-end;gap:6px;transition:opacity .16s cubic-bezier(.05,.7,.1,1);}'+
-    '.pill{display:inline-flex;align-items:center;height:34px;border-radius:999px;background:#211f26;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 4px 14px rgba(0,0,0,.38);overflow:hidden;user-select:none;}'+
+    '.pill{display:inline-flex;align-items:center;height:36px;border-radius:999px;background:#211f26;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 4px 16px rgba(0,0,0,.42);overflow:hidden;user-select:none;}'+
     '.pill:hover{border-color:#d0bcff;}'+
-    '.mbtn{appearance:none;border:none;background:transparent;color:#e6e0e9;height:34px;padding:0 11px 0 8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.01em;white-space:nowrap;}'+
+    '.mbtn{appearance:none;border:none;background:transparent;color:#e6e0e9;height:36px;padding:0 11px 0 8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.01em;white-space:nowrap;}'+
     '.mbtn:hover{background:#2b2930;}'+
     '.mbtn:active{background:#36343b;}'+
-    '.ico{width:20px;height:20px;border-radius:999px;background:#d0bcff;color:#381e72;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}'+
+    '.ico{width:22px;height:22px;border-radius:999px;background:#d0bcff;color:#381e72;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}'+
     '.ico.ok{background:#80d5c0;color:#00382e;}'+
     '.badge{height:18px;padding:0 6px;border-radius:999px;background:#4f378b;color:#eaddff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;letter-spacing:.02em;}'+
     '.sep{width:1px;height:16px;background:#49454f;flex-shrink:0;}'+
-    '.dbtn,.xbtn{appearance:none;border:none;background:transparent;color:#cac4d0;height:34px;width:28px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;}'+
+    '.dbtn,.xbtn{appearance:none;border:none;background:transparent;color:#cac4d0;height:36px;width:28px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;}'+
     '.dbtn:hover{background:#2b2930;color:#ffffff;}'+
     '.xbtn{width:0;opacity:0;overflow:hidden;transition:width .14s ease,opacity .14s ease,background-color .14s ease;}'+
     '.pill:hover .xbtn,.wrap.open .xbtn{width:26px;opacity:1;}'+
     '.xbtn:hover{background:#601410;color:#f9dedc;}'+
-    '.menu{display:none;width:304px;max-width:calc(100vw - 20px);border-radius:20px;background:#1d1b20;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 14px 36px rgba(0,0,0,.52);overflow:hidden;}'+
+    '.menu{display:none;width:316px;max-width:calc(100vw - 20px);border-radius:20px;background:#1d1b20;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 14px 36px rgba(0,0,0,.55);overflow:hidden;}'+
     '.wrap.open .menu{display:block;}'+
     '.mhead{padding:11px 14px 9px;border-bottom:1px solid #36343b;display:flex;align-items:center;justify-content:space-between;background:#2b2930;}'+
     '.mht{font-size:12px;font-weight:700;color:#eaddff;display:flex;align-items:center;gap:6px;}'+
     '.mhs{font-size:10.5px;color:#cac4d0;font-weight:600;}'+
-    '.mlist{max-height:230px;overflow-y:auto;padding:6px;}'+
+    '.mstat{display:none;padding:7px 14px;font-size:11px;color:#d0bcff;background:#25222c;border-bottom:1px solid #36343b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'+
+    '.mstat.show{display:block;}'+
+    '.mlist{max-height:270px;overflow-y:auto;padding:6px;}'+
+    '.mdiv{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#938f99;padding:6px 10px 3px;}'+
     '.mrow{width:100%;appearance:none;border:none;background:transparent;color:inherit;text-align:left;padding:8px 9px;border-radius:12px;display:flex;align-items:center;gap:9px;cursor:pointer;font-family:inherit;}'+
     '.mrow:hover{background:#2b2930;}'+
-    '.mfmt{min-width:42px;height:22px;padding:0 6px;border-radius:999px;background:#4f378b;color:#eaddff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}'+
+    '.mfmt{min-width:44px;height:22px;padding:0 7px;border-radius:999px;background:#4f378b;color:#eaddff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}'+
+    '.mfmt.aud{background:#004f43;color:#a0f2df;}'+
+    '.mfmt.uhd{background:#633b48;color:#ffd8e4;}'+
     '.mmeta{flex:1;min-width:0;}'+
     '.mname{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f5eff7;}'+
     '.msub{font-size:10.5px;color:#cac4d0;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'+
@@ -2812,63 +3390,101 @@ function ensureHost(){
     '.fbtn{flex:1;appearance:none;border:none;border-radius:999px;height:30px;padding:0 11px;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;background:#36343b;color:#e6e0e9;}'+
     '.fbtn:hover{background:#49454f;}'+
     '.fbtn.pri{background:#d0bcff;color:#381e72;}'+
-    '.fbtn.pri:hover{background:#eaddff;}'+
-    '</style>'+
-    '<div class=""wrap"">'+
-      '<div class=""pill"">'+
-        '<button type=""button"" class=""mbtn"" title=""Download this video with dejavu 8x Turbo Download Manager"">'+
-          '<span class=""ico""><svg viewBox=""0 0 16 16"" width=""12"" height=""12"" fill=""none""><path d=""M8 2.4v7.6M5 7.4L8 10.4l3-3M3.2 13h9.6"" stroke=""currentColor"" stroke-width=""1.8"" stroke-linecap=""round"" stroke-linejoin=""round""/></svg></span>'+
-          '<span class=""lbl"">Download</span>'+
-          '<span class=""badge"">8x</span>'+
-        '</button>'+
-        '<span class=""sep""></span>'+
-        '<button type=""button"" class=""dbtn"" title=""Choose stream quality or open Page Media Grabber"">'+
-          '<svg viewBox=""0 0 14 14"" width=""11"" height=""11"" fill=""none""><path d=""M3.5 5.2L7 8.8l3.5-3.6"" stroke=""currentColor"" stroke-width=""1.7"" stroke-linecap=""round"" stroke-linejoin=""round""/></svg>'+
-        '</button>'+
-        '<button type=""button"" class=""xbtn"" title=""Hide download button on this page"">'+
-          '<svg viewBox=""0 0 14 14"" width=""10"" height=""10"" fill=""none""><path d=""M3.8 3.8l6.4 6.4M10.2 3.8l-6.4 6.4"" stroke=""currentColor"" stroke-width=""1.7"" stroke-linecap=""round""/></svg>'+
-        '</button>'+
-      '</div>'+
-      '<div class=""menu"">'+
-        '<div class=""mhead""><span class=""mht"">dejavu Turbo</span><span class=""mhs"">8x Video &amp; HLS</span></div>'+
-        '<div class=""mlist""></div>'+
-        '<div class=""mfoot"">'+
-          '<button type=""button"" class=""fbtn pri f-all"">Grab All Page Media</button>'+
-          '<button type=""button"" class=""fbtn f-hide"">Hide</button>'+
-        '</div>'+
-      '</div>'+
-    '</div>';
+    '.fbtn.pri:hover{background:#eaddff;}';
+  sh.appendChild(st);
 
+  wrapEl=mkEl('div','wrap');
+  var pill=mkEl('div','pill');
+
+  mainBtn=mkEl('button','mbtn');
+  mainBtn.type='button';
+  mainBtn.title='Download this video with dejavu Turbo Download Manager';
+  var icoEl=mkEl('span','ico');
+  icoEl.appendChild(mkSvg('0 0 16 16',12,12,'M8 2.4v7.6M5 7.4L8 10.4l3-3M3.2 13h9.6',1.8));
+  labelEl=mkEl('span','lbl','Download');
+  badgeEl=mkEl('span','badge','8x');
+  mainBtn.appendChild(icoEl);
+  mainBtn.appendChild(labelEl);
+  mainBtn.appendChild(badgeEl);
+
+  var sep=mkEl('span','sep');
+
+  dropBtn=mkEl('button','dbtn');
+  dropBtn.type='button';
+  dropBtn.title='Choose video quality or MP3 audio';
+  dropBtn.appendChild(mkSvg('0 0 14 14',11,11,'M3.5 5.2L7 8.8l3.5-3.6',1.7));
+
+  closeBtn=mkEl('button','xbtn');
+  closeBtn.type='button';
+  closeBtn.title='Hide download button on this page';
+  closeBtn.appendChild(mkSvg('0 0 14 14',10,10,'M3.8 3.8l6.4 6.4M10.2 3.8l-6.4 6.4',1.7));
+
+  pill.appendChild(mainBtn);
+  pill.appendChild(sep);
+  pill.appendChild(dropBtn);
+  pill.appendChild(closeBtn);
+
+  menuEl=mkEl('div','menu');
+  var mhead=mkEl('div','mhead');
+  menuHeadTitle=mkEl('span','mht','dejavu Turbo');
+  menuHeadSub=mkEl('span','mhs','MP4 & MP3');
+  mhead.appendChild(menuHeadTitle);
+  mhead.appendChild(menuHeadSub);
+
+  menuStatusEl=mkEl('div','mstat');
+  menuListEl=mkEl('div','mlist');
+
+  var mfoot=mkEl('div','mfoot');
+  var fAllBtn=mkEl('button','fbtn pri f-all','Open Download Manager');
+  fAllBtn.type='button';
+  var fHideBtn=mkEl('button','fbtn f-hide','Hide');
+  fHideBtn.type='button';
+  mfoot.appendChild(fAllBtn);
+  mfoot.appendChild(fHideBtn);
+
+  menuEl.appendChild(mhead);
+  menuEl.appendChild(menuStatusEl);
+  menuEl.appendChild(menuListEl);
+  menuEl.appendChild(mfoot);
+
+  wrapEl.appendChild(pill);
+  wrapEl.appendChild(menuEl);
+  sh.appendChild(wrapEl);
   root.appendChild(hostEl);
-  wrapEl=sh.querySelector('.wrap');
-  mainBtn=sh.querySelector('.mbtn');
-  labelEl=sh.querySelector('.lbl');
-  badgeEl=sh.querySelector('.badge');
-  dropBtn=sh.querySelector('.dbtn');
-  closeBtn=sh.querySelector('.xbtn');
-  menuEl=sh.querySelector('.menu');
-  menuListEl=sh.querySelector('.mlist');
-  var icoEl=sh.querySelector('.ico');
 
-  function flashQueued(isHls){
-    feedbackUntil=Date.now()+2400;
-    labelEl.textContent=isHls?'Downloading HLS':'Queued 8x';
+  function flashQueued(text){
+    feedbackUntil=Date.now()+2500;
+    labelEl.textContent=text||'Queued 8x';
     icoEl.classList.add('ok');
     setTimeout(function(){
       if(Date.now()>=feedbackUntil-50){
         icoEl.classList.remove('ok');
         updatePillLabel();
       }
-    },2450);
+    },2550);
+  }
+  window.__djvFlashQueued=flashQueued;
+
+  function toggleMenu(){
+    menuOpen=!menuOpen;
+    if(menuOpen){
+      if(isSupportedVideoSite(location.href))requestProbeIfNeeded();
+      renderMenu();
+    }
+    wrapEl.classList.toggle('open',menuOpen);
   }
 
   mainBtn.addEventListener('click',function(ev){
     ev.preventDefault();
     ev.stopPropagation();
+    if(isSupportedVideoSite(location.href)){
+      toggleMenu();
+      return;
+    }
     var items=collectSources(currentTarget);
     if(items.length>0){
       postNative({action:'download',url:items[0].url,fileName:items[0].fileName});
-      flashQueued(items[0].fmt==='HLS');
+      flashQueued(items[0].fmt==='HLS'?'Downloading HLS':'Queued 8x');
       menuOpen=false;
       wrapEl.classList.remove('open');
     }else{
@@ -2879,9 +3495,7 @@ function ensureHost(){
   dropBtn.addEventListener('click',function(ev){
     ev.preventDefault();
     ev.stopPropagation();
-    menuOpen=!menuOpen;
-    if(menuOpen)renderMenu();
-    wrapEl.classList.toggle('open',menuOpen);
+    toggleMenu();
   });
 
   closeBtn.addEventListener('click',function(ev){
@@ -2893,7 +3507,7 @@ function ensureHost(){
     setActiveTracking(false,null);
   });
 
-  sh.querySelector('.f-all').addEventListener('click',function(ev){
+  fAllBtn.addEventListener('click',function(ev){
     ev.preventDefault();
     ev.stopPropagation();
     menuOpen=false;
@@ -2901,7 +3515,7 @@ function ensureHost(){
     postNative({action:'openManager'});
   });
 
-  sh.querySelector('.f-hide').addEventListener('click',function(ev){
+  fHideBtn.addEventListener('click',function(ev){
     ev.preventDefault();
     ev.stopPropagation();
     dismissed=true;
@@ -2920,42 +3534,115 @@ function ensureHost(){
   return true;
 }
 
+function buildMenuRow(fmtCls,fmtTxt,nameTxt,subTxt,goTxt){
+  var row=mkEl('button','mrow');
+  row.type='button';
+  var fmtEl=mkEl('span',fmtCls,fmtTxt);
+  var metaEl=mkEl('span','mmeta');
+  metaEl.appendChild(mkEl('div','mname',nameTxt));
+  metaEl.appendChild(mkEl('div','msub',subTxt));
+  var goEl=mkEl('span','mgo',goTxt);
+  row.appendChild(fmtEl);
+  row.appendChild(metaEl);
+  row.appendChild(goEl);
+  return {row:row,goEl:goEl};
+}
+
+function renderVideoSiteMenu(){
+  var cur=location.href;
+  var list=(probedForUrl===cur&&Array.isArray(probedFormats)&&probedFormats.length>0)
+    ? probedFormats
+    : getInstantVideoPresets(cur);
+  if(menuHeadTitle)menuHeadTitle.textContent='Download Video / Audio';
+  if(menuHeadSub)menuHeadSub.textContent='Built-in MP4 & MP3';
+  if(menuStatusEl){
+    var showStat=probeLoading&&probeStatus;
+    menuStatusEl.textContent=showStat?probeStatus:'';
+    menuStatusEl.classList.toggle('show',!!showStat);
+  }
+  menuListEl.textContent='';
+  var videoOpts=[], audioOpts=[];
+  for(var i=0;i<list.length;i++){
+    if(list[i].isAudio||list[i].category==='audio')audioOpts.push(list[i]);
+    else videoOpts.push(list[i]);
+  }
+  function appendGroup(title,arr){
+    if(!arr.length)return;
+    menuListEl.appendChild(mkEl('div','mdiv',title));
+    for(var k=0;k<arr.length;k++){
+      (function(opt){
+        var fmtCls='mfmt'+(opt.isAudio?' aud':((opt.badge==='4K'||opt.badge==='2K')?' uhd':''));
+        var subParts=[];
+        if(opt.sizeText)subParts.push(opt.sizeText);
+        else if(opt.sizeBytes>0)subParts.push(fmtSize(opt.sizeBytes));
+        subParts.push(opt.isAudio?'Audio Extraction':'Video + Audio MP4');
+        var built=buildMenuRow(
+          fmtCls,
+          opt.badge||(opt.ext?opt.ext.toUpperCase():'MP4'),
+          opt.label||opt.shortLabel||opt.id,
+          subParts.join(' · '),
+          'GET'
+        );
+        built.row.addEventListener('click',function(ev){
+          ev.preventDefault();
+          ev.stopPropagation();
+          postNative({
+            action:'downloadVideo',
+            url:location.href,
+            quality:opt.id||'best',
+            title:probedTitle||cleanDocTitle()
+          });
+          built.goEl.textContent='Queued';
+          if(window.__djvFlashQueued){
+            window.__djvFlashQueued('Queued '+(opt.shortLabel||opt.badge||'Video'));
+          }
+          setTimeout(function(){
+            menuOpen=false;
+            if(wrapEl)wrapEl.classList.remove('open');
+          },340);
+        });
+        menuListEl.appendChild(built.row);
+      })(arr[k]);
+    }
+  }
+  appendGroup('Video Quality (MP4)',videoOpts);
+  appendGroup('Audio Extraction',audioOpts);
+}
+
 function renderMenu(){
   if(!menuListEl)return;
+  if(isSupportedVideoSite(location.href)){
+    renderVideoSiteMenu();
+    return;
+  }
+  if(menuHeadTitle)menuHeadTitle.textContent='dejavu Turbo';
+  if(menuHeadSub)menuHeadSub.textContent='8x Video & HLS';
+  if(menuStatusEl)menuStatusEl.classList.remove('show');
   var items=collectSources(currentTarget);
-  menuListEl.innerHTML='';
+  menuListEl.textContent='';
   if(!items.length){
-    var em=document.createElement('div');
-    em.className='mempty';
-    em.textContent='Streaming player detected. Press play for a moment or click ""Grab All Page Media"" below to inspect captured streams.';
-    menuListEl.appendChild(em);
+    menuListEl.appendChild(mkEl('div','mempty','Streaming player detected. Press play for a moment or click ""Open Download Manager"" below to inspect captured streams.'));
     return;
   }
   for(var i=0;i<items.length&&i<10;i++){
     (function(it){
-      var row=document.createElement('button');
-      row.type='button';
-      row.className='mrow';
       var subParts=[];
       if(it.res&&it.res!==it.fmt)subParts.push(it.res);
       var sz=fmtSize(it.size);
       if(sz)subParts.push(sz);
       subParts.push(it.fmt==='HLS'?'HLS Multi-Segment':(it.cat==='audio'?'Audio':'Video'));
-      row.innerHTML='<span class=""mfmt""></span><span class=""mmeta""><div class=""mname""></div><div class=""msub""></div></span><span class=""mgo"">8x</span>';
-      row.querySelector('.mfmt').textContent=it.fmt;
-      row.querySelector('.mname').textContent=it.title;
-      row.querySelector('.msub').textContent=subParts.join(' · ');
-      row.addEventListener('click',function(ev){
+      var built=buildMenuRow('mfmt',it.fmt,it.title,subParts.join(' · '),'8x');
+      built.row.addEventListener('click',function(ev){
         ev.preventDefault();
         ev.stopPropagation();
         postNative({action:'download',url:it.url,fileName:it.fileName});
-        row.querySelector('.mgo').textContent='Queued';
+        built.goEl.textContent='Queued';
         setTimeout(function(){
           menuOpen=false;
           if(wrapEl)wrapEl.classList.remove('open');
         },380);
       });
-      menuListEl.appendChild(row);
+      menuListEl.appendChild(built.row);
     })(items[i]);
   }
 }
@@ -3027,21 +3714,32 @@ function positionOnly(){
   if(currentTarget&&currentTarget.isConnected){
     var r=currentTarget.getBoundingClientRect();
     if(r.width<120||r.height<20||r.bottom<12||r.top>vh-12){
+      if(isSupportedVideoSite(location.href)){
+        wrapEl.style.top='14px';
+        wrapEl.style.right='18px';
+        return;
+      }
       wrapEl.style.display='none';
       return;
     }
     var top=Math.max(10,Math.min(vh-48,Math.round(r.top+10)));
     var rightGap=Math.max(10,Math.round(vw-r.right+10));
     wrapEl.style.top=top+'px';
-    wrapEl.style.right=Math.min(vw-190,rightGap)+'px';
+    wrapEl.style.right=Math.min(vw-220,rightGap)+'px';
   }else{
-    wrapEl.style.top='12px';
-    wrapEl.style.right='16px';
+    wrapEl.style.top='14px';
+    wrapEl.style.right='18px';
   }
 }
 
 function updatePillLabel(){
   if(!labelEl||Date.now()<feedbackUntil)return;
+  if(isSupportedVideoSite(location.href)){
+    var audOnly=isAudioOnlySite(location.href);
+    labelEl.textContent=audOnly?'Download · MP3 / M4A':'Download · MP4 / MP3';
+    if(badgeEl)badgeEl.textContent=audOnly?'MP3':'HD';
+    return;
+  }
   var items=collectSources(currentTarget);
   var topItem=items.length>0?items[0]:null;
   var res='';
@@ -3062,6 +3760,13 @@ function checkSpaUrlChange(){
     intercepted=[];
     dismissed=false;
     menuOpen=false;
+    probedForUrl='';
+    probeRequestedUrl='';
+    probedFormats=null;
+    probedTitle='';
+    probeLoading=false;
+    probeStatus='';
+    if(wrapEl)wrapEl.classList.remove('open');
   }
 }
 
@@ -3072,9 +3777,10 @@ function updatePosition(){
     setActiveTracking(false,null);
     return;
   }
+  var onVideoSite=isSupportedVideoSite(location.href);
   var best=pickBestMedia();
   currentTarget=best;
-  var hasCaptured=intercepted.length>0;
+  var hasCaptured=onVideoSite||intercepted.length>0;
   if(!hasCaptured){
     for(var i=0;i<sniffed.length;i++){
       if(sniffed[i]&&(sniffed[i].category==='video'||sniffed[i].category==='audio')){hasCaptured=true;break;}
@@ -3098,6 +3804,26 @@ window.__dejavuUpdateSniffedMedia=function(list){
     sniffed=list;
     scheduleScan();
   }
+};
+window.__dejavuUpdateVideoFormats=function(payload){
+  try{
+    if(typeof payload==='string')payload=JSON.parse(payload);
+    if(Array.isArray(payload)){
+      probedForUrl=location.href;
+      probedFormats=payload;
+      probeLoading=false;
+      probeStatus='';
+    }else if(payload&&typeof payload==='object'){
+      if(!payload.url||payload.url===location.href){
+        probedForUrl=payload.url||location.href;
+        if(Array.isArray(payload.formats)&&payload.formats.length>0)probedFormats=payload.formats;
+        if(payload.title)probedTitle=payload.title;
+        probeLoading=!!payload.loading;
+        probeStatus=payload.status||'';
+      }
+    }
+    if(menuOpen)renderMenu();
+  }catch(e){}
 };
 window.__dejavuSetFloatingBtnEnabled=function(en){
   window.__dejavuFloatingBtnEnabled=!!en;

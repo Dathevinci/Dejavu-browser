@@ -1,6 +1,6 @@
 /**
- * dejavu v4.3.0 Native Shell Controller — A-to-Z Google Pixel Material Design 3
- * Pure M3 tonal surfaces, zero layout thrashing, zero idle CPU on static wallpapers.
+ * dejavu v4.4.0 Native Shell Controller — A-to-Z Google Pixel Material Design 3
+ * Pure M3 tonal surfaces, 17 Pure M3 & Butterfly wallpapers, YouTube MP4/MP3 Turbo Downloader.
  */
 (function () {
   const send = (msg) => {
@@ -183,51 +183,69 @@
   const prefPrivacy = document.getElementById('pref-privacy');
   const prefReading = document.getElementById('pref-reading');
 
-  // Official Google Pixel 9/10 × Material Design 3 Wallpaper Catalog (v4.3.0)
+  const settingsWpCountPill = document.getElementById('settings-wp-count-pill');
+
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v4.4.0 — 16 HD + 1 Live = 17 Themes)
+  const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
-    { id: 'art:wp-m3-amethyst.jpg', cat: 'art', m3: true, mode: 'Dark', seed: 'amethyst', name: 'Obsidian Monolith', desc: 'Deep plum-obsidian ceramic monoliths & sweeping lavender arch', img: 'https://dejavu.local/wp-m3-amethyst.jpg' },
-    { id: 'art:wp-m3-pixel-blue.jpg', cat: 'art', m3: true, mode: 'Dark', seed: 'sapphire', name: 'Cobalt Ribbons', desc: 'Midnight cobalt slate & Pixel periwinkle carved sandstone waves', img: 'https://dejavu.local/wp-m3-pixel-blue.jpg' },
-    { id: 'art:wp-m3-sage.jpg', cat: 'art', m3: true, mode: 'Dark', seed: 'aurora', name: 'Eucalyptus Calm', desc: 'Dark forest plaster curved alcove & matte sage stoneware spheres', img: 'https://dejavu.local/wp-m3-sage.jpg' },
-    { id: 'art:wp-m3-blossom.jpg', cat: 'art', m3: true, mode: 'Dark', seed: 'rose', name: 'Velvet Petals', desc: 'Velvet espresso & dusty terracotta-rose Pixel Swirling Petals ceramic', img: 'https://dejavu.local/wp-m3-blossom.jpg' },
-    { id: 'art:wp-m3-honey.jpg', cat: 'art', m3: true, mode: 'Dark', seed: 'gold', name: 'Ochre Solitude', desc: 'Warm obsidian-espresso & burnished matte amber Bauhaus arcs', img: 'https://dejavu.local/wp-m3-honey.jpg' },
-    { id: 'art:wp-m3-porcelain.jpg', cat: 'art', m3: true, mode: 'Light', seed: 'amethyst', name: 'Porcelain Steps', desc: 'Sunlit alabaster stepped terraces & soft lavender-stone curved wall', img: 'https://dejavu.local/wp-m3-porcelain.jpg' },
-    { id: 'art:wp-m3-meadow.jpg', cat: 'art', m3: true, mode: 'Light', seed: 'aurora', name: 'Jade Pebbles', desc: 'Airy off-white porcelain & organic matte stoneware pebbles with celadon hill', img: 'https://dejavu.local/wp-m3-meadow.jpg' },
-    { id: 'art:wp-m3-blush.jpg', cat: 'art', m3: true, mode: 'Light', seed: 'rose', name: 'Terracotta Ribbon', desc: 'Warm sunlit ivory plaster & minimalist folded clay-blush ceramic wave', img: 'https://dejavu.local/wp-m3-blush.jpg' },
-    { id: 'live:m3-expressive', cat: 'live', m3: true, mode: 'Adaptive', name: 'Material You Live', desc: 'Adaptive tonal shapes reacting to your Dynamic Color Seed & theme', grad: 'linear-gradient(135deg, #4f378b 0%, #211f26 52%, #633b48 100%)' },
-    // Classic 2K HD Artworks
-    { id: 'art:wp-velvet-mirage.jpg', cat: 'art', name: 'Velvet Mirage', desc: 'Moonlit amethyst mirror lake & calm twilight ripples', img: 'https://dejavu.local/wp-velvet-mirage.jpg' },
-    { id: 'art:wp-prism-cascade.jpg', cat: 'art', name: 'Prism Cascade', desc: 'Flowing silk ribbons & indigo dusk tones', img: 'https://dejavu.local/wp-prism-cascade.jpg' },
-    { id: 'art:wp-midnight-orchid.jpg', cat: 'art', name: 'Midnight Orchid', desc: 'Dewy indigo night orchids & twilight hues', img: 'https://dejavu.local/wp-midnight-orchid.jpg' },
-    { id: 'art:wp-stardust-sanctuary.jpg', cat: 'art', name: 'Stardust Sanctuary', desc: 'Alpine peaks under Milky Way & amethyst aurora', img: 'https://dejavu.local/wp-stardust-sanctuary.jpg' },
-    { id: 'art:wp-opal-horizon.jpg', cat: 'art', name: 'Opal Horizon', desc: 'Mother-of-pearl clouds & calm dusk swells', img: 'https://dejavu.local/wp-opal-horizon.jpg' },
-    { id: 'art:wp-phantom-lotus.jpg', cat: 'art', name: 'Phantom Lotus', desc: 'Minimalist lotus on zen indigo mirror pond', img: 'https://dejavu.local/wp-phantom-lotus.jpg' },
-    { id: 'art:wp-amethyst.jpg', cat: 'art', name: 'Amethyst Twilight', desc: 'Faceted amethyst sculpture in indigo twilight', img: 'https://dejavu.local/wp-amethyst.jpg' },
-    { id: 'art:wp-aurora.jpg', cat: 'art', name: 'Aurora Lake', desc: 'Emerald & violet aurora over glacial mirror lake', img: 'https://dejavu.local/wp-aurora.jpg' },
-    { id: 'art:wp-celestial.jpg', cat: 'art', name: 'Celestial Sapphire', desc: 'Deep cobalt waves & moonlit sapphire water', img: 'https://dejavu.local/wp-celestial.jpg' },
-    { id: 'art:wp-rosequartz.jpg', cat: 'art', name: 'Rose Quartz Dusk', desc: 'Rose-quartz tones in velvet plum clouds', img: 'https://dejavu.local/wp-rosequartz.jpg' },
-    { id: 'art:wp-arctic.jpg', cat: 'art', name: 'Arctic Diamond', desc: 'Glacial sapphire cavern & crystalline light', img: 'https://dejavu.local/wp-arctic.jpg' },
-    { id: 'art:wp-nebula.jpg', cat: 'art', name: 'Amethyst Nebula', desc: 'Deep-space ultraviolet cosmic nebula', img: 'https://dejavu.local/wp-nebula.jpg' },
-    { id: 'art:wp-gilded.jpg', cat: 'art', name: 'Gilded Obsidian', desc: 'Champagne-gold filigree on charcoal slate', img: 'https://dejavu.local/wp-gilded.jpg' },
-    { id: 'art:wp-morpho.jpg', cat: 'art', name: 'Morpho Nocturne', desc: 'Luminous cobalt tones & dewy nocturnal ferns', img: 'https://dejavu.local/wp-morpho.jpg' },
-    { id: 'art:wp-monarch.jpg', cat: 'art', name: 'Monarch Eclipse', desc: 'Golden eclipse corona & warm amber glow', img: 'https://dejavu.local/wp-monarch.jpg' },
-    { id: 'art:wp-sakura.jpg', cat: 'art', name: 'Sakura Pond', desc: 'Moonlit Kyoto blossoms & pearl mirror pond', img: 'https://dejavu.local/wp-sakura.jpg' },
-    // Live Themes (throttled ~30fps, auto-paused when hidden or reduced motion)
-    { id: 'live:obsidian-prism', cat: 'live', name: 'Obsidian Prism', desc: 'Violet & cyan flowing ribbons', grad: 'radial-gradient(circle at 30% 35%, #5b31b8 0%, #160f2c 55%, #06050b 100%)' },
-    { id: 'live:aurora-borealis', cat: 'live', name: 'Aurora Borealis', desc: 'Emerald, violet & arctic cyan waves', grad: 'radial-gradient(circle at 35% 35%, #16b8a0 0%, #1d1646 54%, #03060d 100%)' },
-    { id: 'live:crimson-velvet', cat: 'live', name: 'Crimson Velvet', desc: 'Deep ruby & rose gold silk', grad: 'radial-gradient(circle at 60% 32%, #c92c5f 0%, #2a0c1a 56%, #070306 100%)' },
-    { id: 'live:arctic-prism', cat: 'live', name: 'Arctic Prism', desc: 'Glacial diamond & silver-blue waves', grad: 'radial-gradient(circle at 40% 34%, #5ca8f5 0%, #12213c 56%, #04070e 100%)' },
-    { id: 'live:midnight-gold', cat: 'live', name: 'Midnight Gold', desc: 'Royal obsidian & champagne gold', grad: 'radial-gradient(circle at 50% 34%, #d6a244 0%, #201712 56%, #060508 100%)' },
-    { id: 'live:morpho-abyss', cat: 'live', name: 'Morpho Abyss', desc: 'Electric sapphire waves', grad: 'radial-gradient(circle at 65% 30%, #1d70e8 0%, #091736 56%, #03060f 100%)' },
-    { id: 'live:velvet-monarch', cat: 'live', name: 'Velvet Monarch', desc: 'Warm amber & rose gold', grad: 'radial-gradient(circle at 35% 35%, #d96b27 0%, #2b1210 56%, #080506 100%)' },
-    { id: 'live:sakura-chrysalis', cat: 'live', name: 'Sakura Chrysalis', desc: 'Twilight plum & pastel rose', grad: 'radial-gradient(circle at 60% 30%, #c95ea4 0%, #26112e 55%, #08050d 100%)' },
-    { id: 'live:emerald-glasswing', cat: 'live', name: 'Emerald Mist', desc: 'Iridescent jade & aurora mist', grad: 'radial-gradient(circle at 40% 35%, #19a88d 0%, #082325 56%, #03080a 100%)' },
-    { id: 'live:halftone-swarm', cat: 'live', name: 'Halftone Lattice', desc: 'Dotted lavender geometric matrix', grad: 'radial-gradient(circle at 50% 40%, #8652e6 0%, #160c2c 58%, #040308 100%)' }
+    // 12 Sculptural / Architectural Material Design 3 HD Wallpapers
+    { id: 'art:wp-m3-amethyst.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'amethyst', name: 'Obsidian Monolith', desc: 'Deep plum-obsidian ceramic monoliths & sweeping lavender arch', img: 'https://dejavu.local/wp-m3-amethyst.jpg' },
+    { id: 'art:wp-m3-pixel-blue.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'sapphire', name: 'Cobalt Ribbons', desc: 'Midnight cobalt slate & Pixel periwinkle carved sandstone waves', img: 'https://dejavu.local/wp-m3-pixel-blue.jpg' },
+    { id: 'art:wp-m3-sage.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'aurora', name: 'Eucalyptus Calm', desc: 'Dark forest plaster curved alcove & matte sage stoneware spheres', img: 'https://dejavu.local/wp-m3-sage.jpg' },
+    { id: 'art:wp-m3-blossom.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'rose', name: 'Velvet Petals', desc: 'Velvet espresso & dusty terracotta-rose Pixel Swirling Petals ceramic', img: 'https://dejavu.local/wp-m3-blossom.jpg' },
+    { id: 'art:wp-m3-honey.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'gold', name: 'Ochre Solitude', desc: 'Warm obsidian-espresso & burnished matte amber Bauhaus arcs', img: 'https://dejavu.local/wp-m3-honey.jpg' },
+    { id: 'art:wp-m3-indigo-dune.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'sapphire', name: 'Indigo Dune', desc: 'Deep twilight indigo-slate matte sculpted sandstone dunes & soft periwinkle crescent disc', img: 'https://dejavu.local/wp-m3-indigo-dune.jpg' },
+    { id: 'art:wp-m3-sienna-arch.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'gold', name: 'Sienna Arch', desc: 'Rich dark espresso-sienna minimalist recessed plaster arches grazed by muted amber light', img: 'https://dejavu.local/wp-m3-sienna-arch.jpg' },
+    { id: 'art:wp-m3-porcelain.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'amethyst', name: 'Porcelain Steps', desc: 'Sunlit alabaster stepped terraces & soft lavender-stone curved wall', img: 'https://dejavu.local/wp-m3-porcelain.jpg' },
+    { id: 'art:wp-m3-meadow.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'aurora', name: 'Jade Pebbles', desc: 'Airy off-white porcelain & organic matte stoneware pebbles with celadon hill', img: 'https://dejavu.local/wp-m3-meadow.jpg' },
+    { id: 'art:wp-m3-blush.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'rose', name: 'Terracotta Ribbon', desc: 'Warm sunlit ivory plaster & minimalist folded clay-blush ceramic wave', img: 'https://dejavu.local/wp-m3-blush.jpg' },
+    { id: 'art:wp-m3-sky-terrace.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'sapphire', name: 'Sky Terrace', desc: 'Sunlit alabaster & pale sky-periwinkle stepped ceramic gallery terrace walls', img: 'https://dejavu.local/wp-m3-sky-terrace.jpg' },
+    { id: 'art:wp-m3-warm-limestone.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'gold', name: 'Warm Limestone', desc: 'Sunlit warm ivory & pale honey-travertine curved monoliths with smooth river pebble', img: 'https://dejavu.local/wp-m3-warm-limestone.jpg' },
+    // 4 Material Design 3 Butterfly Ceramic Relief Editions
+    { id: 'art:wp-m3-butterfly-obsidian.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Dark', seed: 'amethyst', name: 'Amethyst Origami', desc: 'Sculptural matte lavender-plum & charcoal-amethyst stoneware origami butterfly on obsidian ground', img: 'https://dejavu.local/wp-m3-butterfly-obsidian.jpg' },
+    { id: 'art:wp-m3-butterfly-cobalt.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Dark', seed: 'sapphire', name: 'Pixel Morpho', desc: 'Minimalist folded periwinkle & cobalt-slate bisque ceramic butterfly wings on midnight slate', img: 'https://dejavu.local/wp-m3-butterfly-cobalt.jpg' },
+    { id: 'art:wp-m3-butterfly-porcelain.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Light', seed: 'amethyst', name: 'Porcelain Wings', desc: 'Sunlit alabaster & pale lavender folded paper-ceramic butterfly casting soft gallery shadows', img: 'https://dejavu.local/wp-m3-butterfly-porcelain.jpg' },
+    { id: 'art:wp-m3-butterfly-sage.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Light', seed: 'aurora', name: 'Botanical Sage', desc: 'Matte celadon-sage stoneware origami butterfly perched along a curved pale sage ledge on off-white porcelain', img: 'https://dejavu.local/wp-m3-butterfly-sage.jpg' },
+    // 1 Adaptive Material You Live Theme
+    { id: 'live:m3-expressive', cat: 'live', m3: true, butterfly: false, mode: 'Adaptive', name: 'Material You Live', desc: 'Adaptive tonal shapes reacting to your Dynamic Color Seed & Dark/Light mode', grad: 'linear-gradient(135deg, #4f378b 0%, #211f26 52%, #633b48 100%)' }
   ];
 
-  let storeFilterCat = 'm3';
-  let settingsWpFilterCat = 'm3';
+  const VALID_WALLPAPER_IDS = new Set(WALLPAPER_CATALOG.map((w) => w.id));
+  function normalizeWallpaperId(wp) {
+    if (!wp || typeof wp !== 'string') return DEFAULT_WALLPAPER_ID;
+    if (wp.startsWith('custom')) return wp;
+    if (VALID_WALLPAPER_IDS.has(wp)) return wp;
+    return DEFAULT_WALLPAPER_ID;
+  }
+
+  let storeFilterCat = 'all';
+  let settingsWpFilterCat = 'all';
   let activeSettingsPane = 'general';
   let toastTimer = null;
+
+  function syncWallpaperFilterCounts() {
+    const total = WALLPAPER_CATALOG.length;
+    const bfCnt = WALLPAPER_CATALOG.filter((w) => !!w.butterfly).length;
+    const darkCnt = WALLPAPER_CATALOG.filter((w) => (w.mode || '').toLowerCase() === 'dark').length;
+    const lightCnt = WALLPAPER_CATALOG.filter((w) => (w.mode || '').toLowerCase() === 'light').length;
+    const liveCnt = WALLPAPER_CATALOG.filter((w) => w.cat === 'live').length;
+    const labels = {
+      all: `All (${total})`,
+      butterfly: `Butterfly M3 (${bfCnt})`,
+      dark: `Dark (${darkCnt})`,
+      light: `Light (${lightCnt})`,
+      live: `Live (${liveCnt})`
+    };
+    if (settingsWpCountPill) settingsWpCountPill.textContent = String(total);
+    [storeTabs, optWpFilter].forEach((bar) => {
+      if (!bar) return;
+      bar.querySelectorAll('[data-cat]').forEach((btn) => {
+        const key = btn.dataset.cat;
+        if (labels[key]) btn.textContent = labels[key];
+      });
+    });
+  }
+  syncWallpaperFilterCounts();
 
   // Boot Zero-CPU Wallpaper Canvas Engine
   window.DejavuNewTabCanvas.init(newtabCanvas);
@@ -276,12 +294,20 @@
     dlManagerTab: 'all',
     turboDownloads: [],
     pageMedia: [],
+    activeTabUrl: '',
+    activeTabTitle: '',
+    activeTabIsVideoSite: false,
+    videoProbeUrl: '',
+    videoProbeTitle: '',
+    videoProbeLoading: false,
+    videoProbeStatus: '',
+    videoFormats: [],
     downloadsDir: '',
     downloadsCount: 0,
     hasActiveDownload: false,
     readerActive: false,
     activeProfile: bootData.activeProfile || null,
-    wallpaper: bootData.wallpaper || 'art:wp-m3-amethyst.jpg',
+    wallpaper: normalizeWallpaperId(bootData.wallpaper),
     hasCustomWallpaper: !!bootData.hasCustomWallpaper,
     globalAdBlockEnabled: bootData.globalAdBlockEnabled !== false,
     activeForSite: true,
@@ -971,17 +997,21 @@
   function renderWallpaperCardsInto(gridEl, catFilter) {
     if (!gridEl) return;
     gridEl.innerHTML = '';
-    const activeWp = state.wallpaper || 'art:wp-m3-amethyst.jpg';
+    const activeWp = normalizeWallpaperId(state.wallpaper);
 
     const items = WALLPAPER_CATALOG.filter((item) => {
       if (catFilter === 'all') return true;
-      if (catFilter === 'm3') return !!item.m3;
-      return item.cat === catFilter;
+      if (catFilter === 'butterfly') return !!item.butterfly;
+      if (catFilter === 'dark') return (item.mode || '').toLowerCase() === 'dark';
+      if (catFilter === 'light') return (item.mode || '').toLowerCase() === 'light';
+      if (catFilter === 'live') return item.cat === 'live';
+      return true;
     });
-    if (state.hasCustomWallpaper && (catFilter === 'all' || catFilter === 'art' || catFilter === 'm3')) {
+    if (state.hasCustomWallpaper && catFilter === 'all') {
       items.unshift({
         id: activeWp.startsWith('custom') ? activeWp : 'custom',
         cat: 'art',
+        m3: true,
         name: 'My Wallpaper',
         desc: 'Custom photo from your PC',
         img: `https://dejavu.local/custom-wallpaper?t=${Date.now()}`,
@@ -993,7 +1023,7 @@
       const isSelected = item.isCustom ? activeWp.startsWith('custom') : (activeWp === item.id);
       const card = document.createElement('button');
       card.type = 'button';
-      card.className = 'wp-card' + (isSelected ? ' active' : '') + (item.m3 ? ' is-m3' : '');
+      card.className = 'wp-card' + (isSelected ? ' active' : '') + (item.m3 ? ' is-m3' : '') + (item.butterfly ? ' is-butterfly' : '');
 
       const thumb = document.createElement('div');
       thumb.className = 'wp-thumb';
@@ -1016,8 +1046,9 @@
       const badge = document.createElement('span');
       badge.className = 'wp-badge';
       if (item.isCustom) badge.textContent = 'Custom';
-      else if (item.m3) badge.textContent = item.cat === 'live' ? 'Material 3 · Live' : `Material 3 · ${item.mode || 'HD'}`;
-      else badge.textContent = item.cat === 'live' ? 'Live 30fps' : 'HD Art';
+      else if (item.butterfly) badge.textContent = `Butterfly M3 · ${item.mode || 'HD'}`;
+      else if (item.cat === 'live') badge.textContent = 'Material You · Live';
+      else badge.textContent = `Material 3 · ${item.mode || 'HD'}`;
       thumb.appendChild(badge);
 
       const check = document.createElement('span');
@@ -1057,7 +1088,7 @@
     general: { title: 'General', sub: 'Search engine, startup tabs, homepage & toolbar behavior' },
     appearance: { title: 'Material You Appearance', sub: 'Theme mode, Dynamic Color seed, address bar & tab layout' },
     startpage: { title: 'Start Page & Quick Access', sub: 'Choose which Material Design 3 sections appear on new tabs' },
-    wallpapers: { title: 'Material Design 3 Wallpapers', sub: '8 new Google Pixel ceramic themes, 16 HD classics, 11 live themes & custom photos' },
+    wallpapers: { title: 'Pure Material Design 3 Wallpapers', sub: '12 sculptural Google Pixel ceramic artworks, 4 Butterfly M3 editions, Material You Live & custom photos' },
     privacy: { title: 'Privacy, Ad Blocker & VPN', sub: '100/100 ad shield, paused sites, 86+ country Smart & Tor VPN' },
     shortcuts: { title: 'Tabs & Keyboard Shortcuts', sub: 'Tab behavior preferences & desktop browser hotkeys' }
   };
@@ -1140,7 +1171,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     if (settingsVersionSub) {
-      settingsVersionSub.textContent = `Material You · v${state.appVersion || '4.3.0'}`;
+      settingsVersionSub.textContent = `Material You · v${state.appVersion || '4.4.0'}`;
     }
     setSegmentedVal(optSearchEngine, o.searchEngine || state.searchEngine || 'google');
     setSegmentedVal(optStartup, o.startupBehavior || 'startpage');
@@ -1286,7 +1317,7 @@
         }
         if (grpHit) paneHasHit = true;
       });
-      if (pKey === 'wallpapers' && ('wallpaper background photo art live theme'.includes(q) || q.includes('wall'))) {
+      if (pKey === 'wallpapers' && ('wallpaper background photo art live theme butterfly material ceramic'.includes(q) || q.includes('wall') || q.includes('butter'))) {
         paneHasHit = true;
       }
       if (paneHasHit && !firstMatchPane) firstMatchPane = pKey;
@@ -1363,7 +1394,7 @@
       railDlBadge.classList.toggle('is-running', !!state.hasActiveDownload);
       railDlBadge.textContent = dlCnt > 99 ? '99' : String(dlCnt);
     }
-    const mCnt = Array.isArray(state.pageMedia) ? state.pageMedia.length : 0;
+    const mCnt = (Array.isArray(state.pageMedia) ? state.pageMedia.length : 0) + (state.activeTabIsVideoSite ? 1 : 0);
     if (railMediaDot) railMediaDot.classList.toggle('hidden', mCnt <= 0);
     const syncConn = !!(state.sync && state.sync.connected);
     if (railSyncDot) railSyncDot.classList.toggle('hidden', !syncConn);
@@ -1817,7 +1848,20 @@
 
   function applyState(next) {
     const wasOverview = !!state.tabOverviewOpen;
+    const prevVideoFormats = state.videoFormats;
+    const prevVideoProbeUrl = state.videoProbeUrl;
+    const prevVideoProbeTitle = state.videoProbeTitle;
+    const prevVideoProbeStatus = state.videoProbeStatus;
+    const prevVideoProbeLoading = state.videoProbeLoading;
     state = next;
+    state.wallpaper = normalizeWallpaperId(next.wallpaper);
+    if (typeof next.videoFormats === 'undefined' && Array.isArray(prevVideoFormats) && prevVideoFormats.length && (!next.activeTabUrl || next.activeTabUrl === prevVideoProbeUrl)) {
+      state.videoFormats = prevVideoFormats;
+      state.videoProbeUrl = prevVideoProbeUrl;
+      state.videoProbeTitle = prevVideoProbeTitle;
+      state.videoProbeStatus = prevVideoProbeStatus;
+      state.videoProbeLoading = prevVideoProbeLoading;
+    }
 
     syncTabs(next.tabs || [], next.activeTabId);
     if (!bootTabsReady && next.tabs && next.tabs.length > 0) {
@@ -1873,6 +1917,7 @@
     if (btnDownloads) btnDownloads.classList.toggle('is-active', dlOpen);
     if (dlOpen) {
       if (!wasDlOpen && next.dlManagerTab) activeDlTab = next.dlManagerTab;
+      if (!wasDlOpen) maybeAutoProbeActiveVideo();
       renderDlManager();
       window.DejavuNewTabCanvas.start();
     }
@@ -1898,7 +1943,7 @@
     }
     profileUpdateDot.classList.toggle('hidden', !next.updateAvailable);
 
-    if (next.wallpaper) window.DejavuNewTabCanvas.setWallpaper(next.wallpaper);
+    window.DejavuNewTabCanvas.setWallpaper(state.wallpaper);
     if (!wallpaperStore.classList.contains('hidden')) renderWallpaperGrid();
 
     const active = (next.tabs || []).find((t) => t.id === next.activeTabId);
@@ -2000,13 +2045,14 @@
   }
 
   // =========================================================================
-  // AntDM-Class Material Design 3 Turbo Download Manager (8x + HLS Streams)
+  // AntDM-Class Material Design 3 Turbo Download Manager (YT MP4/MP3 + 8x + HLS)
   // =========================================================================
   const dlManagerOverlay = document.getElementById('dl-manager-overlay');
   const dlmNav = document.getElementById('dlm-nav');
   const dlmTitle = document.getElementById('dlm-title');
   const dlmSub = document.getElementById('dlm-sub');
   const dlmUrlInput = document.getElementById('dlm-url-input');
+  const dlmQualitySelect = document.getElementById('dlm-quality-select');
   const btnDlmAddUrl = document.getElementById('btn-dlm-add-url');
   const btnDlmScanMedia = document.getElementById('btn-dlm-scan-media');
   const btnDlmPauseAll = document.getElementById('btn-dlm-pause-all');
@@ -2015,6 +2061,11 @@
   const btnDlmClose = document.getElementById('btn-dlm-close');
   const btnDlmOpenDir = document.getElementById('btn-dlm-open-dir');
   const dlmSaveDir = document.getElementById('dlm-save-dir');
+  const dlmVideoCard = document.getElementById('dlm-video-card');
+  const dlmVideoTitle = document.getElementById('dlm-video-title');
+  const dlmVideoStatus = document.getElementById('dlm-video-status');
+  const dlmVideoChips = document.getElementById('dlm-video-chips');
+  const btnDlmProbeVideo = document.getElementById('btn-dlm-probe-video');
   const dlmMediaBanner = document.getElementById('dlm-media-banner');
   const dlmMbSub = document.getElementById('dlm-mb-sub');
   const btnDlmRescan = document.getElementById('btn-dlm-rescan');
@@ -2024,17 +2075,111 @@
   const dlmCntActive = document.getElementById('dlm-cnt-active');
   const dlmCntMedia = document.getElementById('dlm-cnt-media');
   let activeDlTab = 'all';
+  let lastAutoProbedUrl = '';
+
+  const DEFAULT_VIDEO_CHIPS = [
+    { id: '1080', shortLabel: '1080p MP4', label: '1080p HD · MP4', isAudio: false, height: 1080 },
+    { id: '720', shortLabel: '720p MP4', label: '720p HD · MP4', isAudio: false, height: 720 },
+    { id: '480', shortLabel: '480p', label: '480p · MP4', isAudio: false, height: 480 },
+    { id: '360', shortLabel: '360p', label: '360p · MP4', isAudio: false, height: 360 },
+    { id: 'mp3', shortLabel: 'MP3 320k', label: 'MP3 Audio (320 kbps)', isAudio: true, height: 0 },
+    { id: 'm4a', shortLabel: 'M4A', label: 'M4A Audio (Best)', isAudio: true, height: 0 }
+  ];
 
   const DLM_TAB_META = {
-    all: { title: 'All Downloads', sub: '8-thread byte-range & HLS .m3u8 stream assembler · Pause, resume & organize all files' },
-    active: { title: 'Active Downloads (8x)', sub: 'Live multi-segment HTTP & HLS video transfers running right now' },
-    media: { title: 'Page Media Sniffer', sub: 'Download videos, HLS streams, audio, documents & HD images detected on the active tab' },
-    video: { title: 'Videos', sub: 'MP4, WebM, MKV & assembled HLS stream downloads' },
-    audio: { title: 'Audio', sub: 'MP3, M4A, WAV & FLAC music and podcasts' },
+    all: { title: 'All Downloads', sub: 'YouTube & 1,000+ site Video / MP3 downloader, 8-thread byte-range & HLS .m3u8 assembler' },
+    active: { title: 'Active Downloads (8x)', sub: 'Live YouTube MP4/MP3 extractions, multi-segment HTTP & HLS video transfers' },
+    media: { title: 'Page Media & Video Formats', sub: 'One-click YouTube quality & MP3 extraction plus sniffed HLS streams, audio & files' },
+    video: { title: 'Videos', sub: 'YouTube 4K/1080p/720p MP4, WebM, MKV & assembled HLS stream downloads' },
+    audio: { title: 'Audio & MP3', sub: 'Extracted MP3 320k, M4A, WAV & FLAC music and podcasts' },
     document: { title: 'Documents', sub: 'PDFs, eBooks, Word, Excel & presentations' },
     archive: { title: 'Archives & Apps', sub: 'ZIP, RAR, 7Z, EXE, MSI, APK & ISO files' },
     image: { title: 'Images', sub: 'High-resolution images & wallpapers' }
   };
+
+  function isSupportedVideoUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    return /^https?:\/\/([^/]*\.)?(youtube\.com\/(watch|shorts|live|embed)|youtu\.be\/|tiktok\.com\/|instagram\.com\/(reel|p|tv)\/|x\.com\/|twitter\.com\/|vimeo\.com\/|reddit\.com\/|twitch\.tv\/|dailymotion\.com\/|facebook\.com\/.*(video|reel|watch)|fb\.watch\/|soundcloud\.com\/|bilibili\.com\/|rumble\.com\/)/i.test(url);
+  }
+
+  function getActiveVideoContext() {
+    const activeTab = (state.tabs || []).find((t) => t.id === state.activeTabId);
+    const url = state.activeTabUrl || (activeTab && !activeTab.isNewTab ? activeTab.url : '') || state.videoProbeUrl || '';
+    const title = state.videoProbeTitle || state.activeTabTitle || (activeTab && !activeTab.isNewTab ? activeTab.title : '') || '';
+    const isVideoSite = typeof state.activeTabIsVideoSite === 'boolean'
+      ? (state.activeTabIsVideoSite || (Array.isArray(state.videoFormats) && state.videoFormats.length > 0 && state.videoProbeUrl === url))
+      : isSupportedVideoUrl(url);
+    return { url, title, isVideoSite };
+  }
+
+  function maybeAutoProbeActiveVideo() {
+    const ctx = getActiveVideoContext();
+    if (!ctx.isVideoSite || !ctx.url || state.videoProbeLoading) return;
+    if (ctx.url === lastAutoProbedUrl && Array.isArray(state.videoFormats) && state.videoFormats.some((f) => f && f.probed)) return;
+    lastAutoProbedUrl = ctx.url;
+    send({ type: 'turboProbeActiveVideo', url: ctx.url });
+  }
+
+  function renderVideoQuickCard() {
+    if (!dlmVideoCard || !dlmVideoChips) return;
+    const ctx = getActiveVideoContext();
+    const showOnTab = (activeDlTab === 'media' || activeDlTab === 'all' || activeDlTab === 'video' || activeDlTab === 'audio');
+    const shouldShow = ctx.isVideoSite && !!ctx.url && showOnTab;
+    dlmVideoCard.classList.toggle('hidden', !shouldShow);
+    if (!shouldShow) return;
+
+    const host = extractCleanDomain(ctx.url, '') || 'Video Site';
+    if (dlmVideoTitle) dlmVideoTitle.textContent = ctx.title || host;
+    const fmts = (Array.isArray(state.videoFormats) && state.videoFormats.length > 0 && (!state.videoProbeUrl || state.videoProbeUrl === ctx.url))
+      ? state.videoFormats
+      : DEFAULT_VIDEO_CHIPS;
+    const hasProbed = fmts.some((f) => f && f.probed);
+
+    if (dlmVideoStatus) {
+      if (state.videoProbeStatus) dlmVideoStatus.textContent = state.videoProbeStatus;
+      else if (state.videoProbeLoading) dlmVideoStatus.textContent = `${host} · Detecting live resolutions & file sizes…`;
+      else if (hasProbed) dlmVideoStatus.textContent = `${host} · Live qualities ready — click any MP4 or MP3 chip to download`;
+      else dlmVideoStatus.textContent = `${host} · Click any quality or MP3 chip for instant download (zero extension needed)`;
+    }
+    if (btnDlmProbeVideo) {
+      btnDlmProbeVideo.disabled = !!state.videoProbeLoading;
+      btnDlmProbeVideo.textContent = state.videoProbeLoading ? 'Detecting…' : (hasProbed ? 'Refresh Qualities' : 'Detect Qualities');
+    }
+
+    dlmVideoChips.innerHTML = '';
+    fmts.forEach((f) => {
+      if (!f || !f.id) return;
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      const isAud = !!f.isAudio || f.id === 'mp3' || f.id === 'm4a' || f.category === 'audio';
+      const isHd = !isAud && (Number(f.height || 0) >= 1080 || f.id === 'best' || f.id === '2160' || f.id === '1440' || f.id === '1080');
+      chip.className = 'dlm-q-chip' + (isAud ? ' is-audio' : (isHd ? ' is-hd' : ''));
+      chip.title = f.label || f.shortLabel || f.id;
+      const lbl = f.shortLabel || f.label || f.id;
+      const sizeTxt = (f.sizeText || '').trim();
+      chip.innerHTML = `<span>${escapeSugHtml(lbl)}</span>${sizeTxt ? `<span class="q-size">· ${escapeSugHtml(sizeTxt)}</span>` : ''}`;
+      chip.addEventListener('click', () => {
+        send({
+          type: 'turboDownloadVideo',
+          url: ctx.url,
+          quality: f.id,
+          title: ctx.title || ''
+        });
+        chip.classList.add('queued');
+        chip.textContent = 'Started ✓';
+        chip.disabled = true;
+        if (activeDlTab === 'media') {
+          setTimeout(() => {
+            if (state.dlManagerOpen && activeDlTab === 'media') {
+              activeDlTab = 'all';
+              renderDlManager();
+            }
+          }, 320);
+        }
+      });
+      dlmVideoChips.appendChild(chip);
+    });
+  }
 
   function fmtBytes(b) {
     const n = Number(b || 0);
@@ -2070,11 +2215,12 @@
     if (!dlmList) return;
     const items = Array.isArray(state.turboDownloads) ? state.turboDownloads : [];
     const media = Array.isArray(state.pageMedia) ? state.pageMedia : [];
+    const videoCtx = getActiveVideoContext();
     const activeItems = items.filter((d) => d.status === 'downloading' || d.status === 'probing' || d.status === 'queued');
 
     if (dlmCntAll) dlmCntAll.textContent = String(items.length);
     if (dlmCntActive) dlmCntActive.textContent = String(activeItems.length);
-    if (dlmCntMedia) dlmCntMedia.textContent = String(media.length);
+    if (dlmCntMedia) dlmCntMedia.textContent = String(media.length + (videoCtx.isVideoSite ? 1 : 0));
     if (dlmSaveDir && state.downloadsDir) {
       dlmSaveDir.textContent = state.downloadsDir;
       dlmSaveDir.title = state.downloadsDir;
@@ -2089,27 +2235,31 @@
     if (dlmTitle) dlmTitle.textContent = meta.title;
     if (dlmSub) dlmSub.textContent = meta.sub;
 
+    renderVideoQuickCard();
+
     const isMediaTab = (activeDlTab === 'media');
-    if (dlmMediaBanner) dlmMediaBanner.classList.toggle('hidden', !isMediaTab);
+    if (dlmMediaBanner) dlmMediaBanner.classList.toggle('hidden', !isMediaTab || (videoCtx.isVideoSite && media.length === 0));
     dlmList.innerHTML = '';
 
     if (isMediaTab) {
       if (dlmMbSub) {
         dlmMbSub.textContent = media.length
           ? `${media.length} downloadable videos, HLS streams, audio & files captured on the active webpage`
-          : 'Open a webpage with videos, HLS streams, PDFs, archives or images and click Rescan Tab';
+          : 'Open YouTube or any website with videos, HLS streams, PDFs or audio, then click Rescan Tab';
       }
       if (btnDlmGrabAll) {
         btnDlmGrabAll.disabled = media.length === 0;
         btnDlmGrabAll.textContent = media.length ? `Download All (${media.length})` : 'Download All';
       }
       if (!media.length) {
-        dlmList.innerHTML = `
-          <div class="dlm-empty">
-            <div class="dlm-empty-ico"><svg viewBox="0 0 22 22" width="24" height="24" fill="none"><circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.6"/><path d="M9.2 8.2L14.5 11l-5.3 2.8V8.2z" fill="currentColor"/></svg></div>
-            <div class="dlm-empty-title">No Page Media Detected Yet</div>
-            <div class="dlm-empty-sub">Visit any website with videos, HLS streams, music, PDFs or images, then open Page Media or click <strong>Rescan Tab</strong> to download at 8x speed.</div>
-          </div>`;
+        if (!videoCtx.isVideoSite) {
+          dlmList.innerHTML = `
+            <div class="dlm-empty">
+              <div class="dlm-empty-ico"><svg viewBox="0 0 22 22" width="24" height="24" fill="none"><circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.6"/><path d="M9.2 8.2L14.5 11l-5.3 2.8V8.2z" fill="currentColor"/></svg></div>
+              <div class="dlm-empty-title">No Page Media Detected Yet</div>
+              <div class="dlm-empty-sub">Open YouTube, TikTok, Vimeo, SoundCloud, or any site with videos, HLS streams, music, PDFs or images — or paste a link with your chosen quality / MP3 above.</div>
+            </div>`;
+        }
         return;
       }
       media.forEach((m) => {
@@ -2158,8 +2308,8 @@
       dlmList.innerHTML = `
         <div class="dlm-empty">
           <div class="dlm-empty-ico"><svg viewBox="0 0 22 22" width="24" height="24" fill="none"><path d="M11 3.5v10.2M7 10l4 4 4-4M4.2 17.6h13.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="dlm-empty-title">Ready for 8x Turbo Downloads</div>
-          <div class="dlm-empty-sub">Paste any direct URL or HLS <code>.m3u8</code> link above, click the floating video button while browsing, or open <strong>Page Media</strong>.</div>
+          <div class="dlm-empty-title">Ready for Video, MP3 &amp; 8x Turbo Downloads</div>
+          <div class="dlm-empty-sub">Paste any YouTube, TikTok, Instagram, X, Vimeo, SoundCloud, MP4 or HLS <code>.m3u8</code> link above, pick a quality or <strong>MP3 Audio</strong>, or click the floating download button on any video.</div>
         </div>`;
       return;
     }
@@ -2171,14 +2321,22 @@
       const isDone = d.status === 'completed';
       const isErr = d.status === 'failed' || d.status === 'cancelled';
       const isHls = (d.streamType === 'hls');
+      const isYtDlp = (d.streamType === 'ytdlp');
+      const isAudioDl = (d.category === 'audio') || /mp3|m4a/i.test(d.quality || '') || /\.(mp3|m4a|opus|wav|flac)$/i.test(d.fileName || '');
+      const isM4a = /m4a/i.test(d.quality || '') || /\.m4a$/i.test(d.fileName || '');
       card.className = 'dlm-card' + (isRun ? ' is-active' : '') + (isPaused ? ' is-paused' : '') + (isDone ? ' is-done' : '');
 
-      const cat = d.category || 'other';
+      const cat = d.category || (isAudioDl ? 'audio' : (isYtDlp ? 'video' : 'other'));
       const threads = Number(d.threads || 1);
+      const icoLabel = isYtDlp ? (isAudioDl ? (isM4a ? 'M4A' : 'MP3') : 'YT') : (isHls ? 'HLS' : catBadgeLabel(cat));
       const chipText = isDone
-        ? (isHls ? 'HLS Done' : (d.rangeSupported ? `${threads}x Done` : 'Completed'))
-        : (isErr ? (d.status === 'cancelled' ? 'Cancelled' : 'Failed') : (isPaused ? 'Paused' : (isHls ? `HLS ${threads}x` : `${threads}x Turbo`)));
-      const chipCls = isDone ? 'done' : (isErr ? 'err' : (isHls ? 'hls' : ''));
+        ? (isYtDlp ? (isAudioDl ? (isM4a ? 'M4A Done' : 'MP3 Done') : 'YT / MP4 Done') : (isHls ? 'HLS Done' : (d.rangeSupported ? `${threads}x Done` : 'Completed')))
+        : (isErr ? (d.status === 'cancelled' ? 'Cancelled' : 'Failed')
+          : (isPaused ? 'Paused'
+            : (isYtDlp ? (isAudioDl ? (isM4a ? 'M4A' : 'MP3') : 'YT / MP4') : (isHls ? `HLS ${threads}x` : `${threads}x Turbo`))));
+      const chipCls = isDone ? 'done' : (isErr ? 'err' : (isYtDlp ? (isAudioDl ? 'mp3' : 'ytdlp') : (isHls ? 'hls' : '')));
+      const qBadge = (d.quality || '').trim();
+      const statusText = (isRun && d.statusText) ? String(d.statusText).trim() : '';
 
       const segs = Array.isArray(d.segments) && d.segments.length > 0
         ? d.segments
@@ -2192,11 +2350,13 @@
         : '';
       const sizeStr = d.totalBytes > 0
         ? (isDone ? fmtBytes(d.totalBytes) : `${fmtBytes(d.receivedBytes)} / ${fmtBytes(d.totalBytes)} (${Number(d.percent || 0).toFixed(0)}%)`)
-        : (d.receivedBytes > 0 ? fmtBytes(d.receivedBytes) : (d.status === 'probing' ? 'Connecting…' : ''));
+        : (d.receivedBytes > 0 ? fmtBytes(d.receivedBytes) : (statusText ? '' : (d.status === 'probing' ? 'Connecting…' : '')));
 
       let actsHtml = '';
       if (isRun) {
-        actsHtml = `<button type="button" class="dlm-act-btn act-pause">Pause</button><button type="button" class="dlm-act-btn danger act-cancel">Cancel</button>`;
+        actsHtml = isYtDlp
+          ? `<button type="button" class="dlm-act-btn danger act-cancel">Cancel</button>`
+          : `<button type="button" class="dlm-act-btn act-pause">Pause</button><button type="button" class="dlm-act-btn danger act-cancel">Cancel</button>`;
       } else if (isPaused || isErr) {
         actsHtml = `<button type="button" class="dlm-act-btn primary act-resume">${isErr ? 'Retry' : 'Resume'}</button><button type="button" class="dlm-act-btn act-rm">Remove</button>`;
       } else if (isDone) {
@@ -2205,14 +2365,16 @@
 
       card.innerHTML = `
         <div class="dlm-card-top">
-          <span class="dlm-cat-ico cat-${escapeSugHtml(cat)}">${isHls ? 'HLS' : catBadgeLabel(cat)}</span>
+          <span class="dlm-cat-ico cat-${escapeSugHtml(cat)}">${escapeSugHtml(icoLabel)}</span>
           <div class="dlm-card-meta">
             <div class="dlm-card-name-row">
               <div class="dlm-card-name"></div>
               <span class="dlm-turbo-chip ${chipCls}">${escapeSugHtml(chipText)}</span>
+              ${qBadge ? `<span class="dlm-quality-chip">${escapeSugHtml(qBadge)}</span>` : ''}
             </div>
             <div class="dlm-card-sub">
               <span>${escapeSugHtml(d.host || '')}</span>
+              ${statusText ? `<span class="dlm-status-note">· ${escapeSugHtml(statusText)}</span>` : ''}
               ${hlsSegStr ? `<span>· ${escapeSugHtml(hlsSegStr)}</span>` : ''}
               ${sizeStr ? `<span>· ${escapeSugHtml(sizeStr)}</span>` : ''}
               ${speedStr ? `<span class="dlm-speed-val">· ${escapeSugHtml(speedStr)}</span>` : ''}
@@ -2246,10 +2408,11 @@
     if (!dlmUrlInput) return;
     const raw = (dlmUrlInput.value || '').trim();
     if (!raw) return;
+    const quality = dlmQualitySelect ? (dlmQualitySelect.value || 'best') : 'best';
     dlmUrlInput.value = '';
     const lines = raw.split(/\s+/).filter((u) => u.length > 4);
-    if (lines.length > 1) send({ type: 'turboAddBatch', urls: lines });
-    else send({ type: 'turboAddUrl', url: lines[0] });
+    if (lines.length > 1) send({ type: 'turboAddBatch', urls: lines, quality });
+    else send({ type: 'turboAddUrl', url: lines[0], quality });
     if (activeDlTab === 'media') {
       activeDlTab = 'all';
       renderDlManager();
@@ -2264,19 +2427,38 @@
   if (btnDlmResumeAll) btnDlmResumeAll.addEventListener('click', () => send({ type: 'turboResumeAll' }));
   if (btnDlmClearDone) btnDlmClearDone.addEventListener('click', () => send({ type: 'turboClearDone' }));
   if (btnDlmOpenDir) btnDlmOpenDir.addEventListener('click', () => send({ type: 'turboOpenFolder' }));
+  if (btnDlmProbeVideo) {
+    btnDlmProbeVideo.addEventListener('click', () => {
+      const ctx = getActiveVideoContext();
+      if (!ctx.url) return;
+      lastAutoProbedUrl = ctx.url;
+      state.videoProbeLoading = true;
+      state.videoProbeStatus = 'Detecting real resolutions & file sizes…';
+      renderVideoQuickCard();
+      send({ type: 'turboProbeActiveVideo', url: ctx.url });
+    });
+  }
   if (btnDlmScanMedia) {
     btnDlmScanMedia.addEventListener('click', () => {
       activeDlTab = 'media';
       send({ type: 'turboScanMedia' });
+      maybeAutoProbeActiveVideo();
       renderDlManager();
     });
   }
-  if (btnDlmRescan) btnDlmRescan.addEventListener('click', () => send({ type: 'turboScanMedia' }));
+  if (btnDlmRescan) {
+    btnDlmRescan.addEventListener('click', () => {
+      send({ type: 'turboScanMedia' });
+      const ctx = getActiveVideoContext();
+      if (ctx.isVideoSite && ctx.url) send({ type: 'turboProbeActiveVideo', url: ctx.url });
+    });
+  }
   if (btnDlmGrabAll) {
     btnDlmGrabAll.addEventListener('click', () => {
       const urls = (state.pageMedia || []).map((m) => m.url).filter(Boolean);
       if (!urls.length) return;
-      send({ type: 'turboAddBatch', urls });
+      const quality = dlmQualitySelect ? (dlmQualitySelect.value || 'best') : 'best';
+      send({ type: 'turboAddBatch', urls, quality });
       activeDlTab = 'all';
       renderDlManager();
     });
@@ -2286,7 +2468,10 @@
       const btn = e.target.closest('.settings-nav-item');
       if (!btn) return;
       activeDlTab = btn.dataset.dltab || 'all';
-      if (activeDlTab === 'media') send({ type: 'turboScanMedia' });
+      if (activeDlTab === 'media') {
+        send({ type: 'turboScanMedia' });
+        maybeAutoProbeActiveVideo();
+      }
       renderDlManager();
     });
   }
@@ -2307,6 +2492,14 @@
         state.pageMedia = msg.pageMedia || [];
         state.downloadsCount = msg.downloadsCount || 0;
         state.hasActiveDownload = !!msg.hasActiveDownload;
+        if (typeof msg.activeTabUrl === 'string') state.activeTabUrl = msg.activeTabUrl;
+        if (typeof msg.activeTabTitle === 'string') state.activeTabTitle = msg.activeTabTitle;
+        if (typeof msg.activeTabIsVideoSite === 'boolean') state.activeTabIsVideoSite = msg.activeTabIsVideoSite;
+        if (typeof msg.videoProbeUrl === 'string') state.videoProbeUrl = msg.videoProbeUrl;
+        if (typeof msg.videoProbeTitle === 'string') state.videoProbeTitle = msg.videoProbeTitle;
+        if (typeof msg.videoProbeLoading === 'boolean') state.videoProbeLoading = msg.videoProbeLoading;
+        if (typeof msg.videoProbeStatus === 'string') state.videoProbeStatus = msg.videoProbeStatus;
+        if (Array.isArray(msg.videoFormats)) state.videoFormats = msg.videoFormats;
         dlDot.classList.toggle('hidden', state.downloadsCount <= 0);
         btnDownloads.classList.toggle('downloading', state.hasActiveDownload);
         updateRailIndicators();

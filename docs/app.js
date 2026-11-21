@@ -1,11 +1,11 @@
 /**
- * dejavu Official Website — Simple Material Design 3 Interactive Engine
+ * dejavu Official Website — Simple Material Design 3 Interactive Engine (v4.4.0)
  * 6 Material You Dynamic Color Seeds · 4-View Dual-Device Showcase
- * Live 8x Video & HLS Download Simulator · Wallpaper Harmonizer · GitHub Releases API
+ * Interactive Multi-Quality Video & MP3 Downloader Demo · 16-Wallpaper Harmonizer · GitHub Releases API
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v4.3.0';
+  const FALLBACK_VERSION = 'v4.4.0';
   const root = document.documentElement;
 
   const THEME_META_COLORS = {
@@ -109,6 +109,7 @@
     if (urlEl) urlEl.textContent = VIEW_META[activeView].url;
     const syncEl = document.getElementById('px-synced-title');
     if (syncEl) syncEl.textContent = VIEW_META[activeView].title;
+    closeQualityMenu();
   }
 
   document.querySelectorAll('[data-showcase]').forEach((el) => {
@@ -127,11 +128,86 @@
   document.getElementById('dk-rail-side')?.addEventListener('click', toggleSidePanel);
   document.getElementById('dk-side-close')?.addEventListener('click', toggleSidePanel);
 
-  // 3. Interactive Floating Video Download Button + Live 8-Segment Accelerator Demo
+  // 3. Interactive Floating Video & MP3 Quality Menu + Live 8-Segment Accelerator Demo
+  const QUALITY_PRESETS = {
+    '4k': {
+      label: '4K 2160p · MP4',
+      shortTag: '4K',
+      badge: '8×',
+      fileName: 'Material_You_Showcase_4K_2160p.mp4',
+      sizeMb: 248.0,
+      isAudio: false,
+      doneNote: '4K 2160p MP4 assembled across 8 threads · Ready to play',
+      speedBase: 41.2
+    },
+    '1080p': {
+      label: '1080p HD · MP4',
+      shortTag: '1080p',
+      badge: '8×',
+      fileName: 'Material_You_Showcase_1080p_HD.mp4',
+      sizeMb: 118.4,
+      isAudio: false,
+      doneNote: '1080p HD MP4 assembled across 8 threads · Ready to play',
+      speedBase: 36.8
+    },
+    '720p': {
+      label: '720p HD · MP4',
+      shortTag: '720p',
+      badge: '8×',
+      fileName: 'Material_You_Showcase_720p_HD.mp4',
+      sizeMb: 64.2,
+      isAudio: false,
+      doneNote: '720p HD MP4 assembled across 8 threads · Ready to play',
+      speedBase: 32.4
+    },
+    mp3: {
+      label: 'MP3 Audio (320k)',
+      shortTag: 'MP3',
+      badge: '320k',
+      fileName: 'Material_You_Showcase_320kbps.mp3',
+      sizeMb: 9.6,
+      isAudio: true,
+      doneNote: '320 kbps MP3 audio extracted across 8 threads · Ready to play',
+      speedBase: 14.2
+    }
+  };
+
+  let activeQualityKey = '4k';
   let turboSegs = [76, 84, 68, 92, 74, 88, 79, 65];
   let turboRunning = false;
   let turboPaused = false;
   let turboTimer = null;
+  let floatResetTimer = null;
+
+  const floatDlWrap = document.getElementById('demo-float-dl-wrap');
+  const floatDlBtn = document.getElementById('demo-float-dl-btn');
+  const qualityMenu = document.getElementById('demo-quality-menu');
+  const qualityItems = Array.from(document.querySelectorAll('[data-dl-quality]'));
+
+  function closeQualityMenu() {
+    if (!qualityMenu || !floatDlBtn) return;
+    qualityMenu.hidden = true;
+    floatDlBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  function applyQualityMeta(key) {
+    const preset = QUALITY_PRESETS[key] || QUALITY_PRESETS['4k'];
+    activeQualityKey = QUALITY_PRESETS[key] ? key : '4k';
+
+    const tagEl = document.getElementById('demo-dl-tag');
+    const nameEl = document.getElementById('demo-dl-filename');
+    const badgeEl = document.getElementById('demo-float-badge');
+    if (tagEl) {
+      tagEl.textContent = preset.shortTag;
+      tagEl.classList.toggle('is-audio', preset.isAudio);
+    }
+    if (nameEl) nameEl.textContent = preset.fileName;
+    if (badgeEl) badgeEl.textContent = preset.shortTag;
+
+    qualityItems.forEach((item) => {
+      item.classList.toggle('active', item.dataset.dlQuality === activeQualityKey);
+    });
+  }
 
   function renderTurboDemo() {
     const strip = document.getElementById('demo-dl-segs');
@@ -139,6 +215,7 @@
     const chip = document.getElementById('demo-dl-chip');
     if (!strip || !sub || !chip) return;
 
+    const preset = QUALITY_PRESETS[activeQualityKey] || QUALITY_PRESETS['4k'];
     const bars = strip.querySelectorAll('span');
     let total = 0;
     turboSegs.forEach((val, idx) => {
@@ -149,24 +226,25 @@
 
     const avg = total / 8;
     const finished = avg >= 99.8;
-    const rxMb = ((avg / 100) * 248.0).toFixed(1);
+    const rxMb = ((avg / 100) * preset.sizeMb).toFixed(1);
+    const totalMb = preset.sizeMb.toFixed(1);
 
     strip.classList.toggle('done', finished);
     chip.classList.toggle('done', finished);
 
     if (finished) {
-      chip.textContent = '8x Done';
-      sub.textContent = 'Completed · 248.0 MB assembled across 8 threads · Ready to play';
+      chip.textContent = preset.isAudio ? 'MP3 Done' : '8× Done';
+      sub.textContent = `Completed · ${totalMb} MB · ${preset.doneNote}`;
       turboRunning = false;
       clearInterval(turboTimer);
     } else if (turboPaused) {
       chip.textContent = 'Paused';
-      sub.textContent = `Paused · ${rxMb} / 248.0 MB (${avg.toFixed(0)}%) · Resume anytime`;
+      sub.textContent = `Paused · ${preset.label} · ${rxMb} / ${totalMb} MB (${avg.toFixed(0)}%)`;
     } else {
-      const speed = (41.2 + Math.sin(Date.now() * 0.004) * 4.8).toFixed(1);
-      const remSec = Math.max(1, Math.ceil((248.0 - Number(rxMb)) / Number(speed)));
-      chip.textContent = '8x Active';
-      sub.textContent = `8x Turbo · ${rxMb} / 248.0 MB · ${speed} MB/s · ${remSec}s remaining`;
+      const speed = (preset.speedBase + Math.sin(Date.now() * 0.004) * (preset.isAudio ? 1.8 : 4.2)).toFixed(1);
+      const remSec = Math.max(1, Math.ceil((preset.sizeMb - Number(rxMb)) / Number(speed)));
+      chip.textContent = preset.isAudio ? 'MP3 Active' : '8× Active';
+      sub.textContent = `${preset.label} · ${rxMb} / ${totalMb} MB · ${speed} MB/s · ${remSec}s remaining`;
     }
   }
 
@@ -180,9 +258,11 @@
     renderTurboDemo();
     turboTimer = setInterval(() => {
       if (turboPaused) return;
+      const preset = QUALITY_PRESETS[activeQualityKey] || QUALITY_PRESETS['4k'];
+      const boost = preset.isAudio ? 7.8 : 4.6;
       for (let i = 0; i < 8; i++) {
         if (turboSegs[i] < 100) {
-          turboSegs[i] = Math.min(100, turboSegs[i] + 4.2 + ((i * 1.4 + Math.random() * 3.8)));
+          turboSegs[i] = Math.min(100, turboSegs[i] + boost + ((i * 1.4 + Math.random() * 3.8)));
         }
       }
       renderTurboDemo();
@@ -200,18 +280,48 @@
     renderTurboDemo();
   });
 
-  // Floating IDM / AntDM Video Button inside Preview
-  document.getElementById('demo-float-dl-btn')?.addEventListener('click', (e) => {
-    const btn = e.currentTarget;
-    const lbl = document.getElementById('demo-float-dl-lbl');
-    btn.classList.add('queued');
-    if (lbl) lbl.textContent = 'Downloading 8x…';
-    startTurboDemo(true);
-    setTimeout(() => {
-      btn.classList.remove('queued');
-      if (lbl) lbl.textContent = 'Download · 4K MP4';
-    }, 2400);
-  });
+  // Floating Download Button opens Material 3 Quality & MP3 Dropdown
+  if (floatDlBtn && qualityMenu) {
+    floatDlBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const willOpen = qualityMenu.hidden;
+      qualityMenu.hidden = !willOpen;
+      floatDlBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    });
+
+    qualityItems.forEach((item) => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const key = item.dataset.dlQuality || '4k';
+        const preset = QUALITY_PRESETS[key] || QUALITY_PRESETS['4k'];
+        applyQualityMeta(key);
+        closeQualityMenu();
+
+        const lbl = document.getElementById('demo-float-dl-lbl');
+        floatDlBtn.classList.add('queued');
+        if (lbl) lbl.textContent = `Downloading ${preset.shortTag}…`;
+        startTurboDemo(true);
+
+        clearTimeout(floatResetTimer);
+        floatResetTimer = setTimeout(() => {
+          floatDlBtn.classList.remove('queued');
+          if (lbl) lbl.textContent = 'Download';
+        }, 2200);
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!qualityMenu.hidden && floatDlWrap && !floatDlWrap.contains(e.target)) {
+        closeQualityMenu();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !qualityMenu.hidden) {
+        closeQualityMenu();
+      }
+    });
+  }
 
   // 4. Interactive 86-Country VPN Selector
   let vpnMode = 'Smart · Web & AI';
@@ -280,7 +390,10 @@
       const filter = btn.dataset.wpFilter || 'all';
       wpFilters.forEach((x) => x.classList.toggle('active', x === btn));
       wpCards.forEach((card) => {
-        card.classList.toggle('is-hidden', filter !== 'all' && card.dataset.mode !== filter);
+        const visible =
+          filter === 'all' ||
+          (filter === 'butterfly' ? card.dataset.butterfly === 'true' : card.dataset.mode === filter);
+        card.classList.toggle('is-hidden', !visible);
       });
     });
   });
@@ -299,11 +412,12 @@
       selectShowcase('start');
       const title = card.dataset.title || 'Material You wallpaper';
       const polarity = card.dataset.mode === 'light' ? 'Light' : 'Dark';
-      showSnackbar(`Applied "${title}" · ${polarity} Material You`);
+      const edition = card.dataset.butterfly === 'true' ? 'Butterfly M3' : 'Material You';
+      showSnackbar(`Applied "${title}" · ${polarity} ${edition}`);
     });
   });
 
-  // 7. GitHub Releases API Dynamic Hydration (Fallback: v4.3.0)
+  // 7. GitHub Releases API Dynamic Hydration (Fallback: v4.4.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

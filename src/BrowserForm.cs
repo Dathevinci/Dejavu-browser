@@ -140,6 +140,12 @@ namespace DejavuBrowser
         private string _docStartScript;
         private string _floatingMediaScript;
         private readonly Dictionary<int, DateTime> _tabMediaPushUtc = new Dictionary<int, DateTime>();
+        private CancellationTokenSource _videoProbeCts;
+        private string _videoProbeUrl = "";
+        private string _videoProbeTitle = "";
+        private bool _videoProbeLoading;
+        private string _videoProbeStatus = "";
+        private List<Dictionary<string, object>> _videoFormats = new List<Dictionary<string, object>>();
 
         private static readonly string[] OAuthHosts = new string[]
         {
@@ -252,6 +258,8 @@ namespace DejavuBrowser
             {
                 try { _pipeCts.Cancel(); } catch { }
                 try { _pipeCts.Dispose(); } catch { }
+                try { if (_videoProbeCts != null) _videoProbeCts.Cancel(); } catch { }
+                try { if (_videoProbeCts != null) _videoProbeCts.Dispose(); } catch { }
                 try
                 {
                     List<string> sessionUrls = new List<string>();
@@ -1627,6 +1635,195 @@ namespace DejavuBrowser
             catch { }
         }
 
+        private void PushVideoFormatsToTabWidget(BrowserTab tab, string url, string title, bool loading, string status, List<Dictionary<string, object>> formats)
+        {
+            if (tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed) return;
+            try
+            {
+                var payload = new Dictionary<string, object>
+                {
+                    { "url", url ?? "" },
+                    { "title", title ?? "" },
+                    { "loading", loading },
+                    { "status", status ?? "" },
+                    { "formats", formats ?? new List<Dictionary<string, object>>() }
+                };
+                string json = _json.Serialize(payload);
+                tab.WebView.CoreWebView2.ExecuteScriptAsync("if(window.__dejavuUpdateVideoFormats)window.__dejavuUpdateVideoFormats(" + json + ");");
+            }
+            catch { }
+        }
+
+        private async void StartVideoProbeAsync(string targetUrl, BrowserTab notifyTab, bool pushToShell)
+        {
+            if (_turboDownloads == null) return;
+            BrowserTab active = GetActiveTab();
+            string url = !string.IsNullOrWhiteSpace(targetUrl)
+                ? targetUrl.Trim()
+                : ((active != null && !active.IsNewTab) ? (active.Url ?? "") : "");
+            if (string.IsNullOrWhiteSpace(url)) return;
+
+            if (_videoProbeCts != null)
+            {
+                try { _videoProbeCts.Cancel(); } catch { }
+                try { _videoProbeCts.Dispose(); } catch { }
+            }
+            _videoProbeCts = new CancellationTokenSource();
+            CancellationToken ct = _videoProbeCts.Token;
+
+            string fallbackTitle = (notifyTab != null && !string.IsNullOrEmpty(notifyTab.Title))
+                ? notifyTab.Title
+                : ((active != null && !active.IsNewTab) ? (active.Title ?? "") : "");
+            List<Dictionary<string, object>> instant = VideoExtractorEngine.BuildInstantFallbackPayloads(url);
+
+            _videoProbeUrl = url;
+            _videoProbeTitle = fallbackTitle;
+            _videoProbeLoading = true;
+            _videoProbeStatus = _turboDownloads.VideoEngine.IsYtDlpReady
+                ? "Probing available video & audio qualities..."
+                : "Setting up Video Engine (yt-dlp)...";
+            _videoFormats = instant;
+
+            if (pushToShell) PushTurboDownloadsDelta();
+            if (notifyTab != null) PushVideoFormatsToTabWidget(notifyTab, url, _videoProbeTitle, true, _videoProbeStatus, instant);
+
+            try
+            {
+                VideoProbeResult res = await _turboDownloads.ProbeVideoFormatsAsync(
+                    url,
+                    status =>
+                    {
+                        if (IsDisposed || !IsHandleCreated || ct.IsCancellationRequested) return;
+                        try
+                        {
+                            BeginInvoke((Action)(() =>
+                            {
+                                if (IsDisposed || ct.IsCancellationRequested || !string.Equals(_videoProbeUrl, url, StringComparison.OrdinalIgnoreCase)) return;
+                                _videoProbeStatus = status ?? "";
+                                if (pushToShell) PushTurboDownloadsDelta();
+                                if (notifyTab != null) PushVideoFormatsToTabWidget(notifyTab, url, _videoProbeTitle, true, _videoProbeStatus, _videoFormats);
+                            }));
+                        }
+                        catch { }
+                    },
+                    ct);
+
+                if (IsDisposed || ct.IsCancellationRequested) return;
+                if (!string.Equals(_videoProbeUrl, url, StringComparison.OrdinalIgnoreCase)) return;
+
+                List<Dictionary<string, object>> serialized = (res != null && res.Formats != null && res.Formats.Count > 0)
+                    ? VideoExtractorEngine.SerializeFormats(res.Formats)
+                    : instant;
+                _videoProbeLoading = false;
+                if (res != null && !string.IsNullOrWhiteSpace(res.Title)) _videoProbeTitle = res.Title;
+                _videoProbeStatus = (res != null && res.Success)
+                    ? "Ready"
+                    : ((res != null && !string.IsNullOrWhiteSpace(res.Error)) ? res.Error : "Using quick presets");
+                _videoFormats = serialized;
+
+                if (pushToShell) PushTurboDownloadsDelta();
+                if (notifyTab != null) PushVideoFormatsToTabWidget(notifyTab, url, _videoProbeTitle, false, "", serialized);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch
+            {
+                if (!IsDisposed && string.Equals(_videoProbeUrl, url, StringComparison.OrdinalIgnoreCase))
+                {
+                    _videoProbeLoading = false;
+                    _videoProbeStatus = "Using quick presets";
+                    if (pushToShell) PushTurboDownloadsDelta();
+                    if (notifyTab != null) PushVideoFormatsToTabWidget(notifyTab, url, _videoProbeTitle, false, "", _videoFormats);
+                }
+            }
+        }
+
+        private void EnqueueVideoDownloadFromTab(BrowserTab sourceTab, string pageUrl, string quality, string titleHint)
+        {
+            if (_turboDownloads == null) return;
+            BrowserTab ctx = sourceTab ?? GetActiveTab();
+            string url = !string.IsNullOrWhiteSpace(pageUrl)
+                ? pageUrl.Trim()
+                : ((ctx != null && !ctx.IsNewTab) ? (ctx.Url ?? "") : "");
+            if (string.IsNullOrWhiteSpace(url)) return;
+
+            string title = !string.IsNullOrWhiteSpace(titleHint)
+                ? titleHint.Trim()
+                : ((ctx != null && !ctx.IsNewTab) ? (ctx.Title ?? "") : "");
+            string referer = (ctx != null && !ctx.IsNewTab) ? (ctx.Url ?? url) : url;
+            string ua = "";
+            if (ctx != null && !ctx.IsNewTab && ctx.CoreReady && ctx.WebView != null && !ctx.WebView.IsDisposed)
+            {
+                try { ua = ctx.WebView.CoreWebView2.Settings.UserAgent ?? ""; } catch { }
+            }
+
+            TurboDownloadEntry entry = _turboDownloads.EnqueueVideoExtractDownload(url, quality, title, referer, ua);
+            if (entry != null)
+            {
+                _lastDownloadPath = entry.SavePath;
+                _activeToastTurboId = entry.Id;
+                _lastToastUpdateUtc = DateTime.UtcNow;
+                if (!_dlManagerOpen)
+                {
+                    string toastLabel = !string.IsNullOrEmpty(entry.StatusText) ? entry.StatusText : entry.FileName;
+                    ShowDownloadToast(toastLabel, entry.SavePath, 0, entry.TotalBytes, "progressing");
+                }
+            }
+        }
+
+        private void AppendVideoProbeFields(Dictionary<string, object> target, BrowserTab active)
+        {
+            string activeUrl = (active != null && !active.IsNewTab) ? (active.Url ?? "") : "";
+            string activeTitle = (active != null && !active.IsNewTab) ? (active.Title ?? "") : "";
+            bool isVideoSite = VideoExtractorEngine.IsSupportedVideoSiteUrl(activeUrl);
+            bool matchesProbe = !string.IsNullOrEmpty(activeUrl) &&
+                                string.Equals(_videoProbeUrl, activeUrl, StringComparison.OrdinalIgnoreCase);
+
+            List<Dictionary<string, object>> formats;
+            string probeTitle;
+            bool probeLoading;
+            string probeStatus;
+            string probeUrl;
+
+            if (matchesProbe)
+            {
+                formats = _videoFormats ?? new List<Dictionary<string, object>>();
+                probeTitle = !string.IsNullOrEmpty(_videoProbeTitle) ? _videoProbeTitle : activeTitle;
+                probeLoading = _videoProbeLoading;
+                probeStatus = _videoProbeStatus ?? "";
+                probeUrl = _videoProbeUrl;
+            }
+            else if (isVideoSite)
+            {
+                formats = VideoExtractorEngine.BuildInstantFallbackPayloads(activeUrl);
+                probeTitle = activeTitle;
+                probeLoading = false;
+                probeStatus = "";
+                probeUrl = activeUrl;
+            }
+            else
+            {
+                formats = new List<Dictionary<string, object>>();
+                probeTitle = "";
+                probeLoading = false;
+                probeStatus = "";
+                probeUrl = "";
+            }
+
+            target["activeTabUrl"] = activeUrl;
+            target["activeTabTitle"] = activeTitle;
+            target["activeTabIsVideoSite"] = isVideoSite;
+            target["videoProbeUrl"] = probeUrl;
+            target["videoProbeTitle"] = probeTitle;
+            target["videoProbeLoading"] = probeLoading;
+            target["videoProbeStatus"] = probeStatus;
+            target["videoFormats"] = formats;
+            target["engineStatus"] = _turboDownloads != null
+                ? _turboDownloads.VideoEngine.BuildEngineStatusPayload()
+                : new Dictionary<string, object> { { "ytDlpReady", false }, { "ffmpegReady", false } };
+        }
+
         private void OnTabContentWebMessage(BrowserTab tab, CoreWebView2WebMessageReceivedEventArgs e)
         {
             try
@@ -1642,7 +1839,25 @@ namespace DejavuBrowser
                     string fn = msg.ContainsKey("fileName") ? Convert.ToString(msg["fileName"]) : "";
                     if (!string.IsNullOrWhiteSpace(u))
                     {
-                        EnqueueFromTabContextAsync(tab, u, fn);
+                        EnqueueFromTabContextAsync(tab, u, fn, "");
+                    }
+                }
+                else if (action == "probeFormats")
+                {
+                    string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : (tab != null ? (tab.Url ?? "") : "");
+                    if (!string.IsNullOrWhiteSpace(u))
+                    {
+                        StartVideoProbeAsync(u, tab, tab != null && tab.Id == _activeTabId);
+                    }
+                }
+                else if (action == "downloadVideo")
+                {
+                    string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : (tab != null ? (tab.Url ?? "") : "");
+                    string q = msg.ContainsKey("quality") ? Convert.ToString(msg["quality"]) : "best";
+                    string t = msg.ContainsKey("title") ? Convert.ToString(msg["title"]) : (tab != null ? (tab.Title ?? "") : "");
+                    if (!string.IsNullOrWhiteSpace(u))
+                    {
+                        EnqueueVideoDownloadFromTab(tab, u, q, t);
                     }
                 }
                 else if (action == "sniffed")
@@ -1693,7 +1908,8 @@ namespace DejavuBrowser
                                 string toastState = te.Status == "completed"
                                     ? "completed"
                                     : (te.Status == "failed" || te.Status == "cancelled" ? "interrupted" : "progressing");
-                                ShowDownloadToast(te.FileName, te.SavePath, te.ReceivedBytes, te.TotalBytes, toastState);
+                                string toastName = (!terminal && !string.IsNullOrEmpty(te.StatusText)) ? te.StatusText : te.FileName;
+                                ShowDownloadToast(toastName, te.SavePath, te.ReceivedBytes, te.TotalBytes, toastState);
                             }
                             if (terminal) _activeToastTurboId = "";
                         }
@@ -1718,6 +1934,7 @@ namespace DejavuBrowser
                 { "downloadsCount", turboList.Count + _downloads.Count },
                 { "hasActiveDownload", _turboDownloads.HasActiveDownloads || _downloads.Exists(d => d.state == "progressing") }
             };
+            AppendVideoProbeFields(msg, active);
             try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(msg)); } catch { }
         }
 
@@ -1733,6 +1950,12 @@ namespace DejavuBrowser
                 HideSuggestPopup();
                 if (_activeHudMode == "find") HideHud();
                 ScanActiveTabMediaAsync();
+                BrowserTab active = GetActiveTab();
+                if (active != null && !active.IsNewTab && VideoExtractorEngine.IsSupportedVideoSiteUrl(active.Url) &&
+                    !string.Equals(_videoProbeUrl, active.Url, StringComparison.OrdinalIgnoreCase))
+                {
+                    StartVideoProbeAsync(active.Url, active, true);
+                }
             }
             LayoutViews();
             PushFullStateToShell();
@@ -1818,10 +2041,15 @@ namespace DejavuBrowser
 
         private void EnqueueFromActiveTabContextAsync(string url, string suggestedName)
         {
-            EnqueueFromTabContextAsync(GetActiveTab(), url, suggestedName);
+            EnqueueFromTabContextAsync(GetActiveTab(), url, suggestedName, "");
         }
 
-        private async void EnqueueFromTabContextAsync(BrowserTab sourceTab, string url, string suggestedName)
+        private void EnqueueFromActiveTabContextAsync(string url, string suggestedName, string qualityPreset)
+        {
+            EnqueueFromTabContextAsync(GetActiveTab(), url, suggestedName, qualityPreset);
+        }
+
+        private async void EnqueueFromTabContextAsync(BrowserTab sourceTab, string url, string suggestedName, string qualityPreset)
         {
             if (_turboDownloads == null || string.IsNullOrWhiteSpace(url)) return;
             string referer = "";
@@ -1832,22 +2060,25 @@ namespace DejavuBrowser
             {
                 referer = ctx.Url ?? "";
                 try { ua = ctx.WebView.CoreWebView2.Settings.UserAgent ?? ""; } catch { }
-                try
+                if (!VideoExtractorEngine.IsSupportedVideoSiteUrl(url))
                 {
-                    var cookies = await ctx.WebView.CoreWebView2.CookieManager.GetCookiesAsync(url);
-                    if (cookies != null && cookies.Count > 0)
+                    try
                     {
-                        List<string> parts = new List<string>();
-                        for (int i = 0; i < cookies.Count; i++)
+                        var cookies = await ctx.WebView.CoreWebView2.CookieManager.GetCookiesAsync(url);
+                        if (cookies != null && cookies.Count > 0)
                         {
-                            parts.Add(cookies[i].Name + "=" + cookies[i].Value);
+                            List<string> parts = new List<string>();
+                            for (int i = 0; i < cookies.Count; i++)
+                            {
+                                parts.Add(cookies[i].Name + "=" + cookies[i].Value);
+                            }
+                            cookieHeader = string.Join("; ", parts.ToArray());
                         }
-                        cookieHeader = string.Join("; ", parts.ToArray());
                     }
+                    catch { }
                 }
-                catch { }
             }
-            TurboDownloadEntry entry = _turboDownloads.EnqueueDownload(url, suggestedName, referer, ua, cookieHeader, 8);
+            TurboDownloadEntry entry = _turboDownloads.EnqueueDownload(url, suggestedName, referer, ua, cookieHeader, 8, qualityPreset);
             if (entry != null)
             {
                 _lastDownloadPath = entry.SavePath;
@@ -1855,7 +2086,8 @@ namespace DejavuBrowser
                 _lastToastUpdateUtc = DateTime.UtcNow;
                 if (!_dlManagerOpen)
                 {
-                    ShowDownloadToast(entry.FileName, entry.SavePath, 0, entry.TotalBytes, "progressing");
+                    string toastLabel = !string.IsNullOrEmpty(entry.StatusText) ? entry.StatusText : entry.FileName;
+                    ShowDownloadToast(toastLabel, entry.SavePath, 0, entry.TotalBytes, "progressing");
                 }
             }
         }
@@ -1876,7 +2108,7 @@ namespace DejavuBrowser
                 {
                     e.Cancel = true;
                     e.Handled = true;
-                    EnqueueFromTabContextAsync(tab, dlUri, origName);
+                    EnqueueFromTabContextAsync(tab, dlUri, origName, "");
                     return;
                 }
 
@@ -3583,12 +3815,14 @@ namespace DejavuBrowser
                         {
                             string uAdd = Convert.ToString(msg["url"]);
                             string sName = msg.ContainsKey("fileName") ? Convert.ToString(msg["fileName"]) : "";
-                            EnqueueFromActiveTabContextAsync(uAdd, sName);
+                            string qAdd = msg.ContainsKey("quality") ? Convert.ToString(msg["quality"]) : "";
+                            EnqueueFromActiveTabContextAsync(uAdd, sName, qAdd);
                         }
                         break;
                     case "turboAddBatch":
                         if (_turboDownloads != null && msg.ContainsKey("urls"))
                         {
+                            string qBatch = msg.ContainsKey("quality") ? Convert.ToString(msg["quality"]) : "";
                             ArrayList arr = msg["urls"] as ArrayList;
                             if (arr != null)
                             {
@@ -3597,10 +3831,26 @@ namespace DejavuBrowser
                                     string bu = Convert.ToString(arr[i]);
                                     if (!string.IsNullOrWhiteSpace(bu))
                                     {
-                                        EnqueueFromActiveTabContextAsync(bu, "");
+                                        EnqueueFromActiveTabContextAsync(bu, "", qBatch);
                                     }
                                 }
                             }
+                        }
+                        break;
+                    case "turboProbeActiveVideo":
+                        if (_turboDownloads != null)
+                        {
+                            string pUrl = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : "";
+                            StartVideoProbeAsync(pUrl, GetActiveTab(), true);
+                        }
+                        break;
+                    case "turboDownloadVideo":
+                        if (_turboDownloads != null)
+                        {
+                            string vUrl = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : "";
+                            string vQual = msg.ContainsKey("quality") ? Convert.ToString(msg["quality"]) : "best";
+                            string vTitle = msg.ContainsKey("title") ? Convert.ToString(msg["title"]) : "";
+                            EnqueueVideoDownloadFromTab(GetActiveTab(), vUrl, vQual, vTitle);
                         }
                         break;
                     case "turboPause":
@@ -3650,6 +3900,13 @@ namespace DejavuBrowser
                         break;
                     case "turboScanMedia":
                         ScanActiveTabMediaAsync();
+                        {
+                            BrowserTab activeScan = GetActiveTab();
+                            if (activeScan != null && !activeScan.IsNewTab && VideoExtractorEngine.IsSupportedVideoSiteUrl(activeScan.Url))
+                            {
+                                StartVideoProbeAsync(activeScan.Url, activeScan, true);
+                            }
+                        }
                         break;
                     case "openTabMenu":
                         ShowTabMenuPopoverAt(
@@ -4369,6 +4626,7 @@ namespace DejavuBrowser
                 { "baseRgb", active != null ? active.BaseRgb : new int[] { 20, 18, 24 } },
                 { "accents", active != null ? active.AccentPalette : null }
             };
+            AppendVideoProbeFields(state, active);
 
             try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(state)); } catch { }
         }

@@ -1324,7 +1324,7 @@
       <div id="other-prof-list" class="panel-scroll"></div>
 
       <div class="prof-footer">
-        <div id="prof-ver-text" class="ver-info">dejavu v4.3.0</div>
+        <div id="prof-ver-text" class="ver-info">dejavu v4.4.0</div>
         <div style="display:flex;align-items:center;gap:6px;">
           <button id="btn-prof-settings" class="pill-btn" title="Browser Settings (Ctrl+,)">Settings</button>
           <button id="btn-update-action" class="pill-btn">Check updates</button>
@@ -1947,7 +1947,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.3.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.4.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -2677,7 +2677,7 @@
       dlsList.innerHTML = '';
 
       if (totalCount === 0) {
-        dlsList.innerHTML = '<div class="empty-msg">No downloads yet.<br>Click <strong>8x Manager</strong> to paste any URL or <strong>Grab Media</strong> to download videos &amp; HLS streams from this page.</div>';
+        dlsList.innerHTML = '<div class="empty-msg">No downloads yet.<br>Click <strong>8x Manager</strong> to download YouTube MP4/MP3 or any URL, or <strong>Grab Media</strong> from this page.</div>';
         return;
       }
 
@@ -2690,11 +2690,16 @@
         const pct = Math.min(100, Math.round(it.percent || 0));
         const spd = (isProg && it.speedBps > 0) ? ` · ${formatBytes(it.speedBps)}/s` : '';
         const isHls = (it.streamType === 'hls' || it.isHls || (it.url && it.url.toLowerCase().includes('.m3u8')));
-        const hlsTag = isHls ? 'HLS · ' : '';
+        const isYtDlp = (it.streamType === 'ytdlp');
+        const isAudio = (it.category === 'audio') || /mp3|m4a/i.test(it.quality || '') || /\.(mp3|m4a)$/i.test(it.fileName || '');
+        const modeTag = isYtDlp ? `${it.quality ? it.quality : (isAudio ? 'MP3' : 'YT / MP4')} · ` : (isHls ? 'HLS · ' : '');
         const hlsSegs = (isHls && isProg && it.hlsTotalSegments > 0) ? ` (${it.hlsDoneSegments || 0}/${it.hlsTotalSegments} segs)` : '';
+        const statusNote = (isProg && it.statusText) ? ` · ${it.statusText}` : '';
         const subText = isDone
-          ? `${hlsTag}${it.threads > 1 ? it.threads + 'x · ' : ''}Completed · ${formatBytes(it.totalBytes || it.receivedBytes)}`
-          : (isProg ? `${hlsTag}${it.threads || 1}x Turbo · ${pct}%${hlsSegs}${spd}` : (isPaused ? `Paused · ${pct}%` : (it.error || it.status || 'Failed')));
+          ? `${modeTag}${(!isYtDlp && it.threads > 1) ? it.threads + 'x · ' : ''}Completed · ${formatBytes(it.totalBytes || it.receivedBytes)}`
+          : (isProg
+            ? (it.statusText && pct <= 1 ? `${modeTag}${it.statusText}` : `${modeTag}${isYtDlp ? '' : ((it.threads || 1) + 'x Turbo · ')}${pct}%${hlsSegs}${spd}${statusNote}`)
+            : (isPaused ? `Paused · ${pct}%` : (it.error || it.status || 'Failed')));
 
         row.innerHTML = `
           <span class="dls-ico">
@@ -2708,17 +2713,20 @@
             <div class="dls-sub">${escapeHtml(subText)}</div>
           </div>
           <div class="dls-acts">
-            ${isProg ? '<button type="button" class="dl-act-btn d-pause">Pause</button>' : ''}
+            ${(isProg && !isYtDlp) ? '<button type="button" class="dl-act-btn d-pause">Pause</button>' : ''}
+            ${(isProg && isYtDlp) ? '<button type="button" class="dl-act-btn d-cancel">Cancel</button>' : ''}
             ${isPaused ? '<button type="button" class="dl-act-btn d-resume">Resume</button>' : ''}
             ${isDone ? '<button type="button" class="dl-act-btn d-open">Open</button><button type="button" class="dl-act-btn d-rev">Folder</button>' : ''}
           </div>
         `;
         row.querySelector('.dls-name').textContent = it.fileName || 'Download';
         const pBtn = row.querySelector('.d-pause');
+        const cBtn = row.querySelector('.d-cancel');
         const rBtn = row.querySelector('.d-resume');
         const openBtn = row.querySelector('.d-open');
         const revBtn = row.querySelector('.d-rev');
         if (pBtn) pBtn.addEventListener('click', () => send({ type: 'turboPause', id: it.id }));
+        if (cBtn) cBtn.addEventListener('click', () => send({ type: 'turboCancel', id: it.id }));
         if (rBtn) rBtn.addEventListener('click', () => send({ type: 'turboResume', id: it.id }));
         if (openBtn) openBtn.addEventListener('click', () => send({ type: 'openDownloadPath', path: it.savePath }));
         if (revBtn) revBtn.addEventListener('click', () => send({ type: 'revealDownloadPath', path: it.savePath }));

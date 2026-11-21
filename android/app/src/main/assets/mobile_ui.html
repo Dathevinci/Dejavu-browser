@@ -789,6 +789,60 @@
       font-size: 9.5px; font-weight: 750; letter-spacing: 0.02em;
     }
     body.theme-light .wp-m3-tag { color: var(--accent); }
+    .wp-m3-tag.bfly {
+      background: var(--accent); color: var(--accent-ink);
+    }
+
+    /* Material 3 Filter & Quality Chip Strips (Horizontal Scroll, Zero Blur) */
+    .m3-chip-strip {
+      display: flex; align-items: center; gap: 7px;
+      overflow-x: auto; padding: 2px 0;
+      -webkit-overflow-scrolling: touch;
+    }
+    .m3-chip {
+      height: 32px; padding: 0 13px; border-radius: 999px; flex-shrink: 0;
+      border: 1px solid var(--border); background: var(--group-bg);
+      color: var(--muted); font-family: inherit; font-size: 12px; font-weight: 620;
+      display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+      transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease, transform 0.14s var(--m3-decel);
+    }
+    .m3-chip:active { transform: scale(0.95); }
+    .m3-chip.active {
+      background: var(--accent-soft); border-color: var(--accent);
+      color: var(--accent-bright);
+    }
+    body.theme-light .m3-chip.active { color: var(--accent); }
+    .m3-chip.audio.active {
+      background: rgba(123, 216, 198, 0.20); border-color: var(--mint);
+      color: var(--mint);
+    }
+    .yt-probe-card {
+      padding: 12px 13px; border-radius: 20px;
+      background: var(--group-bg); border: 1px solid var(--accent);
+      display: flex; flex-direction: column; gap: 9px;
+    }
+    .yt-probe-pills {
+      display: flex; flex-wrap: wrap; gap: 7px;
+    }
+    .yt-q-pill {
+      height: 32px; padding: 0 12px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--sheet-elev);
+      color: var(--ink); font-family: inherit; font-size: 12px; font-weight: 640;
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    }
+    .yt-q-pill.pri { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-bright); }
+    body.theme-light .yt-q-pill.pri { color: var(--accent); }
+    .yt-q-pill.aud { background: rgba(123, 216, 198, 0.16); border-color: var(--mint); color: var(--mint); }
+    .upd-fallback-row {
+      padding: 11px 14px; border-top: 1px solid var(--divider);
+      display: flex; flex-direction: column; align-items: stretch; gap: 9px;
+      background: var(--group-bg);
+    }
+    .upd-signing-note.warn {
+      color: var(--danger);
+      background: rgba(179, 38, 30, 0.10);
+      font-weight: 560;
+    }
 
     .radio-dot {
       width: 20px; height: 20px; border-radius: 50%;
@@ -1347,8 +1401,8 @@
           <div class="g-row">
             <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 14V4M5.6 7.4L9 4l3.4 3.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.8 14.5h10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
             <div class="g-row-meta">
-              <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.3.0</div>
-              <div id="opt-upd-sub" class="g-row-sub">Automatic updates via GitHub Releases</div>
+              <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.4.0</div>
+              <div id="opt-upd-sub" class="g-row-sub">V1-V3 permanent signing · Auto-checks GitHub Releases</div>
             </div>
             <button type="button" id="opt-upd-btn" class="pill-btn" onclick="handleUpdateBtn()">Check</button>
           </div>
@@ -1357,28 +1411,41 @@
               <div id="opt-upd-prog-fill" style="height:100%;width:0%;background:var(--accent);transition:width 0.18s ease;"></div>
             </div>
           </div>
+          <div id="opt-upd-files-row" class="upd-fallback-row" style="display:none;">
+            <div class="g-row-meta">
+              <div class="g-row-title" style="font-size:13px;">Manual Install Fallback</div>
+              <div id="opt-upd-files-sub" class="g-row-sub">Tap downloaded APK directly in Files or Share</div>
+            </div>
+            <button type="button" class="pill-btn" onclick="call('openUpdateApkInFiles')">Open APK in Files / Share APK</button>
+          </div>
           <div id="opt-upd-note" class="upd-signing-note">
-            If upgrading from v4.2.0 or earlier shows &lsquo;Cannot be installed&rsquo;, uninstall once and install v4.3.0 &mdash; all future updates will install seamlessly with a permanent signing key!
+            Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.4.0 &mdash; all future updates will install automatically in-place!
           </div>
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:11.5px;color:var(--subtle);padding:4px 0 8px;">
-          dejavu Mobile v4.3.0 · Material Design 3
+          dejavu Mobile v4.4.0 · Material Design 3
         </div>
       </div>
     </div>
   </div>
 
   <!-- ===================================================================
-       SHEET D: MATERIAL YOU HD WALLPAPERS GALLERY
+       SHEET D: PURE MATERIAL DESIGN 3 WALLPAPERS GALLERY (16 HD + LIVE)
        =================================================================== -->
   <div id="scr-wallpapers" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
       <div class="sheet-head" data-swipe-dismiss="1">
         <div class="sheet-grab"></div>
         <div class="sheet-title-row">
-          <h2 class="sheet-title">Material You Wallpapers</h2>
+          <h2 class="sheet-title">Material Design 3 Wallpapers</h2>
           <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
+        </div>
+        <div id="m-wp-filters" class="m3-chip-strip">
+          <button type="button" class="m3-chip active" data-wpf="all" onclick="setWpFilter('all')">All (17)</button>
+          <button type="button" class="m3-chip" data-wpf="butterfly" onclick="setWpFilter('butterfly')">Butterfly (4)</button>
+          <button type="button" class="m3-chip" data-wpf="dark" onclick="setWpFilter('dark')">Dark (9)</button>
+          <button type="button" class="m3-chip" data-wpf="light" onclick="setWpFilter('light')">Light (7)</button>
         </div>
       </div>
       <div class="sheet-body">
@@ -1388,7 +1455,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET E: ANTDM-STYLE 8x TURBO DOWNLOAD MANAGER & PAGE MEDIA GRABBER
+       SHEET E: ANTDM-STYLE 8x TURBO DOWNLOAD MANAGER & YOUTUBE QUALITY/AUDIO
        =================================================================== -->
   <div id="scr-downloads" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -1409,12 +1476,29 @@
         </div>
 
         <div class="compose-row">
-          <input id="m-dl-url-in" type="url" placeholder="Paste file, video, audio, ZIP or PDF link (8x)…">
-          <button type="button" class="pill-btn primary" style="height:44px;padding:0 16px;border-radius:999px;" onclick="submitMobileDlUrl()">8x Go</button>
+          <input id="m-dl-url-in" type="url" placeholder="Paste YouTube, video, audio or file link (8x)…">
+          <button type="button" class="pill-btn primary" style="height:44px;padding:0 16px;border-radius:999px;flex-shrink:0;" onclick="submitMobileDlUrl()">8x Go</button>
         </div>
 
+        <div class="sec-hdr" style="padding:0 2px;">
+          <span>YouTube Quality &amp; Audio</span>
+          <button type="button" class="sec-act" onclick="probeMobileDlUrl()">Fetch Formats</button>
+        </div>
+
+        <div id="m-dl-qual-row" class="m3-chip-strip" aria-label="Video &amp; Audio Quality">
+          <button type="button" class="m3-chip active" data-q="auto" onclick="setMobileDlQuality('auto')">Auto</button>
+          <button type="button" class="m3-chip" data-q="1080p" onclick="setMobileDlQuality('1080p')">1080p MP4</button>
+          <button type="button" class="m3-chip" data-q="720p" onclick="setMobileDlQuality('720p')">720p MP4</button>
+          <button type="button" class="m3-chip" data-q="480p" onclick="setMobileDlQuality('480p')">480p MP4</button>
+          <button type="button" class="m3-chip" data-q="360p" onclick="setMobileDlQuality('360p')">360p MP4</button>
+          <button type="button" class="m3-chip audio" data-q="m4a" onclick="setMobileDlQuality('m4a')">Audio M4A</button>
+          <button type="button" class="m3-chip audio" data-q="webm" onclick="setMobileDlQuality('webm')">Audio WebM</button>
+        </div>
+
+        <div id="m-yt-probe-box" class="yt-probe-card" style="display:none;"></div>
+
         <div id="m-media-acts" style="display:none;align-items:center;justify-content:space-between;gap:8px;padding:11px 13px;border-radius:16px;background:var(--accent-soft);">
-          <span style="font-size:12.5px;font-weight:660;color:var(--accent-bright);">Download Everything from Page</span>
+          <span style="font-size:12.5px;font-weight:660;color:var(--accent-bright);">Download Video, Audio &amp; Page Media</span>
           <div style="display:flex;gap:6px;">
             <button type="button" class="pill-btn" onclick="call('turboScanPageMedia')">Scan</button>
             <button type="button" id="m-dl-grab-all" class="pill-btn primary" onclick="downloadAllMobileMedia()">Grab All</button>
@@ -1441,28 +1525,34 @@
 
   <script>
     const WALLPAPERS = [
-      { id: 'wp-m3-amethyst.jpg',       name: 'Obsidian Monolith',   m3: true, mode: 'dark',  seed: 'amethyst', desc: 'Deep plum-obsidian ceramic monoliths & sweeping lavender arch' },
-      { id: 'wp-m3-pixel-blue.jpg',     name: 'Cobalt Ribbons',      m3: true, mode: 'dark',  seed: 'sapphire', desc: 'Midnight cobalt slate & Pixel periwinkle carved sandstone waves' },
-      { id: 'wp-m3-sage.jpg',           name: 'Eucalyptus Calm',     m3: true, mode: 'dark',  seed: 'aurora',   desc: 'Dark forest plaster curved alcove & matte sage stoneware spheres' },
-      { id: 'wp-m3-blossom.jpg',        name: 'Velvet Petals',       m3: true, mode: 'dark',  seed: 'rose',     desc: 'Velvet espresso & dusty terracotta-rose Swirling Petals ceramic' },
-      { id: 'wp-m3-honey.jpg',          name: 'Ochre Solitude',      m3: true, mode: 'dark',  seed: 'gold',     desc: 'Warm obsidian-espresso & burnished matte amber Bauhaus arcs' },
-      { id: 'wp-m3-porcelain.jpg',      name: 'Porcelain Steps',     m3: true, mode: 'light', seed: 'amethyst', desc: 'Sunlit alabaster stepped terraces & soft lavender-stone curved wall' },
-      { id: 'wp-m3-meadow.jpg',         name: 'Jade Pebbles',        m3: true, mode: 'light', seed: 'aurora',   desc: 'Airy off-white porcelain & organic matte stoneware pebbles with celadon hill' },
-      { id: 'wp-m3-blush.jpg',          name: 'Terracotta Ribbon',   m3: true, mode: 'light', seed: 'rose',     desc: 'Warm sunlit ivory plaster & minimalist folded clay-blush ceramic wave' },
-      { id: 'obsidian',                 name: 'Material You Tonal',  m3: true, mode: '',      seed: '',         desc: 'Clean dynamic tonal surface harmonized with your accent color' },
-      { id: 'wp-velvet-mirage.jpg',     name: 'Velvet Mirage' },
-      { id: 'wp-prism-cascade.jpg',     name: 'Prism Cascade' },
-      { id: 'wp-midnight-orchid.jpg',   name: 'Midnight Orchid' },
-      { id: 'wp-phantom-lotus.jpg',     name: 'Phantom Lotus' },
-      { id: 'wp-opal-horizon.jpg',      name: 'Opal Horizon' },
-      { id: 'wp-stardust-sanctuary.jpg',name: 'Stardust Sanctuary' },
-      { id: 'wp-amethyst.jpg',          name: 'Amethyst Glasswing' },
-      { id: 'wp-aurora.jpg',            name: 'Aurora Glasswing' },
-      { id: 'wp-celestial.jpg',         name: 'Celestial Dusk' },
-      { id: 'wp-sakura.jpg',            name: 'Sakura Bloom' },
-      { id: 'wp-morpho.jpg',            name: 'Blue Morpho' },
-      { id: 'wp-rosequartz.jpg',        name: 'Rose Quartz' }
+      { id: 'wp-m3-amethyst.jpg',           name: 'Obsidian Monolith',  m3: true, mode: 'dark',  seed: 'amethyst', butterfly: false, desc: 'Deep plum-obsidian ceramic monoliths & sweeping lavender arch' },
+      { id: 'wp-m3-pixel-blue.jpg',         name: 'Cobalt Ribbons',     m3: true, mode: 'dark',  seed: 'sapphire', butterfly: false, desc: 'Midnight cobalt slate & Pixel periwinkle carved sandstone waves' },
+      { id: 'wp-m3-sage.jpg',               name: 'Eucalyptus Calm',    m3: true, mode: 'dark',  seed: 'aurora',   butterfly: false, desc: 'Dark forest plaster curved alcove & matte sage stoneware spheres' },
+      { id: 'wp-m3-blossom.jpg',            name: 'Velvet Petals',      m3: true, mode: 'dark',  seed: 'rose',     butterfly: false, desc: 'Velvet espresso & dusty terracotta-rose Pixel Swirling Petals ceramic' },
+      { id: 'wp-m3-honey.jpg',              name: 'Ochre Solitude',     m3: true, mode: 'dark',  seed: 'gold',     butterfly: false, desc: 'Warm obsidian-espresso & burnished matte amber Bauhaus arcs' },
+      { id: 'wp-m3-porcelain.jpg',          name: 'Porcelain Steps',    m3: true, mode: 'light', seed: 'amethyst', butterfly: false, desc: 'Sunlit alabaster stepped terraces & soft lavender-stone curved wall' },
+      { id: 'wp-m3-meadow.jpg',             name: 'Jade Pebbles',       m3: true, mode: 'light', seed: 'aurora',   butterfly: false, desc: 'Airy off-white porcelain & organic matte stoneware pebbles with celadon hill' },
+      { id: 'wp-m3-blush.jpg',              name: 'Terracotta Ribbon',  m3: true, mode: 'light', seed: 'rose',     butterfly: false, desc: 'Warm sunlit ivory plaster & minimalist folded clay-blush ceramic wave' },
+      { id: 'wp-m3-indigo-dune.jpg',        name: 'Indigo Dune',        m3: true, mode: 'dark',  seed: 'sapphire', butterfly: false, desc: 'Deep twilight indigo-slate matte sculpted sandstone dunes & periwinkle crescent disc' },
+      { id: 'wp-m3-sienna-arch.jpg',        name: 'Sienna Arch',        m3: true, mode: 'dark',  seed: 'gold',     butterfly: false, desc: 'Rich dark espresso-sienna minimalist recessed plaster arches grazed by muted amber light' },
+      { id: 'wp-m3-sky-terrace.jpg',        name: 'Sky Terrace',        m3: true, mode: 'light', seed: 'sapphire', butterfly: false, desc: 'Sunlit alabaster & pale sky-periwinkle stepped ceramic gallery terrace walls' },
+      { id: 'wp-m3-warm-limestone.jpg',     name: 'Warm Limestone',     m3: true, mode: 'light', seed: 'gold',     butterfly: false, desc: 'Sunlit warm ivory & pale honey-travertine curved monoliths with smooth river pebble' },
+      { id: 'wp-m3-butterfly-obsidian.jpg', name: 'Amethyst Origami',   m3: true, mode: 'dark',  seed: 'amethyst', butterfly: true,  desc: 'Sculptural matte lavender-plum & charcoal-amethyst stoneware origami butterfly on obsidian ground' },
+      { id: 'wp-m3-butterfly-cobalt.jpg',   name: 'Pixel Morpho',       m3: true, mode: 'dark',  seed: 'sapphire', butterfly: true,  desc: 'Minimalist folded periwinkle & cobalt-slate bisque ceramic butterfly wings on midnight slate' },
+      { id: 'wp-m3-butterfly-porcelain.jpg',name: 'Porcelain Wings',    m3: true, mode: 'light', seed: 'amethyst', butterfly: true,  desc: 'Sunlit alabaster & pale lavender folded paper-ceramic butterfly casting soft gallery shadows' },
+      { id: 'wp-m3-butterfly-sage.jpg',     name: 'Botanical Sage',     m3: true, mode: 'light', seed: 'aurora',   butterfly: true,  desc: 'Matte celadon-sage stoneware origami butterfly perched along a curved pale sage ledge' },
+      { id: 'obsidian',                     name: 'Material You Live',  m3: true, mode: '',      seed: '',         butterfly: false, live: true, desc: 'Adaptive Material Design 3 tonal canvas harmonized with your dynamic color seed' }
     ];
+    const DEFAULT_M3_WP = 'wp-m3-amethyst.jpg';
+    const VALID_WP_MAP = {};
+    WALLPAPERS.forEach((w) => { VALID_WP_MAP[w.id] = w; });
+    function normalizeWallpaperId(raw) {
+      if (!raw || typeof raw !== 'string') return DEFAULT_M3_WP;
+      let id = raw.trim();
+      if (id.startsWith('art:')) id = id.slice(4);
+      if (id === 'live:m3-expressive' || id === 'obsidian') return 'obsidian';
+      return VALID_WP_MAP[id] ? id : DEFAULT_M3_WP;
+    }
     const ENGINES = [
       ['google',     'Google',     'G', '#4285f4'],
       ['duckduckgo', 'DuckDuckGo', 'D', '#de5833'],
@@ -1648,7 +1738,7 @@
     }
     function handleUpdateBtn() {
       const u = state.update || {};
-      if (u.status === 'available' || u.status === 'ready') {
+      if (u.status === 'available' || u.status === 'ready' || (u.status === 'error' && u.hasDownloadedApk && !u.signatureMismatch)) {
         call('downloadOrInstallUpdate');
       } else {
         call('checkForUpdates');
@@ -1926,7 +2016,8 @@
       if (!shown.length) {
         tg.innerHTML = `<div class="empty" style="grid-column:1/-1;">${tabViewPrivate ? 'No Private tabs open.<br>Tap <b>+ New Private</b> to browse without saving history.' : 'No open tabs.'}</div>`;
       } else {
-        const wpUrl = (state.wallpaper && state.wallpaper !== 'obsidian') ? `wallpapers/${state.wallpaper}` : '';
+        const normWp = normalizeWallpaperId(state.wallpaper);
+        const wpUrl = (normWp && normWp !== 'obsidian') ? `wallpapers/${normWp}` : '';
         shown.forEach((t) => {
           const card = document.createElement('div');
           card.className = 'tab-card' + (t.id === state.activeTabId ? ' active' : '');
@@ -2090,16 +2181,30 @@
 
       // Software Update Card
       const u = state.update || {};
-      const curV = u.currentVersion || '4.3.0';
+      const curV = u.currentVersion || '4.4.0';
       const uTitle = document.getElementById('opt-upd-title');
       const uSub = document.getElementById('opt-upd-sub');
       const uBtn = document.getElementById('opt-upd-btn');
       const uProgW = document.getElementById('opt-upd-prog-wrap');
       const uProgF = document.getElementById('opt-upd-prog-fill');
+      const uFilesRow = document.getElementById('opt-upd-files-row');
+      const uFilesSub = document.getElementById('opt-upd-files-sub');
       const uFoot = document.getElementById('opt-ver-footer');
       const uNote = document.getElementById('opt-upd-note');
       if (uFoot) uFoot.textContent = `dejavu Mobile v${curV} · Material Design 3`;
-      if (uNote && u.upgradeNote) uNote.textContent = u.upgradeNote;
+      if (uNote) {
+        if (u.upgradeNote) uNote.textContent = u.upgradeNote;
+        uNote.classList.toggle('warn', !!u.signatureMismatch);
+      }
+      if (uFilesRow) {
+        const showFallback = !!u.hasDownloadedApk || u.status === 'ready' || !!u.signatureMismatch;
+        uFilesRow.style.display = showFallback ? 'flex' : 'none';
+        if (uFilesSub) {
+          uFilesSub.textContent = u.exportedApkName
+            ? `Saved in Downloads/dejavu/${u.exportedApkName}`
+            : 'Tap downloaded APK directly in Files or Share';
+        }
+      }
       if (uTitle && uSub && uBtn) {
         if (u.status === 'checking') {
           uTitle.textContent = 'Checking for updates...';
@@ -2120,29 +2225,36 @@
           uBtn.classList.add('primary');
           uProgW.style.display = 'block';
           uProgF.style.width = `${Math.max(4, u.percent || 0)}%`;
+        } else if (u.status === 'installing') {
+          uTitle.textContent = `Installing v${u.latestVersion}...`;
+          uSub.textContent = 'Confirm update in the Android system dialog';
+          uBtn.textContent = 'Installing';
+          uBtn.classList.add('primary');
+          uProgW.style.display = 'block';
+          uProgF.style.width = '100%';
         } else if (u.status === 'ready') {
           uTitle.textContent = `v${u.latestVersion} Ready to Install`;
           uSub.textContent = u.signatureMismatch
-            ? 'Signing key changed — uninstall old build once if Android blocks install'
-            : 'Verified permanent signature · Tap Install to upgrade cleanly';
+            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '4.4.0')
+            : 'Verified V1-V3 permanent signature · Tap Install to upgrade';
           uBtn.textContent = 'Install';
           uBtn.classList.add('primary');
           uProgW.style.display = 'none';
         } else if (u.status === 'uptodate') {
           uTitle.textContent = `Up to date · v${curV}`;
-          uSub.textContent = 'Permanent signing key active · Seamless updates ready';
+          uSub.textContent = 'Permanent V1-V3 signing key active · Seamless in-place updates';
           uBtn.textContent = 'Check';
           uBtn.classList.remove('primary');
           uProgW.style.display = 'none';
         } else if (u.status === 'error') {
-          uTitle.textContent = `dejavu Mobile v${curV}`;
+          uTitle.textContent = u.signatureMismatch ? 'Older Signing Key Detected' : `dejavu Mobile v${curV}`;
           uSub.textContent = u.error || 'Could not check right now';
-          uBtn.textContent = 'Retry';
+          uBtn.textContent = u.signatureMismatch ? 'Check' : 'Retry';
           uBtn.classList.remove('primary');
           uProgW.style.display = 'none';
         } else {
           uTitle.textContent = `dejavu Mobile v${curV}`;
-          uSub.textContent = 'Permanent signing key active · Auto-checks GitHub Releases';
+          uSub.textContent = 'Permanent V1-V3 signing key active · Auto-checks GitHub Releases';
           uBtn.textContent = 'Check';
           uBtn.classList.remove('primary');
           uProgW.style.display = 'none';
@@ -2150,21 +2262,41 @@
       }
     }
 
+    let wpFilter = 'all'; // 'all' | 'butterfly' | 'dark' | 'light'
+    function setWpFilter(f) {
+      wpFilter = f || 'all';
+      document.querySelectorAll('#m-wp-filters .m3-chip').forEach((c) => {
+        c.classList.toggle('active', c.dataset.wpf === wpFilter);
+      });
+      renderWallpapersSheet();
+    }
+
     function renderWallpapersSheet() {
       const wg = document.getElementById('m-wp-grid');
+      if (!wg) return;
       wg.innerHTML = '';
       const isLight = state.themeMode === 'light';
-      WALLPAPERS.forEach((w) => {
+      const activeWp = normalizeWallpaperId(state.wallpaper);
+      const filtered = WALLPAPERS.filter((w) => {
+        if (wpFilter === 'butterfly') return !!w.butterfly;
+        if (wpFilter === 'dark') return w.mode === 'dark';
+        if (wpFilter === 'light') return w.mode === 'light';
+        return true;
+      });
+      filtered.forEach((w) => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'wp-tile' + (state.wallpaper === w.id ? ' active' : '');
+        btn.className = 'wp-tile' + (activeWp === w.id ? ' active' : '');
         const thumb = w.id === 'obsidian'
           ? `<div class="wp-live-thumb" style="background:${isLight ? 'linear-gradient(135deg,#eaddff 0%,#fef7ff 55%,#ffd8e4 100%)' : 'linear-gradient(135deg,#4f378b 0%,#141218 55%,#633b48 100%)'};"></div>`
           : `<img src="wallpapers/${w.id}" alt="${esc(w.name)}">`;
-        const tagLbl = w.m3 ? (w.mode === 'light' ? 'M3 · Light' : (w.mode === 'dark' ? 'M3 · Dark' : 'Material You')) : '';
+        const tagLbl = w.butterfly
+          ? 'Butterfly M3'
+          : (w.live ? 'Material You Live' : (w.mode === 'light' ? 'M3 · Light' : 'M3 · Dark'));
+        const tagCls = w.butterfly ? 'wp-m3-tag bfly' : 'wp-m3-tag';
         btn.innerHTML = `
           ${thumb}
-          ${tagLbl ? `<span class="wp-m3-tag">${tagLbl}</span>` : ''}
+          <span class="${tagCls}">${tagLbl}</span>
           <span class="wp-check"><svg viewBox="0 0 14 14" width="11" height="11" fill="none"><path d="M3 7.2l2.6 2.6L11 4.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           <div class="wp-tile-meta">
             <div class="wp-tile-name">${esc(w.name)}</div>
@@ -2181,10 +2313,79 @@
     }
 
     let mobileDlTab = 'downloads'; // 'downloads' | 'media'
+    let mobileDlQuality = 'auto';  // 'auto' | '1080p' | '720p' | '480p' | '360p' | 'm4a' | 'webm'
+    let mobileVideoProbe = null;
+    let mobileVideoProbing = false;
+
     function setMobileDlTab(tab) {
       mobileDlTab = tab === 'media' ? 'media' : 'downloads';
       if (mobileDlTab === 'media') call('turboScanPageMedia');
       renderDownloadsSheet();
+    }
+    function setMobileDlQuality(q) {
+      mobileDlQuality = q || 'auto';
+      document.querySelectorAll('#m-dl-qual-row .m3-chip').forEach((b) => {
+        b.classList.toggle('active', b.dataset.q === mobileDlQuality);
+      });
+    }
+    function probeMobileDlUrl() {
+      const inp = document.getElementById('m-dl-url-in');
+      const v = (inp && inp.value ? inp.value.trim() : '') || (state.activeUrl || '');
+      if (!v) return;
+      mobileVideoProbing = true;
+      mobileVideoProbe = null;
+      renderVideoProbeBox();
+      call('turboProbeUrl', v);
+    }
+    window.__onDejavuVideoProbe = function (res) {
+      mobileVideoProbing = false;
+      mobileVideoProbe = res || { ok: false, error: 'Could not extract formats', formats: [] };
+      renderVideoProbeBox();
+    };
+    function renderVideoProbeBox() {
+      const box = document.getElementById('m-yt-probe-box');
+      if (!box) return;
+      if (mobileVideoProbing) {
+        box.style.display = 'flex';
+        box.innerHTML = '<div style="font-size:12.5px;font-weight:620;color:var(--accent-bright);">Resolving real YouTube qualities &amp; audio streams…</div>';
+        return;
+      }
+      if (!mobileVideoProbe) {
+        box.style.display = 'none';
+        box.innerHTML = '';
+        return;
+      }
+      if (!mobileVideoProbe.ok || !Array.isArray(mobileVideoProbe.formats) || !mobileVideoProbe.formats.length) {
+        box.style.display = 'flex';
+        box.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span style="font-size:12px;color:var(--muted);">${esc(mobileVideoProbe.error || 'No multi-quality formats found — tap 8x Go for direct download.')}</span><button type="button" class="pill-btn ghost" onclick="mobileVideoProbe=null;renderVideoProbeBox()">×</button></div>`;
+        return;
+      }
+      box.style.display = 'flex';
+      box.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div style="min-width:0;flex:1;">
+            <div style="font-size:13px;font-weight:660;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(mobileVideoProbe.title || 'YouTube Video')}</div>
+            <div style="font-size:11px;color:var(--muted);">Tap any quality or audio format to download at 8x speed</div>
+          </div>
+          <button type="button" class="tab-card-x" aria-label="Close" onclick="mobileVideoProbe=null;renderVideoProbeBox()">×</button>
+        </div>
+        <div class="yt-probe-pills"></div>
+      `;
+      const pills = box.querySelector('.yt-probe-pills');
+      mobileVideoProbe.formats.forEach((f, idx) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        const isAud = f.category === 'audio';
+        b.className = 'yt-q-pill' + (isAud ? ' aud' : (idx === 0 ? ' pri' : ''));
+        const szTxt = f.sizeBytes > 0 ? ` · ${fmtMb(f.sizeBytes)}` : '';
+        b.textContent = `${f.label || f.shortLabel || 'MP4'}${szTxt}`;
+        b.onclick = () => {
+          call('turboDownloadFormat', f.url, f.fileName || '', f.pairedAudioUrl || '', f.userAgent || '', f.label || '');
+          mobileDlTab = 'downloads';
+          renderDownloadsSheet();
+        };
+        pills.appendChild(b);
+      });
     }
     function submitMobileDlUrl() {
       const inp = document.getElementById('m-dl-url-in');
@@ -2192,7 +2393,11 @@
       if (!v) return;
       inp.value = '';
       mobileDlTab = 'downloads';
-      call('turboAddUrl', v, '');
+      if (window.DejavuMobile && typeof window.DejavuMobile.turboAddUrlWithQuality === 'function') {
+        call('turboAddUrlWithQuality', v, mobileDlQuality, '');
+      } else {
+        call('turboAddUrl', v, '');
+      }
     }
     function downloadAllMobileMedia() {
       const urls = (state.pageMedia || []).map((m) => m.url).filter(Boolean);
@@ -2249,17 +2454,26 @@
         media.forEach((m) => {
           const card = document.createElement('div');
           card.className = 'dl-card';
+          const qBadge = m.qualityLabel ? `<span class="dl-chip">${esc(m.qualityLabel)}</span>` : '';
+          const subLine = m.sizeBytes > 0 ? `${fmtMb(m.sizeBytes)} · ${m.url || ''}` : (m.url || '');
           card.innerHTML = `
             <div class="dl-card-top">
               <span class="dl-cat-badge">${mCatTag(m.category)}</span>
               <div class="g-row-meta">
-                <div class="g-row-title">${esc(m.title || m.fileName || 'Media')}</div>
-                <div class="g-row-sub">${esc(m.url || '')}</div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="g-row-title" style="flex:1;min-width:0;">${esc(m.title || m.fileName || 'Media')}</span>
+                  ${qBadge}
+                </div>
+                <div class="g-row-sub">${esc(subLine)}</div>
               </div>
               <button type="button" class="pill-btn primary m-dl-one" style="flex-shrink:0;">8x</button>
             </div>`;
           card.querySelector('.m-dl-one').onclick = (e) => {
-            call('turboAddUrl', m.url, m.fileName || '');
+            if ((m.pairedAudioUrl || m.userAgent || m.qualityLabel) && window.DejavuMobile && typeof window.DejavuMobile.turboDownloadFormat === 'function') {
+              call('turboDownloadFormat', m.url, m.fileName || '', m.pairedAudioUrl || '', m.userAgent || '', m.qualityLabel || '');
+            } else {
+              call('turboAddUrl', m.url, m.fileName || '');
+            }
             e.currentTarget.textContent = '✓';
             e.currentTarget.disabled = true;
           };
@@ -2269,12 +2483,12 @@
       }
 
       if (!dls.length) {
-        listEl.innerHTML = '<div class="empty">No 8x Turbo downloads yet.<br>Paste any direct file link above, tap a download on any site, or switch to <b>Page Media</b> to grab videos &amp; files.</div>';
+        listEl.innerHTML = '<div class="empty">No 8x Turbo downloads yet.<br>Paste any YouTube, video, audio or file link above, pick a quality chip (1080p / 720p / 360p / Audio M4A), or switch to <b>Page Media</b>.</div>';
         return;
       }
 
       dls.forEach((d) => {
-        const isRun = d.status === 'downloading' || d.status === 'probing';
+        const isRun = d.status === 'downloading' || d.status === 'probing' || d.status === 'muxing';
         const isPaused = d.status === 'paused';
         const isDone = d.status === 'completed';
         const isErr = d.status === 'failed' || d.status === 'cancelled';
@@ -2282,12 +2496,17 @@
         card.className = 'dl-card' + (isRun ? ' active' : '') + (isPaused ? ' paused' : '');
         const segs = Array.isArray(d.segments) && d.segments.length ? d.segments : [{ pct: isDone ? 100 : (d.percent || 0) }];
         const segHtml = segs.map((s) => `<div class="m-seg"><div class="m-seg-fill" style="width:${Math.max(0, Math.min(100, isDone ? 100 : (s.pct || 0)))}%"></div></div>`).join('');
-        const chipLbl = isDone ? (d.isHls ? 'HLS Done' : 'Done') : (isErr ? 'Retry' : (isPaused ? 'Paused' : (d.isHls ? `HLS · ${d.threads || 6}x` : `${d.threads || 1}x Turbo`)));
+        const qPref = d.qualityLabel ? `${d.qualityLabel} · ` : '';
+        const chipLbl = isDone
+          ? (d.qualityLabel ? `${d.qualityLabel} Done` : (d.isHls ? 'HLS Done' : 'Done'))
+          : (d.status === 'muxing' ? 'Muxing MP4' : (isErr ? 'Retry' : (isPaused ? 'Paused' : (d.isHls ? `HLS · ${d.threads || 6}x` : `${qPref}${d.threads || 1}x`))));
         const chipCls = isDone ? 'done' : (isErr ? 'err' : '');
         const spd = (isRun && d.speedBps > 0) ? ` · ${fmtMb(d.speedBps)}/s` : '';
         const sz = (isErr && d.error)
           ? d.error
-          : (d.totalBytes > 0 ? (isDone ? fmtMb(d.totalBytes) : `${fmtMb(d.receivedBytes)} / ${fmtMb(d.totalBytes)} (${Math.round(d.percent || 0)}%)`) : (d.receivedBytes > 0 ? fmtMb(d.receivedBytes) : 'Connecting…'));
+          : (d.status === 'muxing'
+              ? 'Combining HD video + M4A audio into playable MP4…'
+              : (d.totalBytes > 0 ? (isDone ? fmtMb(d.totalBytes) : `${fmtMb(d.receivedBytes)} / ${fmtMb(d.totalBytes)} (${Math.round(d.percent || 0)}%)`) : (d.receivedBytes > 0 ? fmtMb(d.receivedBytes) : 'Connecting…')));
 
         let acts = '';
         if (isRun) {
@@ -2351,10 +2570,11 @@
       if (typeof state.safeBottom === 'number') document.documentElement.style.setProperty('--safe-bottom', state.safeBottom + 'px');
       if (typeof state.sysBottom === 'number') document.documentElement.style.setProperty('--sys-bottom', Math.max(10, state.sysBottom) + 'px');
 
-      // Wallpaper
+      // Wallpaper (Pure Material Design 3 + graceful legacy ID fallback)
       const wpBg = document.getElementById('wp-bg');
-      const curWp = state.wallpaper || 'wp-m3-amethyst.jpg';
-      const isNativeLightWp = curWp.includes('wp-m3-porcelain') || curWp.includes('wp-m3-meadow') || curWp.includes('wp-m3-blush');
+      const curWp = normalizeWallpaperId(state.wallpaper);
+      const wpMeta = VALID_WP_MAP[curWp];
+      const isNativeLightWp = !!(wpMeta && wpMeta.mode === 'light');
       document.body.classList.toggle('wp-native-light', isNativeLightWp);
       if (curWp && curWp !== 'obsidian') {
         wpBg.style.backgroundImage = `url("wallpapers/${curWp}")`;
@@ -2401,13 +2621,19 @@
       window.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           if (!state || !state.screen) {
+            const qp = new URLSearchParams(location.search || '');
+            const initWp = normalizeWallpaperId(qp.get('wp') || 'wp-m3-butterfly-obsidian.jpg');
+            const initMeta = VALID_WP_MAP[initWp] || {};
+            const initMode = qp.get('theme') || initMeta.mode || 'dark';
+            const initSeed = qp.get('accent') || initMeta.seed || 'amethyst';
+            const initScreen = qp.get('screen') || 'start';
             window.__onDejavuState({
-              screen: 'start',
+              screen: initScreen,
               activeTabId: 1,
               searchEngine: 'google',
-              wallpaper: 'wp-m3-amethyst.jpg',
-              accentColor: 'amethyst',
-              themeMode: 'dark',
+              wallpaper: initWp,
+              accentColor: initSeed,
+              themeMode: initMode,
               barPosition: 'bottom',
               autoHideBar: true,
               darkWebPages: false,
@@ -2429,8 +2655,8 @@
               ],
               readingList: [],
               history: [],
-              sync: { connected: false, pairingCode: 'DJV-4300-M3UI', remoteTabs: [], drops: [] },
-              update: { currentVersion: '4.3.0', status: 'uptodate', latestVersion: '4.3.0', available: false },
+              sync: { connected: false, pairingCode: 'DJV-4400-M3UI', remoteTabs: [], drops: [] },
+              update: { currentVersion: '4.4.0', status: 'uptodate', latestVersion: '4.4.0', available: false, hasDownloadedApk: false },
               turboDownloads: [],
               pageMedia: []
             });

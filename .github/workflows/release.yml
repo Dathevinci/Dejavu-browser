@@ -117,19 +117,18 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — A-to-Z Simple Material Design 3, Fixed 8x Video & HLS Downloader & Permanent Android Signing
+          ### dejavu __TAG__ — Built-In Multi-Quality YouTube & MP3 Downloader, 16 Pure Material Design 3 & Butterfly Wallpapers, and Hardened Android Signing
 
-          - **A-to-Z Google Pixel Material Design 3 (Windows, Android & Website)** — Pure HCT tonal surface container hierarchy (`surface` -> `surface-container-highest`), 6 Dynamic Material You color seeds across Dark & Light polarity, fluid GPU-composited `Emphasized Decelerate` motion, Samsung M3 Left Navigation Rail, and strictly zero CSS blur or heavy glassmorphism.
-          - **Fixed AntDM-Class 8x Video & HLS `.m3u8` Downloader (Windows & Android)** — Native HLS master/media playlist resolver + multi-threaded `.ts`/fMP4 segment downloader with AES-128 decryption & video assembly, YouTube / MSE `googlevideo.com` `&range=` stripping + `ytInitialPlayerResponse` format extraction, bulletproof `301/302/303/307/308` redirect & header preservation, chunked unknown-length support, and automatic single-stream fallback when servers reject `Range` requests.
-          - **Permanent Android Signing Key (Fixes `"It cannot be installed"` Update Error)** — Checked-in persistent release keystore (`dejavu-release.jks`), `FileProvider` `Download/` fix, and pre-install APK ZIP/PackageArchiveInfo/signature verification in `MobileAutoUpdater`.
-            > **Android Upgrade Note:** If upgrading from `v4.2.0` or earlier shows *"Cannot be installed"* (due to earlier ephemeral CI signing keys), uninstall the old app once and install `__TAG__` — **all future updates will install seamlessly in-place with a permanent signing key!**
-          - **8 Brand-New Material Design 3 Architectural Wallpapers** — *Obsidian Monolith*, *Cobalt Ribbons*, *Eucalyptus Calm*, *Velvet Petals*, *Ochre Solitude* (Dark) and *Porcelain Steps*, *Jade Pebbles*, *Terracotta Ribbon* (Light) — synced across Windows, Android, and the redesigned Simple Material Design 3 website.
-          - **Near-0% Idle CPU & Native Speed** — Eliminated background screenshot/blur loops and polling `setInterval` timers on both Windows (`~0.85%` idle CPU) and Android, while keeping the 86-Country AI-Ready Smart VPN, 100/100 Ad Blocker (279k+ rules), and E2EE `dejavu Link` PC <-> Phone Sync.
+          - **Built-In YouTube & 1,000+ Site Multi-Quality Video & MP3/M4A Downloader (Zero Extensions!)** — Pick exact qualities (`4K 2160p`, `1080p HD`, `720p HD`, `480p`, `360p`, or **`MP3 320k` / `Audio M4A`**) directly from the floating Material 3 download button or Turbo Download Manager! Powered by auto-bootstrapped `yt-dlp` + `FFmpeg` on Windows and a native Java YouTube InnerTube multi-client resolver (`ANDROID` / `IOS` / `ANDROID_VR`) + Android `MediaMuxer` + 8x/HLS `.m3u8` engine on Android.
+          - **16 Pure Material Design 3 Wallpapers (Including 4 Brand-New Butterfly Material Design 3 Wallpapers!)** — All old legacy wallpapers removed and replaced with 16 curated Google Pixel Material Design 3 wallpapers (12 Sculptural/Architectural + 4 Matte Ceramic Butterfly M3 wallpapers: *Amethyst Origami*, *Pixel Morpho*, *Porcelain Wings*, *Botanical Sage*) + *Material You Live*, synced across Windows, Android, and the official website.
+          - **Hardened Android V1+V2+V3 Release Signing & `PackageInstaller.Session` Updater** — Signed with our permanent release keystore (`dejavu-release.jks`) using V1 + V2 + V3 APK signing for Samsung One UI 7 / Android 14–16 compatibility, upgraded `MobileAutoUpdater` with Android `PackageInstaller.Session` status reporting, clear older-key upgrade instructions, and an **"Open APK in Files / Share APK"** fallback saving to `Downloads/dejavu/`.
+            > **Android Upgrade Note:** Upgrading from `v4.2.0` or earlier? Uninstall dejavu once, then install `__TAG__` — **all future updates will install automatically in-place!**
+          - **Pure Google Pixel Material Design 3 & Near-0% Idle CPU** — Crisp HCT surface containers, strictly zero CSS `blur(` or `backdrop-filter`, `~0.85%` idle CPU, 86-Country AI-Ready Smart VPN, 100/100 Ad Blocker (279k+ rules), and E2EE `dejavu Link` PC <-> Phone Sync.
 
           #### Downloads
           - **dejavu-Setup.exe** — Windows 10/11 Guided Installer
           - **dejavu.exe** — Windows 10/11 Portable Single-File
-          - **dejavu-mobile.apk** — Android Mobile Browser App (permanently signed, Android 8.0+)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (V1+V2+V3 permanently signed, Android 8.0+)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
           sed -i "s/__TAG__/$TAG/g" /tmp/release_notes.md
@@ -138,5 +137,5 @@ jobs:
             release-files/dejavu-Setup.exe \
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
-            --title "dejavu $TAG — A-to-Z Material Design 3, Fixed 8x Video/HLS Downloader & Permanent Android Signing" \
+            --title "dejavu $TAG — Built-In YouTube Quality & MP3 Downloader, 16 Pure Material Design 3 & Butterfly Wallpapers & Hardened Android Signing" \
             --notes-file /tmp/release_notes.md

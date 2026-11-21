@@ -5,6 +5,10 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.MediaCodec;
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
+import android.media.MediaMuxer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -35,7 +39,9 @@ import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -54,19 +60,17 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * AntDM-Style 8-Thread Accelerated Turbo Download Manager + HLS .m3u8 Assembler + Page Media Sniffer
- * for dejavu Mobile v4.3.0.
- * Pure Android SDK / Java 17 implementation supporting:
- * - Cross-protocol HTTP redirect following (301/302/303/307/308) with Referer/User-Agent/Cookie preservation
- * - 8-thread byte-range segmentation with automatic single-stream fallback when Range returns 403/416/200
- * - Unknown Content-Length chunked streaming downloads
- * - Full HLS .m3u8 master/media playlist resolver + multi-threaded .ts/.m4s segment downloader, AES-128 decryptor & assembler
- * - YouTube / googlevideo.com/videoplayback stream normalization (strips &range= params)
- * - Zero-idle-CPU Shadow DOM Floating Material Design 3 Download Button
+ * AntDM-Style 8-Thread Accelerated Turbo Download Manager + Native YouTube InnerTube
+ * Multi-Client Quality/Audio Resolver + Android MediaMuxer + HLS .m3u8 Assembler
+ * for dejavu Mobile v4.4.0.
  */
 public class MobileDownloadManager {
     public interface Listener {
         void onDownloadsChanged();
+    }
+
+    public interface FormatProbeCallback {
+        void onFormatsReady(JSONObject result);
     }
 
     private static final String PREFS_NAME = "dejavu_turbo_downloads_v1";
@@ -76,8 +80,22 @@ public class MobileDownloadManager {
     private static final long MIN_SEGMENTED_BYTES = 256L * 1024L;
     private static final int MAX_HISTORY = 80;
     private static final int MAX_REDIRECTS = 10;
+    private static final long YT_CACHE_TTL_MS = 10L * 60L * 1000L;
+
     private static final String DEFAULT_UA =
         "Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36";
+
+    private static final String YT_PLAYER_API =
+        "https://www.youtube.com/youtubei/v1/player?prettyPrint=false";
+    private static final String UA_YT_ANDROID =
+        "com.google.android.youtube/20.10.38 (Linux; U; Android 14) gzip";
+    private static final String UA_YT_IOS =
+        "com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)";
+    private static final String UA_YT_ANDROID_VR =
+        "com.google.android.apps.youtube.vr.oculus/1.65.10 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip";
+
+    private static final Pattern YT_ID_WATCH = Pattern.compile("[?&]v=([A-Za-z0-9_-]{11})");
+    private static final Pattern YT_ID_SHORT = Pattern.compile("(?:youtu\\.be/|youtube\\.com/(?:shorts|embed|live|v)/)([A-Za-z0-9_-]{11})");
 
     private static final class RangeRejectedException extends Exception {
         RangeRejectedException(String message) { super(message); }
@@ -108,10 +126,32 @@ public class MobileDownloadManager {
         volatile long done;
     }
 
+    private static final class CachedYtResult {
+        long savedMs;
+        String jsonStr;
+    }
+
+    private static final class RawYtStream {
+        int itag;
+        String url;
+        String mime;
+        String codecs;
+        String qualityLabel;
+        int height;
+        int fps;
+        long bitrate;
+        long contentLength;
+        boolean progressive;
+        boolean isAudio;
+        boolean isVideo;
+    }
+
     private static final class Entry {
         String id;
         String url;
         String resolvedUrl;
+        String pairedAudioUrl;
+        String qualityLabel;
         String referer;
         String userAgent;
         String cookies;
@@ -119,7 +159,7 @@ public class MobileDownloadManager {
         String savePath;
         String partPath;
         String category;
-        volatile String status; // probing | downloading | paused | completed | failed | cancelled
+        volatile String status; // probing | downloading | muxing | paused | completed | failed | cancelled
         volatile String error;
         volatile long totalBytes;
         volatile long receivedBytes;
@@ -135,6 +175,9 @@ public class MobileDownloadManager {
 
     private static final class MediaItem {
         String url;
+        String pairedAudioUrl;
+        String userAgent;
+        String qualityLabel;
         String title;
         String fileName;
         String category;
@@ -149,6 +192,7 @@ public class MobileDownloadManager {
     private final Object gate = new Object();
     private final List<Entry> entries = new ArrayList<>();
     private final Map<Integer, List<MediaItem>> tabMedia = new HashMap<>();
+    private final Map<String, CachedYtResult> ytCache = new LinkedHashMap<>();
     private final ExecutorService coordinatorPool = Executors.newCachedThreadPool();
     private final ExecutorService segmentPool = Executors.newFixedThreadPool(16);
     private volatile long lastEmitMs = 0L;
@@ -186,6 +230,8 @@ public class MobileDownloadManager {
                     e.id = o.optString("id", "mdl_" + i);
                     e.url = url;
                     e.resolvedUrl = o.optString("resolvedUrl", url);
+                    e.pairedAudioUrl = o.optString("pairedAudioUrl", "");
+                    e.qualityLabel = o.optString("qualityLabel", "");
                     e.referer = o.optString("referer", "");
                     e.userAgent = o.optString("userAgent", DEFAULT_UA);
                     e.cookies = o.optString("cookies", "");
@@ -194,7 +240,7 @@ public class MobileDownloadManager {
                     e.partPath = o.optString("partPath", "");
                     e.category = o.optString("category", "other");
                     String st = o.optString("status", "paused");
-                    if ("downloading".equals(st) || "probing".equals(st)) st = "paused";
+                    if ("downloading".equals(st) || "probing".equals(st) || "muxing".equals(st)) st = "paused";
                     e.status = st;
                     e.error = o.optString("error", "");
                     e.totalBytes = o.optLong("totalBytes", 0);
@@ -232,6 +278,8 @@ public class MobileDownloadManager {
                     o.put("id", e.id);
                     o.put("url", e.url);
                     o.put("resolvedUrl", e.resolvedUrl != null ? e.resolvedUrl : e.url);
+                    o.put("pairedAudioUrl", e.pairedAudioUrl != null ? e.pairedAudioUrl : "");
+                    o.put("qualityLabel", e.qualityLabel != null ? e.qualityLabel : "");
                     o.put("referer", e.referer);
                     o.put("userAgent", e.userAgent);
                     o.put("cookies", e.cookies);
@@ -271,7 +319,605 @@ public class MobileDownloadManager {
         try { listener.onDownloadsChanged(); } catch (Exception ignored) { }
     }
 
+    // =========================================================================
+    // Native Java YouTube InnerTube Multi-Client Stream Resolver
+    // (ANDROID -> IOS -> ANDROID_VR fallback; direct non-ciphered streams)
+    // =========================================================================
+    public static boolean isYouTubeUrl(String url) {
+        return !extractYouTubeVideoId(url).isEmpty();
+    }
+
+    public static String extractYouTubeVideoId(String url) {
+        if (url == null || url.trim().isEmpty()) return "";
+        String u = url.trim();
+        String low = u.toLowerCase(Locale.US);
+        if (!low.contains("youtube.com") && !low.contains("youtu.be")) return "";
+        Matcher m1 = YT_ID_WATCH.matcher(u);
+        if (m1.find()) return m1.group(1);
+        Matcher m2 = YT_ID_SHORT.matcher(u);
+        if (m2.find()) return m2.group(1);
+        return "";
+    }
+
+    public static String resolveClientUserAgentForStream(String url, String fallbackUa) {
+        if (url != null) {
+            String low = url.toLowerCase(Locale.US);
+            if (low.contains("googlevideo.com/videoplayback") || low.contains("/videoplayback?")) {
+                if (low.contains("c=android_vr")) return UA_YT_ANDROID_VR;
+                if (low.contains("c=ios")) return UA_YT_IOS;
+                if (low.contains("c=android")) return UA_YT_ANDROID;
+            }
+        }
+        return (fallbackUa != null && !fallbackUa.trim().isEmpty()) ? fallbackUa : DEFAULT_UA;
+    }
+
+    private static boolean isMobileClientGooglevideoUrl(String url) {
+        if (url == null) return false;
+        String low = url.toLowerCase(Locale.US);
+        return (low.contains("googlevideo.com/videoplayback") || low.contains("/videoplayback?"))
+            && (low.contains("c=android") || low.contains("c=ios"));
+    }
+
+    /**
+     * Queries YouTube's InnerTube youtubei/v1/player API across mobile clients
+     * (ANDROID, IOS, ANDROID_VR) to obtain real direct non-ciphered stream URLs
+     * for progressive MP4s (720p/360p), high-quality adaptive video (1080p/720p/480p),
+     * Audio M4A / Audio WebM, and HLS fallback.
+     */
+    public JSONObject resolveYouTubeFormats(String videoUrl) {
+        JSONObject fail = new JSONObject();
+        try {
+            fail.put("ok", false);
+            fail.put("url", videoUrl != null ? videoUrl : "");
+            fail.put("formats", new JSONArray());
+        } catch (Exception ignored) { }
+
+        String videoId = extractYouTubeVideoId(videoUrl);
+        if (videoId.isEmpty()) {
+            try { fail.put("error", "Not a YouTube video link"); } catch (Exception ignored) { }
+            return fail;
+        }
+
+        // Fast TTL cache lookup
+        synchronized (ytCache) {
+            CachedYtResult cached = ytCache.get(videoId);
+            if (cached != null && (System.currentTimeMillis() - cached.savedMs) < YT_CACHE_TTL_MS) {
+                try {
+                    return new JSONObject(cached.jsonStr);
+                } catch (Exception ignored) { }
+            }
+        }
+
+        String[] clients = new String[] { "ANDROID", "IOS", "ANDROID_VR" };
+        String lastReason = "";
+
+        for (String clientKey : clients) {
+            try {
+                JSONObject res = queryInnerTubeClient(videoId, clientKey);
+                if (res != null && res.optBoolean("ok", false)) {
+                    JSONArray fmts = res.optJSONArray("formats");
+                    if (fmts != null && fmts.length() > 0) {
+                        synchronized (ytCache) {
+                            CachedYtResult c = new CachedYtResult();
+                            c.savedMs = System.currentTimeMillis();
+                            c.jsonStr = res.toString();
+                            ytCache.put(videoId, c);
+                            while (ytCache.size() > 24) {
+                                String firstKey = ytCache.keySet().iterator().next();
+                                ytCache.remove(firstKey);
+                            }
+                        }
+                        return res;
+                    }
+                }
+                if (res != null && !res.optString("error", "").isEmpty()) {
+                    lastReason = res.optString("error", "");
+                }
+            } catch (Exception ex) {
+                lastReason = ex.getMessage() != null ? ex.getMessage() : "Resolver error";
+            }
+        }
+
+        try {
+            fail.put("videoId", videoId);
+            fail.put("error", lastReason.isEmpty() ? "Could not extract formats for this video" : lastReason);
+        } catch (Exception ignored) { }
+        return fail;
+    }
+
+    private JSONObject queryInnerTubeClient(String videoId, String clientKey) throws Exception {
+        JSONObject clientObj = new JSONObject();
+        String clientNameId;
+        String clientVer;
+        String ua;
+
+        if ("IOS".equals(clientKey)) {
+            clientVer = "20.10.4";
+            clientNameId = "5";
+            ua = UA_YT_IOS;
+            clientObj.put("clientName", "IOS");
+            clientObj.put("clientVersion", clientVer);
+            clientObj.put("deviceMake", "Apple");
+            clientObj.put("deviceModel", "iPhone16,2");
+            clientObj.put("osName", "iPhone");
+            clientObj.put("osVersion", "18.3.2.22D82");
+        } else if ("ANDROID_VR".equals(clientKey)) {
+            clientVer = "1.65.10";
+            clientNameId = "28";
+            ua = UA_YT_ANDROID_VR;
+            clientObj.put("clientName", "ANDROID_VR");
+            clientObj.put("clientVersion", clientVer);
+            clientObj.put("deviceMake", "Oculus");
+            clientObj.put("deviceModel", "Quest 3");
+            clientObj.put("osName", "Android");
+            clientObj.put("osVersion", "12L");
+            clientObj.put("androidSdkVersion", 32);
+        } else {
+            clientVer = "20.10.38";
+            clientNameId = "3";
+            ua = UA_YT_ANDROID;
+            clientObj.put("clientName", "ANDROID");
+            clientObj.put("clientVersion", clientVer);
+            clientObj.put("osName", "Android");
+            clientObj.put("osVersion", "14");
+            clientObj.put("androidSdkVersion", 34);
+        }
+        clientObj.put("hl", "en");
+        clientObj.put("gl", "US");
+
+        JSONObject ctxObj = new JSONObject();
+        ctxObj.put("client", clientObj);
+
+        JSONObject payload = new JSONObject();
+        payload.put("videoId", videoId);
+        payload.put("context", ctxObj);
+        payload.put("contentCheckOk", true);
+        payload.put("racyCheckOk", true);
+
+        HttpURLConnection conn = null;
+        try {
+            conn = (HttpURLConnection) new URL(YT_PLAYER_API).openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(12000);
+            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            conn.setRequestProperty("User-Agent", ua);
+            conn.setRequestProperty("X-YouTube-Client-Name", clientNameId);
+            conn.setRequestProperty("X-YouTube-Client-Version", clientVer);
+            conn.setRequestProperty("Accept-Language", "en-US,en;q=0.9");
+
+            byte[] bodyBytes = payload.toString().getBytes(StandardCharsets.UTF_8);
+            try (OutputStream out = conn.getOutputStream()) {
+                out.write(bodyBytes);
+                out.flush();
+            }
+
+            int code = conn.getResponseCode();
+            InputStream stream = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
+            if (stream == null) throw new Exception("InnerTube HTTP " + code);
+
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = br.readLine()) != null) sb.append(line);
+            }
+            if (code < 200 || code >= 300) {
+                throw new Exception("InnerTube HTTP " + code);
+            }
+
+            JSONObject root = new JSONObject(sb.toString());
+            JSONObject playability = root.optJSONObject("playabilityStatus");
+            String pStatus = playability != null ? playability.optString("status", "") : "";
+            String pReason = playability != null ? playability.optString("reason", "") : "";
+            JSONObject sd = root.optJSONObject("streamingData");
+            if (!"OK".equalsIgnoreCase(pStatus) || sd == null) {
+                JSONObject err = new JSONObject();
+                err.put("ok", false);
+                err.put("error", !pReason.isEmpty() ? pReason : ("Playability: " + pStatus));
+                return err;
+            }
+
+            JSONObject vd = root.optJSONObject("videoDetails");
+            String rawTitle = vd != null ? vd.optString("title", "YouTube Video") : "YouTube Video";
+            String author = vd != null ? vd.optString("author", "") : "";
+            long durationSec = vd != null ? vd.optLong("lengthSeconds", 0L) : 0L;
+            String cleanBaseTitle = sanitizeFileName(rawTitle.replace(" - YouTube", "").trim());
+            if (cleanBaseTitle.length() > 64) cleanBaseTitle = cleanBaseTitle.substring(0, 64).trim();
+
+            List<RawYtStream> progStreams = new ArrayList<>();
+            List<RawYtStream> adpVideos = new ArrayList<>();
+            List<RawYtStream> adpAudios = new ArrayList<>();
+
+            parseStreamArray(sd.optJSONArray("formats"), true, progStreams, adpVideos, adpAudios);
+            parseStreamArray(sd.optJSONArray("adaptiveFormats"), false, progStreams, adpVideos, adpAudios);
+
+            // Sort progressive streams highest height first
+            Collections.sort(progStreams, (a, b) -> {
+                int c = Integer.compare(b.height, a.height);
+                return c != 0 ? c : Long.compare(b.bitrate, a.bitrate);
+            });
+
+            // Pick best AAC M4A audio (prefer mp4a / itag 140+ highest bitrate) and best Opus WebM audio
+            RawYtStream bestM4a = null;
+            RawYtStream bestWebmAudio = null;
+            for (RawYtStream a : adpAudios) {
+                String ml = a.mime.toLowerCase(Locale.US);
+                if (ml.contains("audio/mp4")) {
+                    if (bestM4a == null || scoreM4aAudio(a) > scoreM4aAudio(bestM4a)) bestM4a = a;
+                } else if (ml.contains("audio/webm")) {
+                    if (bestWebmAudio == null || a.bitrate > bestWebmAudio.bitrate) bestWebmAudio = a;
+                }
+            }
+
+            // Build clean deduplicated multi-quality list:
+            // Progressive MP4s + High-Quality Adaptive MP4s (auto-muxed with M4A via MediaMuxer!) + Audio M4A + Audio WebM
+            JSONArray outFormats = new JSONArray();
+            Map<Integer, Boolean> seenVideoHeights = new HashMap<>();
+
+            // 1) Collect target video resolutions (1080p, 720p, 480p, 360p, 240p)
+            //    Always prefer progressive MP4 when available at that height; otherwise pick H.264 MP4 + paired M4A audio!
+            int[] targetHeights = new int[] { 1080, 720, 480, 360, 240 };
+            for (int targetH : targetHeights) {
+                RawYtStream progMatch = null;
+                for (RawYtStream ps : progStreams) {
+                    if (ps.height == targetH) {
+                        progMatch = ps;
+                        break;
+                    }
+                }
+                if (progMatch != null) {
+                    seenVideoHeights.put(targetH, true);
+                    outFormats.put(buildFormatJson(
+                        targetH + "p",
+                        targetH + "p MP4",
+                        targetH + "p",
+                        "MP4",
+                        ".mp4",
+                        "video",
+                        "progressive",
+                        true,
+                        true,
+                        progMatch,
+                        null,
+                        cleanBaseTitle + " (" + targetH + "p).mp4",
+                        ua
+                    ));
+                    continue;
+                }
+
+                // Pick best adaptive video at targetH (strongly prefer H.264 avc1 MP4 so Android MediaMuxer creates playable MP4+Audio!)
+                RawYtStream bestAdp = null;
+                int bestScore = -1;
+                for (RawYtStream vs : adpVideos) {
+                    if (vs.height != targetH) continue;
+                    int sc = scoreAdaptiveVideo(vs);
+                    if (sc > bestScore) {
+                        bestScore = sc;
+                        bestAdp = vs;
+                    }
+                }
+                if (bestAdp != null) {
+                    seenVideoHeights.put(targetH, true);
+                    boolean isMp4 = bestAdp.mime.toLowerCase(Locale.US).contains("video/mp4");
+                    boolean canMux = isMp4 && bestM4a != null && isMediaMuxerFriendlyCodec(bestAdp.codecs);
+                    String ext = isMp4 ? ".mp4" : ".webm";
+                    String container = isMp4 ? "MP4" : "WEBM";
+                    String kind = canMux ? "muxed" : "adaptive";
+                    String label = targetH + "p " + container;
+                    outFormats.put(buildFormatJson(
+                        targetH + "p",
+                        label,
+                        targetH + "p",
+                        container,
+                        ext,
+                        "video",
+                        kind,
+                        canMux,
+                        true,
+                        bestAdp,
+                        canMux ? bestM4a : null,
+                        cleanBaseTitle + " (" + targetH + "p)" + ext,
+                        ua
+                    ));
+                }
+            }
+
+            // Include any progressive stream whose height wasn't in the standard table (e.g. non-standard vertical Shorts)
+            for (RawYtStream ps : progStreams) {
+                if (ps.height > 0 && seenVideoHeights.containsKey(ps.height)) continue;
+                String qLbl = (ps.qualityLabel != null && !ps.qualityLabel.isEmpty())
+                    ? ps.qualityLabel : (ps.height > 0 ? (ps.height + "p") : "MP4");
+                outFormats.put(buildFormatJson(
+                    qLbl.toLowerCase(Locale.US),
+                    qLbl + " MP4",
+                    qLbl,
+                    "MP4",
+                    ".mp4",
+                    "video",
+                    "progressive",
+                    true,
+                    true,
+                    ps,
+                    null,
+                    cleanBaseTitle + " (" + qLbl + ").mp4",
+                    ua
+                ));
+            }
+
+            // 2) Audio M4A (AAC — plays natively in every Android player!)
+            if (bestM4a != null) {
+                int kbps = bestM4a.bitrate > 0 ? (int) Math.round(bestM4a.bitrate / 1000.0) : 128;
+                outFormats.put(buildFormatJson(
+                    "audio_m4a",
+                    "Audio M4A",
+                    kbps + "k",
+                    "M4A",
+                    ".m4a",
+                    "audio",
+                    "audio",
+                    true,
+                    false,
+                    bestM4a,
+                    null,
+                    cleanBaseTitle + " (Audio).m4a",
+                    ua
+                ));
+            }
+
+            // 3) Audio WebM (Opus)
+            if (bestWebmAudio != null) {
+                int kbps = bestWebmAudio.bitrate > 0 ? (int) Math.round(bestWebmAudio.bitrate / 1000.0) : 160;
+                outFormats.put(buildFormatJson(
+                    "audio_webm",
+                    "Audio WebM",
+                    kbps + "k",
+                    "WEBM",
+                    ".webm",
+                    "audio",
+                    "audio",
+                    true,
+                    false,
+                    bestWebmAudio,
+                    null,
+                    cleanBaseTitle + " (Audio).webm",
+                    ua
+                ));
+            }
+
+            // 4) HLS Manifest fallback if returned by IOS client
+            String hlsUrl = sd.optString("hlsManifestUrl", "");
+            if (!hlsUrl.isEmpty() && outFormats.length() == 0) {
+                JSONObject hf = new JSONObject();
+                hf.put("id", "hls");
+                hf.put("itag", 0);
+                hf.put("label", "HD Stream HLS");
+                hf.put("shortLabel", "HLS");
+                hf.put("quality", "HD");
+                hf.put("container", "HLS");
+                hf.put("ext", ".ts");
+                hf.put("category", "video");
+                hf.put("kind", "hls");
+                hf.put("hasAudio", true);
+                hf.put("hasVideo", true);
+                hf.put("height", 720);
+                hf.put("bitrate", 0);
+                hf.put("sizeBytes", 0);
+                hf.put("mime", "application/vnd.apple.mpegurl");
+                hf.put("url", hlsUrl);
+                hf.put("pairedAudioUrl", "");
+                hf.put("fileName", cleanBaseTitle + " (HLS).ts");
+                hf.put("userAgent", ua);
+                outFormats.put(hf);
+            }
+
+            JSONObject result = new JSONObject();
+            result.put("ok", outFormats.length() > 0);
+            result.put("videoId", videoId);
+            result.put("title", rawTitle);
+            result.put("author", author);
+            result.put("durationSec", durationSec);
+            result.put("client", clientKey);
+            result.put("formats", outFormats);
+            return result;
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+    }
+
+    private static void parseStreamArray(
+        JSONArray arr,
+        boolean progressive,
+        List<RawYtStream> progOut,
+        List<RawYtStream> vidOut,
+        List<RawYtStream> audOut
+    ) {
+        if (arr == null) return;
+        for (int i = 0; i < arr.length(); i++) {
+            JSONObject f = arr.optJSONObject(i);
+            if (f == null) continue;
+            String directUrl = f.optString("url", "");
+            if (directUrl.isEmpty() || !directUrl.startsWith("http")) continue;
+            String fullMime = f.optString("mimeType", "");
+            String baseMime = fullMime.contains(";") ? fullMime.substring(0, fullMime.indexOf(';')).trim() : fullMime.trim();
+            String codecs = "";
+            int cIdx = fullMime.indexOf("codecs=");
+            if (cIdx >= 0) {
+                codecs = fullMime.substring(cIdx + 7).replace("\"", "").trim();
+            }
+
+            RawYtStream s = new RawYtStream();
+            s.itag = f.optInt("itag", 0);
+            s.url = normalizeMediaUrl(directUrl);
+            s.mime = baseMime;
+            s.codecs = codecs;
+            s.qualityLabel = f.optString("qualityLabel", "");
+            s.height = f.optInt("height", 0);
+            s.fps = f.optInt("fps", 30);
+            s.bitrate = f.optLong("bitrate", 0L);
+            s.contentLength = parseLongSafe(f.optString("contentLength", "0"));
+            s.progressive = progressive;
+            String ml = baseMime.toLowerCase(Locale.US);
+            s.isAudio = ml.startsWith("audio/");
+            s.isVideo = ml.startsWith("video/");
+
+            if (progressive) {
+                progOut.add(s);
+            } else if (s.isVideo) {
+                vidOut.add(s);
+            } else if (s.isAudio) {
+                audOut.add(s);
+            }
+        }
+    }
+
+    private static long scoreM4aAudio(RawYtStream a) {
+        long sc = a.bitrate;
+        if (a.itag == 140 || a.itag == 141) sc += 500_000L;
+        if (a.codecs.toLowerCase(Locale.US).contains("mp4a")) sc += 200_000L;
+        return sc;
+    }
+
+    private static int scoreAdaptiveVideo(RawYtStream v) {
+        int sc = 0;
+        String ml = v.mime.toLowerCase(Locale.US);
+        String cl = v.codecs.toLowerCase(Locale.US);
+        if (ml.contains("video/mp4")) sc += 1000;
+        if (cl.contains("avc1")) sc += 600; // H.264 — universally supported by Android MediaMuxer & all players
+        else if (cl.contains("hvc1") || cl.contains("hev1")) sc += 250;
+        else if (cl.contains("vp9")) sc += 150;
+        if (v.fps >= 50) sc += 40;
+        sc += (int) Math.min(200, v.bitrate / 50_000L);
+        return sc;
+    }
+
+    private static boolean isMediaMuxerFriendlyCodec(String codecs) {
+        if (codecs == null) return false;
+        String cl = codecs.toLowerCase(Locale.US);
+        return cl.contains("avc1") || cl.contains("mp4v") || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && (cl.contains("hvc1") || cl.contains("hev1")));
+    }
+
+    private static JSONObject buildFormatJson(
+        String id,
+        String label,
+        String quality,
+        String container,
+        String ext,
+        String category,
+        String kind,
+        boolean hasAudio,
+        boolean hasVideo,
+        RawYtStream primary,
+        RawYtStream pairedAudio,
+        String fileName,
+        String ua
+    ) throws Exception {
+        JSONObject o = new JSONObject();
+        o.put("id", id);
+        o.put("itag", primary.itag);
+        o.put("label", label);
+        o.put("shortLabel", "audio".equals(category) ? label : (quality + " " + container));
+        o.put("quality", quality);
+        o.put("container", container);
+        o.put("ext", ext);
+        o.put("category", category);
+        o.put("kind", kind);
+        o.put("hasAudio", hasAudio);
+        o.put("hasVideo", hasVideo);
+        o.put("height", primary.height);
+        o.put("bitrate", primary.bitrate);
+        long totalSz = primary.contentLength + (pairedAudio != null ? pairedAudio.contentLength : 0L);
+        o.put("sizeBytes", totalSz);
+        o.put("mime", primary.mime);
+        o.put("url", primary.url);
+        o.put("pairedAudioUrl", pairedAudio != null ? pairedAudio.url : "");
+        o.put("fileName", sanitizeFileName(fileName));
+        o.put("userAgent", ua);
+        return o;
+    }
+
+    private static long parseLongSafe(String s) {
+        try { return Long.parseLong(s.trim()); }
+        catch (Exception e) { return 0L; }
+    }
+
+    public void probeVideoFormatsAsync(final String pageUrl, final int tabId, final FormatProbeCallback callback) {
+        coordinatorPool.execute(() -> {
+            JSONObject res = resolveYouTubeFormats(pageUrl);
+            if (res.optBoolean("ok", false) && tabId > 0) {
+                mergeResolvedYouTubeMedia(tabId, res);
+            }
+            if (callback != null) {
+                try { callback.onFormatsReady(res); } catch (Exception ignored) { }
+            }
+        });
+    }
+
+    private void mergeResolvedYouTubeMedia(int tabId, JSONObject resolved) {
+        JSONArray fmts = resolved.optJSONArray("formats");
+        if (fmts == null || fmts.length() == 0) return;
+        String videoTitle = resolved.optString("title", "YouTube Video");
+        boolean changed = false;
+        synchronized (gate) {
+            List<MediaItem> list = tabMedia.get(tabId);
+            if (list == null) {
+                list = new ArrayList<>();
+                tabMedia.put(tabId, list);
+            }
+            // Prepend cleanly resolved multi-quality formats at top of Page Media
+            List<MediaItem> fresh = new ArrayList<>();
+            for (int i = 0; i < fmts.length(); i++) {
+                JSONObject f = fmts.optJSONObject(i);
+                if (f == null) continue;
+                String u = f.optString("url", "");
+                if (u.isEmpty()) continue;
+                MediaItem mi = new MediaItem();
+                mi.url = u;
+                mi.pairedAudioUrl = f.optString("pairedAudioUrl", "");
+                mi.userAgent = f.optString("userAgent", UA_YT_ANDROID);
+                mi.qualityLabel = f.optString("label", "");
+                mi.fileName = f.optString("fileName", "video.mp4");
+                mi.title = videoTitle + " · " + mi.qualityLabel;
+                mi.category = f.optString("category", "video");
+                mi.mime = f.optString("mime", "video/mp4");
+                mi.sizeBytes = f.optLong("sizeBytes", 0L);
+                fresh.add(mi);
+            }
+            // Remove any older raw googlevideo fragments for clean presentation
+            List<MediaItem> kept = new ArrayList<>(fresh);
+            for (MediaItem existing : list) {
+                boolean dup = false;
+                for (MediaItem f : fresh) {
+                    if (existing.url.equalsIgnoreCase(f.url)) { dup = true; break; }
+                }
+                if (!dup && !existing.url.toLowerCase(Locale.US).contains("googlevideo.com/videoplayback")) {
+                    kept.add(existing);
+                }
+            }
+            list.clear();
+            list.addAll(kept);
+            changed = true;
+        }
+        if (changed) emitChanged(true);
+    }
+
+    // =========================================================================
+    // Public Enqueue API (Direct Files, HLS, & Smart YouTube Multi-Quality)
+    // =========================================================================
     public String enqueueDownload(String rawUrl, String suggestedName, String referer, String userAgent, String cookies, int threads) {
+        return enqueueDownloadWithQuality(rawUrl, suggestedName, referer, userAgent, cookies, threads, "", "");
+    }
+
+    public String enqueueDownloadWithQuality(
+        String rawUrl,
+        String suggestedName,
+        String referer,
+        String userAgent,
+        String cookies,
+        int threads,
+        String pairedAudioUrl,
+        String qualityLabel
+    ) {
         if (rawUrl == null || rawUrl.trim().isEmpty()) return "";
         String url = normalizeMediaUrl(rawUrl.trim());
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
@@ -286,13 +932,18 @@ public class MobileDownloadManager {
         }
         File target = makeUniqueFile(downloadsDir, name);
 
+        String effectiveUa = resolveClientUserAgentForStream(url, userAgent);
+        boolean mobileClientStream = isMobileClientGooglevideoUrl(url);
+
         Entry e = new Entry();
         e.id = "mdl_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
         e.url = url;
         e.resolvedUrl = url;
-        e.referer = referer != null ? referer : "";
-        e.userAgent = (userAgent != null && !userAgent.isEmpty()) ? userAgent : DEFAULT_UA;
-        e.cookies = cookies != null ? cookies : "";
+        e.pairedAudioUrl = pairedAudioUrl != null ? normalizeMediaUrl(pairedAudioUrl.trim()) : "";
+        e.qualityLabel = qualityLabel != null ? qualityLabel.trim() : "";
+        e.referer = mobileClientStream ? "" : (referer != null ? referer : "");
+        e.userAgent = effectiveUa;
+        e.cookies = mobileClientStream ? "" : (cookies != null ? cookies : "");
         e.fileName = target.getName();
         e.savePath = target.getAbsolutePath();
         e.partPath = target.getAbsolutePath() + ".djvpart";
@@ -313,11 +964,199 @@ public class MobileDownloadManager {
         return e.fileName;
     }
 
+    /**
+     * Smart URL entry point used when a user pastes ANY link (YouTube or direct file) into
+     * Turbo Downloads with a selected quality preference ("auto", "1080p", "720p", "480p", "360p", "m4a", "webm").
+     */
+    public String enqueueSmartUrl(
+        String rawUrl,
+        String qualityPref,
+        String suggestedName,
+        String referer,
+        String userAgent,
+        String cookies
+    ) {
+        if (rawUrl == null || rawUrl.trim().isEmpty()) return "";
+        String trimmed = rawUrl.trim();
+        if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+            trimmed = "https://" + trimmed;
+        }
+        if (!isYouTubeUrl(trimmed)) {
+            return enqueueDownload(trimmed, suggestedName, referer, userAgent, cookies, MAX_THREADS);
+        }
+
+        final String ytUrl = trimmed;
+        final String pref = (qualityPref != null && !qualityPref.trim().isEmpty())
+            ? qualityPref.trim().toLowerCase(Locale.US)
+            : "auto";
+        final String prefBadge = formatPrefBadge(pref);
+        final boolean wantsAudio = "m4a".equals(pref) || "mp3".equals(pref) || "audio".equals(pref) || "webm".equals(pref) || "audio_m4a".equals(pref) || "audio_webm".equals(pref);
+
+        final Entry e = new Entry();
+        e.id = "mdl_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        e.url = ytUrl;
+        e.resolvedUrl = ytUrl;
+        e.pairedAudioUrl = "";
+        e.qualityLabel = prefBadge;
+        e.referer = "";
+        e.userAgent = UA_YT_ANDROID;
+        e.cookies = "";
+        e.fileName = "YouTube · Resolving " + prefBadge + "...";
+        e.savePath = "";
+        e.partPath = "";
+        e.isHls = false;
+        e.category = wantsAudio ? "audio" : "video";
+        e.status = "probing";
+        e.error = "";
+        e.threads = MAX_THREADS;
+        e.createdMs = System.currentTimeMillis();
+
+        final AtomicBoolean flag = new AtomicBoolean(false);
+        e.cancelFlag = flag;
+
+        synchronized (gate) {
+            entries.add(0, e);
+            while (entries.size() > MAX_HISTORY) entries.remove(entries.size() - 1);
+        }
+        savePersisted();
+        emitChanged(true);
+
+        coordinatorPool.execute(() -> {
+            try {
+                JSONObject resolved = resolveYouTubeFormats(ytUrl);
+                if (flag.get()) return;
+                if (!resolved.optBoolean("ok", false)) {
+                    throw new Exception(resolved.optString("error", "Could not resolve YouTube video"));
+                }
+                JSONArray fmts = resolved.optJSONArray("formats");
+                JSONObject chosen = pickYouTubeFormatForPref(fmts, pref);
+                if (chosen == null) {
+                    throw new Exception("No matching downloadable stream found");
+                }
+
+                String streamUrl = chosen.optString("url", "");
+                String audioUrl = chosen.optString("pairedAudioUrl", "");
+                String chosenLabel = chosen.optString("label", prefBadge);
+                String chosenUa = chosen.optString("userAgent", UA_YT_ANDROID);
+                String chosenName = sanitizeFileName(chosen.optString("fileName", "youtube_video.mp4"));
+                String chosenCat = chosen.optString("category", wantsAudio ? "audio" : "video");
+                File target = makeUniqueFile(downloadsDir, chosenName);
+
+                synchronized (gate) {
+                    e.url = streamUrl;
+                    e.resolvedUrl = streamUrl;
+                    e.pairedAudioUrl = audioUrl;
+                    e.qualityLabel = chosenLabel;
+                    e.userAgent = resolveClientUserAgentForStream(streamUrl, chosenUa);
+                    e.fileName = target.getName();
+                    e.savePath = target.getAbsolutePath();
+                    e.partPath = target.getAbsolutePath() + ".djvpart";
+                    e.isHls = isHlsUrl(streamUrl);
+                    e.category = chosenCat;
+                }
+                savePersisted();
+                emitChanged(true);
+                runDownload(e, flag);
+            } catch (Exception ex) {
+                synchronized (gate) {
+                    if (!"cancelled".equals(e.status) && !"paused".equals(e.status)) {
+                        e.status = "failed";
+                        String msg = ex.getMessage();
+                        e.error = (msg != null && !msg.isEmpty()) ? msg : "YouTube stream resolve failed";
+                    }
+                }
+                savePersisted();
+                emitChanged(true);
+            }
+        });
+        return "YouTube (" + prefBadge + ")";
+    }
+
+    private static String formatPrefBadge(String pref) {
+        if (pref == null) return "Auto Best";
+        if (pref.contains("webm")) return "Audio WebM";
+        if (pref.contains("m4a") || pref.contains("audio") || pref.contains("mp3")) return "Audio M4A";
+        if (pref.contains("1080")) return "1080p MP4";
+        if (pref.contains("720")) return "720p MP4";
+        if (pref.contains("480")) return "480p MP4";
+        if (pref.contains("360")) return "360p MP4";
+        return "Auto Best";
+    }
+
+    private static JSONObject pickYouTubeFormatForPref(JSONArray fmts, String pref) {
+        if (fmts == null || fmts.length() == 0) return null;
+        String p = pref != null ? pref.toLowerCase(Locale.US) : "auto";
+        if (p.contains("webm")) {
+            JSONObject anyAudio = null;
+            for (int i = 0; i < fmts.length(); i++) {
+                JSONObject f = fmts.optJSONObject(i);
+                if (f == null) continue;
+                if ("audio_webm".equals(f.optString("id"))) return f;
+                if ("audio".equals(f.optString("category")) && anyAudio == null) anyAudio = f;
+            }
+            if (anyAudio != null) return anyAudio;
+        }
+        if (p.contains("m4a") || p.contains("audio") || p.contains("mp3")) {
+            JSONObject webmFallback = null;
+            for (int i = 0; i < fmts.length(); i++) {
+                JSONObject f = fmts.optJSONObject(i);
+                if (f == null) continue;
+                if ("audio_m4a".equals(f.optString("id"))) return f;
+                if ("audio".equals(f.optString("category")) && webmFallback == null) webmFallback = f;
+            }
+            if (webmFallback != null) return webmFallback;
+        }
+
+        int targetH = 0;
+        if (p.contains("1080")) targetH = 1080;
+        else if (p.contains("720")) targetH = 720;
+        else if (p.contains("480")) targetH = 480;
+        else if (p.contains("360")) targetH = 360;
+
+        if (targetH > 0) {
+            // Exact height match first
+            for (int i = 0; i < fmts.length(); i++) {
+                JSONObject f = fmts.optJSONObject(i);
+                if (f != null && "video".equals(f.optString("category")) && f.optInt("height", 0) == targetH) {
+                    return f;
+                }
+            }
+            // Closest video height <= targetH
+            JSONObject bestBelow = null;
+            int bestBelowH = -1;
+            for (int i = 0; i < fmts.length(); i++) {
+                JSONObject f = fmts.optJSONObject(i);
+                if (f == null || !"video".equals(f.optString("category"))) continue;
+                int h = f.optInt("height", 0);
+                if (h <= targetH && h > bestBelowH) {
+                    bestBelowH = h;
+                    bestBelow = f;
+                }
+            }
+            if (bestBelow != null) return bestBelow;
+        }
+
+        // Auto mode: prefer 720p MP4 with audio, else highest video with audio <= 1080p, else first item
+        for (int i = 0; i < fmts.length(); i++) {
+            JSONObject f = fmts.optJSONObject(i);
+            if (f != null && "video".equals(f.optString("category")) && f.optBoolean("hasAudio", false) && f.optInt("height", 0) == 720) {
+                return f;
+            }
+        }
+        for (int i = 0; i < fmts.length(); i++) {
+            JSONObject f = fmts.optJSONObject(i);
+            if (f != null && "video".equals(f.optString("category")) && f.optBoolean("hasAudio", false)) {
+                return f;
+            }
+        }
+        return fmts.optJSONObject(0);
+    }
+
     public void pause(String id) {
         Entry e = findEntry(id);
         if (e == null) return;
         synchronized (gate) {
-            if (!"downloading".equals(e.status) && !"probing".equals(e.status)) return;
+            if (!"downloading".equals(e.status) && !"probing".equals(e.status) && !"muxing".equals(e.status)) return;
             e.status = "paused";
             e.speedBps = 0;
             e.etaSeconds = 0;
@@ -330,12 +1169,25 @@ public class MobileDownloadManager {
     public void resume(String id) {
         Entry e = findEntry(id);
         if (e == null) return;
+        String reResolveUrl = null;
+        String reResolveQual = null;
         synchronized (gate) {
-            if ("downloading".equals(e.status) || "probing".equals(e.status) || "completed".equals(e.status)) return;
-            e.status = "probing";
-            e.error = "";
-            e.speedBps = 0;
-            e.etaSeconds = 0;
+            if ("downloading".equals(e.status) || "probing".equals(e.status) || "muxing".equals(e.status) || "completed".equals(e.status)) return;
+            if (e.savePath == null || e.savePath.isEmpty()) {
+                reResolveUrl = e.url;
+                reResolveQual = e.qualityLabel != null ? e.qualityLabel : "auto";
+                entries.remove(e);
+            } else {
+                e.status = "probing";
+                e.error = "";
+                e.speedBps = 0;
+                e.etaSeconds = 0;
+            }
+        }
+        if (reResolveUrl != null) {
+            emitChanged(true);
+            enqueueSmartUrl(reResolveUrl, reResolveQual, "", "", "", "");
+            return;
         }
         emitChanged(true);
         startWorker(e);
@@ -351,9 +1203,14 @@ public class MobileDownloadManager {
             e.cancelFlag.set(true);
         }
         try {
-            File pf = new File(e.partPath);
-            if (pf.exists()) //noinspection ResultOfMethodCallIgnored
-                pf.delete();
+            if (e.partPath != null && !e.partPath.isEmpty()) {
+                File pf = new File(e.partPath);
+                if (pf.exists()) //noinspection ResultOfMethodCallIgnored
+                    pf.delete();
+                File af = new File(e.partPath + ".aud");
+                if (af.exists()) //noinspection ResultOfMethodCallIgnored
+                    af.delete();
+            }
             deleteDirRecursive(new File(downloadsDir, "." + e.id + "_hls"));
         } catch (Exception ignored) { }
         savePersisted();
@@ -369,9 +1226,14 @@ public class MobileDownloadManager {
         }
         try {
             if (!"completed".equals(e.status)) {
-                File pf = new File(e.partPath);
-                if (pf.exists()) //noinspection ResultOfMethodCallIgnored
-                    pf.delete();
+                if (e.partPath != null && !e.partPath.isEmpty()) {
+                    File pf = new File(e.partPath);
+                    if (pf.exists()) //noinspection ResultOfMethodCallIgnored
+                        pf.delete();
+                    File af = new File(e.partPath + ".aud");
+                    if (af.exists()) //noinspection ResultOfMethodCallIgnored
+                        af.delete();
+                }
                 deleteDirRecursive(new File(downloadsDir, "." + e.id + "_hls"));
             }
         } catch (Exception ignored) { }
@@ -383,7 +1245,7 @@ public class MobileDownloadManager {
         synchronized (gate) {
             List<Entry> keep = new ArrayList<>();
             for (Entry e : entries) {
-                if ("downloading".equals(e.status) || "probing".equals(e.status) || "paused".equals(e.status)) {
+                if ("downloading".equals(e.status) || "probing".equals(e.status) || "muxing".equals(e.status) || "paused".equals(e.status)) {
                     keep.add(e);
                 }
             }
@@ -397,7 +1259,7 @@ public class MobileDownloadManager {
     public boolean hasActiveDownloads() {
         synchronized (gate) {
             for (Entry e : entries) {
-                if ("downloading".equals(e.status) || "probing".equals(e.status)) return true;
+                if ("downloading".equals(e.status) || "probing".equals(e.status) || "muxing".equals(e.status)) return true;
             }
             return false;
         }
@@ -462,6 +1324,9 @@ public class MobileDownloadManager {
             }
             MediaItem mi = new MediaItem();
             mi.url = url;
+            mi.pairedAudioUrl = "";
+            mi.userAgent = "";
+            mi.qualityLabel = "";
             mi.fileName = fn;
             mi.title = !cleanTitle.isEmpty() ? cleanTitle : fn;
             mi.category = cat;
@@ -498,6 +1363,9 @@ public class MobileDownloadManager {
                 if (dup) continue;
                 MediaItem mi = new MediaItem();
                 mi.url = u;
+                mi.pairedAudioUrl = "";
+                mi.userAgent = "";
+                mi.qualityLabel = "";
                 mi.category = o.optString("category", "other");
                 mi.mime = o.optString("mime", "");
                 String t = o.optString("title", "").trim();
@@ -529,6 +1397,7 @@ public class MobileDownloadManager {
                     try { host = Uri.parse(e.url).getHost(); } catch (Exception ignored) { }
                     o.put("host", host != null ? host : "");
                     o.put("fileName", e.fileName);
+                    o.put("qualityLabel", e.qualityLabel != null ? e.qualityLabel : "");
                     o.put("category", e.category != null ? e.category : "other");
                     o.put("status", e.status != null ? e.status : "paused");
                     o.put("error", e.error != null ? e.error : "");
@@ -569,6 +1438,9 @@ public class MobileDownloadManager {
                     try {
                         JSONObject o = new JSONObject();
                         o.put("url", m.url);
+                        o.put("pairedAudioUrl", m.pairedAudioUrl != null ? m.pairedAudioUrl : "");
+                        o.put("userAgent", m.userAgent != null ? m.userAgent : "");
+                        o.put("qualityLabel", m.qualityLabel != null ? m.qualityLabel : "");
                         o.put("title", m.title);
                         o.put("fileName", m.fileName);
                         o.put("category", m.category);
@@ -583,7 +1455,7 @@ public class MobileDownloadManager {
     }
 
     // =========================================================================
-    // 8-Thread Parallel HTTP Byte-Range + HLS .m3u8 Stream Assembler Engine
+    // 8-Thread Parallel HTTP Byte-Range + MediaMuxer + HLS .m3u8 Engine
     // =========================================================================
     private void startWorker(final Entry entry) {
         final AtomicBoolean flag = new AtomicBoolean(false);
@@ -629,7 +1501,7 @@ public class MobileDownloadManager {
                     synchronized (gate) { entry.resolvedUrl = probe.finalUrl; }
                 }
 
-                // Server responded with an HLS playlist even if URL did not end in .m3u8!
+                // Server responded with an HLS playlist even if URL did not end in .m3u8
                 if (probe.isHls) {
                     synchronized (gate) {
                         entry.isHls = true;
@@ -736,7 +1608,6 @@ public class MobileDownloadManager {
                     if (rangeRejected.get()) {
                         fallbackSingle = true;
                     } else if (firstErr.get() != null) {
-                        // Retry cleanly as single-stream if multi-range connection was blocked by CDN!
                         String em = firstErr.get().getMessage();
                         if (em != null && (em.contains("HTTP 403") || em.contains("HTTP 416") || em.contains("HTTP 400") || em.contains("HTTP 429"))) {
                             fallbackSingle = true;
@@ -772,6 +1643,15 @@ public class MobileDownloadManager {
                 return;
             }
 
+            // If adaptive YouTube MP4 has a paired M4A audio stream, download audio & mux natively with Android MediaMuxer!
+            if (entry.pairedAudioUrl != null && !entry.pairedAudioUrl.isEmpty()) {
+                muxPairedAudioIfPossible(entry, cancelFlag);
+                if (cancelFlag.get()) {
+                    stopEntrySpeed(entry);
+                    return;
+                }
+            }
+
             finalizeDownloadFile(entry);
         } catch (Exception ex) {
             speedStop.set(true);
@@ -787,6 +1667,166 @@ public class MobileDownloadManager {
             }
             savePersisted();
             emitChanged(true);
+        }
+    }
+
+    private void muxPairedAudioIfPossible(Entry entry, AtomicBoolean cancelFlag) {
+        File videoFile = new File(entry.partPath);
+        File audioFile = new File(entry.partPath + ".aud");
+        File muxedFile = new File(entry.partPath + ".mux.mp4");
+        if (!videoFile.isFile() || videoFile.length() <= 0L) return;
+
+        synchronized (gate) {
+            entry.status = "muxing";
+            entry.speedBps = 0;
+            entry.etaSeconds = 0;
+        }
+        emitChanged(true);
+
+        try {
+            downloadAuxiliaryStreamToFile(entry.pairedAudioUrl, entry, audioFile, cancelFlag);
+            if (cancelFlag.get() || !audioFile.isFile() || audioFile.length() <= 0L) {
+                return;
+            }
+            if (muxMp4VideoAndAudio(videoFile, audioFile, muxedFile) && muxedFile.isFile() && muxedFile.length() > 0L) {
+                //noinspection ResultOfMethodCallIgnored
+                videoFile.delete();
+                if (!muxedFile.renameTo(videoFile)) {
+                    copyFile(muxedFile, videoFile);
+                    //noinspection ResultOfMethodCallIgnored
+                    muxedFile.delete();
+                }
+            }
+        } catch (Exception ignored) {
+            // Graceful fallback: keep the downloaded video stream intact
+        } finally {
+            if (audioFile.exists()) //noinspection ResultOfMethodCallIgnored
+                audioFile.delete();
+            if (muxedFile.exists()) //noinspection ResultOfMethodCallIgnored
+                muxedFile.delete();
+        }
+    }
+
+    private void downloadAuxiliaryStreamToFile(String url, Entry entry, File destFile, AtomicBoolean cancelFlag) throws Exception {
+        int retries = 0;
+        while (!cancelFlag.get()) {
+            ConnResult cr = null;
+            try {
+                cr = openConnFollowingRedirects(url, "GET", null, entry);
+                if (cr.statusCode < 200 || cr.statusCode >= 300) {
+                    throw new Exception("Audio HTTP " + cr.statusCode);
+                }
+                try (InputStream in = new BufferedInputStream(cr.conn.getInputStream(), 32768);
+                     OutputStream out = new BufferedOutputStream(new FileOutputStream(destFile), 32768)) {
+                    byte[] buf = new byte[32768];
+                    int n;
+                    while (!cancelFlag.get() && (n = in.read(buf)) > 0) {
+                        out.write(buf, 0, n);
+                    }
+                    out.flush();
+                }
+                return;
+            } catch (Exception ex) {
+                if (cancelFlag.get()) return;
+                retries++;
+                if (retries > 2) throw ex;
+                try { Thread.sleep(400L * retries); } catch (InterruptedException ignored) { return; }
+            } finally {
+                if (cr != null && cr.conn != null) try { cr.conn.disconnect(); } catch (Exception ignored) { }
+            }
+        }
+    }
+
+    /**
+     * Lossless in-app Android SDK MediaMuxer combining an adaptive H.264 MP4 video stream
+     * and AAC M4A audio stream into a single playable MP4 with full sound (zero re-encoding).
+     */
+    private static boolean muxMp4VideoAndAudio(File videoFile, File audioFile, File outFile) {
+        MediaExtractor vidEx = null;
+        MediaExtractor audEx = null;
+        MediaMuxer muxer = null;
+        boolean started = false;
+        try {
+            vidEx = new MediaExtractor();
+            vidEx.setDataSource(videoFile.getAbsolutePath());
+            int vTrackIdx = findTrackByPrefix(vidEx, "video/");
+            if (vTrackIdx < 0) return false;
+            vidEx.selectTrack(vTrackIdx);
+            MediaFormat vFmt = vidEx.getTrackFormat(vTrackIdx);
+
+            audEx = new MediaExtractor();
+            audEx.setDataSource(audioFile.getAbsolutePath());
+            int aTrackIdx = findTrackByPrefix(audEx, "audio/");
+            if (aTrackIdx < 0) return false;
+            audEx.selectTrack(aTrackIdx);
+            MediaFormat aFmt = audEx.getTrackFormat(aTrackIdx);
+
+            muxer = new MediaMuxer(outFile.getAbsolutePath(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+            int outVidTrack = muxer.addTrack(vFmt);
+            int outAudTrack = muxer.addTrack(aFmt);
+            muxer.start();
+            started = true;
+
+            int maxBuf = 512 * 1024;
+            if (vFmt.containsKey(MediaFormat.KEY_MAX_INPUT_SIZE)) {
+                maxBuf = Math.max(maxBuf, vFmt.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE));
+            }
+            if (aFmt.containsKey(MediaFormat.KEY_MAX_INPUT_SIZE)) {
+                maxBuf = Math.max(maxBuf, aFmt.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE));
+            }
+            ByteBuffer buf = ByteBuffer.allocate(Math.min(maxBuf, 4 * 1024 * 1024));
+            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+
+            copyExtractorSamples(vidEx, muxer, outVidTrack, buf, info);
+            copyExtractorSamples(audEx, muxer, outAudTrack, buf, info);
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        } finally {
+            if (muxer != null) {
+                try { if (started) muxer.stop(); } catch (Exception ignored) { }
+                try { muxer.release(); } catch (Exception ignored) { }
+            }
+            if (vidEx != null) try { vidEx.release(); } catch (Exception ignored) { }
+            if (audEx != null) try { audEx.release(); } catch (Exception ignored) { }
+        }
+    }
+
+    private static int findTrackByPrefix(MediaExtractor ex, String mimePrefix) {
+        int count = ex.getTrackCount();
+        for (int i = 0; i < count; i++) {
+            MediaFormat fmt = ex.getTrackFormat(i);
+            String mime = fmt.getString(MediaFormat.KEY_MIME);
+            if (mime != null && mime.startsWith(mimePrefix)) return i;
+        }
+        return -1;
+    }
+
+    private static void copyExtractorSamples(
+        MediaExtractor ex,
+        MediaMuxer muxer,
+        int outTrack,
+        ByteBuffer buf,
+        MediaCodec.BufferInfo info
+    ) {
+        long lastPts = -1L;
+        while (true) {
+            buf.clear();
+            int sampleSize = ex.readSampleData(buf, 0);
+            if (sampleSize < 0) break;
+            long pts = ex.getSampleTime();
+            if (pts < 0L) pts = Math.max(0L, lastPts + 1L);
+            if (pts < lastPts) pts = lastPts;
+            lastPts = pts;
+            int exFlags = ex.getSampleFlags();
+            int muxFlags = (exFlags & MediaExtractor.SAMPLE_FLAG_SYNC) != 0
+                ? MediaCodec.BUFFER_FLAG_KEY_FRAME : 0;
+            info.offset = 0;
+            info.size = sampleSize;
+            info.presentationTimeUs = pts;
+            info.flags = muxFlags;
+            muxer.writeSampleData(outTrack, buf, info);
+            ex.advance();
         }
     }
 
@@ -816,7 +1856,7 @@ public class MobileDownloadManager {
             partFile.delete();
         }
 
-        // Mirror cleanly to Android public Downloads/dejavu/ so users find videos & files in Files & Gallery!
+        // Mirror cleanly to Android public Downloads/dejavu/ so users find videos & audio in Files & Gallery!
         exportToPublicDownloads(finalFile);
 
         synchronized (gate) {
@@ -842,7 +1882,6 @@ public class MobileDownloadManager {
         String playlistText = fetchTextFollowingRedirects(mediaPlaylistUrl, entry);
         if (cancelFlag.get()) return;
 
-        // Resolve master playlist (#EXT-X-STREAM-INF) -> pick highest bandwidth / resolution stream
         int depth = 0;
         while (playlistText.contains("#EXT-X-STREAM-INF") && depth < 3) {
             String bestVariant = pickBestHlsVariant(playlistText, mediaPlaylistUrl);
@@ -867,7 +1906,6 @@ public class MobileDownloadManager {
             }
         }
 
-        // Ensure output filename has playable .mp4 or .ts video extension (never .m3u8 text!)
         synchronized (gate) {
             String base = entry.fileName;
             String low = base.toLowerCase(Locale.US);
@@ -962,7 +2000,6 @@ public class MobileDownloadManager {
             if (cancelFlag.get()) return;
             if (firstErr.get() != null) throw firstErr.get();
 
-            // Assemble all segments in exact sequential order into entry.partPath
             long assembledBytes = 0L;
             try (OutputStream out = new BufferedOutputStream(new FileOutputStream(entry.partPath), 65536)) {
                 byte[] buf = new byte[65536];
@@ -1227,18 +2264,22 @@ public class MobileDownloadManager {
             conn.setInstanceFollowRedirects(false);
             conn.setConnectTimeout(18000);
             conn.setReadTimeout(28000);
-            conn.setRequestProperty("User-Agent", (entry.userAgent != null && !entry.userAgent.isEmpty()) ? entry.userAgent : DEFAULT_UA);
+            boolean mobileYtStream = isMobileClientGooglevideoUrl(current);
+            String ua = resolveClientUserAgentForStream(current, entry.userAgent);
+            conn.setRequestProperty("User-Agent", ua);
             conn.setRequestProperty("Accept", "*/*");
             conn.setRequestProperty("Accept-Encoding", "identity");
-            if (entry.referer != null && !entry.referer.isEmpty()) {
-                conn.setRequestProperty("Referer", entry.referer);
-            }
-            String cookieVal = entry.cookies;
-            if (cookieVal == null || cookieVal.isEmpty()) {
-                try { cookieVal = CookieManager.getInstance().getCookie(current); } catch (Exception ignored) { }
-            }
-            if (cookieVal != null && !cookieVal.isEmpty()) {
-                conn.setRequestProperty("Cookie", cookieVal);
+            if (!mobileYtStream) {
+                if (entry.referer != null && !entry.referer.isEmpty()) {
+                    conn.setRequestProperty("Referer", entry.referer);
+                }
+                String cookieVal = entry.cookies;
+                if (cookieVal == null || cookieVal.isEmpty()) {
+                    try { cookieVal = CookieManager.getInstance().getCookie(current); } catch (Exception ignored) { }
+                }
+                if (cookieVal != null && !cookieVal.isEmpty()) {
+                    conn.setRequestProperty("Cookie", cookieVal);
+                }
             }
             if (rangeHeader != null && !rangeHeader.isEmpty()) {
                 conn.setRequestProperty("Range", rangeHeader);
@@ -1297,12 +2338,10 @@ public class MobileDownloadManager {
             if (cr.statusCode == 200) {
                 long cl = cr.conn.getContentLengthLong();
                 if (cl > 0) p.contentLength = cl;
-                // Server ignored Range header (returned 200 instead of 206): use reliable single-stream!
                 p.acceptsRanges = false;
                 return p;
             }
             if (cr.statusCode == 403 || cr.statusCode == 405 || cr.statusCode == 416 || cr.statusCode == 501) {
-                // Server rejected Range probe; fall through to plain HEAD probe
                 p.acceptsRanges = false;
             }
         } catch (Exception ignored) {
@@ -1345,7 +2384,6 @@ public class MobileDownloadManager {
             try {
                 cr = openConnFollowingRedirects(targetUrl, "GET", "bytes=" + curPos + "-" + seg.end, entry);
                 int code = cr.statusCode;
-                // If server rejects Range (403/416) or ignores Range (returns 200 instead of 206), trigger clean single-stream fallback!
                 if (code == 403 || code == 416 || code == 400 || code == 200) {
                     throw new RangeRejectedException("Range HTTP " + code);
                 }
@@ -1528,7 +2566,6 @@ public class MobileDownloadManager {
     public static String normalizeMediaUrl(String url) {
         if (url == null || url.isEmpty()) return "";
         String low = url.toLowerCase(Locale.US);
-        // Strip byte-range / chunking params from YouTube / googlevideo MSE URLs so we fetch the full stream!
         if (low.contains("googlevideo.com/videoplayback") || low.contains("/videoplayback?")) {
             String stripped = url.replaceAll("([?&])(range|rn|rbuf|ump|srfvp)=[^&]*", "$1");
             stripped = stripped.replace("?&", "?").replace("&&", "&");
@@ -1570,7 +2607,7 @@ public class MobileDownloadManager {
         if (low.contains("video/x-matroska")) return fileName + ".mkv";
         if (low.contains("audio/mpeg")) return fileName + ".mp3";
         if (low.contains("audio/mp4") || low.contains("audio/aac")) return fileName + ".m4a";
-        if (low.contains("audio/webm")) return fileName + ".weba";
+        if (low.contains("audio/webm")) return fileName + ".webm";
         if (low.contains("audio/ogg")) return fileName + ".ogg";
         if (low.contains("application/pdf")) return fileName + ".pdf";
         if (low.contains("application/zip")) return fileName + ".zip";
@@ -1588,7 +2625,7 @@ public class MobileDownloadManager {
             String ext = ".mp4";
             if (isHlsUrl(url)) ext = ".ts";
             else if ("audio".equals(cat) || low.contains("mime=audio") || (mime != null && mime.toLowerCase(Locale.US).contains("audio"))) {
-                ext = (low.contains("webm") || (mime != null && mime.contains("webm"))) ? ".weba" : ".m4a";
+                ext = (low.contains("webm") || (mime != null && mime.contains("webm"))) ? ".webm" : ".m4a";
             } else if (low.contains("webm") || (mime != null && mime.toLowerCase(Locale.US).contains("webm"))) {
                 ext = ".webm";
             }
@@ -1644,13 +2681,11 @@ public class MobileDownloadManager {
         String low = url.toLowerCase(Locale.US);
         int q = low.indexOf('?');
         String clean = q >= 0 ? low.substring(0, q) : low;
-        // Skip tiny individual HLS/DASH segment files so we sniff the master/media .m3u8 cleanly
         if (clean.endsWith(".ts") || clean.endsWith(".m4s")) return null;
         if (clean.endsWith(".mp4") || clean.endsWith(".webm") || clean.endsWith(".mkv") || clean.endsWith(".m3u8") || clean.endsWith(".mov")) return "video";
         if (clean.endsWith(".mp3") || clean.endsWith(".m4a") || clean.endsWith(".wav") || clean.endsWith(".flac") || clean.endsWith(".ogg") || clean.endsWith(".aac")) return "audio";
         if (clean.endsWith(".pdf") || clean.endsWith(".epub") || clean.endsWith(".docx") || clean.endsWith(".pptx")) return "document";
         if (clean.endsWith(".zip") || clean.endsWith(".rar") || clean.endsWith(".7z") || clean.endsWith(".apk") || clean.endsWith(".exe") || clean.endsWith(".iso")) return "archive";
-        // YouTube / MSE / CDN streaming URLs with query-param MIME hints
         if (low.contains("googlevideo.com/videoplayback") || low.contains("/videoplayback?")) {
             if (low.contains("mime=audio") || low.contains("mime%3daudio")) return "audio";
             return "video";
@@ -1682,48 +2717,65 @@ public class MobileDownloadManager {
     }
 
     /**
-     * Zero-Idle-CPU Isolated Shadow DOM IDM / AntDM-Style Floating Material Design 3 Download Button.
-     * - Event-driven + throttled MutationObserver (ZERO setInterval polling!)
-     * - Extracts YouTube ytInitialPlayerResponse.streamingData.formats & adaptiveFormats
-     * - Normalizes googlevideo.com/videoplayback URLs (strips &range= params)
-     * - Anchors a crisp Material 3 tonal pill to visible <video> / <audio> players
+     * Zero-Idle-CPU Isolated Shadow DOM Material Design 3 Floating Video/Audio Quality Downloader.
+     * - Event-driven + MutationObserver (ZERO setInterval polling, ZERO CSS blur!)
+     * - On YouTube & video pages, calls window.__djvMedia.probeVideoFormats(location.href)
+     *   -> populates real quality & audio pills (1080p MP4, 720p MP4, 480p MP4, 360p MP4, Audio M4A, Audio WebM)
+     *   right inside the mobile floating Material 3 menu
+     * - Tapping any quality pill downloads it immediately via MobileDownloadManager (8x threads -> Downloads/dejavu/)
      */
     public static String getFloatingDownloadButtonScript() {
         return "(function(){"
             + "if(window!==window.top||window.__djvMobileAntDm)return;"
             + "window.__djvMobileAntDm=true;"
-            + "var dismissed=false,menuOpen=false,sniffed=[],host=null,wrap=null,lbl=null,ico=null,mlist=null,target=null,fbUntil=0,st=null,mo=null;"
+            + "var dismissed=false,menuOpen=false,sniffed=[],ytProbed=null,ytProbedUrl='',ytProbing=false,host=null,wrap=null,lbl=null,ico=null,mpills=null,mlist=null,mhdrSub=null,target=null,fbUntil=0,st=null,mo=null;"
             + "function fmtSz(b){var n=Number(b||0);if(!n||n<=0)return '';if(n<1048576)return (n/1024).toFixed(0)+' KB';return (n/1048576).toFixed(1)+' MB';}"
+            + "function isYtPage(){var h=(location.hostname||'').toLowerCase();var u=location.href||'';return (h.indexOf('youtube.com')>=0||h==='youtu.be')&&(/[?&]v=[A-Za-z0-9_-]{11}|\\/(?:shorts|live|embed)\\/[A-Za-z0-9_-]{11}|youtu\\.be\\/[A-Za-z0-9_-]{11}/i.test(u));}"
             + "function cleanUrl(u){if(!u||typeof u!=='string')return '';if(/googlevideo\\.com\\/videoplayback|\\/videoplayback\\?/i.test(u)){"
             + "u=u.replace(/([?&])(range|rn|rbuf|ump|srfvp)=[^&]*/gi,'$1').replace(/\\?&/g,'?').replace(/&&+/g,'&').replace(/[?&]+$/,'');}return u;}"
             + "function gFmt(u,m){var s=((m||'')+' '+(u||'')).toLowerCase();if(s.indexOf('m3u8')>=0||s.indexOf('mpegurl')>=0)return 'HLS';if(s.indexOf('webm')>=0)return 'WEBM';if(s.indexOf('mp4')>=0)return 'MP4';if(s.indexOf('mp3')>=0)return 'MP3';if(s.indexOf('m4a')>=0)return 'M4A';if(s.indexOf('audio')>=0)return 'AUDIO';return 'VIDEO';}"
-            + "function getYtFormats(){var res=[];try{var pr=window.ytInitialPlayerResponse;"
+            + "function triggerYtProbe(force){if(!isYtPage()||!window.__djvMedia||typeof window.__djvMedia.probeVideoFormats!=='function')return;"
+            + "var cur=location.href;if(!force&&cur===ytProbedUrl&&(ytProbing||ytProbed))return;"
+            + "ytProbedUrl=cur;ytProbed=null;ytProbing=true;"
+            + "try{window.__djvMedia.probeVideoFormats(cur);}catch(e){ytProbing=false;}if(menuOpen)rMenu();}"
+            + "window.__djvOnVideoFormats=function(data){ytProbing=false;if(data&&data.ok&&Array.isArray(data.formats)&&data.formats.length>0){ytProbed=data;}upd();if(menuOpen)rMenu();};"
+            + "function getYtDomFormats(){var res=[];try{var pr=window.ytInitialPlayerResponse;"
             + "if(!pr&&window.ytplayer&&window.ytplayer.config&&window.ytplayer.config.args&&window.ytplayer.config.args.raw_player_response)pr=window.ytplayer.config.args.raw_player_response;"
             + "if(!pr||!pr.streamingData)return res;var sd=pr.streamingData,tt=(pr.videoDetails&&pr.videoDetails.title)||document.title||'video';"
             + "var mux=Array.isArray(sd.formats)?sd.formats:[];var adp=Array.isArray(sd.adaptiveFormats)?sd.adaptiveFormats:[];"
-            + "mux.forEach(function(f){if(f&&f.url){res.push({url:cleanUrl(f.url),title:tt,mime:f.mimeType||'video/mp4',size:Number(f.contentLength||0),cat:'video',res:f.qualityLabel||(f.height?(f.height+'p'):'')});}});"
-            + "var vAdp=adp.filter(function(f){return f&&f.url&&/video\\//i.test(f.mimeType||'');}).sort(function(a,b){return (b.height||0)-(a.height||0);}).slice(0,3);"
-            + "vAdp.forEach(function(f){res.push({url:cleanUrl(f.url),title:tt+' (HD)',mime:f.mimeType||'video/mp4',size:Number(f.contentLength||0),cat:'video',res:f.qualityLabel||(f.height?(f.height+'p'):'')});});"
+            + "mux.forEach(function(f){if(f&&f.url){var ql=f.qualityLabel||(f.height?(f.height+'p'):'MP4');res.push({url:cleanUrl(f.url),title:tt,label:ql+' MP4',mime:f.mimeType||'video/mp4',size:Number(f.contentLength||0),cat:'video',res:ql,hasAudio:true});}});"
             + "var aAdp=adp.filter(function(f){return f&&f.url&&/audio\\//i.test(f.mimeType||'');}).sort(function(a,b){return (b.bitrate||0)-(a.bitrate||0);}).slice(0,2);"
-            + "aAdp.forEach(function(f){res.push({url:cleanUrl(f.url),title:tt+' (Audio)',mime:f.mimeType||'audio/mp4',size:Number(f.contentLength||0),cat:'audio',res:f.audioQuality?'Audio':''});});"
-            + "if(sd.hlsManifestUrl){res.push({url:sd.hlsManifestUrl,title:tt+' (HLS)',mime:'application/vnd.apple.mpegurl',size:0,cat:'video',res:'HLS'});}"
+            + "aAdp.forEach(function(f){var isW=/webm/i.test(f.mimeType||'');res.push({url:cleanUrl(f.url),title:tt+' (Audio)',label:isW?'Audio WebM':'Audio M4A',mime:f.mimeType||'audio/mp4',size:Number(f.contentLength||0),cat:'audio',res:isW?'WEBM':'M4A',hasAudio:true});});"
+            + "if(sd.hlsManifestUrl){res.push({url:sd.hlsManifestUrl,title:tt+' (HLS)',label:'HD HLS',mime:'application/vnd.apple.mpegurl',size:0,cat:'video',res:'HLS',hasAudio:true});}"
             + "}catch(e){}return res;}"
             + "function collect(el){var out=[],seen={};"
-            + "function add(u,t,m,sz,c,res){u=cleanUrl(u);if(!u||!/^https?:\\/\\//i.test(u)||seen[u])return;seen[u]=1;var f=gFmt(u,m);var fn='';"
+            + "if(ytProbed&&ytProbed.ok&&Array.isArray(ytProbed.formats)&&ytProbedUrl===location.href){"
+            + "for(var k=0;k<ytProbed.formats.length;k++){var f=ytProbed.formats[k];if(!f||!f.url||seen[f.url])continue;seen[f.url]=1;"
+            + "out.push({url:f.url,pairedAudioUrl:f.pairedAudioUrl||'',userAgent:f.userAgent||'',title:(ytProbed.title||document.title||'Video').slice(0,56),fileName:f.fileName||'video.mp4',label:f.label||'MP4',fmt:f.container||'MP4',size:Number(f.sizeBytes||0),cat:f.category||'video',res:f.quality||'',hasAudio:!!f.hasAudio,kind:f.kind||''});}"
+            + "if(out.length>0)return out;}"
+            + "function add(u,t,m,sz,c,res,lblText){u=cleanUrl(u);if(!u||!/^https?:\\/\\//i.test(u)||seen[u])return;seen[u]=1;var f=gFmt(u,m);var fn='';"
             + "try{var p=new URL(u).pathname||'';var sg=decodeURIComponent(p.split('/').pop()||'').trim();if(sg&&sg.indexOf('.')>0&&sg.length<80&&sg!=='videoplayback')fn=sg;}catch(e){}"
             + "if(!fn){var base=(t||document.title||'video').replace(' - YouTube','').replace(/[\\\\/:*?\"<>|]+/g,' ').trim().slice(0,52);"
             + "fn=base+(f==='MP3'?'.mp3':(f==='M4A'||f==='AUDIO'?'.m4a':(f==='WEBM'?'.webm':(f==='HLS'?'.ts':'.mp4'))));}"
-            + "out.push({url:u,title:(t||fn).slice(0,56),fileName:fn,fmt:f,size:Number(sz||0),cat:c||'video',res:res||''});}"
-            + "var yt=getYtFormats();for(var y=0;y<yt.length;y++){add(yt[y].url,yt[y].title,yt[y].mime,yt[y].size,yt[y].cat,yt[y].res);}"
+            + "out.push({url:u,pairedAudioUrl:'',userAgent:'',title:(t||fn).slice(0,56),fileName:fn,label:lblText||(res?(res+' '+f):f),fmt:f,size:Number(sz||0),cat:c||'video',res:res||'',hasAudio:true,kind:''});}"
+            + "var yt=getYtDomFormats();for(var y=0;y<yt.length;y++){add(yt[y].url,yt[y].title,yt[y].mime,yt[y].size,yt[y].cat,yt[y].res,yt[y].label);}"
             + "if(el){var res=(el.tagName==='VIDEO'&&el.videoHeight>=240)?(el.videoHeight+'p'):'';"
-            + "add(el.currentSrc||el.src,document.title,el.tagName==='AUDIO'?'audio/mpeg':'video/mp4',0,el.tagName==='AUDIO'?'audio':'video',res);"
-            + "var ss=el.querySelectorAll('source');for(var i=0;i<ss.length;i++)add(ss[i].src,document.title,ss[i].type||'',0,el.tagName==='AUDIO'?'audio':'video',res);}"
-            + "for(var j=0;j<sniffed.length;j++){var x=sniffed[j];if(x&&x.url&&(x.category==='video'||x.category==='audio'))add(x.url,x.title||x.fileName,x.mime||'',x.sizeBytes||0,x.category,'');}"
+            + "add(el.currentSrc||el.src,document.title,el.tagName==='AUDIO'?'audio/mpeg':'video/mp4',0,el.tagName==='AUDIO'?'audio':'video',res,'');"
+            + "var ss=el.querySelectorAll('source');for(var i=0;i<ss.length;i++)add(ss[i].src,document.title,ss[i].type||'',0,el.tagName==='AUDIO'?'audio':'video',res,'');}"
+            + "for(var j=0;j<sniffed.length;j++){var x=sniffed[j];if(x&&x.url&&(x.category==='video'||x.category==='audio'))add(x.url,x.title||x.fileName,x.mime||'',x.sizeBytes||0,x.category,'',x.qualityLabel||'');}"
             + "return out;}"
+            + "function fireDownload(x){if(!x||!x.url||!window.__djvMedia)return;"
+            + "if(typeof window.__djvMedia.downloadFormat==='function'){window.__djvMedia.downloadFormat(x.url,x.fileName||'',x.pairedAudioUrl||'',x.userAgent||'',x.label||x.fmt||'');}"
+            + "else{window.__djvMedia.downloadMedia(x.url,x.fileName||'');}"
+            + "fbUntil=Date.now()+2100;if(lbl)lbl.textContent='Queued · '+(x.label||'8x');if(ico)ico.classList.add('ok');"
+            + "setTimeout(function(){if(ico)ico.classList.remove('ok');updLbl();},2150);menuOpen=false;if(wrap)wrap.classList.remove('open');}"
+            + "function mk(tag,cls,txt){var n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;}"
+            + "function mkSvg(vb,w,h,d,sw){var ns='http://www.w3.org/2000/svg',s=document.createElementNS(ns,'svg');s.setAttribute('viewBox',vb);s.setAttribute('width',String(w));s.setAttribute('height',String(h));s.setAttribute('fill','none');var p=document.createElementNS(ns,'path');p.setAttribute('d',d);p.setAttribute('stroke','currentColor');p.setAttribute('stroke-width',String(sw));p.setAttribute('stroke-linecap','round');p.setAttribute('stroke-linejoin','round');s.appendChild(p);return s;}"
             + "function ensure(){if(host&&host.isConnected)return true;var r=document.documentElement||document.body;if(!r)return false;"
             + "host=document.createElement('div');host.id='__djv_m_antdm__';host.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:2147483640;';"
             + "var sh=host.attachShadow({mode:'open'});"
-            + "sh.innerHTML='<style>:host{all:initial;font-family:Roboto,system-ui,sans-serif;}'"
+            + "var stEl=document.createElement('style');"
+            + "stEl.textContent=':host{all:initial;font-family:Roboto,system-ui,sans-serif;}'"
             + "+'.w{position:fixed;pointer-events:auto;display:none;flex-direction:column;align-items:flex-end;gap:6px;transition:transform .24s cubic-bezier(0.05,0.7,0.1,1),opacity .2s ease;}'"
             + "+'.p{display:inline-flex;align-items:center;height:36px;border-radius:999px;background:#211f26;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 4px 12px rgba(0,0,0,.36);overflow:hidden;}'"
             + "+'.mb{border:none;background:transparent;color:#e6e0e9;height:36px;padding:0 10px 0 7px;display:inline-flex;align-items:center;gap:6px;font:600 12px/1 Roboto,system-ui,sans-serif;}'"
@@ -1732,42 +2784,74 @@ public class MobileDownloadManager {
             + "+'.bg{height:18px;padding:0 6px;border-radius:999px;background:#4f378b;color:#eaddff;font:700 10px/18px Roboto,system-ui,sans-serif;}'"
             + "+'.sp{width:1px;height:16px;background:#49454f;}'"
             + "+'.db,.xb{border:none;background:transparent;color:#cac4d0;width:30px;height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;}'"
-            + "+'.mn{display:none;width:272px;max-width:calc(100vw - 20px);border-radius:20px;background:#1d1b20;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 12px 28px rgba(0,0,0,.48);overflow:hidden;}'"
+            + "+'.mn{display:none;width:296px;max-width:calc(100vw - 20px);border-radius:22px;background:#1d1b20;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 12px 28px rgba(0,0,0,.48);overflow:hidden;}'"
             + "+'.w.open .mn{display:block;}'"
-            + "+'.mh{padding:11px 14px;border-bottom:1px solid #36343b;display:flex;justify-content:space-between;background:#2b2930;font:600 12px/1 Roboto,system-ui,sans-serif;color:#eaddff;}'"
-            + "+'.ml{max-height:200px;overflow-y:auto;padding:6px;}'"
+            + "+'.mh{padding:11px 14px;border-bottom:1px solid #36343b;display:flex;justify-content:space-between;align-items:center;background:#2b2930;font:600 12px/1 Roboto,system-ui,sans-serif;color:#eaddff;}'"
+            + "+'.mp{display:flex;flex-wrap:wrap;gap:6px;padding:10px 10px 6px;border-bottom:1px solid #36343b;background:#211f26;}'"
+            + "+'.mp:empty{display:none;}'"
+            + "+'.qp{border:1px solid #49454f;background:#2b2930;color:#e6e0e9;border-radius:999px;height:30px;padding:0 11px;font:600 11.5px/1 Roboto,system-ui,sans-serif;display:inline-flex;align-items:center;gap:5px;}'"
+            + "+'.qp.pri{background:#4f378b;border-color:#d0bcff;color:#eaddff;}'"
+            + "+'.qp.aud{background:#1e3a34;border-color:#7bd8c6;color:#a3f2e5;}'"
+            + "+'.ml{max-height:210px;overflow-y:auto;padding:6px;}'"
             + "+'.mr{width:100%;border:none;background:transparent;color:inherit;text-align:left;padding:9px 10px;border-radius:12px;display:flex;align-items:center;gap:8px;font:500 12px/1.25 Roboto,system-ui,sans-serif;}'"
-            + "+'.mf{min-width:40px;height:20px;padding:0 6px;border-radius:999px;background:#4f378b;color:#eaddff;font:700 10px/20px Roboto,system-ui,sans-serif;text-align:center;}'"
+            + "+'.mf{min-width:46px;height:22px;padding:0 7px;border-radius:999px;background:#4f378b;color:#eaddff;font:700 10px/22px Roboto,system-ui,sans-serif;text-align:center;}'"
+            + "+'.mf.aud{background:#1e3a34;color:#a3f2e5;}'"
             + "+'.mm{flex:1;min-width:0;}.mnm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}.msb{font-size:10.5px;color:#cac4d0;}'"
             + "+'.mft{padding:8px;border-top:1px solid #36343b;display:flex;gap:8px;background:#211f26;}'"
             + "+'.fb{flex:1;border:none;border-radius:999px;height:34px;font:600 12px/1 Roboto,system-ui,sans-serif;background:#36343b;color:#e6e0e9;}'"
-            + "+'.fb.pri{background:#d0bcff;color:#381e72;}'"
-            + "+'</style><div class=\"w\"><div class=\"p\">'"
-            + "+'<button type=\"button\" class=\"mb\"><span class=\"ic\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" fill=\"none\"><path d=\"M8 2.4v7.6M5 7.4L8 10.4l3-3M3.2 13h9.6\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span><span class=\"lb\">Download</span><span class=\"bg\">8x</span></button>'"
-            + "+'<span class=\"sp\"></span><button type=\"button\" class=\"db\"><svg viewBox=\"0 0 14 14\" width=\"11\" height=\"11\" fill=\"none\"><path d=\"M3.5 5.2L7 8.8l3.5-3.6\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"/></svg></button>'"
-            + "+'<button type=\"button\" class=\"xb\"><svg viewBox=\"0 0 14 14\" width=\"10\" height=\"10\" fill=\"none\"><path d=\"M3.8 3.8l6.4 6.4M10.2 3.8l-6.4 6.4\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"/></svg></button>'"
-            + "+'</div><div class=\"mn\"><div class=\"mh\"><span>dejavu Turbo</span><span style=\"opacity:.75;font-size:10.5px\">8x Video &amp; HLS</span></div><div class=\"ml\"></div><div class=\"mft\"><button type=\"button\" class=\"fb pri fa\">All Page Media</button><button type=\"button\" class=\"fb fh\">Hide</button></div></div></div>';"
-            + "r.appendChild(host);wrap=sh.querySelector('.w');lbl=sh.querySelector('.lb');ico=sh.querySelector('.ic');mlist=sh.querySelector('.ml');"
-            + "sh.querySelector('.mb').addEventListener('click',function(e){e.preventDefault();e.stopPropagation();var it=collect(target);"
-            + "if(it.length>0&&window.__djvMedia){window.__djvMedia.downloadMedia(it[0].url,it[0].fileName);fbUntil=Date.now()+2000;lbl.textContent='Queued 8x';ico.classList.add('ok');setTimeout(function(){ico.classList.remove('ok');updLbl();},2050);menuOpen=false;wrap.classList.remove('open');}"
-            + "else if(window.__djvMedia){window.__djvMedia.openMediaManager();}});"
-            + "sh.querySelector('.db').addEventListener('click',function(e){e.preventDefault();e.stopPropagation();menuOpen=!menuOpen;if(menuOpen)rMenu();wrap.classList.toggle('open',menuOpen);});"
-            + "sh.querySelector('.xb').addEventListener('click',function(e){e.preventDefault();e.stopPropagation();dismissed=true;if(mo){mo.disconnect();mo=null;}wrap.style.display='none';});"
-            + "sh.querySelector('.fa').addEventListener('click',function(e){e.preventDefault();e.stopPropagation();menuOpen=false;wrap.classList.remove('open');if(window.__djvMedia)window.__djvMedia.openMediaManager();});"
-            + "sh.querySelector('.fh').addEventListener('click',function(e){e.preventDefault();e.stopPropagation();dismissed=true;if(mo){mo.disconnect();mo=null;}wrap.style.display='none';});"
+            + "+'.fb.pri{background:#d0bcff;color:#381e72;}';"
+            + "sh.appendChild(stEl);"
+            + "wrap=mk('div','w');var pill=mk('div','p');"
+            + "var mb=mk('button','mb');mb.type='button';"
+            + "ico=mk('span','ic');ico.appendChild(mkSvg('0 0 16 16',12,12,'M8 2.4v7.6M5 7.4L8 10.4l3-3M3.2 13h9.6',1.8));"
+            + "lbl=mk('span','lb','Download');var bg=mk('span','bg','8x');"
+            + "mb.appendChild(ico);mb.appendChild(lbl);mb.appendChild(bg);"
+            + "var sp=mk('span','sp');"
+            + "var db=mk('button','db');db.type='button';db.appendChild(mkSvg('0 0 14 14',11,11,'M3.5 5.2L7 8.8l3.5-3.6',1.7));"
+            + "var xb=mk('button','xb');xb.type='button';xb.appendChild(mkSvg('0 0 14 14',10,10,'M3.8 3.8l6.4 6.4M10.2 3.8l-6.4 6.4',1.7));"
+            + "pill.appendChild(mb);pill.appendChild(sp);pill.appendChild(db);pill.appendChild(xb);"
+            + "var mn=mk('div','mn');var mh=mk('div','mh');"
+            + "mh.appendChild(mk('span','','dejavu Video & Audio'));"
+            + "mhdrSub=mk('span','mhs','8x Turbo');mhdrSub.style.cssText='opacity:.8;font-size:10.5px';"
+            + "mh.appendChild(mhdrSub);"
+            + "mpills=mk('div','mp');mlist=mk('div','ml');"
+            + "var mft=mk('div','mft');"
+            + "var fa=mk('button','fb pri fa','All Page Media');fa.type='button';"
+            + "var fh=mk('button','fb fh','Hide');fh.type='button';"
+            + "mft.appendChild(fa);mft.appendChild(fh);"
+            + "mn.appendChild(mh);mn.appendChild(mpills);mn.appendChild(mlist);mn.appendChild(mft);"
+            + "wrap.appendChild(pill);wrap.appendChild(mn);sh.appendChild(wrap);r.appendChild(host);"
+            + "mb.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();"
+            + "if(isYtPage()){triggerYtProbe(false);menuOpen=!menuOpen;if(menuOpen)rMenu();wrap.classList.toggle('open',menuOpen);return;}"
+            + "var it=collect(target);if(it.length>0){fireDownload(it[0]);}else if(window.__djvMedia){window.__djvMedia.openMediaManager();}});"
+            + "db.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();if(isYtPage())triggerYtProbe(false);menuOpen=!menuOpen;if(menuOpen)rMenu();wrap.classList.toggle('open',menuOpen);});"
+            + "xb.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();dismissed=true;if(mo){mo.disconnect();mo=null;}wrap.style.display='none';});"
+            + "fa.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();menuOpen=false;wrap.classList.remove('open');if(window.__djvMedia)window.__djvMedia.openMediaManager();});"
+            + "fh.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();dismissed=true;if(mo){mo.disconnect();mo=null;}wrap.style.display='none';});"
             + "return true;}"
-            + "function rMenu(){if(!mlist)return;var it=collect(target);mlist.innerHTML='';if(!it.length){mlist.innerHTML='<div style=\"padding:10px;font-size:11.5px;color:#cac4d0\">Tap All Page Media below to scan every stream &amp; file on this page.</div>';return;}"
-            + "for(var i=0;i<it.length&&i<8;i++){(function(x){var b=document.createElement('button');b.type='button';b.className='mr';"
-            + "b.innerHTML='<span class=\"mf\"></span><span class=\"mm\"><div class=\"mnm\"></div><div class=\"msb\"></div></span><span style=\"color:#d0bcff;font-weight:700\">8x</span>';"
-            + "b.querySelector('.mf').textContent=x.fmt;b.querySelector('.mnm').textContent=x.title;b.querySelector('.msb').textContent=[x.res,fmtSz(x.size),x.cat].filter(Boolean).join(' · ');"
-            + "b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();if(window.__djvMedia)window.__djvMedia.downloadMedia(x.url,x.fileName);menuOpen=false;wrap.classList.remove('open');});mlist.appendChild(b);})(it[i]);}}"
+            + "function rMenu(){if(!mlist||!mpills)return;var it=collect(target);mpills.textContent='';mlist.textContent='';"
+            + "if(mhdrSub)mhdrSub.textContent=ytProbing?'Probing qualities...':(ytProbed&&ytProbed.ok?'Select Quality · 8x':'8x Video & HLS');"
+            + "if(ytProbing&&!it.length){var pd=mk('div','','Resolving 1080p / 720p / 360p & Audio M4A streams...');pd.style.cssText='padding:12px;font-size:12px;color:#cac4d0';mlist.appendChild(pd);return;}"
+            + "if(!it.length){var ed=mk('div','','Tap All Page Media below to scan every stream & file on this page.');ed.style.cssText='padding:10px;font-size:11.5px;color:#cac4d0';mlist.appendChild(ed);return;}"
+            + "for(var p=0;p<it.length&&p<6;p++){(function(x,idx){var chip=mk('button','qp'+(x.cat==='audio'?' aud':(idx===0?' pri':'')),x.label||x.fmt);chip.type='button';"
+            + "chip.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();fireDownload(x);});"
+            + "mpills.appendChild(chip);})(it[p],p);}"
+            + "for(var i=0;i<it.length&&i<8;i++){(function(x){var b=mk('button','mr');b.type='button';"
+            + "var isA=x.cat==='audio';var subParts=[x.kind==='progressive'?'Video+Audio':(x.kind==='muxed'?'HD Video+Audio':(isA?'Audio Only':x.cat)),fmtSz(x.size)].filter(Boolean);"
+            + "var mf=mk('span','mf'+(isA?' aud':''),x.label||x.fmt);"
+            + "var mm=mk('span','mm');mm.appendChild(mk('div','mnm',x.title));mm.appendChild(mk('div','msb',subParts.join(' · ')));"
+            + "var sp8=mk('span','','8x');sp8.style.cssText='color:#d0bcff;font-weight:700';"
+            + "b.appendChild(mf);b.appendChild(mm);b.appendChild(sp8);"
+            + "b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();fireDownload(x);});mlist.appendChild(b);})(it[i]);}}"
             + "function pick(){var best=null,bs=-1,vh=window.innerHeight||780;"
             + "var vs=document.querySelectorAll('video');for(var i=0;i<vs.length;i++){var v=vs[i],r=v.getBoundingClientRect();if(r.width<150||r.height<90||r.bottom<20||r.top>vh-20)continue;var sc=r.width*r.height+(v.paused?0:300000);if(sc>bs){bs=sc;best=v;}}"
             + "if(best)return best;var as=document.querySelectorAll('audio');for(var j=0;j<as.length;j++){var ar=as[j].getBoundingClientRect();if(ar.width>=120&&ar.height>=20&&ar.bottom>10&&ar.top<vh-10)return as[j];}return null;}"
-            + "function updLbl(){if(!lbl||Date.now()<fbUntil)return;var rs=(target&&target.tagName==='VIDEO'&&target.videoHeight>=360)?(' · '+target.videoHeight+'p'):'';lbl.textContent=(target&&target.tagName==='AUDIO')?'Audio':'Download'+rs;}"
+            + "function updLbl(){if(!lbl||Date.now()<fbUntil)return;if(isYtPage()){var topQ=(ytProbed&&ytProbed.formats&&ytProbed.formats[0])?ytProbed.formats[0].quality:'';lbl.textContent=topQ?('Download · '+topQ):'Download';return;}"
+            + "var rs=(target&&target.tagName==='VIDEO'&&target.videoHeight>=360)?(' · '+target.videoHeight+'p'):'';lbl.textContent=(target&&target.tagName==='AUDIO')?'Audio':'Download'+rs;}"
             + "function upd(){if(dismissed||document.fullscreenElement||document.webkitFullscreenElement){if(wrap)wrap.style.display='none';return;}"
-            + "target=pick();var hs=false;for(var i=0;i<sniffed.length;i++){if(sniffed[i]&&(sniffed[i].category==='video'||sniffed[i].category==='audio')){hs=true;break;}}"
-            + "if(!hs&&getYtFormats().length>0)hs=true;"
+            + "if(isYtPage()&&location.href!==ytProbedUrl){triggerYtProbe(false);}"
+            + "target=pick();var hs=isYtPage();if(!hs){for(var i=0;i<sniffed.length;i++){if(sniffed[i]&&(sniffed[i].category==='video'||sniffed[i].category==='audio')){hs=true;break;}}}"
+            + "if(!hs&&getYtDomFormats().length>0)hs=true;"
             + "if(!target&&!hs){if(wrap)wrap.style.display='none';return;}if(!ensure())return;updLbl();wrap.style.display='flex';"
             + "var vh=window.innerHeight||780;if(target){var r=target.getBoundingClientRect();wrap.style.top=Math.max(10,Math.min(vh-96,Math.round(r.top+8)))+'px';wrap.style.right='10px';}else{wrap.style.top='12px';wrap.style.right='10px';}if(menuOpen)rMenu();}"
             + "window.__djvUpdateMobileSniffed=function(a){if(Array.isArray(a)){sniffed=a;upd();}};"
@@ -1775,6 +2859,7 @@ public class MobileDownloadManager {
             + "window.addEventListener('scroll',function(){if(wrap&&wrap.style.display==='flex')sch();},{passive:true,capture:true});"
             + "window.addEventListener('resize',function(){if(wrap&&wrap.style.display==='flex')sch();},{passive:true});"
             + "document.addEventListener('fullscreenchange',upd);document.addEventListener('play',sch,true);document.addEventListener('playing',sch,true);document.addEventListener('loadedmetadata',sch,true);"
+            + "window.addEventListener('yt-navigate-finish',function(){ytProbed=null;ytProbedUrl='';sch();});"
             + "window.addEventListener('popstate',sch);window.addEventListener('hashchange',sch);"
             + "if(window.MutationObserver&&document.body){mo=new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var an=ms[i].addedNodes;if(!an)continue;for(var j=0;j<an.length;j++){var nd=an[j];if(nd&&nd.nodeType===1&&(nd.tagName==='VIDEO'||nd.tagName==='AUDIO'||(nd.querySelector&&nd.querySelector('video,audio')))){sch();return;}}}});"
             + "mo.observe(document.body,{childList:true,subtree:true});}"

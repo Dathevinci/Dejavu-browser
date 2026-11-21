@@ -16,6 +16,10 @@ if (!(Test-Path $wvCore) -or !(Test-Path $wvLoader)) {
 
 New-Item -ItemType Directory -Force -Path (Join-Path $root "dist") | Out-Null
 
+$wpResources = @(Get-ChildItem -Path (Join-Path $root "assets\wallpapers") -Filter "wp-m3-*.jpg" | Sort-Object Name | ForEach-Object {
+  "/resource:$($_.FullName),$($_.Name)"
+})
+
 $args = @(
   "/nologo",
   "/target:winexe",
@@ -29,6 +33,8 @@ $args = @(
   "/reference:System.Drawing.dll",
   "/reference:System.Windows.Forms.dll",
   "/reference:System.Web.Extensions.dll",
+  "/reference:System.IO.Compression.dll",
+  "/reference:System.IO.Compression.FileSystem.dll",
   "/reference:$wvCore",
   "/reference:$wvForms",
   "/resource:$wvCore,Microsoft.Web.WebView2.Core.dll",
@@ -43,31 +49,8 @@ $args = @(
   "/resource:$root\ui\app.js,app.js",
   "/resource:$root\assets\logo-transparent.png,logo-transparent.png",
   "/resource:$root\assets\dejavu-icon.png,dejavu-icon.png",
-  "/resource:$root\assets\dejavu.ico,dejavu.ico",
-  "/resource:$root\assets\wallpapers\wp-m3-amethyst.jpg,wp-m3-amethyst.jpg",
-  "/resource:$root\assets\wallpapers\wp-m3-pixel-blue.jpg,wp-m3-pixel-blue.jpg",
-  "/resource:$root\assets\wallpapers\wp-m3-sage.jpg,wp-m3-sage.jpg",
-  "/resource:$root\assets\wallpapers\wp-m3-blossom.jpg,wp-m3-blossom.jpg",
-  "/resource:$root\assets\wallpapers\wp-m3-porcelain.jpg,wp-m3-porcelain.jpg",
-  "/resource:$root\assets\wallpapers\wp-m3-honey.jpg,wp-m3-honey.jpg",
-  "/resource:$root\assets\wallpapers\wp-m3-meadow.jpg,wp-m3-meadow.jpg",
-  "/resource:$root\assets\wallpapers\wp-m3-blush.jpg,wp-m3-blush.jpg",
-  "/resource:$root\assets\wallpapers\wp-amethyst.jpg,wp-amethyst.jpg",
-  "/resource:$root\assets\wallpapers\wp-morpho.jpg,wp-morpho.jpg",
-  "/resource:$root\assets\wallpapers\wp-monarch.jpg,wp-monarch.jpg",
-  "/resource:$root\assets\wallpapers\wp-sakura.jpg,wp-sakura.jpg",
-  "/resource:$root\assets\wallpapers\wp-aurora.jpg,wp-aurora.jpg",
-  "/resource:$root\assets\wallpapers\wp-celestial.jpg,wp-celestial.jpg",
-  "/resource:$root\assets\wallpapers\wp-rosequartz.jpg,wp-rosequartz.jpg",
-  "/resource:$root\assets\wallpapers\wp-arctic.jpg,wp-arctic.jpg",
-  "/resource:$root\assets\wallpapers\wp-nebula.jpg,wp-nebula.jpg",
-  "/resource:$root\assets\wallpapers\wp-gilded.jpg,wp-gilded.jpg",
-  "/resource:$root\assets\wallpapers\wp-velvet-mirage.jpg,wp-velvet-mirage.jpg",
-  "/resource:$root\assets\wallpapers\wp-prism-cascade.jpg,wp-prism-cascade.jpg",
-  "/resource:$root\assets\wallpapers\wp-midnight-orchid.jpg,wp-midnight-orchid.jpg",
-  "/resource:$root\assets\wallpapers\wp-stardust-sanctuary.jpg,wp-stardust-sanctuary.jpg",
-  "/resource:$root\assets\wallpapers\wp-opal-horizon.jpg,wp-opal-horizon.jpg",
-  "/resource:$root\assets\wallpapers\wp-phantom-lotus.jpg,wp-phantom-lotus.jpg",
+  "/resource:$root\assets\dejavu.ico,dejavu.ico"
+) + $wpResources + @(
   "$root\src\Program.cs",
   "$root\src\NativeWin32.cs",
   "$root\src\SettingsStore.cs",
@@ -76,6 +59,7 @@ $args = @(
   "$root\src\LocalProxyBridge.cs",
   "$root\src\VpnManager.cs",
   "$root\src\SyncManager.cs",
+  "$root\src\VideoExtractorEngine.cs",
   "$root\src\TurboDownloadManager.cs",
   "$root\src\SuggestEngine.cs",
   "$root\src\AdBlocker.cs",

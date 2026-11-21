@@ -63,5 +63,9 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <receiver
+            android:name=".MobileAutoUpdater$InstallResultReceiver"
+            android:exported="false" />
+
     </application>
 </manifest>

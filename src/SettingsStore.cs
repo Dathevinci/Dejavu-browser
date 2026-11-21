@@ -130,7 +130,14 @@ namespace DejavuBrowser
                         if (loaded != null)
                         {
                             if (string.IsNullOrEmpty(loaded.searchEngine)) loaded.searchEngine = "google";
-                            if (string.IsNullOrEmpty(loaded.wallpaper)) loaded.wallpaper = "art:wp-m3-amethyst.jpg";
+                            if (string.IsNullOrEmpty(loaded.wallpaper) ||
+                                (loaded.wallpaper.StartsWith("art:", StringComparison.OrdinalIgnoreCase) &&
+                                 !loaded.wallpaper.StartsWith("art:wp-m3-", StringComparison.OrdinalIgnoreCase)) ||
+                                (loaded.wallpaper.StartsWith("live:", StringComparison.OrdinalIgnoreCase) &&
+                                 !string.Equals(loaded.wallpaper, "live:m3-expressive", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                loaded.wallpaper = "art:wp-m3-amethyst.jpg";
+                            }
                             if (loaded.customWallpaperPath == null) loaded.customWallpaperPath = "";
                             if (string.IsNullOrEmpty(loaded.vpnCountry)) loaded.vpnCountry = "AUTO";
                             if (string.IsNullOrEmpty(loaded.vpnMode)) loaded.vpnMode = "smart";

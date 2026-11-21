@@ -113,20 +113,24 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ github.ref_name }}"
+          cat > /tmp/release_notes.md <<EOF
+          ### dejavu $TAG — macOS Safari Liquid Glass Browser + Android Mobile & PC Sync
+
+          - **NEW: dejavu Mobile (dejavu-mobile.apk)** — Thumb-friendly Samsung Internet x Safari Butterfly Liquid Glass browser for Android (Android 8.0+) with multi-tab browsing, built-in Ad Blocker, 6 HD wallpapers, Reader Mode, Desktop Site, QR scanner, and system-wide Share to dejavu to beam links/text straight to your PC
+          - **NEW: dejavu Link (PC <-> Mobile E2EE Sync)** — Pair PC and Android with a QR code or short code (DJV-XXXX-XXXX). Send tabs, links, and text notes between PC and phone in real time (AES-256-CBC + HMAC-SHA256 encrypted over Wi-Fi & mobile data), view each other's open tabs, and sync Bookmarks & Reading List
+          - **macOS Safari Options Suite (Ctrl+,)** — 6 customization panes: Search Engines (Google, DuckDuckGo, Brave, Bing, Perplexity), Appearance Polarity, 6 Butterfly Accent Colors, Full URL mode, Compact Tab Bar, Default Zoom, Start Page toggles, and Browsing Data controls
+          - **26 Butterfly Studio HD & Live Themes** — 16 crisp 2K (2560x1440) dejavu artworks + 10 live 60fps themes + custom wallpaper upload
+          - **46-Country 3-Hop Encrypted VPN** & **100/100 Native Ad Blocker**
+
+          #### Downloads
+          - **dejavu-Setup.exe** — Windows 10/11 Guided Installer
+          - **dejavu.exe** — Windows 10/11 Portable Single-File
+          - **dejavu-mobile.apk** — Android Mobile Browser App (with PC <-> Phone Sync)
+          EOF
+          sed -i 's/^          //' /tmp/release_notes.md
           gh release create "$TAG" \
             release-files/dejavu-Setup.exe \
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
             --title "dejavu $TAG — Desktop + Android Mobile (.apk) & Cross-Device Sync" \
-            --notes "### dejavu $TAG — macOS Safari Liquid Glass Browser + Android Mobile & PC Sync
-
-- **NEW: dejavu Mobile (\`dejavu-mobile.apk\`)** — Thumb-friendly Samsung Internet × Safari Butterfly Liquid Glass browser for Android (Android 8.0+) with multi-tab browsing, built-in Ad Blocker, 6 HD wallpapers, Reader Mode, Desktop Site, QR scanner, and system-wide **Share → dejavu** to beam links/text straight to your PC
-- **NEW: dejavu Link (PC ↔ Mobile E2EE Sync)** — Pair PC and Android with a QR code or short code (\`DJV-XXXX-XXXX\`). Send tabs, links, and text notes between PC and phone in real time (AES-256-CBC + HMAC-SHA256 encrypted over Wi-Fi & mobile data), view each other's open tabs, and sync Bookmarks & Reading List
-- **macOS Safari Options Suite (\`Ctrl+,\`)** — 6 customization panes: Search Engines (Google, DuckDuckGo, Brave, Bing, Perplexity), Appearance Polarity, 6 Butterfly Accent Colors, Full URL mode, Compact Tab Bar, Default Zoom, Start Page toggles, and Browsing Data controls
-- **26 Butterfly Studio HD & Live Themes** — 16 crisp 2K (\`2560×1440\`) dejavu artworks + 10 live 60fps themes + custom wallpaper upload
-- **46-Country 3-Hop Encrypted VPN** & **100/100 Native Ad Blocker**
-
-#### Downloads
-- **\`dejavu-Setup.exe\`** — Windows 10/11 Guided Installer
-- **\`dejavu.exe\`** — Windows 10/11 Portable Single-File
-- **\`dejavu-mobile.apk\`** — Android Mobile Browser App (with PC ↔ Phone Sync)"
+            --notes-file /tmp/release_notes.md

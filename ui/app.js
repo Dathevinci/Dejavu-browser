@@ -1,5 +1,5 @@
 /**
- * dejavu v5.4.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * dejavu v5.5.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
  * 12 Official HCT Material You Themes, 24 Pure M3 & Butterfly Wallpapers, Auto Wallpaper-to-Theme,
  * Redesigned Pixel At-a-Glance Message of the Day Card, Clean 5-Control ChromeOS Toolbar,
  * Zero-Glitch 120Hz Tab Strip, Brave-Grade Shields, Real-Time dejavu Link Hub & 8x Turbo Downloader.
@@ -475,7 +475,7 @@
   const btnChromeImportRescan = document.getElementById('btn-chrome-import-rescan');
   const btnChromeImportDone = document.getElementById('btn-chrome-import-done');
 
-  // Full-Viewport Material Design 3 dejavu Link Hub
+  // Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub
   const linkOverlay = document.getElementById('link-overlay');
   const linkHeaderStatus = document.getElementById('link-header-status');
   const linkRelayPill = document.getElementById('link-relay-pill');
@@ -488,6 +488,7 @@
   const linkGoogleName = document.getElementById('link-google-name');
   const linkGoogleEmail = document.getElementById('link-google-email');
   const linkDevicesGrid = document.getElementById('link-devices-grid');
+  const linkPassphraseDetails = document.getElementById('link-passphrase-details');
   const linkPassphraseBadge = document.getElementById('link-passphrase-badge');
   const linkPassphraseInput = document.getElementById('link-passphrase-input');
   const btnLinkSavePassphrase = document.getElementById('btn-link-save-passphrase');
@@ -507,20 +508,51 @@
   const btnLinkJoinCode = document.getElementById('btn-link-join-code');
   const btnLinkBackGoogle = document.getElementById('btn-link-back-google');
   const btnLinkSendTab = document.getElementById('btn-link-send-tab');
+  const linkSendTabIco = document.getElementById('link-send-tab-ico');
   const linkSendTabLbl = document.getElementById('link-send-tab-lbl');
+  const linkSendTabSub = document.getElementById('link-send-tab-sub');
+  const btnLinkSendAllTabs = document.getElementById('btn-link-send-all-tabs');
+  const linkAllTabsLbl = document.getElementById('link-all-tabs-lbl');
+  const linkOpenTabsBadge = document.getElementById('link-open-tabs-badge');
   const btnLinkSendClipboard = document.getElementById('btn-link-send-clipboard');
+  const linkSendClipLbl = document.getElementById('link-send-clip-lbl');
+  const btnLinkSendDownload = document.getElementById('btn-link-send-download');
+  const linkSendDlLbl = document.getElementById('link-send-dl-lbl');
   const linkDropForm = document.getElementById('link-drop-form');
   const linkDropInput = document.getElementById('link-drop-input');
+  const btnLinkModeDrop = document.getElementById('btn-link-mode-drop');
+  const btnLinkModeDl = document.getElementById('btn-link-mode-dl');
+  const btnLinkBeam = document.getElementById('btn-link-beam');
+  const linkViewSeg = document.getElementById('link-view-seg');
+  const linkSegGlider = document.getElementById('link-seg-glider');
+  const linkSegTabsBadge = document.getElementById('link-seg-tabs-badge');
+  const linkSegClipnotesBadge = document.getElementById('link-seg-clipnotes-badge');
+  const linkTabTabs = document.getElementById('link-tab-tabs');
+  const linkTabClipnotes = document.getElementById('link-tab-clipnotes');
+  const linkTabSettings = document.getElementById('link-tab-settings');
   const linkRtabsCount = document.getElementById('link-rtabs-count');
+  const btnLinkOpenAllTabs = document.getElementById('btn-link-open-all-tabs');
+  const linkRtabsSub = document.getElementById('link-rtabs-sub');
   const linkRtabsList = document.getElementById('link-rtabs-list');
   const linkDropsCount = document.getElementById('link-drops-count');
   const btnLinkClearDrops = document.getElementById('btn-link-clear-drops');
   const linkDropsList = document.getElementById('link-drops-list');
+  const linkCliphistCount = document.getElementById('link-cliphist-count');
+  const btnLinkClearCliphist = document.getElementById('btn-link-clear-cliphist');
+  const linkCliphistList = document.getElementById('link-cliphist-list');
+  const linkNotesCount = document.getElementById('link-notes-count');
+  const linkNoteForm = document.getElementById('link-note-form');
+  const linkNoteInput = document.getElementById('link-note-input');
+  const linkNotesList = document.getElementById('link-notes-list');
   const linkPrefTabs = document.getElementById('link-pref-tabs');
   const linkPrefBookmarks = document.getElementById('link-pref-bookmarks');
   const linkPrefReading = document.getElementById('link-pref-reading');
   const linkPrefClipboard = document.getElementById('link-pref-clipboard');
   const linkPrefHistory = document.getElementById('link-pref-history');
+  const linkDiagTransport = document.getElementById('link-diag-transport');
+  const linkDiagBroker = document.getElementById('link-diag-broker');
+  const linkDiagCipher = document.getElementById('link-diag-cipher');
+  const linkDiagLastsync = document.getElementById('link-diag-lastsync');
 
   const SEED_COLORS = {
     amethyst: '#d0bcff',
@@ -537,7 +569,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.4.0 — 24 HD + 1 Live = 25 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.5.0 — 24 HD + 1 Live = 25 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 18 Sculptural / Architectural Material Design 3 HD Wallpapers (10 Dark, 8 Light)
@@ -778,7 +810,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.4.0',
+    appVersion: bootData.appVersion || '5.5.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -1984,7 +2016,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.4.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.5.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2275,7 +2307,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.4.0';
+    const ver = state.appVersion || '5.5.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -5071,10 +5103,12 @@
     if (linkOverlay) linkOverlay.classList.toggle('hidden', !linkOpen);
     if (btnSync) btnSync.classList.toggle('is-active', linkOpen);
     updateNewtabLinkChip(state.sync);
+    checkIncomingSyncDrops(state.sync);
     if (linkOpen) {
       wallpaperStore.classList.add('hidden');
       shortcutModal.classList.add('hidden');
       renderLinkHub();
+      requestAnimationFrame(() => updateLinkSegGlider());
       window.DejavuNewTabCanvas.start();
     }
 
@@ -6114,8 +6148,13 @@
   }
 
   // =========================================================================
-  // Full-Viewport Material Design 3 dejavu Link Hub (Single-Scroll · Zero Sub-Tabs)
+  // Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub
   // =========================================================================
+  let activeLinkView = 'tabs';
+  let activeLinkBeamMode = 'drop';
+  const seenRemoteDropIds = new Set();
+  let linkDropsHydrated = false;
+
   function formatLinkRelativeTime(ms) {
     const t = Number(ms || 0);
     if (!t || t <= 0) return '';
@@ -6132,13 +6171,128 @@
     return /\.(mp4|mkv|webm|mov|m4v|mp3|m4a|flac|wav|ogg|pdf|zip|rar|7z|tar|gz|exe|msi|apk|iso|dmg|m3u8)(\?|#|$)/i.test(url);
   }
 
+  function looksLikeHttpUrl(text) {
+    if (!text || typeof text !== 'string') return false;
+    const t = text.trim();
+    return /^https?:\/\/\S+$/i.test(t);
+  }
+
+  function notifyIncomingSyncDrop(drop) {
+    if (!drop || typeof drop !== 'object') return;
+    const from = drop.fromName || 'Phone';
+    const dt = String(drop.dropType || '').toLowerCase();
+    if (dt === 'ping') {
+      showToast(`📱 Ping from ${from}`, 'info');
+    } else if (dt === 'download') {
+      const lbl = (drop.title || extractCleanDomain(drop.url || '', drop.url || '') || 'File').slice(0, 44);
+      showToast(`⚡ 8× Download from ${from}: ${lbl}`, 'success');
+    } else if (dt === 'video') {
+      const lbl = (drop.title || 'Video').slice(0, 42);
+      showToast(`▶ Continue Watching from ${from}: ${lbl}`, 'info');
+    } else if (dt === 'batch_tabs') {
+      const cnt = Array.isArray(drop.tabs) ? drop.tabs.length : 0;
+      showToast(`🗂 ${cnt > 0 ? cnt : 'Multiple'} tabs received from ${from}`, 'info');
+    } else if (dt === 'clipboard') {
+      showToast(`📋 Clipboard received from ${from}`, 'info');
+    }
+  }
+
+  function checkIncomingSyncDrops(s) {
+    if (!s || !Array.isArray(s.drops)) return;
+    const selfId = String(s.deviceId || '');
+    if (!linkDropsHydrated) {
+      s.drops.forEach((d) => { if (d && d.id) seenRemoteDropIds.add(String(d.id)); });
+      linkDropsHydrated = true;
+      return;
+    }
+    const freshRemote = [];
+    s.drops.forEach((d) => {
+      if (!d || !d.id) return;
+      const key = String(d.id);
+      if (seenRemoteDropIds.has(key)) return;
+      seenRemoteDropIds.add(key);
+      const isSelf = (selfId && d.fromId === selfId) || String(d.platform || '').toLowerCase() === 'windows';
+      if (!isSelf) freshRemote.push(d);
+    });
+    if (seenRemoteDropIds.size > 200) {
+      const arr = Array.from(seenRemoteDropIds).slice(-120);
+      seenRemoteDropIds.clear();
+      arr.forEach((id) => seenRemoteDropIds.add(id));
+    }
+    if (freshRemote.length > 0) {
+      notifyIncomingSyncDrop(freshRemote[0]);
+    }
+  }
+
   const LINK_DESKTOP_SVG = '<svg viewBox="0 0 20 20" width="20" height="20" fill="none"><rect x="2.6" y="3.8" width="14.8" height="10.2" rx="2.2" stroke="currentColor" stroke-width="1.55"/><path d="M7.2 16.6h5.6M10 14v2.6" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg>';
   const LINK_PHONE_SVG = '<svg viewBox="0 0 20 20" width="20" height="20" fill="none"><rect x="5.4" y="2.4" width="9.2" height="15.2" rx="2.2" stroke="currentColor" stroke-width="1.55"/><circle cx="10" cy="14.4" r="0.9" fill="currentColor"/></svg>';
   const LINK_BRIDGE_SVG = '<svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M3.2 6.6h11.6M11.6 3.6L14.8 6.6l-3.2 3M14.8 11.4H3.2M6.4 8.4l-3.2 3 3.2 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const LINK_PING_SVG = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true"><path d="M8 2.2a3.6 3.6 0 0 0-3.6 3.6v2.1L3.2 9.8a.6.6 0 0 0 .5.9h8.6a.6.6 0 0 0 .5-.9l-1.2-1.9V5.8A3.6 3.6 0 0 0 8 2.2z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M6.4 12.2a1.7 1.7 0 0 0 3.2 0" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>';
+  const LINK_SEND_TAB_SVG = '<svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M3 9h10.5M9.5 4.8L13.7 9l-4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const LINK_VIDEO_TAB_SVG = '<svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M5.4 4.2l8.4 4.8-8.4 4.8V4.2z" fill="currentColor"/></svg>';
+
+  function updateLinkSegGlider() {
+    if (!linkViewSeg || !linkSegGlider) return;
+    const activeBtn = linkViewSeg.querySelector('.link-seg-tab.active');
+    if (!activeBtn) return;
+    const x = activeBtn.offsetLeft;
+    const w = activeBtn.offsetWidth;
+    if (w > 0) {
+      linkSegGlider.style.width = `${w}px`;
+      linkSegGlider.style.transform = `translateX(${x}px)`;
+    }
+  }
+
+  function setActiveLinkView(view) {
+    const valid = view === 'clipnotes' ? 'clipnotes' : (view === 'settings' ? 'settings' : 'tabs');
+    activeLinkView = valid;
+    if (linkViewSeg) {
+      linkViewSeg.querySelectorAll('.link-seg-tab').forEach((btn) => {
+        const isOn = btn.dataset.linkView === valid;
+        btn.classList.toggle('active', isOn);
+        btn.setAttribute('aria-selected', isOn ? 'true' : 'false');
+      });
+    }
+    if (linkTabTabs) linkTabTabs.classList.toggle('hidden', valid !== 'tabs');
+    if (linkTabClipnotes) linkTabClipnotes.classList.toggle('hidden', valid !== 'clipnotes');
+    if (linkTabSettings) linkTabSettings.classList.toggle('hidden', valid !== 'settings');
+    requestAnimationFrame(() => updateLinkSegGlider());
+  }
+
+  function setActiveLinkBeamMode(mode) {
+    activeLinkBeamMode = mode === 'download' ? 'download' : 'drop';
+    if (btnLinkModeDrop) btnLinkModeDrop.classList.toggle('active', activeLinkBeamMode === 'drop');
+    if (btnLinkModeDl) btnLinkModeDl.classList.toggle('active', activeLinkBeamMode === 'download');
+    if (linkDropInput) {
+      linkDropInput.placeholder = activeLinkBeamMode === 'download'
+        ? 'Paste a YouTube, video, or file URL to start 8× Turbo Download on Phone…'
+        : 'Paste a link, YouTube URL, or note to beam to your phone…';
+    }
+    if (btnLinkBeam) {
+      btnLinkBeam.textContent = activeLinkBeamMode === 'download' ? 'Send 8×' : 'Beam';
+    }
+  }
+
+  function resolveTransportPill(dev, relayStatus) {
+    const tr = String((dev && dev.transport) || '').toLowerCase();
+    const rs = String(relayStatus || '').toLowerCase();
+    if (tr === 'lan' || (!tr && rs === 'connected_lan')) {
+      return { cls: 'is-lan', label: 'Direct Wi-Fi LAN' };
+    }
+    if (tr === 'cloud' || (!tr && rs === 'connected_cloud')) {
+      return { cls: 'is-cloud', label: 'E2EE Cloud TLS' };
+    }
+    if (dev && dev.isSelf) {
+      if (rs === 'connected_lan') return { cls: 'is-lan', label: 'Direct Wi-Fi LAN' };
+      if (rs === 'connected_cloud') return { cls: 'is-cloud', label: 'E2EE Cloud TLS' };
+      return { cls: '', label: 'This PC' };
+    }
+    return { cls: '', label: 'E2EE Cloud TLS' };
+  }
 
   function renderLinkDevices(s) {
     if (!linkDevicesGrid) return;
-    const pcTabsCount = Array.isArray(state.tabs) ? state.tabs.filter((t) => t && !t.isNewTab).length : 0;
+    const pcTabsCount = Array.isArray(state.tabs) ? state.tabs.filter((t) => t && !t.isNewTab && t.url).length : 0;
     const remoteTabsCount = Array.isArray(s.remoteTabs) ? s.remoteTabs.length : 0;
     const devices = Array.isArray(s.devices) ? s.devices : [];
 
@@ -6149,7 +6303,8 @@
       isSelf: true,
       isOnline: true,
       lastSeenMs: Date.now(),
-      tabCount: pcTabsCount
+      tabCount: pcTabsCount,
+      transport: s.relayStatus === 'connected_lan' ? 'lan' : (s.relayStatus === 'connected_cloud' ? 'cloud' : 'local')
     };
 
     const peers = devices.filter((d) => d && !d.isSelf);
@@ -6165,16 +6320,12 @@
       card.className = 'link-device-card' + (isPhone ? ' is-phone' : '') + (online ? ' is-online' : '');
 
       const badgeCls = online ? 'online' : (synced ? 'synced' : '');
-      const badgeText = online ? 'Online' : (synced ? `Seen ${formatLinkRelativeTime(dev.lastSeenMs)}` : 'Waiting');
+      const badgeText = online
+        ? 'Online now'
+        : (synced ? `Last seen ${formatLinkRelativeTime(dev.lastSeenMs)}` : 'Ready to link');
       const tabCnt = typeof dev.tabCount === 'number' ? dev.tabCount : (dev.isSelf ? pcTabsCount : remoteTabsCount);
-      let subLine = '';
-      if (dev.isSelf) {
-        subLine = `This Windows PC · ${tabCnt} ${tabCnt === 1 ? 'open tab' : 'open tabs'}`;
-      } else if (online || synced) {
-        subLine = `${tabCnt} ${tabCnt === 1 ? 'synced tab' : 'synced tabs'}${dev.lastSeenMs ? ' · ' + formatLinkRelativeTime(dev.lastSeenMs) : ''}`;
-      } else {
-        subLine = 'Sign in with the same Google Account in dejavu Mobile';
-      }
+      const trPill = resolveTransportPill(dev, s.relayStatus);
+      const devLabel = dev.name || (isPhone ? 'Android Phone' : 'This Windows PC');
 
       card.innerHTML = `
         <span class="link-device-ico" aria-hidden="true">${isPhone ? LINK_PHONE_SVG : LINK_DESKTOP_SVG}</span>
@@ -6183,11 +6334,29 @@
             <span class="link-device-name"></span>
             <span class="link-presence-pill ${badgeCls}"><span class="link-presence-dot"></span><span>${escapeSugHtml(badgeText)}</span></span>
           </div>
-          <div class="link-device-sub"></div>
+          <div class="link-device-pills">
+            <span class="link-meta-pill ${trPill.cls}">${escapeSugHtml(trPill.label)}</span>
+            <span class="link-meta-pill is-tabs">${tabCnt} ${tabCnt === 1 ? 'tab' : 'tabs'}</span>
+          </div>
         </div>
+        ${dev.isSelf ? '' : `<button type="button" class="link-ping-btn" title="Ring &amp; notify ${escapeSugHtml(devLabel)}">${LINK_PING_SVG}<span>Ping</span></button>`}
       `;
-      card.querySelector('.link-device-name').textContent = dev.name || (isPhone ? 'Android Phone' : 'This Windows PC');
-      card.querySelector('.link-device-sub').textContent = subLine;
+      card.querySelector('.link-device-name').textContent = devLabel;
+
+      const pingBtn = card.querySelector('.link-ping-btn');
+      if (pingBtn) {
+        pingBtn.addEventListener('click', () => {
+          send({ type: 'syncPingPeer' });
+          pingBtn.classList.add('is-pinged');
+          const lbl = pingBtn.querySelector('span');
+          if (lbl) lbl.textContent = 'Pinged ✓';
+          showToast(`📱 Ping sent to ${devLabel}`, 'info');
+          setTimeout(() => {
+            pingBtn.classList.remove('is-pinged');
+            if (lbl) lbl.textContent = 'Ping';
+          }, 1600);
+        });
+      }
       return card;
     };
 
@@ -6202,7 +6371,8 @@
         isSelf: false,
         isOnline: !!s.peerOnline,
         lastSeenMs: Number(s.peerLastSeenMs || 0),
-        tabCount: remoteTabsCount
+        tabCount: remoteTabsCount,
+        transport: s.relayStatus === 'connected_lan' ? 'lan' : 'cloud'
       };
       linkDevicesGrid.appendChild(buildDeviceCard(selfDev, false));
       const bridge = document.createElement('div');
@@ -6212,6 +6382,118 @@
       linkDevicesGrid.appendChild(bridge);
       linkDevicesGrid.appendChild(buildDeviceCard(peerDev, true));
     }
+  }
+
+  function renderLinkClipboardHistory(s, fallbackDrops) {
+    const rawList = Array.isArray(s.clipboardHistory)
+      ? s.clipboardHistory
+      : (fallbackDrops || []).filter((d) => d && String(d.dropType || '').toLowerCase() === 'clipboard');
+    if (linkCliphistCount) linkCliphistCount.textContent = String(rawList.length);
+    if (btnLinkClearCliphist) btnLinkClearCliphist.classList.toggle('hidden', rawList.length === 0);
+    if (!linkCliphistList) return rawList.length;
+
+    linkCliphistList.innerHTML = '';
+    if (!rawList.length) {
+      linkCliphistList.innerHTML = '<div class="link-empty-box">No shared clipboard history yet.<br>Click <strong>Send Clipboard</strong> above or copy from your Android phone — your last 10 E2EE clips stay right here.</div>';
+      return 0;
+    }
+
+    const frag = document.createDocumentFragment();
+    rawList.slice(0, 10).forEach((clip) => {
+      if (!clip) return;
+      const txt = String(clip.text || '').trim();
+      if (!txt) return;
+      const isUrl = looksLikeHttpUrl(txt);
+      const when = formatLinkRelativeTime(clip.ts);
+      const from = clip.fromName || (String(clip.platform || '').toLowerCase() === 'android' ? 'Android Phone' : 'Windows PC');
+
+      const card = document.createElement('div');
+      card.className = 'link-drop-item';
+      card.innerHTML = `
+        <div class="link-drop-item-top">
+          <div class="link-drop-badge-row">
+            <span class="link-drop-type-chip is-clip">Clip</span>
+            <span class="link-drop-sender">${escapeSugHtml(from)}${when ? ' · ' + escapeSugHtml(when) : ''}</span>
+          </div>
+          <button type="button" class="link-drop-rm" title="Delete clip">×</button>
+        </div>
+        <div class="link-drop-text"></div>
+        <div class="link-drop-actions">
+          <button type="button" class="link-chip-btn act-copy">Copy</button>
+          ${isUrl ? '<button type="button" class="link-chip-btn primary act-open">Open</button>' : ''}
+        </div>
+      `;
+      card.querySelector('.link-drop-text').textContent = txt;
+      card.querySelector('.link-drop-rm').addEventListener('click', () => {
+        if (clip.id) send({ type: 'syncDeleteClipboardItem', id: clip.id });
+      });
+
+      const copyBtn = card.querySelector('.act-copy');
+      copyBtn.addEventListener('click', () => {
+        send({ type: 'syncCopyDrop', text: txt });
+        copyBtn.textContent = 'Copied ✓';
+        setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1100);
+      });
+
+      const openBtn = card.querySelector('.act-open');
+      if (openBtn) {
+        openBtn.addEventListener('click', () => {
+          send({ type: 'closeLinkHub' });
+          send({ type: 'syncOpenUrl', url: txt });
+        });
+      }
+      frag.appendChild(card);
+    });
+    linkCliphistList.appendChild(frag);
+    return rawList.length;
+  }
+
+  function renderLinkPinnedNotes(s) {
+    const notes = Array.isArray(s.pinnedNotes) ? s.pinnedNotes : [];
+    if (linkNotesCount) linkNotesCount.textContent = String(notes.length);
+    if (!linkNotesList) return notes.length;
+
+    linkNotesList.innerHTML = '';
+    if (!notes.length) {
+      linkNotesList.innerHTML = '<div class="link-empty-box">No pinned notes yet.<br>Pin commands, Wi-Fi notes, or quick reminders above — synced end-to-end encrypted across PC &amp; Phone.</div>';
+      return 0;
+    }
+
+    const frag = document.createDocumentFragment();
+    notes.forEach((note) => {
+      if (!note || !note.text) return;
+      const when = formatLinkRelativeTime(note.updatedMs || note.ts);
+      const from = note.fromName || (String(note.platform || '').toLowerCase() === 'android' ? 'Android Phone' : 'Windows PC');
+
+      const card = document.createElement('div');
+      card.className = 'link-note-card';
+      card.innerHTML = `
+        <div class="link-note-body"></div>
+        <div class="link-note-foot">
+          <span class="link-drop-sender">${escapeSugHtml(from)}${when ? ' · ' + escapeSugHtml(when) : ''}</span>
+          <div class="link-note-acts">
+            <button type="button" class="link-chip-btn act-note-copy">Copy</button>
+            <button type="button" class="link-drop-rm act-note-del" title="Delete pinned note">×</button>
+          </div>
+        </div>
+      `;
+      card.querySelector('.link-note-body').textContent = note.text;
+
+      const cp = card.querySelector('.act-note-copy');
+      cp.addEventListener('click', () => {
+        send({ type: 'syncCopyDrop', text: note.text });
+        cp.textContent = 'Copied ✓';
+        setTimeout(() => { cp.textContent = 'Copy'; }, 1100);
+      });
+
+      const del = card.querySelector('.act-note-del');
+      del.addEventListener('click', () => {
+        if (note.id) send({ type: 'syncDeleteNote', id: note.id });
+      });
+      frag.appendChild(card);
+    });
+    linkNotesList.appendChild(frag);
+    return notes.length;
   }
 
   function renderLinkHub() {
@@ -6255,9 +6537,10 @@
       }
     }
 
-    // Card 1: Google Account Active vs Sign-In CTA
+    // Card 1: Google Account Active vs Sign-In CTA + Device Presence Grid (Always Rendered)
     if (linkGoogleActiveBox) linkGoogleActiveBox.classList.toggle('hidden', !isGoogleMode);
     if (linkGoogleSigninBox) linkGoogleSigninBox.classList.toggle('hidden', isGoogleMode);
+    if (linkPassphraseDetails) linkPassphraseDetails.classList.toggle('hidden', !isGoogleMode);
 
     if (isGoogleMode) {
       const dispName = (ap.googleEmail && ap.googleEmail.toLowerCase() === String(s.googleEmail || '').toLowerCase() && ap.googleDisplayName)
@@ -6272,7 +6555,6 @@
       }
       if (linkGoogleName) linkGoogleName.textContent = dispName;
       if (linkGoogleEmail) linkGoogleEmail.textContent = s.googleEmail || '';
-      renderLinkDevices(s);
       if (linkPassphraseBadge) linkPassphraseBadge.classList.toggle('hidden', !s.hasPassphrase);
       if (btnLinkClearPassphrase) btnLinkClearPassphrase.classList.toggle('hidden', !s.hasPassphrase);
     } else {
@@ -6285,6 +6567,7 @@
         btnLinkGoogleSignup.classList.toggle('hidden', !!profileGoogleEmail);
       }
     }
+    renderLinkDevices(s);
 
     // Collapsible Manual Fallback (never forced open!)
     const isManualActive = !isGoogleMode && !!s.connected;
@@ -6305,22 +6588,52 @@
       btnLinkBackGoogle.classList.toggle('hidden', isGoogleMode || !profileGoogleEmail);
     }
 
-    // Card 2: Instant Actions (Send Current Tab)
+    // Card 2: Instant Cross-Device Actions (4-Pill Grid)
+    const webTabs = Array.isArray(state.tabs)
+      ? state.tabs.filter((t) => t && !t.isNewTab && t.url && /^https?:\/\//i.test(t.url))
+      : [];
     const activeTab = (state.tabs || []).find((t) => t.id === state.activeTabId);
-    const hasWebTab = !!(activeTab && !activeTab.isNewTab && activeTab.url);
-    if (btnLinkSendTab) btnLinkSendTab.disabled = !hasWebTab;
-    if (linkSendTabLbl) {
+    const hasWebTab = !!(activeTab && !activeTab.isNewTab && activeTab.url && /^https?:\/\//i.test(activeTab.url));
+    const isVideoTab = hasWebTab && isSupportedVideoUrl(activeTab.url);
+
+    if (btnLinkSendTab) {
+      btnLinkSendTab.disabled = !hasWebTab;
+      btnLinkSendTab.title = hasWebTab
+        ? (isVideoTab ? `Send video "${activeTab.title || activeTab.url}" to Phone` : `Send "${activeTab.title || activeTab.url}" to Phone`)
+        : 'Open any website tab to send to Phone';
+    }
+    if (linkSendTabIco) linkSendTabIco.innerHTML = isVideoTab ? LINK_VIDEO_TAB_SVG : LINK_SEND_TAB_SVG;
+    if (linkSendTabLbl) linkSendTabLbl.textContent = isVideoTab ? 'Send Video Tab' : 'Send Active Tab';
+    if (linkSendTabSub) {
       if (hasWebTab) {
-        const shortT = (activeTab.title || extractCleanDomain(activeTab.url, activeTab.url) || 'Tab').slice(0, 28);
-        linkSendTabLbl.textContent = `Send "${shortT}" to Phone`;
+        const shortT = (activeTab.title || extractCleanDomain(activeTab.url, activeTab.url) || 'Tab').slice(0, 22);
+        linkSendTabSub.textContent = isVideoTab ? `Continue · ${shortT}` : shortT;
       } else {
-        linkSendTabLbl.textContent = 'Send Current Tab to Phone';
+        linkSendTabSub.textContent = 'Open a website first';
       }
     }
 
-    // Card 3 Left: Phone Open Tabs ("Continue on PC")
+    if (btnLinkSendAllTabs) btnLinkSendAllTabs.disabled = webTabs.length === 0;
+    if (linkOpenTabsBadge) linkOpenTabsBadge.textContent = String(webTabs.length);
+
+    if (btnLinkSendDownload) {
+      const typedUrl = linkDropInput ? (linkDropInput.value || '').trim() : '';
+      const hasDlTarget = looksLikeHttpUrl(typedUrl) || hasWebTab;
+      btnLinkSendDownload.title = hasDlTarget
+        ? 'Beam URL directly to Android 8× Turbo Downloader'
+        : 'Paste a URL below or open a web tab to beam to Phone 8× Downloads';
+    }
+
+    setActiveLinkBeamMode(activeLinkBeamMode);
+
+    // Sub-View 1 Left: Phone Open Tabs ("Continue on PC") + 1-click "Open All"
     const rtabs = Array.isArray(s.remoteTabs) ? s.remoteTabs : [];
     if (linkRtabsCount) linkRtabsCount.textContent = String(rtabs.length);
+    if (btnLinkOpenAllTabs) {
+      btnLinkOpenAllTabs.classList.toggle('hidden', rtabs.length < 2);
+      btnLinkOpenAllTabs.textContent = `Open All (${rtabs.length})`;
+    }
+    if (linkRtabsSub) linkRtabsSub.classList.toggle('hidden', rtabs.length >= 2);
     if (linkRtabsList) {
       linkRtabsList.innerHTML = '';
       if (!rtabs.length) {
@@ -6363,28 +6676,88 @@
       }
     }
 
-    // Card 3 Right: Shared Clipboard & Quick Drops
+    // Sub-View 1 Right: Rich Recent Quick Drops & Media Handoffs
     const drops = Array.isArray(s.drops) ? s.drops : [];
     if (linkDropsCount) linkDropsCount.textContent = String(drops.length);
     if (btnLinkClearDrops) btnLinkClearDrops.classList.toggle('hidden', drops.length === 0);
     if (linkDropsList) {
       linkDropsList.innerHTML = '';
       if (!drops.length) {
-        linkDropsList.innerHTML = '<div class="link-empty-box">No shared clips or drops yet.<br>Send your clipboard or beam a link above — incoming clips from Android show up here with 1-click Copy, Open &amp; 8× Download.</div>';
+        linkDropsList.innerHTML = '<div class="link-empty-box">No recent drops or handoffs yet.<br>Send tabs, videos, 8× downloads, or pings between PC &amp; Android — they appear right here.</div>';
       } else {
         const frag = document.createDocumentFragment();
         drops.forEach((it) => {
           if (!it) return;
           const dt = String(it.dropType || 'link').toLowerCase();
-          const typeLabel = dt === 'clipboard' ? 'Clipboard' : (dt === 'tab' ? 'Tab' : (dt === 'text' ? 'Note' : 'Link'));
-          const chipCls = dt === 'clipboard' ? 'is-clip' : (dt === 'tab' ? 'is-tab' : '');
-          const primaryText = (dt === 'clipboard' || dt === 'text') ? (it.text || it.title || it.url || '') : (it.title || it.url || it.text || '');
-          const showUrl = !!(it.url && it.url !== primaryText);
-          const canDownload = !!(it.url && isDownloadableDropUrl(it.url));
+          const batchTabs = Array.isArray(it.tabs) ? it.tabs.filter((t) => t && t.url) : [];
           const when = formatLinkRelativeTime(it.ts);
+          const qualLabel = (it.quality && it.quality !== 'best') ? ` · ${String(it.quality).toUpperCase()}` : '';
+
+          let typeLabel = 'Link';
+          let chipCls = '';
+          let cardExtraCls = '';
+          if (dt === 'video') {
+            typeLabel = 'Continue Watching';
+            chipCls = 'is-video';
+            cardExtraCls = ' is-video-drop';
+          } else if (dt === 'download') {
+            typeLabel = `8× Download${qualLabel}`;
+            chipCls = 'is-download';
+            cardExtraCls = ' is-dl-drop';
+          } else if (dt === 'batch_tabs') {
+            typeLabel = `${batchTabs.length || 0} Tabs Bundle`;
+            chipCls = 'is-batch';
+          } else if (dt === 'ping') {
+            typeLabel = 'Device Ping';
+            chipCls = 'is-ping';
+            cardExtraCls = ' is-ping-drop';
+          } else if (dt === 'clipboard') {
+            typeLabel = 'Clipboard';
+            chipCls = 'is-clip';
+          } else if (dt === 'tab') {
+            typeLabel = 'Tab';
+            chipCls = 'is-tab';
+          } else if (dt === 'text') {
+            typeLabel = 'Note';
+          }
+
+          const primaryText = (dt === 'clipboard' || dt === 'text')
+            ? (it.text || it.title || it.url || '')
+            : (it.title || it.url || it.text || (dt === 'ping' ? `Ping from ${it.fromName || 'Device'}` : ''));
+          const showSubtitle = (dt === 'video' || dt === 'ping') && !!(it.text && it.text !== primaryText);
+          const showUrl = dt !== 'batch_tabs' && dt !== 'ping' && !!(it.url && it.url !== primaryText);
+          const canDownload = dt !== 'download' && dt !== 'batch_tabs' && dt !== 'ping' && !!(it.url && isDownloadableDropUrl(it.url));
+
+          let actionsHtml = '';
+          if (dt === 'video') {
+            actionsHtml = `
+              ${it.url ? '<button type="button" class="link-chip-btn primary act-open">▶ Resume Video</button>' : ''}
+              ${it.url ? '<button type="button" class="link-chip-btn turbo act-dl8x">Download 8×</button>' : ''}
+              <button type="button" class="link-chip-btn act-copy">Copy</button>
+            `;
+          } else if (dt === 'download') {
+            actionsHtml = `
+              ${it.url ? '<button type="button" class="link-chip-btn primary act-dl8x">Download 8× on PC</button>' : ''}
+              ${it.url ? '<button type="button" class="link-chip-btn act-open">Open</button>' : ''}
+              <button type="button" class="link-chip-btn act-copy">Copy</button>
+            `;
+          } else if (dt === 'batch_tabs') {
+            actionsHtml = `
+              ${batchTabs.length ? `<button type="button" class="link-chip-btn primary act-open-batch">Open All ${batchTabs.length} Tabs</button>` : ''}
+              <button type="button" class="link-chip-btn act-copy">Copy Links</button>
+            `;
+          } else if (dt === 'ping') {
+            actionsHtml = '<button type="button" class="link-chip-btn act-dismiss">Dismiss</button>';
+          } else {
+            actionsHtml = `
+              <button type="button" class="link-chip-btn act-copy">Copy</button>
+              ${it.url ? '<button type="button" class="link-chip-btn primary act-open">Open</button>' : ''}
+              ${canDownload ? '<button type="button" class="link-chip-btn turbo act-dl8x">Download 8×</button>' : ''}
+            `;
+          }
 
           const card = document.createElement('div');
-          card.className = 'link-drop-item';
+          card.className = 'link-drop-item' + cardExtraCls;
           card.innerHTML = `
             <div class="link-drop-item-top">
               <div class="link-drop-badge-row">
@@ -6394,24 +6767,56 @@
               <button type="button" class="link-drop-rm" title="Remove">×</button>
             </div>
             <div class="link-drop-text"></div>
+            ${showSubtitle ? '<div class="link-drop-subtitle"></div>' : ''}
             ${showUrl ? '<div class="link-drop-url"></div>' : ''}
-            <div class="link-drop-actions">
-              <button type="button" class="link-chip-btn act-copy">Copy</button>
-              ${it.url ? '<button type="button" class="link-chip-btn primary act-open">Open</button>' : ''}
-              ${canDownload ? '<button type="button" class="link-chip-btn turbo act-dl8x">Download 8×</button>' : ''}
-            </div>
+            ${dt === 'batch_tabs' && batchTabs.length ? '<div class="link-batch-preview"></div>' : ''}
+            <div class="link-drop-actions">${actionsHtml}</div>
           `;
           card.querySelector('.link-drop-text').textContent = primaryText;
+          if (showSubtitle) card.querySelector('.link-drop-subtitle').textContent = it.text;
           if (showUrl) card.querySelector('.link-drop-url').textContent = it.url;
+
+          if (dt === 'batch_tabs' && batchTabs.length) {
+            const previewEl = card.querySelector('.link-batch-preview');
+            batchTabs.slice(0, 4).forEach((bt) => {
+              const line = document.createElement('div');
+              line.className = 'link-batch-preview-item';
+              const h = extractHost(bt.url) || bt.url;
+              const strong = document.createElement('strong');
+              strong.textContent = (bt.title || h).slice(0, 42);
+              line.appendChild(strong);
+              if (bt.title && h && bt.title !== h) {
+                line.appendChild(document.createTextNode(` · ${h}`));
+              }
+              previewEl.appendChild(line);
+            });
+            if (batchTabs.length > 4) {
+              const more = document.createElement('div');
+              more.className = 'link-batch-preview-item';
+              more.textContent = `+${batchTabs.length - 4} more tabs`;
+              previewEl.appendChild(more);
+            }
+          }
+
           card.querySelector('.link-drop-rm').addEventListener('click', () => send({ type: 'syncDeleteDrop', id: it.id }));
 
+          const dismissBtn = card.querySelector('.act-dismiss');
+          if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => send({ type: 'syncDeleteDrop', id: it.id }));
+          }
+
           const copyBtn = card.querySelector('.act-copy');
-          copyBtn.addEventListener('click', () => {
-            const payloadText = it.url || it.text || it.title || '';
-            send({ type: 'syncCopyDrop', text: payloadText });
-            copyBtn.textContent = 'Copied ✓';
-            setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1100);
-          });
+          if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+              const payloadText = dt === 'batch_tabs' && batchTabs.length
+                ? batchTabs.map((t) => t.url).join('\n')
+                : (it.url || it.text || it.title || '');
+              send({ type: 'syncCopyDrop', text: payloadText });
+              const origLbl = copyBtn.textContent;
+              copyBtn.textContent = 'Copied ✓';
+              setTimeout(() => { copyBtn.textContent = origLbl; }, 1100);
+            });
+          }
 
           const openBtn = card.querySelector('.act-open');
           if (openBtn) {
@@ -6421,10 +6826,23 @@
             });
           }
 
+          const batchBtn = card.querySelector('.act-open-batch');
+          if (batchBtn && batchTabs.length) {
+            batchBtn.addEventListener('click', () => {
+              send({ type: 'closeLinkHub' });
+              send({ type: 'syncOpenBatchTabs', tabs: batchTabs });
+            });
+          }
+
           const dlBtn = card.querySelector('.act-dl8x');
           if (dlBtn) {
             dlBtn.addEventListener('click', () => {
-              send({ type: 'syncDownloadDropUrl', url: it.url });
+              send({
+                type: 'syncQueueDownload',
+                url: it.url,
+                title: it.title || '',
+                quality: it.quality || 'best'
+              });
               dlBtn.textContent = 'Queued 8× ✓';
               dlBtn.disabled = true;
             });
@@ -6436,13 +6854,45 @@
       }
     }
 
-    // Card 4: What Syncs Automatically Switches
+    // Sub-View 2: Shared Clipboard History & Pinned Notes
+    const clipCount = renderLinkClipboardHistory(s, drops);
+    const notesCount = renderLinkPinnedNotes(s);
+
+    // Update Segmented Bar Live Badges
+    if (linkSegTabsBadge) linkSegTabsBadge.textContent = String(rtabs.length + drops.length);
+    if (linkSegClipnotesBadge) linkSegClipnotesBadge.textContent = String(clipCount + notesCount);
+
+    // Sub-View 3: Sync Settings Switches & Transport Diagnostics
     const prefs = s.prefs || {};
     setSwitchState(linkPrefTabs, prefs.tabs !== false);
     setSwitchState(linkPrefBookmarks, prefs.bookmarks !== false);
     setSwitchState(linkPrefReading, prefs.readingList !== false);
     setSwitchState(linkPrefClipboard, prefs.clipboard !== false);
     setSwitchState(linkPrefHistory, prefs.history !== false);
+
+    if (linkDiagTransport) {
+      linkDiagTransport.textContent = relayInfo.label || (hasLinkTransport ? 'Ready (LAN + TLS MQTT)' : 'Not paired yet');
+    }
+    if (linkDiagBroker) {
+      const ep = s.relayStatus === 'connected_lan'
+        ? (s.lanUrl || 'Direct Wi-Fi LAN')
+        : (s.relayBroker || s.lanUrl || 'TLS MQTT Cloud Auto-Failover');
+      linkDiagBroker.textContent = ep;
+      linkDiagBroker.title = ep;
+    }
+    if (linkDiagCipher) {
+      linkDiagCipher.textContent = s.hasPassphrase
+        ? 'AES-256-CBC + HMAC-SHA256 (DV1 + Passphrase)'
+        : 'AES-256-CBC + HMAC-SHA256 (DV1)';
+    }
+    if (linkDiagLastsync) {
+      const devCount = Array.isArray(s.devices) ? s.devices.length : 1;
+      linkDiagLastsync.textContent = s.lastSyncMs
+        ? `${formatLinkRelativeTime(s.lastSyncMs)} · ${devCount} ${devCount === 1 ? 'device' : 'devices'}`
+        : 'Waiting for first sync';
+    }
+
+    setActiveLinkView(activeLinkView);
   }
 
   // dejavu Link Hub Event Bindings
@@ -6452,6 +6902,17 @@
       if (e.target === linkOverlay) send({ type: 'closeLinkHub' });
     });
   }
+  if (linkViewSeg) {
+    linkViewSeg.querySelectorAll('.link-seg-tab').forEach((btn) => {
+      btn.addEventListener('click', () => setActiveLinkView(btn.dataset.linkView || 'tabs'));
+    });
+  }
+  window.addEventListener('resize', () => {
+    if (state.linkOpen) updateLinkSegGlider();
+  });
+  if (btnLinkModeDrop) btnLinkModeDrop.addEventListener('click', () => setActiveLinkBeamMode('drop'));
+  if (btnLinkModeDl) btnLinkModeDl.addEventListener('click', () => setActiveLinkBeamMode('download'));
+
   if (btnLinkSyncNow) {
     btnLinkSyncNow.addEventListener('click', () => {
       btnLinkSyncNow.classList.add('is-syncing');
@@ -6532,18 +6993,60 @@
   if (btnLinkSendTab) {
     btnLinkSendTab.addEventListener('click', () => {
       if (btnLinkSendTab.disabled) return;
-      send({ type: 'syncSendCurrentTab' });
-      if (linkSendTabLbl) linkSendTabLbl.textContent = 'Sent to Phone ✓';
+      const activeTab = (state.tabs || []).find((t) => t.id === state.activeTabId);
+      const isVid = !!(activeTab && activeTab.url && isSupportedVideoUrl(activeTab.url));
+      if (isVid) {
+        send({ type: 'syncSendVideo', url: activeTab.url, title: activeTab.title || '', seconds: 0 });
+      } else {
+        send({ type: 'syncSendCurrentTab' });
+      }
+      if (linkSendTabLbl) linkSendTabLbl.textContent = isVid ? 'Video Sent ✓' : 'Tab Sent ✓';
       setTimeout(() => { if (state.linkOpen) renderLinkHub(); }, 1300);
+    });
+  }
+  if (btnLinkSendAllTabs) {
+    btnLinkSendAllTabs.addEventListener('click', () => {
+      if (btnLinkSendAllTabs.disabled) return;
+      send({ type: 'syncSendAllTabs' });
+      if (linkAllTabsLbl) {
+        linkAllTabsLbl.textContent = 'All Tabs Sent ✓';
+        setTimeout(() => { linkAllTabsLbl.textContent = 'Send All Tabs'; }, 1300);
+      }
     });
   }
   if (btnLinkSendClipboard) {
     btnLinkSendClipboard.addEventListener('click', () => {
       send({ type: 'syncSendClipboard' });
-      const sp = btnLinkSendClipboard.querySelector('span');
-      if (sp) {
-        sp.textContent = 'Clipboard Sent ✓';
-        setTimeout(() => { sp.textContent = 'Send Clipboard to Phone'; }, 1300);
+      if (linkSendClipLbl) {
+        linkSendClipLbl.textContent = 'Clipboard Sent ✓';
+        setTimeout(() => { linkSendClipLbl.textContent = 'Send Clipboard'; }, 1300);
+      }
+    });
+  }
+  if (btnLinkSendDownload) {
+    btnLinkSendDownload.addEventListener('click', () => {
+      const typed = linkDropInput ? (linkDropInput.value || '').trim() : '';
+      const activeTab = (state.tabs || []).find((t) => t.id === state.activeTabId);
+      let targetUrl = '';
+      let targetTitle = '';
+      if (looksLikeHttpUrl(typed)) {
+        targetUrl = typed;
+        targetTitle = extractCleanDomain(typed, typed);
+        if (linkDropInput) linkDropInput.value = '';
+      } else if (activeTab && !activeTab.isNewTab && activeTab.url && /^https?:\/\//i.test(activeTab.url)) {
+        targetUrl = activeTab.url;
+        targetTitle = activeTab.title || extractCleanDomain(activeTab.url, activeTab.url);
+      }
+      if (!targetUrl) {
+        setActiveLinkBeamMode('download');
+        if (linkDropInput) linkDropInput.focus();
+        showToast('Paste a video or file URL to beam to Phone 8× Downloads', 'info');
+        return;
+      }
+      send({ type: 'syncSendDownload', url: targetUrl, title: targetTitle, quality: 'best' });
+      if (linkSendDlLbl) {
+        linkSendDlLbl.textContent = 'Beamed 8× ✓';
+        setTimeout(() => { linkSendDlLbl.textContent = '8× to Phone'; }, 1300);
       }
     });
   }
@@ -6553,11 +7056,41 @@
       const txt = (linkDropInput.value || '').trim();
       if (!txt) return;
       linkDropInput.value = '';
-      send({ type: 'syncSendDrop', text: txt });
+      if (activeLinkBeamMode === 'download') {
+        const resolved = /^https?:\/\//i.test(txt) ? txt : (`https://${txt}`);
+        send({ type: 'syncSendDownload', url: resolved, title: extractCleanDomain(resolved, resolved), quality: 'best' });
+        showToast('Beamed URL to Phone 8× Turbo Downloader', 'success');
+      } else {
+        send({ type: 'syncSendDrop', text: txt });
+      }
+    });
+  }
+  if (btnLinkOpenAllTabs) {
+    btnLinkOpenAllTabs.addEventListener('click', () => {
+      const rtabs = (state.sync && Array.isArray(state.sync.remoteTabs)) ? state.sync.remoteTabs : [];
+      if (!rtabs.length) return;
+      send({ type: 'closeLinkHub' });
+      send({ type: 'syncOpenBatchTabs', tabs: rtabs });
     });
   }
   if (btnLinkClearDrops) {
     btnLinkClearDrops.addEventListener('click', () => send({ type: 'syncClearDrops' }));
+  }
+  if (btnLinkClearCliphist) {
+    btnLinkClearCliphist.addEventListener('click', () => {
+      send({ type: 'syncClearClipboardHistory' });
+      showToast('Shared clipboard history cleared', 'info');
+    });
+  }
+  if (linkNoteForm && linkNoteInput) {
+    linkNoteForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const txt = (linkNoteInput.value || '').trim();
+      if (!txt) return;
+      linkNoteInput.value = '';
+      send({ type: 'syncAddNote', text: txt });
+      showToast('Note pinned across your devices', 'success');
+    });
   }
 
   function bindLinkPrefSwitch(btn, prefKey) {
@@ -6633,6 +7166,9 @@
         if (!msg.busy && chromeImportOverlay && !chromeImportOverlay.classList.contains('hidden')) {
           send({ type: 'extScanChrome' });
         }
+      } else if ((msg.type === 'syncIncomingDrop' || msg.type === 'incomingSyncDrop') && msg.drop) {
+        if (msg.drop.id) seenRemoteDropIds.add(String(msg.drop.id));
+        notifyIncomingSyncDrop(msg.drop);
       } else if (msg.type === 'toast') {
         showToast(msg.message || msg.text || '', msg.tone || 'success');
       } else if (msg.type === 'settingsToast') {

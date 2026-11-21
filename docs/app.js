@@ -1,13 +1,12 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.4.0)
- * 12 Google Material Design 3 HCT Color Themes (Dark & Light) · 24 Pure M3 & 6 Butterfly Wallpapers (Auto-Harmonizing!)
- * Redesigned Pixel M3 At-a-Glance MOTD Card · Decluttered ChromeOS 5-Icon Toolbar · Material Symbols Rounded
- * 100%-Verified Brave-Exact Shields Engine (279K+ Win / 108K+ Android Rules) · Real-Time dejavu Link (Direct LAN + TLS MQTT E2EE)
- * Interactive Chrome MV3 Extensions + Draggable Tabs + M3 Right-Click Context Menu · 4K->MP3 8x Turbo Demo
+ * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.5.0)
+ * Collapsible 34x34px M3 Butterfly Video Downloader FAB · Expanded dejavu Link v2.3 Continuity Hub
+ * Buttery 120Hz Android Scrolling & Zero-Overlap Edge-to-Edge Polish · 12 Material You HCT Themes · 24 Pure M3 & 6 Butterfly Wallpapers
+ * 100%-Verified Brave-Exact Shields Engine (279K+ Win / 108K+ Android Rules) · Chrome MV3 Extensions · 4K->MP3 8x Turbo Demo
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v5.4.0';
+  const FALLBACK_VERSION = 'v5.5.0';
   const root = document.documentElement;
   const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let themeShiftTimer = null;
@@ -368,12 +367,12 @@
     });
   }
 
-  // 2. Clean 5-View Dual-Device Browser Showcase (v5.4.0 Pixel At-a-Glance MOTD + 5-Icon ChromeOS Toolbar + Brave-Exact Shields)
+  // 2. Clean 5-View Dual-Device Browser Showcase (v5.5.0 Collapsible Butterfly Video FAB + Link v2.3 + Pixel At-a-Glance)
   const VIEW_META = {
     start:      { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
-    sync:       { url: 'dejavu://link · Direct LAN + TLS MQTT E2EE (alex@gmail.com)', title: 'Direct LAN + MQTT · Pixel Online' },
+    sync:       { url: 'dejavu://link · Link v2.3 (Direct LAN + TLS MQTT E2EE)', title: 'dejavu Link v2.3 · Pixel Online' },
     extensions: { url: 'dejavu://extensions · Chrome MV3 Manager', title: 'Chrome Extensions · 3 Active' },
-    video:      { url: 'youtube.com/watch?v=material-you-4k', title: 'Material You 4K Film' },
+    video:      { url: 'youtube.com/watch?v=material-you-4k&t=422', title: 'Material You 4K Film (?t=07:02)' },
     vpn:        { url: 'gemini.google.com/app', title: 'Google Gemini · Smart VPN' }
   };
 
@@ -834,7 +833,7 @@
     });
   }
 
-  // 2e. Interactive Chrome Extensions Manager Showcase (v5.4.0 — Uncluttered 5-Icon ChromeOS Toolbar by Default)
+  // 2e. Interactive Chrome Extensions Manager Showcase (v5.5.0 — Uncluttered 5-Icon ChromeOS Toolbar by Default)
   const DEMO_EXTS = {
     ublock:     { label: 'uB', name: 'uBlock Origin Lite',    enabled: true,  pinned: false },
     darkreader: { label: 'DR', name: 'Dark Reader',           enabled: true,  pinned: false },
@@ -962,13 +961,18 @@
 
   const floatDlWrap = document.getElementById('demo-float-dl-wrap');
   const floatDlBtn = document.getElementById('demo-float-dl-btn');
+  const floatDlExt = document.getElementById('demo-float-ext');
   const qualityMenu = document.getElementById('demo-quality-menu');
   const qualityItems = Array.from(document.querySelectorAll('[data-dl-quality]'));
+  const sendVideoPhoneBtn = document.getElementById('demo-send-video-phone');
 
-  function closeQualityMenu() {
+  function closeQualityMenu(collapsePill) {
     if (!qualityMenu || !floatDlBtn) return;
     qualityMenu.hidden = true;
     floatDlBtn.setAttribute('aria-expanded', 'false');
+    if (collapsePill !== false && floatDlWrap) {
+      floatDlWrap.classList.remove('is-expanded');
+    }
   }
 
   function applyQualityMeta(key) {
@@ -1061,14 +1065,26 @@
     renderTurboDemo();
   });
 
-  // Floating Download Button opens Material 3 Quality & MP3 Dropdown
-  if (floatDlBtn && qualityMenu) {
+  // Collapsible 34x34px Butterfly Video FAB expands smoothly on click into 4K/1080p/MP3 & Send-to-Phone menu
+  if (floatDlWrap && floatDlBtn && qualityMenu) {
     floatDlBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const willOpen = qualityMenu.hidden;
-      qualityMenu.hidden = !willOpen;
-      floatDlBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      const willExpand = !floatDlWrap.classList.contains('is-expanded');
+      clearTimeout(floatResetTimer);
+      floatDlWrap.classList.remove('is-queued');
+      floatDlWrap.classList.toggle('is-expanded', willExpand);
+      qualityMenu.hidden = !willExpand;
+      floatDlBtn.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
     });
+
+    if (floatDlExt) {
+      floatDlExt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const willOpen = qualityMenu.hidden;
+        qualityMenu.hidden = !willOpen;
+        floatDlBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      });
+    }
 
     qualityItems.forEach((item) => {
       item.addEventListener('click', (e) => {
@@ -1076,30 +1092,48 @@
         const key = item.dataset.dlQuality || '4k';
         const preset = QUALITY_PRESETS[key] || QUALITY_PRESETS['4k'];
         applyQualityMeta(key);
-        closeQualityMenu();
+        closeQualityMenu(false);
 
         const lbl = document.getElementById('demo-float-dl-lbl');
-        floatDlBtn.classList.add('queued');
-        if (lbl) lbl.textContent = `Downloading ${preset.shortTag}…`;
+        floatDlWrap.classList.add('is-expanded', 'is-queued');
+        if (lbl) lbl.textContent = `Queued ${preset.shortTag}`;
         startTurboDemo(true);
 
         clearTimeout(floatResetTimer);
         floatResetTimer = setTimeout(() => {
-          floatDlBtn.classList.remove('queued');
+          floatDlWrap.classList.remove('is-queued', 'is-expanded');
           if (lbl) lbl.textContent = 'Download';
         }, 2200);
       });
     });
 
+    if (sendVideoPhoneBtn) {
+      sendVideoPhoneBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeQualityMenu(false);
+        const lbl = document.getElementById('demo-float-dl-lbl');
+        floatDlWrap.classList.add('is-expanded', 'is-queued');
+        if (lbl) lbl.textContent = 'Sent to Phone';
+        beamToPixel('video');
+        showSnackbar('Beamed Continue Watching (?t=07:02) to Pixel 9 Pro · Link v2.3');
+
+        clearTimeout(floatResetTimer);
+        floatResetTimer = setTimeout(() => {
+          floatDlWrap.classList.remove('is-queued', 'is-expanded');
+          if (lbl) lbl.textContent = 'Download';
+        }, 2200);
+      });
+    }
+
     document.addEventListener('click', (e) => {
-      if (!qualityMenu.hidden && floatDlWrap && !floatDlWrap.contains(e.target)) {
-        closeQualityMenu();
+      if ((floatDlWrap.classList.contains('is-expanded') || !qualityMenu.hidden) && !floatDlWrap.contains(e.target)) {
+        closeQualityMenu(true);
       }
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !qualityMenu.hidden) {
-        closeQualityMenu();
+      if (e.key === 'Escape' && (floatDlWrap.classList.contains('is-expanded') || !qualityMenu.hidden)) {
+        closeQualityMenu(true);
       }
     });
   }
@@ -1137,7 +1171,7 @@
     });
   });
 
-  // 5. PC <-> Phone Live Beam & Shared Clipboard Toast
+  // 5. PC <-> Phone Live Beam, Link v2.3 Continuity Handoffs & Shared Clipboard Toast
   let toastTimer = null;
   function beamToPixel(mode) {
     const toast = document.getElementById('px-toast');
@@ -1146,9 +1180,21 @@
     const actEl = document.getElementById('px-toast-act');
     if (!toast || !titleEl) return;
     if (mode === 'clipboard') {
-      if (eyebrowEl) eyebrowEl.textContent = 'Shared Clipboard · Direct LAN / E2EE';
+      if (eyebrowEl) eyebrowEl.textContent = '10-Item Clipboard · Link v2.3 E2EE';
       titleEl.textContent = 'Copied text beamed from Windows PC';
       if (actEl) actEl.textContent = 'Copy';
+    } else if (mode === 'all-tabs') {
+      if (eyebrowEl) eyebrowEl.textContent = 'Send All Open Tabs · Link v2.3';
+      titleEl.textContent = '5 Windows PC tabs ready on Pixel';
+      if (actEl) actEl.textContent = 'Open All';
+    } else if (mode === 'video') {
+      if (eyebrowEl) eyebrowEl.textContent = 'Continue Watching (?t=07:02)';
+      titleEl.textContent = 'Material You 4K Film · Resume at 07:02';
+      if (actEl) actEl.textContent = 'Resume';
+    } else if (mode === 'ping') {
+      if (eyebrowEl) eyebrowEl.textContent = '1-Tap Ping · Find Device';
+      titleEl.textContent = 'Windows PC pinged Pixel 9 Pro';
+      if (actEl) actEl.textContent = 'Chime';
     } else {
       if (eyebrowEl) eyebrowEl.textContent = 'From Windows PC · Direct LAN / E2EE';
       titleEl.textContent = VIEW_META[activeView].title;
@@ -1158,13 +1204,21 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { toast.hidden = true; }, 4200);
   }
+  document.getElementById('demo-send-all-tabs')?.addEventListener('click', () => {
+    beamToPixel('all-tabs');
+    showSnackbar('Sent all 5 open tabs to Pixel 9 Pro · Link v2.3 Direct LAN + MQTT E2EE');
+  });
   document.getElementById('demo-send-phone')?.addEventListener('click', () => {
     beamToPixel('tab');
     showSnackbar('Beamed active tab to Pixel 9 Pro · Direct LAN + TLS MQTT E2EE');
   });
+  document.getElementById('demo-ping-peer')?.addEventListener('click', () => {
+    beamToPixel('ping');
+    showSnackbar('Pinged Pixel 9 Pro · 1-Tap Find Device over Direct LAN + E2EE');
+  });
   document.getElementById('demo-send-clipboard')?.addEventListener('click', () => {
     beamToPixel('clipboard');
-    showSnackbar('Beamed Shared Clipboard to Pixel 9 Pro · Direct LAN + AES-256 E2EE');
+    showSnackbar('Beamed to 10-Item Shared Clipboard History · AES-256 E2EE');
   });
   document.getElementById('demo-copy-clip')?.addEventListener('click', () => {
     const clipTxt = document.getElementById('demo-clip-preview')?.textContent || '';
@@ -1273,7 +1327,7 @@
     });
   });
 
-  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.4.0)
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.5.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

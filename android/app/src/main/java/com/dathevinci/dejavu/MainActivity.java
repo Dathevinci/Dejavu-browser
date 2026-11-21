@@ -22,6 +22,8 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -29,6 +31,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -39,6 +42,7 @@ import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.Window;
@@ -117,22 +121,37 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         void onScroll(int scrollY, int deltaY);
     }
 
+    private interface TouchStateListener {
+        void onTouchStateChanged(boolean touching);
+    }
+
     private static final class ObservableWebView extends WebView {
+        private final int touchSlop;
         private ScrollListener scrollListener;
+        private TouchStateListener touchStateListener;
+        private float downX = 0f;
+        private float downY = 0f;
         volatile boolean innerScrollAtTop = true;
-        boolean touchStartedAtTop = true;
+        volatile boolean touchStartedAtTop = true;
+        volatile boolean isUserTouching = false;
+        volatile boolean disallowRefreshThisGesture = false;
 
         ObservableWebView(Context context) {
             super(context);
+            this.touchSlop = Math.max(8, ViewConfiguration.get(context).getScaledTouchSlop());
         }
 
         void setScrollListener(ScrollListener listener) {
             this.scrollListener = listener;
         }
 
+        void setTouchStateListener(TouchStateListener listener) {
+            this.touchStateListener = listener;
+        }
+
         boolean canScrollUpForRefresh() {
-            if (!touchStartedAtTop) return true;
-            if (getScrollY() > 0 || canScrollVertically(-1)) return true;
+            if (disallowRefreshThisGesture || !touchStartedAtTop) return true;
+            if (getScrollY() > 2 || canScrollVertically(-1)) return true;
             return !innerScrollAtTop;
         }
 
@@ -141,20 +160,40 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             if (ev != null) {
                 int act = ev.getActionMasked();
                 if (act == MotionEvent.ACTION_DOWN) {
-                    touchStartedAtTop = (getScrollY() <= 0 && !canScrollVertically(-1) && innerScrollAtTop);
-                    if (!touchStartedAtTop && getParent() != null) {
-                        getParent().requestDisallowInterceptTouchEvent(true);
+                    downX = ev.getRawX();
+                    downY = ev.getRawY();
+                    isUserTouching = true;
+                    disallowRefreshThisGesture = false;
+                    touchStartedAtTop = (getScrollY() <= 2 && !canScrollVertically(-1) && innerScrollAtTop);
+                    if (!touchStartedAtTop) {
+                        disallowRefreshThisGesture = true;
+                        if (getParent() != null) {
+                            getParent().requestDisallowInterceptTouchEvent(true);
+                        }
+                    }
+                    if (touchStateListener != null) {
+                        touchStateListener.onTouchStateChanged(true);
                     }
                 } else if (act == MotionEvent.ACTION_MOVE) {
-                    if (!touchStartedAtTop || getScrollY() > 0 || canScrollVertically(-1) || !innerScrollAtTop) {
+                    float dx = ev.getRawX() - downX;
+                    float dy = ev.getRawY() - downY;
+                    boolean draggingUp = dy < -(touchSlop * 0.35f);
+                    boolean horizontalSwipe = Math.abs(dx) > (touchSlop * 0.8f) && Math.abs(dx) > Math.abs(dy) * 0.85f;
+                    if (disallowRefreshThisGesture || !touchStartedAtTop || draggingUp || horizontalSwipe
+                        || getScrollY() > 2 || canScrollVertically(-1) || !innerScrollAtTop) {
+                        disallowRefreshThisGesture = true;
                         touchStartedAtTop = false;
                         if (getParent() != null) {
                             getParent().requestDisallowInterceptTouchEvent(true);
                         }
                     }
                 } else if (act == MotionEvent.ACTION_UP || act == MotionEvent.ACTION_CANCEL) {
+                    isUserTouching = false;
                     if (getParent() != null) {
                         getParent().requestDisallowInterceptTouchEvent(false);
+                    }
+                    if (touchStateListener != null) {
+                        touchStateListener.onTouchStateChanged(false);
                     }
                 }
             }
@@ -164,8 +203,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         @Override
         protected void onScrollChanged(int l, int t, int oldl, int oldt) {
             super.onScrollChanged(l, t, oldl, oldt);
-            if (t > 0) {
+            if (t > 2) {
                 touchStartedAtTop = false;
+                disallowRefreshThisGesture = true;
             }
             if (scrollListener != null) {
                 scrollListener.onScroll(t, t - oldt);
@@ -183,6 +223,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             webView.innerScrollAtTop = atTop;
             if (!atTop) {
                 webView.touchStartedAtTop = false;
+                webView.disallowRefreshThisGesture = true;
             }
         }
     }
@@ -235,6 +276,16 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             mainHandler.post(() -> {
                 scanActivePageMedia();
                 openUiScreen("downloads");
+            });
+        }
+        @JavascriptInterface
+        public void sendVideoToPc(final String pageUrl, final String title, final int seconds) {
+            mainHandler.post(() -> {
+                if (syncManager == null || pageUrl == null || pageUrl.trim().isEmpty()) return;
+                String cleanTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : formatHost(pageUrl.trim());
+                int sec = Math.max(0, seconds);
+                syncManager.sendVideoHandoff(pageUrl.trim(), cleanTitle, sec);
+                Toast.makeText(MainActivity.this, sec > 3 ? "Video sent to Windows PC with timestamp!" : "Video sent to Windows PC!", Toast.LENGTH_SHORT).show();
             });
         }
     }
@@ -294,6 +345,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         String thumbDataUrl = "";
         ObservableWebView webView;
         ScriptHandler shieldScriptHandler;
+        ScriptHandler scrollScriptHandler;
         boolean hasDocumentStartScript = false;
     }
 
@@ -342,6 +394,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private JSONArray customUserscripts = new JSONArray();
     private String mobileUserAgent = null;
     private boolean chromeCollapsed = false;
+    private boolean isUserTouchingWeb = false;
+    private int scrollAccumY = 0;
+    private long ignoreScrollUntilMs = 0L;
+    private long lastChromeToggleMs = 0L;
+    private boolean pendingDeferredViewportPad = false;
+    private final Runnable deferredViewportPaddingTask = this::applyDeferredViewportPadding;
+    private boolean deferredUpdateBanner = false;
+    private int lastBottomChromeHeightPx = 0;
+    private int lastTopChromeHeightPx = 0;
     private float lastNavBackAlpha = -1f;
     private float lastNavFwdAlpha = -1f;
     private String lastSyncPillKey = "";
@@ -423,6 +484,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     incomingBanner.setVisibility(View.GONE);
                     incomingBanner.setAlpha(1f);
                     incomingBanner.setTranslationY(0f);
+                    restoreDeferredUpdateBannerIfNeeded();
                 }).start();
         }
     };
@@ -675,6 +737,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         fullscreenContainer = findViewById(R.id.fullscreen_container);
     }
 
+    private boolean isImeVisible() {
+        return insetImePx > dp(80);
+    }
+
     private void setupInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(rootContainer, (v, insets) -> {
             Insets sys = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -688,6 +754,73 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             pushStateToUi();
             return insets;
         });
+
+        // Re-push exact safe insets on first layout / bar-height changes so --safe-bottom is never stale
+        View.OnLayoutChangeListener barLayoutSync = (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            int bh = bottomChrome != null && bottomChrome.getVisibility() == View.VISIBLE ? bottomChrome.getHeight() : 0;
+            int th = topChrome != null && topChrome.getVisibility() == View.VISIBLE ? topChrome.getHeight() : 0;
+            if (bh != lastBottomChromeHeightPx || th != lastTopChromeHeightPx) {
+                lastBottomChromeHeightPx = bh;
+                lastTopChromeHeightPx = th;
+                updateBannerTopMargins();
+                if (!isUserTouchingWeb) {
+                    updateViewportPadding();
+                }
+                if (uiReady) pushStateToUi();
+            }
+        };
+        if (bottomChrome != null) bottomChrome.addOnLayoutChangeListener(barLayoutSync);
+        if (topChrome != null) topChrome.addOnLayoutChangeListener(barLayoutSync);
+    }
+
+    private void updateCollapsedPillLayoutParams() {
+        if (collapsedPill == null) return;
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) collapsedPill.getLayoutParams();
+        boolean isTop = "top".equals(barPosition);
+        int targetGravity = isTop ? (Gravity.BOTTOM | Gravity.END) : (Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        int targetTop = isTop ? 0 : (insetTopPx + dp(6));
+        int targetBottom = isTop ? (insetBottomPx + dp(10)) : 0;
+        int targetEnd = isTop ? (insetRightPx + dp(12)) : 0;
+        if (lp.gravity != targetGravity || lp.topMargin != targetTop || lp.bottomMargin != targetBottom || lp.getMarginEnd() != targetEnd) {
+            lp.gravity = targetGravity;
+            lp.topMargin = targetTop;
+            lp.bottomMargin = targetBottom;
+            lp.setMarginEnd(targetEnd);
+            collapsedPill.setLayoutParams(lp);
+        }
+    }
+
+    private int computeVisibleTopChromePx() {
+        if (topChrome == null || topChrome.getVisibility() != View.VISIBLE) return 0;
+        int total = 0;
+        if (topUrlSlot != null && topUrlSlot.getVisibility() == View.VISIBLE) {
+            total += topUrlSlot.getHeight() > 0 ? topUrlSlot.getHeight() : dp(64);
+        }
+        if (findBar != null && findBar.getVisibility() == View.VISIBLE) {
+            total += findBar.getHeight() > 0 ? findBar.getHeight() : dp(48);
+        }
+        return total;
+    }
+
+    private void updateBannerTopMargins() {
+        int topChromePx = (!chromeCollapsed && topChrome != null && topChrome.getVisibility() == View.VISIBLE)
+            ? computeVisibleTopChromePx()
+            : 0;
+        int targetTop = insetTopPx + topChromePx + dp(8);
+        if (incomingBanner != null) {
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) incomingBanner.getLayoutParams();
+            if (lp.topMargin != targetTop) {
+                lp.topMargin = targetTop;
+                incomingBanner.setLayoutParams(lp);
+            }
+        }
+        if (updateBanner != null) {
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) updateBanner.getLayoutParams();
+            if (lp.topMargin != targetTop) {
+                lp.topMargin = targetTop;
+                updateBanner.setLayoutParams(lp);
+            }
+        }
     }
 
     private void applyInsetsLayout() {
@@ -701,26 +834,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (topChrome != null) {
             topChrome.setPadding(insetLeftPx, insetTopPx, insetRightPx, 0);
         }
-        int bottomPad = Math.max(insetBottomPx, insetImePx);
-        if (bottomChrome != null) {
-            bottomChrome.setPadding(insetLeftPx, 0, insetRightPx, bottomPad);
-        }
-        if (collapsedPill != null) {
-            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) collapsedPill.getLayoutParams();
-            lp.bottomMargin = insetBottomPx + dp(12);
-            collapsedPill.setLayoutParams(lp);
-        }
-        if (incomingBanner != null) {
-            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) incomingBanner.getLayoutParams();
-            lp.topMargin = insetTopPx + dp(10);
-            incomingBanner.setLayoutParams(lp);
-        }
-        if (updateBanner != null) {
-            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) updateBanner.getLayoutParams();
-            lp.topMargin = insetTopPx + dp(10);
-            updateBanner.setLayoutParams(lp);
-        }
-        updateViewportPadding();
+        updateCollapsedPillLayoutParams();
+        updateChromeVisibility();
     }
 
     private void updateViewportPadding() {
@@ -728,28 +843,38 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         boolean topBar = "top".equals(barPosition);
         MobileTab active = getActiveTab();
         boolean hasWebTab = active != null && !active.isNewTab;
+        boolean onWeb = hasWebTab && "none".equals(activeUiScreen);
+        boolean hideBottomForWebIme = onWeb && !urlInput.hasFocus() && isImeVisible();
+
         int topPad = insetTopPx;
-        if (topBar && hasWebTab && !chromeCollapsed) {
+        if (topBar && hasWebTab && !chromeCollapsed && topChrome != null && topChrome.getVisibility() == View.VISIBLE) {
             topPad += (topUrlSlot != null && topUrlSlot.getHeight() > 0) ? topUrlSlot.getHeight() : dp(64);
         }
         if (findBar != null && findBar.getVisibility() == View.VISIBLE) {
             topPad += findBar.getHeight() > 0 ? findBar.getHeight() : dp(48);
         }
 
-        int bottomPad = insetBottomPx;
-        if (!chromeCollapsed) {
-            int navH = (navDockRow != null && navDockRow.getHeight() > 0) ? navDockRow.getHeight() : dp(54);
-            if (hasWebTab) {
-                int urlH = (bottomUrlSlot != null && bottomUrlSlot.getHeight() > 0) ? bottomUrlSlot.getHeight() : dp(60);
-                bottomPad += topBar ? navH : (navH + urlH);
-            } else {
-                bottomPad += navH;
+        int bottomPad;
+        if (hideBottomForWebIme) {
+            // Soft keyboard open on live webpage: bottomChrome is hidden and webpage resizes cleanly ABOVE keyboard
+            bottomPad = Math.max(insetBottomPx, insetImePx);
+        } else {
+            bottomPad = insetBottomPx;
+            if (!chromeCollapsed && bottomChrome != null && bottomChrome.getVisibility() == View.VISIBLE) {
+                int navH = (navDockRow != null && navDockRow.getHeight() > 0) ? navDockRow.getHeight() : dp(54);
+                if (hasWebTab) {
+                    int urlH = (bottomUrlSlot != null && bottomUrlSlot.getHeight() > 0) ? bottomUrlSlot.getHeight() : dp(60);
+                    bottomPad += topBar ? navH : (navH + urlH);
+                } else {
+                    bottomPad += navH;
+                }
             }
         }
         if (viewportHost.getPaddingLeft() != insetLeftPx ||
             viewportHost.getPaddingTop() != topPad ||
             viewportHost.getPaddingRight() != insetRightPx ||
             viewportHost.getPaddingBottom() != bottomPad) {
+            ignoreScrollUntilMs = Math.max(ignoreScrollUntilMs, SystemClock.uptimeMillis() + 280L);
             viewportHost.setPadding(insetLeftPx, topPad, insetRightPx, bottomPad);
         }
     }
@@ -764,8 +889,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 target.addView(urlPillBox);
             }
         }
+        updateCollapsedPillLayoutParams();
         updateChromeVisibility();
-        updateViewportPadding();
     }
 
     private static final class M3Palette {
@@ -980,9 +1105,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             urlInput.setHintTextColor(p.onSurfaceVariant);
         }
 
-        // Sleek 34dp Scroll-Collapsed Floating Domain Pill
+        // Whisper-slim 28dp Scroll-Collapsed Floating Domain Pill
         if (collapsedPill != null) {
-            collapsedPill.setBackground(makeM3PillDrawable(p.surfaceContainerHigh, 0, 0f, 17f));
+            collapsedPill.setBackground(makeM3PillDrawable(p.surfaceContainerHigh, 0, 0f, 14f));
         }
         if (collapsedDomain != null) collapsedDomain.setTextColor(p.onSurface);
         if (collapsedIco != null) collapsedIco.setColorFilter(isPriv ? p.primary : p.onSurfaceVariant);
@@ -1083,8 +1208,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         // CRITICAL FIX: SwipeRefreshLayout wraps FrameLayout(web_container), NOT the WebView directly.
         // Without this callback, FrameLayout.canScrollVertically(-1) is always false, causing every
         // scroll-up gesture on any webpage to hijack and trigger pull-to-refresh!
-        swipeRefresh.setDistanceToTriggerSync(dp(118));
-        swipeRefresh.setSlingshotDistance(dp(145));
+        swipeRefresh.setDistanceToTriggerSync(dp(152));
+        swipeRefresh.setSlingshotDistance(dp(184));
         swipeRefresh.setOnChildScrollUpCallback((parent, child) -> {
             if (!pullToRefresh) return true;
             MobileTab t = getActiveTab();
@@ -1327,7 +1452,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         btnFindClose.setOnClickListener(v -> closeFindBar());
 
         // Incoming PC Drop Toast Banner
-        btnIncomingDismiss.setOnClickListener(v -> incomingBanner.setVisibility(View.GONE));
+        btnIncomingDismiss.setOnClickListener(v -> {
+            mainHandler.removeCallbacks(hideBannerTask);
+            incomingBanner.setVisibility(View.GONE);
+            restoreDeferredUpdateBannerIfNeeded();
+        });
         btnIncomingCopy.setOnClickListener(v -> {
             if (latestIncomingDrop != null) {
                 String txt = latestIncomingDrop.optString("url", "");
@@ -1335,14 +1464,31 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 copyToClipboard(txt);
                 Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
             }
+            mainHandler.removeCallbacks(hideBannerTask);
             incomingBanner.setVisibility(View.GONE);
+            restoreDeferredUpdateBannerIfNeeded();
         });
         btnIncomingOpen.setOnClickListener(v -> {
             if (latestIncomingDrop != null) {
-                String u = latestIncomingDrop.optString("url", "");
-                if (!u.isEmpty()) createTab(u, true, false);
+                String dType = latestIncomingDrop.optString("dropType", "link");
+                if ("ping".equals(dType)) {
+                    openUiScreen("sync");
+                } else if ("download".equals(dType)) {
+                    String u = latestIncomingDrop.optString("url", "");
+                    String ttl = latestIncomingDrop.optString("title", "");
+                    String qual = latestIncomingDrop.optString("quality", defaultYoutubeQuality);
+                    startRemoteTurboDownload(u, ttl, qual);
+                } else if ("batch_tabs".equals(dType)) {
+                    JSONArray batch = latestIncomingDrop.optJSONArray("tabs");
+                    openBatchTabsArray(batch);
+                } else {
+                    String u = latestIncomingDrop.optString("url", "");
+                    if (!u.isEmpty()) createTab(u, true, false);
+                }
             }
+            mainHandler.removeCallbacks(hideBannerTask);
             incomingBanner.setVisibility(View.GONE);
+            restoreDeferredUpdateBannerIfNeeded();
         });
 
         // Floating In-App Auto-Update Banner
@@ -1474,50 +1620,76 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         return out;
     }
 
+    private void scheduleDeferredViewportPadding(long delayMs) {
+        pendingDeferredViewportPad = true;
+        mainHandler.removeCallbacks(deferredViewportPaddingTask);
+        mainHandler.postDelayed(deferredViewportPaddingTask, delayMs);
+    }
+
+    private void applyDeferredViewportPadding() {
+        if (isUserTouchingWeb) return;
+        pendingDeferredViewportPad = false;
+        ignoreScrollUntilMs = SystemClock.uptimeMillis() + 300L;
+        updateViewportPadding();
+    }
+
     private void setChromeCollapsed(boolean collapsed) {
         if (!autoHideBar) collapsed = false;
         MobileTab t = getActiveTab();
         boolean onWeb = (t != null && !t.isNewTab && "none".equals(activeUiScreen));
-        if (!onWeb) collapsed = false;
+        if (!onWeb || isImeVisible()) collapsed = false;
         if (chromeCollapsed == collapsed) return;
         chromeCollapsed = collapsed;
 
         boolean isTop = "top".equals(barPosition);
+        float pillHiddenOffset = isTop ? dp(12) : -dp(12);
+        // Pure GPU-accelerated animation only — NEVER call updateViewportPadding() mid-drag!
         if (collapsed) {
             if (isTop && topChrome != null) {
+                topChrome.animate().cancel();
                 topChrome.animate().translationY(-topChrome.getHeight()).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
-            if (bottomChrome != null) {
+            if (bottomChrome != null && bottomChrome.getVisibility() == View.VISIBLE) {
+                bottomChrome.animate().cancel();
                 bottomChrome.animate().translationY(bottomChrome.getHeight()).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (collapsedPill != null) {
+                updateCollapsedPillLayoutParams();
                 collapsedDomain.setText(formatHost(t.url));
                 collapsedPill.animate().cancel();
                 collapsedPill.setVisibility(View.VISIBLE);
                 collapsedPill.setAlpha(0f);
-                collapsedPill.setTranslationY(dp(16));
-                collapsedPill.animate().alpha(1f).translationY(0f).setDuration(240)
+                collapsedPill.setTranslationY(pillHiddenOffset);
+                collapsedPill.animate().alpha(1f).translationY(0f).setDuration(220)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
         } else {
             if (topChrome != null) {
+                topChrome.animate().cancel();
                 topChrome.animate().translationY(0f).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (bottomChrome != null) {
+                bottomChrome.animate().cancel();
                 bottomChrome.animate().translationY(0f).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (collapsedPill != null && collapsedPill.getVisibility() == View.VISIBLE) {
                 collapsedPill.animate().cancel();
-                collapsedPill.animate().alpha(0f).translationY(dp(14)).setDuration(180)
+                collapsedPill.animate().alpha(0f).translationY(pillHiddenOffset).setDuration(180)
                     .setInterpolator(M3_EMPHASIZED_DECEL)
                     .withEndAction(() -> collapsedPill.setVisibility(View.GONE)).start();
             }
         }
-        updateViewportPadding();
+        updateBannerTopMargins();
+        if (isUserTouchingWeb) {
+            pendingDeferredViewportPad = true;
+            mainHandler.removeCallbacks(deferredViewportPaddingTask);
+        } else {
+            scheduleDeferredViewportPadding(220L);
+        }
     }
 
     private void captureActiveTabThumbnail() {
@@ -1702,6 +1874,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             try { victim.shieldScriptHandler.remove(); } catch (Throwable ignored) { }
             victim.shieldScriptHandler = null;
         }
+        if (victim.scrollScriptHandler != null) {
+            try { victim.scrollScriptHandler.remove(); } catch (Throwable ignored) { }
+            victim.scrollScriptHandler = null;
+        }
         if (victim.webView != null) {
             webContainer.removeView(victim.webView);
             victim.webView.destroy();
@@ -1725,6 +1901,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (t.shieldScriptHandler != null) {
                     try { t.shieldScriptHandler.remove(); } catch (Throwable ignored) { }
                     t.shieldScriptHandler = null;
+                }
+                if (t.scrollScriptHandler != null) {
+                    try { t.scrollScriptHandler.remove(); } catch (Throwable ignored) { }
+                    t.scrollScriptHandler = null;
                 }
                 if (t.webView != null) {
                     webContainer.removeView(t.webView);
@@ -1969,12 +2149,41 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             wv.addJavascriptInterface(new MobileGoogleBridge(tab), "__djvGoogle");
         }
 
+        wv.setTouchStateListener(touching -> {
+            if (tab.id != activeTabId) return;
+            isUserTouchingWeb = touching;
+            if (touching) {
+                scrollAccumY = 0;
+                mainHandler.removeCallbacks(deferredViewportPaddingTask);
+            } else if (pendingDeferredViewportPad) {
+                scheduleDeferredViewportPadding(220L);
+            }
+        });
+
         wv.setScrollListener((scrollY, deltaY) -> {
-            if (tab.id != activeTabId || !"none".equals(activeUiScreen) || urlInput.hasFocus()) return;
+            if (tab.id != activeTabId || !"none".equals(activeUiScreen) || urlInput.hasFocus() || isImeVisible()) return;
             if (!autoHideBar) return;
-            if (deltaY > dp(10) && scrollY > dp(52)) {
+            long now = SystemClock.uptimeMillis();
+            if (now < ignoreScrollUntilMs) {
+                scrollAccumY = 0;
+                return;
+            }
+            if (pendingDeferredViewportPad && !isUserTouchingWeb) {
+                scheduleDeferredViewportPadding(220L);
+            }
+            if ((scrollAccumY > 0 && deltaY < -dp(2)) || (scrollAccumY < 0 && deltaY > dp(2))) {
+                scrollAccumY = deltaY;
+            } else {
+                scrollAccumY += deltaY;
+            }
+            long sinceToggle = now - lastChromeToggleMs;
+            if (!chromeCollapsed && scrollAccumY > dp(52) && scrollY > dp(84) && sinceToggle >= 320L) {
+                scrollAccumY = 0;
+                lastChromeToggleMs = now;
                 setChromeCollapsed(true);
-            } else if (deltaY < -dp(8) || scrollY < dp(24)) {
+            } else if (chromeCollapsed && ((scrollAccumY < -dp(36) && sinceToggle >= 320L) || scrollY < dp(20))) {
+                scrollAccumY = 0;
+                lastChromeToggleMs = now;
                 setChromeCollapsed(false);
             }
         });
@@ -2059,7 +2268,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (tab.webView != null) {
                     tab.webView.innerScrollAtTop = true;
                     tab.webView.touchStartedAtTop = true;
+                    tab.webView.disallowRefreshThisGesture = false;
                 }
+                scrollAccumY = 0;
+                injectScrollTopTracker(view);
                 if (adBlocker != null && adBlocker.isSiteShieldUp(url)) {
                     if (!tab.hasDocumentStartScript) {
                         view.evaluateJavascript(adBlocker.getBraveShieldScript(), null);
@@ -2226,6 +2438,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         tab.webView = wv;
         registerDocumentStartShield(tab);
+        registerDocumentStartScrollTracker(tab);
         webContainer.addView(wv);
     }
 
@@ -2718,16 +2931,38 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         } catch (Exception ignored) { }
     }
 
+    private static String getScrollTopTrackerScript() {
+        return "(function(){if(window.__djvScrollHooked)return;window.__djvScrollHooked=1;var last=true;" +
+            "function send(v){v=!!v;if(v!==last){last=v;try{window.__djvScroll&&window.__djvScroll.setAtTop(v);}catch(e){}}}" +
+            "function docTop(){return (window.scrollY||(document.documentElement&&document.documentElement.scrollTop)||(document.body&&document.body.scrollTop)||0);}" +
+            "function checkEl(el){if(docTop()>1)return false;" +
+            "var n=el;while(n&&n!==document&&n!==window){try{if(n.scrollHeight>n.clientHeight+2&&n.scrollTop>1)return false;}catch(e){}n=n.parentElement;}return true;}" +
+            "window.addEventListener('touchstart',function(e){send(checkEl(e.target));},{capture:true,passive:true});" +
+            "window.addEventListener('touchmove',function(e){if(!checkEl(e.target))send(false);},{capture:true,passive:true});" +
+            "window.addEventListener('scroll',function(e){var t=e.target;if(t&&t!==document&&t!==window&&t.scrollHeight>t.clientHeight+2&&t.scrollTop>1){send(false);}else{send(docTop()<=1);}},{capture:true,passive:true});" +
+            "})();";
+    }
+
+    private void registerDocumentStartScrollTracker(MobileTab tab) {
+        if (tab == null || tab.webView == null) return;
+        try {
+            if (tab.scrollScriptHandler != null) {
+                tab.scrollScriptHandler.remove();
+                tab.scrollScriptHandler = null;
+            }
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+                tab.scrollScriptHandler = WebViewCompat.addDocumentStartJavaScript(
+                    tab.webView,
+                    getScrollTopTrackerScript(),
+                    Collections.singleton("*")
+                );
+            }
+        } catch (Throwable ignored) { }
+    }
+
     private void injectScrollTopTracker(WebView view) {
         if (view == null) return;
-        String js = "(function(){if(window.__djvScrollHooked)return;window.__djvScrollHooked=1;var last=true;" +
-            "function send(v){v=!!v;if(v!==last){last=v;try{window.__djvScroll&&window.__djvScroll.setAtTop(v);}catch(e){}}}" +
-            "function checkEl(el){if((window.scrollY||document.documentElement.scrollTop||document.body.scrollTop||0)>1)return false;" +
-            "var n=el;while(n&&n!==document&&n!==window){if(n.scrollTop&&n.scrollTop>1)return false;n=n.parentElement;}return true;}" +
-            "window.addEventListener('touchstart',function(e){send(checkEl(e.target));},{capture:true,passive:true});" +
-            "window.addEventListener('scroll',function(e){var t=e.target;if(t&&t!==document&&t!==window&&t.scrollTop>1){send(false);}else{send((window.scrollY||document.documentElement.scrollTop||document.body.scrollTop||0)<=1);}},{capture:true,passive:true});" +
-            "})();";
-        view.evaluateJavascript(js, null);
+        view.evaluateJavascript(getScrollTopTrackerScript(), null);
     }
 
     private void applyDarkWebToTab(MobileTab tab) {
@@ -2741,7 +2976,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.4.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.5.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -2848,7 +3083,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
               "function ensureUi(){var vids=document.querySelectorAll('video');var box=document.getElementById('__djv_ext_vspeed');if(!vids.length){if(box)box.remove();return;}" +
               "vids.forEach(function(v){if(!v.__djvSpBound){v.__djvSpBound=1;v.addEventListener('play',function(){if(window.__djvVspeedRate&&window.__djvVspeedRate!==1)try{v.playbackRate=window.__djvVspeedRate;}catch(e){}});}});if(box)return;" +
               "box=document.createElement('div');box.id='__djv_ext_vspeed';" +
-              "box.style.cssText='position:fixed;right:12px;top:64px;z-index:2147483645;display:inline-flex;align-items:center;gap:4px;padding:4px 6px;border-radius:999px;background:#2b2930;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 4px 14px rgba(0,0,0,0.36);font:700 12px/1 system-ui,Roboto,sans-serif;';" +
+              "box.style.cssText='position:fixed;left:10px;top:56px;z-index:2147483635;display:inline-flex;align-items:center;gap:4px;padding:4px 6px;border-radius:999px;background:#2b2930;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 4px 14px rgba(0,0,0,0.36);font:700 12px/1 system-ui,Roboto,sans-serif;';" +
               "var bStyle='width:24px;height:24px;border-radius:999px;border:none;background:#4f378b;color:#eaddff;font:700 14px/1 system-ui,sans-serif;padding:0;cursor:pointer;';" +
               "var bMin=document.createElement('button');bMin.type='button';bMin.textContent='−';bMin.style.cssText=bStyle;" +
               "var lbl=document.createElement('button');lbl.id='__djv_vsp_lbl';lbl.type='button';lbl.textContent='1.0x';lbl.style.cssText='height:24px;padding:0 7px;border-radius:999px;border:none;background:transparent;color:#d0bcff;font:700 12px/1 system-ui,sans-serif;cursor:pointer;';" +
@@ -2871,14 +3106,19 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             : "(function(){window.__djvCopyUnlockOn=false;var s=document.getElementById('__djv_ext_copy_css');if(s)s.remove();})();";
         tab.webView.evaluateJavascript(copyJs, null);
 
-        // 5. Cookie Banner Auto-Dismisser
+        // 5. Cookie Banner Auto-Dismisser (only unlocks overflow-y when an actual cookie banner is matched)
         String cookieJs = extCookieDismisser
-            ? "(function(){var s=document.getElementById('__djv_ext_cookie_css');if(!s){s=document.createElement('style');s.id='__djv_ext_cookie_css';" +
-              "s.textContent='#onetrust-consent-sdk,#CybotCookiebotDialog,.qc-cmp2-container,#didomi-host,.truste_overlay,.truste_box_overlay,#cookie-banner,.cookie-banner,.cookie-consent,.cc-window,[aria-label*=\"cookie\" i][role=\"dialog\"]{display:none!important;visibility:hidden!important;}html,body{overflow:auto!important;}';" +
+            ? "(function(){var ckSel='#onetrust-consent-sdk,#CybotCookiebotDialog,.qc-cmp2-container,#didomi-host,.truste_overlay,.truste_box_overlay,#cookie-banner,.cookie-banner,.cookie-consent,.cc-window,[aria-label*=\"cookie\" i][role=\"dialog\"]';" +
+              "var s=document.getElementById('__djv_ext_cookie_css');if(!s){s=document.createElement('style');s.id='__djv_ext_cookie_css';" +
+              "s.textContent=ckSel+'{display:none!important;visibility:hidden!important;pointer-events:none!important;}';" +
               "(document.head||document.documentElement).appendChild(s);}" +
               "function dismiss(){try{var sels=['#onetrust-reject-all-handler','#CybotCookiebotDialogBodyButtonDecline','.qc-cmp2-summary-buttons button[mode=\"secondary\"]','#didomi-notice-disagree-button','button[data-testid=\"cookie-policy-dialog-reject-button\"]'];" +
               "for(var i=0;i<sels.length;i++){var b=document.querySelector(sels[i]);if(b&&!b.__djvClk){b.__djvClk=1;try{b.click();}catch(e){}}}" +
-              "if(document.body&&getComputedStyle(document.body).overflow==='hidden')document.body.style.overflow='auto';}catch(e){}}" +
+              "if(document.body&&document.querySelector(ckSel)){" +
+              "var tall=(document.documentElement&&document.documentElement.scrollHeight>window.innerHeight+40)||document.body.scrollHeight>window.innerHeight+40;" +
+              "if(tall&&getComputedStyle(document.body).overflowY==='hidden')document.body.style.setProperty('overflow-y','auto','important');" +
+              "if(tall&&document.documentElement&&getComputedStyle(document.documentElement).overflowY==='hidden')document.documentElement.style.setProperty('overflow-y','auto','important');" +
+              "}}catch(e){}}" +
               "dismiss();if(!window.__djvCookieObs&&window.MutationObserver&&document.documentElement){var t=null;window.__djvCookieObs=new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=null;dismiss();},400);});window.__djvCookieObs.observe(document.documentElement,{childList:true,subtree:true});}})();"
             : "(function(){var s=document.getElementById('__djv_ext_cookie_css');if(s)s.remove();if(window.__djvCookieObs){try{window.__djvCookieObs.disconnect();}catch(e){}window.__djvCookieObs=null;}})();";
         tab.webView.evaluateJavascript(cookieJs, null);
@@ -3001,13 +3241,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         boolean isStart = "start".equals(activeUiScreen);
         boolean inOmnibox = "omnibox".equals(activeUiScreen);
         boolean onWeb = "none".equals(activeUiScreen);
-        boolean showUrlBar = !hideBars && !isStart && (onWeb || inOmnibox);
+        boolean imeVisible = isImeVisible();
+        boolean hideBottomForWebIme = onWeb && !urlInput.hasFocus() && imeVisible;
+        boolean showUrlBar = !hideBars && !isStart && (inOmnibox || (onWeb && (isTop || !hideBottomForWebIme)));
 
         if (statusScrim != null) {
             statusScrim.setVisibility(onWeb ? View.VISIBLE : View.GONE);
         }
         if (navDockRow != null) {
-            navDockRow.setVisibility((hideBars || inOmnibox) ? View.GONE : View.VISIBLE);
+            navDockRow.setVisibility((hideBars || inOmnibox || hideBottomForWebIme) ? View.GONE : View.VISIBLE);
         }
 
         // Start Page has its own Pixel Search Pill (#sp-search-pill): hide native URL slots on "start"
@@ -3025,7 +3267,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
 
         if (bottomChrome != null) {
-            boolean showBottom = !hideBars && !(inOmnibox && isTop);
+            boolean showBottom = !hideBars && !(inOmnibox && isTop) && !hideBottomForWebIme;
+            int bottomBarPad = inOmnibox ? Math.max(insetBottomPx, insetImePx) : insetBottomPx;
+            if (bottomChrome.getPaddingLeft() != insetLeftPx ||
+                bottomChrome.getPaddingRight() != insetRightPx ||
+                bottomChrome.getPaddingBottom() != bottomBarPad) {
+                bottomChrome.setPadding(insetLeftPx, 0, insetRightPx, bottomBarPad);
+            }
             bottomChrome.setVisibility(showBottom ? View.VISIBLE : View.GONE);
             if (showBottom && !chromeCollapsed) bottomChrome.setTranslationY(0f);
         }
@@ -3035,13 +3283,14 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             topChrome.setVisibility(showTop ? View.VISIBLE : View.GONE);
             if (showTop && !chromeCollapsed) topChrome.setTranslationY(0f);
         }
-        if (collapsedPill != null && (hideBars || !chromeCollapsed || !onWeb)) {
+        if (collapsedPill != null && (hideBars || !chromeCollapsed || !onWeb || hideBottomForWebIme)) {
             collapsedPill.setVisibility(View.GONE);
         }
         if (uiWebView != null) {
             // Keep uiWebView transparent on modal bottom sheets so live webpage stays dimmed cleanly behind sheet!
             uiWebView.setBackgroundColor(Color.TRANSPARENT);
         }
+        updateBannerTopMargins();
         updateViewportPadding();
     }
 
@@ -3218,11 +3467,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         int topChromeDp = computeVisibleTopChromeDp();
         int bottomChromeDp = computeVisibleBottomChromeDp();
 
+        boolean inOmnibox = "omnibox".equals(activeUiScreen);
         int safeTop = sysTopDp + topChromeDp;
-        int safeBottom = effectiveBottomInset + (bottomChromeDp > 0 ? bottomChromeDp : 12);
+        int safeBottom = inOmnibox
+            ? (effectiveBottomInset + bottomChromeDp)
+            : (effectiveBottomInset + (bottomChromeDp > 0 ? bottomChromeDp : 12));
+
+        st.put("sysTop", sysTopDp);
         st.put("safeTop", safeTop);
-        st.put("safeBottom", safeBottom);
         st.put("sysBottom", sysBottomDp);
+        st.put("safeBottom", safeBottom);
+        st.put("imeBottom", imeBottomDp);
     }
 
     private void pushStateToUi() {
@@ -3813,6 +4068,63 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         });
     }
 
+    private void playGentlePingFeedback() {
+        try {
+            if (rootContainer != null) {
+                rootContainer.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            }
+        } catch (Throwable ignored) { }
+        try {
+            final ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 60);
+            tg.startTone(ToneGenerator.TONE_PROP_BEEP2, 180);
+            mainHandler.postDelayed(() -> {
+                try { tg.release(); } catch (Throwable ignored) { }
+            }, 320L);
+        } catch (Throwable ignored) { }
+    }
+
+    private void openBatchTabsArray(JSONArray batch) {
+        if (batch == null || batch.length() == 0) return;
+        int opened = 0;
+        for (int i = 0; i < batch.length() && opened < 12; i++) {
+            JSONObject item = batch.optJSONObject(i);
+            if (item == null) continue;
+            String u = item.optString("url", "").trim();
+            if (u.startsWith("http://") || u.startsWith("https://")) {
+                createTab(u, opened == 0, false);
+                opened++;
+            }
+        }
+        if (opened > 0) {
+            Toast.makeText(this, "Opened " + opened + (opened == 1 ? " tab" : " tabs") + " from PC", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void startRemoteTurboDownload(String rawUrl, String title, String quality) {
+        if (downloadManager == null || rawUrl == null || rawUrl.trim().isEmpty()) return;
+        String cleanUrl = rawUrl.trim();
+        MobileTab t = getActiveTab();
+        String ref = (t != null && !t.isNewTab) ? t.url : "";
+        String ua = (t != null && t.webView != null) ? t.webView.getSettings().getUserAgentString() : "";
+        String ck = CookieManager.getInstance().getCookie(cleanUrl);
+        String qPref = (quality != null && !quality.trim().isEmpty() && !"best".equalsIgnoreCase(quality.trim()))
+            ? quality.trim()
+            : defaultYoutubeQuality;
+        String fn = downloadManager.enqueueSmartUrl(cleanUrl, qPref, title != null ? title : "", ref, ua, ck);
+        Toast.makeText(this, "8x Turbo Download: " + fn, Toast.LENGTH_SHORT).show();
+        openUiScreen("downloads");
+    }
+
+    private void restoreDeferredUpdateBannerIfNeeded() {
+        if (!deferredUpdateBanner || updateBanner == null) return;
+        deferredUpdateBanner = false;
+        refreshUpdateBanner();
+        if (autoUpdater != null && !"idle".equals(autoUpdater.getStatus()) && !"uptodate".equals(autoUpdater.getStatus())) {
+            updateBannerTopMargins();
+            updateBanner.setVisibility(View.VISIBLE);
+        }
+    }
+
     @Override
     public void onIncomingDrop(final JSONObject drop) {
         mainHandler.post(() -> {
@@ -3823,17 +4135,58 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             String text = drop.optString("text", "");
             String title = drop.optString("title", "");
             boolean isTextOnly = url.isEmpty();
+
+            // Never display incomingBanner and updateBanner on top of each other
+            if (updateBanner != null && updateBanner.getVisibility() == View.VISIBLE) {
+                deferredUpdateBanner = true;
+                updateBanner.setVisibility(View.GONE);
+            }
+
             String bannerHeading;
-            if ("clipboard".equals(dropType)) {
+            String bannerBody;
+            btnIncomingCopy.setVisibility(View.VISIBLE);
+            btnIncomingOpen.setText("Open Tab");
+            if ("ping".equals(dropType)) {
+                playGentlePingFeedback();
+                bannerHeading = "Ping from " + from;
+                bannerBody = text.isEmpty() ? (from + " is pinging this device") : text;
+                btnIncomingCopy.setVisibility(View.GONE);
+                btnIncomingOpen.setText("Open Link");
+                btnIncomingOpen.setVisibility(View.VISIBLE);
+            } else if ("download".equals(dropType)) {
+                bannerHeading = "8x Download from " + from;
+                bannerBody = title.isEmpty() ? url : title;
+                btnIncomingOpen.setText("Download 8x");
+                btnIncomingOpen.setVisibility(url.isEmpty() ? View.GONE : View.VISIBLE);
+            } else if ("batch_tabs".equals(dropType)) {
+                JSONArray batch = drop.optJSONArray("tabs");
+                int cnt = batch != null ? batch.length() : 0;
+                bannerHeading = (cnt > 0 ? (cnt + " Tabs from ") : "Tabs from ") + from;
+                bannerBody = !text.isEmpty() ? text : (!title.isEmpty() ? title : url);
+                btnIncomingOpen.setText(cnt > 0 ? ("Open All " + cnt + " Tabs") : "Open Tabs");
+                btnIncomingOpen.setVisibility(cnt > 0 ? View.VISIBLE : View.GONE);
+            } else if ("video".equals(dropType)) {
+                bannerHeading = "Continue Watching · " + from;
+                bannerBody = (title.isEmpty() ? formatHost(url) : title) + (text.isEmpty() ? "" : (" · " + text));
+                btnIncomingOpen.setText("Resume Video");
+                btnIncomingOpen.setVisibility(url.isEmpty() ? View.GONE : View.VISIBLE);
+            } else if ("clipboard".equals(dropType)) {
                 bannerHeading = "Clipboard from " + from;
+                bannerBody = text;
+                btnIncomingOpen.setVisibility(isTextOnly ? View.GONE : View.VISIBLE);
             } else if (isTextOnly) {
-                bannerHeading = "Text from " + from;
+                bannerHeading = "Note from " + from;
+                bannerBody = text;
+                btnIncomingOpen.setVisibility(View.GONE);
             } else {
                 bannerHeading = "From " + from + ": " + (title.isEmpty() ? formatHost(url) : title);
+                bannerBody = url;
+                btnIncomingOpen.setVisibility(View.VISIBLE);
             }
+
             incomingTitle.setText(bannerHeading);
-            incomingBody.setText(isTextOnly ? text : url);
-            btnIncomingOpen.setVisibility(isTextOnly ? View.GONE : View.VISIBLE);
+            incomingBody.setText(bannerBody);
+            updateBannerTopMargins();
             incomingBanner.setVisibility(View.VISIBLE);
             incomingBanner.setAlpha(0f);
             incomingBanner.setTranslationY(-dp(24));
@@ -3915,12 +4268,14 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     // =========================================================================
     private void refreshUpdateBanner() {
         if (autoUpdater == null || updateBanner == null) return;
+        boolean incomingShowing = incomingBanner != null && incomingBanner.getVisibility() == View.VISIBLE;
         String st = autoUpdater.getStatus();
         String ver = autoUpdater.getLatestVersion();
         String sz = autoUpdater.formatSize();
         int pct = autoUpdater.getDownloadPercent();
+        updateBannerTopMargins();
         if ("downloading".equals(st)) {
-            updateBanner.setVisibility(View.VISIBLE);
+            if (incomingShowing) { deferredUpdateBanner = true; } else { updateBanner.setVisibility(View.VISIBLE); }
             updateTitle.setText("Downloading dejavu v" + ver + "...");
             updateBody.setText(pct > 0 ? ("Downloading update · " + pct + "%") : "Connecting to GitHub Releases...");
             updateProgress.setVisibility(View.VISIBLE);
@@ -3928,7 +4283,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             btnUpdateNow.setText(pct + "%");
             btnUpdateNow.setEnabled(false);
         } else if ("installing".equals(st)) {
-            updateBanner.setVisibility(View.VISIBLE);
+            if (incomingShowing) { deferredUpdateBanner = true; } else { updateBanner.setVisibility(View.VISIBLE); }
             updateTitle.setText("Installing dejavu v" + ver + "...");
             updateBody.setText("Confirm installation when prompted by Android");
             updateProgress.setVisibility(View.VISIBLE);
@@ -3936,7 +4291,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             btnUpdateNow.setText("Installing...");
             btnUpdateNow.setEnabled(false);
         } else if ("ready".equals(st)) {
-            updateBanner.setVisibility(View.VISIBLE);
+            if (incomingShowing) { deferredUpdateBanner = true; } else { updateBanner.setVisibility(View.VISIBLE); }
             updateTitle.setText("dejavu v" + ver + " Ready to Install");
             updateBody.setText(autoUpdater.isSignatureMismatch()
                 ? MobileAutoUpdater.INCOMPATIBLE_SIGNING_MSG
@@ -3976,6 +4331,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         mainHandler.post(() -> {
             if (updateBanner == null) return;
             refreshUpdateBanner();
+            if (incomingBanner != null && incomingBanner.getVisibility() == View.VISIBLE) {
+                deferredUpdateBanner = true;
+                return;
+            }
+            updateBannerTopMargins();
             updateBanner.setVisibility(View.VISIBLE);
             updateBanner.setAlpha(0f);
             updateBanner.setTranslationY(-dp(24));
@@ -4048,6 +4408,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mainHandler.removeCallbacks(deferredViewportPaddingTask);
+        mainHandler.removeCallbacks(hideBannerTask);
         dismissActiveAuthDialog();
         saveLocalCollections();
         if (adBlocker != null) adBlocker.shutdown();
@@ -4351,6 +4713,114 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 syncManager.sendClipboard(clip);
                 Toast.makeText(MainActivity.this, "Clipboard sent to Windows PC!", Toast.LENGTH_SHORT).show();
             });
+        }
+
+        @JavascriptInterface
+        public void sendAllTabsToPc() {
+            mainHandler.post(() -> {
+                JSONArray openArr = collectOpenTabsArray();
+                if (openArr.length() == 0) {
+                    Toast.makeText(MainActivity.this, "Open at least one website first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                syncManager.sendBatchTabs(openArr);
+                publishOpenTabsToPc();
+                Toast.makeText(MainActivity.this, "Sent " + openArr.length() + (openArr.length() == 1 ? " tab" : " tabs") + " to Windows PC!", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void sendVideoToPc(final String url, final String title, final int seconds) {
+            mainHandler.post(() -> {
+                String targetUrl = (url != null && !url.trim().isEmpty()) ? url.trim() : "";
+                String targetTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "";
+                if (targetUrl.isEmpty()) {
+                    MobileTab t = getActiveTab();
+                    if (t != null && !t.isNewTab && t.url != null) {
+                        targetUrl = t.url;
+                        if (targetTitle.isEmpty()) targetTitle = t.title;
+                    }
+                }
+                if (targetUrl.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Open a video first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                syncManager.sendVideoHandoff(targetUrl, targetTitle.isEmpty() ? formatHost(targetUrl) : targetTitle, Math.max(0, seconds));
+                Toast.makeText(MainActivity.this, "Video sent to Windows PC!", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void sendDownloadToPc(final String url, final String title, final String quality) {
+            mainHandler.post(() -> {
+                String targetUrl = (url != null && !url.trim().isEmpty()) ? url.trim() : "";
+                String targetTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "";
+                if (targetUrl.isEmpty()) {
+                    MobileTab t = getActiveTab();
+                    if (t != null && !t.isNewTab && t.url != null) {
+                        targetUrl = t.url;
+                        if (targetTitle.isEmpty()) targetTitle = t.title;
+                    }
+                }
+                if (targetUrl.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Open a page or enter a URL first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String resolved = resolveInputToUrl(targetUrl);
+                syncManager.sendRemoteDownload(resolved, targetTitle.isEmpty() ? formatHost(resolved) : targetTitle, quality != null ? quality : "best");
+                Toast.makeText(MainActivity.this, "Beamed to PC 8x Downloads!", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void pingPc() {
+            mainHandler.post(() -> {
+                syncManager.sendFindDevicePing();
+                Toast.makeText(MainActivity.this, "Pinging Windows PC...", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void addPinnedNote(final String text) {
+            mainHandler.post(() -> {
+                if (text == null || text.trim().isEmpty()) return;
+                syncManager.addPinnedNote(text.trim());
+                Toast.makeText(MainActivity.this, "Pinned note synced!", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void deletePinnedNote(final String id) {
+            mainHandler.post(() -> syncManager.deletePinnedNote(id));
+        }
+
+        @JavascriptInterface
+        public void deleteClipboardItem(final String id) {
+            mainHandler.post(() -> syncManager.deleteClipboardItem(id));
+        }
+
+        @JavascriptInterface
+        public void clearClipboardHistory() {
+            mainHandler.post(() -> {
+                syncManager.clearClipboardHistory();
+                Toast.makeText(MainActivity.this, "Cleared clipboard history", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void openBatchTabs(final String tabsJson) {
+            mainHandler.post(() -> {
+                if (tabsJson == null || tabsJson.trim().isEmpty()) return;
+                try {
+                    JSONArray arr = new JSONArray(tabsJson);
+                    openBatchTabsArray(arr);
+                } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface
+        public void startRemoteDownload(final String url, final String title, final String quality) {
+            mainHandler.post(() -> startRemoteTurboDownload(url, title, quality));
         }
 
         @JavascriptInterface

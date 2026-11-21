@@ -16,11 +16,31 @@ namespace DejavuBrowser
     public class SyncDropItem
     {
         public string id { get; set; }
-        public string dropType { get; set; } // "tab" | "link" | "text" | "clipboard"
+        public string dropType { get; set; } // "tab" | "link" | "text" | "clipboard" | "batch_tabs" | "video" | "download" | "ping"
         public string title { get; set; }
         public string url { get; set; }
         public string text { get; set; }
+        public string quality { get; set; } // optional for "download" drops ("best", "1080", "mp3", etc.)
+        public List<RemoteTabItem> tabs { get; set; } // optional for "batch_tabs" drops
         public string fromId { get; set; }
+        public string fromName { get; set; }
+        public string platform { get; set; } // "windows" | "android"
+        public long ts { get; set; }
+    }
+
+    public class SyncNoteItem
+    {
+        public string id { get; set; }
+        public string text { get; set; }
+        public long updatedMs { get; set; }
+        public string fromName { get; set; }
+        public string platform { get; set; } // "windows" | "android"
+    }
+
+    public class SyncClipboardItem
+    {
+        public string id { get; set; }
+        public string text { get; set; }
         public string fromName { get; set; }
         public string platform { get; set; } // "windows" | "android"
         public long ts { get; set; }
@@ -37,6 +57,7 @@ namespace DejavuBrowser
         public string id { get; set; }
         public string name { get; set; }
         public string platform { get; set; } // "windows" | "android"
+        public string transport { get; set; } // "lan" | "cloud" | "local"
         public bool isSelf { get; set; }
         public bool isOnline { get; set; }
         public long lastSeenMs { get; set; }
@@ -94,6 +115,9 @@ namespace DejavuBrowser
         public List<SyncDeviceInfo> devices { get; set; }
         public List<SyncDropItem> drops { get; set; }
         public List<RemoteTabItem> remoteTabs { get; set; }
+        public List<SyncNoteItem> pinnedNotes { get; set; }
+        public List<string> deletedNoteIds { get; set; }
+        public List<SyncClipboardItem> clipboardHistory { get; set; }
 
         public SyncPersistedState()
         {
@@ -116,6 +140,9 @@ namespace DejavuBrowser
             devices = new List<SyncDeviceInfo>();
             drops = new List<SyncDropItem>();
             remoteTabs = new List<RemoteTabItem>();
+            pinnedNotes = new List<SyncNoteItem>();
+            deletedNoteIds = new List<string>();
+            clipboardHistory = new List<SyncClipboardItem>();
         }
 
         private static string SafeMachineName()
@@ -381,6 +408,32 @@ namespace DejavuBrowser
                 if (_state.devices == null) _state.devices = new List<SyncDeviceInfo>();
                 if (_state.drops == null) _state.drops = new List<SyncDropItem>();
                 if (_state.remoteTabs == null) _state.remoteTabs = new List<RemoteTabItem>();
+                if (_state.pinnedNotes == null) _state.pinnedNotes = new List<SyncNoteItem>();
+                if (_state.deletedNoteIds == null) _state.deletedNoteIds = new List<string>();
+                if (_state.clipboardHistory == null) _state.clipboardHistory = new List<SyncClipboardItem>();
+
+                if (_state.clipboardHistory.Count == 0 && _state.drops.Count > 0)
+                {
+                    for (int i = 0; i < _state.drops.Count && _state.clipboardHistory.Count < 10; i++)
+                    {
+                        SyncDropItem dr = _state.drops[i];
+                        if (dr != null && string.Equals(dr.dropType, "clipboard", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(dr.text))
+                        {
+                            string t = dr.text.Trim();
+                            if (_state.clipboardHistory.Count == 0 || !string.Equals(_state.clipboardHistory[_state.clipboardHistory.Count - 1].text, t, StringComparison.Ordinal))
+                            {
+                                _state.clipboardHistory.Add(new SyncClipboardItem
+                                {
+                                    id = string.IsNullOrEmpty(dr.id) ? ("clip_" + Guid.NewGuid().ToString("N").Substring(0, 12)) : dr.id,
+                                    text = Truncate(t, 2400),
+                                    fromName = dr.fromName ?? "",
+                                    platform = dr.platform ?? "windows",
+                                    ts = dr.ts
+                                });
+                            }
+                        }
+                    }
+                }
 
                 if (string.Equals(_state.syncMode, "google", StringComparison.OrdinalIgnoreCase) &&
                     string.IsNullOrWhiteSpace(_state.googleEmail))
@@ -708,6 +761,8 @@ namespace DejavuBrowser
                     _cachedQrDataUrl = MiniQrSvg.BuildDataUrl(qrPayload);
                 }
 
+                bool lanActive = _lastLanSeenMs > 0 && (nowMs - _lastLanSeenMs) < PeerOnlineWindowMs && !string.IsNullOrEmpty(_state.peerLanUrl);
+
                 // Build unified device presence list (self first, then tracked peers)
                 List<Dictionary<string, object>> deviceList = new List<Dictionary<string, object>>();
                 deviceList.Add(new Dictionary<string, object>
@@ -715,6 +770,7 @@ namespace DejavuBrowser
                     { "id", _state.deviceId },
                     { "name", _state.deviceName },
                     { "platform", "windows" },
+                    { "transport", "local" },
                     { "isSelf", true },
                     { "isOnline", true },
                     { "lastSeenMs", nowMs },
@@ -730,11 +786,19 @@ namespace DejavuBrowser
                         SyncDeviceInfo d = peers[i];
                         if (d == null || string.Equals(d.id, _state.deviceId, StringComparison.Ordinal)) continue;
                         bool dOnline = (nowMs - d.lastSeenMs) < PeerOnlineWindowMs;
+                        string dTransport = !string.IsNullOrEmpty(d.transport)
+                            ? d.transport
+                            : (lanActive ? "lan" : "cloud");
+                        if (lanActive && string.Equals(d.id, _state.peerId, StringComparison.Ordinal))
+                        {
+                            dTransport = "lan";
+                        }
                         deviceList.Add(new Dictionary<string, object>
                         {
                             { "id", d.id ?? "" },
                             { "name", string.IsNullOrEmpty(d.name) ? "Mobile Device" : d.name },
                             { "platform", string.IsNullOrEmpty(d.platform) ? "android" : d.platform },
+                            { "transport", dTransport },
                             { "isSelf", false },
                             { "isOnline", dOnline },
                             { "lastSeenMs", d.lastSeenMs },
@@ -749,6 +813,7 @@ namespace DejavuBrowser
                         { "id", string.IsNullOrEmpty(_state.peerId) ? "peer-1" : _state.peerId },
                         { "name", _state.peerName },
                         { "platform", string.IsNullOrEmpty(_state.peerPlatform) ? "android" : _state.peerPlatform },
+                        { "transport", lanActive ? "lan" : "cloud" },
                         { "isSelf", false },
                         { "isOnline", peerOnline },
                         { "lastSeenMs", _state.peerLastSeenMs },
@@ -756,22 +821,40 @@ namespace DejavuBrowser
                     });
                 }
 
-                // Latest shared clipboard entry
+                // Latest shared clipboard entry (prefer clipboardHistory[0], fallback to drops)
                 Dictionary<string, object> latestClip = null;
-                for (int i = 0; i < _state.drops.Count; i++)
+                if (_state.clipboardHistory != null && _state.clipboardHistory.Count > 0)
                 {
-                    SyncDropItem dr = _state.drops[i];
-                    if (dr != null && string.Equals(dr.dropType, "clipboard", StringComparison.OrdinalIgnoreCase))
+                    SyncClipboardItem hc = _state.clipboardHistory[0];
+                    if (hc != null && !string.IsNullOrEmpty(hc.text))
                     {
                         latestClip = new Dictionary<string, object>
                         {
-                            { "id", dr.id ?? "" },
-                            { "text", dr.text ?? "" },
-                            { "fromName", dr.fromName ?? "" },
-                            { "platform", dr.platform ?? "" },
-                            { "ts", dr.ts }
+                            { "id", hc.id ?? "" },
+                            { "text", hc.text ?? "" },
+                            { "fromName", hc.fromName ?? "" },
+                            { "platform", hc.platform ?? "" },
+                            { "ts", hc.ts }
                         };
-                        break;
+                    }
+                }
+                if (latestClip == null)
+                {
+                    for (int i = 0; i < _state.drops.Count; i++)
+                    {
+                        SyncDropItem dr = _state.drops[i];
+                        if (dr != null && string.Equals(dr.dropType, "clipboard", StringComparison.OrdinalIgnoreCase))
+                        {
+                            latestClip = new Dictionary<string, object>
+                            {
+                                { "id", dr.id ?? "" },
+                                { "text", dr.text ?? "" },
+                                { "fromName", dr.fromName ?? "" },
+                                { "platform", dr.platform ?? "" },
+                                { "ts", dr.ts }
+                            };
+                            break;
+                        }
                     }
                 }
 
@@ -786,7 +869,7 @@ namespace DejavuBrowser
                 };
 
                 string effectiveRelayStatus;
-                if (_lastLanSeenMs > 0 && (nowMs - _lastLanSeenMs) < PeerOnlineWindowMs && !string.IsNullOrEmpty(_state.peerLanUrl))
+                if (lanActive)
                 {
                     effectiveRelayStatus = "connected_lan";
                 }
@@ -820,6 +903,8 @@ namespace DejavuBrowser
                     { "qrDataUrl", _cachedQrDataUrl ?? "" },
                     { "drops", new List<SyncDropItem>(_state.drops) },
                     { "remoteTabs", new List<RemoteTabItem>(_state.remoteTabs) },
+                    { "pinnedNotes", _state.pinnedNotes != null ? new List<SyncNoteItem>(_state.pinnedNotes) : new List<SyncNoteItem>() },
+                    { "clipboardHistory", _state.clipboardHistory != null ? new List<SyncClipboardItem>(_state.clipboardHistory) : new List<SyncClipboardItem>() },
                     { "latestClipboard", latestClip },
                     { "prefs", prefsDict },
                     { "relayStatus", effectiveRelayStatus },
@@ -925,6 +1010,23 @@ namespace DejavuBrowser
             RaiseStateChanged();
         }
 
+        public SyncDropItem FindDropById(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            lock (_lock)
+            {
+                if (_state.drops == null) return null;
+                for (int i = 0; i < _state.drops.Count; i++)
+                {
+                    if (_state.drops[i] != null && string.Equals(_state.drops[i].id, id, StringComparison.Ordinal))
+                    {
+                        return _state.drops[i];
+                    }
+                }
+            }
+            return null;
+        }
+
         public void SendClipboardAsync(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return;
@@ -934,17 +1036,289 @@ namespace DejavuBrowser
 
         public void SendDropAsync(string dropType, string title, string url, string text)
         {
+            SendDropInternal(dropType, title, url, text, "", null);
+        }
+
+        public void SendBatchTabs(List<RemoteTabItem> tabs)
+        {
+            if (tabs == null || tabs.Count == 0) return;
+            List<RemoteTabItem> clean = new List<RemoteTabItem>();
+            for (int i = 0; i < tabs.Count && clean.Count < 15; i++)
+            {
+                RemoteTabItem it = tabs[i];
+                if (it == null || string.IsNullOrWhiteSpace(it.url)) continue;
+                string u = it.url.Trim();
+                if (!u.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                    !u.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) continue;
+                clean.Add(new RemoteTabItem
+                {
+                    title = Truncate(string.IsNullOrWhiteSpace(it.title) ? u : it.title.Trim(), 90),
+                    url = Truncate(u, 500)
+                });
+            }
+            if (clean.Count == 0) return;
+
+            string devName;
+            lock (_lock)
+            {
+                devName = string.IsNullOrEmpty(_state.deviceName) ? "Windows PC" : _state.deviceName;
+            }
+            List<string> previewNames = new List<string>();
+            for (int i = 0; i < clean.Count && i < 3; i++)
+            {
+                previewNames.Add(clean[i].title);
+            }
+            string summary = string.Join(" · ", previewNames.ToArray());
+            if (clean.Count > 3) summary = summary + " (+" + (clean.Count - 3) + " more)";
+            string title = clean.Count + (clean.Count == 1 ? " tab from " : " tabs from ") + devName;
+            SendDropInternal("batch_tabs", title, clean[0].url, Truncate(summary, 280), "", clean);
+        }
+
+        public void SendVideoHandoff(string url, string title, int seconds)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return;
+            string cleanUrl = url.Trim();
+            if (!cleanUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !cleanUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                cleanUrl = "https://" + cleanUrl;
+            }
+            int safeSec = Math.Max(0, seconds);
+            string timedUrl = AppendVideoTimestamp(cleanUrl, safeSec);
+            string devName;
+            lock (_lock)
+            {
+                devName = string.IsNullOrEmpty(_state.deviceName) ? "Windows PC" : _state.deviceName;
+            }
+            string cleanTitle = string.IsNullOrWhiteSpace(title) ? ("Video from " + devName) : title.Trim();
+            string sub = safeSec > 0
+                ? ("Continue watching at " + FormatTimestamp(safeSec))
+                : "Watch on peer device";
+            SendDropInternal("video", cleanTitle, timedUrl, sub, "", null);
+        }
+
+        public void SendRemoteDownload(string url, string title, string quality)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return;
+            string cleanUrl = url.Trim();
+            if (!cleanUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !cleanUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                cleanUrl = "https://" + cleanUrl;
+            }
+            string cleanQual = string.IsNullOrWhiteSpace(quality) ? "best" : quality.Trim();
+            string cleanTitle = string.IsNullOrWhiteSpace(title) ? cleanUrl : title.Trim();
+            SendDropInternal("download", cleanTitle, cleanUrl, "8x Turbo Download handoff", cleanQual, null);
+        }
+
+        public void SendFindDevicePing()
+        {
+            string devName;
+            lock (_lock)
+            {
+                devName = string.IsNullOrEmpty(_state.deviceName) ? "Windows PC" : _state.deviceName;
+            }
+            SendDropInternal("ping", "Ping from " + devName, "", devName + " is pinging this device", "", null);
+        }
+
+        public SyncNoteItem AddPinnedNote(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return null;
+            string clean = Truncate(text.Trim(), 1200);
+            SyncNoteItem note;
+            lock (_lock)
+            {
+                if (_state.pinnedNotes == null) _state.pinnedNotes = new List<SyncNoteItem>();
+                if (_state.deletedNoteIds == null) _state.deletedNoteIds = new List<string>();
+                long nowMs = NowUnixMs();
+                note = new SyncNoteItem
+                {
+                    id = "note_" + Guid.NewGuid().ToString("N").Substring(0, 12),
+                    text = clean,
+                    updatedMs = nowMs,
+                    fromName = string.IsNullOrEmpty(_state.deviceName) ? "Windows PC" : _state.deviceName,
+                    platform = "windows"
+                };
+                _state.pinnedNotes.Insert(0, note);
+                if (_state.pinnedNotes.Count > 12) _state.pinnedNotes.RemoveRange(12, _state.pinnedNotes.Count - 12);
+                _state.deletedNoteIds.RemoveAll(x => string.Equals(x, note.id, StringComparison.Ordinal));
+                _lastSyncMs = nowMs;
+                SaveLocked();
+            }
+            RaiseStateChanged();
+            PublishCachedSnapshotAsync();
+            return note;
+        }
+
+        public void DeletePinnedNote(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return;
+            string key = id.Trim();
+            lock (_lock)
+            {
+                if (_state.pinnedNotes == null) _state.pinnedNotes = new List<SyncNoteItem>();
+                if (_state.deletedNoteIds == null) _state.deletedNoteIds = new List<string>();
+                _state.pinnedNotes.RemoveAll(n => n == null || string.Equals(n.id, key, StringComparison.Ordinal));
+                if (!_state.deletedNoteIds.Contains(key))
+                {
+                    _state.deletedNoteIds.Insert(0, key);
+                    if (_state.deletedNoteIds.Count > 24)
+                    {
+                        _state.deletedNoteIds.RemoveRange(24, _state.deletedNoteIds.Count - 24);
+                    }
+                }
+                _lastSyncMs = NowUnixMs();
+                SaveLocked();
+            }
+            RaiseStateChanged();
+            PublishCachedSnapshotAsync();
+        }
+
+        public void RecordClipboardItem(string text, string fromName, string platform, long ts)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return;
+            lock (_lock)
+            {
+                RecordClipboardItemLocked("", text, fromName, platform, ts > 0 ? ts : NowUnixMs());
+                SaveLocked();
+            }
+            RaiseStateChanged();
+        }
+
+        public void DeleteClipboardItem(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return;
+            string key = id.Trim();
+            lock (_lock)
+            {
+                if (_state.clipboardHistory == null) _state.clipboardHistory = new List<SyncClipboardItem>();
+                _state.clipboardHistory.RemoveAll(c => c == null || string.Equals(c.id, key, StringComparison.Ordinal));
+                SaveLocked();
+            }
+            RaiseStateChanged();
+            PublishCachedSnapshotAsync();
+        }
+
+        public void ClearClipboardHistory()
+        {
+            lock (_lock)
+            {
+                if (_state.clipboardHistory == null) _state.clipboardHistory = new List<SyncClipboardItem>();
+                _state.clipboardHistory.Clear();
+                SaveLocked();
+            }
+            RaiseStateChanged();
+            PublishCachedSnapshotAsync();
+        }
+
+        private void RecordClipboardItemLocked(string id, string text, string fromName, string platform, long ts)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return;
+            if (_state.clipboardHistory == null) _state.clipboardHistory = new List<SyncClipboardItem>();
+            string clean = Truncate(text.Trim(), 2400);
+            long effTs = ts > 0 ? ts : NowUnixMs();
+            if (_state.clipboardHistory.Count > 0 && _state.clipboardHistory[0] != null &&
+                string.Equals(_state.clipboardHistory[0].text, clean, StringComparison.Ordinal))
+            {
+                if (effTs > _state.clipboardHistory[0].ts) _state.clipboardHistory[0].ts = effTs;
+                return;
+            }
+            string cid = string.IsNullOrEmpty(id) ? ("clip_" + Guid.NewGuid().ToString("N").Substring(0, 12)) : id;
+            _state.clipboardHistory.RemoveAll(c => c == null || string.Equals(c.id, cid, StringComparison.Ordinal));
+            _state.clipboardHistory.Insert(0, new SyncClipboardItem
+            {
+                id = cid,
+                text = clean,
+                fromName = string.IsNullOrEmpty(fromName) ? (_state.deviceName ?? "Windows PC") : fromName,
+                platform = string.IsNullOrEmpty(platform) ? "windows" : platform,
+                ts = effTs
+            });
+            if (_state.clipboardHistory.Count > 10)
+            {
+                _state.clipboardHistory.RemoveRange(10, _state.clipboardHistory.Count - 10);
+            }
+        }
+
+        private static string FormatTimestamp(int seconds)
+        {
+            if (seconds <= 0) return "00:00";
+            int h = seconds / 3600;
+            int m = (seconds % 3600) / 60;
+            int s = seconds % 60;
+            if (h > 0) return string.Format("{0}:{1:00}:{2:00}", h, m, s);
+            return string.Format("{0:00}:{1:00}", m, s);
+        }
+
+        public static string AppendVideoTimestamp(string rawUrl, int seconds)
+        {
+            if (string.IsNullOrWhiteSpace(rawUrl) || seconds <= 0) return rawUrl ?? "";
+            try
+            {
+                Uri uri = new Uri(rawUrl);
+                string host = (uri.Host ?? "").ToLowerInvariant();
+                if (host.EndsWith("vimeo.com"))
+                {
+                    int hashIdx = rawUrl.IndexOf('#');
+                    string baseNoHash = hashIdx >= 0 ? rawUrl.Substring(0, hashIdx) : rawUrl;
+                    return baseNoHash + "#t=" + seconds + "s";
+                }
+                if (host.EndsWith("youtube.com") || host == "youtu.be" || host.EndsWith("dailymotion.com") || host.EndsWith("twitch.tv"))
+                {
+                    string fragment = "";
+                    string work = rawUrl;
+                    int hashIdx = work.IndexOf('#');
+                    if (hashIdx >= 0)
+                    {
+                        fragment = work.Substring(hashIdx);
+                        work = work.Substring(0, hashIdx);
+                    }
+                    int qIdx = work.IndexOf('?');
+                    if (qIdx < 0)
+                    {
+                        return work + "?t=" + seconds + fragment;
+                    }
+                    string basePart = work.Substring(0, qIdx);
+                    string queryPart = work.Substring(qIdx + 1);
+                    string[] pairs = queryPart.Split('&');
+                    List<string> kept = new List<string>();
+                    for (int i = 0; i < pairs.Length; i++)
+                    {
+                        string pair = pairs[i];
+                        if (string.IsNullOrEmpty(pair)) continue;
+                        int eq = pair.IndexOf('=');
+                        string k = (eq >= 0 ? pair.Substring(0, eq) : pair).ToLowerInvariant();
+                        if (k == "t" || k == "start") continue;
+                        kept.Add(pair);
+                    }
+                    kept.Add("t=" + seconds);
+                    return basePart + "?" + string.Join("&", kept.ToArray()) + fragment;
+                }
+                int hIdx = rawUrl.IndexOf('#');
+                string withoutHash = hIdx >= 0 ? rawUrl.Substring(0, hIdx) : rawUrl;
+                return withoutHash + "#t=" + seconds;
+            }
+            catch
+            {
+                return rawUrl;
+            }
+        }
+
+        private void SendDropInternal(string dropType, string title, string url, string text, string quality, List<RemoteTabItem> tabs)
+        {
             SyncDropItem item;
             string envelopeJson;
             lock (_lock)
             {
+                string normType = string.IsNullOrEmpty(dropType) ? "link" : dropType;
                 item = new SyncDropItem
                 {
                     id = Guid.NewGuid().ToString("N").Substring(0, 14),
-                    dropType = string.IsNullOrEmpty(dropType) ? "link" : dropType,
+                    dropType = normType,
                     title = title ?? "",
                     url = url ?? "",
                     text = text ?? "",
+                    quality = quality ?? "",
+                    tabs = (tabs != null && tabs.Count > 0) ? new List<RemoteTabItem>(tabs) : null,
                     fromId = _state.deviceId,
                     fromName = _state.deviceName,
                     platform = "windows",
@@ -953,6 +1327,10 @@ namespace DejavuBrowser
                 _seenIds.Add(item.id);
                 _state.drops.Insert(0, item);
                 if (_state.drops.Count > 40) _state.drops.RemoveRange(40, _state.drops.Count - 40);
+                if (string.Equals(normType, "clipboard", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(item.text))
+                {
+                    RecordClipboardItemLocked(item.id, item.text, item.fromName, item.platform, item.ts);
+                }
                 _lastSyncMs = item.ts;
                 SaveLocked();
 
@@ -970,6 +1348,14 @@ namespace DejavuBrowser
                     { "url", Truncate(item.url, 900) },
                     { "text", Truncate(item.text, 2400) }
                 };
+                if (!string.IsNullOrEmpty(item.quality))
+                {
+                    env["quality"] = Truncate(item.quality, 24);
+                }
+                if (item.tabs != null && item.tabs.Count > 0)
+                {
+                    env["tabs"] = BuildCompactList(item.tabs, 15, 80, 400);
+                }
                 envelopeJson = _json.Serialize(env);
             }
             RaiseStateChanged();
@@ -1051,8 +1437,65 @@ namespace DejavuBrowser
                     ? BuildCompactList(_cachedLocalHistory, 16, 60, 200)
                     : new List<Dictionary<string, object>>();
 
+                List<Dictionary<string, object>> compactNotes = new List<Dictionary<string, object>>();
+                if (_state.pinnedNotes != null)
+                {
+                    for (int i = 0; i < _state.pinnedNotes.Count && compactNotes.Count < 12; i++)
+                    {
+                        SyncNoteItem n = _state.pinnedNotes[i];
+                        if (n == null || string.IsNullOrEmpty(n.id) || string.IsNullOrWhiteSpace(n.text)) continue;
+                        compactNotes.Add(new Dictionary<string, object>
+                        {
+                            { "id", n.id },
+                            { "text", Truncate(n.text, 1200) },
+                            { "updatedMs", n.updatedMs },
+                            { "fromName", Truncate(n.fromName ?? "", 48) },
+                            { "platform", string.IsNullOrEmpty(n.platform) ? "windows" : n.platform }
+                        });
+                    }
+                }
+
+                List<string> compactDeletedNotes = new List<string>();
+                if (_state.deletedNoteIds != null)
+                {
+                    for (int i = 0; i < _state.deletedNoteIds.Count && compactDeletedNotes.Count < 24; i++)
+                    {
+                        if (!string.IsNullOrEmpty(_state.deletedNoteIds[i]))
+                        {
+                            compactDeletedNotes.Add(_state.deletedNoteIds[i]);
+                        }
+                    }
+                }
+
+                List<Dictionary<string, object>> compactClipHist = new List<Dictionary<string, object>>();
+                if (prefs.clipboard && _state.clipboardHistory != null)
+                {
+                    for (int i = 0; i < _state.clipboardHistory.Count && compactClipHist.Count < 10; i++)
+                    {
+                        SyncClipboardItem c = _state.clipboardHistory[i];
+                        if (c == null || string.IsNullOrWhiteSpace(c.text)) continue;
+                        compactClipHist.Add(new Dictionary<string, object>
+                        {
+                            { "id", c.id ?? "" },
+                            { "text", Truncate(c.text, 1800) },
+                            { "fromName", Truncate(c.fromName ?? "", 48) },
+                            { "platform", string.IsNullOrEmpty(c.platform) ? "windows" : c.platform },
+                            { "ts", c.ts }
+                        });
+                    }
+                }
+
                 Dictionary<string, object> latestClip = null;
-                if (prefs.clipboard && _state.drops != null)
+                if (prefs.clipboard && compactClipHist.Count > 0)
+                {
+                    latestClip = new Dictionary<string, object>
+                    {
+                        { "id", compactClipHist[0]["id"] },
+                        { "text", compactClipHist[0]["text"] },
+                        { "ts", compactClipHist[0]["ts"] }
+                    };
+                }
+                else if (prefs.clipboard && _state.drops != null)
                 {
                     for (int i = 0; i < _state.drops.Count; i++)
                     {
@@ -1092,6 +1535,9 @@ namespace DejavuBrowser
                     { "bookmarks", compactFavs },
                     { "reading", compactReading },
                     { "history", compactHistory },
+                    { "pinnedNotes", compactNotes },
+                    { "deletedNoteIds", compactDeletedNotes },
+                    { "clipboardHistory", compactClipHist },
                     { "latestClipboard", latestClip }
                 };
                 envelopeJson = _json.Serialize(env);
@@ -1374,7 +1820,7 @@ namespace DejavuBrowser
             }
         }
 
-        private void UpsertPeerDeviceLocked(string fromId, string fromName, string platform, long nowMs, int? tabCount)
+        private void UpsertPeerDeviceLocked(string fromId, string fromName, string platform, long nowMs, int? tabCount, bool viaLan)
         {
             if (_state.devices == null) _state.devices = new List<SyncDeviceInfo>();
             string key = string.IsNullOrEmpty(fromId) ? ("peer:" + fromName) : fromId;
@@ -1403,9 +1849,155 @@ namespace DejavuBrowser
             }
             existing.name = string.IsNullOrEmpty(fromName) ? "Mobile Device" : fromName;
             existing.platform = string.IsNullOrEmpty(platform) ? "android" : platform;
+            bool lanRecent = viaLan || (_lastLanSeenMs > 0 && (nowMs - _lastLanSeenMs) < PeerOnlineWindowMs && !string.IsNullOrEmpty(_state.peerLanUrl));
+            existing.transport = lanRecent ? "lan" : "cloud";
             existing.lastSeenMs = nowMs;
             existing.isOnline = true;
             if (tabCount.HasValue) existing.tabCount = Math.Max(0, tabCount.Value);
+        }
+
+        private void MergeIncomingNotesLocked(object rawPinned, object rawDeleted, string defaultFromName, string defaultPlatform, long nowMs)
+        {
+            if (_state.pinnedNotes == null) _state.pinnedNotes = new List<SyncNoteItem>();
+            if (_state.deletedNoteIds == null) _state.deletedNoteIds = new List<string>();
+
+            HashSet<string> tombstones = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; i < _state.deletedNoteIds.Count; i++)
+            {
+                if (!string.IsNullOrEmpty(_state.deletedNoteIds[i])) tombstones.Add(_state.deletedNoteIds[i]);
+            }
+
+            System.Collections.IEnumerable delSeq = rawDeleted as System.Collections.IEnumerable;
+            if (delSeq != null)
+            {
+                foreach (object o in delSeq)
+                {
+                    string did = Convert.ToString(o);
+                    if (!string.IsNullOrWhiteSpace(did))
+                    {
+                        did = did.Trim();
+                        if (tombstones.Add(did))
+                        {
+                            _state.deletedNoteIds.Insert(0, did);
+                        }
+                    }
+                }
+                if (_state.deletedNoteIds.Count > 24)
+                {
+                    _state.deletedNoteIds.RemoveRange(24, _state.deletedNoteIds.Count - 24);
+                }
+            }
+
+            if (tombstones.Count > 0)
+            {
+                _state.pinnedNotes.RemoveAll(n => n == null || string.IsNullOrEmpty(n.id) || tombstones.Contains(n.id));
+            }
+
+            System.Collections.IEnumerable pinSeq = rawPinned as System.Collections.IEnumerable;
+            if (pinSeq != null)
+            {
+                Dictionary<string, SyncNoteItem> byId = new Dictionary<string, SyncNoteItem>(StringComparer.Ordinal);
+                for (int i = 0; i < _state.pinnedNotes.Count; i++)
+                {
+                    SyncNoteItem ex = _state.pinnedNotes[i];
+                    if (ex != null && !string.IsNullOrEmpty(ex.id)) byId[ex.id] = ex;
+                }
+                foreach (object obj in pinSeq)
+                {
+                    Dictionary<string, object> d = obj as Dictionary<string, object>;
+                    if (d == null) continue;
+                    string nid = d.ContainsKey("id") ? (Convert.ToString(d["id"]) ?? "").Trim() : "";
+                    string ntxt = d.ContainsKey("text") ? (Convert.ToString(d["text"]) ?? "").Trim() : "";
+                    if (string.IsNullOrEmpty(nid) || string.IsNullOrEmpty(ntxt)) continue;
+                    if (tombstones.Contains(nid)) continue;
+                    long ums = nowMs;
+                    if (d.ContainsKey("updatedMs"))
+                    {
+                        try { ums = Convert.ToInt64(d["updatedMs"]); } catch { }
+                    }
+                    string nFrom = d.ContainsKey("fromName") ? (Convert.ToString(d["fromName"]) ?? "") : "";
+                    if (string.IsNullOrEmpty(nFrom)) nFrom = defaultFromName;
+                    string nPlat = d.ContainsKey("platform") ? (Convert.ToString(d["platform"]) ?? "") : "";
+                    if (string.IsNullOrEmpty(nPlat)) nPlat = defaultPlatform;
+
+                    SyncNoteItem cur;
+                    if (!byId.TryGetValue(nid, out cur) || ums > cur.updatedMs)
+                    {
+                        byId[nid] = new SyncNoteItem
+                        {
+                            id = nid,
+                            text = Truncate(ntxt, 1200),
+                            updatedMs = ums,
+                            fromName = nFrom,
+                            platform = nPlat
+                        };
+                    }
+                }
+                List<SyncNoteItem> merged = new List<SyncNoteItem>(byId.Values);
+                merged.Sort((a, b) => b.updatedMs.CompareTo(a.updatedMs));
+                if (merged.Count > 12) merged.RemoveRange(12, merged.Count - 12);
+                _state.pinnedNotes = merged;
+            }
+        }
+
+        private void MergeIncomingClipboardHistoryLocked(object rawHistory, string defaultFromName, string defaultPlatform, long nowMs)
+        {
+            System.Collections.IEnumerable seq = rawHistory as System.Collections.IEnumerable;
+            if (seq == null) return;
+            if (_state.clipboardHistory == null) _state.clipboardHistory = new List<SyncClipboardItem>();
+
+            Dictionary<string, SyncClipboardItem> byId = new Dictionary<string, SyncClipboardItem>(StringComparer.Ordinal);
+            for (int i = 0; i < _state.clipboardHistory.Count; i++)
+            {
+                SyncClipboardItem ex = _state.clipboardHistory[i];
+                if (ex != null && !string.IsNullOrEmpty(ex.id) && !string.IsNullOrWhiteSpace(ex.text))
+                {
+                    byId[ex.id] = ex;
+                }
+            }
+            foreach (object obj in seq)
+            {
+                Dictionary<string, object> d = obj as Dictionary<string, object>;
+                if (d == null) continue;
+                string cid = d.ContainsKey("id") ? (Convert.ToString(d["id"]) ?? "").Trim() : "";
+                string ctxt = d.ContainsKey("text") ? (Convert.ToString(d["text"]) ?? "").Trim() : "";
+                if (string.IsNullOrEmpty(ctxt)) continue;
+                long cts = nowMs;
+                if (d.ContainsKey("ts"))
+                {
+                    try { cts = Convert.ToInt64(d["ts"]); } catch { }
+                }
+                if (string.IsNullOrEmpty(cid)) cid = "clip_" + cts + "_" + ctxt.GetHashCode();
+                string cFrom = d.ContainsKey("fromName") ? (Convert.ToString(d["fromName"]) ?? "") : "";
+                if (string.IsNullOrEmpty(cFrom)) cFrom = defaultFromName;
+                string cPlat = d.ContainsKey("platform") ? (Convert.ToString(d["platform"]) ?? "") : "";
+                if (string.IsNullOrEmpty(cPlat)) cPlat = defaultPlatform;
+
+                if (!byId.ContainsKey(cid))
+                {
+                    byId[cid] = new SyncClipboardItem
+                    {
+                        id = cid,
+                        text = Truncate(ctxt, 2400),
+                        fromName = cFrom,
+                        platform = cPlat,
+                        ts = cts
+                    };
+                }
+            }
+            List<SyncClipboardItem> all = new List<SyncClipboardItem>(byId.Values);
+            all.Sort((a, b) => b.ts.CompareTo(a.ts));
+            List<SyncClipboardItem> deduped = new List<SyncClipboardItem>();
+            for (int i = 0; i < all.Count && deduped.Count < 10; i++)
+            {
+                SyncClipboardItem it = all[i];
+                if (deduped.Count > 0 && string.Equals(deduped[deduped.Count - 1].text, it.text, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+                deduped.Add(it);
+            }
+            _state.clipboardHistory = deduped;
         }
 
         private void HandleEncryptedBlob(string blob, bool viaLan)
@@ -1464,7 +2056,7 @@ namespace DejavuBrowser
 
                 SyncPrefs prefs = _state.prefs ?? new SyncPrefs();
 
-                if (kind == "snapshot")
+                if (kind == "snapshot" || kind == "state")
                 {
                     if (prefs.tabs && msg.ContainsKey("tabs"))
                     {
@@ -1484,6 +2076,16 @@ namespace DejavuBrowser
                     if (prefs.history && msg.ContainsKey("history"))
                     {
                         incomingHistory = ParseRemoteList(msg["history"]);
+                    }
+                    if (msg.ContainsKey("pinnedNotes") || msg.ContainsKey("deletedNoteIds"))
+                    {
+                        object rawPinned = msg.ContainsKey("pinnedNotes") ? msg["pinnedNotes"] : null;
+                        object rawDeleted = msg.ContainsKey("deletedNoteIds") ? msg["deletedNoteIds"] : null;
+                        MergeIncomingNotesLocked(rawPinned, rawDeleted, _state.peerName, platform, nowMs);
+                    }
+                    if (prefs.clipboard && msg.ContainsKey("clipboardHistory"))
+                    {
+                        MergeIncomingClipboardHistoryLocked(msg["clipboardHistory"], _state.peerName, platform, nowMs);
                     }
                     if (prefs.clipboard && msg.ContainsKey("latestClipboard"))
                     {
@@ -1534,6 +2136,7 @@ namespace DejavuBrowser
                                     };
                                     _state.drops.Insert(0, clipDrop);
                                     if (_state.drops.Count > 40) _state.drops.RemoveRange(40, _state.drops.Count - 40);
+                                    RecordClipboardItemLocked(finalCid, clipDrop.text, _state.peerName, platform, cts);
                                     if (Math.Abs(nowMs - cts) < 120000L)
                                     {
                                         notifyDrop = clipDrop;
@@ -1559,6 +2162,9 @@ namespace DejavuBrowser
                     bool acceptDrop = !string.Equals(dropType, "clipboard", StringComparison.OrdinalIgnoreCase) || prefs.clipboard;
                     if (acceptDrop)
                     {
+                        List<RemoteTabItem> dropTabs = msg.ContainsKey("tabs") ? ParseRemoteList(msg["tabs"]) : null;
+                        if (dropTabs != null && dropTabs.Count == 0) dropTabs = null;
+                        string dropQual = msg.ContainsKey("quality") ? (Convert.ToString(msg["quality"]) ?? "") : "";
                         SyncDropItem item = new SyncDropItem
                         {
                             id = string.IsNullOrEmpty(id) ? Guid.NewGuid().ToString("N").Substring(0, 14) : id,
@@ -1566,6 +2172,8 @@ namespace DejavuBrowser
                             title = msg.ContainsKey("title") ? Convert.ToString(msg["title"]) : "",
                             url = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : "",
                             text = msg.ContainsKey("text") ? Convert.ToString(msg["text"]) : "",
+                            quality = dropQual,
+                            tabs = dropTabs,
                             fromId = from,
                             fromName = _state.peerName,
                             platform = platform,
@@ -1573,6 +2181,10 @@ namespace DejavuBrowser
                         };
                         _state.drops.Insert(0, item);
                         if (_state.drops.Count > 40) _state.drops.RemoveRange(40, _state.drops.Count - 40);
+                        if (string.Equals(dropType, "clipboard", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(item.text))
+                        {
+                            RecordClipboardItemLocked(item.id, item.text, item.fromName, item.platform, item.ts);
+                        }
                         notifyDrop = item;
                     }
                 }
@@ -1608,7 +2220,7 @@ namespace DejavuBrowser
                     }
                 }
 
-                UpsertPeerDeviceLocked(from, _state.peerName, platform, nowMs, reportedTabs);
+                UpsertPeerDeviceLocked(from, _state.peerName, platform, nowMs, reportedTabs, viaLan);
                 SaveLocked();
             }
 
@@ -2344,7 +2956,7 @@ namespace DejavuBrowser
 
                         byte[] allBytes = ms.ToArray();
                         string reqHead = headerEnd > 0 ? Encoding.ASCII.GetString(allBytes, 0, headerEnd) : "";
-                        string respJson = "{\"ok\":true,\"app\":\"dejavu\",\"version\":\"5.4.0\"}";
+                        string respJson = "{\"ok\":true,\"app\":\"dejavu\",\"version\":\"5.5.0\"}";
                         if (reqHead.StartsWith("POST /sync", StringComparison.OrdinalIgnoreCase) && headerEnd > 0 && contentLen > 0)
                         {
                             int actual = Math.Min(contentLen, allBytes.Length - headerEnd);

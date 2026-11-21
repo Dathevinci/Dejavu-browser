@@ -2024,21 +2024,22 @@
     .dls-acts { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 
     /* =========================================================================
-       Mode 13 & 14: Streamlined Tab-Free Material Design 3 dejavu Link Popover
-       Zero Sub-Tabs · Zero QR Clutter · Google Account Auto-Sync First
+       Mode 13 & 14: Streamlined Material Design 3 dejavu Link v2.3 Quick Popover
+       376x496 · Zero Scrollbar · Zero Truncation · 1-Tap Ping & Quick Continuity
        ========================================================================= */
     .sync-pop-box {
-      padding: 15px 15px 13px;
-      gap: 10px;
+      padding: 12px 13px 11px;
+      gap: 8px;
+      overflow: hidden;
     }
 
     .sync-status-card {
-      padding: 12px 13px;
-      border-radius: 18px;
+      padding: 10px 12px;
+      border-radius: 16px;
       background: var(--md-surface-container);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       flex-shrink: 0;
     }
 
@@ -2054,7 +2055,7 @@
     .sync-status-top {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
       min-width: 0;
     }
 
@@ -2075,7 +2076,7 @@
     }
 
     .sync-status-email {
-      font-size: 12.6px;
+      font-size: 12.2px;
       font-weight: 700;
       white-space: nowrap;
       overflow: hidden;
@@ -2084,58 +2085,88 @@
       min-width: 0;
     }
 
+    .sync-ping-pill {
+      height: 24px;
+      padding: 0 9px;
+      border-radius: var(--md-shape-full);
+      border: none;
+      background: color-mix(in srgb, var(--md-on-surface) 13%, transparent);
+      color: inherit;
+      font-family: inherit;
+      font-size: 10.6px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      white-space: nowrap;
+      transition: filter var(--md-dur-short) ease, transform var(--md-dur-press) ease;
+    }
+
+    .sync-ping-pill:hover { filter: brightness(1.1); }
+    .sync-ping-pill:active { transform: scale(0.95); }
+
     .sync-status-meta {
-      font-size: 11.2px;
-      opacity: 0.86;
+      font-size: 11px;
+      opacity: 0.88;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 6px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
+    .sync-status-meta-txt {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
     .sync-signin-copy {
-      font-size: 11.8px;
+      font-size: 11.4px;
       color: var(--md-on-surface-variant);
-      line-height: 1.42;
+      line-height: 1.38;
     }
 
     .sync-signin-row {
       display: flex;
       align-items: center;
-      gap: 7px;
-      flex-wrap: wrap;
+      gap: 6px;
+      flex-wrap: nowrap;
     }
 
     .sync-signin-row .pill-btn {
-      height: 32px;
-      padding: 0 13px;
-      font-size: 11.6px;
+      height: 30px;
+      padding: 0 11px;
+      font-size: 11.3px;
     }
 
     .sync-quick-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 7px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
       flex-shrink: 0;
     }
 
     .sync-act-pill {
-      height: 36px;
-      padding: 0 12px;
+      height: 33px;
+      padding: 0 8px;
       border-radius: var(--md-shape-full);
       border: none;
       outline: none;
       background: var(--md-secondary-container);
       color: var(--md-on-secondary-container);
       font-family: inherit;
-      font-size: 12px;
+      font-size: 11.4px;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 5px;
       cursor: pointer;
       white-space: nowrap;
       overflow: hidden;
@@ -2156,7 +2187,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 3px 4px 3px 13px;
+      padding: 3px 4px 3px 12px;
       border-radius: var(--md-shape-full);
       border: 1.5px solid color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
       background: var(--md-surface-container);
@@ -2173,34 +2204,86 @@
     .sync-compose input {
       flex: 1;
       min-width: 0;
-      height: 30px;
+      height: 28px;
       border: none;
       outline: none;
       background: transparent;
       color: var(--md-on-surface);
       font-family: inherit;
-      font-size: 12px;
+      font-size: 11.8px;
       user-select: text;
     }
 
     .sync-compose input::placeholder { color: var(--md-on-surface-variant); }
 
+    .sync-meta-strip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .sync-stat-chip {
+      flex: 1;
+      height: 25px;
+      padding: 0 10px;
+      border-radius: var(--md-shape-full);
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 34%, transparent);
+      background: var(--md-surface-container);
+      color: var(--md-on-surface-variant);
+      font-family: inherit;
+      font-size: 10.8px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: background-color var(--md-dur-short) ease, color var(--md-dur-short) ease;
+    }
+
+    body.theme-light .sync-stat-chip {
+      background: var(--md-surface-container-lowest);
+    }
+
+    .sync-stat-chip:hover {
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface);
+    }
+
+    .sync-stat-chip strong {
+      color: var(--md-primary);
+      font-weight: 700;
+    }
+
+    #sync-recent-list {
+      overflow: hidden !important;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1 1 0;
+      min-height: 0;
+    }
+
     .sync-micro-hdr {
-      font-size: 10.4px;
+      font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--md-primary);
-      padding: 4px 4px 1px;
+      padding: 2px 4px 0;
       flex-shrink: 0;
     }
 
     .sync-recent-row {
       display: flex;
       align-items: center;
-      gap: 9px;
-      padding: 8px 10px;
-      border-radius: 14px;
+      gap: 8px;
+      padding: 7px 9px;
+      border-radius: 13px;
       background: var(--md-surface-container);
       flex-shrink: 0;
       contain: layout style;
@@ -2220,9 +2303,9 @@
     }
 
     .sync-recent-ico {
-      width: 24px;
-      height: 24px;
-      border-radius: 8px;
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
       background: var(--md-surface-container-high);
       color: var(--md-primary);
       display: inline-flex;
@@ -2232,7 +2315,7 @@
       overflow: hidden;
     }
 
-    .sync-recent-ico img { width: 15px; height: 15px; object-fit: contain; display: block; }
+    .sync-recent-ico img { width: 14px; height: 14px; object-fit: contain; display: block; }
 
     .sync-recent-meta {
       flex: 1;
@@ -2240,7 +2323,7 @@
     }
 
     .sync-recent-title {
-      font-size: 12.2px;
+      font-size: 11.8px;
       font-weight: 600;
       color: var(--md-on-surface);
       white-space: nowrap;
@@ -2249,7 +2332,7 @@
     }
 
     .sync-recent-sub {
-      font-size: 10.6px;
+      font-size: 10.3px;
       color: var(--md-on-surface-variant);
       white-space: nowrap;
       overflow: hidden;
@@ -2265,7 +2348,7 @@
     }
 
     .sync-pop-foot {
-      padding-top: 8px;
+      padding-top: 7px;
       border-top: 1px solid color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
       display: flex;
       flex-shrink: 0;
@@ -2273,8 +2356,8 @@
 
     .sync-pop-foot .pill-btn {
       width: 100%;
-      height: 36px;
-      font-size: 12.2px;
+      height: 34px;
+      font-size: 12px;
     }
 
     /* Mode 17: Chrome-Grade Material Design 3 Toolbar Extensions Puzzle Popover */
@@ -2619,7 +2702,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v5.4.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v5.5.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -2976,7 +3059,7 @@
     </div>
   </div>
 
-  <!-- Mode 13: Streamlined Tab-Free Material Design 3 dejavu Link Quick Popover -->
+  <!-- Mode 13: Streamlined Material Design 3 dejavu Link v2.3 Quick Popover (376x496 · Zero Scrollbar) -->
   <div id="mode-sync" class="overlay-shell hidden">
     <div class="panel-box sync-pop-box">
       <div class="panel-head">
@@ -2997,35 +3080,49 @@
         </div>
       </div>
 
-      <!-- Top: Google Auto-Sync Status Pill OR Sign-In CTA (Zero QR Clutter, Zero Sub-Tabs) -->
+      <!-- Compact Device Presence Card + Transport Pill + 1-Tap Ping -->
       <div id="sync-status-card" class="sync-status-card"></div>
 
-      <!-- Quick Action Row -->
+      <!-- 3 Crisp Quick-Action Pills: Send Tab · All Tabs · Clipboard -->
       <div class="sync-quick-actions">
         <button id="btn-sync-send-tab" class="sync-act-pill primary" type="button">
-          <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M2.5 8h10M8.8 4.2L12.6 8l-3.8 3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><path d="M2.5 8h10M8.8 4.2L12.6 8l-3.8 3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span id="sync-send-tab-lbl">Send Tab</span>
         </button>
+        <button id="btn-sync-send-all" class="sync-act-pill" type="button" title="Send all open browser tabs as a batch">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><rect x="2.4" y="4.5" width="8.6" height="7.4" rx="1.6" stroke="currentColor" stroke-width="1.4"/><path d="M5 2.7h6.6a1.7 1.7 0 0 1 1.7 1.7v5.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <span id="sync-send-all-lbl">All Tabs</span>
+        </button>
         <button id="btn-sync-send-clip" class="sync-act-pill" type="button">
-          <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><rect x="3.8" y="3.8" width="8.4" height="9.8" rx="1.7" stroke="currentColor" stroke-width="1.4"/><path d="M6 3.8V3.1a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v.7" stroke="currentColor" stroke-width="1.4"/></svg>
-          <span id="sync-send-clip-lbl">Send Clipboard</span>
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><rect x="3.8" y="3.8" width="8.4" height="9.8" rx="1.7" stroke="currentColor" stroke-width="1.4"/><path d="M6 3.8V3.1a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v.7" stroke="currentColor" stroke-width="1.4"/></svg>
+          <span id="sync-send-clip-lbl">Clipboard</span>
         </button>
       </div>
 
       <!-- Compact Quick Drop Input -->
       <div class="sync-compose">
         <input id="sync-drop-input" type="text" placeholder="Beam a link, YouTube URL, or note…" autocomplete="off">
-        <button id="btn-sync-send-drop" class="pill-btn primary" type="button" style="height:28px;padding:0 13px;">Beam</button>
+        <button id="btn-sync-send-drop" class="pill-btn primary" type="button" style="height:26px;padding:0 12px;font-size:11.4px;">Beam</button>
       </div>
 
-      <!-- Top 3 Recent Phone Tabs & Clips (Zero Inner Sub-Tabs) -->
-      <div id="sync-recent-list" class="panel-scroll"></div>
+      <!-- Compact Clipboard History & Pinned Notes Summary Strip -->
+      <div id="sync-meta-strip" class="sync-meta-strip">
+        <button id="btn-sync-chip-clips" class="sync-stat-chip" type="button" title="Open Shared Clipboard History in Link Hub">
+          <span>Clips</span><strong id="sync-chip-clips-cnt">0</strong>
+        </button>
+        <button id="btn-sync-chip-notes" class="sync-stat-chip" type="button" title="Open Pinned Notes in Link Hub">
+          <span>Pinned Notes</span><strong id="sync-chip-notes-cnt">0</strong>
+        </button>
+      </div>
+
+      <!-- Compact Live Preview (Latest Phone Tabs + Latest Clip/Drop · Zero Scrollbar) -->
+      <div id="sync-recent-list"></div>
 
       <!-- Footer: Full Hub CTA -->
       <div class="sync-pop-foot">
         <button id="btn-sync-open-hub" class="pill-btn" type="button">
           <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><rect x="2" y="3.4" width="7.4" height="6" rx="1.2" stroke="currentColor" stroke-width="1.35"/><path d="M4.4 11.4h2.6M5.7 9.4v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><rect x="10" y="4.6" width="4" height="7.6" rx="1" stroke="currentColor" stroke-width="1.35"/></svg>
-          <span>Open Full dejavu Link Hub</span>
+          <span>Open Link Hub</span>
         </button>
       </div>
     </div>
@@ -3132,7 +3229,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v5.4.0</span>
+        <span id="mn-version-lbl">dejavu v5.5.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -3693,7 +3790,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.4.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.5.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -4579,21 +4676,31 @@
     }
 
     // =========================================================================
-    // Mode 13 & 14: Streamlined Tab-Free Material Design 3 dejavu Link Popover
+    // Mode 13 & 14: Streamlined Material Design 3 dejavu Link v2.3 Quick Popover
     // =========================================================================
     const syncStatusCard = document.getElementById('sync-status-card');
     const btnSyncSendTab = document.getElementById('btn-sync-send-tab');
     const syncSendTabLbl = document.getElementById('sync-send-tab-lbl');
+    const btnSyncSendAll = document.getElementById('btn-sync-send-all');
+    const syncSendAllLbl = document.getElementById('sync-send-all-lbl');
     const btnSyncSendClip = document.getElementById('btn-sync-send-clip');
     const syncSendClipLbl = document.getElementById('sync-send-clip-lbl');
     const syncDropInput = document.getElementById('sync-drop-input');
     const btnSyncSendDrop = document.getElementById('btn-sync-send-drop');
+    const syncChipClipsCnt = document.getElementById('sync-chip-clips-cnt');
+    const syncChipNotesCnt = document.getElementById('sync-chip-notes-cnt');
+    const btnSyncChipClips = document.getElementById('btn-sync-chip-clips');
+    const btnSyncChipNotes = document.getElementById('btn-sync-chip-notes');
     const syncRecentList = document.getElementById('sync-recent-list');
     const btnSyncOpenHub = document.getElementById('btn-sync-open-hub');
+
+    const SYNC_PING_BELL_SVG = '<svg viewBox="0 0 16 16" width="11" height="11" fill="none" aria-hidden="true"><path d="M8 2.2a3.6 3.6 0 0 0-3.6 3.6v2.1L3.2 9.8a.6.6 0 0 0 .5.9h8.6a.6.6 0 0 0 .5-.9l-1.2-1.9V5.8A3.6 3.6 0 0 0 8 2.2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.4 12.2a1.7 1.7 0 0 0 3.2 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
 
     document.getElementById('btn-sync-close').addEventListener('click', () => send({ type: 'closePanel' }));
     document.getElementById('btn-sync-now').addEventListener('click', () => send({ type: 'syncNow' }));
     if (btnSyncOpenHub) btnSyncOpenHub.addEventListener('click', () => send({ type: 'openLinkHub' }));
+    if (btnSyncChipClips) btnSyncChipClips.addEventListener('click', () => send({ type: 'openLinkHub' }));
+    if (btnSyncChipNotes) btnSyncChipNotes.addEventListener('click', () => send({ type: 'openLinkHub' }));
 
     btnSyncSendTab.addEventListener('click', () => {
       if (btnSyncSendTab.disabled) return;
@@ -4602,12 +4709,24 @@
       setTimeout(() => { syncSendTabLbl.textContent = 'Send Tab'; }, 1200);
     });
 
+    if (btnSyncSendAll) {
+      btnSyncSendAll.addEventListener('click', () => {
+        if (btnSyncSendAll.disabled) return;
+        send({ type: 'syncSendAllTabs' });
+        if (syncSendAllLbl) {
+          const prevLbl = syncSendAllLbl.textContent;
+          syncSendAllLbl.textContent = 'Sent ✓';
+          setTimeout(() => { syncSendAllLbl.textContent = prevLbl || 'All Tabs'; }, 1200);
+        }
+      });
+    }
+
     if (btnSyncSendClip) {
       btnSyncSendClip.addEventListener('click', () => {
         send({ type: 'syncSendClipboard' });
         if (syncSendClipLbl) {
           syncSendClipLbl.textContent = 'Sent ✓';
-          setTimeout(() => { syncSendClipLbl.textContent = 'Send Clipboard'; }, 1200);
+          setTimeout(() => { syncSendClipLbl.textContent = 'Clipboard'; }, 1200);
         }
       });
     }
@@ -4627,6 +4746,18 @@
         /\.(mp4|mkv|webm|mov|mp3|m4a|flac|wav|pdf|zip|rar|7z|exe|msi|apk|iso|m3u8)(\?|#|$)/i.test(url);
     }
 
+    function bindSyncPingBtn(btn) {
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        send({ type: 'syncPingPeer' });
+        const sp = btn.querySelector('span');
+        if (sp) {
+          sp.textContent = 'Pinged ✓';
+          setTimeout(() => { sp.textContent = 'Ping'; }, 1300);
+        }
+      });
+    }
+
     function renderSyncPanel(d) {
       const s = d.sync || {};
       const isGoogle = s.syncMode === 'google' && !!s.googleEmail;
@@ -4634,15 +4765,22 @@
       const connected = !!(s.connected || s.paired);
       const rtabs = Array.isArray(s.remoteTabs) ? s.remoteTabs : [];
       const drops = Array.isArray(s.drops) ? s.drops : [];
+      const clipHist = Array.isArray(s.clipboardHistory)
+        ? s.clipboardHistory
+        : drops.filter((x) => x && String(x.dropType || '').toLowerCase() === 'clipboard');
+      const pinnedNotes = Array.isArray(s.pinnedNotes) ? s.pinnedNotes : [];
+
+      if (syncChipClipsCnt) syncChipClipsCnt.textContent = String(clipHist.length);
+      if (syncChipNotesCnt) syncChipNotesCnt.textContent = String(pinnedNotes.length);
 
       const relayStatus = String(s.relayStatus || '').toLowerCase();
-      const relayLabel = relayStatus === 'connected_lan'
-        ? 'Direct Wi-Fi LAN'
+      const relayShort = relayStatus === 'connected_lan'
+        ? 'LAN'
         : (relayStatus === 'connected_cloud'
-          ? 'E2EE Cloud · Connected'
+          ? 'E2EE Cloud'
           : (relayStatus === 'retrying'
-            ? 'Reconnecting…'
-            : (relayStatus === 'connecting' ? 'Connecting…' : '')));
+            ? 'Retrying'
+            : (relayStatus === 'connecting' ? 'Connecting' : '')));
       const relayIsLive = relayStatus === 'connected_lan' || relayStatus === 'connected_cloud';
 
       if (syncStatusCard) {
@@ -4652,36 +4790,45 @@
             ? `${s.peerName || 'Android Phone'} · Online · ${rtabs.length} ${rtabs.length === 1 ? 'tab' : 'tabs'}`
             : (connected
               ? `${s.peerName || 'Android Phone'} · Synced · ${rtabs.length} ${rtabs.length === 1 ? 'tab' : 'tabs'}`
-              : 'Waiting for Android phone with same Google Account');
+              : 'Waiting for phone on same Google Account');
           syncStatusCard.innerHTML = `
             <div class="sync-status-top">
               <span class="sync-live-dot ${peerOnline || relayIsLive ? 'online' : ''}"></span>
               <span class="sync-status-email"></span>
-              ${relayLabel ? `<span class="sync-relay-tag ${relayIsLive ? 'is-live' : ''}" title="${escapeHtml(s.relayBroker || '')}">${escapeHtml(relayLabel)}</span>` : ''}
+              ${relayShort ? `<span class="sync-relay-tag ${relayIsLive ? 'is-live' : ''}" title="${escapeHtml(s.relayBroker || '')}">${escapeHtml(relayShort)}</span>` : ''}
+              <button type="button" id="btn-sync-ping" class="sync-ping-pill" title="Ping connected phone">${SYNC_PING_BELL_SVG}<span>Ping</span></button>
             </div>
-            <div class="sync-status-meta"></div>
+            <div class="sync-status-meta"><span class="sync-status-meta-txt"></span></div>
           `;
-          syncStatusCard.querySelector('.sync-status-email').textContent = `Synced via ${s.googleEmail}`;
-          syncStatusCard.querySelector('.sync-status-meta').textContent = peerLine;
+          syncStatusCard.querySelector('.sync-status-email').textContent = s.googleEmail;
+          syncStatusCard.querySelector('.sync-status-meta-txt').textContent = peerLine;
+          bindSyncPingBtn(syncStatusCard.querySelector('#btn-sync-ping'));
         } else if (s.connected) {
           syncStatusCard.innerHTML = `
             <div class="sync-status-top">
               <span class="sync-live-dot ${peerOnline || relayIsLive ? 'online' : ''}"></span>
               <span class="sync-status-email"></span>
-              ${relayLabel ? `<span class="sync-relay-tag ${relayIsLive ? 'is-live' : ''}" title="${escapeHtml(s.relayBroker || '')}">${escapeHtml(relayLabel)}</span>` : ''}
+              ${relayShort ? `<span class="sync-relay-tag ${relayIsLive ? 'is-live' : ''}" title="${escapeHtml(s.relayBroker || '')}">${escapeHtml(relayShort)}</span>` : ''}
+              <button type="button" id="btn-sync-ping" class="sync-ping-pill" title="Ping connected phone">${SYNC_PING_BELL_SVG}<span>Ping</span></button>
             </div>
-            <div class="sync-status-meta">Manual E2EE Link active · Sign in with Google for automatic sync</div>
+            <div class="sync-status-meta"><span class="sync-status-meta-txt">Manual E2EE Link active · ${rtabs.length} ${rtabs.length === 1 ? 'tab' : 'tabs'}</span></div>
           `;
-          syncStatusCard.querySelector('.sync-status-email').textContent = `Connected · ${s.peerName || 'Android Phone'}`;
+          syncStatusCard.querySelector('.sync-status-email').textContent = s.peerName || 'Android Phone';
+          bindSyncPingBtn(syncStatusCard.querySelector('#btn-sync-ping'));
         } else {
-          const gSvg = '<svg viewBox="0 0 18 18" width="13" height="13" aria-hidden="true"><path fill="currentColor" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/><path fill="currentColor" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z" opacity="0.9"/><path fill="currentColor" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z" opacity="0.8"/><path fill="currentColor" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" opacity="0.95"/></svg>';
+          const gSvg = '<svg viewBox="0 0 18 18" width="12" height="12" aria-hidden="true"><path fill="currentColor" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/><path fill="currentColor" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z" opacity="0.9"/><path fill="currentColor" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z" opacity="0.8"/><path fill="currentColor" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" opacity="0.95"/></svg>';
           syncStatusCard.innerHTML = `
-            <div class="sync-signin-copy">Sign in with Google on Windows &amp; Android to auto-sync tabs and clipboard — zero QR codes needed.</div>
+            <div class="sync-status-top">
+              <span class="sync-live-dot ${relayIsLive ? 'online' : ''}"></span>
+              <span class="sync-status-email">Auto-Sync PC &amp; Android</span>
+              <button type="button" id="btn-sync-ping" class="sync-ping-pill" title="Ping paired device">${SYNC_PING_BELL_SVG}<span>Ping</span></button>
+            </div>
             <div class="sync-signin-row">
               <button type="button" id="btn-sync-google-cta" class="pill-btn primary">${gSvg}<span>Sign in with Google</span></button>
-              <button type="button" id="btn-sync-manual-cta" class="pill-btn">Link Hub</button>
+              <button type="button" id="btn-sync-manual-cta" class="pill-btn">Pair Code</button>
             </div>
           `;
+          bindSyncPingBtn(syncStatusCard.querySelector('#btn-sync-ping'));
           const gBtn = syncStatusCard.querySelector('#btn-sync-google-cta');
           if (gBtn) gBtn.addEventListener('click', () => send({ type: 'googleSignIn' }));
           const mBtn = syncStatusCard.querySelector('#btn-sync-manual-cta');
@@ -4694,14 +4841,29 @@
       syncSendTabLbl.textContent = 'Send Tab';
       btnSyncSendTab.title = hasActiveTab ? `Send "${d.activeTabTitle || d.activeTabUrl}" to Phone` : 'Open a website to send tab';
 
+      const openTabCount = typeof d.openTabCount === 'number' ? d.openTabCount : (hasActiveTab ? 1 : 0);
+      if (btnSyncSendAll) {
+        btnSyncSendAll.disabled = openTabCount <= 0;
+        btnSyncSendAll.title = openTabCount > 0
+          ? `Send all ${openTabCount} open ${openTabCount === 1 ? 'tab' : 'tabs'} to Phone`
+          : 'Open at least one website tab first';
+      }
+      if (syncSendAllLbl) {
+        syncSendAllLbl.textContent = openTabCount > 0 ? `All (${openTabCount})` : 'All Tabs';
+      }
+
       if (!syncRecentList) return;
       syncRecentList.innerHTML = '';
 
-      const topTabs = rtabs.slice(0, 3);
-      const topDrops = drops.slice(0, 3);
+      // Fit cleanly inside 376x496 with ZERO scrollbar: up to 2 phone tabs + 1 latest clip/drop (or 2 drops if no tabs)
+      const latestClip = clipHist.length ? clipHist[0] : null;
+      const topTabs = rtabs.slice(0, latestClip || drops.length ? 2 : 3);
+      const latestDrop = drops.find((x) => x && String(x.dropType || '').toLowerCase() !== 'ping') || drops[0] || null;
+      const hasClipPreview = !!(latestClip && latestClip.text);
+      const showDropRow = !!(latestDrop && (!hasClipPreview || String(latestDrop.dropType || '').toLowerCase() !== 'clipboard'));
 
-      if (!topTabs.length && !topDrops.length) {
-        syncRecentList.innerHTML = '<div class="empty-msg" style="padding:20px 10px;">No recent phone tabs or clips yet.<br>Beam a link or click <strong>Send Clipboard</strong> above!</div>';
+      if (!topTabs.length && !hasClipPreview && !showDropRow) {
+        syncRecentList.innerHTML = '<div class="empty-msg" style="padding:18px 10px;">No phone tabs or shared clips yet.<br>Send a tab, clipboard, or pinned note to sync across devices.</div>';
         return;
       }
 
@@ -4719,7 +4881,7 @@
           const row = document.createElement('div');
           row.className = 'sync-recent-row';
           row.innerHTML = `
-            <span class="sync-recent-ico">${icoSrc ? '<img alt="" draggable="false">' : makeM3LogoSpan(15, '')}</span>
+            <span class="sync-recent-ico">${icoSrc ? '<img alt="" draggable="false">' : makeM3LogoSpan(14, '')}</span>
             <div class="sync-recent-meta">
               <div class="sync-recent-title"></div>
               <div class="sync-recent-sub"></div>
@@ -4731,7 +4893,7 @@
           const img = row.querySelector('.sync-recent-ico img');
           if (img && icoSrc) {
             img.src = icoSrc;
-            img.onerror = () => swapImgToM3Logo(img, 15, '');
+            img.onerror = () => swapImgToM3Logo(img, 14, '');
           }
           row.querySelector('.sync-recent-title').textContent = rt.title || host || rt.url;
           row.querySelector('.sync-recent-sub').textContent = host || rt.url;
@@ -4740,52 +4902,87 @@
         });
       }
 
-      if (topDrops.length) {
+      if (hasClipPreview) {
         const hdr = document.createElement('div');
         hdr.className = 'sync-micro-hdr';
-        hdr.textContent = `Recent Clips & Drops (${drops.length})`;
+        hdr.textContent = 'Latest Shared Clipboard';
         frag.appendChild(hdr);
 
-        topDrops.forEach((it) => {
-          const dt = String(it.dropType || 'link').toLowerCase();
-          const badgeLbl = dt === 'clipboard' ? 'Clip' : (dt === 'tab' ? 'Tab' : (dt === 'text' ? 'Note' : 'Link'));
-          const primary = (dt === 'clipboard' || dt === 'text') ? (it.text || it.title || it.url || '') : (it.title || it.url || it.text || '');
-          const sub = `${it.fromName || 'Device'} · ${badgeLbl}`;
-          const canDl = !!(it.url && isOvDownloadableUrl(it.url));
-
-          const row = document.createElement('div');
-          row.className = 'sync-recent-row';
-          row.innerHTML = `
-            <div class="sync-recent-meta">
-              <div class="sync-recent-title"></div>
-              <div class="sync-recent-sub"></div>
-            </div>
-            <div class="sync-recent-acts">
-              ${it.url ? '<button type="button" class="dl-act-btn s-open">Open</button>' : ''}
-              ${canDl ? '<button type="button" class="dl-act-btn s-dl8x" title="Download 8x">8×</button>' : ''}
-              <button type="button" class="dl-act-btn s-copy">Copy</button>
-            </div>
-          `;
-          row.querySelector('.sync-recent-title').textContent = primary;
-          row.querySelector('.sync-recent-sub').textContent = sub;
-          const ob = row.querySelector('.s-open');
-          if (ob) ob.addEventListener('click', () => send({ type: 'syncOpenUrl', url: it.url }));
-          const dl = row.querySelector('.s-dl8x');
-          if (dl) dl.addEventListener('click', () => send({ type: 'syncDownloadDropUrl', url: it.url }));
-          const cb = row.querySelector('.s-copy');
-          cb.addEventListener('click', () => {
-            send({ type: 'syncCopyDrop', text: it.url || it.text || it.title || '' });
-            cb.textContent = '✓';
-            setTimeout(() => { cb.textContent = 'Copy'; }, 1000);
-          });
-          frag.appendChild(row);
+        const row = document.createElement('div');
+        row.className = 'sync-recent-row';
+        const isUrlClip = /^https?:\/\/\S+$/i.test(String(latestClip.text || '').trim());
+        row.innerHTML = `
+          <div class="sync-recent-meta">
+            <div class="sync-recent-title"></div>
+            <div class="sync-recent-sub"></div>
+          </div>
+          <div class="sync-recent-acts">
+            ${isUrlClip ? '<button type="button" class="dl-act-btn s-open">Open</button>' : ''}
+            <button type="button" class="dl-act-btn s-copy">Copy</button>
+          </div>
+        `;
+        row.querySelector('.sync-recent-title').textContent = latestClip.text;
+        row.querySelector('.sync-recent-sub').textContent = `${latestClip.fromName || 'Device'} · Clipboard`;
+        const ob = row.querySelector('.s-open');
+        if (ob) ob.addEventListener('click', () => send({ type: 'syncOpenUrl', url: latestClip.text.trim() }));
+        const cb = row.querySelector('.s-copy');
+        cb.addEventListener('click', () => {
+          send({ type: 'syncCopyDrop', text: latestClip.text });
+          cb.textContent = '✓';
+          setTimeout(() => { cb.textContent = 'Copy'; }, 1000);
         });
+        frag.appendChild(row);
+      } else if (showDropRow) {
+        const hdr = document.createElement('div');
+        hdr.className = 'sync-micro-hdr';
+        hdr.textContent = 'Latest Drop';
+        frag.appendChild(hdr);
+
+        const it = latestDrop;
+        const dt = String(it.dropType || 'link').toLowerCase();
+        const batchTabs = Array.isArray(it.tabs) ? it.tabs.filter((t) => t && t.url) : [];
+        const badgeLbl = dt === 'video' ? 'Video'
+          : (dt === 'download' ? '8× DL'
+            : (dt === 'batch_tabs' ? `${batchTabs.length} Tabs`
+              : (dt === 'ping' ? 'Ping' : (dt === 'tab' ? 'Tab' : (dt === 'text' ? 'Note' : 'Link')))));
+        const primary = (dt === 'clipboard' || dt === 'text') ? (it.text || it.title || it.url || '') : (it.title || it.url || it.text || '');
+        const sub = `${it.fromName || 'Device'} · ${badgeLbl}`;
+        const canDl = dt === 'download' || !!(it.url && isOvDownloadableUrl(it.url));
+
+        const row = document.createElement('div');
+        row.className = 'sync-recent-row';
+        row.innerHTML = `
+          <div class="sync-recent-meta">
+            <div class="sync-recent-title"></div>
+            <div class="sync-recent-sub"></div>
+          </div>
+          <div class="sync-recent-acts">
+            ${dt === 'batch_tabs' && batchTabs.length ? '<button type="button" class="dl-act-btn s-batch">Open All</button>' : (it.url ? `<button type="button" class="dl-act-btn s-open">${dt === 'video' ? 'Resume' : 'Open'}</button>` : '')}
+            ${canDl && it.url ? '<button type="button" class="dl-act-btn s-dl8x" title="Download 8x">8×</button>' : ''}
+            <button type="button" class="dl-act-btn s-copy">Copy</button>
+          </div>
+        `;
+        row.querySelector('.sync-recent-title').textContent = primary;
+        row.querySelector('.sync-recent-sub').textContent = sub;
+        const ob = row.querySelector('.s-open');
+        if (ob) ob.addEventListener('click', () => send({ type: 'syncOpenUrl', url: it.url }));
+        const bb = row.querySelector('.s-batch');
+        if (bb) bb.addEventListener('click', () => send({ type: 'syncOpenBatchTabs', tabs: batchTabs }));
+        const dl = row.querySelector('.s-dl8x');
+        if (dl) dl.addEventListener('click', () => send({ type: 'syncQueueDownload', url: it.url, title: it.title || '', quality: it.quality || 'best' }));
+        const cb = row.querySelector('.s-copy');
+        cb.addEventListener('click', () => {
+          send({ type: 'syncCopyDrop', text: it.url || it.text || it.title || '' });
+          cb.textContent = '✓';
+          setTimeout(() => { cb.textContent = 'Copy'; }, 1000);
+        });
+        frag.appendChild(row);
       }
 
       syncRecentList.appendChild(frag);
     }
 
-    // Mode 14: Incoming Drop HUD Toast
+    // Mode 14: Incoming Drop HUD Toast (Supports ping, download, video, batch_tabs, clipboard, tab, link, text)
     const stTitle = document.getElementById('st-title');
     const stSub = document.getElementById('st-sub');
     const stDismiss = document.getElementById('st-dismiss');
@@ -4795,22 +4992,85 @@
     stDismiss.addEventListener('click', () => send({ type: 'syncDismissToast' }));
     stCopy.addEventListener('click', () => {
       if (!latestToastDrop) return;
-      send({ type: 'syncCopyDrop', text: latestToastDrop.url || latestToastDrop.text || latestToastDrop.title || '' });
+      const dt = String(latestToastDrop.dropType || '').toLowerCase();
+      const batch = Array.isArray(latestToastDrop.tabs) ? latestToastDrop.tabs : [];
+      const txt = (dt === 'batch_tabs' && batch.length)
+        ? batch.map((t) => t.url).filter(Boolean).join('\n')
+        : (latestToastDrop.url || latestToastDrop.text || latestToastDrop.title || '');
+      send({ type: 'syncCopyDrop', text: txt });
     });
     stOpen.addEventListener('click', () => {
-      if (latestToastDrop && latestToastDrop.url) send({ type: 'syncOpenUrl', url: latestToastDrop.url });
-      else send({ type: 'syncDismissToast' });
+      if (!latestToastDrop) {
+        send({ type: 'syncDismissToast' });
+        return;
+      }
+      const dt = String(latestToastDrop.dropType || '').toLowerCase();
+      if (dt === 'download' && latestToastDrop.url) {
+        send({
+          type: 'syncQueueDownload',
+          url: latestToastDrop.url,
+          title: latestToastDrop.title || '',
+          quality: latestToastDrop.quality || 'best'
+        });
+        send({ type: 'syncDismissToast' });
+      } else if (dt === 'batch_tabs' && Array.isArray(latestToastDrop.tabs) && latestToastDrop.tabs.length) {
+        send({ type: 'syncOpenBatchTabs', tabs: latestToastDrop.tabs });
+        send({ type: 'syncDismissToast' });
+      } else if (latestToastDrop.url) {
+        send({ type: 'syncOpenUrl', url: latestToastDrop.url });
+      } else {
+        send({ type: 'syncDismissToast' });
+      }
     });
     function renderSyncToast(drop) {
       latestToastDrop = drop || {};
       const from = drop.fromName || 'Mobile';
       const dt = String(drop.dropType || '').toLowerCase();
+      const batch = Array.isArray(drop.tabs) ? drop.tabs.filter((t) => t && t.url) : [];
+
+      if (dt === 'ping') {
+        stTitle.textContent = `📱 Ping from ${from}`;
+        stSub.textContent = drop.text || `${from} is pinging this Windows PC`;
+        stDismiss.textContent = 'Got it';
+        stCopy.classList.add('hidden');
+        stOpen.classList.add('hidden');
+        return;
+      }
+
+      stDismiss.textContent = 'Dismiss';
+      stCopy.classList.remove('hidden');
+
+      if (dt === 'download') {
+        stTitle.textContent = `8× Download from ${from}`;
+        stSub.textContent = drop.title || drop.url || 'Turbo Download handoff';
+        stOpen.textContent = 'Download 8×';
+        stOpen.classList.toggle('hidden', !drop.url);
+        return;
+      }
+
+      if (dt === 'video') {
+        stTitle.textContent = `Continue Watching · ${from}`;
+        stSub.textContent = `${drop.title || drop.url || 'Video'}${drop.text ? ' · ' + drop.text : ''}`;
+        stOpen.textContent = 'Resume Video';
+        stOpen.classList.toggle('hidden', !drop.url);
+        return;
+      }
+
+      if (dt === 'batch_tabs') {
+        stTitle.textContent = `${batch.length || 'Multiple'} Tabs from ${from}`;
+        stSub.textContent = batch.slice(0, 2).map((t) => t.title || extractHost(t.url) || t.url).join(' · ') || (drop.text || '');
+        stOpen.textContent = `Open All (${batch.length})`;
+        stOpen.classList.toggle('hidden', batch.length === 0);
+        return;
+      }
+
       const isClip = dt === 'clipboard';
       const isText = (dt === 'text' || isClip) && !drop.url;
       stTitle.textContent = isClip
         ? `Clipboard from ${from}`
         : (isText ? `Note from ${from}` : `From ${from}: ${drop.title || 'Shared Tab'}`);
       stSub.textContent = isText ? (drop.text || '') : (drop.url || '');
+      stOpen.textContent = 'Open Tab';
       stOpen.classList.toggle('hidden', !drop.url);
     }
 
@@ -4845,7 +5105,7 @@
     function renderMenuPanel(d) {
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.4.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.5.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');

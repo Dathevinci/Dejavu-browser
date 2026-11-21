@@ -3024,12 +3024,12 @@ namespace DejavuBrowser
 
         public static string GetFloatingDownloadButtonScript()
         {
-            // Zero-Idle-CPU Shadow DOM Material Design 3 IDM/AntDM Floating Download Button (v5.4.0)
-            // - ZERO setInterval polling! Event-driven + filtered MutationObserver + lazy scroll/ResizeObserver
-            // - Pure Material Design 3 solid tonal surfaces (zero frosted filters)
-            // - On YouTube / TikTok / Instagram / X / Vimeo / Reddit / Twitch / SoundCloud / etc.:
-            //   Shows native Multi-Quality MP4 (4K/2K/1080p/720p/480p/360p) + MP3/M4A picker backed by VideoExtractorEngine (zero extension!)
-            // - On direct HTML5 <video>/<audio> & HLS .m3u8 sites: keeps 1-click 8x byte-range & HLS assembler!
+            // Zero-Idle-CPU Shadow DOM Material Design 3 Collapsible Butterfly Video Downloader FAB (v5.5.0)
+            // - Starts collapsed as a 34x34px sculpted dejavu Butterfly circular M3 Tonal FAB (ZERO video obstruction!)
+            // - Click Butterfly -> smoothly extends leftward into full M3 Download pill + quality/MP3/Send-to-Phone menu
+            // - Click Butterfly again, click outside, or press Escape -> collapses cleanly back to 34x34px Butterfly badge
+            // - ZERO .innerHTML (100% YouTube Trusted Types CSP safe via createElement / createElementNS / textContent)
+            // - ZERO setInterval polling, ZERO blur(), ZERO transition: all
             return @"(function(){
 if(window!==window.top)return;
 if(window.__dejavuAntDmInstalled)return;
@@ -3037,12 +3037,17 @@ window.__dejavuAntDmInstalled=true;
 if(typeof window.__dejavuFloatingBtnEnabled==='undefined')window.__dejavuFloatingBtnEnabled=true;
 
 var dismissed=false;
+var expanded=false;
 var menuOpen=false;
+var flashSeq=0;
 var sniffed=[];
 var intercepted=[];
 var hostEl=null;
 var wrapEl=null;
+var bflyBtn=null;
+var pillExtEl=null;
 var mainBtn=null;
+var icoEl=null;
 var labelEl=null;
 var badgeEl=null;
 var dropBtn=null;
@@ -3052,6 +3057,8 @@ var menuHeadTitle=null;
 var menuHeadSub=null;
 var menuStatusEl=null;
 var menuListEl=null;
+var fPhoneBtn=null;
+var fPhoneLbl=null;
 var currentTarget=null;
 var feedbackUntil=0;
 var scanTimer=null;
@@ -3356,13 +3363,15 @@ function mkEl(tag,cls,txt){
   return el;
 }
 
-function mkSvg(vb,w,h,d,sw){
+function mkSvg(vb,w,h,d,sw,cls){
   var ns='http://www.w3.org/2000/svg';
   var svg=document.createElementNS(ns,'svg');
   svg.setAttribute('viewBox',vb);
   svg.setAttribute('width',String(w));
   svg.setAttribute('height',String(h));
   svg.setAttribute('fill','none');
+  svg.setAttribute('aria-hidden','true');
+  if(cls)svg.setAttribute('class',cls);
   var p=document.createElementNS(ns,'path');
   p.setAttribute('d',d);
   p.setAttribute('stroke','currentColor');
@@ -3371,6 +3380,96 @@ function mkSvg(vb,w,h,d,sw){
   p.setAttribute('stroke-linejoin','round');
   svg.appendChild(p);
   return svg;
+}
+
+function mkButterflySvg(size){
+  var ns='http://www.w3.org/2000/svg';
+  var svg=document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox','0 0 64 64');
+  svg.setAttribute('width',String(size));
+  svg.setAttribute('height',String(size));
+  svg.setAttribute('fill','none');
+  svg.setAttribute('aria-hidden','true');
+  var parts=[
+    ['M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z','#d0bcff','1'],
+    ['M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z','#d0bcff','1'],
+    ['M31.2 34.4C26.2 24.4 19.6 17.4 13.2 17.0C16.2 24.8 22.8 31.8 31.2 34.4Z','#eaddff','0.5'],
+    ['M32.8 34.4C37.8 24.4 44.4 17.4 50.8 17.0C47.8 24.8 41.2 31.8 32.8 34.4Z','#eaddff','0.5'],
+    ['M31.2 36.6C23.0 36.4 15.2 39.2 15.0 44.8C14.8 49.0 19.4 51.6 24.6 49.6C28.6 48.0 30.8 43.2 31.2 36.6Z','#d0bcff','0.82'],
+    ['M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z','#d0bcff','0.82'],
+    ['M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z','#eaddff','1']
+  ];
+  for(var i=0;i<parts.length;i++){
+    var p=document.createElementNS(ns,'path');
+    p.setAttribute('d',parts[i][0]);
+    p.setAttribute('fill',parts[i][1]);
+    if(parts[i][2]!=='1')p.setAttribute('fill-opacity',parts[i][2]);
+    svg.appendChild(p);
+  }
+  return svg;
+}
+
+function mkPhoneSvg(size){
+  var ns='http://www.w3.org/2000/svg';
+  var svg=document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox','0 0 20 20');
+  svg.setAttribute('width',String(size));
+  svg.setAttribute('height',String(size));
+  svg.setAttribute('fill','none');
+  svg.setAttribute('aria-hidden','true');
+  var r=document.createElementNS(ns,'rect');
+  r.setAttribute('x','5');
+  r.setAttribute('y','2.2');
+  r.setAttribute('width','10');
+  r.setAttribute('height','15.6');
+  r.setAttribute('rx','2.2');
+  r.setAttribute('stroke','currentColor');
+  r.setAttribute('stroke-width','1.6');
+  var l=document.createElementNS(ns,'path');
+  l.setAttribute('d','M8.5 14.8h3');
+  l.setAttribute('stroke','currentColor');
+  l.setAttribute('stroke-width','1.6');
+  l.setAttribute('stroke-linecap','round');
+  svg.appendChild(r);
+  svg.appendChild(l);
+  return svg;
+}
+
+function fmtVideoTime(sec){
+  var s=Math.floor(Number(sec||0));
+  if(!s||s<=0)return '';
+  var h=Math.floor(s/3600);
+  var m=Math.floor((s%3600)/60);
+  var r=s%60;
+  var ms=(m<10?'0':'')+m;
+  var rs=(r<10?'0':'')+r;
+  return h>0?(h+':'+ms+':'+rs):(ms+':'+rs);
+}
+
+function getCurrentVideoSeconds(){
+  try{
+    if(currentTarget&&typeof currentTarget.currentTime==='number'&&isFinite(currentTarget.currentTime)&&currentTarget.currentTime>0){
+      return Math.floor(currentTarget.currentTime);
+    }
+  }catch(e){}
+  return 0;
+}
+
+function updateSendPhoneLabel(){
+  if(!fPhoneLbl)return;
+  var sec=getCurrentVideoSeconds();
+  fPhoneLbl.textContent=sec>3?('Send to Phone · '+fmtVideoTime(sec)):'Send to Phone';
+}
+
+function collapseAll(){
+  expanded=false;
+  menuOpen=false;
+  if(wrapEl){
+    wrapEl.classList.remove('expanded');
+    wrapEl.classList.remove('open');
+  }
+  if(bflyBtn)bflyBtn.title='dejavu Video Downloader — Click to expand';
+  positionOnly();
 }
 
 function ensureHost(){
@@ -3385,20 +3484,29 @@ function ensureHost(){
   var st=document.createElement('style');
   st.textContent=
     ':host{all:initial;font-family:""Segoe UI Variable"",""Segoe UI"",system-ui,-apple-system,sans-serif;}'+
-    '.wrap{position:fixed;pointer-events:auto;display:none;flex-direction:column;align-items:flex-end;gap:6px;transition:opacity .16s cubic-bezier(.05,.7,.1,1);}'+
-    '.pill{display:inline-flex;align-items:center;height:36px;border-radius:999px;background:#211f26;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 4px 16px rgba(0,0,0,.42);overflow:hidden;user-select:none;}'+
-    '.pill:hover{border-color:#d0bcff;}'+
-    '.mbtn{appearance:none;border:none;background:transparent;color:#e6e0e9;height:36px;padding:0 11px 0 8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.01em;white-space:nowrap;}'+
+    '.wrap{position:fixed;pointer-events:auto;display:none;flex-direction:column;align-items:flex-end;gap:6px;opacity:.72;transition:opacity 180ms cubic-bezier(.05,.7,.1,1);}'+
+    '.wrap:hover,.wrap.expanded{opacity:1;}'+
+    '.pill{display:inline-flex;align-items:center;height:36px;box-sizing:border-box;border-radius:999px;background:#211f26;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 3px 12px rgba(0,0,0,.38);overflow:hidden;user-select:none;transition:border-color 180ms ease,box-shadow 180ms ease;}'+
+    '.pill:hover,.wrap.expanded .pill{border-color:#d0bcff;box-shadow:0 6px 20px rgba(0,0,0,.5);}'+
+    '.bfly-btn{appearance:none;border:none;background:transparent;width:34px;height:34px;padding:0;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background-color 160ms ease,transform 200ms cubic-bezier(0.2,0,0,1);}'+
+    '.bfly-btn:hover{background:#2b2930;transform:scale(1.04);}'+
+    '.bfly-btn:active{transform:scale(0.95);}'+
+    '.wrap.expanded .bfly-btn{background:#2d2838;}'+
+    '.bfly-btn.ok{background:#004f43;}'+
+    '.pill-ext{max-width:0;opacity:0;overflow:hidden;pointer-events:none;display:inline-flex;align-items:center;transition:max-width 260ms cubic-bezier(0.2,0,0,1),opacity 180ms ease;}'+
+    '.wrap.expanded .pill-ext{max-width:340px;opacity:1;pointer-events:auto;}'+
+    '.mbtn{appearance:none;border:none;background:transparent;color:#e6e0e9;height:34px;padding:0 10px 0 7px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.01em;white-space:nowrap;transition:background-color 140ms ease;}'+
     '.mbtn:hover{background:#2b2930;}'+
     '.mbtn:active{background:#36343b;}'+
-    '.ico{width:22px;height:22px;border-radius:999px;background:#d0bcff;color:#381e72;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}'+
+    '.ico{width:20px;height:20px;border-radius:999px;background:#d0bcff;color:#381e72;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:background-color 160ms ease,color 160ms ease;}'+
+    '.ico .ico-ok{display:none;}'+
     '.ico.ok{background:#80d5c0;color:#00382e;}'+
-    '.badge{height:18px;padding:0 6px;border-radius:999px;background:#4f378b;color:#eaddff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;letter-spacing:.02em;}'+
+    '.ico.ok .ico-dl{display:none;}'+
+    '.ico.ok .ico-ok{display:block;}'+
+    '.badge{height:18px;padding:0 6px;border-radius:999px;background:#4f378b;color:#eaddff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;letter-spacing:.02em;flex-shrink:0;}'+
     '.sep{width:1px;height:16px;background:#49454f;flex-shrink:0;}'+
-    '.dbtn,.xbtn{appearance:none;border:none;background:transparent;color:#cac4d0;height:36px;width:28px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;}'+
+    '.dbtn,.xbtn{appearance:none;border:none;background:transparent;color:#cac4d0;height:34px;width:28px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;transition:background-color 140ms ease,color 140ms ease;}'+
     '.dbtn:hover{background:#2b2930;color:#ffffff;}'+
-    '.xbtn{width:0;opacity:0;overflow:hidden;transition:width .14s ease,opacity .14s ease,background-color .14s ease;}'+
-    '.pill:hover .xbtn,.wrap.open .xbtn{width:26px;opacity:1;}'+
     '.xbtn:hover{background:#601410;color:#f9dedc;}'+
     '.menu{display:none;width:316px;max-width:calc(100vw - 20px);border-radius:20px;background:#1d1b20;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 14px 36px rgba(0,0,0,.55);overflow:hidden;}'+
     '.wrap.open .menu{display:block;}'+
@@ -3407,9 +3515,9 @@ function ensureHost(){
     '.mhs{font-size:10.5px;color:#cac4d0;font-weight:600;}'+
     '.mstat{display:none;padding:7px 14px;font-size:11px;color:#d0bcff;background:#25222c;border-bottom:1px solid #36343b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'+
     '.mstat.show{display:block;}'+
-    '.mlist{max-height:270px;overflow-y:auto;padding:6px;}'+
+    '.mlist{max-height:248px;overflow-y:auto;padding:6px;}'+
     '.mdiv{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#938f99;padding:6px 10px 3px;}'+
-    '.mrow{width:100%;appearance:none;border:none;background:transparent;color:inherit;text-align:left;padding:8px 9px;border-radius:12px;display:flex;align-items:center;gap:9px;cursor:pointer;font-family:inherit;}'+
+    '.mrow{width:100%;appearance:none;border:none;background:transparent;color:inherit;text-align:left;padding:8px 9px;border-radius:12px;display:flex;align-items:center;gap:9px;cursor:pointer;font-family:inherit;transition:background-color 140ms ease;}'+
     '.mrow:hover{background:#2b2930;}'+
     '.mfmt{min-width:44px;height:22px;padding:0 7px;border-radius:999px;background:#4f378b;color:#eaddff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}'+
     '.mfmt.aud{background:#004f43;color:#a0f2df;}'+
@@ -3419,21 +3527,33 @@ function ensureHost(){
     '.msub{font-size:10.5px;color:#cac4d0;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'+
     '.mgo{font-size:11px;font-weight:700;color:#d0bcff;flex-shrink:0;}'+
     '.mempty{padding:12px 10px;font-size:11.5px;color:#cac4d0;line-height:1.45;}'+
-    '.mfoot{padding:7px;border-top:1px solid #36343b;display:flex;gap:6px;background:#211f26;}'+
-    '.fbtn{flex:1;appearance:none;border:none;border-radius:999px;height:30px;padding:0 11px;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;background:#36343b;color:#e6e0e9;}'+
+    '.mhandoff{padding:7px 8px 0;border-top:1px solid #36343b;background:#211f26;display:flex;}'+
+    '.mfoot{padding:7px 8px 8px;display:flex;gap:6px;background:#211f26;}'+
+    '.fbtn{flex:1;appearance:none;border:none;border-radius:999px;height:30px;padding:0 10px;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;background:#36343b;color:#e6e0e9;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;transition:background-color 140ms ease,color 140ms ease;}'+
     '.fbtn:hover{background:#49454f;}'+
     '.fbtn.pri{background:#d0bcff;color:#381e72;}'+
-    '.fbtn.pri:hover{background:#eaddff;}';
+    '.fbtn.pri:hover{background:#eaddff;}'+
+    '.fbtn.handoff{width:100%;background:#4f378b;color:#eaddff;}'+
+    '.fbtn.handoff:hover{background:#5e43a3;}';
   sh.appendChild(st);
 
   wrapEl=mkEl('div','wrap');
   var pill=mkEl('div','pill');
 
+  bflyBtn=mkEl('button','bfly-btn');
+  bflyBtn.type='button';
+  bflyBtn.title='dejavu Video Downloader — Click to expand';
+  bflyBtn.setAttribute('aria-label','dejavu Video Downloader');
+  bflyBtn.appendChild(mkButterflySvg(22));
+
+  pillExtEl=mkEl('div','pill-ext');
+
   mainBtn=mkEl('button','mbtn');
   mainBtn.type='button';
   mainBtn.title='Download this video with dejavu Turbo Download Manager';
-  var icoEl=mkEl('span','ico');
-  icoEl.appendChild(mkSvg('0 0 16 16',12,12,'M8 2.4v7.6M5 7.4L8 10.4l3-3M3.2 13h9.6',1.8));
+  icoEl=mkEl('span','ico');
+  icoEl.appendChild(mkSvg('0 0 16 16',11,11,'M8 2.4v7.6M5 7.4L8 10.4l3-3M3.2 13h9.6',1.8,'ico-dl'));
+  icoEl.appendChild(mkSvg('0 0 16 16',11,11,'M3.2 8.4l3.1 3.1 6.5-6.8',2.0,'ico-ok'));
   labelEl=mkEl('span','lbl','Download');
   badgeEl=mkEl('span','badge','8x');
   mainBtn.appendChild(icoEl);
@@ -3452,10 +3572,13 @@ function ensureHost(){
   closeBtn.title='Hide download button on this page';
   closeBtn.appendChild(mkSvg('0 0 14 14',10,10,'M3.8 3.8l6.4 6.4M10.2 3.8l-6.4 6.4',1.7));
 
-  pill.appendChild(mainBtn);
-  pill.appendChild(sep);
-  pill.appendChild(dropBtn);
-  pill.appendChild(closeBtn);
+  pillExtEl.appendChild(mainBtn);
+  pillExtEl.appendChild(sep);
+  pillExtEl.appendChild(dropBtn);
+  pillExtEl.appendChild(closeBtn);
+
+  pill.appendChild(bflyBtn);
+  pill.appendChild(pillExtEl);
 
   menuEl=mkEl('div','menu');
   var mhead=mkEl('div','mhead');
@@ -3467,17 +3590,30 @@ function ensureHost(){
   menuStatusEl=mkEl('div','mstat');
   menuListEl=mkEl('div','mlist');
 
+  var mhandoff=mkEl('div','mhandoff');
+  fPhoneBtn=mkEl('button','fbtn handoff f-phone');
+  fPhoneBtn.type='button';
+  fPhoneBtn.title='Continue watching on your linked phone with dejavu Link';
+  fPhoneBtn.appendChild(mkPhoneSvg(14));
+  fPhoneLbl=mkEl('span','','Send to Phone');
+  fPhoneBtn.appendChild(fPhoneLbl);
+  mhandoff.appendChild(fPhoneBtn);
+
   var mfoot=mkEl('div','mfoot');
-  var fAllBtn=mkEl('button','fbtn pri f-all','Open Download Manager');
+  var fAllBtn=mkEl('button','fbtn pri f-all','Downloads');
   fAllBtn.type='button';
+  var fCopyBtn=mkEl('button','fbtn f-copy','Copy Link');
+  fCopyBtn.type='button';
   var fHideBtn=mkEl('button','fbtn f-hide','Hide');
   fHideBtn.type='button';
   mfoot.appendChild(fAllBtn);
+  mfoot.appendChild(fCopyBtn);
   mfoot.appendChild(fHideBtn);
 
   menuEl.appendChild(mhead);
   menuEl.appendChild(menuStatusEl);
   menuEl.appendChild(menuListEl);
+  menuEl.appendChild(mhandoff);
   menuEl.appendChild(mfoot);
 
   wrapEl.appendChild(pill);
@@ -3486,81 +3622,142 @@ function ensureHost(){
   root.appendChild(hostEl);
 
   function flashQueued(text){
-    feedbackUntil=Date.now()+2500;
-    labelEl.textContent=text||'Queued 8x';
-    icoEl.classList.add('ok');
+    var mySeq=++flashSeq;
+    feedbackUntil=Date.now()+2200;
+    expanded=true;
+    menuOpen=false;
+    wrapEl.classList.add('expanded');
+    wrapEl.classList.remove('open');
+    if(bflyBtn)bflyBtn.classList.add('ok');
+    if(icoEl)icoEl.classList.add('ok');
+    if(labelEl)labelEl.textContent=text||'Queued 8x';
+    positionOnly();
     setTimeout(function(){
-      if(Date.now()>=feedbackUntil-50){
-        icoEl.classList.remove('ok');
-        updatePillLabel();
-      }
-    },2550);
+      if(mySeq!==flashSeq)return;
+      if(icoEl)icoEl.classList.remove('ok');
+      if(bflyBtn)bflyBtn.classList.remove('ok');
+      updatePillLabel();
+      if(!menuOpen)collapseAll();
+    },2200);
   }
   window.__djvFlashQueued=flashQueued;
 
-  function toggleMenu(){
+  function openExpandedMenu(){
+    expanded=true;
+    menuOpen=true;
+    wrapEl.classList.add('expanded');
+    wrapEl.classList.add('open');
+    if(bflyBtn)bflyBtn.title='Collapse dejavu Video Downloader';
+    if(isSupportedVideoSite(location.href))requestProbeIfNeeded();
+    renderMenu();
+    positionOnly();
+  }
+
+  function toggleMenuOnly(){
+    expanded=true;
     menuOpen=!menuOpen;
+    wrapEl.classList.add('expanded');
     if(menuOpen){
       if(isSupportedVideoSite(location.href))requestProbeIfNeeded();
       renderMenu();
     }
     wrapEl.classList.toggle('open',menuOpen);
+    positionOnly();
   }
+
+  bflyBtn.addEventListener('click',function(ev){
+    ev.preventDefault();
+    ev.stopPropagation();
+    if(!expanded){
+      openExpandedMenu();
+    }else{
+      collapseAll();
+    }
+  });
 
   mainBtn.addEventListener('click',function(ev){
     ev.preventDefault();
     ev.stopPropagation();
     if(isSupportedVideoSite(location.href)){
-      toggleMenu();
+      toggleMenuOnly();
       return;
     }
     var items=collectSources(currentTarget);
     if(items.length>0){
       postNative({action:'download',url:items[0].url,fileName:items[0].fileName});
       flashQueued(items[0].fmt==='HLS'?'Downloading HLS':'Queued 8x');
-      menuOpen=false;
-      wrapEl.classList.remove('open');
     }else{
       postNative({action:'openManager'});
+      collapseAll();
     }
   });
 
   dropBtn.addEventListener('click',function(ev){
     ev.preventDefault();
     ev.stopPropagation();
-    toggleMenu();
+    toggleMenuOnly();
   });
 
   closeBtn.addEventListener('click',function(ev){
     ev.preventDefault();
     ev.stopPropagation();
     dismissed=true;
-    menuOpen=false;
+    collapseAll();
     wrapEl.style.display='none';
     setActiveTracking(false,null);
+  });
+
+  fPhoneBtn.addEventListener('click',function(ev){
+    ev.preventDefault();
+    ev.stopPropagation();
+    var sec=getCurrentVideoSeconds();
+    postNative({
+      action:'sendVideoToPeer',
+      url:location.href,
+      title:probedTitle||cleanDocTitle(),
+      seconds:sec
+    });
+    flashQueued(sec>3?('Sent · '+fmtVideoTime(sec)):'Sent to Phone');
   });
 
   fAllBtn.addEventListener('click',function(ev){
     ev.preventDefault();
     ev.stopPropagation();
-    menuOpen=false;
-    wrapEl.classList.remove('open');
+    collapseAll();
     postNative({action:'openManager'});
+  });
+
+  fCopyBtn.addEventListener('click',function(ev){
+    ev.preventDefault();
+    ev.stopPropagation();
+    var u=location.href;
+    postNative({action:'copyLink',url:u});
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(u);
+      }
+    }catch(e){}
+    flashQueued('Link Copied');
   });
 
   fHideBtn.addEventListener('click',function(ev){
     ev.preventDefault();
     ev.stopPropagation();
     dismissed=true;
-    menuOpen=false;
+    collapseAll();
     wrapEl.style.display='none';
     setActiveTracking(false,null);
   });
 
   document.addEventListener('click',function(ev){
-    if(menuOpen&&ev.target!==hostEl){
-      menuOpen=false;
-      if(wrapEl)wrapEl.classList.remove('open');
+    if(!(expanded||menuOpen))return;
+    var inside=(typeof ev.composedPath==='function')?(ev.composedPath().indexOf(hostEl)>=0):(ev.target===hostEl);
+    if(!inside)collapseAll();
+  },true);
+
+  document.addEventListener('keydown',function(ev){
+    if((expanded||menuOpen)&&(ev.key==='Escape'||ev.keyCode===27)){
+      collapseAll();
     }
   },true);
 
@@ -3629,10 +3826,6 @@ function renderVideoSiteMenu(){
           if(window.__djvFlashQueued){
             window.__djvFlashQueued('Queued '+(opt.shortLabel||opt.badge||'Video'));
           }
-          setTimeout(function(){
-            menuOpen=false;
-            if(wrapEl)wrapEl.classList.remove('open');
-          },340);
         });
         menuListEl.appendChild(built.row);
       })(arr[k]);
@@ -3644,6 +3837,7 @@ function renderVideoSiteMenu(){
 
 function renderMenu(){
   if(!menuListEl)return;
+  updateSendPhoneLabel();
   if(isSupportedVideoSite(location.href)){
     renderVideoSiteMenu();
     return;
@@ -3654,7 +3848,7 @@ function renderMenu(){
   var items=collectSources(currentTarget);
   menuListEl.textContent='';
   if(!items.length){
-    menuListEl.appendChild(mkEl('div','mempty','Streaming player detected. Press play for a moment or click ""Open Download Manager"" below to inspect captured streams.'));
+    menuListEl.appendChild(mkEl('div','mempty','Streaming player detected. Press play for a moment or click ""Downloads"" below to inspect captured streams.'));
     return;
   }
   for(var i=0;i<items.length&&i<10;i++){
@@ -3670,10 +3864,9 @@ function renderMenu(){
         ev.stopPropagation();
         postNative({action:'download',url:it.url,fileName:it.fileName});
         built.goEl.textContent='Queued';
-        setTimeout(function(){
-          menuOpen=false;
-          if(wrapEl)wrapEl.classList.remove('open');
-        },380);
+        if(window.__djvFlashQueued){
+          window.__djvFlashQueued(it.fmt==='HLS'?'Downloading HLS':'Queued 8x');
+        }
       });
       menuListEl.appendChild(built.row);
     })(items[i]);
@@ -3748,20 +3941,21 @@ function positionOnly(){
     var r=currentTarget.getBoundingClientRect();
     if(r.width<120||r.height<20||r.bottom<12||r.top>vh-12){
       if(isSupportedVideoSite(location.href)){
-        wrapEl.style.top='14px';
-        wrapEl.style.right='18px';
+        wrapEl.style.top='10px';
+        wrapEl.style.right='10px';
         return;
       }
       wrapEl.style.display='none';
       return;
     }
-    var top=Math.max(10,Math.min(vh-48,Math.round(r.top+10)));
-    var rightGap=Math.max(10,Math.round(vw-r.right+10));
+    var top=Math.max(8,Math.min(vh-46,Math.round(r.top+8)));
+    var rightGap=Math.max(8,Math.round(vw-r.right+8));
+    var maxRight=expanded?Math.max(8,vw-324):Math.max(8,vw-48);
     wrapEl.style.top=top+'px';
-    wrapEl.style.right=Math.min(vw-220,rightGap)+'px';
+    wrapEl.style.right=Math.min(maxRight,rightGap)+'px';
   }else{
-    wrapEl.style.top='14px';
-    wrapEl.style.right='18px';
+    wrapEl.style.top='10px';
+    wrapEl.style.right='10px';
   }
 }
 
@@ -3792,6 +3986,7 @@ function checkSpaUrlChange(){
     lastPageUrl=location.href;
     intercepted=[];
     dismissed=false;
+    expanded=false;
     menuOpen=false;
     probedForUrl='';
     probeRequestedUrl='';
@@ -3799,7 +3994,11 @@ function checkSpaUrlChange(){
     probedTitle='';
     probeLoading=false;
     probeStatus='';
-    if(wrapEl)wrapEl.classList.remove('open');
+    if(wrapEl){
+      wrapEl.classList.remove('open');
+      wrapEl.classList.remove('expanded');
+    }
+    if(bflyBtn)bflyBtn.title='dejavu Video Downloader — Click to expand';
   }
 }
 

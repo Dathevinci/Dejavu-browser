@@ -28,10 +28,15 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -48,7 +53,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 /**
- * dejavu Link v5.4.0 — Cross-Device E2EE Sync Engine (100% byte-compatible with Windows SyncManager.cs)
+ * dejavu Link v2.3 (v5.5.0) — Cross-Device E2EE Sync Engine (100% byte-compatible with Windows SyncManager.cs)
  *
  * Key Derivation & Crypto (unchanged v1/v2 contract):
  * - Zero-QR Google-Account Auto-Sync: 10,000-round SHA-256 chain -> topicId "dv4-...", encKey, macKey
@@ -119,12 +124,17 @@ public final class SyncManager {
     private String googleEmail = "";
     private String googlePassphrase = "";
     private String pairingCode;
+    private String peerId = "";
     private String peerName = "";
     private String peerPlatform = "windows";
     private String peerLanUrl = "";
     private long peerLastSeenMs = 0;
+    private int peerTabCount = 0;
     private JSONArray drops = new JSONArray();
     private JSONArray remoteTabs = new JSONArray();
+    private JSONArray pinnedNotes = new JSONArray();
+    private JSONArray deletedNoteIds = new JSONArray();
+    private JSONArray clipboardHistory = new JSONArray();
     private JSONObject latestClipboard = null;
     private int lastPublishedTabCount = 0;
 
@@ -173,7 +183,7 @@ public final class SyncManager {
     }
 
     /**
-     * Exact v5.4.0 Cross-Platform Google Auto-Sync Key Derivation (100% bit-identical to Windows SyncManager.cs):
+     * Exact v5.5.0 Cross-Platform Google Auto-Sync Key Derivation (100% bit-identical to Windows SyncManager.cs):
      * - normEmail = email.trim().toLowerCase(Locale.US)
      * - normPass  = passphrase.trim()
      * - seedStr   = "dejavu-google-link-v2:" + normEmail + ":" + normPass
@@ -278,10 +288,12 @@ public final class SyncManager {
 
             pairingCode = prefs.getString("pairingCode", "");
             if (pairingCode.isEmpty()) pairingCode = generatePairingCode();
+            peerId = prefs.getString("peerId", "");
             peerName = prefs.getString("peerName", "");
             peerPlatform = prefs.getString("peerPlatform", "windows");
             peerLanUrl = prefs.getString("peerLanUrl", "");
             peerLastSeenMs = prefs.getLong("peerLastSeenMs", 0);
+            peerTabCount = prefs.getInt("peerTabCount", 0);
 
             prefTabs = prefs.getBoolean("prefTabs", true);
             prefBookmarks = prefs.getBoolean("prefBookmarks", true);
@@ -291,6 +303,9 @@ public final class SyncManager {
 
             try { drops = new JSONArray(prefs.getString("drops", "[]")); } catch (Exception e) { drops = new JSONArray(); }
             try { remoteTabs = new JSONArray(prefs.getString("remoteTabs", "[]")); } catch (Exception e) { remoteTabs = new JSONArray(); }
+            try { pinnedNotes = new JSONArray(prefs.getString("pinnedNotes", "[]")); } catch (Exception e) { pinnedNotes = new JSONArray(); }
+            try { deletedNoteIds = new JSONArray(prefs.getString("deletedNoteIds", "[]")); } catch (Exception e) { deletedNoteIds = new JSONArray(); }
+            try { clipboardHistory = new JSONArray(prefs.getString("clipboardHistory", "[]")); } catch (Exception e) { clipboardHistory = new JSONArray(); }
             String clipRaw = prefs.getString("latestClipboard", "");
             latestClipboard = null;
             if (clipRaw != null && !clipRaw.isEmpty()) {
@@ -315,6 +330,11 @@ public final class SyncManager {
             }
             if (latestClipboard != null && !latestClipboard.optString("id", "").isEmpty()) {
                 seenIds.add(latestClipboard.optString("id"));
+                if (clipboardHistory.length() == 0 && !latestClipboard.optString("text", "").isEmpty()) {
+                    clipboardHistory.put(latestClipboard);
+                }
+            } else if (clipboardHistory.length() > 0) {
+                latestClipboard = clipboardHistory.optJSONObject(0);
             }
             deriveActiveKeysLocked();
             saveLocked();
@@ -329,10 +349,12 @@ public final class SyncManager {
             .putString("googleEmail", googleEmail)
             .putString("googlePassphrase", googlePassphrase)
             .putString("pairingCode", pairingCode)
+            .putString("peerId", peerId)
             .putString("peerName", peerName)
             .putString("peerPlatform", peerPlatform)
             .putString("peerLanUrl", peerLanUrl)
             .putLong("peerLastSeenMs", peerLastSeenMs)
+            .putInt("peerTabCount", peerTabCount)
             .putBoolean("prefTabs", prefTabs)
             .putBoolean("prefBookmarks", prefBookmarks)
             .putBoolean("prefReadingList", prefReadingList)
@@ -340,6 +362,9 @@ public final class SyncManager {
             .putBoolean("prefHistory", prefHistory)
             .putString("drops", drops.toString())
             .putString("remoteTabs", remoteTabs.toString())
+            .putString("pinnedNotes", pinnedNotes.toString())
+            .putString("deletedNoteIds", deletedNoteIds.toString())
+            .putString("clipboardHistory", clipboardHistory.toString())
             .putString("latestClipboard", latestClipboard != null ? latestClipboard.toString() : "")
             .apply();
     }
@@ -394,7 +419,7 @@ public final class SyncManager {
     }
 
     /**
-     * Activates Zero-QR Google-Account E2EE Auto-Sync using the exact v5.4.0 cross-platform spec.
+     * Activates Zero-QR Google-Account E2EE Auto-Sync using the exact v5.5.0 cross-platform spec.
      */
     public boolean configureGoogleAccountSync(String email, String passphrase) {
         if (email == null || !email.trim().contains("@")) return false;
@@ -639,8 +664,34 @@ public final class SyncManager {
                 pObj.put("history", prefHistory);
                 o.put("prefs", pObj);
 
+                JSONArray devArr = new JSONArray();
+                JSONObject selfDev = new JSONObject();
+                selfDev.put("id", deviceId);
+                selfDev.put("name", deviceName);
+                selfDev.put("platform", "android");
+                selfDev.put("isSelf", true);
+                selfDev.put("isOnline", true);
+                selfDev.put("lastSeenMs", now);
+                selfDev.put("tabCount", lastPublishedTabCount);
+                selfDev.put("transport", "local");
+                devArr.put(selfDev);
+                if (peerSeen) {
+                    JSONObject peerDev = new JSONObject();
+                    peerDev.put("id", !peerId.isEmpty() ? peerId : "peer-1");
+                    peerDev.put("name", peerName);
+                    peerDev.put("platform", !peerPlatform.isEmpty() ? peerPlatform : "windows");
+                    peerDev.put("isSelf", false);
+                    peerDev.put("isOnline", peerOnline);
+                    peerDev.put("lastSeenMs", peerLastSeenMs);
+                    peerDev.put("tabCount", remoteTabs.length() > 0 ? remoteTabs.length() : peerTabCount);
+                    peerDev.put("transport", lanActive ? "lan" : "cloud");
+                    devArr.put(peerDev);
+                }
+                o.put("devices", devArr);
                 o.put("drops", drops);
                 o.put("remoteTabs", remoteTabs);
+                o.put("pinnedNotes", pinnedNotes);
+                o.put("clipboardHistory", clipboardHistory);
             } catch (Exception ignored) { }
         }
         return o;
@@ -678,12 +729,17 @@ public final class SyncManager {
     }
 
     public void sendDrop(String dropType, String title, String url, String text) {
+        sendDropExtended(dropType, title, url, text, "", null);
+    }
+
+    private void sendDropExtended(String dropType, String title, String url, String text, String quality, JSONArray tabsArr) {
         try {
             String id = UUID.randomUUID().toString().replace("-", "").substring(0, 14);
             long ts = System.currentTimeMillis();
             String safeTitle = truncate(title, 180);
             String safeUrl = truncate(url, 900);
             String safeText = truncate(text, 1600);
+            String safeQuality = truncate(quality, 24);
             JSONObject item = new JSONObject();
             JSONObject env = new JSONObject();
             boolean updateSnapshot = false;
@@ -694,6 +750,8 @@ public final class SyncManager {
                 item.put("title", safeTitle);
                 item.put("url", safeUrl);
                 item.put("text", safeText);
+                if (!safeQuality.isEmpty()) item.put("quality", safeQuality);
+                if (tabsArr != null && tabsArr.length() > 0) item.put("tabs", tabsArr);
                 item.put("fromId", deviceId);
                 item.put("fromName", deviceName);
                 item.put("platform", "android");
@@ -704,7 +762,7 @@ public final class SyncManager {
                 for (int i = 0; i < drops.length() && next.length() < 40; i++) next.put(drops.opt(i));
                 drops = next;
                 if ("clipboard".equals(dropType) && !safeText.isEmpty()) {
-                    latestClipboard = buildClipboardObject(id, safeText, deviceName, "android", ts);
+                    recordClipboardItemLocked(id, safeText, deviceName, "android", ts);
                     updateSnapshot = true;
                 }
                 saveLocked();
@@ -720,6 +778,8 @@ public final class SyncManager {
                 env.put("title", safeTitle);
                 env.put("url", safeUrl);
                 env.put("text", safeText);
+                if (!safeQuality.isEmpty()) env.put("quality", safeQuality);
+                if (tabsArr != null && tabsArr.length() > 0) env.put("tabs", tabsArr);
             }
             notifyStateChanged();
             publishEventAsync(env.toString());
@@ -727,6 +787,287 @@ public final class SyncManager {
                 publishCurrentSnapshotAsync();
             }
         } catch (Exception ignored) { }
+    }
+
+    public void sendBatchTabs(JSONArray tabs) {
+        JSONArray clean = compactUrlItems(tabs, 15, 72, 260);
+        if (clean.length() == 0) return;
+        String firstUrl = "";
+        StringBuilder preview = new StringBuilder();
+        for (int i = 0; i < clean.length(); i++) {
+            JSONObject t = clean.optJSONObject(i);
+            if (t == null) continue;
+            String u = t.optString("url", "");
+            if (firstUrl.isEmpty()) firstUrl = u;
+            if (i < 3) {
+                if (preview.length() > 0) preview.append(" · ");
+                String ttl = t.optString("title", u);
+                preview.append(truncate(ttl, 34));
+            }
+        }
+        String devLabel;
+        synchronized (lock) { devLabel = deviceName; }
+        String title = clean.length() + (clean.length() == 1 ? " tab from " : " tabs from ") + devLabel;
+        sendDropExtended("batch_tabs", title, firstUrl, preview.toString(), "", clean);
+    }
+
+    public void sendVideoHandoff(String url, String title, int seconds) {
+        if (url == null || url.trim().isEmpty()) return;
+        int sec = Math.max(0, seconds);
+        String targetUrl = appendTimestampToUrl(url.trim(), sec);
+        String cleanTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "Video";
+        String sub = sec > 0 ? ("Continue watching at " + formatVideoTimestamp(sec)) : "Watch on peer device";
+        sendDropExtended("video", cleanTitle, targetUrl, sub, "", null);
+    }
+
+    public void sendRemoteDownload(String url, String title, String quality) {
+        if (url == null || url.trim().isEmpty()) return;
+        String cleanUrl = url.trim();
+        String cleanTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : cleanUrl;
+        String q = (quality != null && !quality.trim().isEmpty()) ? quality.trim() : "best";
+        sendDropExtended("download", cleanTitle, cleanUrl, "8x Turbo Download handoff", q, null);
+    }
+
+    public void sendFindDevicePing() {
+        String devLabel;
+        synchronized (lock) { devLabel = deviceName; }
+        sendDropExtended("ping", "Ping from " + devLabel, "", devLabel + " is pinging this device", "", null);
+    }
+
+    public void addPinnedNote(String text) {
+        if (text == null || text.trim().isEmpty()) return;
+        String clean = truncate(text.trim(), 1000);
+        long now = System.currentTimeMillis();
+        String id = "note_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        synchronized (lock) {
+            try {
+                JSONObject note = new JSONObject();
+                note.put("id", id);
+                note.put("text", clean);
+                note.put("updatedMs", now);
+                note.put("fromName", deviceName);
+                note.put("platform", "android");
+                JSONArray next = new JSONArray();
+                next.put(note);
+                for (int i = 0; i < pinnedNotes.length() && next.length() < 12; i++) {
+                    JSONObject o = pinnedNotes.optJSONObject(i);
+                    if (o != null && !id.equals(o.optString("id"))) next.put(o);
+                }
+                pinnedNotes = next;
+                saveLocked();
+            } catch (Exception ignored) { }
+        }
+        notifyStateChanged();
+        publishCurrentSnapshotAsync();
+    }
+
+    public void deletePinnedNote(String id) {
+        if (id == null || id.trim().isEmpty()) return;
+        String cleanId = id.trim();
+        synchronized (lock) {
+            JSONArray next = new JSONArray();
+            for (int i = 0; i < pinnedNotes.length(); i++) {
+                JSONObject o = pinnedNotes.optJSONObject(i);
+                if (o != null && !cleanId.equals(o.optString("id"))) next.put(o);
+            }
+            pinnedNotes = next;
+
+            List<String> dels = new ArrayList<>();
+            for (int i = 0; i < deletedNoteIds.length(); i++) {
+                String d = deletedNoteIds.optString(i, "");
+                if (!d.isEmpty() && !d.equals(cleanId) && !dels.contains(d)) dels.add(d);
+            }
+            dels.add(cleanId);
+            while (dels.size() > 24) dels.remove(0);
+            JSONArray nextDel = new JSONArray();
+            for (String d : dels) nextDel.put(d);
+            deletedNoteIds = nextDel;
+            saveLocked();
+        }
+        notifyStateChanged();
+        publishCurrentSnapshotAsync();
+    }
+
+    public void deleteClipboardItem(String id) {
+        if (id == null || id.trim().isEmpty()) return;
+        String cleanId = id.trim();
+        synchronized (lock) {
+            JSONArray next = new JSONArray();
+            for (int i = 0; i < clipboardHistory.length(); i++) {
+                JSONObject o = clipboardHistory.optJSONObject(i);
+                if (o != null && !cleanId.equals(o.optString("id"))) next.put(o);
+            }
+            clipboardHistory = next;
+            if (latestClipboard != null && cleanId.equals(latestClipboard.optString("id"))) {
+                latestClipboard = clipboardHistory.length() > 0 ? clipboardHistory.optJSONObject(0) : findLatestClipboardLocked();
+            }
+            saveLocked();
+        }
+        notifyStateChanged();
+        publishCurrentSnapshotAsync();
+    }
+
+    public void clearClipboardHistory() {
+        synchronized (lock) {
+            clipboardHistory = new JSONArray();
+            latestClipboard = null;
+            saveLocked();
+        }
+        notifyStateChanged();
+        publishCurrentSnapshotAsync();
+    }
+
+    private void recordClipboardItemLocked(String id, String text, String fromName, String platform, long ts) {
+        if (text == null || text.trim().isEmpty()) return;
+        String cleanText = truncate(text.trim(), 1600);
+        String cid = (id != null && !id.isEmpty()) ? id : ("clip_" + ts);
+        JSONObject item = buildClipboardObject(cid, cleanText, fromName, platform, ts);
+        latestClipboard = item;
+
+        JSONArray next = new JSONArray();
+        next.put(item);
+        for (int i = 0; i < clipboardHistory.length() && next.length() < 10; i++) {
+            JSONObject old = clipboardHistory.optJSONObject(i);
+            if (old == null) continue;
+            if (cid.equals(old.optString("id"))) continue;
+            if (next.length() == 1 && cleanText.equals(old.optString("text", ""))) continue;
+            next.put(old);
+        }
+        clipboardHistory = next;
+    }
+
+    private void mergePinnedNotesLocked(JSONArray incomingNotes, JSONArray incomingDeleted) {
+        List<String> delList = new ArrayList<>();
+        Set<String> delSet = new HashSet<>();
+        for (int i = 0; i < deletedNoteIds.length(); i++) {
+            String d = deletedNoteIds.optString(i, "").trim();
+            if (!d.isEmpty() && delSet.add(d)) delList.add(d);
+        }
+        if (incomingDeleted != null) {
+            for (int i = 0; i < incomingDeleted.length(); i++) {
+                String d = incomingDeleted.optString(i, "").trim();
+                if (!d.isEmpty() && delSet.add(d)) delList.add(d);
+            }
+        }
+        while (delList.size() > 24) {
+            String dropped = delList.remove(0);
+            delSet.remove(dropped);
+        }
+        JSONArray nextDel = new JSONArray();
+        for (String d : delList) nextDel.put(d);
+        deletedNoteIds = nextDel;
+
+        Map<String, JSONObject> byId = new LinkedHashMap<>();
+        JSONArray[] sources = new JSONArray[] { pinnedNotes, incomingNotes };
+        for (JSONArray src : sources) {
+            if (src == null) continue;
+            for (int i = 0; i < src.length(); i++) {
+                JSONObject o = src.optJSONObject(i);
+                if (o == null) continue;
+                String nid = o.optString("id", "").trim();
+                String txt = o.optString("text", "").trim();
+                if (nid.isEmpty() || txt.isEmpty() || delSet.contains(nid)) continue;
+                long upd = o.optLong("updatedMs", 0L);
+                JSONObject cur = byId.get(nid);
+                if (cur == null || upd >= cur.optLong("updatedMs", 0L)) {
+                    try {
+                        JSONObject norm = new JSONObject();
+                        norm.put("id", nid);
+                        norm.put("text", truncate(txt, 1000));
+                        norm.put("updatedMs", upd);
+                        norm.put("fromName", truncate(o.optString("fromName", peerName), 64));
+                        norm.put("platform", truncate(o.optString("platform", peerPlatform), 24));
+                        byId.put(nid, norm);
+                    } catch (Exception ignored) { }
+                }
+            }
+        }
+        List<JSONObject> merged = new ArrayList<>(byId.values());
+        Collections.sort(merged, (a, b) -> Long.compare(b.optLong("updatedMs", 0L), a.optLong("updatedMs", 0L)));
+        JSONArray nextNotes = new JSONArray();
+        for (int i = 0; i < merged.size() && nextNotes.length() < 12; i++) {
+            nextNotes.put(merged.get(i));
+        }
+        pinnedNotes = nextNotes;
+    }
+
+    private void mergeClipboardHistoryLocked(JSONArray incomingClips) {
+        if (incomingClips == null || incomingClips.length() == 0) return;
+        Map<String, JSONObject> byId = new LinkedHashMap<>();
+        JSONArray[] sources = new JSONArray[] { clipboardHistory, incomingClips };
+        for (JSONArray src : sources) {
+            if (src == null) continue;
+            for (int i = 0; i < src.length(); i++) {
+                JSONObject o = src.optJSONObject(i);
+                if (o == null) continue;
+                String txt = o.optString("text", "").trim();
+                if (txt.isEmpty()) continue;
+                long ts = o.optLong("ts", 0L);
+                String cid = o.optString("id", "").trim();
+                if (cid.isEmpty()) cid = "clip-" + ts + "-" + Integer.toHexString(txt.hashCode());
+                JSONObject cur = byId.get(cid);
+                if (cur == null || ts >= cur.optLong("ts", 0L)) {
+                    byId.put(cid, buildClipboardObject(
+                        cid,
+                        truncate(txt, 1600),
+                        truncate(o.optString("fromName", peerName), 64),
+                        truncate(o.optString("platform", peerPlatform), 24),
+                        ts
+                    ));
+                }
+            }
+        }
+        List<JSONObject> sorted = new ArrayList<>(byId.values());
+        Collections.sort(sorted, (a, b) -> Long.compare(b.optLong("ts", 0L), a.optLong("ts", 0L)));
+        JSONArray next = new JSONArray();
+        String prevText = null;
+        for (JSONObject item : sorted) {
+            if (next.length() >= 10) break;
+            String t = item.optString("text", "");
+            if (t.equals(prevText)) continue;
+            prevText = t;
+            next.put(item);
+        }
+        clipboardHistory = next;
+        if (clipboardHistory.length() > 0) {
+            JSONObject top = clipboardHistory.optJSONObject(0);
+            if (latestClipboard == null || (top != null && top.optLong("ts", 0L) >= latestClipboard.optLong("ts", 0L))) {
+                latestClipboard = top;
+            }
+        }
+    }
+
+    private static String formatVideoTimestamp(int totalSeconds) {
+        int s = Math.max(0, totalSeconds);
+        int h = s / 3600;
+        int m = (s % 3600) / 60;
+        int sec = s % 60;
+        if (h > 0) {
+            return String.format(Locale.US, "%d:%02d:%02d", h, m, sec);
+        }
+        return String.format(Locale.US, "%02d:%02d", m, sec);
+    }
+
+    private static String appendTimestampToUrl(String url, int seconds) {
+        if (url == null || url.isEmpty() || seconds <= 0) return url != null ? url : "";
+        String low = url.toLowerCase(Locale.US);
+        boolean isYt = low.contains("youtube.com") || low.contains("youtu.be");
+        if (isYt) {
+            int hashIdx = url.indexOf('#');
+            String base = hashIdx >= 0 ? url.substring(0, hashIdx) : url;
+            String frag = hashIdx >= 0 ? url.substring(hashIdx) : "";
+            base = base.replaceAll("([?&])t=[^&]*", "$1")
+                .replace("?&", "?")
+                .replace("&&", "&");
+            while (base.endsWith("&") || base.endsWith("?")) {
+                base = base.substring(0, base.length() - 1);
+            }
+            String sep = base.contains("?") ? "&" : "?";
+            return base + sep + "t=" + seconds + frag;
+        }
+        int hashIdx = url.indexOf('#');
+        String base = hashIdx >= 0 ? url.substring(0, hashIdx) : url;
+        return base + "#t=" + seconds + "s";
     }
 
     private static JSONArray compactUrlItems(JSONArray src, int maxItems, int maxTitle, int maxUrl) {
@@ -822,6 +1163,9 @@ public final class SyncManager {
             env.put("bookmarks", prefBookmarks ? localBookmarks : new JSONArray());
             env.put("reading", prefReadingList ? localReading : new JSONArray());
             env.put("history", prefHistory ? localHistory : new JSONArray());
+            env.put("pinnedNotes", pinnedNotes);
+            env.put("deletedNoteIds", deletedNoteIds);
+            env.put("clipboardHistory", prefClipboard ? clipboardHistory : new JSONArray());
             if (prefClipboard && latestClipboard != null && !latestClipboard.optString("text", "").isEmpty()) {
                 env.put("latestClipboard", latestClipboard);
             } else {
@@ -957,7 +1301,7 @@ public final class SyncManager {
             conn.setConnectTimeout(1200);
             conn.setReadTimeout(1200);
             conn.setDoOutput(true);
-            conn.setRequestProperty("User-Agent", "dejavu-link-android/5.4.0");
+            conn.setRequestProperty("User-Agent", "dejavu-link-android/5.5.0");
             conn.setRequestProperty("Content-Type", "text/plain; charset=utf-8");
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(body);
@@ -1060,14 +1404,18 @@ public final class SyncManager {
                     if (seenIds.size() > 600) seenIds.clear();
                 }
 
+                peerId = from;
                 peerName = fromName.isEmpty() ? "Windows PC" : fromName;
                 peerPlatform = platform.isEmpty() ? "windows" : platform;
                 peerLastSeenMs = now;
+                if (msg.has("tabCount")) {
+                    peerTabCount = Math.max(0, msg.optInt("tabCount", peerTabCount));
+                }
                 lastSyncMs = now;
                 String lu = msg.optString("lanUrl", "");
                 if (lu.startsWith("http://")) peerLanUrl = lu;
 
-                if ("snapshot".equals(kind)) {
+                if ("snapshot".equals(kind) || "state".equals(kind)) {
                     if (prefTabs) {
                         JSONArray t = msg.optJSONArray("tabs");
                         if (t != null) remoteTabs = t;
@@ -1084,7 +1432,16 @@ public final class SyncManager {
                         JSONArray h = msg.optJSONArray("history");
                         if (h != null && h.length() > 0) incomingHist = h;
                     }
+                    JSONArray incNotes = msg.optJSONArray("pinnedNotes");
+                    JSONArray incDel = msg.optJSONArray("deletedNoteIds");
+                    if (incNotes != null || incDel != null) {
+                        mergePinnedNotesLocked(incNotes, incDel);
+                    }
                     if (prefClipboard) {
+                        JSONArray incClipHist = msg.optJSONArray("clipboardHistory");
+                        if (incClipHist != null && incClipHist.length() > 0) {
+                            mergeClipboardHistoryLocked(incClipHist);
+                        }
                         JSONObject clip = msg.optJSONObject("latestClipboard");
                         if (clip != null) {
                             String clipText = clip.optString("text", "").trim();
@@ -1104,7 +1461,7 @@ public final class SyncManager {
                                     || hasDropIdLocked(clipId);
                                 if (!alreadyHad) {
                                     seenIds.add(clipId);
-                                    latestClipboard = buildClipboardObject(clipId, clipText, clipFrom, clipPlat, clipTs);
+                                    recordClipboardItemLocked(clipId, clipText, clipFrom, clipPlat, clipTs);
                                     JSONObject dropItem = new JSONObject();
                                     dropItem.put("id", clipId);
                                     dropItem.put("dropType", "clipboard");
@@ -1139,6 +1496,8 @@ public final class SyncManager {
                     }
                     String dropId = id.isEmpty() ? UUID.randomUUID().toString().substring(0, 12) : id;
                     String dropText = msg.optString("text", "");
+                    String dropQuality = msg.optString("quality", "");
+                    JSONArray dropTabs = msg.optJSONArray("tabs");
                     long dropTs = msg.optLong("ts", now);
 
                     JSONObject item = new JSONObject();
@@ -1147,6 +1506,8 @@ public final class SyncManager {
                     item.put("title", msg.optString("title", ""));
                     item.put("url", msg.optString("url", ""));
                     item.put("text", dropText);
+                    if (!dropQuality.isEmpty()) item.put("quality", dropQuality);
+                    if (dropTabs != null && dropTabs.length() > 0) item.put("tabs", dropTabs);
                     item.put("fromId", from);
                     item.put("fromName", peerName);
                     item.put("platform", peerPlatform);
@@ -1157,7 +1518,7 @@ public final class SyncManager {
                     for (int i = 0; i < drops.length() && next.length() < 40; i++) next.put(drops.opt(i));
                     drops = next;
                     if ("clipboard".equals(dropType) && !dropText.isEmpty()) {
-                        latestClipboard = buildClipboardObject(dropId, dropText, peerName, peerPlatform, dropTs);
+                        recordClipboardItemLocked(dropId, dropText, peerName, peerPlatform, dropTs);
                     }
                     incomingDrop = item;
                 } else if ("tabs".equals(kind)) {

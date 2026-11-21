@@ -1891,7 +1891,7 @@ img {
   color: var(--md-on-surface-variant);
 }
 
-/* Row 2: Decluttered v5.4.0 ChromeOS 5-Icon Right Toolbar + Pill Omnibox with Brave-Exact Shields */
+/* Row 2: Decluttered v5.5.0 ChromeOS 5-Icon Right Toolbar + Pill Omnibox with Brave-Exact Shields */
 .dk-toolbar {
   height: 50px;
   padding: 0 12px;
@@ -2787,7 +2787,7 @@ img {
   color: var(--md-on-primary-container);
 }
 
-/* Page 2: Real Chrome Extensions Manager Showcase (v5.4.0 Material Design 3) */
+/* Page 2: Real Chrome Extensions Manager Showcase (v5.5.0 Material Design 3) */
 .dk-ext-stage {
   min-height: 472px;
   height: 100%;
@@ -3484,50 +3484,88 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   gap: 5px;
 }
 
-/* Interactive Floating M3 Video Download Pill + Quality/MP3 Menu */
+/* Interactive v5.5.0 Collapsible 34x34px M3 Butterfly Video Downloader FAB + Quality/MP3/Handoff Menu */
 .md-float-dl-wrap {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 10px;
+  right: 10px;
   z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
-.md-float-dl {
+.md-float-pill {
   position: relative;
-  height: 38px;
-  padding: 0 12px 0 6px;
+  height: 36px;
+  padding: 0;
   border-radius: 999px;
-  border: 1.5px solid var(--md-primary);
+  border: 1px solid var(--md-outline-variant);
   background: var(--md-surface-container-high);
   color: var(--md-on-surface);
   box-shadow: var(--md-elevation-1);
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  font-weight: 700;
-  transition: transform 0.2s var(--md-ease-emphasized), background-color 0.18s var(--md-ease-emphasized);
+  opacity: 0.84;
+  transition: opacity 0.18s var(--md-ease-emphasized), border-color 0.2s var(--md-ease-emphasized), background-color 0.2s var(--md-ease-emphasized);
 }
 
-.md-float-dl:hover {
-  transform: translateY(-2px);
+.md-float-pill:hover,
+.md-float-dl-wrap.is-expanded .md-float-pill {
+  opacity: 1;
+  border-color: var(--md-primary);
   background: var(--md-surface-container-highest);
 }
 
-.md-float-ico {
-  width: 24px;
-  height: 24px;
+.md-float-dl-wrap.is-queued .md-float-pill {
+  border-color: var(--md-tertiary);
+}
+
+.md-float-ext {
+  max-width: 0;
+  opacity: 0;
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: max-width 0.26s var(--md-ease-emphasized), opacity 0.18s ease, padding 0.24s var(--md-ease-emphasized);
+}
+
+.md-float-dl-wrap.is-expanded .md-float-ext {
+  max-width: 220px;
+  opacity: 1;
+  padding: 0 6px 0 12px;
+}
+
+.md-float-lbl {
+  color: var(--md-on-surface);
+}
+
+.md-bfly-btn {
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: var(--md-primary);
-  color: var(--md-on-primary);
+  border: none;
+  background: transparent;
+  color: var(--md-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s var(--md-ease-emphasized), background-color 0.18s var(--md-ease-emphasized);
 }
 
-.md-float-dl.queued .md-float-ico {
-  background: var(--md-tertiary);
-  color: var(--md-on-tertiary);
+.md-bfly-btn:hover {
+  background: var(--md-state-hover);
+}
+
+.md-bfly-btn:active {
+  transform: scale(0.93);
 }
 
 .md-float-badge {
@@ -3539,6 +3577,11 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   font-weight: 800;
 }
 
+.md-float-dl-wrap.is-queued .md-float-badge {
+  background: var(--md-tertiary-container);
+  color: var(--md-on-tertiary-container);
+}
+
 .md-float-chevron {
   display: inline-flex;
   align-items: center;
@@ -3547,7 +3590,7 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   transition: transform 0.18s var(--md-ease-emphasized);
 }
 
-.md-float-dl[aria-expanded="true"] .md-float-chevron {
+.md-float-dl-wrap.is-expanded .md-float-chevron {
   transform: rotate(180deg);
 }
 
@@ -3646,6 +3689,16 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
 .md-q-item.is-audio .md-q-badge {
   background: var(--md-tertiary-container);
   color: var(--md-on-tertiary-container);
+}
+
+.md-q-item.is-handoff .md-q-badge {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+
+.md-q-item.is-handoff:hover {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
 }
 
 .md-q-item.active .md-q-badge {
@@ -3952,7 +4005,7 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   opacity: 0.86;
 }
 
-/* Page 5: PC <-> Phone Sync (v5.4.0 Direct Wi-Fi LAN + TLS MQTT Retained E2EE) */
+/* Page 5: PC <-> Phone Sync (v5.5.0 Expanded dejavu Link v2.3 Continuity Hub) */
 .dk-sync-stage {
   height: 100%;
   padding: 20px 24px;
@@ -4035,8 +4088,15 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
 .sync-v49-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
   flex-shrink: 0;
+}
+
+.sync-head-pills {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .sync-v49-grid {
@@ -4200,7 +4260,7 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
 }
 
 /* ==========================================================================
-   COMPANION GOOGLE PIXEL PHONE MOCKUP (v5.4.0 PIXEL MATERIAL DESIGN 3 + AT-A-GLANCE MOTD)
+   COMPANION GOOGLE PIXEL PHONE MOCKUP (v5.5.0 120HZ ANDROID EDGE-TO-EDGE + AT-A-GLANCE MOTD)
    ========================================================================== */
 .pixel-frame {
   border-radius: 38px;

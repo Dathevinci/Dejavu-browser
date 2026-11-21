@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 
 /**
- * dejavu True Brave-Exact Shields Mobile Engine (v5.4.0)
+ * dejavu True Brave-Exact Shields Mobile Engine (v5.5.0)
  * - Background cached EasyList + EasyPrivacy + uBlock Quick-Fixes + Brave Specific/Disconnect/Unbreak + OISD + Peter Lowe
  *   compiled into ctx.getFilesDir()/filters-v4/ with 24h TTL (zero UI-thread I/O, 100,000+ rules!)
  * - 720+ millisecond-0 built-in core ad, tracker, telemetry, OEM, d3ward, adblock-tester, popunder & crypto-miner domains
@@ -842,7 +842,7 @@ public final class MobileAdBlocker {
             conn.setInstanceFollowRedirects(false);
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(15000);
-            conn.setRequestProperty("User-Agent", "dejavu-mobile/5.4.0");
+            conn.setRequestProperty("User-Agent", "dejavu-mobile/5.5.0");
             conn.setRequestProperty("Accept-Encoding", "gzip");
             int code = conn.getResponseCode();
             if (code >= 300 && code < 400) {
@@ -1808,12 +1808,16 @@ public final class MobileAdBlocker {
             + "}"
             + "function unlockCookieScroll(){"
             +   "try{"
-            +     "if(isPaused()||!cfg.blockCookies)return;"
-            +     "if(document.body&&document.querySelector(CK_SEL)){"
-            +       "if(getComputedStyle(document.body).overflow==='hidden')document.body.style.setProperty('overflow','auto','important');"
-            +       "if(getComputedStyle(document.body).position==='fixed')document.body.style.setProperty('position','static','important');"
-            +       "if(document.documentElement&&getComputedStyle(document.documentElement).overflow==='hidden')document.documentElement.style.setProperty('overflow','auto','important');"
-            +     "}"
+            +     "if(isPaused()||!cfg.blockCookies||!document.body)return;"
+            +     "var ckNode=document.querySelector(CK_SEL);"
+            +     "if(!ckNode)return;"
+            +     "var docEl=document.documentElement;"
+            +     "var tall=(docEl&&docEl.scrollHeight>window.innerHeight+40)||(document.body.scrollHeight>window.innerHeight+40);"
+            +     "if(!tall)return;"
+            +     "var bcs=getComputedStyle(document.body);"
+            +     "if(bcs.overflowY==='hidden')document.body.style.setProperty('overflow-y','auto','important');"
+            +     "if(bcs.position==='fixed'&&document.body.style.position==='fixed')document.body.style.setProperty('position','static','important');"
+            +     "if(docEl){var dcs=getComputedStyle(docEl);if(dcs.overflowY==='hidden')docEl.style.setProperty('overflow-y','auto','important');}"
             +   "}catch(e){}"
             + "}"
             + "window.__djvUpdateShieldCfg=function(next){"

@@ -4621,6 +4621,32 @@ namespace DejavuBrowser
                 {
                     SetDlManagerOpen(true, "media");
                 }
+                else if (action == "sendVideoToPeer")
+                {
+                    string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : (tab != null ? (tab.Url ?? "") : "");
+                    string t = msg.ContainsKey("title") ? Convert.ToString(msg["title"]) : (tab != null ? (tab.Title ?? "") : "");
+                    int sec = 0;
+                    if (msg.ContainsKey("seconds"))
+                    {
+                        try { sec = Math.Max(0, Convert.ToInt32(msg["seconds"])); } catch { }
+                    }
+                    if (_sync != null && !string.IsNullOrWhiteSpace(u))
+                    {
+                        _sync.SendVideoHandoff(u, t, sec);
+                        PushFullStateToShell();
+                        SendSyncPanelState(null);
+                        PushShellToast(sec > 3 ? "Video + timestamp sent to connected device" : "Video sent to connected device", "success");
+                    }
+                }
+                else if (action == "copyLink")
+                {
+                    string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : (tab != null ? (tab.Url ?? "") : "");
+                    if (!string.IsNullOrWhiteSpace(u))
+                    {
+                        try { Clipboard.SetText(u); } catch { }
+                        PushShellToast("Video link copied", "success");
+                    }
+                }
             }
             catch { }
         }
@@ -5357,6 +5383,20 @@ namespace DejavuBrowser
         {
             BrowserTab tab = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || tab == null || tab.IsNewTab);
+            int openWebCount = 0;
+            if (!_isPrivateWindow)
+            {
+                for (int i = 0; i < _tabs.Count; i++)
+                {
+                    BrowserTab bt = _tabs[i];
+                    if (bt != null && !bt.IsNewTab && !string.IsNullOrWhiteSpace(bt.Url) &&
+                        (bt.Url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                         bt.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        openWebCount++;
+                    }
+                }
+            }
             var payload = new Dictionary<string, object>
             {
                 { "mode", "sync" },
@@ -5365,7 +5405,8 @@ namespace DejavuBrowser
                 { "activeProfile", _profiles.ActiveProfile },
                 { "sync", _sync != null ? _sync.GetSnapshot() : new Dictionary<string, object>() },
                 { "activeTabUrl", (tab != null && !tab.IsNewTab) ? (tab.Url ?? "") : "" },
-                { "activeTabTitle", (tab != null && !tab.IsNewTab) ? (tab.Title ?? "") : "" }
+                { "activeTabTitle", (tab != null && !tab.IsNewTab) ? (tab.Title ?? "") : "" },
+                { "openTabCount", openWebCount }
             };
             if (backdrop != null) payload["backdrop"] = backdrop;
             return _json.Serialize(payload);
@@ -5570,6 +5611,228 @@ namespace DejavuBrowser
                 SendSyncPanelState(null);
                 return true;
             }
+            if (type == "syncSendAllTabs")
+            {
+                if (_sync == null) return true;
+                if (_isPrivateWindow)
+                {
+                    PushShellToast("Private window tabs are not sent over dejavu Link", "info");
+                    return true;
+                }
+                List<RemoteTabItem> batch = new List<RemoteTabItem>();
+                for (int i = 0; i < _tabs.Count && batch.Count < 15; i++)
+                {
+                    BrowserTab bt = _tabs[i];
+                    if (bt == null || bt.IsNewTab || string.IsNullOrWhiteSpace(bt.Url)) continue;
+                    string u = bt.Url.Trim();
+                    if (u.StartsWith("dejavu://", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!u.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                        !u.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) continue;
+                    batch.Add(new RemoteTabItem
+                    {
+                        title = string.IsNullOrWhiteSpace(bt.Title) ? FormatDisplayUrl(u) : bt.Title.Trim(),
+                        url = u
+                    });
+                }
+                if (batch.Count == 0)
+                {
+                    PushShellToast("Open a website first to send tabs", "info");
+                    return true;
+                }
+                _sync.SendBatchTabs(batch);
+                PublishOpenTabsToSync();
+                PushFullStateToShell();
+                SendSyncPanelState(null);
+                PushShellToast("Sent " + batch.Count + (batch.Count == 1 ? " tab" : " tabs") + " to connected device", "success");
+                return true;
+            }
+            if (type == "syncSendVideo")
+            {
+                if (_sync == null) return true;
+                BrowserTab active = GetActiveTab();
+                string u = msg.ContainsKey("url") ? (Convert.ToString(msg["url"]) ?? "").Trim() : "";
+                string t = msg.ContainsKey("title") ? (Convert.ToString(msg["title"]) ?? "").Trim() : "";
+                int sec = 0;
+                if (msg.ContainsKey("seconds"))
+                {
+                    try { sec = Math.Max(0, Convert.ToInt32(msg["seconds"])); } catch { }
+                }
+                if (string.IsNullOrEmpty(u) && active != null && !active.IsNewTab && !string.IsNullOrWhiteSpace(active.Url))
+                {
+                    u = active.Url.Trim();
+                    if (string.IsNullOrEmpty(t)) t = active.Title ?? "";
+                }
+                if (string.IsNullOrEmpty(u))
+                {
+                    PushShellToast("Open a video webpage first to hand it off", "info");
+                    return true;
+                }
+                string resolved = ResolveInputToUrl(u);
+                if (string.IsNullOrEmpty(t)) t = FormatDisplayUrl(resolved);
+                _sync.SendVideoHandoff(resolved, t, sec);
+                PushFullStateToShell();
+                SendSyncPanelState(null);
+                PushShellToast(sec > 3 ? "Video + timestamp sent to connected device" : "Video sent to connected device", "success");
+                return true;
+            }
+            if (type == "syncSendDownload")
+            {
+                if (_sync == null) return true;
+                BrowserTab active = GetActiveTab();
+                string u = msg.ContainsKey("url") ? (Convert.ToString(msg["url"]) ?? "").Trim() : "";
+                string t = msg.ContainsKey("title") ? (Convert.ToString(msg["title"]) ?? "").Trim() : "";
+                string q = msg.ContainsKey("quality") ? (Convert.ToString(msg["quality"]) ?? "").Trim() : "best";
+                if (string.IsNullOrEmpty(u) && active != null && !active.IsNewTab && !string.IsNullOrWhiteSpace(active.Url))
+                {
+                    u = active.Url.Trim();
+                    if (string.IsNullOrEmpty(t)) t = active.Title ?? "";
+                }
+                if (string.IsNullOrEmpty(u))
+                {
+                    PushShellToast("Open a page or paste a URL to beam to 8x Downloads", "info");
+                    return true;
+                }
+                string resolved = ResolveInputToUrl(u);
+                if (string.IsNullOrEmpty(t)) t = FormatDisplayUrl(resolved);
+                _sync.SendRemoteDownload(resolved, t, q);
+                PushFullStateToShell();
+                SendSyncPanelState(null);
+                PushShellToast("Beamed to peer 8x Turbo Downloads", "success");
+                return true;
+            }
+            if (type == "syncPingPeer")
+            {
+                if (_sync == null) return true;
+                _sync.SendFindDevicePing();
+                PushFullStateToShell();
+                SendSyncPanelState(null);
+                PushShellToast("Ping sent to connected device", "success");
+                return true;
+            }
+            if (type == "syncAddNote")
+            {
+                if (_sync == null) return true;
+                string txt = msg.ContainsKey("text") ? (Convert.ToString(msg["text"]) ?? "").Trim() : "";
+                if (string.IsNullOrEmpty(txt)) return true;
+                _sync.AddPinnedNote(txt);
+                PushFullStateToShell();
+                SendSyncPanelState(null);
+                PushShellToast("Pinned note synced across devices", "success");
+                return true;
+            }
+            if (type == "syncDeleteNote")
+            {
+                if (_sync == null) return true;
+                string id = msg.ContainsKey("id") ? (Convert.ToString(msg["id"]) ?? "").Trim() : "";
+                if (!string.IsNullOrEmpty(id))
+                {
+                    _sync.DeletePinnedNote(id);
+                    PushFullStateToShell();
+                    SendSyncPanelState(null);
+                }
+                return true;
+            }
+            if (type == "syncDeleteClipboardItem")
+            {
+                if (_sync == null) return true;
+                string id = msg.ContainsKey("id") ? (Convert.ToString(msg["id"]) ?? "").Trim() : "";
+                if (!string.IsNullOrEmpty(id))
+                {
+                    _sync.DeleteClipboardItem(id);
+                    PushFullStateToShell();
+                    SendSyncPanelState(null);
+                }
+                return true;
+            }
+            if (type == "syncClearClipboardHistory")
+            {
+                if (_sync == null) return true;
+                _sync.ClearClipboardHistory();
+                PushFullStateToShell();
+                SendSyncPanelState(null);
+                PushShellToast("Shared clipboard history cleared", "info");
+                return true;
+            }
+            if (type == "syncOpenBatchTabs")
+            {
+                List<string> urls = new List<string>();
+                if (msg.ContainsKey("tabs") && msg["tabs"] is System.Collections.IEnumerable)
+                {
+                    System.Collections.IEnumerable seq = (System.Collections.IEnumerable)msg["tabs"];
+                    foreach (object item in seq)
+                    {
+                        string u = "";
+                        Dictionary<string, object> td = item as Dictionary<string, object>;
+                        if (td != null && td.ContainsKey("url"))
+                        {
+                            u = Convert.ToString(td["url"]) ?? "";
+                        }
+                        else if (item is string)
+                        {
+                            u = (string)item;
+                        }
+                        u = u.Trim();
+                        if (!string.IsNullOrEmpty(u) &&
+                            (u.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                             u.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            urls.Add(u);
+                            if (urls.Count >= 15) break;
+                        }
+                    }
+                }
+                else if (msg.ContainsKey("id") && _sync != null)
+                {
+                    SyncDropItem found = _sync.FindDropById(Convert.ToString(msg["id"]));
+                    if (found != null && found.tabs != null)
+                    {
+                        for (int i = 0; i < found.tabs.Count && urls.Count < 15; i++)
+                        {
+                            string u = (found.tabs[i] != null && found.tabs[i].url != null) ? found.tabs[i].url.Trim() : "";
+                            if (u.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                                u.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                            {
+                                urls.Add(u);
+                            }
+                        }
+                    }
+                }
+                if (urls.Count > 0)
+                {
+                    if (fromOverlay) HidePopover();
+                    if (_activeHudMode == "synctoast") HideHud();
+                    if (_linkOpen) SetLinkOpen(false);
+                    for (int i = 0; i < urls.Count; i++)
+                    {
+                        CreateTab(urls[i], i == 0);
+                    }
+                    PushShellToast("Opened " + urls.Count + (urls.Count == 1 ? " tab" : " tabs"), "success");
+                }
+                return true;
+            }
+            if (type == "syncQueueDownload" || type == "syncDownloadDropUrl")
+            {
+                string u = msg.ContainsKey("url") ? (Convert.ToString(msg["url"]) ?? "").Trim() : "";
+                string t = msg.ContainsKey("title") ? (Convert.ToString(msg["title"]) ?? "").Trim() : "";
+                string q = msg.ContainsKey("quality") ? (Convert.ToString(msg["quality"]) ?? "").Trim() : "";
+                if (!string.IsNullOrEmpty(u) && _turboDownloads != null)
+                {
+                    string resolved = ResolveInputToUrl(u);
+                    if (fromOverlay) HidePopover();
+                    if (_activeHudMode == "synctoast") HideHud();
+                    if (VideoExtractorEngine.IsSupportedVideoSiteUrl(resolved))
+                    {
+                        string effQ = string.IsNullOrEmpty(q) ? (_settings != null ? _settings.defaultVideoQuality : "best") : q;
+                        EnqueueVideoDownloadFromTab(GetActiveTab(), resolved, effQ, t);
+                    }
+                    else
+                    {
+                        EnqueueFromActiveTabContextAsync(resolved, t, q);
+                    }
+                    PushShellToast("Queued in 8x Turbo Download Manager", "success");
+                }
+                return true;
+            }
             if (type == "syncSendClipboard")
             {
                 if (_sync == null) return true;
@@ -5638,25 +5901,12 @@ namespace DejavuBrowser
                 }
                 return true;
             }
-            if (type == "syncDownloadDropUrl")
-            {
-                string u = msg.ContainsKey("url") ? (Convert.ToString(msg["url"]) ?? "").Trim() : "";
-                if (!string.IsNullOrEmpty(u) && _turboDownloads != null)
-                {
-                    string resolved = ResolveInputToUrl(u);
-                    if (fromOverlay) HidePopover();
-                    if (_activeHudMode == "synctoast") HideHud();
-                    EnqueueFromActiveTabContextAsync(resolved, "", "");
-                    PushShellToast("Sent to 8x Turbo Download Manager", "success");
-                }
-                return true;
-            }
             if (type == "syncOpenUrl")
             {
                 string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : "";
                 HidePopover();
                 if (_activeHudMode == "synctoast") HideHud();
-                _linkOpen = false;
+                if (_linkOpen) SetLinkOpen(false);
                 if (!string.IsNullOrEmpty(u)) CreateTab(ResolveInputToUrl(u), true);
                 return true;
             }
@@ -5714,6 +5964,24 @@ namespace DejavuBrowser
         public void HandleAppSyncIncomingDrop(SyncDropItem item)
         {
             if (IsDisposed || item == null) return;
+            string dt = (item.dropType ?? "").ToLowerInvariant();
+            if (dt == "ping")
+            {
+                try { System.Media.SystemSounds.Asterisk.Play(); } catch { }
+            }
+            if (_shellReady && _shellView != null && _shellView.CoreWebView2 != null)
+            {
+                try
+                {
+                    var evMsg = new Dictionary<string, object>
+                    {
+                        { "type", "syncIncomingDrop" },
+                        { "drop", item }
+                    };
+                    _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(evMsg));
+                }
+                catch { }
+            }
             ShowIncomingSyncHud(item);
         }
 
@@ -6957,7 +7225,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.4.0 defaults", "success");
+            PushShellToast("Settings restored to v5.5.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -9020,8 +9288,11 @@ namespace DejavuBrowser
             try
             {
                 Dictionary<string, object> msg = _json.Deserialize<Dictionary<string, object>>(e.WebMessageAsJson);
-                if (msg == null || !msg.ContainsKey("type")) return;
-                string type = Convert.ToString(msg["type"]);
+                if (msg == null) return;
+                string type = msg.ContainsKey("type")
+                    ? Convert.ToString(msg["type"])
+                    : (msg.ContainsKey("action") ? Convert.ToString(msg["action"]) : "");
+                if (string.IsNullOrEmpty(type)) return;
 
                 switch (type)
                 {
@@ -9859,8 +10130,11 @@ namespace DejavuBrowser
             try
             {
                 Dictionary<string, object> msg = _json.Deserialize<Dictionary<string, object>>(json);
-                if (msg == null || !msg.ContainsKey("type")) return;
-                string type = Convert.ToString(msg["type"]);
+                if (msg == null) return;
+                string type = msg.ContainsKey("type")
+                    ? Convert.ToString(msg["type"])
+                    : (msg.ContainsKey("action") ? Convert.ToString(msg["action"]) : "");
+                if (string.IsNullOrEmpty(type)) return;
 
                 if (HandleShieldOrMotdMessage(type, msg, true)) return;
                 if (HandleLinkMessage(type, msg, true)) return;

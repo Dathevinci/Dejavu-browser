@@ -117,24 +117,26 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — 24 Pure M3 Wallpapers, 12 Material You Themes, Pixel At-a-Glance & ChromeOS Polish
+          ### dejavu __TAG__ — Collapsible M3 Butterfly Video FAB, dejavu Link v2.3 Continuity Hub & 120Hz Android Polish
 
-          - **12 Google Material Design 3 HCT Color Themes + 24 Pure M3 & 6 Butterfly Wallpapers (Auto-Harmonizing!)**:
-            - **12 Complete Dark & Light HCT Palettes** — Amethyst, Pixel Blue, Royal Indigo, Aurora Teal, Botanical Jade, Matcha Olive, Honey Amber, Sunset Coral, Crimson Clay, Velvet Rose, Orchid Mist, and Titanium Slate across Windows, Android & Web (strictly zero CSS blur).
-            - **24 Sculpted HD Wallpapers (8 Brand-New Editions)** — Expanded from 16 to **24 Pure M3 HD wallpapers** (`1920×1080`), adding `Crimson Fold`, `Jade Terrace`, `Cobalt Prism`, `Coral Bloom`, `Lavender Mist`, `Mint Atelier`, plus 2 new **Butterfly M3** ceramic editions (`Coral Monarch` & `Emerald Swallowtail`, 6 Butterfly M3 wallpapers total!).
-            - **Automatic Wallpaper-to-Theme Matching (Pixel *Wallpaper & Style*)** — Picking any wallpaper automatically transforms both your browser's Material You color seed AND Dark/Light polarity (with dominant color sampling for custom uploaded images on Windows, toggleable in Settings → Appearance).
-          - **Redesigned Pixel Material Design 3 At-a-Glance Message of the Day Card** — Unified greeting, date, and daily thought into one calm, elevated Google Pixel At-a-Glance M3 card on both Windows and Android with a soft `primaryContainer` time-of-day medallion and 1-tap rotating refresh button.
-          - **Decluttered ChromeOS 5-Icon Toolbar, Scroll-Free `⋮` Menu, Overhauled VPN Popover & Material Symbols Rounded**:
-            - **Breathable ChromeOS Right Toolbar** — Always shows at most 5 clean controls (`VPN`, `Downloads`, `Extensions`, compact `Profile` with zero redundant `Main` pill, and `⋮ Menu`) even when the Navigation Rail hides!
-            - **Zero-Scrollbar `⋮` Menu & Overhauled M3 VPN Popover** — Cleanly grouped ChromeOS `⋮` Menu with zero scrollbars and zero truncated labels, plus an overhauled M3 VPN popover with a tactile `60px` circular Power/Shield toggle, search pill, filter chips, and sleek `5px` themed scrollbars.
-            - **Unified Google Material Symbols Rounded Iconography** — Crisp `24×24` Material Symbols Rounded icons everywhere — including the brand-new **6-tooth rounded Settings Gear** and **VPN Shield-Globe**.
-          - **100%-Verified Brave-Exact Shields Engine & Flagship Ecosystem** — Native Chromium `ERR_BLOCKED_BY_CLIENT` + `FrameNavigationStarting` ad-iframe cancellation, **`279K+` Windows / `108K+` Android** Brave/EasyList/EasyPrivacy/uBlock/OISD rules + `document_start` scriptlets (100% d3ward & 100/100 adblock-tester parity), deep YouTube JSON-prune + instant video-event ad skipping + Brave `ima3.js` surrogates, popunder blocking, URL cleaning, farbling & Fanboy cookies; real-time **dejavu Link** (Direct Wi-Fi LAN + TLS MQTT Retained E2EE); Smooth Win 11 8-edge resize & Snap; Zero-Lag 120Hz anti-glitch tabs; Windows Hello & Android Passkeys + Universal M3 OAuth Popups; Real Chrome MV3 Extensions & Android Userscripts; YouTube `4K / 1080p / 720p / MP3 320k` 8× Turbo Downloader; 86-country Smart VPN + 3-Hop Tor; `<1%` idle CPU; and permanent V1+V2+V3 Android signing with in-place auto-updates.
-            > **Android Upgrade Note:** Upgrading from `v4.2.0` or earlier? Uninstall dejavu once, then install `__TAG__` — **all future updates will install automatically in-place!**
+          - **Collapsible Material Design 3 Butterfly Video Downloader FAB (Windows & Android)**:
+            - **Zero Video Obstruction at Rest** — Tucks cleanly into the video corner as an unobtrusive **`34×34px` sculpted Material Design 3 Butterfly logo** (100% Trusted Types CSP-safe SVG on YouTube & 1,000+ sites).
+            - **Smooth On-Click Expansion** — Click the Butterfly to expand cleanly into **`4K / 1080p / 720p` MP4**, **`320k` MP3** audio extraction, and **Send-to-Phone / PC** video timestamp handoff controls with 8× parallel byte-range acceleration & HLS `.m3u8` assembly, then smoothly auto-collapses back to the compact Butterfly badge!
+          - **Expanded `dejavu Link v2.3` Cross-Device Continuity Hub (Direct Wi-Fi LAN + TLS MQTT E2EE)**:
+            - **Send All Open Tabs** in one click, **Continue Watching** video timestamp handoff (`?t=...`), and **Remote 8× Download Handoff** directly between Windows & Android.
+            - **10-Item Shared Clipboard History**, **Retained E2EE Pinned Cross-Device Notes**, and **1-Tap Ping / Find Device** over Direct Wi-Fi LAN auto-discovery + TLS MQTT Retained AES-256 E2EE (zero rate limits).
+          - **Buttery 120Hz Android Scrolling & Zero-Overlap Edge-to-Edge Polish (`__TAG__` · `versionCode 550`)**:
+            - Eliminated mid-scroll viewport resize loops and pull-to-refresh touch hijacking for silky, locked **120Hz scrolling**.
+            - Added **IME keyboard-aware** bottom sheets & webpage viewport resizing, a **non-overlapping top-tucked scroll pill**, and a sleek refreshed **Android Material Design 3 Link Hub**.
+          - **Flagship Material Design 3 Ecosystem & Brave-Exact Shields**:
+            - **12 Material You HCT Color Themes & 24 Pure M3 / 6 Butterfly HD Wallpapers** with automatic wallpaper-to-theme harmonizing, Pixel M3 At-a-Glance MOTD card, breathable 5-icon ChromeOS toolbar, zero-scrollbar `⋮` Menu & overhauled M3 VPN popover, and Google Material Symbols Rounded icons (strictly zero CSS blur).
+            - **100%-Verified Brave-Exact Shields Engine** (`ERR_BLOCKED_BY_CLIENT` + `FrameNavigationStarting` ad-iframe cancellation, **`279K+` Windows / `108K+` Android** rules + `document_start` scriptlets, 100% d3ward & 100/100 adblock-tester, deep YouTube JSON-prune + instant ad skip + `ima3.js` surrogates, popunder blocking, farbling & Fanboy cookies), Windows Hello & Android Passkeys + Universal M3 OAuth Popups, Real Chrome MV3 Extensions & Android Userscripts, 86-country Smart VPN + 3-Hop Tor, `<1%` idle CPU, and permanent V1+V2+V3 Android signing with in-place auto-updates.
+            > **Android Upgrade Note (`__TAG__`, `versionCode 550`):** Upgrading from `v4.2.0` or earlier? Uninstall dejavu once, then install `__TAG__` — **all future updates will install automatically in-place!**
 
           #### Downloads
-          - **dejavu-Setup.exe** — Windows 10/11 Guided Installer (12 Material You HCT Themes, 24 Pure M3 & 6 Butterfly Wallpapers with auto-theme matching, Redesigned Pixel M3 At-a-Glance MOTD, Decluttered 5-Icon ChromeOS Toolbar & Overhauled M3 Menu/VPN Popovers, Material Symbols Rounded Icons, 100%-verified Brave-Exact Shields Engine `279K+` rules & Real-Time Link Sync)
+          - **dejavu-Setup.exe** — Windows 10/11 Guided Installer (Collapsible `34×34px` M3 Butterfly Video Downloader FAB, Expanded `dejavu Link v2.3` Continuity Hub, 12 Material You HCT Themes & 24 Pure M3 / 6 Butterfly Wallpapers, Pixel M3 At-a-Glance MOTD, 5-Icon ChromeOS Toolbar, 100%-verified Brave-Exact Shields `279K+` rules & Real Chrome MV3 Extensions)
           - **dejavu.exe** — Windows 10/11 Portable Single-File
-          - **dejavu-mobile.apk** — Android Mobile Browser App (12 Material You HCT Themes, 24 Pure M3 & 6 Butterfly Wallpapers with auto-theme matching, Redesigned Pixel M3 At-a-Glance MOTD, Material Symbols Rounded Icons, Brave-Exact Shields Engine `108K+` cached rules + `document_start` scriptlets, Direct LAN + TLS MQTT E2EE Link Sync, V1+V2+V3 permanently signed, Android 8.0+)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 550` — Buttery 120Hz Scrolling & Zero-Overlap Edge-to-Edge/IME Polish, Collapsible `34×34px` M3 Butterfly Video FAB, Sleek Android M3 `dejavu Link v2.3` Continuity Hub, 12 HCT Themes & 24 Wallpapers, Brave-Exact Shields `108K+` cached rules + `document_start` scriptlets, V1+V2+V3 permanently signed, Android 8.0+)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
           sed -i "s/__TAG__/$TAG/g" /tmp/release_notes.md
@@ -143,5 +145,5 @@ jobs:
             release-files/dejavu-Setup.exe \
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
-            --title "dejavu $TAG — 24 M3 Wallpapers, 12 Material You Themes, Pixel At-a-Glance & Brave-Exact Shields" \
+            --title "dejavu $TAG — Butterfly Video FAB, dejavu Link v2.3 Continuity Hub & 120Hz Android Polish" \
             --notes-file /tmp/release_notes.md

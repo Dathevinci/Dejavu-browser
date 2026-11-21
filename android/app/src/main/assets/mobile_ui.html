@@ -6,9 +6,11 @@
   <title>dejavu Mobile</title>
   <style>
     :root {
+      --sys-top: 28px;
       --safe-top: 28px;
-      --safe-bottom: 24px;
       --sys-bottom: 16px;
+      --safe-bottom: 72px;
+      --ime-bottom: 0px;
 
       /* Google Pixel Android 15 Material Design 3 — Dark HCT Surface Container Tokens */
       --bg: #141218;
@@ -173,7 +175,9 @@
     .sheet-backdrop.ctx-layer { z-index: 32; }
     .sheet-backdrop.hidden { display: none !important; }
     .sheet-panel {
-      width: 100%; max-height: 88vh;
+      width: 100%;
+      max-height: calc(100dvh - var(--sys-top, 28px) - var(--ime-bottom, 0px) - 12px);
+      margin-bottom: var(--ime-bottom, 0px);
       background: var(--sheet-bg);
       border: none;
       border-radius: 28px 28px 0 0;
@@ -244,6 +248,9 @@
       padding: 4px 16px calc(var(--sys-bottom) + 28px);
       display: flex; flex-direction: column; gap: 16px;
       -webkit-overflow-scrolling: touch;
+    }
+    body.ime-open .sheet-body {
+      padding-bottom: 18px;
     }
 
     /* =====================================================================
@@ -545,7 +552,7 @@
        SCREEN 1: START PAGE — BREATHABLE, CALM PIXEL MATERIAL DESIGN 3
        ===================================================================== */
     #scr-start {
-      padding: calc(var(--safe-top) + 12px) 20px calc(var(--safe-bottom) + 24px);
+      padding: calc(var(--safe-top) + 12px) 20px calc(var(--safe-bottom) + 28px);
       gap: 20px;
     }
     .sp-topbar {
@@ -962,7 +969,7 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v5.4.0 — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.5.0) — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
@@ -1001,25 +1008,54 @@
     .sync-badge .s-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
     .sync-pc-row {
       padding-top: 12px; border-top: 1px solid var(--divider);
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sync-pc-acts {
+      display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .sync-pc-acts .pill-btn.sm {
+      height: 30px; padding: 0 10px; font-size: 12px;
     }
     .sync-pc-dot {
       display: inline-block; width: 7px; height: 7px; border-radius: 50%;
       background: var(--mint); margin-right: 5px; vertical-align: middle;
     }
     .sync-pc-dot.idle { background: var(--subtle); }
-    .sync-pill-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sync-pill-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .sync-pill-act {
-      height: 44px; padding: 0 14px; border-radius: 999px; border: none;
+      height: 42px; padding: 0 12px; border-radius: 999px; border: none;
       background: var(--sheet-elev); color: var(--ink);
-      font-family: inherit; font-size: 13.5px; font-weight: 560;
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      cursor: pointer;
+      font-family: inherit; font-size: 13px; font-weight: 560;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      cursor: pointer; white-space: nowrap; min-width: 0; overflow: hidden;
       transition: transform 0.18s var(--md-ease-spring), background-color 0.15s var(--md-ease-emphasized);
     }
+    .sync-pill-act span { overflow: hidden; text-overflow: ellipsis; }
     .sync-pill-act.tonal { background: var(--accent-soft); color: var(--accent-bright); }
     body.theme-light .sync-pill-act.tonal { color: var(--accent); }
     .sync-pill-act:active { transform: scale(0.96); }
+    .sync-sub-pane { display: flex; flex-direction: column; gap: 12px; }
+    .sync-sub-pane.hidden { display: none !important; }
+    #sync-view-seg button { font-size: 12px; padding: 0 6px; white-space: nowrap; }
+    #sync-view-seg button.active::before { display: none; }
+    .sync-kind-tag {
+      height: 20px; padding: 0 8px; border-radius: 999px;
+      background: var(--sheet-elev); color: var(--muted);
+      font-size: 10.5px; font-weight: 620;
+      display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+    }
+    .sync-kind-tag.tonal { background: var(--accent-soft); color: var(--accent-bright); }
+    body.theme-light .sync-kind-tag.tonal { color: var(--accent); }
+    .sync-kind-tag.mint { background: var(--mint-soft); color: var(--mint); }
+    .sync-note-card {
+      padding: 13px 15px; border-radius: 20px; background: var(--group-bg);
+      display: flex; flex-direction: column; gap: 8px;
+      contain: layout style;
+    }
+    .sync-note-body {
+      font-size: 13.8px; line-height: 1.48; color: var(--ink);
+      white-space: pre-wrap; word-break: break-word;
+    }
 
     .compose-row { display: flex; gap: 8px; align-items: center; }
     .compose-row input {
@@ -1414,11 +1450,15 @@
     .mini-modal {
       position: fixed; inset: 0; z-index: 40;
       background: var(--scrim); display: flex; align-items: center; justify-content: center;
-      padding: 20px; animation: fadeScrim 0.18s var(--md-ease-decel) both;
+      padding: calc(var(--sys-top, 28px) + 12px) 20px calc(var(--ime-bottom, 0px) + var(--sys-bottom, 16px) + 16px);
+      animation: fadeScrim 0.18s var(--md-ease-decel) both;
     }
     .mini-modal.hidden { display: none !important; }
     .mini-modal-card {
-      width: 100%; max-width: 348px; border-radius: 28px;
+      width: 100%; max-width: 348px;
+      max-height: calc(100dvh - var(--sys-top, 28px) - var(--ime-bottom, 0px) - 40px);
+      overflow-y: auto;
+      border-radius: 28px;
       background: var(--sheet-bg); border: none;
       padding: 22px; display: flex; flex-direction: column; gap: 12px;
       box-shadow: 0 20px 44px rgba(0, 0, 0, 0.42);
@@ -1435,7 +1475,7 @@
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
     /* =====================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.4.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.5.0)
        ===================================================================== */
     .sh-hero-card {
       background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
@@ -1817,7 +1857,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v5.4.0 — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.5.0) — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -1830,7 +1870,7 @@
       </div>
 
       <div class="sheet-body">
-        <!-- 1. Unified Account & PC Status Card -->
+        <!-- 1. Unified Account & PC Presence Card -->
         <div class="sync-card">
           <div id="sync-google-active" style="display:none;flex-direction:column;gap:12px;">
             <div class="sync-id-row">
@@ -1840,17 +1880,6 @@
                 <div id="sync-g-email" style="font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
               </div>
               <span id="sync-mode-pill" class="sync-badge"><span class="s-dot"></span><span>Auto-synced</span></span>
-            </div>
-
-            <div class="sync-pc-row">
-              <span class="m3-ico tonal">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2.2"/><path d="M8.5 19.5h7M12 16.5v3"/></svg>
-              </span>
-              <div class="g-row-meta">
-                <div id="sync-status-title" class="g-row-title">Windows PC</div>
-                <div class="g-row-sub"><span id="sync-pc-dot" class="sync-pc-dot"></span><span id="sync-pc-presence">Online now</span></div>
-              </div>
-              <button type="button" class="pill-btn sm tonal" onclick="call('syncNow')">Sync</button>
             </div>
           </div>
 
@@ -1870,26 +1899,49 @@
             </button>
           </div>
 
-          <!-- Live E2EE Relay & LAN Transport Health Indicator -->
+          <!-- Unified PC Presence Row with 1-tap Ping PC & Sync -->
+          <div id="sync-pc-row" class="sync-pc-row" style="display:none;">
+            <span class="m3-ico tonal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2.2"/><path d="M8.5 19.5h7M12 16.5v3"/></svg>
+            </span>
+            <div class="g-row-meta">
+              <div id="sync-status-title" class="g-row-title">Windows PC</div>
+              <div class="g-row-sub"><span id="sync-pc-dot" class="sync-pc-dot"></span><span id="sync-pc-presence">Online now</span></div>
+            </div>
+            <div class="sync-pc-acts">
+              <button type="button" id="btn-m-ping-pc" class="pill-btn sm tonal" onclick="call('pingPc')">Ping PC</button>
+              <button type="button" class="pill-btn sm" onclick="call('syncNow')">Sync</button>
+            </div>
+          </div>
+
+          <!-- Live E2EE Transport Health Bar -->
           <div id="sync-relay-row" class="sync-relay-row">
             <span class="sync-relay-left">
               <span id="sync-relay-dot" class="sync-relay-dot"></span>
-              <span id="sync-relay-txt">E2EE Cloud · Connected</span>
+              <span id="sync-relay-txt">E2EE Cloud TLS · Connected</span>
             </span>
-            <span id="sync-relay-broker" class="sync-relay-broker">TLS MQTT</span>
+            <span id="sync-relay-broker" class="sync-relay-broker">HiveMQ TLS</span>
           </div>
         </div>
 
-        <!-- 2. Clean 2-Pill Action Row + Slim Quick Drop -->
-        <div class="sync-card" style="gap:12px;">
+        <!-- 2. Clean 2x2 Quick Actions Grid + Slim Quick Drop Bar -->
+        <div class="sync-card" style="gap:10px;">
           <div class="sync-pill-row">
             <button type="button" id="btn-m-send-tab" class="sync-pill-act tonal" onclick="call('sendCurrentTabToPc')">
-              <svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M3.5 14.5L14.5 3.5M14.5 3.5H7.5M14.5 3.5v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Send tab</span>
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><path d="M3.5 14.5L14.5 3.5M14.5 3.5H7.5M14.5 3.5v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Send Tab</span>
+            </button>
+            <button type="button" id="btn-m-send-all-tabs" class="sync-pill-act" onclick="call('sendAllTabsToPc')">
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><rect x="2.5" y="5.5" width="9.5" height="9.5" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M6 5.5V4a1.5 1.5 0 0 1 1.5-1.5h6.5A1.5 1.5 0 0 1 15.5 4v6.5A1.5 1.5 0 0 1 14 12h-2" stroke="currentColor" stroke-width="1.6"/></svg>
+              <span id="btn-m-send-all-lbl">All Tabs</span>
             </button>
             <button type="button" id="btn-m-send-clip" class="sync-pill-act" onclick="call('sendClipboardToPc')">
-              <svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M6.5 3.5h5a1 1 0 0 1 1 1v.5h1A1.5 1.5 0 0 1 15 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 14.5v-8A1.5 1.5 0 0 1 4.5 5h1v-.5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.5"/></svg>
-              <span>Send clipboard</span>
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><path d="M6.5 3.5h5a1 1 0 0 1 1 1v.5h1A1.5 1.5 0 0 1 15 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 14.5v-8A1.5 1.5 0 0 1 4.5 5h1v-.5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.5"/></svg>
+              <span>Clipboard</span>
+            </button>
+            <button type="button" id="btn-m-send-dl" class="sync-pill-act" onclick="sendCurrentDownloadToPc()">
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><path d="M9 3.2v7.8M6 8.2L9 11.2l3-3M3.5 14.5h11" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>8x to PC</span>
             </button>
           </div>
           <div class="compose-row">
@@ -1898,36 +1950,58 @@
           </div>
         </div>
 
-        <!-- 3. From Windows PC (Tabs + Shared Clipboard & Drops) -->
-        <div id="sync-pc-content-wrap" style="display:flex;flex-direction:column;gap:12px;">
-          <div class="sec-hdr">
-            <span>From Windows PC</span>
-            <button type="button" id="m-drops-clear-btn" class="sec-act" style="display:none;" onclick="call('clearDrops')">Clear drops</button>
-          </div>
-          <div id="m-latest-clip-card" class="sync-clip-card" style="display:none;">
-            <div class="sync-clip-head">
-              <span id="m-latest-clip-meta">Shared clipboard</span>
-              <button type="button" class="pill-btn primary sm" style="height:28px;" onclick="copyLatestSharedClipboard()">Copy</button>
-            </div>
-            <div id="m-latest-clip-txt" class="sync-clip-txt"></div>
+        <!-- 3. Gliding 3-Segment Control: PC & Drops | Clips & Notes | Settings -->
+        <div class="m3-seg-3" id="sync-view-seg" role="tablist" aria-label="dejavu Link sections">
+          <span class="seg-glider is-tonal" aria-hidden="true"></span>
+          <button type="button" id="sync-seg-drops" role="tab" class="active" onclick="setSyncSubTab('drops')">PC &amp; Drops</button>
+          <button type="button" id="sync-seg-clips" role="tab" onclick="setSyncSubTab('clips')">Clips &amp; Notes</button>
+          <button type="button" id="sync-seg-settings" role="tab" onclick="setSyncSubTab('settings')">Settings</button>
+        </div>
+
+        <!-- SEGMENT 1: PC OPEN TABS & DROPS -->
+        <div id="sync-pane-drops" class="sync-sub-pane">
+          <div id="m-pc-tabs-hdr" class="sec-hdr" style="display:none;">
+            <span>Open on Windows PC</span>
+            <button type="button" id="m-pc-tabs-open-all" class="sec-act" style="display:none;" onclick="openAllPcTabs()">Open All</button>
           </div>
           <div id="m-pc-tabs-list" class="g-group" style="display:none;"></div>
+
+          <div id="m-drops-hdr" class="sec-hdr" style="display:none;">
+            <span>Recent drops &amp; handoffs</span>
+            <button type="button" id="m-drops-clear-btn" class="sec-act" onclick="call('clearDrops')">Clear</button>
+          </div>
           <div id="m-drops-list" style="display:none;flex-direction:column;gap:10px;"></div>
+
           <div id="m-sync-empty-hint" class="empty compact" style="display:none;">
-            Open tabs and shared clipboard items from Windows PC appear here.
+            Open PC tabs, video handoffs, 8x downloads, and shared links appear here.
           </div>
         </div>
 
-        <!-- 4. Collapsible Disclosure: Sync Preferences (Collapsed by Default) -->
-        <div class="m3-disclosure">
-          <button type="button" id="m-sync-prefs-toggle" class="m3-disclosure-btn" aria-expanded="false" onclick="toggleDisclosure('m-sync-prefs')">
-            <span class="m3-disclosure-left">
-              <span class="m3-ico"><svg viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="7.5" cy="6" r="1.7" fill="var(--group-bg)" stroke="currentColor" stroke-width="1.6"/><circle cx="13" cy="10" r="1.7" fill="var(--group-bg)" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="14" r="1.7" fill="var(--group-bg)" stroke="currentColor" stroke-width="1.6"/></svg></span>
-              <span>Sync preferences</span>
-            </span>
-            <span class="m3-disclosure-chev">▾</span>
-          </button>
-          <div id="m-sync-prefs-body" class="m3-disclosure-body">
+        <!-- SEGMENT 2: SHARED CLIPBOARD HISTORY & PINNED NOTES -->
+        <div id="sync-pane-clips" class="sync-sub-pane hidden">
+          <div class="sec-hdr">
+            <span>Shared clipboard</span>
+            <button type="button" id="m-clip-clear-btn" class="sec-act" style="display:none;" onclick="call('clearClipboardHistory')">Clear</button>
+          </div>
+          <div id="m-clip-history-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+          <div class="sec-hdr" style="margin-top:4px;">
+            <span>Pinned cross-device notes</span>
+            <span id="m-notes-cnt" style="font-size:11.5px;color:var(--subtle);">0</span>
+          </div>
+          <div class="sync-card" style="padding:12px;gap:10px;">
+            <div class="compose-row">
+              <input id="m-note-input" type="text" maxlength="1000" placeholder="Pin an E2EE note across PC &amp; Phone…" onkeydown="if(event.key==='Enter')addMobilePinnedNote()">
+              <button type="button" class="pill-btn primary" style="height:44px;padding:0 16px;" onclick="addMobilePinnedNote()">Pin</button>
+            </div>
+          </div>
+          <div id="m-notes-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+
+        <!-- SEGMENT 3: SYNC SETTINGS & MANUAL PAIRING -->
+        <div id="sync-pane-settings" class="sync-sub-pane hidden">
+          <div class="sec-hdr"><span>What syncs automatically</span></div>
+          <div class="g-group">
             <div class="g-row" onclick="call('toggleSyncPref','tabs')">
               <div class="g-row-meta"><div class="g-row-title">Open tabs</div></div>
               <button type="button" id="sw-sync-tabs" class="sw on" aria-label="Sync open tabs"></button>
@@ -1949,36 +2023,35 @@
               <button type="button" id="sw-sync-history" class="sw on" aria-label="Sync browsing history"></button>
             </div>
           </div>
-        </div>
 
-        <!-- 5. Collapsible Disclosure: Manual Pairing & Passphrase (Collapsed by Default) -->
-        <div class="m3-disclosure">
-          <button type="button" id="m-manual-pair-toggle" class="m3-disclosure-btn" aria-expanded="false" onclick="toggleDisclosure('m-manual-pair')">
-            <span class="m3-disclosure-left">
-              <span class="m3-ico"><svg viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="8" rx="2.2" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6.8a3 3 0 0 1 6 0V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
-              <span>Manual pairing &amp; passphrase</span>
-            </span>
-            <span class="m3-disclosure-chev">▾</span>
-          </button>
-          <div id="m-manual-pair-body" class="m3-disclosure-body">
-            <div class="m3-disclosure-pad">
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <div style="font-size:12.5px;color:var(--muted);" id="sync-pass-status">Extra E2EE sync passphrase (optional)</div>
-                <div class="compose-row">
-                  <input id="m-sync-pass-in" type="password" placeholder="Optional E2EE passphrase">
-                  <button type="button" class="pill-btn tonal" style="height:44px;padding:0 16px;" onclick="applySyncPassphrase()">Save</button>
+          <div class="m3-disclosure">
+            <button type="button" id="m-manual-pair-toggle" class="m3-disclosure-btn" aria-expanded="false" onclick="toggleDisclosure('m-manual-pair')">
+              <span class="m3-disclosure-left">
+                <span class="m3-ico"><svg viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="8" rx="2.2" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6.8a3 3 0 0 1 6 0V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+                <span>Manual pairing &amp; passphrase</span>
+              </span>
+              <span class="m3-disclosure-chev">▾</span>
+            </button>
+            <div id="m-manual-pair-body" class="m3-disclosure-body">
+              <div class="m3-disclosure-pad">
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="font-size:12.5px;color:var(--muted);" id="sync-pass-status">Extra E2EE sync passphrase (optional)</div>
+                  <div class="compose-row">
+                    <input id="m-sync-pass-in" type="password" placeholder="Optional E2EE passphrase">
+                    <button type="button" class="pill-btn tonal" style="height:44px;padding:0 16px;" onclick="applySyncPassphrase()">Save</button>
+                  </div>
                 </div>
-              </div>
-              <div style="border-top:1px solid var(--divider);padding-top:12px;display:flex;flex-direction:column;gap:10px;">
-                <div style="font-size:12.5px;color:var(--muted);">Pair locally with a PC code or QR</div>
-                <div id="m-code-box" class="code-pill">DJV-5400-M3UI</div>
-                <div style="display:flex;gap:8px;">
-                  <button type="button" class="pill-btn primary" style="flex:1;height:40px;" onclick="call('scanQr')">Scan QR</button>
-                  <button type="button" class="pill-btn" style="height:40px;" onclick="copyPairCode()">Copy code</button>
-                </div>
-                <div class="compose-row">
-                  <input id="m-pair-input" type="text" placeholder="Enter PC code (DJV-XXXX-XXXX)" style="text-transform:uppercase;font-family:monospace;">
-                  <button type="button" class="pill-btn" style="height:44px;" onclick="pairCode()">Pair</button>
+                <div style="border-top:1px solid var(--divider);padding-top:12px;display:flex;flex-direction:column;gap:10px;">
+                  <div style="font-size:12.5px;color:var(--muted);">Pair locally with a PC code or QR</div>
+                  <div id="m-code-box" class="code-pill">DJV-5500-M3UI</div>
+                  <div style="display:flex;gap:8px;">
+                    <button type="button" class="pill-btn primary" style="flex:1;height:40px;" onclick="call('scanQr')">Scan QR</button>
+                    <button type="button" class="pill-btn" style="height:40px;" onclick="copyPairCode()">Copy code</button>
+                  </div>
+                  <div class="compose-row">
+                    <input id="m-pair-input" type="text" placeholder="Enter PC code (DJV-XXXX-XXXX)" style="text-transform:uppercase;font-family:monospace;">
+                    <button type="button" class="pill-btn" style="height:44px;" onclick="pairCode()">Pair</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2080,7 +2153,7 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.8v5.2M12 7.8h.01"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.4.0 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.5.0 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -2348,7 +2421,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update apk version 5.4.0 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update apk version 5.5.0 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2372,10 +2445,10 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update auto updater github releases apk version 5.4.0 about">
+              <div class="g-row set-item" data-search="software update auto updater github releases apk version 5.5.0 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.4.0</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.5.0</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
                 <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check</button>
@@ -2414,7 +2487,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.4.0
+          dejavu Mobile v5.5.0
         </div>
       </div>
     </div>
@@ -2685,7 +2758,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.4.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.5.0)
        =================================================================== -->
   <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2813,7 +2886,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.4.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.5.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -3005,7 +3078,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.4.0)
+    // Zero-mutation DOM equality-guard helpers (v5.5.0)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -3432,6 +3505,42 @@
 
     function copyActiveUrl() { if (state.activeUrl) call('copyText', state.activeUrl); }
     function goClipboard() { if (state.clipboardText) call('navigate', state.clipboardText); }
+    let syncSubTab = 'drops';
+    function isHttpUrl(s) {
+      return /^https?:\/\/\S+/i.test(String(s || '').trim());
+    }
+    function setSyncSubTab(tab) {
+      const next = (tab === 'clips' || tab === 'settings') ? tab : 'drops';
+      syncSubTab = next;
+      setCls(document.getElementById('sync-seg-drops'), 'active', next === 'drops');
+      setCls(document.getElementById('sync-seg-clips'), 'active', next === 'clips');
+      setCls(document.getElementById('sync-seg-settings'), 'active', next === 'settings');
+      setCls(document.getElementById('sync-pane-drops'), 'hidden', next !== 'drops');
+      setCls(document.getElementById('sync-pane-clips'), 'hidden', next !== 'clips');
+      setCls(document.getElementById('sync-pane-settings'), 'hidden', next !== 'settings');
+      requestAnimationFrame(() => syncMobileGlider(document.getElementById('sync-view-seg')));
+    }
+    function openAllPcTabs() {
+      const rtabs = (state.sync && Array.isArray(state.sync.remoteTabs)) ? state.sync.remoteTabs : [];
+      if (rtabs.length) call('openBatchTabs', JSON.stringify(rtabs));
+    }
+    function sendCurrentDownloadToPc() {
+      const inp = document.getElementById('m-drop-input');
+      const typed = inp ? (inp.value || '').trim() : '';
+      if (typed && (isHttpUrl(typed) || (!typed.includes(' ') && typed.includes('.')))) {
+        if (inp) inp.value = '';
+        call('sendDownloadToPc', typed, getHost(typed) || typed, 'best');
+        return;
+      }
+      call('sendDownloadToPc', state.activeUrl || '', state.activeTitle || '', 'best');
+    }
+    function addMobilePinnedNote() {
+      const inp = document.getElementById('m-note-input');
+      const txt = inp ? (inp.value || '').trim() : '';
+      if (!txt) return;
+      if (inp) inp.value = '';
+      call('addPinnedNote', txt);
+    }
     function sendMobileDrop() {
       const inp = document.getElementById('m-drop-input');
       const v = (inp.value || '').trim();
@@ -3815,11 +3924,13 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.4.0)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.5.0)
     const _domSigs = {
+      sysTop: '',
       safeTop: '',
       safeBottom: '',
       sysBottom: '',
+      imeBottom: '',
       wpBg: '',
       motdSlot: '',
       spProfAv: '',
@@ -3834,6 +3945,8 @@
       syncModePill: '',
       syncPcTabs: '',
       syncDrops: '',
+      syncClipHistory: '',
+      syncPinnedNotes: '',
       shieldsSheet: '',
       setYg: '',
       setAccents: '',
@@ -3874,6 +3987,7 @@
 
     function syncAllMobileGliders() {
       syncMobileGlider(document.getElementById('tabs-mode-seg'), { isPriv: tabViewPrivate });
+      syncMobileGlider(document.getElementById('sync-view-seg'));
       syncMobileGlider(document.getElementById('set-theme-seg'));
       syncMobileGlider(document.getElementById('set-bar-seg'));
       syncMobileGlider(document.getElementById('set-shield-level-seg'));
@@ -4307,9 +4421,12 @@
       const peerOnline = !!sync.peerOnline;
       const connected = !!sync.connected || peerOnline;
       const peerLabel = sync.peerName || 'Windows PC';
+      const rStat = sync.relayStatus || 'connecting';
+      const isLan = rStat === 'connected_lan';
 
       const gActiveBox = document.getElementById('sync-google-active');
       const gSignInBox = document.getElementById('sync-google-signin');
+      const pcRow = document.getElementById('sync-pc-row');
       if (gActiveBox && gSignInBox) {
         if (hasGoogleEmail) {
           setDisp(gActiveBox, 'flex');
@@ -4334,13 +4451,6 @@
                 : '<span class="s-dot"></span><span>Paired</span>';
             }
           }
-
-          setTxt(document.getElementById('sync-status-title'), connected ? peerLabel : 'Windows PC');
-          setCls(document.getElementById('sync-pc-dot'), 'idle', !peerOnline);
-          const pcPres = document.getElementById('sync-pc-presence');
-          if (peerOnline) setTxt(pcPres, 'Online now · E2EE');
-          else if (connected && sync.peerLastSeenMs) setTxt(pcPres, `Last seen ${formatAgoShort(sync.peerLastSeenMs)}`);
-          else setTxt(pcPres, 'Sign in on Windows PC to connect');
         } else {
           setDisp(gActiveBox, 'none');
           setDisp(gSignInBox, 'flex');
@@ -4351,15 +4461,28 @@
         }
       }
 
+      if (pcRow) {
+        const showPcRow = hasGoogleEmail || connected;
+        setDisp(pcRow, showPcRow ? 'flex' : 'none');
+        if (showPcRow) {
+          setTxt(document.getElementById('sync-status-title'), connected ? peerLabel : 'Windows PC');
+          setCls(document.getElementById('sync-pc-dot'), 'idle', !peerOnline);
+          const pcPres = document.getElementById('sync-pc-presence');
+          const trTag = isLan ? 'Wi-Fi LAN' : 'E2EE Cloud';
+          if (peerOnline) setTxt(pcPres, `Online · ${trTag}`);
+          else if (connected && sync.peerLastSeenMs) setTxt(pcPres, `Last seen ${formatAgoShort(sync.peerLastSeenMs)}`);
+          else setTxt(pcPres, 'Sign in on Windows PC to connect');
+        }
+      }
+
       // Live Relay & LAN Health Status
-      const rStat = sync.relayStatus || 'connecting';
       const rBroker = sync.relayBroker || '';
       const rDot = document.getElementById('sync-relay-dot');
       const rTxt = document.getElementById('sync-relay-txt');
       const rBrk = document.getElementById('sync-relay-broker');
       const brokerShort = rBroker.includes('hivemq') ? 'HiveMQ TLS'
         : (rBroker.includes('emqx') ? 'EMQX TLS' : (rBroker || 'TLS MQTT'));
-      if (rStat === 'connected_lan') {
+      if (isLan) {
         setCls(rDot, 'connecting', false);
         setCls(rDot, 'retrying', false);
         setTxt(rTxt, 'Direct Wi-Fi LAN · Instant E2EE');
@@ -4367,7 +4490,7 @@
       } else if (rStat === 'connected_cloud') {
         setCls(rDot, 'connecting', false);
         setCls(rDot, 'retrying', false);
-        setTxt(rTxt, 'E2EE Cloud · Connected');
+        setTxt(rTxt, 'E2EE Cloud TLS · Connected');
         setTxt(rBrk, brokerShort);
       } else if (rStat === 'retrying') {
         setCls(rDot, 'connecting', false);
@@ -4383,24 +4506,25 @@
 
       setTxt(document.getElementById('sync-pass-status'), sync.hasPassphrase ? 'Custom E2EE passphrase active' : 'Extra E2EE sync passphrase (optional)');
       setStyle(document.getElementById('btn-m-send-tab'), 'opacity', state.activeUrl ? '1' : '0.55');
+      setStyle(document.getElementById('btn-m-send-dl'), 'opacity', state.activeUrl ? '1' : '0.72');
+      const openWebTabs = (state.tabs || []).filter((t) => t && !t.isNewTab && !t.isPrivate && t.url && !t.url.startsWith('dejavu://'));
+      setTxt(document.getElementById('btn-m-send-all-lbl'), openWebTabs.length > 0 ? `All Tabs (${openWebTabs.length})` : 'All Tabs');
 
-      // From Windows PC (Tabs + Shared Clipboard + Drops)
+      // Sync Gliding 3-Segment Control & Active Sub-Pane
+      setCls(document.getElementById('sync-seg-drops'), 'active', syncSubTab === 'drops');
+      setCls(document.getElementById('sync-seg-clips'), 'active', syncSubTab === 'clips');
+      setCls(document.getElementById('sync-seg-settings'), 'active', syncSubTab === 'settings');
+      setCls(document.getElementById('sync-pane-drops'), 'hidden', syncSubTab !== 'drops');
+      setCls(document.getElementById('sync-pane-clips'), 'hidden', syncSubTab !== 'clips');
+      setCls(document.getElementById('sync-pane-settings'), 'hidden', syncSubTab !== 'settings');
+      syncMobileGlider(document.getElementById('sync-view-seg'));
+
+      // SEGMENT 1: PC Open Tabs + Rich Drops & Handoffs
       const rtabs = Array.isArray(sync.remoteTabs) ? sync.remoteTabs : [];
-      const latestClip = sync.latestClipboard && sync.latestClipboard.text ? sync.latestClipboard : null;
       const drops = Array.isArray(sync.drops) ? sync.drops : [];
-      const visibleDrops = latestClip ? drops.filter((d) => d && d.id !== latestClip.id) : drops;
 
-      setDisp(document.getElementById('m-drops-clear-btn'), drops.length ? 'inline-block' : 'none');
-
-      const clipCard = document.getElementById('m-latest-clip-card');
-      if (latestClip) {
-        setDisp(clipCard, 'flex');
-        const ago = formatAgoShort(latestClip.ts);
-        setTxt(document.getElementById('m-latest-clip-meta'), `Shared clipboard · ${latestClip.fromName || 'PC'}${ago ? ' · ' + ago : ''}`);
-        setTxt(document.getElementById('m-latest-clip-txt'), latestClip.text);
-      } else {
-        setDisp(clipCard, 'none');
-      }
+      setDisp(document.getElementById('m-pc-tabs-hdr'), rtabs.length > 0 ? 'flex' : 'none');
+      setDisp(document.getElementById('m-pc-tabs-open-all'), rtabs.length >= 2 ? 'inline-block' : 'none');
 
       const pcList = document.getElementById('m-pc-tabs-list');
       if (rtabs.length > 0) {
@@ -4428,52 +4552,159 @@
         setDisp(pcList, 'none');
       }
 
+      setDisp(document.getElementById('m-drops-hdr'), drops.length > 0 ? 'flex' : 'none');
       const dl = document.getElementById('m-drops-list');
-      if (visibleDrops.length > 0) {
+      if (drops.length > 0) {
         setDisp(dl, 'flex');
-        const syncDropsSig = JSON.stringify(visibleDrops.slice(0, 10).map((it) => [it.id || '', it.dropType || '', it.title || '', it.url || '', it.text || '', formatAgoShort(it.ts)]));
+        const syncDropsSig = JSON.stringify(drops.slice(0, 12).map((it) => [
+          it.id || '', it.dropType || '', it.title || '', it.url || '', it.text || '',
+          it.quality || '', Array.isArray(it.tabs) ? it.tabs.length : 0, formatAgoShort(it.ts)
+        ]));
         if (syncDropsSig !== _domSigs.syncDrops) {
           _domSigs.syncDrops = syncDropsSig;
           dl.innerHTML = '';
-          visibleDrops.slice(0, 10).forEach((it) => {
+          drops.slice(0, 12).forEach((it) => {
             const card = document.createElement('div');
             card.className = 'drop-card';
-            const isTxt = (it.dropType === 'text' || it.dropType === 'clipboard') && !it.url;
-            const kindLabel = it.dropType === 'clipboard' ? 'Clipboard' : (it.dropType === 'tab' ? 'Tab' : (it.dropType === 'text' ? 'Note' : 'Link'));
+            const dt = it.dropType || 'link';
             const ago = formatAgoShort(it.ts);
+            const batchTabs = Array.isArray(it.tabs) ? it.tabs : [];
+            let tagText = 'Link';
+            let tagCls = '';
+            if (dt === 'video') { tagText = 'Continue Watching'; tagCls = ' tonal'; }
+            else if (dt === 'download') { tagText = '8x Download'; tagCls = ' tonal'; }
+            else if (dt === 'batch_tabs') { tagText = `${batchTabs.length || ''} Tabs`.trim(); tagCls = ' tonal'; }
+            else if (dt === 'ping') { tagText = 'Device Ping'; tagCls = ' mint'; }
+            else if (dt === 'clipboard') { tagText = 'Clipboard'; }
+            else if (dt === 'tab') { tagText = 'Tab'; }
+            else if (dt === 'text') { tagText = 'Note'; }
+
+            const isTxt = (dt === 'text' || dt === 'clipboard' || dt === 'ping') && !it.url;
+            const headline = isTxt ? (it.text || it.title) : (it.title || it.url);
+            const subLine = (dt === 'video' || dt === 'batch_tabs')
+              ? (it.text || (it.url ? getHost(it.url) : ''))
+              : (it.url ? getHost(it.url) : '');
+
+            let actsHtml = '';
+            if (dt === 'video' && it.url) {
+              actsHtml = '<button type="button" class="pill-btn sm primary o-btn">Resume Video</button><button type="button" class="pill-btn sm c-btn">Copy</button>';
+            } else if (dt === 'download' && it.url) {
+              actsHtml = '<button type="button" class="pill-btn sm primary dl-btn">Download 8x</button><button type="button" class="pill-btn sm tonal o-btn">Open</button><button type="button" class="pill-btn sm c-btn">Copy</button>';
+            } else if (dt === 'batch_tabs' && batchTabs.length > 0) {
+              actsHtml = `<button type="button" class="pill-btn sm primary bt-btn">Open All ${batchTabs.length}</button>`;
+            } else if (dt === 'ping') {
+              actsHtml = '';
+            } else {
+              actsHtml = `${it.url ? '<button type="button" class="pill-btn sm tonal o-btn">Open</button>' : ''}<button type="button" class="pill-btn sm c-btn">Copy</button>`;
+            }
+
             card.innerHTML = `
               <div class="drop-meta">
-                <span>${esc(it.fromName || 'PC')} · ${kindLabel}${ago ? ' · ' + esc(ago) : ''}</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;min-width:0;">
+                  <span class="sync-kind-tag${tagCls}">${esc(tagText)}</span>
+                  <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(it.fromName || 'PC')}${ago ? ' · ' + esc(ago) : ''}</span>
+                </span>
                 <span class="rm" style="padding:2px 6px;cursor:pointer;">✕</span>
               </div>
-              <div class="drop-text">${esc(isTxt ? it.text : (it.title || it.url))}</div>
-              ${it.url ? `<div class="drop-url">${esc(getHost(it.url))}</div>` : ''}
-              <div class="drop-acts">
-                ${it.url ? '<button type="button" class="pill-btn sm tonal o-btn">Open</button>' : ''}
-                <button type="button" class="pill-btn sm c-btn">Copy</button>
-              </div>
+              <div class="drop-text">${esc(headline)}</div>
+              ${subLine ? `<div class="drop-url">${esc(subLine)}</div>` : ''}
+              ${actsHtml ? `<div class="drop-acts">${actsHtml}</div>` : ''}
             `;
             card.querySelector('.rm').onclick = () => call('deleteDrop', it.id);
             const ob = card.querySelector('.o-btn');
             if (ob) ob.onclick = () => call('openNewTab', it.url);
-            card.querySelector('.c-btn').onclick = () => call('copyText', it.url || it.text || it.title || '');
+            const dlb = card.querySelector('.dl-btn');
+            if (dlb) dlb.onclick = () => call('startRemoteDownload', it.url, it.title || '', it.quality || 'best');
+            const btb = card.querySelector('.bt-btn');
+            if (btb) btb.onclick = () => call('openBatchTabs', JSON.stringify(batchTabs));
+            const cb = card.querySelector('.c-btn');
+            if (cb) cb.onclick = () => call('copyText', it.url || it.text || it.title || '');
             dl.appendChild(card);
           });
         }
       } else {
         setDisp(dl, 'none');
       }
+      setDisp(document.getElementById('m-sync-empty-hint'), (!rtabs.length && !drops.length) ? 'block' : 'none');
 
-      setDisp(document.getElementById('m-sync-empty-hint'), (!rtabs.length && !latestClip && !visibleDrops.length) ? 'block' : 'none');
+      // SEGMENT 2: Shared Clipboard History (up to 10) & Pinned Cross-Device Notes (up to 12)
+      let clipHist = Array.isArray(sync.clipboardHistory) ? sync.clipboardHistory : [];
+      if (!clipHist.length && sync.latestClipboard && sync.latestClipboard.text) {
+        clipHist = [sync.latestClipboard];
+      }
+      setDisp(document.getElementById('m-clip-clear-btn'), clipHist.length > 0 ? 'inline-block' : 'none');
+      const clipBox = document.getElementById('m-clip-history-list');
+      const clipSig = JSON.stringify(clipHist.slice(0, 10).map((c) => [c.id || '', c.text || '', c.fromName || '', formatAgoShort(c.ts)]));
+      if (clipBox && clipSig !== _domSigs.syncClipHistory) {
+        _domSigs.syncClipHistory = clipSig;
+        clipBox.innerHTML = '';
+        if (!clipHist.length) {
+          clipBox.innerHTML = '<div class="empty compact">Shared clipboard items from PC &amp; Phone appear here.</div>';
+        } else {
+          clipHist.slice(0, 10).forEach((c) => {
+            const card = document.createElement('div');
+            card.className = 'drop-card';
+            const ago = formatAgoShort(c.ts);
+            const urlItem = isHttpUrl(c.text);
+            card.innerHTML = `
+              <div class="drop-meta">
+                <span>${esc(c.fromName || 'Device')}${ago ? ' · ' + esc(ago) : ''}</span>
+                <span class="rm" style="padding:2px 6px;cursor:pointer;">✕</span>
+              </div>
+              <div class="sync-clip-txt">${esc(c.text || '')}</div>
+              <div class="drop-acts">
+                <button type="button" class="pill-btn sm tonal c-btn">Copy</button>
+                ${urlItem ? '<button type="button" class="pill-btn sm o-btn">Open</button>' : ''}
+              </div>
+            `;
+            card.querySelector('.c-btn').onclick = () => call('copyText', c.text || '');
+            const ob = card.querySelector('.o-btn');
+            if (ob) ob.onclick = () => call('openNewTab', c.text.trim());
+            card.querySelector('.rm').onclick = () => call('deleteClipboardItem', c.id || '');
+            clipBox.appendChild(card);
+          });
+        }
+      }
 
-      // Sync Preference Switches
+      const notes = Array.isArray(sync.pinnedNotes) ? sync.pinnedNotes : [];
+      setTxt(document.getElementById('m-notes-cnt'), String(notes.length));
+      const notesBox = document.getElementById('m-notes-list');
+      const notesSig = JSON.stringify(notes.slice(0, 12).map((n) => [n.id || '', n.text || '', n.fromName || '', formatAgoShort(n.updatedMs)]));
+      if (notesBox && notesSig !== _domSigs.syncPinnedNotes) {
+        _domSigs.syncPinnedNotes = notesSig;
+        notesBox.innerHTML = '';
+        if (!notes.length) {
+          notesBox.innerHTML = '<div class="empty compact">Pin notes above to keep them synced E2EE across Windows &amp; Android.</div>';
+        } else {
+          notes.slice(0, 12).forEach((n) => {
+            const card = document.createElement('div');
+            card.className = 'sync-note-card';
+            const ago = formatAgoShort(n.updatedMs);
+            card.innerHTML = `
+              <div class="drop-meta">
+                <span>${esc(n.fromName || 'Device')}${ago ? ' · ' + esc(ago) : ''}</span>
+                <span class="rm" style="padding:2px 6px;cursor:pointer;">✕</span>
+              </div>
+              <div class="sync-note-body">${esc(n.text || '')}</div>
+              <div class="drop-acts">
+                <button type="button" class="pill-btn sm tonal c-btn">Copy</button>
+              </div>
+            `;
+            card.querySelector('.c-btn').onclick = () => call('copyText', n.text || '');
+            card.querySelector('.rm').onclick = () => call('deletePinnedNote', n.id || '');
+            notesBox.appendChild(card);
+          });
+        }
+      }
+
+      // SEGMENT 3: Sync Preference Switches & Code
       const sp = sync.prefs || {};
       setCls(document.getElementById('sw-sync-tabs'), 'on', sp.tabs !== false);
       setCls(document.getElementById('sw-sync-bookmarks'), 'on', sp.bookmarks !== false);
       setCls(document.getElementById('sw-sync-reading'), 'on', sp.readingList !== false);
       setCls(document.getElementById('sw-sync-clipboard'), 'on', sp.clipboard !== false);
       setCls(document.getElementById('sw-sync-history'), 'on', sp.history !== false);
-      setTxt(document.getElementById('m-code-box'), sync.pairingCode || 'DJV-5400-M3UI');
+      setTxt(document.getElementById('m-code-box'), sync.pairingCode || 'DJV-5500-M3UI');
     }
 
     function toggleCurrentSiteShield() {
@@ -4602,7 +4833,7 @@
       setTxt(document.getElementById('set-sum-downloads'), `${ytqLbl}${state.floatingDownloadButton !== false ? ' · Floating pill' : ''}`);
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.4.0';
+      const curV = u.currentVersion || '5.5.0';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -4766,7 +4997,7 @@
         setStyle(uProgF, 'width', '100%');
       } else if (u.status === 'ready') {
         setTxt(uTitle, `v${u.latestVersion} ready`);
-        setTxt(uSub, u.signatureMismatch ? `Uninstall older build once, then install v${u.latestVersion || '5.4.0'}` : 'Tap Install to upgrade');
+        setTxt(uSub, u.signatureMismatch ? `Uninstall older build once, then install v${u.latestVersion || '5.5.0'}` : 'Tap Install to upgrade');
         setTxt(uBtn, 'Install');
         setCls(uBtn, 'primary', true);
         setDisp(uProgW, 'none');
@@ -5236,7 +5467,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.4.0 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.5.0 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -5387,6 +5618,10 @@
         setMobileDlQuality(state.defaultYoutubeQuality);
       }
 
+      if (typeof state.sysTop === 'number') {
+        const v = Math.max(0, state.sysTop) + 'px';
+        if (_domSigs.sysTop !== v) { _domSigs.sysTop = v; document.documentElement.style.setProperty('--sys-top', v); }
+      }
       if (typeof state.safeTop === 'number') {
         const v = state.safeTop + 'px';
         if (_domSigs.safeTop !== v) { _domSigs.safeTop = v; document.documentElement.style.setProperty('--safe-top', v); }
@@ -5398,6 +5633,12 @@
       if (typeof state.sysBottom === 'number') {
         const v = Math.max(10, state.sysBottom) + 'px';
         if (_domSigs.sysBottom !== v) { _domSigs.sysBottom = v; document.documentElement.style.setProperty('--sys-bottom', v); }
+      }
+      if (typeof state.imeBottom === 'number') {
+        const imePx = Math.max(0, state.imeBottom);
+        const v = imePx + 'px';
+        if (_domSigs.imeBottom !== v) { _domSigs.imeBottom = v; document.documentElement.style.setProperty('--ime-bottom', v); }
+        setCls(document.body, 'ime-open', imePx > 60);
       }
 
       const wpBg = document.getElementById('wp-bg');
@@ -5422,6 +5663,9 @@
 
       if (scr !== lastScreen) {
         if (scr === 'menu') setMenuSubView('main');
+        if (scr === 'sync') {
+          requestAnimationFrame(() => syncMobileGlider(document.getElementById('sync-view-seg')));
+        }
         if (scr === 'settings' && lastScreen !== 'profile' && lastScreen !== 'clear-data' && lastScreen !== 'extensions') {
           settingsView = 'root';
           _domSigs.setLayout = '';
@@ -5613,9 +5857,58 @@
         }
         else if (fn === 'sendClipboardToPc') {
           const cur = Object.assign({}, st.sync || {});
-          const clipItem = { id: 'clip_' + Date.now(), dropType: 'clipboard', title: 'Clipboard', url: '', text: 'https://m3.material.io/styles/color/roles', fromName: 'Pixel 9 Pro', ts: Date.now() };
-          cur.latestClipboard = { id: clipItem.id, text: clipItem.text, fromName: clipItem.fromName, ts: clipItem.ts };
+          const clipItem = { id: 'clip_' + Date.now(), dropType: 'clipboard', title: 'Clipboard', url: '', text: 'https://m3.material.io/styles/color/roles', fromName: 'Pixel 9 Pro', platform: 'android', ts: Date.now() };
+          cur.latestClipboard = { id: clipItem.id, text: clipItem.text, fromName: clipItem.fromName, platform: 'android', ts: clipItem.ts };
+          cur.clipboardHistory = [cur.latestClipboard, ...(cur.clipboardHistory || [])].slice(0, 10);
           cur.drops = [clipItem, ...(cur.drops || [])];
+          st.sync = cur;
+        }
+        else if (fn === 'sendAllTabsToPc') {
+          const cur = Object.assign({}, st.sync || {});
+          const openTabs = (st.tabs || []).filter((t) => t && !t.isNewTab && !t.isPrivate && t.url).map((t) => ({ title: t.title, url: t.url }));
+          if (openTabs.length) {
+            cur.drops = [{ id: 'batch_' + Date.now(), dropType: 'batch_tabs', title: `${openTabs.length} tabs from Pixel 9 Pro`, url: openTabs[0].url, text: openTabs.map((x) => x.title).join(' · '), tabs: openTabs, fromName: 'Pixel 9 Pro', platform: 'android', ts: Date.now() }, ...(cur.drops || [])];
+            st.sync = cur;
+          }
+        }
+        else if (fn === 'sendVideoToPc') {
+          const cur = Object.assign({}, st.sync || {});
+          cur.drops = [{ id: 'vid_' + Date.now(), dropType: 'video', title: args[1] || 'Video', url: args[0] || st.activeUrl || 'https://youtube.com', text: args[2] > 0 ? `Continue watching at ${args[2]}s` : 'Watch on PC', fromName: 'Pixel 9 Pro', platform: 'android', ts: Date.now() }, ...(cur.drops || [])];
+          st.sync = cur;
+        }
+        else if (fn === 'sendDownloadToPc') {
+          const cur = Object.assign({}, st.sync || {});
+          const u = args[0] || st.activeUrl || 'https://example.com/file.mp4';
+          cur.drops = [{ id: 'dl_' + Date.now(), dropType: 'download', title: args[1] || getHost(u), url: u, quality: args[2] || 'best', text: '8x Turbo Download handoff', fromName: 'Pixel 9 Pro', platform: 'android', ts: Date.now() }, ...(cur.drops || [])];
+          st.sync = cur;
+        }
+        else if (fn === 'pingPc') {
+          const cur = Object.assign({}, st.sync || {});
+          cur.drops = [{ id: 'ping_' + Date.now(), dropType: 'ping', title: 'Ping from Pixel 9 Pro', url: '', text: 'Pixel 9 Pro is pinging this device', fromName: 'Pixel 9 Pro', platform: 'android', ts: Date.now() }, ...(cur.drops || [])];
+          st.sync = cur;
+        }
+        else if (fn === 'addPinnedNote') {
+          const txt = String(args[0] || '').trim();
+          if (txt) {
+            const cur = Object.assign({}, st.sync || {});
+            cur.pinnedNotes = [{ id: 'note_' + Date.now(), text: txt, updatedMs: Date.now(), fromName: 'Pixel 9 Pro', platform: 'android' }, ...(cur.pinnedNotes || [])].slice(0, 12);
+            st.sync = cur;
+          }
+        }
+        else if (fn === 'deletePinnedNote') {
+          const cur = Object.assign({}, st.sync || {});
+          cur.pinnedNotes = (cur.pinnedNotes || []).filter((n) => n && n.id !== args[0]);
+          st.sync = cur;
+        }
+        else if (fn === 'deleteClipboardItem') {
+          const cur = Object.assign({}, st.sync || {});
+          cur.clipboardHistory = (cur.clipboardHistory || []).filter((c) => c && c.id !== args[0]);
+          if (cur.latestClipboard && cur.latestClipboard.id === args[0]) cur.latestClipboard = cur.clipboardHistory[0] || null;
+          st.sync = cur;
+        }
+        else if (fn === 'clearClipboardHistory') {
+          const cur = Object.assign({}, st.sync || {});
+          cur.clipboardHistory = []; cur.latestClipboard = null;
           st.sync = cur;
         }
         else if (fn === 'sendDropToPc') {
@@ -5667,9 +5960,11 @@
             const initSeed = qp.get('accent') || initMeta.seed || 'amethyst';
             const initScreen = qp.get('screen') || 'start';
             const initCat = qp.get('cat') || '';
+            const initSyncTab = qp.get('synctab') || '';
+            const initIme = Math.max(0, Number(qp.get('ime') || 0) || 0);
             const signedIn = qp.has('signedin') ? (qp.get('signedin') === '1') : (initScreen === 'sync');
             const isWeb = qp.get('web') === '1' || initScreen === 'sync' || initScreen === 'shields';
-            const initRelay = qp.get('relay') || 'connected_cloud';
+            const initRelay = qp.get('relay') || 'connected_lan';
             const nowMs = Date.now();
             const prof1 = {
               id: 'default', name: 'Personal', accentColor: initSeed, isMainProfile: true,
@@ -5683,23 +5978,38 @@
             const previewSync = signedIn ? {
               enabled: true, syncMode: 'google', googleEmail: 'alex@gmail.com', hasPassphrase: false,
               paired: true, connected: true, peerName: 'Windows 11 Desktop', peerPlatform: 'windows',
-              peerOnline: true, peerLastSeenMs: nowMs - 8000, pairingCode: 'DJV-5400-M3UI',
+              peerOnline: true, peerLastSeenMs: nowMs - 8000, pairingCode: 'DJV-5500-M3UI',
               relayStatus: initRelay, relayBroker: 'broker.hivemq.com', lastSyncMs: nowMs - 4000,
-              latestClipboard: { id: 'clip_pc_1', text: 'https://m3.material.io/styles/color/roles — Material Design 3 tokens', fromName: 'Windows 11 Desktop', ts: nowMs - 25000 },
+              devices: [
+                { id: 'self-android', name: 'Pixel 9 Pro', platform: 'android', isSelf: true, isOnline: true, lastSeenMs: nowMs, tabCount: 2, transport: 'local' },
+                { id: 'peer-win', name: 'Windows 11 Desktop', platform: 'windows', isSelf: false, isOnline: true, lastSeenMs: nowMs - 8000, tabCount: 2, transport: initRelay === 'connected_lan' ? 'lan' : 'cloud' }
+              ],
+              latestClipboard: { id: 'clip_pc_1', text: 'https://m3.material.io/styles/color/roles — Material Design 3 tokens', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 25000 },
+              clipboardHistory: [
+                { id: 'clip_pc_1', text: 'https://m3.material.io/styles/color/roles', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 25000 },
+                { id: 'clip_pc_2', text: 'Flight confirmation: DL-4829 · Seat 14A', fromName: 'Pixel 9 Pro', platform: 'android', ts: nowMs - 180000 }
+              ],
+              pinnedNotes: [
+                { id: 'note_1', text: 'Pick up espresso beans and USB-C braided cable on the way home.', updatedMs: nowMs - 120000, fromName: 'Windows 11 Desktop', platform: 'windows' },
+                { id: 'note_2', text: 'Design tokens: 28px bottom sheet top radius, zero CSS blur, monochrome M3 icons.', updatedMs: nowMs - 480000, fromName: 'Pixel 9 Pro', platform: 'android' }
+              ],
               prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true },
               remoteTabs: [
                 { title: 'Material Design 3 — Color & Surface Tokens', url: 'https://m3.material.io/styles/color/roles' },
                 { title: 'GitHub — Dathevinci/Dejavu-browser', url: 'https://github.com/Dathevinci/Dejavu-browser' }
               ],
               drops: [
-                { id: 'clip_pc_1', dropType: 'clipboard', title: 'Clipboard', url: '', text: 'https://m3.material.io/styles/color/roles — Material Design 3 tokens', fromName: 'Windows 11 Desktop', ts: nowMs - 25000 }
+                { id: 'vid_pc_1', dropType: 'video', title: 'Material 3 Expressive Motion Deep Dive', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=422', text: 'Continue watching at 07:02', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 45000 },
+                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.5.0-release.mp4', url: 'https://example.com/dejavu-v5.5.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
+                { id: 'bt_pc_1', dropType: 'batch_tabs', title: '2 tabs from Windows 11 Desktop', url: 'https://m3.material.io', text: 'Material Design 3 · GitHub', tabs: [{ title: 'Material Design 3', url: 'https://m3.material.io' }, { title: 'GitHub', url: 'https://github.com' }], fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 210000 }
               ]
             } : {
               enabled: true, syncMode: 'manual', googleEmail: '', hasPassphrase: false,
               paired: false, connected: false, peerName: '', peerPlatform: 'windows',
-              peerOnline: false, peerLastSeenMs: 0, pairingCode: 'DJV-5400-M3UI',
+              peerOnline: false, peerLastSeenMs: 0, pairingCode: 'DJV-5500-M3UI',
               relayStatus: initRelay, relayBroker: 'broker.hivemq.com', lastSyncMs: 0,
-              latestClipboard: null, prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true },
+              devices: [], latestClipboard: null, clipboardHistory: [], pinnedNotes: [],
+              prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true },
               remoteTabs: [], drops: []
             };
             window.__onDejavuState({
@@ -5735,7 +6045,7 @@
                 pausedCount: 0
               },
               profiles: [prof1, prof2], activeProfileId: 'default', mainProfileId: 'default', activeProfile: prof1,
-              safeTop: 28, safeBottom: 24, sysBottom: 16,
+              sysTop: 28, safeTop: 28, sysBottom: 16, safeBottom: 72, imeBottom: initIme,
               tabs: [
                 { id: 1, title: 'Start Page', url: 'dejavu://newtab', isNewTab: true, isPrivate: false },
                 { id: 2, title: 'Material Design 3', url: 'https://m3.material.io', isNewTab: false, isPrivate: false }
@@ -5755,7 +6065,7 @@
                 { title: 'GitHub — Dathevinci/Dejavu-browser', url: 'https://github.com/Dathevinci/Dejavu-browser' }
               ],
               sync: previewSync,
-              update: { currentVersion: '5.4.0', status: 'uptodate', latestVersion: '5.4.0', available: qp.get('upd') === '1', hasDownloadedApk: false },
+              update: { currentVersion: '5.5.0', status: 'uptodate', latestVersion: '5.5.0', available: qp.get('upd') === '1', hasDownloadedApk: false },
               turboDownloads: [], pageMedia: [],
               extensions: {
                 builtins: DEFAULT_BUILTIN_EXTENSIONS.map((b) => Object.assign({}, b)),
@@ -5765,6 +6075,9 @@
             });
             if (initScreen === 'settings' && initCat && SET_CAT_TITLES[initCat]) {
               setSettingsView(initCat, false);
+            }
+            if (initScreen === 'sync' && initSyncTab) {
+              setSyncSubTab(initSyncTab);
             }
           }
         }, 60);

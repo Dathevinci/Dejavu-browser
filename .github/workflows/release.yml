@@ -129,6 +129,7 @@ jobs:
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
           gh release create "$TAG" \
+            --repo "${{ github.repository }}" \
             release-files/dejavu-Setup.exe \
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \

@@ -762,6 +762,9 @@ html.m3-theme-shifting .wp-card,
 html.m3-theme-shifting .kbd-card,
 html.m3-theme-shifting .dl-panel,
 html.m3-theme-shifting .dl-card,
+html.m3-theme-shifting .trust-card,
+html.m3-theme-shifting .trust-item,
+html.m3-theme-shifting .trust-verify-bar,
 html.m3-theme-shifting .m3-footer,
 html.m3-theme-shifting .seed-picker,
 html.m3-theme-shifting .seed-popover,
@@ -1891,7 +1894,7 @@ img {
   color: var(--md-on-surface-variant);
 }
 
-/* Row 2: Decluttered v5.5.0 ChromeOS 5-Icon Right Toolbar + Pill Omnibox with Brave-Exact Shields */
+/* Row 2: Decluttered v5.6.0 ChromeOS 5-Icon Right Toolbar + Pill Omnibox with Brave-Exact Shields */
 .dk-toolbar {
   height: 50px;
   padding: 0 12px;
@@ -2787,7 +2790,7 @@ img {
   color: var(--md-on-primary-container);
 }
 
-/* Page 2: Real Chrome Extensions Manager Showcase (v5.5.0 Material Design 3) */
+/* Page 2: Real Chrome Extensions Manager Showcase (v5.6.0 Material Design 3) */
 .dk-ext-stage {
   min-height: 472px;
   height: 100%;
@@ -3484,7 +3487,7 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   gap: 5px;
 }
 
-/* Interactive v5.5.0 Collapsible 34x34px M3 Butterfly Video Downloader FAB + Quality/MP3/Handoff Menu */
+/* Interactive v5.6.0 Collapsible 34x34px M3 Butterfly Video Downloader FAB + Quality/MP3/Handoff Menu */
 .md-float-dl-wrap {
   position: absolute;
   top: 10px;
@@ -4005,7 +4008,7 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   opacity: 0.86;
 }
 
-/* Page 5: PC <-> Phone Sync (v5.5.0 Expanded dejavu Link v2.3 Continuity Hub) */
+/* Page 5: PC <-> Phone Sync (v5.6.0 Expanded dejavu Link v2.3 Continuity Hub) */
 .dk-sync-stage {
   height: 100%;
   padding: 20px 24px;
@@ -4260,7 +4263,7 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
 }
 
 /* ==========================================================================
-   COMPANION GOOGLE PIXEL PHONE MOCKUP (v5.5.0 120HZ ANDROID EDGE-TO-EDGE + AT-A-GLANCE MOTD)
+   COMPANION GOOGLE PIXEL PHONE MOCKUP (v5.6.0 120HZ ANDROID EDGE-TO-EDGE + AT-A-GLANCE MOTD)
    ========================================================================== */
 .pixel-frame {
   border-radius: 38px;
@@ -5094,6 +5097,11 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   letter-spacing: 0.02em;
 }
 
+.wp-cat-pill.is-froggie {
+  background: var(--md-tertiary-container);
+  color: var(--md-on-tertiary-container);
+}
+
 .wp-meta {
   padding: 15px 17px 17px;
   display: flex;
@@ -5298,6 +5306,162 @@ html[data-theme="light"] .dl-upgrade-note {
   white-space: nowrap;
 }
 
+/* Open-Source Verified & Security Transparency Material Design 3 Card */
+.trust-card {
+  margin-top: 20px;
+  padding: 28px 30px;
+  border-radius: 28px;
+  background: var(--md-surface-container);
+  border: 1px solid var(--md-outline-variant);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+html[data-theme="light"] .trust-card {
+  background: var(--md-surface-container-lowest);
+  box-shadow: var(--md-elevation-1);
+}
+
+.trust-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.trust-title-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.trust-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  background: var(--md-tertiary-container);
+  color: var(--md-on-tertiary-container);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.trust-eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--md-tertiary);
+  margin-bottom: 2px;
+}
+
+.trust-title-group h3 {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--md-on-surface);
+}
+
+.trust-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.trust-item {
+  padding: 18px 20px;
+  border-radius: 22px;
+  background: var(--md-surface-container-low);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+html[data-theme="light"] .trust-item {
+  background: var(--md-surface-container);
+}
+
+.trust-item strong {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--md-on-surface);
+}
+
+.trust-item p {
+  font-size: 13.5px;
+  line-height: 1.58;
+  color: var(--md-on-surface-variant);
+}
+
+.trust-item code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: var(--md-surface-container-highest);
+  color: var(--md-on-surface);
+}
+
+.trust-verify-bar {
+  padding: 12px 16px;
+  border-radius: 18px;
+  background: var(--md-surface-container-low);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+html[data-theme="light"] .trust-verify-bar {
+  background: var(--md-surface-container);
+}
+
+.trust-verify-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 280px;
+}
+
+.trust-verify-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--md-primary);
+  white-space: nowrap;
+}
+
+.trust-verify-code {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--md-on-surface);
+  background: var(--md-surface-container-highest);
+  padding: 5px 10px;
+  border-radius: 10px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 /* Minimal Tonal M3 Footer */
 .m3-footer {
   margin-top: 88px;
@@ -5404,7 +5568,8 @@ html[data-theme="light"] .dl-upgrade-note {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .bento-grid,
-  .dl-cards {
+  .dl-cards,
+  .trust-grid {
     grid-template-columns: 1fr;
   }
   .bento-card.span-2 {
@@ -5520,6 +5685,19 @@ html[data-theme="light"] .dl-upgrade-note {
   .dl-panel {
     padding: 26px 18px;
     border-radius: 28px;
+  }
+  .trust-card {
+    padding: 20px 18px;
+    border-radius: 24px;
+  }
+  .trust-title-group h3 {
+    font-size: 18.5px;
+  }
+  .trust-links {
+    width: 100%;
+  }
+  .trust-verify-bar {
+    padding: 12px;
   }
   .m3-snackbar {
     width: calc(100vw - 28px);

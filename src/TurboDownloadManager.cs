@@ -3024,7 +3024,7 @@ namespace DejavuBrowser
 
         public static string GetFloatingDownloadButtonScript()
         {
-            // Zero-Idle-CPU Shadow DOM Material Design 3 Collapsible Butterfly Video Downloader FAB (v5.5.0)
+            // Zero-Idle-CPU Shadow DOM Material Design 3 Collapsible Butterfly Video Downloader FAB (v5.6.0)
             // - Starts collapsed as a 34x34px sculpted dejavu Butterfly circular M3 Tonal FAB (ZERO video obstruction!)
             // - Click Butterfly -> smoothly extends leftward into full M3 Download pill + quality/MP3/Send-to-Phone menu
             // - Click Butterfly again, click outside, or press Escape -> collapses cleanly back to 34x34px Butterfly badge

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   dejavu v5.5.0 — Authentic Chromebook × Pixel Material Design 3 Expressive
+   dejavu v5.6.0 — Authentic Chromebook × Pixel Material Design 3 Expressive
    12 Official HCT Tonal Palettes · Official M3 Motion · State Layers
    Zero Compositing Overhead · Strictly Zero CSS Filter Softening
    ========================================================================== */
@@ -3264,25 +3264,27 @@ body.on-newtab.sp-entering .anim-rise-4 { animation: m3RiseIn 310ms var(--md-eas
 
 .m3-filter-chip {
   height: 32px;
-  padding: 0 14px;
+  padding: 0 12px;
   border-radius: var(--md-shape-sm);
   border: 1px solid var(--md-outline);
   background: transparent;
   color: var(--md-on-surface-variant);
   font-family: inherit;
-  font-size: 12.2px;
+  font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   cursor: pointer;
   transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
 }
 
 .m3-filter-chip:hover:not(.active) { background: var(--md-state-hover); color: var(--md-on-surface); }
 .m3-filter-chip:active { transform: scale(0.97); }
-.m3-filter-chip .chip-check { width: 15px; height: 15px; display: none; flex-shrink: 0; }
-.m3-filter-chip.active { background: var(--md-secondary-container); color: var(--md-on-secondary-container); border-color: transparent; padding-left: 10px; }
+.m3-filter-chip .chip-check { width: 14px; height: 14px; display: none; flex-shrink: 0; }
+.m3-filter-chip.active { background: var(--md-secondary-container); color: var(--md-on-secondary-container); border-color: transparent; padding-left: 9px; }
 .m3-filter-chip.active .chip-check { display: inline-block; animation: m3CheckPop 210ms var(--md-ease-spring); }
 
 /* 5. True M3 Outlined Inputs, Selects, Sliders & Radios */
@@ -4920,11 +4922,14 @@ body.force-light .m3-ctx-menu {
 .store-filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
 .store-filter-heading { font-size: 12.2px; font-weight: 600; color: var(--md-on-surface-variant); letter-spacing: 0.01em; }
 
-.store-tabs { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--md-shape-full); background: var(--md-surface-container); border: 1px solid var(--md-outline-variant); }
-.store-tab { height: 28px; padding: 0 12px; border: none; border-radius: var(--md-shape-full); background: transparent; color: var(--md-on-surface-variant); font-family: inherit; font-size: 11.6px; font-weight: 600; cursor: pointer; transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized); }
+.store-tabs { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border-radius: var(--md-shape-full); background: var(--md-surface-container); border: 1px solid var(--md-outline-variant); flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.store-tabs::-webkit-scrollbar { display: none; }
+.store-tab { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 11px; border: none; border-radius: var(--md-shape-full); background: transparent; color: var(--md-on-surface-variant); font-family: inherit; font-size: 11.5px; font-weight: 600; white-space: nowrap; flex-shrink: 0; cursor: pointer; transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized); }
 .store-tab:hover { color: var(--md-on-surface); }
 .store-tab:active { transform: scale(0.97); }
-.store-tab.active { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+.store-tab .chip-check { width: 13px; height: 13px; display: none; flex-shrink: 0; }
+.store-tab.active { background: var(--md-secondary-container); color: var(--md-on-secondary-container); padding-left: 9px; }
+.store-tab.active .chip-check { display: inline-block; animation: m3CheckPop 210ms var(--md-ease-spring); }
 
 .store-upload-btn { height: 32px; padding: 0 14px; border-radius: var(--md-shape-full); border: none; background: var(--md-secondary-container); color: var(--md-on-secondary-container); font-family: inherit; font-size: 11.8px; font-weight: 600; cursor: pointer; transition: filter var(--md-dur-short) ease, transform var(--md-dur-press) var(--md-ease-emphasized); }
 .store-upload-btn:hover { filter: brightness(1.06); }
@@ -4944,6 +4949,7 @@ body.theme-light .wp-card, body.force-light .wp-card { background: var(--md-surf
 .wp-badge { position: absolute; top: 8px; left: 8px; padding: 2px 8px; border-radius: var(--md-shape-full); font-size: 10px; font-weight: 700; background: var(--md-surface-container-highest); color: var(--md-on-surface); }
 .wp-card.is-m3 .wp-badge { background: var(--md-primary-container); color: var(--md-on-primary-container); }
 .wp-card.is-butterfly .wp-badge { background: var(--md-tertiary-container); color: var(--md-on-tertiary-container); }
+.wp-card.is-froggie .wp-badge { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
 .wp-check { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: var(--md-shape-full); background: var(--md-primary); color: var(--md-on-primary); font-size: 12px; font-weight: 800; display: none; align-items: center; justify-content: center; }
 .wp-card.active .wp-check { display: flex; }
 .wp-meta { padding: 9px 12px 10px; }
@@ -5202,7 +5208,7 @@ body.theme-light .dlm-video-card, body.force-light .dlm-video-card { background:
 }
 
 /* ==========================================================================
-   Full-Viewport Chrome-Grade Material Design 3 Extensions Manager (v5.5.0)
+   Full-Viewport Chrome-Grade Material Design 3 Extensions Manager (v5.6.0)
    28px Expressive Workspace · 2-Col M3 Cards · Details View · Chrome Import
    ========================================================================== */
 .ext-manager-overlay { z-index: 176; }
@@ -5749,7 +5755,7 @@ body.force-light .ext-details-hero {
 }
 
 /* ==========================================================================
-   Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub (v5.5.0)
+   Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub (v5.6.0)
    Gliding Segmented Views · Device Presence & Ping · Notes & Clip History
    ========================================================================== */
 .link-hub-overlay { z-index: 175; }

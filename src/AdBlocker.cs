@@ -1782,7 +1782,7 @@ namespace DejavuBrowser
                 using (WebClient wc = new WebClient())
                 {
                     wc.Encoding = Encoding.UTF8;
-                    wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) dejavu/5.5.0");
+                    wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) dejavu/5.6.0");
                     return wc.DownloadString(url);
                 }
             }
@@ -2382,7 +2382,7 @@ namespace DejavuBrowser
         }
 
         /// <summary>
-        /// Brave-Grade Injected Document-Start Scriptlet Engine (v5.5.0):
+        /// Brave-Grade Injected Document-Start Scriptlet Engine (v5.6.0):
         /// - Dynamic live config embedded at document_start (globalEnabled, pausedHosts, aggressive, blockFp, blockCookies, genericCosmetics)
         /// - Network-parity fetch / XMLHttpRequest / sendBeacon Guard (rejects blocked trackers with TypeError("Failed to fetch"))
         /// - Deep Modern YouTube Ad Neutralization (ytInitialPlayerResponse, ytInitialData, JSON.parse, Response.json/text, XHR responseText + event-driven <video> instant skip — ZERO setInterval!)

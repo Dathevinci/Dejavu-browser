@@ -31,8 +31,14 @@ namespace DejavuBrowser
                 catch { }
             }
 
+            if (TryHandleApplyUpdateMode(args))
+            {
+                return;
+            }
+
             string initialUrl = null;
             string requestedProfileId = null;
+            string cleanupUpdatePath = null;
             int debugPort = 0;
             bool newWindow = false;
             bool isPrivate = false;
@@ -45,7 +51,12 @@ namespace DejavuBrowser
                 for (int i = 0; i < args.Length; i++)
                 {
                     string a = args[i] ?? "";
-                    if (a.StartsWith("--profile=", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(a, "--cleanup-update", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+                    {
+                        cleanupUpdatePath = args[i + 1];
+                        i++;
+                    }
+                    else if (a.StartsWith("--profile=", StringComparison.OrdinalIgnoreCase))
                     {
                         requestedProfileId = a.Substring("--profile=".Length).Trim();
                     }
@@ -79,6 +90,11 @@ namespace DejavuBrowser
                         initialUrl = a;
                     }
                 }
+            }
+
+            if (!string.IsNullOrEmpty(cleanupUpdatePath))
+            {
+                TryCleanupStagedUpdate(cleanupUpdatePath);
             }
 
             // Chrome-Style Per-Profile Process Isolation:
@@ -201,6 +217,127 @@ namespace DejavuBrowser
                 }
                 catch { }
             }
+        }
+
+        private static bool TryHandleApplyUpdateMode(string[] args)
+        {
+            if (args == null || args.Length < 3) return false;
+
+            int applyIdx = -1;
+            string profileId = null;
+            for (int i = 0; i < args.Length; i++)
+            {
+                string a = args[i] ?? "";
+                if (string.Equals(a, "--apply-update", StringComparison.OrdinalIgnoreCase))
+                {
+                    applyIdx = i;
+                }
+                else if (a.StartsWith("--profile=", StringComparison.OrdinalIgnoreCase))
+                {
+                    profileId = a.Substring("--profile=".Length).Trim();
+                }
+            }
+
+            if (applyIdx < 0 || applyIdx + 2 >= args.Length) return false;
+
+            int oldPid = 0;
+            int.TryParse(args[applyIdx + 1], out oldPid);
+            string targetExe = args[applyIdx + 2];
+
+            if (oldPid > 0 && oldPid != Process.GetCurrentProcess().Id)
+            {
+                try
+                {
+                    using (Process oldProc = Process.GetProcessById(oldPid))
+                    {
+                        oldProc.WaitForExit(15000);
+                    }
+                }
+                catch
+                {
+                    // Previous browser process has already exited.
+                }
+            }
+
+            string selfExe = Assembly.GetExecutingAssembly().Location;
+            bool copied = false;
+            try
+            {
+                if (!string.IsNullOrEmpty(selfExe) && File.Exists(selfExe) &&
+                    !string.IsNullOrEmpty(targetExe) && Path.IsPathRooted(targetExe) &&
+                    targetExe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(Path.GetFullPath(selfExe), Path.GetFullPath(targetExe), StringComparison.OrdinalIgnoreCase))
+                {
+                    for (int attempt = 0; attempt < 10; attempt++)
+                    {
+                        try
+                        {
+                            File.Copy(selfExe, targetExe, true);
+                            copied = true;
+                            break;
+                        }
+                        catch
+                        {
+                            Thread.Sleep(300);
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            if (copied || (!string.IsNullOrEmpty(targetExe) && File.Exists(targetExe)))
+            {
+                try
+                {
+                    string relaunchArgs = "--cleanup-update \"" + selfExe + "\"";
+                    if (!string.IsNullOrEmpty(profileId))
+                    {
+                        relaunchArgs += " --profile=" + profileId;
+                    }
+                    ProcessStartInfo psi = new ProcessStartInfo(targetExe, relaunchArgs);
+                    psi.UseShellExecute = true;
+                    Process.Start(psi);
+                }
+                catch { }
+            }
+
+            return true;
+        }
+
+        private static void TryCleanupStagedUpdate(string stagedPath)
+        {
+            if (string.IsNullOrWhiteSpace(stagedPath)) return;
+            try
+            {
+                string updatesRoot = Path.GetFullPath(Path.Combine(SettingsStore.AppDataDir, "updates"));
+                if (!updatesRoot.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+                {
+                    updatesRoot += Path.DirectorySeparatorChar;
+                }
+                string fullStaged = Path.GetFullPath(stagedPath);
+                if (!fullStaged.StartsWith(updatesRoot, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+                if (!fullStaged.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+                for (int attempt = 0; attempt < 10; attempt++)
+                {
+                    if (!File.Exists(fullStaged)) break;
+                    try
+                    {
+                        File.Delete(fullStaged);
+                        break;
+                    }
+                    catch
+                    {
+                        Thread.Sleep(150);
+                    }
+                }
+            }
+            catch { }
         }
 
         private static string BuildSecondaryPayload(

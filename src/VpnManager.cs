@@ -1165,7 +1165,6 @@ namespace DejavuBrowser
                 psi.WorkingDirectory = Path.GetDirectoryName(_torExePath);
                 psi.UseShellExecute = false;
                 psi.CreateNoWindow = true;
-                psi.WindowStyle = ProcessWindowStyle.Hidden;
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;
 
@@ -1731,7 +1730,6 @@ namespace DejavuBrowser
                     "-xzf \"" + archivePath + "\" -C \"" + _torBinDir + "\" tor/tor.exe data/geoip data/geoip6");
                 psi.UseShellExecute = false;
                 psi.CreateNoWindow = true;
-                psi.WindowStyle = ProcessWindowStyle.Hidden;
 
                 using (Process p = Process.Start(psi))
                 {

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
@@ -19,12 +20,14 @@ namespace DejavuBrowser
         public string ReleaseNotes { get; set; }
         public string DownloadUrl { get; set; }
         public string DownloadedPath { get; set; }
+        public string ExpectedSha256 { get; set; }
+        public bool Sha256Verified { get; set; }
         public bool IsReady { get; set; }
     }
 
     internal sealed class AutoUpdater
     {
-        public const string CurrentVersion = "5.5.0";
+        public const string CurrentVersion = "5.6.0";
         private const string LatestReleaseApi = "https://api.github.com/repos/Dathevinci/Dejavu-browser/releases/latest";
 
         private static readonly JavaScriptSerializer Json = new JavaScriptSerializer();
@@ -69,8 +72,9 @@ namespace DejavuBrowser
                     return;
                 }
 
-                // Locate dejavu.exe release asset
+                // Locate dejavu.exe and optional SHA256SUMS.txt release assets
                 string downloadUrl = null;
+                string sha256SumsUrl = null;
                 if (rel.ContainsKey("assets") && rel["assets"] is ArrayList)
                 {
                     ArrayList assets = (ArrayList)rel["assets"];
@@ -79,10 +83,14 @@ namespace DejavuBrowser
                         Dictionary<string, object> asset = assets[i] as Dictionary<string, object>;
                         if (asset == null) continue;
                         string name = asset.ContainsKey("name") ? Convert.ToString(asset["name"]) : "";
+                        string assetUrl = asset.ContainsKey("browser_download_url") ? Convert.ToString(asset["browser_download_url"]) : null;
                         if (string.Equals(name, "dejavu.exe", StringComparison.OrdinalIgnoreCase))
                         {
-                            downloadUrl = asset.ContainsKey("browser_download_url") ? Convert.ToString(asset["browser_download_url"]) : null;
-                            break;
+                            downloadUrl = assetUrl;
+                        }
+                        else if (string.Equals(name, "SHA256SUMS.txt", StringComparison.OrdinalIgnoreCase))
+                        {
+                            sha256SumsUrl = assetUrl;
                         }
                     }
                 }
@@ -93,6 +101,28 @@ namespace DejavuBrowser
                     return;
                 }
 
+                string expectedSha256 = null;
+                if (!string.IsNullOrEmpty(sha256SumsUrl))
+                {
+                    expectedSha256 = await Task.Run(() =>
+                    {
+                        try
+                        {
+                            using (WebClient wc = new WebClient())
+                            {
+                                wc.Encoding = Encoding.UTF8;
+                                wc.Headers.Add("User-Agent", "dejavu-browser/" + CurrentVersion);
+                                string sumsText = wc.DownloadString(sha256SumsUrl);
+                                return ParseExpectedSha256(sumsText, "dejavu.exe");
+                            }
+                        }
+                        catch
+                        {
+                            return null;
+                        }
+                    });
+                }
+
                 if (userTriggered) RaiseStatus("Downloading dejavu v" + remoteVerStr + "...");
 
                 string updateDir = Path.Combine(SettingsStore.AppDataDir, "updates");
@@ -100,7 +130,8 @@ namespace DejavuBrowser
                 string stagedExe = Path.Combine(updateDir, "dejavu-" + remoteVerStr + ".exe");
                 string tempExe = stagedExe + ".part";
 
-                if (!IsValidExecutable(stagedExe))
+                bool cachedValid = IsValidExecutable(stagedExe) && MatchesExpectedSha256(stagedExe, expectedSha256);
+                if (!cachedValid)
                 {
                     await Task.Run(() =>
                     {
@@ -112,7 +143,12 @@ namespace DejavuBrowser
                         if (!IsValidExecutable(tempExe))
                         {
                             try { File.Delete(tempExe); } catch { }
-                            throw new Exception("Downloaded update failed verification.");
+                            throw new Exception("Downloaded update failed PE verification.");
+                        }
+                        if (!MatchesExpectedSha256(tempExe, expectedSha256))
+                        {
+                            try { File.Delete(tempExe); } catch { }
+                            throw new Exception("Downloaded update failed SHA-256 integrity verification.");
                         }
                         if (File.Exists(stagedExe)) File.Delete(stagedExe);
                         File.Move(tempExe, stagedExe);
@@ -126,6 +162,8 @@ namespace DejavuBrowser
                     ReleaseNotes = rel.ContainsKey("body") ? Convert.ToString(rel["body"]) : "",
                     DownloadUrl = downloadUrl,
                     DownloadedPath = stagedExe,
+                    ExpectedSha256 = expectedSha256,
+                    Sha256Verified = !string.IsNullOrEmpty(expectedSha256),
                     IsReady = true
                 };
                 ReadyUpdate = info;
@@ -149,12 +187,15 @@ namespace DejavuBrowser
             {
                 return false;
             }
+            if (!MatchesExpectedSha256(ReadyUpdate.DownloadedPath, ReadyUpdate.ExpectedSha256))
+            {
+                return false;
+            }
 
             try
             {
                 string currentExe = Assembly.GetExecutingAssembly().Location;
                 int pid = Process.GetCurrentProcess().Id;
-                string helperBat = Path.Combine(SettingsStore.AppDataDir, "updates", "apply-update.cmd");
                 string staged = ReadyUpdate.DownloadedPath;
                 string newVer = ReadyUpdate.Version;
 
@@ -168,46 +209,16 @@ namespace DejavuBrowser
                 }
                 catch { }
 
-                string profileArg = string.IsNullOrEmpty(activeProfileId) ? "" : (" --profile=" + activeProfileId);
+                // Clean pure-C# native handoff: launch the verified staged executable directly
+                // so it waits for this PID to exit, replaces currentExe atomically, and relaunches.
+                string handoffArgs = "--apply-update " + pid + " \"" + currentExe + "\"";
+                if (!string.IsNullOrEmpty(activeProfileId))
+                {
+                    handoffArgs += " --profile=" + activeProfileId;
+                }
 
-                // Atomic background updater: genuinely waits ~1s per check (ping -n 2) for old PID
-                // to exit completely before swapping binary in-place and relaunching cleanly!
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine("@echo off");
-                sb.AppendLine("setlocal enabledelayedexpansion");
-                sb.AppendLine("set \"TARGET=" + currentExe + "\"");
-                sb.AppendLine("set \"STAGED=" + staged + "\"");
-                sb.AppendLine("set /a tries=0");
-                sb.AppendLine(":waitloop");
-                sb.AppendLine("tasklist /FI \"PID eq " + pid + "\" 2>NUL | find /I \"" + pid + "\" >NUL");
-                sb.AppendLine("if \"%ERRORLEVEL%\"==\"0\" (");
-                sb.AppendLine("  set /a tries+=1");
-                sb.AppendLine("  if !tries! GTR 30 goto swap");
-                sb.AppendLine("  ping -n 2 127.0.0.1 >NUL");
-                sb.AppendLine("  goto waitloop");
-                sb.AppendLine(")");
-                sb.AppendLine("ping -n 2 127.0.0.1 >NUL");
-                sb.AppendLine(":swap");
-                sb.AppendLine("set /a ctries=0");
-                sb.AppendLine(":copyloop");
-                sb.AppendLine("copy /Y \"%STAGED%\" \"%TARGET%\" >NUL 2>&1");
-                sb.AppendLine("if errorlevel 1 (");
-                sb.AppendLine("  set /a ctries+=1");
-                sb.AppendLine("  if !ctries! LEQ 10 (");
-                sb.AppendLine("    ping -n 2 127.0.0.1 >NUL");
-                sb.AppendLine("    goto copyloop");
-                sb.AppendLine("  )");
-                sb.AppendLine(")");
-                sb.AppendLine("if exist \"%TARGET%\" start \"\" \"%TARGET%\"" + profileArg);
-                sb.AppendLine("del /F /Q \"%STAGED%\" >NUL 2>&1");
-                sb.AppendLine("del /F /Q \"%~f0\" >NUL 2>&1");
-
-                File.WriteAllText(helperBat, sb.ToString(), Encoding.ASCII);
-
-                ProcessStartInfo psi = new ProcessStartInfo("cmd.exe", "/c \"" + helperBat + "\"");
-                psi.CreateNoWindow = true;
+                ProcessStartInfo psi = new ProcessStartInfo(staged, handoffArgs);
                 psi.UseShellExecute = false;
-                psi.WindowStyle = ProcessWindowStyle.Hidden;
                 Process.Start(psi);
                 return true;
             }
@@ -221,6 +232,79 @@ namespace DejavuBrowser
         {
             Action<string> h = StatusChanged;
             if (h != null) h(s);
+        }
+
+        private static string ParseExpectedSha256(string sumsText, string targetFileName)
+        {
+            if (string.IsNullOrWhiteSpace(sumsText) || string.IsNullOrWhiteSpace(targetFileName)) return null;
+            string[] lines = sumsText.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (line.Length < 66 || line[0] == '#') continue;
+
+                int sep = line.IndexOfAny(new char[] { ' ', '\t' });
+                if (sep != 64) continue;
+
+                string digest = line.Substring(0, 64);
+                if (!IsHex64(digest)) continue;
+
+                string filePart = line.Substring(sep).Trim();
+                if (filePart.StartsWith("*", StringComparison.Ordinal))
+                {
+                    filePart = filePart.Substring(1).Trim();
+                }
+                filePart = filePart.Replace('/', '\\');
+                string baseName = Path.GetFileName(filePart);
+                if (string.Equals(baseName, targetFileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return digest.ToLowerInvariant();
+                }
+            }
+            return null;
+        }
+
+        private static bool IsHex64(string s)
+        {
+            if (string.IsNullOrEmpty(s) || s.Length != 64) return false;
+            for (int i = 0; i < 64; i++)
+            {
+                char c = s[i];
+                bool ok = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+                if (!ok) return false;
+            }
+            return true;
+        }
+
+        private static bool MatchesExpectedSha256(string path, string expectedSha256)
+        {
+            if (string.IsNullOrEmpty(expectedSha256)) return true;
+            string actual = ComputeFileSha256(path);
+            return !string.IsNullOrEmpty(actual) &&
+                   string.Equals(actual, expectedSha256, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string ComputeFileSha256(string path)
+        {
+            try
+            {
+                if (!File.Exists(path)) return null;
+                using (SHA256 sha = SHA256.Create())
+                using (FileStream fs = File.OpenRead(path))
+                {
+                    byte[] hash = sha.ComputeHash(fs);
+                    StringBuilder sb = new StringBuilder(64);
+                    for (int i = 0; i < hash.Length; i++)
+                    {
+                        sb.Append(hash[i].ToString("x2"));
+                    }
+                    return sb.ToString();
+                }
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private static bool IsValidExecutable(string path)

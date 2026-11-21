@@ -528,8 +528,10 @@
     .m3-chip-strip {
       display: flex; align-items: center; gap: 7px;
       overflow-x: auto; padding: 2px 0;
+      scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
     }
+    .m3-chip-strip::-webkit-scrollbar { display: none; }
     .m3-chip {
       height: 34px; padding: 0 12px; border-radius: 999px; flex-shrink: 0;
       border: 1px solid var(--border-subtle); background: transparent;
@@ -969,7 +971,7 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.5.0) — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.6.0) — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
@@ -1239,15 +1241,10 @@
     }
     .radio-dot.on { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
 
-    .upd-fallback-row {
-      padding: 12px 18px; border-top: 1px solid var(--divider);
-      display: flex; flex-direction: column; gap: 10px;
-    }
     .upd-signing-note {
       padding: 11px 18px 13px; border-top: 1px solid var(--divider);
       font-size: 12px; line-height: 1.45; color: var(--muted);
     }
-    .upd-signing-note.warn { color: var(--danger); background: var(--danger-soft); font-weight: 540; }
 
     .set-section { display: flex; flex-direction: column; gap: 12px; }
     .set-section.hidden-cat, .set-section.search-hide, .set-item.search-hide { display: none !important; }
@@ -1475,7 +1472,7 @@
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
     /* =====================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.5.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.6.0)
        ===================================================================== */
     .sh-hero-card {
       background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
@@ -1857,7 +1854,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.5.0) — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.6.0) — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2153,7 +2150,7 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.8v5.2M12 7.8h.01"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.5.0 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.6.0 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -2188,7 +2185,7 @@
                 <div id="opt-m-accents" class="orb-group"></div>
               </div>
 
-              <button type="button" class="g-row set-item" data-search="wallpaper butterfly 24 25 themes background material you live" onclick="call('openScreen','wallpapers')">
+              <button type="button" class="g-row set-item" data-search="wallpaper butterfly froggie frog 32 33 themes background material you live" onclick="call('openScreen','wallpapers')">
                 <span id="set-wp-thumb" class="set-wp-thumb"></span>
                 <span class="g-row-meta">
                   <span class="g-row-title">Wallpapers</span>
@@ -2421,7 +2418,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update apk version 5.5.0 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.6.0 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2445,30 +2442,16 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update auto updater github releases apk version 5.5.0 about">
+              <div class="g-row set-item" data-search="software update updater github releases signed sha256 version 5.6.0 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.5.0</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.6.0</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
-                <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check</button>
+                <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check for updates</button>
               </div>
 
-              <div id="opt-upd-prog-wrap" style="display:none;padding:0 18px 14px;">
-                <div style="height:5px;border-radius:999px;background:var(--input-bg);overflow:hidden;">
-                  <div id="opt-upd-prog-fill" style="height:100%;width:0%;background:var(--accent);transition:width 0.18s ease;"></div>
-                </div>
-              </div>
-
-              <div id="opt-upd-files-row" class="upd-fallback-row" style="display:none;">
-                <div class="g-row-meta">
-                  <div class="g-row-title" style="font-size:13.5px;">Manual install fallback</div>
-                  <div id="opt-upd-files-sub" class="g-row-sub">Open downloaded APK in Files</div>
-                </div>
-                <button type="button" class="pill-btn sm" onclick="call('openUpdateApkInFiles')">Open APK in Files</button>
-              </div>
-
-              <div id="opt-upd-note" class="upd-signing-note" style="display:none;"></div>
+              <div id="opt-upd-note" class="upd-signing-note" style="display:none;">Official signed updates are verified on GitHub Releases (SHA-256 + V1/V2/V3 signing).</div>
 
               <button type="button" class="g-row set-item" data-search="reset settings defaults restore factory preferences" onclick="openResetSettingsModal()">
                 <div class="g-row-meta">
@@ -2487,7 +2470,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.5.0
+          dejavu Mobile v5.6.0
         </div>
       </div>
     </div>
@@ -2644,10 +2627,11 @@
           <button type="button" class="pill-btn ghost" onclick="call('closeScreen')">Done</button>
         </div>
         <div id="m-wp-filters" class="m3-chip-strip">
-          <button type="button" class="m3-chip active" data-wpf="all" onclick="setWpFilter('all')">All (25)</button>
-          <button type="button" class="m3-chip" data-wpf="butterfly" onclick="setWpFilter('butterfly')">Butterfly (6)</button>
-          <button type="button" class="m3-chip" data-wpf="dark" onclick="setWpFilter('dark')">Dark (13)</button>
-          <button type="button" class="m3-chip" data-wpf="light" onclick="setWpFilter('light')">Light (11)</button>
+          <button type="button" class="m3-chip active" data-wpf="all" onclick="setWpFilter('all')">All (33)</button>
+          <button type="button" class="m3-chip" data-wpf="butterfly" onclick="setWpFilter('butterfly')">Butterfly (10)</button>
+          <button type="button" class="m3-chip" data-wpf="froggie" onclick="setWpFilter('froggie')">Froggie (4)</button>
+          <button type="button" class="m3-chip" data-wpf="dark" onclick="setWpFilter('dark')">Dark (18)</button>
+          <button type="button" class="m3-chip" data-wpf="light" onclick="setWpFilter('light')">Light (14)</button>
         </div>
       </div>
       <div class="sheet-body">
@@ -2758,7 +2742,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.5.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.6.0)
        =================================================================== -->
   <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2886,7 +2870,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.5.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.6.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -2897,42 +2881,58 @@
 
   <script>
     const WALLPAPERS = [
-      { id: 'wp-m3-amethyst.jpg',            name: 'Obsidian Monolith',   m3: true, mode: 'dark',  seed: 'amethyst', butterfly: false },
-      { id: 'wp-m3-pixel-blue.jpg',          name: 'Cobalt Ribbons',      m3: true, mode: 'dark',  seed: 'sapphire', butterfly: false },
-      { id: 'wp-m3-cobalt-prism.jpg',        name: 'Cobalt Prism',        m3: true, mode: 'dark',  seed: 'indigo',   butterfly: false },
-      { id: 'wp-m3-sage.jpg',                name: 'Eucalyptus Calm',     m3: true, mode: 'dark',  seed: 'aurora',   butterfly: false },
-      { id: 'wp-m3-jade-terrace.jpg',        name: 'Jade Terrace',        m3: true, mode: 'dark',  seed: 'emerald',  butterfly: false },
-      { id: 'wp-m3-crimson-fold.jpg',        name: 'Crimson Fold',        m3: true, mode: 'dark',  seed: 'crimson',  butterfly: false },
-      { id: 'wp-m3-blossom.jpg',             name: 'Velvet Petals',       m3: true, mode: 'dark',  seed: 'rose',     butterfly: false },
-      { id: 'wp-m3-honey.jpg',               name: 'Ochre Solitude',      m3: true, mode: 'dark',  seed: 'gold',     butterfly: false },
-      { id: 'wp-m3-indigo-dune.jpg',         name: 'Indigo Dune',         m3: true, mode: 'dark',  seed: 'indigo',   butterfly: false },
-      { id: 'wp-m3-sienna-arch.jpg',         name: 'Sienna Arch',         m3: true, mode: 'dark',  seed: 'gold',     butterfly: false },
-      { id: 'wp-m3-porcelain.jpg',           name: 'Porcelain Steps',     m3: true, mode: 'light', seed: 'amethyst', butterfly: false },
-      { id: 'wp-m3-lavender-mist.jpg',       name: 'Lavender Mist',       m3: true, mode: 'light', seed: 'lavender', butterfly: false },
-      { id: 'wp-m3-sky-terrace.jpg',         name: 'Sky Terrace',         m3: true, mode: 'light', seed: 'sapphire', butterfly: false },
-      { id: 'wp-m3-mint-atelier.jpg',        name: 'Mint Atelier',        m3: true, mode: 'light', seed: 'aurora',   butterfly: false },
-      { id: 'wp-m3-meadow.jpg',              name: 'Jade Pebbles',        m3: true, mode: 'light', seed: 'aurora',   butterfly: false },
-      { id: 'wp-m3-warm-limestone.jpg',      name: 'Warm Limestone',      m3: true, mode: 'light', seed: 'gold',     butterfly: false },
-      { id: 'wp-m3-coral-bloom.jpg',         name: 'Coral Bloom',         m3: true, mode: 'light', seed: 'coral',    butterfly: false },
-      { id: 'wp-m3-blush.jpg',               name: 'Terracotta Ribbon',   m3: true, mode: 'light', seed: 'rose',     butterfly: false },
-      { id: 'wp-m3-butterfly-obsidian.jpg',  name: 'Amethyst Origami',    m3: true, mode: 'dark',  seed: 'amethyst', butterfly: true },
-      { id: 'wp-m3-butterfly-cobalt.jpg',    name: 'Pixel Morpho',        m3: true, mode: 'dark',  seed: 'sapphire', butterfly: true },
-      { id: 'wp-m3-butterfly-emerald.jpg',   name: 'Emerald Swallowtail', m3: true, mode: 'dark',  seed: 'emerald',  butterfly: true },
-      { id: 'wp-m3-butterfly-porcelain.jpg', name: 'Porcelain Wings',     m3: true, mode: 'light', seed: 'amethyst', butterfly: true },
-      { id: 'wp-m3-butterfly-sage.jpg',      name: 'Botanical Sage',      m3: true, mode: 'light', seed: 'aurora',   butterfly: true },
-      { id: 'wp-m3-butterfly-coral.jpg',     name: 'Coral Monarch',       m3: true, mode: 'light', seed: 'coral',    butterfly: true },
-      { id: 'obsidian',                      name: 'Material You Live',   m3: true, mode: '',      seed: '',         butterfly: false, live: true }
+      { id: 'wp-m3-amethyst.jpg',            slug: 'amethyst',           name: 'Obsidian Monolith',     m3: true, mode: 'dark',  seed: 'amethyst', category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-pixel-blue.jpg',          slug: 'pixel-blue',         name: 'Cobalt Ribbons',        m3: true, mode: 'dark',  seed: 'sapphire', category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-cobalt-prism.jpg',        slug: 'cobalt-prism',       name: 'Cobalt Prism',          m3: true, mode: 'dark',  seed: 'indigo',   category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-sage.jpg',                slug: 'sage',               name: 'Eucalyptus Calm',       m3: true, mode: 'dark',  seed: 'aurora',   category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-jade-terrace.jpg',        slug: 'jade-terrace',       name: 'Jade Terrace',          m3: true, mode: 'dark',  seed: 'emerald',  category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-crimson-fold.jpg',        slug: 'crimson-fold',       name: 'Crimson Fold',          m3: true, mode: 'dark',  seed: 'crimson',  category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-blossom.jpg',             slug: 'blossom',            name: 'Velvet Petals',         m3: true, mode: 'dark',  seed: 'rose',     category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-honey.jpg',               slug: 'honey',              name: 'Ochre Solitude',        m3: true, mode: 'dark',  seed: 'gold',     category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-indigo-dune.jpg',         slug: 'indigo-dune',        name: 'Indigo Dune',           m3: true, mode: 'dark',  seed: 'indigo',   category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-sienna-arch.jpg',         slug: 'sienna-arch',        name: 'Sienna Arch',           m3: true, mode: 'dark',  seed: 'gold',     category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-porcelain.jpg',           slug: 'porcelain',          name: 'Porcelain Steps',       m3: true, mode: 'light', seed: 'amethyst', category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-lavender-mist.jpg',       slug: 'lavender-mist',      name: 'Lavender Mist',         m3: true, mode: 'light', seed: 'lavender', category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-sky-terrace.jpg',         slug: 'sky-terrace',        name: 'Sky Terrace',           m3: true, mode: 'light', seed: 'sapphire', category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-mint-atelier.jpg',        slug: 'mint-atelier',       name: 'Mint Atelier',          m3: true, mode: 'light', seed: 'aurora',   category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-meadow.jpg',              slug: 'meadow',             name: 'Jade Pebbles',          m3: true, mode: 'light', seed: 'aurora',   category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-warm-limestone.jpg',      slug: 'warm-limestone',     name: 'Warm Limestone',        m3: true, mode: 'light', seed: 'gold',     category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-coral-bloom.jpg',         slug: 'coral-bloom',        name: 'Coral Bloom',           m3: true, mode: 'light', seed: 'coral',    category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-blush.jpg',               slug: 'blush',              name: 'Terracotta Ribbon',     m3: true, mode: 'light', seed: 'rose',     category: 'abstract',  butterfly: false, froggie: false },
+      { id: 'wp-m3-butterfly-obsidian.jpg',  slug: 'butterfly-obsidian', name: 'Amethyst Origami',      m3: true, mode: 'dark',  seed: 'amethyst', category: 'butterfly', butterfly: true,  froggie: false },
+      { id: 'wp-m3-butterfly-cobalt.jpg',    slug: 'butterfly-cobalt',   name: 'Pixel Morpho',          m3: true, mode: 'dark',  seed: 'sapphire', category: 'butterfly', butterfly: true,  froggie: false },
+      { id: 'wp-m3-butterfly-emerald.jpg',   slug: 'butterfly-emerald',  name: 'Emerald Swallowtail',   m3: true, mode: 'dark',  seed: 'emerald',  category: 'butterfly', butterfly: true,  froggie: false },
+      { id: 'wp-m3-butterfly-porcelain.jpg', slug: 'butterfly-porcelain',name: 'Porcelain Wings',       m3: true, mode: 'light', seed: 'amethyst', category: 'butterfly', butterfly: true,  froggie: false },
+      { id: 'wp-m3-butterfly-sage.jpg',      slug: 'butterfly-sage',     name: 'Botanical Sage',        m3: true, mode: 'light', seed: 'aurora',   category: 'butterfly', butterfly: true,  froggie: false },
+      { id: 'wp-m3-butterfly-coral.jpg',     slug: 'butterfly-coral',    name: 'Coral Monarch',         m3: true, mode: 'light', seed: 'coral',    category: 'butterfly', butterfly: true,  froggie: false },
+      { id: 'wp-m3-butterfly-amethyst.jpg',  slug: 'butterfly-amethyst', name: 'Amethyst Butterfly',    m3: true, mode: 'dark',  seed: 'amethyst', category: 'butterfly', butterfly: true,  froggie: false },
+      { id: 'wp-m3-butterfly-rose.jpg',      slug: 'butterfly-rose',     name: 'Velvet Rose Butterfly', m3: true, mode: 'dark',  seed: 'rose',     category: 'butterfly', butterfly: true,  froggie: false },
+      { id: 'wp-m3-butterfly-gold.jpg',      slug: 'butterfly-gold',     name: 'Honey Gold Butterfly',  m3: true, mode: 'dark',  seed: 'gold',     category: 'butterfly', butterfly: true,  froggie: false },
+      { id: 'wp-m3-butterfly-lavender.jpg',  slug: 'butterfly-lavender', name: 'Lavender Butterfly',    m3: true, mode: 'light', seed: 'lavender', category: 'butterfly', butterfly: true,  froggie: false },
+      { id: 'wp-m3-froggie-emerald.jpg',     slug: 'froggie-emerald',    name: 'Emerald Froggie',       m3: true, mode: 'dark',  seed: 'emerald',  category: 'froggie',   butterfly: false, froggie: true  },
+      { id: 'wp-m3-froggie-mint.jpg',        slug: 'froggie-mint',       name: 'Mint Lily Froggie',     m3: true, mode: 'light', seed: 'aurora',   category: 'froggie',   butterfly: false, froggie: true  },
+      { id: 'wp-m3-froggie-lime.jpg',        slug: 'froggie-lime',       name: 'Matcha Froggie',        m3: true, mode: 'light', seed: 'lime',     category: 'froggie',   butterfly: false, froggie: true  },
+      { id: 'wp-m3-froggie-sage.jpg',        slug: 'froggie-sage',       name: 'Twilight Froggie',      m3: true, mode: 'dark',  seed: 'aurora',   category: 'froggie',   butterfly: false, froggie: true  },
+      { id: 'obsidian',                      slug: 'obsidian',           name: 'Material You Live',     m3: true, mode: '',      seed: '',         category: 'live',      butterfly: false, froggie: false, live: true }
     ];
     const DEFAULT_M3_WP = 'wp-m3-amethyst.jpg';
     const VALID_WP_MAP = {};
-    WALLPAPERS.forEach((w) => { VALID_WP_MAP[w.id] = w; });
+    const WP_SLUG_MAP = {};
+    WALLPAPERS.forEach((w) => {
+      VALID_WP_MAP[w.id] = w;
+      if (w.slug) WP_SLUG_MAP[w.slug] = w.id;
+    });
 
     function normalizeWallpaperId(raw) {
       if (!raw || typeof raw !== 'string') return DEFAULT_M3_WP;
       let id = raw.trim();
       if (id.startsWith('art:')) id = id.slice(4);
       if (id === 'live:m3-expressive' || id === 'obsidian') return 'obsidian';
-      return VALID_WP_MAP[id] ? id : DEFAULT_M3_WP;
+      if (VALID_WP_MAP[id]) return id;
+      const low = id.toLowerCase();
+      if (WP_SLUG_MAP[low]) return WP_SLUG_MAP[low];
+      const candidate = 'wp-m3-' + low.replace(/^wp-m3-/, '').replace(/\.jpg$/i, '') + '.jpg';
+      return VALID_WP_MAP[candidate] ? candidate : DEFAULT_M3_WP;
     }
 
     const ENGINES = [
@@ -3078,7 +3078,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.5.0)
+    // Zero-mutation DOM equality-guard helpers (v5.6.0)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -3857,7 +3857,7 @@
     }
     function handleUpdateBtn() {
       const u = state.update || {};
-      if (u.status === 'available' || u.status === 'ready' || (u.status === 'error' && u.hasDownloadedApk && !u.signatureMismatch)) {
+      if (u.status === 'available' || u.available) {
         call('downloadOrInstallUpdate');
       } else {
         call('checkForUpdates');
@@ -3924,7 +3924,7 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.5.0)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.6.0)
     const _domSigs = {
       sysTop: '',
       safeTop: '',
@@ -4704,7 +4704,7 @@
       setCls(document.getElementById('sw-sync-reading'), 'on', sp.readingList !== false);
       setCls(document.getElementById('sw-sync-clipboard'), 'on', sp.clipboard !== false);
       setCls(document.getElementById('sw-sync-history'), 'on', sp.history !== false);
-      setTxt(document.getElementById('m-code-box'), sync.pairingCode || 'DJV-5500-M3UI');
+      setTxt(document.getElementById('m-code-box'), sync.pairingCode || 'DJV-5600-M3UI');
     }
 
     function toggleCurrentSiteShield() {
@@ -4833,7 +4833,7 @@
       setTxt(document.getElementById('set-sum-downloads'), `${ytqLbl}${state.floatingDownloadButton !== false ? ' · Floating pill' : ''}`);
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.5.0';
+      const curV = u.currentVersion || '5.6.0';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -4949,70 +4949,37 @@
       const uTitle = document.getElementById('opt-upd-title');
       const uSub = document.getElementById('opt-upd-sub');
       const uBtn = document.getElementById('opt-upd-btn');
-      const uProgW = document.getElementById('opt-upd-prog-wrap');
-      const uProgF = document.getElementById('opt-upd-prog-fill');
-      const uFilesRow = document.getElementById('opt-upd-files-row');
-      const uFilesSub = document.getElementById('opt-upd-files-sub');
       const uFoot = document.getElementById('opt-ver-footer');
       const uNote = document.getElementById('opt-upd-note');
 
       setTxt(uFoot, `dejavu Mobile v${curV}`);
       if (uNote) {
-        const showNote = !!u.signatureMismatch || !!u.upgradeNote;
-        setDisp(uNote, showNote ? 'block' : 'none');
-        if (u.upgradeNote) setTxt(uNote, u.upgradeNote);
-        setCls(uNote, 'warn', !!u.signatureMismatch);
-      }
-      if (uFilesRow) {
-        const showFallback = !!u.hasDownloadedApk || u.status === 'ready' || !!u.signatureMismatch;
-        setDisp(uFilesRow, showFallback ? 'flex' : 'none');
-        setTxt(uFilesSub, u.exportedApkName ? `Saved in Downloads/dejavu/${u.exportedApkName}` : 'Open downloaded APK in Files');
+        const noteText = u.upgradeNote || 'Official signed updates are verified on GitHub Releases (SHA-256 + V1/V2/V3 signing).';
+        setDisp(uNote, 'block');
+        setTxt(uNote, noteText);
       }
 
       if (u.status === 'checking') {
         setTxt(uTitle, 'Checking for updates…');
         setTxt(uSub, `Installed: v${curV}`);
-        setTxt(uBtn, '…');
+        setTxt(uBtn, 'Checking…');
         setCls(uBtn, 'primary', false);
-        setDisp(uProgW, 'none');
-      } else if (u.status === 'available') {
-        setTxt(uTitle, `Update ready · v${u.latestVersion}`);
-        setTxt(uSub, u.sizeLabel ? `Download size · ${u.sizeLabel}` : 'Tap Update to install');
-        setTxt(uBtn, 'Update');
+      } else if (u.status === 'available' || u.available) {
+        const nextVer = u.latestVersion || curV;
+        setTxt(uTitle, `Update · v${nextVer}`);
+        setTxt(uSub, u.sizeLabel ? `GitHub · ${u.sizeLabel}` : 'GitHub Releases');
+        setTxt(uBtn, 'Download Update');
         setCls(uBtn, 'primary', true);
-        setDisp(uProgW, 'none');
-      } else if (u.status === 'downloading') {
-        setTxt(uTitle, `Downloading v${u.latestVersion}…`);
-        setTxt(uSub, `${u.percent || 0}% complete`);
-        setTxt(uBtn, `${u.percent || 0}%`);
-        setCls(uBtn, 'primary', true);
-        setDisp(uProgW, 'block');
-        setStyle(uProgF, 'width', `${Math.max(4, u.percent || 0)}%`);
-      } else if (u.status === 'installing') {
-        setTxt(uTitle, `Installing v${u.latestVersion}…`);
-        setTxt(uSub, 'Confirm in the Android system prompt');
-        setTxt(uBtn, 'Installing');
-        setCls(uBtn, 'primary', true);
-        setDisp(uProgW, 'block');
-        setStyle(uProgF, 'width', '100%');
-      } else if (u.status === 'ready') {
-        setTxt(uTitle, `v${u.latestVersion} ready`);
-        setTxt(uSub, u.signatureMismatch ? `Uninstall older build once, then install v${u.latestVersion || '5.5.0'}` : 'Tap Install to upgrade');
-        setTxt(uBtn, 'Install');
-        setCls(uBtn, 'primary', true);
-        setDisp(uProgW, 'none');
       } else if (u.status === 'error') {
-        setTxt(uTitle, u.signatureMismatch ? 'Signature mismatch' : `dejavu v${curV}`);
-        setTxt(uSub, u.error || 'Could not check right now');
-        setTxt(uBtn, u.signatureMismatch ? 'Check' : 'Retry');
+        setTxt(uTitle, `dejavu v${curV}`);
+        setTxt(uSub, u.error || 'Could not reach GitHub Releases');
+        setTxt(uBtn, 'Retry');
         setCls(uBtn, 'primary', false);
-        setDisp(uProgW, 'none');
       } else {
         setTxt(uTitle, `dejavu v${curV}`);
-        setTxt(uSub, u.status === 'uptodate' ? 'Up to date' : 'Check GitHub Releases');
-        setTxt(uBtn, 'Check');
+        setTxt(uSub, u.status === 'uptodate' ? 'Up to date' : 'Official GitHub Releases');
+        setTxt(uBtn, 'Check for updates');
         setCls(uBtn, 'primary', false);
-        setDisp(uProgW, 'none');
       }
 
       const setQ = (document.getElementById('settings-search-in')?.value || '').trim();
@@ -5204,6 +5171,7 @@
       wg.innerHTML = '';
       const filtered = WALLPAPERS.filter((w) => {
         if (wpFilter === 'butterfly') return !!w.butterfly;
+        if (wpFilter === 'froggie') return !!w.froggie;
         if (wpFilter === 'dark') return w.mode === 'dark';
         if (wpFilter === 'light') return w.mode === 'light';
         return true;
@@ -5212,6 +5180,8 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'wp-tile' + (activeWp === w.id ? ' active' : '');
+        btn.dataset.wpId = w.id;
+        if (w.slug) btn.dataset.wpSlug = w.slug;
         const thumb = w.id === 'obsidian'
           ? `<div class="wp-live-thumb" style="background:${isLight ? 'linear-gradient(135deg,#eaddff 0%,#fef7ff 55%,#ffd8e4 100%)' : 'linear-gradient(135deg,#4f378b 0%,#141218 55%,#633b48 100%)'};"></div>`
           : `<img src="wallpapers/${w.id}" alt="${esc(w.name)}">`;
@@ -5467,7 +5437,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.5.0 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.6.0 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -5978,7 +5948,7 @@
             const previewSync = signedIn ? {
               enabled: true, syncMode: 'google', googleEmail: 'alex@gmail.com', hasPassphrase: false,
               paired: true, connected: true, peerName: 'Windows 11 Desktop', peerPlatform: 'windows',
-              peerOnline: true, peerLastSeenMs: nowMs - 8000, pairingCode: 'DJV-5500-M3UI',
+              peerOnline: true, peerLastSeenMs: nowMs - 8000, pairingCode: 'DJV-5600-M3UI',
               relayStatus: initRelay, relayBroker: 'broker.hivemq.com', lastSyncMs: nowMs - 4000,
               devices: [
                 { id: 'self-android', name: 'Pixel 9 Pro', platform: 'android', isSelf: true, isOnline: true, lastSeenMs: nowMs, tabCount: 2, transport: 'local' },
@@ -6000,13 +5970,13 @@
               ],
               drops: [
                 { id: 'vid_pc_1', dropType: 'video', title: 'Material 3 Expressive Motion Deep Dive', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=422', text: 'Continue watching at 07:02', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 45000 },
-                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.5.0-release.mp4', url: 'https://example.com/dejavu-v5.5.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
+                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.6.0-release.mp4', url: 'https://example.com/dejavu-v5.6.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
                 { id: 'bt_pc_1', dropType: 'batch_tabs', title: '2 tabs from Windows 11 Desktop', url: 'https://m3.material.io', text: 'Material Design 3 · GitHub', tabs: [{ title: 'Material Design 3', url: 'https://m3.material.io' }, { title: 'GitHub', url: 'https://github.com' }], fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 210000 }
               ]
             } : {
               enabled: true, syncMode: 'manual', googleEmail: '', hasPassphrase: false,
               paired: false, connected: false, peerName: '', peerPlatform: 'windows',
-              peerOnline: false, peerLastSeenMs: 0, pairingCode: 'DJV-5500-M3UI',
+              peerOnline: false, peerLastSeenMs: 0, pairingCode: 'DJV-5600-M3UI',
               relayStatus: initRelay, relayBroker: 'broker.hivemq.com', lastSyncMs: 0,
               devices: [], latestClipboard: null, clipboardHistory: [], pinnedNotes: [],
               prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true },
@@ -6065,7 +6035,20 @@
                 { title: 'GitHub — Dathevinci/Dejavu-browser', url: 'https://github.com/Dathevinci/Dejavu-browser' }
               ],
               sync: previewSync,
-              update: { currentVersion: '5.5.0', status: 'uptodate', latestVersion: '5.5.0', available: qp.get('upd') === '1', hasDownloadedApk: false },
+              update: {
+                currentVersion: '5.6.0',
+                status: qp.get('upd') === '1' ? 'available' : 'uptodate',
+                latestVersion: qp.get('upd') === '1' ? '5.7.0' : '5.6.0',
+                sizeLabel: qp.get('upd') === '1' ? '10.2 MB' : '',
+                releaseUrl: 'https://github.com/Dathevinci/Dejavu-browser/releases/latest',
+                available: qp.get('upd') === '1',
+                error: '',
+                percent: 0,
+                signatureMismatch: false,
+                signingVerified: true,
+                hasDownloadedApk: false,
+                upgradeNote: 'Official signed updates are verified on GitHub Releases (SHA-256 + V1/V2/V3 signing).'
+              },
               turboDownloads: [], pageMedia: [],
               extensions: {
                 builtins: DEFAULT_BUILTIN_EXTENSIONS.map((b) => Object.assign({}, b)),
@@ -6078,6 +6061,10 @@
             }
             if (initScreen === 'sync' && initSyncTab) {
               setSyncSubTab(initSyncTab);
+            }
+            const initWpf = qp.get('wpf') || '';
+            if (initScreen === 'wallpapers' && initWpf) {
+              setWpFilter(initWpf);
             }
           }
         }, 60);

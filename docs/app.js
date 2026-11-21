@@ -1,12 +1,12 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.5.0)
- * Collapsible 34x34px M3 Butterfly Video Downloader FAB · Expanded dejavu Link v2.3 Continuity Hub
- * Buttery 120Hz Android Scrolling & Zero-Overlap Edge-to-Edge Polish · 12 Material You HCT Themes · 24 Pure M3 & 6 Butterfly Wallpapers
- * 100%-Verified Brave-Exact Shields Engine (279K+ Win / 108K+ Android Rules) · Chrome MV3 Extensions · 4K->MP3 8x Turbo Demo
+ * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.6.0)
+ * Open-Source Security Hardening (SLSA Provenance + SHA256SUMS) · 32 Pure M3, Butterfly (10) & Cute Froggie (4) Wallpapers
+ * Collapsible 34x34px M3 Butterfly Video Downloader FAB · Expanded dejavu Link v2.3 Continuity Hub · 120Hz Android Polish
+ * 12 Material You HCT Themes · 100%-Verified Brave-Exact Shields Engine (279K+ Win / 108K+ Android Rules) · Chrome MV3 Extensions
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v5.5.0';
+  const FALLBACK_VERSION = 'v5.6.0';
   const root = document.documentElement;
   const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let themeShiftTimer = null;
@@ -367,7 +367,7 @@
     });
   }
 
-  // 2. Clean 5-View Dual-Device Browser Showcase (v5.5.0 Collapsible Butterfly Video FAB + Link v2.3 + Pixel At-a-Glance)
+  // 2. Clean 5-View Dual-Device Browser Showcase (v5.6.0 Collapsible Butterfly Video FAB + Link v2.3 + Pixel At-a-Glance)
   const VIEW_META = {
     start:      { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
     sync:       { url: 'dejavu://link · Link v2.3 (Direct LAN + TLS MQTT E2EE)', title: 'dejavu Link v2.3 · Pixel Online' },
@@ -833,7 +833,7 @@
     });
   }
 
-  // 2e. Interactive Chrome Extensions Manager Showcase (v5.5.0 — Uncluttered 5-Icon ChromeOS Toolbar by Default)
+  // 2e. Interactive Chrome Extensions Manager Showcase (v5.6.0 — Uncluttered 5-Icon ChromeOS Toolbar by Default)
   const DEMO_EXTS = {
     ublock:     { label: 'uB', name: 'uBlock Origin Lite',    enabled: true,  pinned: false },
     darkreader: { label: 'DR', name: 'Dark Reader',           enabled: true,  pinned: false },
@@ -1252,7 +1252,11 @@
       wpCards.forEach((card) => {
         const visible =
           filter === 'all' ||
-          (filter === 'butterfly' ? card.dataset.butterfly === 'true' : card.dataset.mode === filter);
+          (filter === 'butterfly'
+            ? card.dataset.butterfly === 'true'
+            : filter === 'froggie'
+              ? card.dataset.froggie === 'true'
+              : card.dataset.mode === filter);
         card.classList.toggle('is-hidden', !visible);
         card.classList.remove('wp-filter-in');
         if (visible) {
@@ -1327,7 +1331,19 @@
     });
   });
 
-  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.5.0)
+  // 7b. Copyable SHA-256 Verification Command in Open-Source Security Transparency Card
+  const trustCopyBtn = document.getElementById('trust-copy-hash-cmd');
+  if (trustCopyBtn) {
+    trustCopyBtn.addEventListener('click', () => {
+      const cmd = document.getElementById('trust-hash-cmd')?.textContent?.trim() || 'Get-FileHash .\\dejavu-Setup.exe -Algorithm SHA256';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(cmd).catch(() => {});
+      }
+      showSnackbar('Copied SHA-256 PowerShell verification command');
+    });
+  }
+
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.6.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -1365,6 +1381,7 @@
       const setup = rel.assets.find((a) => /setup\.exe$/i.test(a.name));
       const port = rel.assets.find((a) => /^dejavu\.exe$/i.test(a.name));
       const apk = rel.assets.find((a) => /\.apk$/i.test(a.name));
+      const sums = rel.assets.find((a) => /^SHA256SUMS\.txt$/i.test(a.name));
 
       const metaParts = [];
 
@@ -1401,9 +1418,14 @@
         if (sz) metaParts.push(`Portable ${sz}`);
       }
 
+      if (sums) {
+        const shaEl = document.getElementById('trust-dl-sha256');
+        if (shaEl) shaEl.href = sums.browser_download_url;
+      }
+
       if (metaParts.length > 0) {
         const heroMeta = document.getElementById('hero-release-meta');
-        if (heroMeta) heroMeta.textContent = `${metaParts.join(' · ')} · Signed GitHub Releases`;
+        if (heroMeta) heroMeta.textContent = `${metaParts.join(' · ')} · SLSA Provenance & SHA-256 Verified`;
       }
     })
     .catch(() => {});

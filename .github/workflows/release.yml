@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   build-windows:
@@ -20,9 +22,137 @@ jobs:
         shell: pwsh
         run: .\build.ps1
 
+      - name: Detect Windows Authenticode signing configuration
+        id: sign-config
+        shell: pwsh
+        env:
+          HAS_AZURE_TENANT: ${{ secrets.AZURE_TENANT_ID != '' }}
+          HAS_AZURE_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT != '' }}
+          HAS_WINDOWS_PFX: ${{ secrets.WINDOWS_CERT_PFX_B64 != '' }}
+        run: |
+          if ($env:HAS_AZURE_TENANT -eq 'true' -and $env:HAS_AZURE_ENDPOINT -eq 'true') {
+            "mode=trusted" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            Write-Host "Windows Authenticode signing: Microsoft Trusted Signing is enabled."
+          } elseif ($env:HAS_AZURE_TENANT -ne 'true' -and $env:HAS_WINDOWS_PFX -eq 'true') {
+            "mode=pfx" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            Write-Host "Windows Authenticode signing: PFX certificate fallback (SHA-256 + DigiCert RFC 3161) is enabled."
+          } else {
+            "mode=unsigned" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            Write-Host "Windows Authenticode signing: No signing secrets configured yet. Continuing cleanly; configure AZURE_TENANT_ID + AZURE_TRUSTED_SIGNING_ENDPOINT (Microsoft Trusted Signing) or WINDOWS_CERT_PFX_B64 (PFX) in Repository Secrets to enable automatic Windows SmartScreen trust."
+          }
+
+      - name: Sign dejavu.exe with Microsoft Trusted Signing
+        if: steps.sign-config.outputs.mode == 'trusted'
+        uses: azure/trusted-signing-action@v0.5.7
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT || secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
+          certificate-profile-name: ${{ secrets.AZURE_TRUSTED_SIGNING_PROFILE || secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME }}
+          files-folder: ${{ github.workspace }}\dist
+          files-folder-filter: exe
+          files-folder-recurse: false
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Sign dejavu.exe with PFX Authenticode (Fallback)
+        if: steps.sign-config.outputs.mode == 'pfx'
+        shell: pwsh
+        env:
+          WINDOWS_CERT_PFX_B64: ${{ secrets.WINDOWS_CERT_PFX_B64 }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" -ErrorAction SilentlyContinue |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1
+          if (-not $signtool) {
+            throw "signtool.exe not found under Windows Kits."
+          }
+          $pfxPath = Join-Path $env:RUNNER_TEMP "dejavu-codesign.pfx"
+          try {
+            [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:WINDOWS_CERT_PFX_B64))
+            $signArgs = @("sign", "/f", $pfxPath, "/fd", "SHA256", "/tr", "http://timestamp.digicert.com", "/td", "SHA256")
+            if ($env:WINDOWS_CERT_PASSWORD) {
+              $signArgs += @("/p", $env:WINDOWS_CERT_PASSWORD)
+            }
+            $signArgs += "dist\dejavu.exe"
+            & $signtool.FullName @signArgs
+            if ($LASTEXITCODE -ne 0) {
+              throw "signtool.exe failed while signing dist\dejavu.exe (exit $LASTEXITCODE)."
+            }
+          } finally {
+            if (Test-Path $pfxPath) {
+              Remove-Item $pfxPath -Force
+            }
+          }
+
       - name: Build dejavu-Setup.exe
         shell: pwsh
         run: .\build-setup.ps1
+
+      - name: Sign dejavu-Setup.exe with Microsoft Trusted Signing
+        if: steps.sign-config.outputs.mode == 'trusted'
+        uses: azure/trusted-signing-action@v0.5.7
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT || secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
+          certificate-profile-name: ${{ secrets.AZURE_TRUSTED_SIGNING_PROFILE || secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME }}
+          files-folder: ${{ github.workspace }}\dist
+          files-folder-filter: exe
+          files-folder-exclude: dejavu.exe
+          files-folder-recurse: false
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Sign dejavu-Setup.exe with PFX Authenticode (Fallback)
+        if: steps.sign-config.outputs.mode == 'pfx'
+        shell: pwsh
+        env:
+          WINDOWS_CERT_PFX_B64: ${{ secrets.WINDOWS_CERT_PFX_B64 }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" -ErrorAction SilentlyContinue |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1
+          if (-not $signtool) {
+            throw "signtool.exe not found under Windows Kits."
+          }
+          $pfxPath = Join-Path $env:RUNNER_TEMP "dejavu-codesign.pfx"
+          try {
+            [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:WINDOWS_CERT_PFX_B64))
+            $signArgs = @("sign", "/f", $pfxPath, "/fd", "SHA256", "/tr", "http://timestamp.digicert.com", "/td", "SHA256")
+            if ($env:WINDOWS_CERT_PASSWORD) {
+              $signArgs += @("/p", $env:WINDOWS_CERT_PASSWORD)
+            }
+            $signArgs += "dist\dejavu-Setup.exe"
+            & $signtool.FullName @signArgs
+            if ($LASTEXITCODE -ne 0) {
+              throw "signtool.exe failed while signing dist\dejavu-Setup.exe (exit $LASTEXITCODE)."
+            }
+          } finally {
+            if (Test-Path $pfxPath) {
+              Remove-Item $pfxPath -Force
+            }
+          }
+
+      - name: Verify Windows Authenticode signatures
+        if: steps.sign-config.outputs.mode != 'unsigned'
+        shell: pwsh
+        run: |
+          foreach ($bin in @("dist\dejavu.exe", "dist\dejavu-Setup.exe")) {
+            $sig = Get-AuthenticodeSignature -FilePath $bin
+            Write-Host ("{0}: Status={1} Subject={2}" -f $bin, $sig.Status, $sig.SignerCertificate.Subject)
+            if ($sig.Status -ne "Valid") {
+              throw "Authenticode signature verification failed for $bin (Status=$($sig.Status))."
+            }
+          }
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -111,39 +241,61 @@ jobs:
           name: dejavu-android-apk
           path: release-files
 
+      - name: Generate SHA-256 Checksums
+        run: |
+          cd release-files
+          sha256sum dejavu-Setup.exe dejavu.exe dejavu-mobile.apk > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Attest Build Provenance (SLSA)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            release-files/dejavu-Setup.exe
+            release-files/dejavu.exe
+            release-files/dejavu-mobile.apk
+
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — Collapsible M3 Butterfly Video FAB, dejavu Link v2.3 Continuity Hub & 120Hz Android Polish
+          ### dejavu __TAG__ — Open-Source Security Hardening, SLSA Provenance & 32 Curated M3 Butterfly + Cute Froggie Wallpapers
 
-          - **Collapsible Material Design 3 Butterfly Video Downloader FAB (Windows & Android)**:
-            - **Zero Video Obstruction at Rest** — Tucks cleanly into the video corner as an unobtrusive **`34×34px` sculpted Material Design 3 Butterfly logo** (100% Trusted Types CSP-safe SVG on YouTube & 1,000+ sites).
-            - **Smooth On-Click Expansion** — Click the Butterfly to expand cleanly into **`4K / 1080p / 720p` MP4**, **`320k` MP3** audio extraction, and **Send-to-Phone / PC** video timestamp handoff controls with 8× parallel byte-range acceleration & HLS `.m3u8` assembly, then smoothly auto-collapses back to the compact Butterfly badge!
-          - **Expanded `dejavu Link v2.3` Cross-Device Continuity Hub (Direct Wi-Fi LAN + TLS MQTT E2EE)**:
-            - **Send All Open Tabs** in one click, **Continue Watching** video timestamp handoff (`?t=...`), and **Remote 8× Download Handoff** directly between Windows & Android.
-            - **10-Item Shared Clipboard History**, **Retained E2EE Pinned Cross-Device Notes**, and **1-Tap Ping / Find Device** over Direct Wi-Fi LAN auto-discovery + TLS MQTT Retained AES-256 E2EE (zero rate limits).
-          - **Buttery 120Hz Android Scrolling & Zero-Overlap Edge-to-Edge Polish (`__TAG__` · `versionCode 550`)**:
-            - Eliminated mid-scroll viewport resize loops and pull-to-refresh touch hijacking for silky, locked **120Hz scrolling**.
-            - Added **IME keyboard-aware** bottom sheets & webpage viewport resizing, a **non-overlapping top-tucked scroll pill**, and a sleek refreshed **Android Material Design 3 Link Hub**.
-          - **Flagship Material Design 3 Ecosystem & Brave-Exact Shields**:
-            - **12 Material You HCT Color Themes & 24 Pure M3 / 6 Butterfly HD Wallpapers** with automatic wallpaper-to-theme harmonizing, Pixel M3 At-a-Glance MOTD card, breathable 5-icon ChromeOS toolbar, zero-scrollbar `⋮` Menu & overhauled M3 VPN popover, and Google Material Symbols Rounded icons (strictly zero CSS blur).
-            - **100%-Verified Brave-Exact Shields Engine** (`ERR_BLOCKED_BY_CLIENT` + `FrameNavigationStarting` ad-iframe cancellation, **`279K+` Windows / `108K+` Android** rules + `document_start` scriptlets, 100% d3ward & 100/100 adblock-tester, deep YouTube JSON-prune + instant ad skip + `ima3.js` surrogates, popunder blocking, farbling & Fanboy cookies), Windows Hello & Android Passkeys + Universal M3 OAuth Popups, Real Chrome MV3 Extensions & Android Userscripts, 86-country Smart VPN + 3-Hop Tor, `<1%` idle CPU, and permanent V1+V2+V3 Android signing with in-place auto-updates.
-            > **Android Upgrade Note (`__TAG__`, `versionCode 550`):** Upgrading from `v4.2.0` or earlier? Uninstall dejavu once, then install `__TAG__` — **all future updates will install automatically in-place!**
+          - **Security & Anti-False-Positive Hardening (Windows & Android)**:
+            - **Zero Windows Heuristic Red Flags** — Completely removed `WScript.Shell`, hidden `cmd.exe` self-deleting update scripts, and dynamic COM helpers; embedded full authentic Win32 PE VersionInfo metadata (`FileVersion 5.6.0.0`, `dejavu Browser`), explicit `asInvoker` UAC manifest, `/highentropyva+` & `/deterministic` compilation, and ready-to-activate **Microsoft Trusted Signing** (`azure/trusted-signing-action`) + PFX Authenticode fallback hooks.
+            - **Zero Android Dropper / Play Protect Red Flags (`__TAG__` · `versionCode 560`)** — Completely removed `REQUEST_INSTALL_PACKAGES` and `PackageInstaller` self-installing dropper permissions, hardened `android:allowBackup="false"` and system-CA `networkSecurityConfig`, and routed update notifications cleanly to official GitHub Releases while preserving permanent V1+V2+V3 release signing.
+            - **Cryptographic Open-Source Verification** — Every release publishes **`SHA256SUMS.txt`** checksums alongside GitHub **SLSA Build Provenance Attestations** proving each binary was compiled directly from this public source tree on GitHub Actions.
+          - **32 Curated Material Design 3 HD Wallpapers (`10` Butterflies + `4` Cute Froggies!)**:
+            - Added **8 brand-new HD Material Design 3 wallpapers** synced byte-identically across Windows, Android, and the official website: **4 new Butterflies** (`Amethyst Butterfly`, `Velvet Rose Butterfly`, `Honey Gold Butterfly`, `Lavender Butterfly`) and **4 new Cute Froggies** (`Emerald Froggie`, `Mint Lily Froggie`, `Matcha Froggie`, `Twilight Froggie`).
+            - Instant **12-Theme Material You HCT Auto-Harmonizing** (Dark & Light polarity) plus crisp **`All` / `Butterfly` / `Froggie` / `Dark` / `Light`** category filter chips across Windows, Android, and Web!
+          - **Flagship Material Design 3 Ecosystem, Collapsible Butterfly Video FAB & Link v2.3 Continuity**:
+            - **Collapsible `34×34px` M3 Butterfly Video Downloader FAB** (zero video obstruction at rest, expanding cleanly on click into `4K / 1080p / 720p` MP4, `320k` MP3 & Send-to-Phone/PC timestamp handoff with 8× parallel byte-range acceleration & HLS `.m3u8` assembly).
+            - **Expanded `dejavu Link v2.3` Continuity Hub** (Send All Open Tabs, Continue Watching `?t=...`, Remote 8× Download Handoff, 10-Item Shared Clipboard History, Retained E2EE Pinned Cross-Device Notes & 1-Tap Ping over Direct Wi-Fi LAN + TLS MQTT E2EE).
+            - **Buttery 120Hz Android Scrolling & Zero-Overlap Edge-to-Edge Polish** + **100%-Verified Brave-Exact Shields Engine** (`279K+` Windows / `108K+` Android rules, 100% d3ward & 100/100 adblock-tester, deep YouTube ad skip + `ima3.js` surrogates, farbling & Fanboy cookies), Windows Hello & Android Passkeys, Real Chrome MV3 Extensions, 86-country Smart VPN + 3-Hop Tor, and `<1%` idle CPU.
+            > **Android Upgrade Note (`__TAG__`, `versionCode 560`):** Upgrading from `v4.2.0` or earlier? Uninstall dejavu once, then install `__TAG__` — future releases keep the same permanent V1+V2+V3 signing key for smooth upgrades from GitHub Releases.
 
-          #### Downloads
-          - **dejavu-Setup.exe** — Windows 10/11 Guided Installer (Collapsible `34×34px` M3 Butterfly Video Downloader FAB, Expanded `dejavu Link v2.3` Continuity Hub, 12 Material You HCT Themes & 24 Pure M3 / 6 Butterfly Wallpapers, Pixel M3 At-a-Glance MOTD, 5-Icon ChromeOS Toolbar, 100%-verified Brave-Exact Shields `279K+` rules & Real Chrome MV3 Extensions)
-          - **dejavu.exe** — Windows 10/11 Portable Single-File
-          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 550` — Buttery 120Hz Scrolling & Zero-Overlap Edge-to-Edge/IME Polish, Collapsible `34×34px` M3 Butterfly Video FAB, Sleek Android M3 `dejavu Link v2.3` Continuity Hub, 12 HCT Themes & 24 Wallpapers, Brave-Exact Shields `108K+` cached rules + `document_start` scriptlets, V1+V2+V3 permanently signed, Android 8.0+)
+          #### Downloads & Verification
+          - **dejavu-Setup.exe** — Windows 10/11 Guided Installer (Security-hardened `asInvoker` + full Win32 PE VersionInfo, zero `WScript.Shell`/batch scripts, 32 Curated M3 Wallpapers including 10 Butterflies & 4 Cute Froggies, 12 Material You HCT Themes, Collapsible `34×34px` M3 Butterfly Video FAB, `dejavu Link v2.3`, Brave-Exact Shields `279K+` rules & Chrome MV3 Extensions)
+          - **dejavu.exe** — Windows 10/11 Portable Single-File (`/highentropyva+`, deterministic build, full Win32 PE VersionInfo)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 560` — Play-Protect-clean zero dropper permissions, `allowBackup="false"`, system-CA `networkSecurityConfig`, 32 M3 Wallpapers with 10 Butterflies & 4 Cute Froggies, 120Hz scrolling, Collapsible Butterfly Video FAB, `dejavu Link v2.3`, `108K+` Brave-Exact Shields, V1+V2+V3 permanently signed, Android 8.0+)
+          - **SHA256SUMS.txt** — Official SHA-256 verification checksums for all release binaries (paired with GitHub SLSA Build Provenance Attestations)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
           sed -i "s/__TAG__/$TAG/g" /tmp/release_notes.md
+          {
+            echo ""
+            echo '#### SHA-256 Checksums (`SHA256SUMS.txt`)'
+            echo '```text'
+            cat release-files/SHA256SUMS.txt
+            echo '```'
+          } >> /tmp/release_notes.md
           gh release create "$TAG" \
             --repo "${{ github.repository }}" \
             release-files/dejavu-Setup.exe \
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
-            --title "dejavu $TAG — Butterfly Video FAB, dejavu Link v2.3 Continuity Hub & 120Hz Android Polish" \
+            release-files/SHA256SUMS.txt \
+            --title "dejavu $TAG — Security Hardening, SLSA Provenance & 32 M3 Butterfly + Cute Froggie Wallpapers" \
             --notes-file /tmp/release_notes.md

@@ -5,6 +5,8 @@ using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
@@ -44,6 +46,37 @@ namespace DejavuSetup
             try { int round = 2; DwmSetWindowAttribute(hwnd, 33, ref round, sizeof(int)); } catch { }
             try { MARGINS m = new MARGINS { L = 1, R = 1, T = 1, B = 1 }; DwmExtendFrameIntoClientArea(hwnd, ref m); } catch { }
         }
+    }
+
+    [ComImport]
+    [Guid("00021401-0000-0000-C000-000000000046")]
+    internal class ShellLink
+    {
+    }
+
+    [ComImport]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("000214F9-0000-0000-C000-000000000046")]
+    internal interface IShellLinkW
+    {
+        void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszFile, int cchMaxPath, IntPtr pfd, uint fFlags);
+        void GetIDList(out IntPtr ppidl);
+        void SetIDList(IntPtr pidl);
+        void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszName, int cchMaxName);
+        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string pszName);
+        void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszDir, int cchMaxPath);
+        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string pszDir);
+        void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszArgs, int cchMaxPath);
+        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string pszArgs);
+        void GetHotkey(out short pwHotkey);
+        void SetHotkey(short wHotkey);
+        void GetShowCmd(out int piShowCmd);
+        void SetShowCmd(int iShowCmd);
+        void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszIconPath, int cchIconPath, out int piIcon);
+        void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
+        void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, uint dwReserved);
+        void Resolve(IntPtr hwnd, uint fFlags);
+        void SetPath([MarshalAs(UnmanagedType.LPWStr)] string pszFile);
     }
 
     internal static class SetupProgram
@@ -304,20 +337,38 @@ namespace DejavuSetup
             try { _wv.CoreWebView2.PostWebMessageAsJson(_json.Serialize(obj)); } catch { }
         }
 
+        private static void CloseRunningBrowserInstances()
+        {
+            try
+            {
+                foreach (Process p in Process.GetProcessesByName("dejavu"))
+                {
+                    try
+                    {
+                        if (!p.HasExited)
+                        {
+                            p.CloseMainWindow();
+                            if (!p.WaitForExit(1500) && !p.HasExited)
+                            {
+                                p.Kill();
+                                p.WaitForExit(1500);
+                            }
+                        }
+                    }
+                    catch { }
+                    finally
+                    {
+                        try { p.Dispose(); } catch { }
+                    }
+                }
+            }
+            catch { }
+        }
+
         private async Task PerformInstallAsync(bool createDesktop, bool createStartMenu)
         {
             Post(new Dictionary<string, object> { { "type", "progress" }, { "percent", 18 }, { "status", "Closing running instances..." } });
-            await Task.Run(() =>
-            {
-                try
-                {
-                    foreach (Process p in Process.GetProcessesByName("dejavu"))
-                    {
-                        try { p.Kill(); p.WaitForExit(1500); } catch { }
-                    }
-                }
-                catch { }
-            });
+            await Task.Run(() => CloseRunningBrowserInstances());
             await Task.Delay(220);
 
             Post(new Dictionary<string, object> { { "type", "progress" }, { "percent", 48 }, { "status", "Installing dejavu browser..." } });
@@ -368,8 +419,8 @@ namespace DejavuSetup
                     if (key != null)
                     {
                         key.SetValue("DisplayName", "dejavu");
-                        key.SetValue("DisplayVersion", "5.5.0");
-                        key.SetValue("Publisher", "dejavu");
+                        key.SetValue("DisplayVersion", "5.6.0");
+                        key.SetValue("Publisher", "dejavu Browser");
                         key.SetValue("DisplayIcon", iconPath);
                         key.SetValue("InstallLocation", InstallDir);
                         key.SetValue("UninstallString", "\"" + uninstallerPath + "\" --uninstall");
@@ -391,14 +442,7 @@ namespace DejavuSetup
             Post(new Dictionary<string, object> { { "type", "progress" }, { "percent", 35 }, { "status", "Removing dejavu..." } });
             await Task.Run(() =>
             {
-                try
-                {
-                    foreach (Process p in Process.GetProcessesByName("dejavu"))
-                    {
-                        try { p.Kill(); p.WaitForExit(1500); } catch { }
-                    }
-                }
-                catch { }
+                CloseRunningBrowserInstances();
 
                 try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "dejavu.lnk")); } catch { }
                 try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), "dejavu.lnk")); } catch { }
@@ -413,18 +457,25 @@ namespace DejavuSetup
 
         private static void CreateShortcut(string lnkPath, string targetPath, string iconPath, string description)
         {
+            IShellLinkW link = null;
             try
             {
-                Type t = Type.GetTypeFromProgID("WScript.Shell");
-                dynamic shell = Activator.CreateInstance(t);
-                dynamic sc = shell.CreateShortcut(lnkPath);
-                sc.TargetPath = targetPath;
-                sc.WorkingDirectory = Path.GetDirectoryName(targetPath);
-                sc.IconLocation = iconPath + ",0";
-                sc.Description = description;
-                sc.Save();
+                link = (IShellLinkW)new ShellLink();
+                link.SetPath(targetPath);
+                link.SetWorkingDirectory(Path.GetDirectoryName(targetPath));
+                link.SetIconLocation(iconPath, 0);
+                link.SetDescription(description);
+                IPersistFile persistFile = (IPersistFile)link;
+                persistFile.Save(lnkPath, false);
             }
             catch { }
+            finally
+            {
+                if (link != null)
+                {
+                    try { Marshal.FinalReleaseComObject(link); } catch { }
+                }
+            }
         }
     }
 }

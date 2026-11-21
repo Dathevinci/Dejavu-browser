@@ -1680,6 +1680,23 @@ namespace DejavuBrowser
                 case "wp-m3-mint-atelier.jpg": accent = "aurora"; mode = "light"; return true;
                 case "wp-m3-butterfly-coral.jpg": accent = "coral"; mode = "light"; return true;
                 case "wp-m3-butterfly-emerald.jpg": accent = "emerald"; mode = "dark"; return true;
+                // 8 new v5.6.0 Butterfly & Cute Froggie Material Design 3 wallpapers
+                case "wp-m3-butterfly-amethyst.jpg":
+                case "butterfly-amethyst": accent = "amethyst"; mode = "dark"; return true;
+                case "wp-m3-butterfly-rose.jpg":
+                case "butterfly-rose": accent = "rose"; mode = "dark"; return true;
+                case "wp-m3-butterfly-gold.jpg":
+                case "butterfly-gold": accent = "gold"; mode = "dark"; return true;
+                case "wp-m3-butterfly-lavender.jpg":
+                case "butterfly-lavender": accent = "lavender"; mode = "light"; return true;
+                case "wp-m3-froggie-emerald.jpg":
+                case "froggie-emerald": accent = "emerald"; mode = "dark"; return true;
+                case "wp-m3-froggie-mint.jpg":
+                case "froggie-mint": accent = "aurora"; mode = "light"; return true;
+                case "wp-m3-froggie-lime.jpg":
+                case "froggie-lime": accent = "lime"; mode = "light"; return true;
+                case "wp-m3-froggie-sage.jpg":
+                case "froggie-sage": accent = "aurora"; mode = "dark"; return true;
                 default:
                     return false;
             }
@@ -7225,7 +7242,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.5.0 defaults", "success");
+            PushShellToast("Settings restored to v5.6.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()

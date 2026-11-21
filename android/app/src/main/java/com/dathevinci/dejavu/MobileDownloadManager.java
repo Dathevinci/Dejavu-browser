@@ -62,7 +62,7 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * AntDM-Style 8-Thread Accelerated Turbo Download Manager + Native YouTube InnerTube
  * Multi-Client Quality/Audio Resolver + Android MediaMuxer + HLS .m3u8 Assembler
- * for dejavu Mobile v5.5.0.
+ * for dejavu Mobile v5.6.0.
  */
 public class MobileDownloadManager {
     public interface Listener {
@@ -2717,7 +2717,7 @@ public class MobileDownloadManager {
     }
 
     /**
-     * Zero-Idle-CPU Isolated Shadow DOM Collapsible Material Design 3 Butterfly Video/Audio Downloader FAB (v5.5.0).
+     * Zero-Idle-CPU Isolated Shadow DOM Collapsible Material Design 3 Butterfly Video/Audio Downloader FAB (v5.6.0).
      * - Default Collapsed Rest State: unobtrusive 36x36px circular M3 Tonal FAB with sculpted dejavu Butterfly SVG
      *   (100% document.createElementNS, ZERO .innerHTML — YouTube Trusted Types CSP safe, ZERO CSS blur, ZERO setInterval!).
      * - Tap Butterfly -> smoothly extends leftward into [Butterfly | Download · 1080p 8x | chevron | close] + opens M3 quality/audio

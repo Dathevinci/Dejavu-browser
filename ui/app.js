@@ -1,6 +1,6 @@
 /**
- * dejavu v5.5.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
- * 12 Official HCT Material You Themes, 24 Pure M3 & Butterfly Wallpapers, Auto Wallpaper-to-Theme,
+ * dejavu v5.6.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * 12 Official HCT Material You Themes, 32 Pure M3, Butterfly & Froggie Wallpapers, Auto Wallpaper-to-Theme,
  * Redesigned Pixel At-a-Glance Message of the Day Card, Clean 5-Control ChromeOS Toolbar,
  * Zero-Glitch 120Hz Tab Strip, Brave-Grade Shields, Real-Time dejavu Link Hub & 8x Turbo Downloader.
  */
@@ -569,44 +569,80 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.5.0 — 24 HD + 1 Live = 25 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.6.0 — 32 HD + 1 Live = 33 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 18 Sculptural / Architectural Material Design 3 HD Wallpapers (10 Dark, 8 Light)
-    { id: 'art:wp-m3-amethyst.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'amethyst', name: 'Obsidian Monolith', desc: 'Deep plum-obsidian ceramic monoliths & sweeping lavender arch', img: 'https://dejavu.local/wp-m3-amethyst.jpg' },
-    { id: 'art:wp-m3-pixel-blue.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'sapphire', name: 'Cobalt Ribbons', desc: 'Midnight cobalt slate & Pixel periwinkle carved sandstone waves', img: 'https://dejavu.local/wp-m3-pixel-blue.jpg' },
-    { id: 'art:wp-m3-cobalt-prism.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'indigo', name: 'Cobalt Prism', desc: 'Deep royal indigo stoneware prisms & midnight slate geometry', img: 'https://dejavu.local/wp-m3-cobalt-prism.jpg' },
-    { id: 'art:wp-m3-sage.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'aurora', name: 'Eucalyptus Calm', desc: 'Dark forest plaster curved alcove & matte sage stoneware spheres', img: 'https://dejavu.local/wp-m3-sage.jpg' },
-    { id: 'art:wp-m3-jade-terrace.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'emerald', name: 'Jade Terrace', desc: 'Sculptural dark botanical jade terraces & matte emerald plaster', img: 'https://dejavu.local/wp-m3-jade-terrace.jpg' },
-    { id: 'art:wp-m3-crimson-fold.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'crimson', name: 'Crimson Fold', desc: 'Deep velvet crimson-obsidian ceramic folds & subtle ruby arch', img: 'https://dejavu.local/wp-m3-crimson-fold.jpg' },
-    { id: 'art:wp-m3-blossom.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'rose', name: 'Velvet Petals', desc: 'Velvet espresso & dusty terracotta-rose Pixel Swirling Petals ceramic', img: 'https://dejavu.local/wp-m3-blossom.jpg' },
-    { id: 'art:wp-m3-honey.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'gold', name: 'Ochre Solitude', desc: 'Warm obsidian-espresso & burnished matte amber Bauhaus arcs', img: 'https://dejavu.local/wp-m3-honey.jpg' },
-    { id: 'art:wp-m3-indigo-dune.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'indigo', name: 'Indigo Dune', desc: 'Deep twilight indigo-slate matte sculpted sandstone dunes & crescent disc', img: 'https://dejavu.local/wp-m3-indigo-dune.jpg' },
-    { id: 'art:wp-m3-sienna-arch.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'gold', name: 'Sienna Arch', desc: 'Rich dark espresso-sienna minimalist recessed plaster arches in amber light', img: 'https://dejavu.local/wp-m3-sienna-arch.jpg' },
-    { id: 'art:wp-m3-porcelain.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'amethyst', name: 'Porcelain Steps', desc: 'Sunlit alabaster stepped terraces & soft lavender-stone curved wall', img: 'https://dejavu.local/wp-m3-porcelain.jpg' },
-    { id: 'art:wp-m3-lavender-mist.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'lavender', name: 'Lavender Mist', desc: 'Airy orchid-white matte arches & pale lavender ceramic ribbons', img: 'https://dejavu.local/wp-m3-lavender-mist.jpg' },
-    { id: 'art:wp-m3-mint-atelier.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'aurora', name: 'Mint Atelier', desc: 'Bright gallery alabaster & cool seafoam-mint sculpted reliefs', img: 'https://dejavu.local/wp-m3-mint-atelier.jpg' },
-    { id: 'art:wp-m3-coral-bloom.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'coral', name: 'Coral Bloom', desc: 'Sunlit porcelain ivory & soft sunset-coral ceramic petals', img: 'https://dejavu.local/wp-m3-coral-bloom.jpg' },
-    { id: 'art:wp-m3-meadow.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'aurora', name: 'Jade Pebbles', desc: 'Airy off-white porcelain & organic matte stoneware pebbles with celadon hill', img: 'https://dejavu.local/wp-m3-meadow.jpg' },
-    { id: 'art:wp-m3-blush.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'rose', name: 'Terracotta Ribbon', desc: 'Warm sunlit ivory plaster & minimalist folded clay-blush ceramic wave', img: 'https://dejavu.local/wp-m3-blush.jpg' },
-    { id: 'art:wp-m3-sky-terrace.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'sapphire', name: 'Sky Terrace', desc: 'Sunlit alabaster & pale sky-periwinkle stepped ceramic gallery terrace walls', img: 'https://dejavu.local/wp-m3-sky-terrace.jpg' },
-    { id: 'art:wp-m3-warm-limestone.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'gold', name: 'Warm Limestone', desc: 'Sunlit warm ivory & pale honey-travertine curved monoliths with river pebble', img: 'https://dejavu.local/wp-m3-warm-limestone.jpg' },
-    // 6 Material Design 3 Butterfly Ceramic Relief Editions (3 Dark, 3 Light)
-    { id: 'art:wp-m3-butterfly-obsidian.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Dark', seed: 'amethyst', name: 'Amethyst Origami', desc: 'Sculptural matte lavender-plum stoneware origami butterfly on obsidian ground', img: 'https://dejavu.local/wp-m3-butterfly-obsidian.jpg' },
-    { id: 'art:wp-m3-butterfly-cobalt.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Dark', seed: 'sapphire', name: 'Pixel Morpho', desc: 'Minimalist folded periwinkle & cobalt-slate bisque ceramic butterfly wings', img: 'https://dejavu.local/wp-m3-butterfly-cobalt.jpg' },
-    { id: 'art:wp-m3-butterfly-emerald.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Dark', seed: 'emerald', name: 'Emerald Origami', desc: 'Deep obsidian gallery stoneware & sculptural botanical jade origami butterfly', img: 'https://dejavu.local/wp-m3-butterfly-emerald.jpg' },
-    { id: 'art:wp-m3-butterfly-porcelain.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Light', seed: 'amethyst', name: 'Porcelain Wings', desc: 'Sunlit alabaster & pale lavender folded paper-ceramic butterfly gallery relief', img: 'https://dejavu.local/wp-m3-butterfly-porcelain.jpg' },
-    { id: 'art:wp-m3-butterfly-sage.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Light', seed: 'aurora', name: 'Botanical Sage', desc: 'Matte celadon-sage stoneware origami butterfly perched on off-white porcelain', img: 'https://dejavu.local/wp-m3-butterfly-sage.jpg' },
-    { id: 'art:wp-m3-butterfly-coral.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Light', seed: 'coral', name: 'Coral Origami', desc: 'Sunlit warm porcelain origami butterfly with blush-coral ceramic wings', img: 'https://dejavu.local/wp-m3-butterfly-coral.jpg' },
+    { id: 'art:wp-m3-amethyst.jpg', slug: 'amethyst', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Dark', seed: 'amethyst', name: 'Obsidian Monolith', desc: 'Deep plum-obsidian ceramic monoliths & sweeping lavender arch', img: 'https://dejavu.local/wp-m3-amethyst.jpg' },
+    { id: 'art:wp-m3-pixel-blue.jpg', slug: 'pixel-blue', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Dark', seed: 'sapphire', name: 'Cobalt Ribbons', desc: 'Midnight cobalt slate & Pixel periwinkle carved sandstone waves', img: 'https://dejavu.local/wp-m3-pixel-blue.jpg' },
+    { id: 'art:wp-m3-cobalt-prism.jpg', slug: 'cobalt-prism', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Dark', seed: 'indigo', name: 'Cobalt Prism', desc: 'Deep royal indigo stoneware prisms & midnight slate geometry', img: 'https://dejavu.local/wp-m3-cobalt-prism.jpg' },
+    { id: 'art:wp-m3-sage.jpg', slug: 'sage', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Dark', seed: 'aurora', name: 'Eucalyptus Calm', desc: 'Dark forest plaster curved alcove & matte sage stoneware spheres', img: 'https://dejavu.local/wp-m3-sage.jpg' },
+    { id: 'art:wp-m3-jade-terrace.jpg', slug: 'jade-terrace', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Dark', seed: 'emerald', name: 'Jade Terrace', desc: 'Sculptural dark botanical jade terraces & matte emerald plaster', img: 'https://dejavu.local/wp-m3-jade-terrace.jpg' },
+    { id: 'art:wp-m3-crimson-fold.jpg', slug: 'crimson-fold', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Dark', seed: 'crimson', name: 'Crimson Fold', desc: 'Deep velvet crimson-obsidian ceramic folds & subtle ruby arch', img: 'https://dejavu.local/wp-m3-crimson-fold.jpg' },
+    { id: 'art:wp-m3-blossom.jpg', slug: 'blossom', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Dark', seed: 'rose', name: 'Velvet Petals', desc: 'Velvet espresso & dusty terracotta-rose Pixel Swirling Petals ceramic', img: 'https://dejavu.local/wp-m3-blossom.jpg' },
+    { id: 'art:wp-m3-honey.jpg', slug: 'honey', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Dark', seed: 'gold', name: 'Ochre Solitude', desc: 'Warm obsidian-espresso & burnished matte amber Bauhaus arcs', img: 'https://dejavu.local/wp-m3-honey.jpg' },
+    { id: 'art:wp-m3-indigo-dune.jpg', slug: 'indigo-dune', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Dark', seed: 'indigo', name: 'Indigo Dune', desc: 'Deep twilight indigo-slate matte sculpted sandstone dunes & crescent disc', img: 'https://dejavu.local/wp-m3-indigo-dune.jpg' },
+    { id: 'art:wp-m3-sienna-arch.jpg', slug: 'sienna-arch', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Dark', seed: 'gold', name: 'Sienna Arch', desc: 'Rich dark espresso-sienna minimalist recessed plaster arches in amber light', img: 'https://dejavu.local/wp-m3-sienna-arch.jpg' },
+    { id: 'art:wp-m3-porcelain.jpg', slug: 'porcelain', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Light', seed: 'amethyst', name: 'Porcelain Steps', desc: 'Sunlit alabaster stepped terraces & soft lavender-stone curved wall', img: 'https://dejavu.local/wp-m3-porcelain.jpg' },
+    { id: 'art:wp-m3-lavender-mist.jpg', slug: 'lavender-mist', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Light', seed: 'lavender', name: 'Lavender Mist', desc: 'Airy orchid-white matte arches & pale lavender ceramic ribbons', img: 'https://dejavu.local/wp-m3-lavender-mist.jpg' },
+    { id: 'art:wp-m3-mint-atelier.jpg', slug: 'mint-atelier', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Light', seed: 'aurora', name: 'Mint Atelier', desc: 'Bright gallery alabaster & cool seafoam-mint sculpted reliefs', img: 'https://dejavu.local/wp-m3-mint-atelier.jpg' },
+    { id: 'art:wp-m3-coral-bloom.jpg', slug: 'coral-bloom', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Light', seed: 'coral', name: 'Coral Bloom', desc: 'Sunlit porcelain ivory & soft sunset-coral ceramic petals', img: 'https://dejavu.local/wp-m3-coral-bloom.jpg' },
+    { id: 'art:wp-m3-meadow.jpg', slug: 'meadow', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Light', seed: 'aurora', name: 'Jade Pebbles', desc: 'Airy off-white porcelain & organic matte stoneware pebbles with celadon hill', img: 'https://dejavu.local/wp-m3-meadow.jpg' },
+    { id: 'art:wp-m3-blush.jpg', slug: 'blush', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Light', seed: 'rose', name: 'Terracotta Ribbon', desc: 'Warm sunlit ivory plaster & minimalist folded clay-blush ceramic wave', img: 'https://dejavu.local/wp-m3-blush.jpg' },
+    { id: 'art:wp-m3-sky-terrace.jpg', slug: 'sky-terrace', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Light', seed: 'sapphire', name: 'Sky Terrace', desc: 'Sunlit alabaster & pale sky-periwinkle stepped ceramic gallery terrace walls', img: 'https://dejavu.local/wp-m3-sky-terrace.jpg' },
+    { id: 'art:wp-m3-warm-limestone.jpg', slug: 'warm-limestone', cat: 'art', m3: true, butterfly: false, froggie: false, mode: 'Light', seed: 'gold', name: 'Warm Limestone', desc: 'Sunlit warm ivory & pale honey-travertine curved monoliths with river pebble', img: 'https://dejavu.local/wp-m3-warm-limestone.jpg' },
+    // 10 Material Design 3 Butterfly Ceramic Relief Editions (6 Dark, 4 Light)
+    { id: 'art:wp-m3-butterfly-obsidian.jpg', slug: 'butterfly-obsidian', cat: 'art', m3: true, butterfly: true, froggie: false, mode: 'Dark', seed: 'amethyst', name: 'Amethyst Origami', desc: 'Sculptural matte lavender-plum stoneware origami butterfly on obsidian ground', img: 'https://dejavu.local/wp-m3-butterfly-obsidian.jpg' },
+    { id: 'art:wp-m3-butterfly-cobalt.jpg', slug: 'butterfly-cobalt', cat: 'art', m3: true, butterfly: true, froggie: false, mode: 'Dark', seed: 'sapphire', name: 'Pixel Morpho', desc: 'Minimalist folded periwinkle & cobalt-slate bisque ceramic butterfly wings', img: 'https://dejavu.local/wp-m3-butterfly-cobalt.jpg' },
+    { id: 'art:wp-m3-butterfly-emerald.jpg', slug: 'butterfly-emerald', cat: 'art', m3: true, butterfly: true, froggie: false, mode: 'Dark', seed: 'emerald', name: 'Emerald Origami', desc: 'Deep obsidian gallery stoneware & sculptural botanical jade origami butterfly', img: 'https://dejavu.local/wp-m3-butterfly-emerald.jpg' },
+    { id: 'art:wp-m3-butterfly-amethyst.jpg', slug: 'butterfly-amethyst', cat: 'art', m3: true, butterfly: true, froggie: false, mode: 'Dark', seed: 'amethyst', name: 'Amethyst Butterfly', desc: 'Geometric matte amethyst & lilac origami butterfly on obsidian ceramic rings', img: 'https://dejavu.local/wp-m3-butterfly-amethyst.jpg' },
+    { id: 'art:wp-m3-butterfly-rose.jpg', slug: 'butterfly-rose', cat: 'art', m3: true, butterfly: true, froggie: false, mode: 'Dark', seed: 'rose', name: 'Velvet Rose Butterfly', desc: 'Layered blush-rose ceramic swallowtail gliding over dark velvet plum ribbons', img: 'https://dejavu.local/wp-m3-butterfly-rose.jpg' },
+    { id: 'art:wp-m3-butterfly-gold.jpg', slug: 'butterfly-gold', cat: 'art', m3: true, butterfly: true, froggie: false, mode: 'Dark', seed: 'gold', name: 'Honey Gold Butterfly', desc: 'Sculpted honey-gold ceramic butterfly nestled between bronze-obsidian waves', img: 'https://dejavu.local/wp-m3-butterfly-gold.jpg' },
+    { id: 'art:wp-m3-butterfly-porcelain.jpg', slug: 'butterfly-porcelain', cat: 'art', m3: true, butterfly: true, froggie: false, mode: 'Light', seed: 'amethyst', name: 'Porcelain Wings', desc: 'Sunlit alabaster & pale lavender folded paper-ceramic butterfly gallery relief', img: 'https://dejavu.local/wp-m3-butterfly-porcelain.jpg' },
+    { id: 'art:wp-m3-butterfly-sage.jpg', slug: 'butterfly-sage', cat: 'art', m3: true, butterfly: true, froggie: false, mode: 'Light', seed: 'aurora', name: 'Botanical Sage', desc: 'Matte celadon-sage stoneware origami butterfly perched on off-white porcelain', img: 'https://dejavu.local/wp-m3-butterfly-sage.jpg' },
+    { id: 'art:wp-m3-butterfly-coral.jpg', slug: 'butterfly-coral', cat: 'art', m3: true, butterfly: true, froggie: false, mode: 'Light', seed: 'coral', name: 'Coral Origami', desc: 'Sunlit warm porcelain origami butterfly with blush-coral ceramic wings', img: 'https://dejavu.local/wp-m3-butterfly-coral.jpg' },
+    { id: 'art:wp-m3-butterfly-lavender.jpg', slug: 'butterfly-lavender', cat: 'art', m3: true, butterfly: true, froggie: false, mode: 'Light', seed: 'lavender', name: 'Lavender Butterfly', desc: 'Minimalist orchid-lavender folded ceramic butterfly above pastel lilac waves', img: 'https://dejavu.local/wp-m3-butterfly-lavender.jpg' },
+    // 4 Cute Material Design 3 Froggie Clay Editions (2 Dark, 2 Light)
+    { id: 'art:wp-m3-froggie-emerald.jpg', slug: 'froggie-emerald', cat: 'art', m3: true, butterfly: false, froggie: true, mode: 'Dark', seed: 'emerald', name: 'Emerald Froggie', desc: 'Rosy-cheeked emerald clay froggie peeking from a forest-jade lily saucer with dewdrops', img: 'https://dejavu.local/wp-m3-froggie-emerald.jpg' },
+    { id: 'art:wp-m3-froggie-mint.jpg', slug: 'froggie-mint', cat: 'art', m3: true, butterfly: false, froggie: true, mode: 'Light', seed: 'aurora', name: 'Mint Lily Froggie', desc: 'Pastel mint-ceramic froggie perched on a sunlit porcelain lily pad amid calm ripples', img: 'https://dejavu.local/wp-m3-froggie-mint.jpg' },
+    { id: 'art:wp-m3-froggie-lime.jpg', slug: 'froggie-lime', cat: 'art', m3: true, butterfly: false, froggie: true, mode: 'Light', seed: 'lime', name: 'Matcha Froggie', desc: 'Cheerful matcha-lime clay froggie holding a leaf umbrella on sunlit sage hills', img: 'https://dejavu.local/wp-m3-froggie-lime.jpg' },
+    { id: 'art:wp-m3-froggie-sage.jpg', slug: 'froggie-sage', cat: 'art', m3: true, butterfly: false, froggie: true, mode: 'Dark', seed: 'aurora', name: 'Twilight Froggie', desc: 'Sleepy celadon-sage clay froggie napping in a teal lotus petal under a twilight firefly', img: 'https://dejavu.local/wp-m3-froggie-sage.jpg' },
     // 1 Adaptive Material You Live Theme
-    { id: 'live:m3-expressive', cat: 'live', m3: true, butterfly: false, mode: 'Adaptive', name: 'Material You Live', desc: 'Adaptive tonal shapes reacting to all 12 Dynamic Color Seeds & Dark/Light mode', grad: 'linear-gradient(135deg, #4f378b 0%, #211f26 52%, #633b48 100%)' }
+    { id: 'live:m3-expressive', slug: 'm3-expressive', cat: 'live', m3: true, butterfly: false, froggie: false, mode: 'Adaptive', name: 'Material You Live', desc: 'Adaptive tonal shapes reacting to all 12 Dynamic Color Seeds & Dark/Light mode', grad: 'linear-gradient(135deg, #4f378b 0%, #211f26 52%, #633b48 100%)' }
   ];
 
   const VALID_WALLPAPER_IDS = new Set(WALLPAPER_CATALOG.map((w) => w.id));
+  const WALLPAPER_SLUG_MAP = new Map(WALLPAPER_CATALOG.filter((w) => w.slug).map((w) => [w.slug, w.id]));
+  const WALLPAPER_THEME_MAP = Object.freeze(
+    WALLPAPER_CATALOG.reduce((acc, w) => {
+      if (w.seed && (w.mode === 'Dark' || w.mode === 'Light')) {
+        const entry = { accentColor: w.seed, appearanceMode: w.mode.toLowerCase() };
+        acc[w.id] = entry;
+        if (w.slug) acc[w.slug] = entry;
+      }
+      return acc;
+    }, {})
+  );
+  const LIGHT_WALLPAPERS = new Set(
+    WALLPAPER_CATALOG.filter((w) => (w.mode || '').toLowerCase() === 'light').reduce((arr, w) => {
+      arr.push(w.id);
+      if (w.slug) arr.push(w.slug);
+      return arr;
+    }, [])
+  );
+
   function normalizeWallpaperId(wp) {
     if (!wp || typeof wp !== 'string') return DEFAULT_WALLPAPER_ID;
-    if (wp.startsWith('custom')) return wp;
-    if (VALID_WALLPAPER_IDS.has(wp)) return wp;
+    const raw = wp.trim();
+    if (raw.startsWith('custom')) return raw;
+    if (VALID_WALLPAPER_IDS.has(raw)) return raw;
+    if (WALLPAPER_SLUG_MAP.has(raw)) return WALLPAPER_SLUG_MAP.get(raw);
+    const asArt = raw.startsWith('art:')
+      ? raw
+      : (raw.startsWith('wp-m3-')
+        ? `art:${raw}${raw.endsWith('.jpg') ? '' : '.jpg'}`
+        : `art:wp-m3-${raw}${raw.endsWith('.jpg') ? '' : '.jpg'}`);
+    if (VALID_WALLPAPER_IDS.has(asArt)) return asArt;
     return DEFAULT_WALLPAPER_ID;
   }
 
@@ -620,12 +656,14 @@
   function syncWallpaperFilterCounts() {
     const total = WALLPAPER_CATALOG.length;
     const bfCnt = WALLPAPER_CATALOG.filter((w) => !!w.butterfly).length;
+    const frogCnt = WALLPAPER_CATALOG.filter((w) => !!w.froggie).length;
     const darkCnt = WALLPAPER_CATALOG.filter((w) => (w.mode || '').toLowerCase() === 'dark').length;
     const lightCnt = WALLPAPER_CATALOG.filter((w) => (w.mode || '').toLowerCase() === 'light').length;
     const liveCnt = WALLPAPER_CATALOG.filter((w) => w.cat === 'live').length;
     const labels = {
       all: `All (${total})`,
-      butterfly: `Butterfly M3 (${bfCnt})`,
+      butterfly: `Butterfly (${bfCnt})`,
+      froggie: `Froggie (${frogCnt})`,
       dark: `Dark (${darkCnt})`,
       light: `Light (${lightCnt})`,
       live: `Live (${liveCnt})`
@@ -634,7 +672,11 @@
     if (storeTabs) {
       storeTabs.querySelectorAll('[data-cat]').forEach((btn) => {
         const key = btn.dataset.cat;
-        if (labels[key]) btn.textContent = labels[key];
+        const span = btn.querySelector('span');
+        if (labels[key]) {
+          if (span) span.textContent = labels[key];
+          else btn.textContent = labels[key];
+        }
       });
     }
     if (optWpFilter) {
@@ -810,7 +852,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.5.0',
+    appVersion: bootData.appVersion || '5.6.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -1878,7 +1920,7 @@
   scName.addEventListener('keydown', (e) => { if (e.key === 'Enter') scUrl.focus(); });
 
   // =========================================================================
-  // Material Design 3 Wallpaper Gallery (24 Pure M3 HD + 1 Live = 25 Themes)
+  // Material Design 3 Wallpaper Gallery (32 Pure M3 HD + 1 Live = 33 Themes)
   // =========================================================================
   function isAutoThemeEnabled() {
     if (state.browserOptions && typeof state.browserOptions.autoThemeFromWallpaper === 'boolean') {
@@ -1912,6 +1954,7 @@
     const items = WALLPAPER_CATALOG.filter((item) => {
       if (catFilter === 'all') return true;
       if (catFilter === 'butterfly') return !!item.butterfly;
+      if (catFilter === 'froggie') return !!item.froggie;
       if (catFilter === 'dark') return (item.mode || '').toLowerCase() === 'dark';
       if (catFilter === 'light') return (item.mode || '').toLowerCase() === 'light';
       if (catFilter === 'live') return item.cat === 'live';
@@ -1933,7 +1976,16 @@
       const isSelected = item.isCustom ? activeWp.startsWith('custom') : (activeWp === item.id);
       const card = document.createElement('button');
       card.type = 'button';
-      card.className = 'wp-card' + (isSelected ? ' active' : '') + (item.m3 ? ' is-m3' : '') + (item.butterfly ? ' is-butterfly' : '');
+      card.className = 'wp-card'
+        + (isSelected ? ' active' : '')
+        + (item.m3 ? ' is-m3' : '')
+        + (item.butterfly ? ' is-butterfly' : '')
+        + (item.froggie ? ' is-froggie' : '');
+      card.dataset.wpId = item.id;
+      if (item.slug) card.dataset.wpSlug = item.slug;
+      card.dataset.wpCat = item.froggie ? 'froggie' : (item.butterfly ? 'butterfly' : (item.cat === 'live' ? 'live' : 'art'));
+      if (item.mode) card.dataset.wpMode = item.mode.toLowerCase();
+      if (item.seed) card.dataset.wpSeed = item.seed;
 
       const thumb = document.createElement('div');
       thumb.className = 'wp-thumb';
@@ -1956,6 +2008,7 @@
       const badge = document.createElement('span');
       badge.className = 'wp-badge';
       if (item.isCustom) badge.textContent = 'Custom';
+      else if (item.froggie) badge.textContent = `Froggie M3 · ${item.mode || 'HD'}`;
       else if (item.butterfly) badge.textContent = `Butterfly M3 · ${item.mode || 'HD'}`;
       else if (item.cat === 'live') badge.textContent = 'Material You · Live';
       else badge.textContent = `Material 3 · ${item.mode || 'HD'}`;
@@ -1980,14 +2033,15 @@
         renderWallpaperGrid();
         if (state.settingsOpen && activeSettingsPane === 'appearance') renderSettingsWallpaperGrid();
         const autoMatch = isAutoThemeEnabled() && !state.isPrivateWindow;
-        if (autoMatch && item.seed && (item.mode === 'Dark' || item.mode === 'Light')) {
-          const nextMode = item.mode.toLowerCase() === 'light' ? 'light' : 'dark';
+        const mappedTheme = WALLPAPER_THEME_MAP[item.id];
+        if (autoMatch && mappedTheme) {
+          const nextMode = LIGHT_WALLPAPERS.has(item.id) ? 'light' : mappedTheme.appearanceMode;
           state.browserOptions = Object.assign({}, state.browserOptions || {}, {
-            accentColor: item.seed,
+            accentColor: mappedTheme.accentColor,
             appearanceMode: nextMode
           });
           applyBrowserOptions(state.browserOptions);
-          send({ type: 'setWallpaper', wallpaper: item.id, accentColor: item.seed, appearanceMode: nextMode });
+          send({ type: 'setWallpaper', wallpaper: item.id, accentColor: mappedTheme.accentColor, appearanceMode: nextMode });
         } else if (item.isCustom) {
           lastSampledCustomWpId = '';
           send({ type: 'setWallpaper', wallpaper: item.id, skipAutoTheme: !autoMatch });
@@ -2008,7 +2062,7 @@
   // =========================================================================
   const SETTINGS_PANE_META = {
     you: { title: 'You and Google', sub: 'Manage your Google Account, Main Profile, and simultaneous Chrome-style profile windows' },
-    appearance: { title: 'Appearance & Material You', sub: '12 HCT Dynamic Color themes, auto wallpaper matching, 24 Pure M3 wallpapers, typography & zoom' },
+    appearance: { title: 'Appearance & Material You', sub: '12 HCT Dynamic Color themes, auto wallpaper matching, 32 HD M3, Butterfly & Froggie wallpapers, typography & zoom' },
     privacy: { title: 'Privacy & Security', sub: 'Brave-Grade Shields, fingerprinting defense, cookie notice blocking, Clear Browsing Data & permissions' },
     search: { title: 'Search Engine', sub: 'Choose your default search provider, custom search template & address bar suggestions' },
     tabs: { title: 'Tabs & On Startup', sub: 'Startup session restore, Homepage, Memory Saver inactivity timer & keyboard shortcuts' },
@@ -2016,7 +2070,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.5.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.6.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2307,7 +2361,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.5.0';
+    const ver = state.appVersion || '5.6.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;

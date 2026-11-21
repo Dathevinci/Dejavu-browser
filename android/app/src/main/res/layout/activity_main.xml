@@ -521,7 +521,7 @@
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:maxLines="2"
-            android:text="A new version of dejavu Mobile is ready to install"
+            android:text="A new signed release of dejavu Mobile is ready on GitHub Releases"
             android:textColor="@color/ink_muted"
             android:textSize="12.5sp" />
 
@@ -564,7 +564,7 @@
                 android:gravity="center"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:text="Update Now"
+                android:text="Download Update"
                 android:textColor="@color/amethyst_bright"
                 android:textSize="12.5sp"
                 android:textStyle="bold" />

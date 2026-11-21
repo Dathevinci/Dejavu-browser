@@ -1,5 +1,5 @@
 /**
- * dejavu v5.5.0 — Zero-Idle-CPU Pure Material Design 3 Wallpaper Engine
+ * dejavu v5.6.0 — Zero-Idle-CPU Pure Material Design 3 Wallpaper Engine
  * - Static HD wallpapers (`art:wp-m3-*` & `custom`): single-shot draw on load, resize,
  *   or option change — STRICTLY ZERO continuous requestAnimationFrame loop (0.0% idle CPU!).
  * - Single adaptive live theme (`live:m3-expressive`): reacts cleanly to all 12 Material You
@@ -35,7 +35,15 @@
     'art:wp-m3-butterfly-emerald.jpg',
     'art:wp-m3-butterfly-porcelain.jpg',
     'art:wp-m3-butterfly-sage.jpg',
-    'art:wp-m3-butterfly-coral.jpg'
+    'art:wp-m3-butterfly-coral.jpg',
+    'art:wp-m3-butterfly-amethyst.jpg',
+    'art:wp-m3-butterfly-rose.jpg',
+    'art:wp-m3-butterfly-gold.jpg',
+    'art:wp-m3-butterfly-lavender.jpg',
+    'art:wp-m3-froggie-emerald.jpg',
+    'art:wp-m3-froggie-mint.jpg',
+    'art:wp-m3-froggie-lime.jpg',
+    'art:wp-m3-froggie-sage.jpg'
   ]);
 
   const LIGHT_M3_ART_IDS = new Set([
@@ -49,7 +57,10 @@
     'art:wp-m3-mint-atelier.jpg',
     'art:wp-m3-butterfly-porcelain.jpg',
     'art:wp-m3-butterfly-sage.jpg',
-    'art:wp-m3-butterfly-coral.jpg'
+    'art:wp-m3-butterfly-coral.jpg',
+    'art:wp-m3-butterfly-lavender.jpg',
+    'art:wp-m3-froggie-mint.jpg',
+    'art:wp-m3-froggie-lime.jpg'
   ]);
 
   const LIVE_THEMES = {
@@ -146,9 +157,16 @@
 
   function normalizeWallpaperId(wp) {
     if (!wp || typeof wp !== 'string') return DEFAULT_WALLPAPER;
-    if (wp === 'live:m3-expressive') return wp;
-    if (wp.startsWith('custom')) return wp;
-    if (VALID_M3_ART_IDS.has(wp)) return wp;
+    const raw = wp.trim();
+    if (raw === 'live:m3-expressive' || raw === 'm3-expressive') return 'live:m3-expressive';
+    if (raw.startsWith('custom')) return raw;
+    if (VALID_M3_ART_IDS.has(raw)) return raw;
+    const asArt = raw.startsWith('art:')
+      ? raw
+      : (raw.startsWith('wp-m3-')
+        ? `art:${raw}${raw.endsWith('.jpg') ? '' : '.jpg'}`
+        : `art:wp-m3-${raw}${raw.endsWith('.jpg') ? '' : '.jpg'}`);
+    if (VALID_M3_ART_IDS.has(asArt)) return asArt;
     return DEFAULT_WALLPAPER;
   }
 

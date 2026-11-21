@@ -587,7 +587,6 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     @Override
     protected void onResume() {
         super.onResume();
-        if (autoUpdater != null) autoUpdater.onActivityResumed(this);
         if (uiReady) pushStateToUi();
     }
 
@@ -1491,17 +1490,18 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             restoreDeferredUpdateBannerIfNeeded();
         });
 
-        // Floating In-App Auto-Update Banner
+        // Floating GitHub Releases Update Banner
         btnUpdateLater.setOnClickListener(v -> {
             if (autoUpdater != null) autoUpdater.dismissBannerForCurrentRelease();
             if (updateBanner != null) updateBanner.setVisibility(View.GONE);
         });
         btnUpdateNow.setOnClickListener(v -> {
             if (autoUpdater == null) return;
-            if ("error".equals(autoUpdater.getStatus()) && autoUpdater.isSignatureMismatch() && autoUpdater.hasDownloadedApk()) {
-                autoUpdater.openApkInFilesOrShare(MainActivity.this);
+            if ("error".equals(autoUpdater.getStatus())) {
+                autoUpdater.checkForUpdates(true);
             } else {
-                autoUpdater.startDownloadOrInstall(MainActivity.this);
+                autoUpdater.openReleasePage(MainActivity.this);
+                if (updateBanner != null) updateBanner.setVisibility(View.GONE);
             }
         });
     }
@@ -2976,7 +2976,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.5.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.6.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -3637,6 +3637,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (id.startsWith("art:")) id = id.substring(4);
         if ("obsidian".equals(id) || "live:m3-expressive".equals(id)) return "obsidian";
         if (id.startsWith("wp-m3-") && id.endsWith(".jpg")) return id;
+        String candidate = "wp-m3-" + id.toLowerCase(Locale.US) + ".jpg";
+        if (resolveWallpaperAutoTheme(candidate) != null) return candidate;
         return "wp-m3-amethyst.jpg";
     }
 
@@ -3677,6 +3679,14 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if ("wp-m3-butterfly-porcelain.jpg".equals(wpId)) return new String[] { "amethyst", "light" };
         if ("wp-m3-butterfly-sage.jpg".equals(wpId))      return new String[] { "aurora", "light" };
         if ("wp-m3-butterfly-coral.jpg".equals(wpId))     return new String[] { "coral", "light" };
+        if ("wp-m3-butterfly-amethyst.jpg".equals(wpId))  return new String[] { "amethyst", "dark" };
+        if ("wp-m3-butterfly-rose.jpg".equals(wpId))      return new String[] { "rose", "dark" };
+        if ("wp-m3-butterfly-gold.jpg".equals(wpId))      return new String[] { "gold", "dark" };
+        if ("wp-m3-butterfly-lavender.jpg".equals(wpId))  return new String[] { "lavender", "light" };
+        if ("wp-m3-froggie-emerald.jpg".equals(wpId))     return new String[] { "emerald", "dark" };
+        if ("wp-m3-froggie-mint.jpg".equals(wpId))        return new String[] { "aurora", "light" };
+        if ("wp-m3-froggie-lime.jpg".equals(wpId))        return new String[] { "lime", "light" };
+        if ("wp-m3-froggie-sage.jpg".equals(wpId))        return new String[] { "aurora", "dark" };
         return null;
     }
 
@@ -4119,7 +4129,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (!deferredUpdateBanner || updateBanner == null) return;
         deferredUpdateBanner = false;
         refreshUpdateBanner();
-        if (autoUpdater != null && !"idle".equals(autoUpdater.getStatus()) && !"uptodate".equals(autoUpdater.getStatus())) {
+        if (autoUpdater != null && "available".equals(autoUpdater.getStatus())) {
             updateBannerTopMargins();
             updateBanner.setVisibility(View.VISIBLE);
         }
@@ -4264,57 +4274,27 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // MobileAutoUpdater.Listener (In-App GitHub Releases Auto-Updater)
+    // MobileAutoUpdater.Listener (Read-Only GitHub Releases Update Checker)
     // =========================================================================
     private void refreshUpdateBanner() {
         if (autoUpdater == null || updateBanner == null) return;
-        boolean incomingShowing = incomingBanner != null && incomingBanner.getVisibility() == View.VISIBLE;
         String st = autoUpdater.getStatus();
         String ver = autoUpdater.getLatestVersion();
         String sz = autoUpdater.formatSize();
-        int pct = autoUpdater.getDownloadPercent();
         updateBannerTopMargins();
-        if ("downloading".equals(st)) {
-            if (incomingShowing) { deferredUpdateBanner = true; } else { updateBanner.setVisibility(View.VISIBLE); }
-            updateTitle.setText("Downloading dejavu v" + ver + "...");
-            updateBody.setText(pct > 0 ? ("Downloading update · " + pct + "%") : "Connecting to GitHub Releases...");
-            updateProgress.setVisibility(View.VISIBLE);
-            updateProgress.setProgress(Math.max(4, pct));
-            btnUpdateNow.setText(pct + "%");
-            btnUpdateNow.setEnabled(false);
-        } else if ("installing".equals(st)) {
-            if (incomingShowing) { deferredUpdateBanner = true; } else { updateBanner.setVisibility(View.VISIBLE); }
-            updateTitle.setText("Installing dejavu v" + ver + "...");
-            updateBody.setText("Confirm installation when prompted by Android");
-            updateProgress.setVisibility(View.VISIBLE);
-            updateProgress.setProgress(100);
-            btnUpdateNow.setText("Installing...");
-            btnUpdateNow.setEnabled(false);
-        } else if ("ready".equals(st)) {
-            if (incomingShowing) { deferredUpdateBanner = true; } else { updateBanner.setVisibility(View.VISIBLE); }
-            updateTitle.setText("dejavu v" + ver + " Ready to Install");
-            updateBody.setText(autoUpdater.isSignatureMismatch()
-                ? MobileAutoUpdater.INCOMPATIBLE_SIGNING_MSG
-                : "Verified V1-V3 signature · Tap Install Now to upgrade seamlessly");
-            updateProgress.setVisibility(View.GONE);
-            btnUpdateNow.setText("Install Now");
-            btnUpdateNow.setEnabled(true);
-        } else if ("available".equals(st)) {
+        if (updateProgress != null) updateProgress.setVisibility(View.GONE);
+        if ("available".equals(st)) {
             updateTitle.setText("Update Available · v" + ver);
-            updateBody.setText((sz.isEmpty() ? "New release ready" : ("New release ready · " + sz)) + " · Tap to download & install");
-            updateProgress.setVisibility(View.GONE);
-            btnUpdateNow.setText("Update Now");
+            updateBody.setText((sz.isEmpty() ? "Signed release ready on GitHub" : ("Signed release ready · " + sz)) + " · Tap to open GitHub Releases");
+            btnUpdateNow.setText("Download Update");
             btnUpdateNow.setEnabled(true);
         } else if ("error".equals(st)) {
-            updateProgress.setVisibility(View.GONE);
-            if (autoUpdater.isSignatureMismatch()) {
-                updateTitle.setText("Signing Key Upgrade Required");
-                updateBody.setText(MobileAutoUpdater.INCOMPATIBLE_SIGNING_MSG);
-                btnUpdateNow.setText("Files / Share");
-            } else {
-                btnUpdateNow.setText("Retry");
-            }
+            updateTitle.setText("Update Check Unavailable");
+            updateBody.setText("Could not reach GitHub Releases right now");
+            btnUpdateNow.setText("Retry");
             btnUpdateNow.setEnabled(true);
+        } else if ("uptodate".equals(st) || "idle".equals(st)) {
+            updateBanner.setVisibility(View.GONE);
         }
     }
 
@@ -5866,9 +5846,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
 
         @JavascriptInterface
-        public void openUpdateApkInFiles() {
+        public void openReleasePage() {
             mainHandler.post(() -> {
-                if (autoUpdater != null) autoUpdater.openApkInFilesOrShare(MainActivity.this);
+                if (autoUpdater != null) autoUpdater.openReleasePage(MainActivity.this);
             });
         }
     }

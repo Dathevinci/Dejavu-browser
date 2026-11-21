@@ -24,7 +24,7 @@ namespace DejavuBrowser
 
     internal sealed class AutoUpdater
     {
-        public const string CurrentVersion = "3.2.0";
+        public const string CurrentVersion = "3.3.0";
         private const string LatestReleaseApi = "https://api.github.com/repos/Dathevinci/Dejavu-browser/releases/latest";
 
         private static readonly JavaScriptSerializer Json = new JavaScriptSerializer();

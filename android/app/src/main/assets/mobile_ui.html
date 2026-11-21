@@ -6,82 +6,220 @@
   <title>dejavu Mobile</title>
   <style>
     :root {
+      --safe-top: 28px;
+      --safe-bottom: 112px;
+      --sys-bottom: 16px;
+
       --bg: #07060d;
+      --canvas-bg: #0a0814;
+      --sheet-bg: #131022;
+      --sheet-elev: #1b1630;
+      --group-bg: rgba(255, 255, 255, 0.055);
+      --group-press: rgba(255, 255, 255, 0.11);
+      --card: rgba(18, 14, 34, 0.84);
+      --card-hi: rgba(26, 21, 48, 0.92);
+      --scrim: rgba(4, 3, 10, 0.58);
+      --input-bg: rgba(255, 255, 255, 0.075);
+      --divider: rgba(255, 255, 255, 0.085);
+      --border: rgba(255, 255, 255, 0.13);
+      --rim-top: rgba(255, 255, 255, 0.17);
+
       --ink: #f6f4ff;
-      --muted: rgba(212, 206, 236, 0.72);
-      --subtle: rgba(196, 188, 226, 0.48);
+      --muted: rgba(214, 208, 238, 0.68);
+      --subtle: rgba(196, 188, 226, 0.44);
+
       --accent: #b688ff;
       --accent-bright: #d4b8ff;
-      --accent-glow: rgba(182, 136, 255, 0.34);
-      --mint: #5eead4;
-      --card: rgba(16, 13, 31, 0.88);
-      --card-hi: rgba(24, 19, 46, 0.93);
-      --sheet-bg: linear-gradient(180deg, rgba(11,9,22,0.96) 0%, rgba(7,6,14,0.98) 100%);
-      --input-bg: rgba(0, 0, 0, 0.34);
-      --border: rgba(255, 255, 255, 0.14);
-      --rim-top: rgba(255, 255, 255, 0.16);
-      --shadow: 0 10px 26px -8px rgba(0, 0, 0, 0.56);
-      --font: -apple-system, BlinkMacSystemFont, 'Roboto', 'Segoe UI', sans-serif;
+      --accent-soft: rgba(182, 136, 255, 0.18);
+      --accent-glow: rgba(182, 136, 255, 0.36);
+      --accent-ink: #0c0818;
+      --mint: #4de6c8;
+      --danger: #ff6b8b;
+      --shadow: 0 10px 28px -8px rgba(0, 0, 0, 0.56);
+      --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Roboto', 'Segoe UI', sans-serif;
     }
+
     body.theme-light {
       --bg: #f4f1fc;
+      --canvas-bg: #f2eefb;
+      --sheet-bg: #f8f6fe;
+      --sheet-elev: #ffffff;
+      --group-bg: #ffffff;
+      --group-press: #f0ebf9;
+      --card: rgba(255, 255, 255, 0.88);
+      --card-hi: rgba(255, 255, 255, 0.96);
+      --scrim: rgba(16, 12, 34, 0.36);
+      --input-bg: rgba(22, 16, 48, 0.06);
+      --divider: rgba(22, 16, 48, 0.08);
+      --border: rgba(22, 16, 48, 0.11);
+      --rim-top: rgba(255, 255, 255, 0.98);
+
       --ink: #141122;
-      --muted: rgba(34, 28, 58, 0.66);
-      --subtle: rgba(48, 42, 74, 0.46);
+      --muted: rgba(34, 28, 58, 0.64);
+      --subtle: rgba(48, 42, 74, 0.42);
+
       --accent: #7c4dff;
       --accent-bright: #6435e8;
-      --accent-glow: rgba(124, 77, 255, 0.22);
+      --accent-soft: rgba(124, 77, 255, 0.13);
+      --accent-glow: rgba(124, 77, 255, 0.24);
+      --accent-ink: #ffffff;
       --mint: #0d9488;
-      --card: rgba(255, 255, 255, 0.90);
-      --card-hi: rgba(255, 255, 255, 0.96);
-      --sheet-bg: linear-gradient(180deg, #faf8ff 0%, #f1ecfc 100%);
-      --input-bg: rgba(24, 18, 52, 0.055);
-      --border: rgba(24, 18, 52, 0.12);
-      --rim-top: rgba(255, 255, 255, 0.98);
-      --shadow: 0 8px 22px -8px rgba(24, 16, 64, 0.15);
+      --danger: #e11d48;
+      --shadow: 0 10px 26px -10px rgba(24, 16, 64, 0.16);
     }
-    :root[data-accent="sapphire"] { --accent: #4da6ff; --accent-bright: #93ccff; --accent-glow: rgba(77,166,255,0.34); }
-    :root[data-accent="aurora"]   { --accent: #38d9a9; --accent-bright: #8ef2d3; --accent-glow: rgba(56,217,169,0.34); }
-    :root[data-accent="rose"]     { --accent: #f472b6; --accent-bright: #fbc0de; --accent-glow: rgba(244,114,182,0.34); }
-    :root[data-accent="gold"]     { --accent: #f5b942; --accent-bright: #fde19a; --accent-glow: rgba(245,185,66,0.34); }
-    body.theme-light[data-accent="sapphire"] { --accent: #0284c7; --accent-bright: #0369a1; }
-    body.theme-light[data-accent="aurora"]   { --accent: #0d9488; --accent-bright: #0f766e; }
-    body.theme-light[data-accent="rose"]     { --accent: #db2777; --accent-bright: #be185d; }
-    body.theme-light[data-accent="gold"]     { --accent: #d97706; --accent-bright: #b45309; }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    :root[data-accent="sapphire"] { --accent: #4da6ff; --accent-bright: #93ccff; --accent-soft: rgba(77,166,255,0.18); --accent-glow: rgba(77,166,255,0.34); }
+    :root[data-accent="aurora"]   { --accent: #38d9a9; --accent-bright: #8ef2d3; --accent-soft: rgba(56,217,169,0.18); --accent-glow: rgba(56,217,169,0.34); }
+    :root[data-accent="rose"]     { --accent: #f472b6; --accent-bright: #fbc0de; --accent-soft: rgba(244,114,182,0.18); --accent-glow: rgba(244,114,182,0.34); }
+    :root[data-accent="gold"]     { --accent: #f5b942; --accent-bright: #fde19a; --accent-soft: rgba(245,185,66,0.18); --accent-glow: rgba(245,185,66,0.34); }
+
+    body.theme-light[data-accent="sapphire"] { --accent: #0284c7; --accent-bright: #0369a1; --accent-soft: rgba(2,132,199,0.12); }
+    body.theme-light[data-accent="aurora"]   { --accent: #0d9488; --accent-bright: #0f766e; --accent-soft: rgba(13,148,136,0.12); }
+    body.theme-light[data-accent="rose"]     { --accent: #db2777; --accent-bright: #be185d; --accent-soft: rgba(219,39,119,0.12); }
+    body.theme-light[data-accent="gold"]     { --accent: #d97706; --accent-bright: #b45309; --accent-soft: rgba(217,119,6,0.12); }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; scrollbar-width: none; }
+    *::-webkit-scrollbar { display: none; }
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%;
-      background: var(--bg); color: var(--ink);
+      background: transparent; color: var(--ink);
       font-family: var(--font); overflow: hidden;
+      font-variant-numeric: tabular-nums;
+      -webkit-font-smoothing: antialiased;
     }
+    .screen > *, .sheet-body > *, .tabs-scroll > * { flex-shrink: 0; }
 
-    /* Full-bleed HD Wallpaper Backdrop + Adaptive Contrast Veil (ZERO CSS blur) */
-    #wp-bg {
+    /* Full-bleed HD Wallpaper Canvas (only visible behind Start Page) */
+    #wp-layer {
       position: fixed; inset: 0; z-index: 0;
+      display: none;
+    }
+    #wp-layer.show { display: block; }
+    #wp-bg {
+      position: absolute; inset: 0;
       background-size: cover; background-position: center;
       background-color: var(--bg);
-      transition: background-image 0.3s ease;
+      transition: background-image 0.32s ease;
     }
     #wp-vignette {
-      position: fixed; inset: 0; z-index: 1; pointer-events: none;
-      background: linear-gradient(180deg, rgba(7,6,14,0.44) 0%, rgba(7,6,14,0.28) 40%, rgba(7,6,14,0.74) 100%);
+      position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(180deg, rgba(6,5,14,0.48) 0%, rgba(6,5,14,0.22) 38%, rgba(6,5,14,0.72) 100%);
     }
     body.theme-light #wp-vignette {
-      background: linear-gradient(180deg, rgba(250,248,255,0.72) 0%, rgba(244,240,254,0.62) 45%, rgba(238,233,252,0.84) 100%);
+      background: linear-gradient(180deg, rgba(248,245,255,0.68) 0%, rgba(244,240,254,0.52) 42%, rgba(238,233,252,0.82) 100%);
+    }
+    body.mode-private #wp-vignette {
+      background: linear-gradient(180deg, rgba(16,8,34,0.86) 0%, rgba(12,6,26,0.78) 50%, rgba(8,4,18,0.94) 100%);
     }
 
+    /* Fullscreen Screens (Start, Omnibox, Tabs) */
     .screen {
       position: fixed; inset: 0; z-index: 2;
       overflow-y: auto; overflow-x: hidden;
-      padding: 18px 16px 28px;
+      display: flex; flex-direction: column;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screen.hidden { display: none !important; }
+    .screen.solid-canvas { background: var(--canvas-bg); }
+
+    /* True Modal Bottom Sheet Layer (Menu, Sync, Settings, Wallpapers) */
+    .sheet-backdrop {
+      position: fixed; inset: 0; z-index: 20;
+      background: var(--scrim);
+      display: flex; flex-direction: column; justify-content: flex-end;
+      animation: fadeScrim 0.2s ease-out both;
+    }
+    .sheet-backdrop.hidden { display: none !important; }
+    .sheet-panel {
+      width: 100%; max-height: 88vh;
+      background: var(--sheet-bg);
+      border-top: 1px solid var(--border);
+      border-radius: 26px 26px 0 0;
+      box-shadow: inset 0 1px 0 var(--rim-top), 0 -14px 40px rgba(0, 0, 0, 0.42);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      animation: sheetRise 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+      will-change: transform;
+    }
+    @keyframes fadeScrim { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes sheetRise { from { transform: translateY(42px); opacity: 0.72; } to { transform: translateY(0); opacity: 1; } }
+
+    .sheet-head {
+      flex-shrink: 0;
+      padding: 8px 18px 12px;
+      display: flex; flex-direction: column; gap: 10px;
+      border-bottom: 1px solid var(--divider);
+      touch-action: none;
+    }
+    .sheet-grab {
+      width: 38px; height: 4.5px; border-radius: 99px;
+      background: var(--subtle); margin: 2px auto 0;
+      opacity: 0.65;
+    }
+    .sheet-title-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .sheet-title {
+      margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.025em;
+    }
+    .sheet-body {
+      flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+      padding: 14px 16px calc(var(--sys-bottom) + 22px);
       display: flex; flex-direction: column; gap: 14px;
       -webkit-overflow-scrolling: touch;
     }
-    .screen.hidden { display: none; }
-    .screen.sheet { background: var(--sheet-bg); }
 
-    /* Liquid Glass Mobile Cards (Crisp Fresnel specular rim, ZERO blur) */
+    /* Shared Buttons & Chips */
+    .icon-circle {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--card);
+      color: var(--ink); display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+      box-shadow: inset 0 1px 0 var(--rim-top);
+      transition: transform 0.14s ease, background 0.14s ease;
+    }
+    .icon-circle:active { transform: scale(0.92); }
+    .icon-circle.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-bright); }
+    .icon-circle.gold { background: rgba(245, 185, 66, 0.22); border-color: rgba(245, 185, 66, 0.56); color: #f5b942; }
+
+    .pill-btn {
+      height: 32px; padding: 0 14px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--group-bg);
+      color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 620;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      cursor: pointer; transition: transform 0.14s ease, opacity 0.14s ease;
+    }
+    .pill-btn:active, .fav-tile:active, .q-tile:active, .g-row:active, .tab-card:active, .cta-btn:active {
+      transform: scale(0.97);
+    }
+    .pill-btn.primary {
+      background: var(--accent); border-color: transparent;
+      color: var(--accent-ink); box-shadow: 0 4px 14px var(--accent-glow);
+    }
+    .pill-btn.ghost { background: transparent; border-color: transparent; color: var(--accent-bright); padding: 0 8px; }
+    .pill-btn.danger {
+      background: rgba(225, 29, 72, 0.14); border-color: rgba(225, 29, 72, 0.32);
+      color: var(--danger);
+    }
+
+    .sec-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11.5px; font-weight: 680; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted); padding: 0 4px;
+    }
+    .sec-act {
+      font-size: 12px; font-weight: 620; text-transform: none; letter-spacing: 0;
+      color: var(--accent-bright); background: none; border: none; padding: 2px 4px; font-family: inherit;
+    }
+
+    /* iOS / OneUI Grouped Card + Rows */
+    .g-group {
+      background: var(--group-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 var(--rim-top);
+    }
     .g-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -89,180 +227,48 @@
       box-shadow: inset 0 1px 0 var(--rim-top), var(--shadow);
       padding: 14px;
     }
+    .g-row {
+      width: 100%; background: transparent; border: none; color: var(--ink);
+      font-family: inherit; text-align: left;
+      padding: 13px 14px;
+      display: flex; align-items: center; gap: 12px;
+      position: relative; transition: background 0.12s ease;
+    }
+    .g-row + .g-row::before {
+      content: ''; position: absolute; left: 54px; right: 0; top: 0;
+      height: 1px; background: var(--divider);
+    }
+    .g-row.plain + .g-row.plain::before { left: 14px; }
+    .g-row:active { background: var(--group-press); }
+    .g-row-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .g-row-title { font-size: 14.5px; font-weight: 560; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .g-row-sub { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .g-row-val { font-size: 13px; color: var(--muted); font-weight: 520; flex-shrink: 0; }
+    .g-chev { color: var(--subtle); flex-shrink: 0; }
 
-    .top-row {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    /* iOS Sliding Toggle Switch */
+    .sw {
+      width: 48px; height: 28px; border-radius: 99px; flex-shrink: 0;
+      background: rgba(130, 124, 162, 0.34); border: 1px solid var(--border);
+      position: relative; transition: background 0.2s ease, border-color 0.2s ease;
+      cursor: pointer; padding: 0;
     }
-    .screen-title { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
-    .pill-btn {
-      height: 34px; padding: 0 14px; border-radius: 999px;
-      border: 1px solid var(--border); background: rgba(128,120,168,0.12);
-      color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 600;
-      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      cursor: pointer; transition: transform 0.14s ease, opacity 0.14s ease;
+    .sw::after {
+      content: ''; position: absolute; top: 2.5px; left: 2.5px;
+      width: 21px; height: 21px; border-radius: 50%;
+      background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.28);
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    .pill-btn:active, .menu-tile:active, .fav-tile:active, .cta-full:active { transform: scale(0.96); }
-    .pill-btn.primary {
-      background: var(--accent); border-color: var(--accent-bright);
-      color: #0d0919; box-shadow: 0 4px 16px var(--accent-glow);
-    }
-    body.theme-light .pill-btn.primary { color: #ffffff; }
-    .pill-btn.danger {
-      background: rgba(255, 107, 139, 0.16); border-color: rgba(255, 107, 139, 0.42);
-      color: #ff9cb2;
-    }
-    body.theme-light .pill-btn.danger {
-      background: rgba(225, 29, 72, 0.10); border-color: rgba(225, 29, 72, 0.30);
-      color: #be123c;
-    }
+    .sw.on { background: var(--accent); border-color: transparent; }
+    .sw.on::after { transform: translateX(20px); }
 
-    /* Start Page */
-    .hero {
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
-      padding: 16px 0 4px; text-align: center;
-    }
-    .hero img { width: 54px; height: 54px; object-fit: contain; filter: drop-shadow(0 0 14px var(--accent-glow)); }
-    .hero h1 { margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 0.10em; }
-    .link-pill {
-      display: inline-flex; align-items: center; gap: 7px;
-      padding: 6px 13px; border-radius: 999px;
-      background: var(--card); border: 1px solid var(--border);
-      color: var(--muted); font-size: 12px; font-weight: 560; cursor: pointer;
-      box-shadow: inset 0 1px 0 var(--rim-top);
-    }
-    .link-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--subtle); }
-    .link-pill.on { border-color: rgba(94, 234, 212, 0.48); color: var(--mint); }
-    .link-pill.on .dot { background: var(--mint); box-shadow: 0 0 8px var(--mint); }
-
-    .search-box {
-      display: flex; align-items: center; gap: 8px;
-      height: 48px; padding: 0 7px 0 16px; border-radius: 999px;
-      background: var(--card-hi);
-      border: 1px solid var(--border);
-      box-shadow: inset 0 1px 0 var(--rim-top), var(--shadow);
-    }
-    .search-box input {
-      flex: 1; min-width: 0; border: none; outline: none; background: transparent;
-      color: var(--ink); font-size: 15px; font-family: inherit;
-    }
-    .search-box input::placeholder { color: var(--muted); }
-    .search-go {
-      width: 34px; height: 34px; border-radius: 50%; border: none;
-      background: var(--accent); color: #0c0918; display: inline-flex; align-items: center; justify-content: center;
-    }
-    body.theme-light .search-go { color: #ffffff; }
-
-    .sec-hdr {
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 11.5px; font-weight: 660; text-transform: uppercase;
-      letter-spacing: 0.075em; color: var(--muted); padding: 2px 4px;
-    }
-    .fav-grid {
-      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;
-    }
-    .fav-tile {
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      background: transparent; border: none; color: var(--ink); padding: 0; cursor: pointer;
-      transition: transform 0.14s ease;
-    }
-    .fav-sq {
-      width: 56px; height: 56px; border-radius: 16px;
-      background: var(--card-hi); border: 1px solid var(--border);
-      box-shadow: inset 0 1px 0 var(--rim-top), var(--shadow);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; font-weight: 700; color: var(--accent-bright);
-    }
-    .fav-lbl {
-      font-size: 11.5px; font-weight: 500; color: var(--ink); max-width: 72px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
-    .shield-badge-ico {
-      width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
-      background: linear-gradient(145deg, rgba(164,116,255,0.28), rgba(94,234,212,0.16));
-      border: 1px solid rgba(196,162,255,0.34); color: var(--accent-bright);
+    /* Colored Squircle SF-Style Badges */
+    .sq-ico {
+      width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
       display: inline-flex; align-items: center; justify-content: center;
+      color: #ffffff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.32);
     }
-    body.theme-light .shield-badge-ico {
-      background: linear-gradient(145deg, rgba(124,77,255,0.14), rgba(13,148,136,0.10));
-      border-color: rgba(124,77,255,0.26); color: var(--accent);
-    }
-
-    /* Tabs Grid */
-    .tabs-grid {
-      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
-    }
-    .tab-card {
-      padding: 12px; border-radius: 16px;
-      background: var(--card-hi); border: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 6px; min-height: 92px;
-      position: relative; box-shadow: inset 0 1px 0 var(--rim-top);
-    }
-    .tab-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 8px 20px var(--accent-glow); }
-    .tab-card-title { font-size: 13.5px; font-weight: 600; padding-right: 28px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .tab-card-url { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: auto; }
-    .tab-card-x {
-      position: absolute; top: 8px; right: 8px;
-      width: 26px; height: 26px; border-radius: 50%; border: none;
-      background: rgba(128,120,168,0.18); color: var(--ink); font-size: 14px;
-      display: inline-flex; align-items: center; justify-content: center;
-    }
-
-    /* Sync Hub */
-    .cta-full {
-      width: 100%; height: 46px; border-radius: 14px;
-      border: 1px solid var(--accent-bright);
-      background: linear-gradient(135deg, #8b5cf6, #a855f7);
-      color: #ffffff; font-family: inherit; font-size: 14px; font-weight: 650;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      box-shadow: 0 6px 20px var(--accent-glow);
-      transition: transform 0.14s ease;
-    }
-    .drop-compose { display: flex; gap: 8px; }
-    .drop-compose input {
-      flex: 1; min-width: 0; height: 44px; padding: 0 13px; border-radius: 13px;
-      border: 1px solid var(--border); background: var(--input-bg);
-      color: var(--ink); font-size: 14px; font-family: inherit; outline: none;
-    }
-    .drop-compose input:focus { border-color: var(--accent); }
-    .code-display {
-      font-family: ui-monospace, monospace; font-size: 18px; font-weight: 700;
-      letter-spacing: 0.12em; color: var(--accent-bright);
-      padding: 8px 14px; border-radius: 11px;
-      background: var(--input-bg); border: 1px solid var(--accent);
-      text-align: center;
-    }
-    .drop-item {
-      padding: 12px; border-radius: 14px;
-      background: var(--card-hi); border: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 5px;
-      box-shadow: inset 0 1px 0 var(--rim-top);
-    }
-    .drop-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--accent-bright); font-weight: 620; text-transform: uppercase; }
-    .drop-text { font-size: 14px; color: var(--ink); word-break: break-word; }
-    .drop-url { font-size: 11.5px; color: var(--muted); word-break: break-all; }
-    .drop-acts { display: flex; gap: 8px; margin-top: 4px; }
-
-    /* Menu Action Grid with SF-Style Color-Coded Squircle Icons */
-    .menu-grid {
-      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
-    }
-    .menu-tile {
-      padding: 12px 8px; border-radius: 16px;
-      background: var(--card-hi); border: 1px solid var(--border);
-      color: var(--ink); font-family: inherit;
-      display: flex; flex-direction: column; align-items: center; gap: 7px;
-      font-size: 11.8px; font-weight: 560;
-      box-shadow: inset 0 1px 0 var(--rim-top);
-      transition: transform 0.14s ease, border-color 0.16s ease;
-    }
-    .menu-tile.active { border-color: var(--accent); background: rgba(124,77,255,0.16); }
-    .m-ico {
-      width: 34px; height: 34px; border-radius: 10px;
-      display: inline-flex; align-items: center; justify-content: center;
-      color: #ffffff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), 0 3px 8px rgba(0,0,0,0.22);
-    }
-    .m-ico svg { width: 17px; height: 17px; }
+    .sq-ico svg { width: 16px; height: 16px; }
     .ic-violet { background: linear-gradient(145deg, #9b6dff, #6d3ef6); }
     .ic-amber  { background: linear-gradient(145deg, #fbbf24, #d97706); }
     .ic-sky    { background: linear-gradient(145deg, #38bdf8, #0284c7); }
@@ -271,304 +277,1008 @@
     .ic-indigo { background: linear-gradient(145deg, #818cf8, #4f46e5); }
     .ic-rose   { background: linear-gradient(145deg, #f472b6, #db2777); }
     .ic-plum   { background: linear-gradient(145deg, #c084fc, #9333ea); }
+    .ic-night  { background: linear-gradient(145deg, #4338ca, #1e1b4b); }
+    .ic-emerald{ background: linear-gradient(145deg, #34d399, #059669); }
 
-    .list-row {
-      padding: 11px 13px; border-radius: 14px;
-      background: var(--card-hi); border: 1px solid var(--border);
-      display: flex; align-items: center; gap: 10px;
-      box-shadow: inset 0 1px 0 var(--rim-top);
+    /* Real Site Favicon Container */
+    .site-ico {
+      width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+      position: relative; overflow: hidden;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #ffffff;
     }
-    .list-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-    .list-title { font-size: 13.5px; font-weight: 580; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .list-sub { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .site-ico img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; border-radius: inherit;
+    }
 
+    /* =====================================================================
+       SCREEN 1: START PAGE (Safari iOS 18 x Arc Butterfly)
+       ===================================================================== */
+    #scr-start {
+      padding: calc(var(--safe-top) + 10px) 18px calc(var(--safe-bottom) + 18px);
+      gap: 20px;
+    }
+    .sp-topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .sp-link-pill {
+      height: 36px; padding: 0 13px 0 11px; border-radius: 999px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--ink); font-family: inherit; font-size: 12.5px; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 8px;
+      box-shadow: inset 0 1px 0 var(--rim-top), var(--shadow);
+    }
+    .sp-link-pill .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent); box-shadow: 0 0 8px var(--accent-glow);
+    }
+    .sp-link-pill.on { border-color: rgba(77, 230, 200, 0.44); }
+    .sp-link-pill.on .dot { background: var(--mint); box-shadow: 0 0 9px var(--mint); }
+    .sp-top-acts { display: flex; gap: 8px; }
+
+    .sp-hero {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 14px 8px 4px; gap: 6px;
+    }
+    .sp-logo {
+      width: 56px; height: 56px; object-fit: contain;
+      filter: drop-shadow(0 4px 16px var(--accent-glow));
+    }
+    .sp-brand {
+      margin: 0; font-size: 30px; font-weight: 300; letter-spacing: 0.14em;
+      text-indent: 0.14em;
+    }
+    .sp-date {
+      font-size: 11.5px; font-weight: 620; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted);
+    }
+
+    .sp-priv-card {
+      background: rgba(34, 18, 66, 0.90);
+      border: 1px solid rgba(196, 152, 255, 0.36);
+      border-radius: 22px; padding: 18px 16px;
+      display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;
+      color: #f6f0ff; box-shadow: var(--shadow);
+    }
+    .sp-priv-card h2 { margin: 0; font-size: 18px; font-weight: 700; }
+    .sp-priv-card p { margin: 0; font-size: 13px; line-height: 1.48; color: rgba(226, 212, 252, 0.78); }
+
+    /* Favorites Speed Dial Grid */
+    .fav-grid {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px 10px;
+    }
+    .fav-tile {
+      position: relative;
+      display: flex; flex-direction: column; align-items: center; gap: 7px;
+      background: transparent; border: none; color: var(--ink);
+      padding: 0; font-family: inherit; cursor: pointer;
+    }
+    .fav-sq {
+      width: 58px; height: 58px; border-radius: 17px;
+      background: var(--card-hi); border: 1px solid var(--border);
+      box-shadow: inset 0 1px 0 var(--rim-top), var(--shadow);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
+    }
+    .fav-sq .site-ico { width: 34px; height: 34px; border-radius: 10px; font-size: 16px; }
+    .fav-sq.add-sq {
+      background: var(--card); border-style: dashed; color: var(--muted);
+    }
+    .fav-lbl {
+      font-size: 11.5px; font-weight: 560; color: var(--ink);
+      max-width: 74px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.34);
+    }
+    body.theme-light .fav-lbl { text-shadow: none; }
+    .fav-del {
+      position: absolute; top: -5px; right: 4px; z-index: 3;
+      width: 21px; height: 21px; border-radius: 50%;
+      background: #e11d48; color: #fff; border: 2px solid var(--bg);
+      font-size: 13px; font-weight: 700; line-height: 1;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    /* Continue from Windows PC Carousel */
+    .pc-carousel {
+      display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;
+      scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .pc-carousel::-webkit-scrollbar { display: none; }
+    .pc-card {
+      flex: 0 0 226px; scroll-snap-align: start;
+      background: var(--card-hi); border: 1px solid var(--border);
+      border-radius: 17px; padding: 12px 13px;
+      box-shadow: inset 0 1px 0 var(--rim-top), var(--shadow);
+      display: flex; align-items: center; gap: 11px;
+      text-align: left; color: var(--ink); font-family: inherit;
+    }
+    .pc-card-meta { flex: 1; min-width: 0; }
+    .pc-card-eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--accent-bright);
+    }
+    .pc-card-title {
+      font-size: 13.5px; font-weight: 620; margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .pc-card-host {
+      font-size: 11.5px; color: var(--muted); margin-top: 1px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Compact Privacy Shield Pill */
+    .sp-shield-pill {
+      margin-top: auto;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 11px 14px;
+      box-shadow: inset 0 1px 0 var(--rim-top), var(--shadow);
+      display: flex; align-items: center; gap: 11px;
+    }
+    .sp-shield-badge {
+      width: 34px; height: 34px; border-radius: 11px; flex-shrink: 0;
+      background: var(--accent-soft); border: 1px solid var(--accent);
+      color: var(--accent-bright);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .sp-shield-status {
+      font-size: 11.5px; font-weight: 660; color: var(--mint);
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 99px;
+      background: rgba(77, 230, 200, 0.12);
+    }
+
+    /* =====================================================================
+       SCREEN 2: LIVE OMNIBOX SEARCH & SUGGESTIONS OVERLAY
+       ===================================================================== */
+    #scr-omnibox {
+      background: var(--canvas-bg);
+      padding: calc(var(--safe-top) + 10px) 14px calc(var(--safe-bottom) + 12px);
+      gap: 12px;
+    }
+    .omni-top {
+      display: flex; align-items: center; justify-content: space-between; padding: 0 4px;
+    }
+    .omni-active-card {
+      background: var(--group-bg); border: 1px solid var(--border);
+      border-radius: 16px; padding: 11px 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .omni-paste-card {
+      background: var(--accent-soft); border: 1px solid var(--accent);
+      border-radius: 15px; padding: 11px 13px;
+      display: flex; align-items: center; gap: 11px;
+      color: var(--ink); font-family: inherit; text-align: left;
+    }
+    .sug-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 13px; position: relative;
+      background: transparent; border: none; color: var(--ink);
+      font-family: inherit; width: 100%; text-align: left;
+    }
+    .sug-row + .sug-row::before {
+      content: ''; position: absolute; left: 48px; right: 0; top: 0;
+      height: 1px; background: var(--divider);
+    }
+    .sug-row:active { background: var(--group-press); }
+    .sug-ico {
+      width: 28px; height: 28px; border-radius: 9px; flex-shrink: 0;
+      background: var(--input-bg); color: var(--muted);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .sug-fill {
+      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+      background: transparent; border: none; color: var(--muted);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .quick-chips {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .q-chip {
+      height: 36px; padding: 0 12px 0 8px; border-radius: 99px;
+      background: var(--group-bg); border: 1px solid var(--border);
+      color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 560;
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+
+    /* =====================================================================
+       SCREEN 3: VISUAL LIVE-THUMBNAIL TAB SWITCHER (Safari iOS x Chrome)
+       ===================================================================== */
+    #scr-tabs {
+      background: var(--canvas-bg);
+      padding: 0; overflow: hidden;
+    }
+    .tabs-top {
+      flex-shrink: 0;
+      padding: calc(var(--safe-top) + 10px) 16px 12px;
+      display: flex; align-items: center; justify-content: center;
+      border-bottom: 1px solid var(--divider);
+      background: var(--sheet-bg);
+    }
+    .mode-seg {
+      display: inline-flex; padding: 3px; border-radius: 99px;
+      background: var(--input-bg); border: 1px solid var(--border);
+      gap: 2px;
+    }
+    .mode-seg-btn {
+      height: 32px; padding: 0 16px; border-radius: 99px; border: none;
+      background: transparent; color: var(--muted);
+      font-family: inherit; font-size: 13px; font-weight: 640;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: background 0.16s ease, color 0.16s ease;
+    }
+    .mode-seg-btn.active {
+      background: var(--sheet-elev); color: var(--ink);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+    }
+    .mode-seg-btn.active.priv {
+      background: #6d28d9; color: #ffffff;
+    }
+    .tabs-scroll {
+      flex: 1; min-height: 0; overflow-y: auto;
+      padding: 14px 14px 24px;
+      display: flex; flex-direction: column; gap: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tabs-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+    }
+    .tab-card {
+      border-radius: 18px; overflow: hidden;
+      background: var(--sheet-elev); border: 1.5px solid var(--border);
+      display: flex; flex-direction: column;
+      box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.42);
+      transition: transform 0.14s ease, border-color 0.16s ease;
+    }
+    .tab-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1.5px var(--accent), 0 10px 24px var(--accent-glow);
+    }
+    .tab-card-hdr {
+      height: 36px; padding: 0 6px 0 10px;
+      display: flex; align-items: center; gap: 7px;
+      background: var(--sheet-bg); border-bottom: 1px solid var(--divider);
+    }
+    .tab-card-title {
+      flex: 1; min-width: 0; font-size: 12px; font-weight: 630;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .tab-card-x {
+      width: 24px; height: 24px; border-radius: 50%; border: none; flex-shrink: 0;
+      background: var(--input-bg); color: var(--muted);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 14px; line-height: 1;
+    }
+    .tab-card-preview {
+      height: 164px; position: relative; overflow: hidden;
+      background: var(--bg);
+    }
+    .tab-card-preview img.live-shot {
+      width: 100%; height: 100%; object-fit: cover; object-position: top; display: block;
+    }
+    .tab-card-start-prev {
+      width: 100%; height: 100%; background-size: cover; background-position: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      position: relative;
+    }
+    .tab-card-start-prev::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(8,6,18,0.28), rgba(8,6,18,0.68));
+    }
+    .tab-card-start-prev > * { position: relative; z-index: 1; }
+    .tab-card-host {
+      position: absolute; left: 8px; right: 8px; bottom: 8px;
+      padding: 4px 8px; border-radius: 8px;
+      background: rgba(10, 8, 22, 0.78); color: #f6f4ff;
+      font-size: 10.5px; font-weight: 560;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .tabs-bottom-bar {
+      flex-shrink: 0;
+      padding: 10px 18px calc(var(--sys-bottom) + 10px);
+      background: var(--sheet-bg); border-top: 1px solid var(--divider);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .tabs-add-fab {
+      height: 40px; padding: 0 22px; border-radius: 99px; border: none;
+      background: var(--accent); color: var(--accent-ink);
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      display: inline-flex; align-items: center; gap: 6px;
+      box-shadow: 0 6px 18px var(--accent-glow);
+    }
+    .tabs-add-fab.priv { background: #7c3aed; color: #ffffff; }
+
+    /* =====================================================================
+       SHEET A: MENU (Safari AA x Samsung OneUI Bottom Sheet)
+       ===================================================================== */
+    .page-hdr-card {
+      display: flex; align-items: center; gap: 11px;
+      padding: 11px 12px; border-radius: 16px;
+      background: var(--group-bg); border: 1px solid var(--border);
+    }
+    .q-grid {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px;
+    }
+    .q-tile {
+      padding: 11px 4px; border-radius: 15px;
+      background: var(--group-bg); border: 1px solid var(--border);
+      color: var(--ink); font-family: inherit;
+      display: flex; flex-direction: column; align-items: center; gap: 7px;
+      font-size: 11px; font-weight: 580; text-align: center;
+      transition: transform 0.13s ease, border-color 0.14s ease;
+    }
+    .q-tile.active {
+      border-color: var(--accent); background: var(--accent-soft);
+    }
+    .zoom-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border-radius: 16px;
+      background: var(--group-bg); border: 1px solid var(--border);
+    }
+    .zoom-stepper {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--input-bg); border-radius: 99px; padding: 3px;
+    }
+    .zoom-btn {
+      height: 30px; min-width: 38px; padding: 0 10px; border-radius: 99px;
+      border: none; background: transparent; color: var(--ink);
+      font-family: inherit; font-size: 13px; font-weight: 680;
+    }
+    .zoom-btn:active { background: var(--group-press); }
+    .zoom-val { font-size: 12.5px; font-weight: 700; min-width: 44px; text-align: center; color: var(--accent-bright); }
+
+    /* =====================================================================
+       SHEET B: DEJAVU LINK (AirDrop-Style Sync Hub)
+       ===================================================================== */
+    .cta-btn {
+      width: 100%; height: 46px; border-radius: 15px; border: none;
+      background: linear-gradient(135deg, #8b5cf6, #a855f7);
+      color: #ffffff; font-family: inherit; font-size: 14px; font-weight: 680;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 6px 20px var(--accent-glow);
+    }
+    .compose-row { display: flex; gap: 8px; }
+    .compose-row input {
+      flex: 1; min-width: 0; height: 44px; padding: 0 14px; border-radius: 14px;
+      border: 1px solid var(--border); background: var(--input-bg);
+      color: var(--ink); font-size: 14px; font-family: inherit; outline: none;
+    }
+    .compose-row input:focus { border-color: var(--accent); }
+    .code-pill {
+      font-family: ui-monospace, 'SF Mono', monospace; font-size: 19px; font-weight: 700;
+      letter-spacing: 0.14em; color: var(--accent-bright);
+      padding: 11px 14px; border-radius: 14px;
+      background: var(--input-bg); border: 1px solid var(--border);
+      text-align: center;
+    }
+    .drop-card {
+      padding: 12px 13px; border-radius: 16px;
+      background: var(--group-bg); border: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .drop-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--accent-bright); font-weight: 680; text-transform: uppercase;
+    }
+    .drop-text { font-size: 14px; color: var(--ink); word-break: break-word; line-height: 1.4; }
+    .drop-url { font-size: 11.5px; color: var(--muted); word-break: break-all; }
+    .drop-acts { display: flex; gap: 8px; margin-top: 2px; }
+
+    /* =====================================================================
+       SHEET C: SETTINGS / OPTIONS (iOS 18 x OneUI Grouped Settings)
+       ===================================================================== */
+    .theme-cards {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px;
+    }
+    .theme-card {
+      padding: 10px; border-radius: 15px; border: 1.5px solid var(--border);
+      background: var(--input-bg); color: var(--ink); font-family: inherit;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      transition: border-color 0.15s ease;
+    }
+    .theme-card.active {
+      border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 6px 16px var(--accent-glow);
+    }
+    .mini-phone {
+      width: 100%; height: 68px; border-radius: 11px; padding: 8px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .mp-dark  { background: linear-gradient(155deg, #211642 0%, #0d0a1a 100%); }
+    .mp-light { background: linear-gradient(155deg, #ffffff 0%, #ede6fc 100%); border-color: rgba(24,18,52,0.14); }
+    .mp-dots  { display: flex; gap: 4px; }
+    .mp-dots span { width: 10px; height: 10px; border-radius: 3.5px; background: rgba(182,136,255,0.45); }
+    .mp-light .mp-dots span { background: rgba(124,77,255,0.28); }
+    .mp-pill  { height: 13px; border-radius: 99px; background: rgba(255,255,255,0.16); }
+    .mp-light .mp-pill { background: #ffffff; border: 1px solid rgba(24,18,52,0.12); }
+
+    .accent-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-top: 1px solid var(--divider);
+    }
+    .orb-group { display: flex; align-items: center; gap: 11px; }
+    .acc-orb {
+      width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent;
+      padding: 0; position: relative; cursor: pointer;
+      transition: transform 0.14s ease;
+    }
+    .acc-orb:active { transform: scale(0.9); }
+    .acc-orb.active {
+      border-color: var(--ink);
+      box-shadow: 0 0 0 2px var(--sheet-bg) inset, 0 0 12px var(--accent-glow);
+    }
+
+    .bar-seg {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+      padding: 3px; border-radius: 12px; background: var(--input-bg);
+      border: 1px solid var(--border); margin: 0 12px 12px;
+    }
+    .bar-seg button {
+      height: 34px; border-radius: 9px; border: none;
+      background: transparent; color: var(--muted);
+      font-family: inherit; font-size: 12.5px; font-weight: 630;
+    }
+    .bar-seg button.active {
+      background: var(--sheet-elev); color: var(--ink);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    }
+
+    .radio-dot {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 1.8px solid var(--subtle);
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .radio-dot.on {
+      border-color: var(--accent); background: var(--accent); color: var(--accent-ink);
+    }
+
+    /* =====================================================================
+       SHEET D: HD WALLPAPERS GALLERY
+       ===================================================================== */
     .wp-grid {
-      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px;
     }
     .wp-tile {
-      border-radius: 15px; overflow: hidden; border: 1.5px solid var(--border);
-      background: var(--card-hi); padding: 0; text-align: left; color: var(--ink);
+      position: relative; border-radius: 16px; overflow: hidden;
+      border: 2px solid var(--border); background: var(--sheet-elev);
+      padding: 0; text-align: left; color: var(--ink); font-family: inherit;
     }
-    .wp-tile.active { border-color: var(--accent-bright); box-shadow: 0 0 0 1px var(--accent); }
-    .wp-tile img, .wp-live-thumb { width: 100%; height: 96px; object-fit: cover; display: block; }
-    .wp-tile-name { padding: 8px 10px; font-size: 12.5px; font-weight: 600; }
+    .wp-tile.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 8px 20px var(--accent-glow); }
+    .wp-tile img, .wp-live-thumb { width: 100%; height: 118px; object-fit: cover; display: block; }
+    .wp-tile-name { padding: 8px 10px; font-size: 12.5px; font-weight: 620; }
+    .wp-check {
+      position: absolute; top: 8px; right: 8px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--accent); color: var(--accent-ink);
+      display: none; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .wp-tile.active .wp-check { display: inline-flex; }
 
-    /* Mobile Visual Theme Preview Cards */
-    .m-theme-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    /* Inline Add Favorite Modal */
+    .mini-modal {
+      position: fixed; inset: 0; z-index: 40;
+      background: var(--scrim); display: flex; align-items: center; justify-content: center;
+      padding: 20px;
     }
-    .m-theme-card {
-      padding: 9px; border-radius: 14px; border: 1.5px solid var(--border);
-      background: var(--input-bg); color: var(--ink); font-family: inherit;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    .mini-modal.hidden { display: none !important; }
+    .mini-modal-card {
+      width: 100%; max-width: 340px; border-radius: 22px;
+      background: var(--sheet-bg); border: 1px solid var(--border);
+      padding: 18px; display: flex; flex-direction: column; gap: 12px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.52);
     }
-    .m-theme-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 6px 16px var(--accent-glow); }
-    .m-th-prev {
-      width: 100%; height: 52px; border-radius: 9px; padding: 7px;
-      display: flex; flex-direction: column; justify-content: space-between;
-      border: 1px solid rgba(255,255,255,0.14);
+    .mini-modal-card input {
+      height: 44px; padding: 0 13px; border-radius: 13px;
+      border: 1px solid var(--border); background: var(--input-bg);
+      color: var(--ink); font-size: 14px; font-family: inherit; outline: none;
     }
-    .m-th-dark  { background: linear-gradient(155deg, #1d1636, #0b0818); }
-    .m-th-light { background: linear-gradient(155deg, #ffffff, #ece6fb); border-color: rgba(24,18,52,0.14); }
-    .m-th-bar   { height: 8px; width: 70%; border-radius: 99px; background: rgba(182,136,255,0.42); }
-    .m-th-light .m-th-bar { background: rgba(124,77,255,0.28); }
-    .m-th-box   { height: 18px; border-radius: 6px; background: rgba(255,255,255,0.12); }
-    .m-th-light .m-th-box { background: rgba(255,255,255,0.92); border: 1px solid rgba(24,18,52,0.09); }
+    .mini-modal-card input:focus { border-color: var(--accent); }
 
-    .seg { display: flex; flex-wrap: wrap; gap: 6px; }
-    .seg-btn {
-      padding: 7px 12px; border-radius: 10px; border: 1px solid var(--border);
-      background: var(--input-bg); color: var(--muted); font-size: 12.5px; font-weight: 560; font-family: inherit;
-    }
-    .seg-btn.active { border-color: var(--accent); background: rgba(124,77,255,0.20); color: var(--ink); font-weight: 660; }
-    .empty { text-align: center; padding: 22px 12px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .empty { text-align: center; padding: 28px 16px; color: var(--muted); font-size: 13px; line-height: 1.5; }
   </style>
 </head>
 <body>
-  <div id="wp-bg"></div>
-  <div id="wp-vignette"></div>
+  <!-- Full-Bleed Edge-to-Edge HD Wallpaper Layer -->
+  <div id="wp-layer" class="show">
+    <div id="wp-bg"></div>
+    <div id="wp-vignette"></div>
+  </div>
 
-  <!-- Screen 1: Mobile Butterfly Start Page -->
+  <!-- ===================================================================
+       SCREEN 1: START PAGE (Clean Safari iOS 18 x Arc Butterfly)
+       =================================================================== -->
   <section id="scr-start" class="screen">
-    <div class="hero">
-      <img src="file:///android_asset/logo-transparent.png" alt="dejavu">
-      <h1>dejavu</h1>
-      <button type="button" id="sp-link-pill" class="link-pill" onclick="call('openScreen','sync')">
+    <div class="sp-topbar">
+      <button type="button" id="sp-link-pill" class="sp-link-pill" onclick="call('openScreen','sync')">
         <span class="dot"></span>
-        <span id="sp-link-txt">Connect to Windows PC</span>
+        <span id="sp-link-txt">Link PC</span>
       </button>
-    </div>
-
-    <form class="search-box" onsubmit="event.preventDefault(); goStartSearch();">
-      <input id="sp-search-in" type="search" placeholder="Search or enter website name" autocomplete="off">
-      <button type="submit" class="search-go" aria-label="Search">
-        <svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M4 9h10M9.8 4.8L14 9l-4.2 4.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-    </form>
-
-    <div class="sec-hdr">
-      <span>Favorites</span>
-      <span id="sp-sync-hint" style="color:var(--accent-bright);font-size:11px;" onclick="call('openScreen','wallpapers')">Wallpapers</span>
-    </div>
-    <div id="sp-fav-grid" class="fav-grid"></div>
-
-    <!-- Latest Drop from Windows PC -->
-    <div id="sp-latest-drop-wrap" style="display:none;flex-direction:column;gap:8px;">
-      <div class="sec-hdr">
-        <span>Shared with PC</span>
-        <span style="color:var(--accent-bright);" onclick="call('openScreen','sync')">Open Hub</span>
+      <div class="sp-top-acts">
+        <button type="button" class="icon-circle" aria-label="Wallpapers" onclick="call('openScreen','wallpapers')">
+          <svg viewBox="0 0 20 20" width="17" height="17" fill="none"><rect x="2.8" y="3.8" width="14.4" height="12.4" rx="2.6" stroke="currentColor" stroke-width="1.65"/><circle cx="7.2" cy="7.8" r="1.35" fill="currentColor"/><path d="M3.4 14.2l3.8-3.6 2.8 2.5 2.4-2.4 4.2 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" class="icon-circle" aria-label="Options" onclick="call('openScreen','settings')">
+          <svg viewBox="0 0 20 20" width="17" height="17" fill="none"><path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/><circle cx="7.5" cy="6" r="1.9" fill="var(--sheet-bg)" stroke="currentColor" stroke-width="1.6"/><circle cx="13" cy="10" r="1.9" fill="var(--sheet-bg)" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="14" r="1.9" fill="var(--sheet-bg)" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
       </div>
-      <div id="sp-latest-drop" class="g-card"></div>
     </div>
 
-    <!-- Privacy Report Card -->
-    <div class="g-card" style="display:flex;align-items:center;justify-content:space-between;gap:11px;">
-      <div style="display:flex;align-items:center;gap:11px;min-width:0;flex:1;">
-        <span class="shield-badge-ico">
-          <svg viewBox="0 0 22 22" width="19" height="19" fill="none"><path d="M11 2.5L4 5.3v5.4c0 4.4 3 7.7 7 9 4-1.3 7-4.6 7-9V5.3L11 2.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.1 11.2l2 2 4-4.2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-        <div style="min-width:0;">
-          <div style="font-size:13.5px;font-weight:650;"><span id="sp-blocked">0</span> ads &amp; trackers blocked</div>
-          <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">Built-in Mobile Shield · dejavu v3.2</div>
+    <div id="sp-hero-normal" class="sp-hero">
+      <img class="sp-logo" src="logo-transparent.png" alt="dejavu" onerror="this.style.display='none'">
+      <h1 class="sp-brand">dejavu</h1>
+      <div id="sp-date" class="sp-date"></div>
+    </div>
+
+    <div id="sp-hero-private" class="sp-priv-card" style="display:none;">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="none"><path d="M3 11h18M6 11l2-5.5A1.5 1.5 0 0 1 9.4 4.5h5.2a1.5 1.5 0 0 1 1.4 1L18 11" stroke="#d4b8ff" stroke-width="1.8" stroke-linecap="round"/><circle cx="7.5" cy="15.8" r="2.7" stroke="#d4b8ff" stroke-width="1.8"/><circle cx="16.5" cy="15.8" r="2.7" stroke="#d4b8ff" stroke-width="1.8"/><path d="M10.2 15.8h3.6" stroke="#d4b8ff" stroke-width="1.8"/></svg>
+      <h2>Private Browsing</h2>
+      <p>Pages you visit in Private tabs won't appear in history or sync to your Windows PC.</p>
+    </div>
+
+    <!-- Favorites Speed Dial -->
+    <div id="sp-fav-section" style="display:flex;flex-direction:column;gap:11px;">
+      <div class="sec-hdr">
+        <span>Favorites</span>
+        <button type="button" id="sp-fav-edit-btn" class="sec-act" onclick="toggleFavEdit()">Edit</button>
+      </div>
+      <div id="sp-fav-grid" class="fav-grid"></div>
+    </div>
+
+    <!-- Continue from Windows PC (Synced Tabs + Shared Drops Carousel) -->
+    <div id="sp-pc-section" style="display:none;flex-direction:column;gap:10px;">
+      <div class="sec-hdr">
+        <span>From Windows PC</span>
+        <button type="button" class="sec-act" onclick="call('openScreen','sync')">Sync Hub</button>
+      </div>
+      <div id="sp-pc-carousel" class="pc-carousel"></div>
+    </div>
+
+    <!-- Compact Privacy Shield Summary Capsule -->
+    <div class="sp-shield-pill" onclick="call('openScreen','settings')">
+      <span class="sp-shield-badge">
+        <svg viewBox="0 0 22 22" width="18" height="18" fill="none"><path d="M11 2.5L4 5.3v5.4c0 4.4 3 7.7 7 9 4-1.3 7-4.6 7-9V5.3L11 2.5z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="M8.1 11.2l2 2 4-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13.5px;font-weight:640;"><span id="sp-blocked">0</span> trackers blocked</div>
+        <div style="font-size:11.5px;color:var(--muted);">dejavu Shield · Ad &amp; Tracker Protection</div>
+      </div>
+      <span id="sp-shield-status" class="sp-shield-status">Active</span>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       SCREEN 2: LIVE OMNIBOX SEARCH & SUGGESTIONS OVERLAY
+       =================================================================== -->
+  <section id="scr-omnibox" class="screen hidden">
+    <div class="omni-top">
+      <span style="font-size:12px;font-weight:680;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);" id="omni-hdr-lbl">Search &amp; Suggestions</span>
+      <button type="button" class="pill-btn ghost" onclick="call('closeScreen')">Cancel</button>
+    </div>
+
+    <!-- Active Webpage Quick Strip -->
+    <div id="omni-active-card" class="omni-active-card" style="display:none;">
+      <div id="omni-active-ico"></div>
+      <div class="g-row-meta">
+        <div id="omni-active-title" class="g-row-title" style="font-size:13.5px;"></div>
+        <div id="omni-active-url" class="g-row-sub"></div>
+      </div>
+      <button type="button" class="icon-circle" style="width:32px;height:32px;" title="Copy link" onclick="copyActiveUrl()">
+        <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><rect x="6" y="6" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 12H3.5A1.5 1.5 0 0 1 2 10.5v-7A1.5 1.5 0 0 1 3.5 2h7A1.5 1.5 0 0 1 12 3.5V4" stroke="currentColor" stroke-width="1.5"/></svg>
+      </button>
+      <button type="button" class="icon-circle" style="width:32px;height:32px;" title="Send to PC" onclick="call('sendCurrentTabToPc')">
+        <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><rect x="2.2" y="3.5" width="10" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 13.5h3.4M7.2 11v2.5M11.5 9.5L16 5M16 5h-3.4M16 5v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <!-- Clipboard Paste & Go Banner -->
+    <button type="button" id="omni-paste-btn" class="omni-paste-card" style="display:none;" onclick="goClipboard()">
+      <span class="sq-ico ic-violet" style="width:32px;height:32px;">
+        <svg viewBox="0 0 18 18" fill="none"><path d="M6.5 3.5h5a1 1 0 0 1 1 1v.5h1A1.5 1.5 0 0 1 15 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 14.5v-8A1.5 1.5 0 0 1 4.5 5h1v-.5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.5"/></svg>
+      </span>
+      <div class="g-row-meta">
+        <div class="g-row-title" style="font-size:13px;color:var(--accent-bright);">Link or text you copied</div>
+        <div id="omni-paste-txt" class="g-row-sub"></div>
+      </div>
+      <span style="font-size:12px;font-weight:700;color:var(--accent-bright);">Go</span>
+    </button>
+
+    <!-- Suggestions / Matches List -->
+    <div id="omni-list-group" class="g-group" style="display:none;"></div>
+
+    <!-- Quick Favorites Chips when empty -->
+    <div id="omni-quick-wrap" style="display:flex;flex-direction:column;gap:10px;">
+      <div class="sec-hdr"><span>Quick Jump</span></div>
+      <div id="omni-quick-chips" class="quick-chips"></div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       SCREEN 3: VISUAL LIVE-THUMBNAIL TAB SWITCHER (Safari iOS x Chrome)
+       =================================================================== -->
+  <section id="scr-tabs" class="screen hidden">
+    <div class="tabs-top">
+      <div class="mode-seg">
+        <button type="button" id="seg-tabs-normal" class="mode-seg-btn active" onclick="setTabViewMode(false)">
+          <span id="seg-tabs-normal-lbl">Tabs (1)</span>
+        </button>
+        <button type="button" id="seg-tabs-priv" class="mode-seg-btn" onclick="setTabViewMode(true)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><path d="M3 11h18M6 11l2-5.5A1.5 1.5 0 0 1 9.4 4.5h5.2a1.5 1.5 0 0 1 1.4 1L18 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="7.5" cy="16" r="2.6" stroke="currentColor" stroke-width="2"/><circle cx="16.5" cy="16" r="2.6" stroke="currentColor" stroke-width="2"/></svg>
+          <span id="seg-tabs-priv-lbl">Private</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="tabs-scroll">
+      <div id="tabs-grid" class="tabs-grid"></div>
+
+      <div id="pc-tabs-wrap" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="sec-hdr">
+          <span>Open on Windows PC</span>
+          <button type="button" class="sec-act" onclick="call('syncNow')">Refresh</button>
+        </div>
+        <div id="pc-tabs-list" class="g-group"></div>
+      </div>
+    </div>
+
+    <div class="tabs-bottom-bar">
+      <button type="button" class="pill-btn ghost" style="color:var(--muted);" onclick="closeAllInMode()">Close All</button>
+      <button type="button" id="btn-tabs-new" class="tabs-add-fab" onclick="openNewInMode()">
+        <svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M9 3.5v11M3.5 9h11" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>
+        <span id="btn-tabs-new-lbl">New Tab</span>
+      </button>
+      <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       SHEET A: MENU (Safari AA x Samsung OneUI Rounded Bottom Sheet)
+       =================================================================== -->
+  <div id="scr-menu" class="sheet-backdrop hidden" onclick="backdropClose(event)">
+    <div class="sheet-panel" onclick="event.stopPropagation()">
+      <div class="sheet-head" data-swipe-dismiss="1">
+        <div class="sheet-grab"></div>
+        <div class="sheet-title-row">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button type="button" id="menu-back-btn" class="pill-btn ghost" style="display:none;padding-left:0;" onclick="setMenuSubView('main')">‹ Menu</button>
+            <h2 id="menu-sheet-title" class="sheet-title">Menu</h2>
+          </div>
+          <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
         </div>
       </div>
-      <button type="button" class="pill-btn" onclick="call('openScreen','settings')">Options</button>
-    </div>
-  </section>
 
-  <!-- Screen 2: Mobile Tab Switcher + Windows PC Open Tabs -->
-  <section id="scr-tabs" class="screen sheet hidden">
-    <div class="top-row">
-      <h2 class="screen-title">Tabs</h2>
-      <div style="display:flex;gap:8px;">
-        <button type="button" class="pill-btn primary" onclick="call('openNewTab','')">+ New Tab</button>
-        <button type="button" class="pill-btn" onclick="call('closeScreen')">Done</button>
+      <div class="sheet-body">
+        <!-- Main Menu View -->
+        <div id="menu-view-main" style="display:flex;flex-direction:column;gap:14px;">
+          <!-- Active Page Context Strip -->
+          <div id="menu-page-hdr" class="page-hdr-card" style="display:none;">
+            <div id="menu-page-ico"></div>
+            <div class="g-row-meta">
+              <div id="menu-page-title" class="g-row-title" style="font-size:14px;"></div>
+              <div id="menu-page-host" class="g-row-sub"></div>
+            </div>
+            <button type="button" id="menu-bm-btn" class="icon-circle" title="Bookmark" onclick="call('toggleBookmark')">
+              <svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M9 2.4l2 4.1 4.5.6-3.2 3.2.8 4.5L9 12.7l-4.1 2.1.8-4.5-3.2-3.2 4.5-.6L9 2.4z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+            </button>
+            <button type="button" class="icon-circle" title="Copy URL" onclick="copyActiveUrl()">
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><rect x="6" y="6" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 12H3.5A1.5 1.5 0 0 1 2 10.5v-7A1.5 1.5 0 0 1 3.5 2h7A1.5 1.5 0 0 1 12 3.5V4" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+            <button type="button" class="icon-circle" title="Share" onclick="call('shareNative')">
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><path d="M9 11.2V3.2M6.2 6L9 3.2 11.8 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.2 9.4v4.4a1.2 1.2 0 0 0 1.2 1.2h7.2a1.2 1.2 0 0 0 1.2-1.2V9.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+
+          <!-- Compact 4-Column Quick Action Grid -->
+          <div class="q-grid">
+            <button type="button" class="q-tile" onclick="call('sendCurrentTabToPc')">
+              <span class="sq-ico ic-violet"><svg viewBox="0 0 18 18" fill="none"><rect x="2.2" y="3.5" width="10" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 13.5h3.4M7.2 11v2.5M11.5 9.5L16 5M16 5h-3.4M16 5v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Send to PC</span>
+            </button>
+            <button type="button" id="m-rl-tile" class="q-tile" onclick="call('toggleReadingList')">
+              <span class="sq-ico ic-sky"><svg viewBox="0 0 18 18" fill="none"><circle cx="5.8" cy="9.5" r="2.7" stroke="currentColor" stroke-width="1.5"/><circle cx="12.2" cy="9.5" r="2.7" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 9.5h1" stroke="currentColor" stroke-width="1.5"/></svg></span>
+              <span>Read Later</span>
+            </button>
+            <button type="button" id="m-desk-tile" class="q-tile" onclick="call('toggleDesktopMode')">
+              <span class="sq-ico ic-slate"><svg viewBox="0 0 18 18" fill="none"><rect x="2.4" y="3.2" width="13.2" height="9" rx="1.6" stroke="currentColor" stroke-width="1.5"/><path d="M6.2 14.8h5.6M9 12.2v2.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+              <span>Desktop</span>
+            </button>
+            <button type="button" id="m-darkweb-tile" class="q-tile" onclick="call('toggleDarkWebPages')">
+              <span class="sq-ico ic-night"><svg viewBox="0 0 18 18" fill="none"><path d="M14 10.6A5.6 5.6 0 1 1 7.4 4a4.5 4.5 0 0 0 6.6 6.6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+              <span>Dark Web</span>
+            </button>
+            <button type="button" class="q-tile" onclick="call('openReaderMode')">
+              <span class="sq-ico ic-teal"><svg viewBox="0 0 18 18" fill="none"><path d="M3.2 4.6h11.6M3.2 8h11.6M3.2 11.4h8.2M3.2 14.5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+              <span>Reader</span>
+            </button>
+            <button type="button" class="q-tile" onclick="call('openFindInPage')">
+              <span class="sq-ico ic-indigo"><svg viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="4.8" stroke="currentColor" stroke-width="1.55"/><path d="M11.6 11.6L15 15" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg></span>
+              <span>Find Page</span>
+            </button>
+            <button type="button" class="q-tile" onclick="call('goHome')">
+              <span class="sq-ico ic-amber"><svg viewBox="0 0 18 18" fill="none"><path d="M3 8.5L9 3.4l6 5.1M4.8 7.5v6.8a1 1 0 0 0 1 1h6.4a1 1 0 0 0 1-1V7.5" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Start Page</span>
+            </button>
+            <button type="button" class="q-tile" onclick="call('openScreen','wallpapers')">
+              <span class="sq-ico ic-rose"><svg viewBox="0 0 18 18" fill="none"><rect x="2.6" y="3.5" width="12.8" height="11" rx="2.2" stroke="currentColor" stroke-width="1.5"/><circle cx="6.6" cy="7.2" r="1.2" fill="currentColor"/><path d="M3.2 12.8l3.2-3.1 2.4 2.2 2.2-2.2 3.5 3.1" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Wallpapers</span>
+            </button>
+          </div>
+
+          <!-- Safari AA Text Size / Zoom Control -->
+          <div class="zoom-row">
+            <span style="font-size:13.5px;font-weight:600;">Page Text Size</span>
+            <div class="zoom-stepper">
+              <button type="button" class="zoom-btn" onclick="stepZoom(-15)">A-</button>
+              <span id="m-zoom-val" class="zoom-val" onclick="call('setPageZoom',100)">100%</span>
+              <button type="button" class="zoom-btn" onclick="stepZoom(15)">A+</button>
+            </div>
+          </div>
+
+          <!-- iOS / OneUI Grouped Library & Settings List -->
+          <div class="g-group">
+            <button type="button" class="g-row" onclick="setMenuSubView('bookmarks')">
+              <span class="sq-ico ic-amber"><svg viewBox="0 0 18 18" fill="none"><path d="M9 2.6l2 4.1 4.4.6-3.2 3.1.8 4.4L9 12.7l-4 2.1.8-4.4-3.2-3.1 4.4-.6L9 2.6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Bookmarks</span></span>
+              <span id="m-cnt-bm" class="g-row-val">0</span>
+              <span class="g-chev">›</span>
+            </button>
+            <button type="button" class="g-row" onclick="setMenuSubView('reading')">
+              <span class="sq-ico ic-sky"><svg viewBox="0 0 18 18" fill="none"><circle cx="5.8" cy="9.5" r="2.7" stroke="currentColor" stroke-width="1.5"/><circle cx="12.2" cy="9.5" r="2.7" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 9.5h1" stroke="currentColor" stroke-width="1.5"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Reading List</span></span>
+              <span id="m-cnt-rl" class="g-row-val">0</span>
+              <span class="g-chev">›</span>
+            </button>
+            <button type="button" class="g-row" onclick="setMenuSubView('history')">
+              <span class="sq-ico ic-indigo"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.55"/><path d="M9 5.8V9l2.4 1.6" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">History</span></span>
+              <span id="m-cnt-hi" class="g-row-val">0</span>
+              <span class="g-chev">›</span>
+            </button>
+            <button type="button" class="g-row" onclick="call('openDownloads')">
+              <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 3.5v8M6 8.8l3 3 3-3M3.8 14.5h10.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Downloads</span></span>
+              <span class="g-chev">›</span>
+            </button>
+            <button type="button" class="g-row" onclick="call('openScreen','settings')">
+              <span class="sq-ico ic-plum"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 2.8v1.5M9 13.7v1.5M2.8 9h1.5M13.7 9h1.5M4.6 4.6l1.1 1.1M12.3 12.3l1.1 1.1M13.4 4.6l-1.1 1.1M5.7 12.3l-1.1 1.1" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg></span>
+              <span class="g-row-meta">
+                <span class="g-row-title">Settings &amp; Appearance</span>
+                <span class="g-row-sub">Theme, address bar, search engine, shield</span>
+              </span>
+              <span class="g-chev">›</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Drill-in List View (Bookmarks / Reading List / History) -->
+        <div id="menu-view-list" style="display:none;flex-direction:column;gap:12px;">
+          <div id="menu-list-group" class="g-group"></div>
+        </div>
       </div>
     </div>
-    <div id="tabs-grid" class="tabs-grid"></div>
+  </div>
 
-    <div class="sec-hdr" style="margin-top:6px;">
-      <span>Open on Windows PC</span>
-      <span style="color:var(--accent-bright);" onclick="call('syncNow')">Refresh</span>
-    </div>
-    <div id="pc-tabs-list" style="display:flex;flex-direction:column;gap:8px;"></div>
-  </section>
-
-  <!-- Screen 3: dejavu Link (Cross-Device Sync Hub) -->
-  <section id="scr-sync" class="screen sheet hidden">
-    <div class="top-row">
-      <h2 class="screen-title">dejavu Link</h2>
-      <div style="display:flex;gap:7px;">
-        <button type="button" class="pill-btn" onclick="call('syncNow')">Sync</button>
-        <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
-      </div>
-    </div>
-
-    <div class="g-card" style="display:flex;flex-direction:column;gap:10px;">
-      <div>
-        <div id="sync-status-title" style="font-size:14.5px;font-weight:650;">Ready to Pair with PC</div>
-        <div id="sync-status-sub" style="font-size:11.5px;color:var(--muted);margin-top:2px;">End-to-end encrypted (AES-256) · Wi-Fi &amp; Mobile Data</div>
+  <!-- ===================================================================
+       SHEET B: DEJAVU LINK (AirDrop-Style Cross-Device Sync Sheet)
+       =================================================================== -->
+  <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
+    <div class="sheet-panel" onclick="event.stopPropagation()">
+      <div class="sheet-head" data-swipe-dismiss="1">
+        <div class="sheet-grab"></div>
+        <div class="sheet-title-row">
+          <h2 class="sheet-title">dejavu Link</h2>
+          <div style="display:flex;gap:7px;">
+            <button type="button" class="pill-btn" onclick="call('syncNow')">Sync</button>
+            <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
+          </div>
+        </div>
       </div>
 
-      <button type="button" id="btn-m-send-tab" class="cta-full" onclick="call('sendCurrentTabToPc')">
-        <svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M3 14L14 4M14 4H7.5M14 4v6.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span id="btn-m-send-tab-lbl">Send Current Tab to Windows PC</span>
-      </button>
+      <div class="sheet-body">
+        <!-- Connection Device Card -->
+        <div class="g-card" style="display:flex;flex-direction:column;gap:12px;background:var(--group-bg);box-shadow:none;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span id="sync-dev-ico" class="sq-ico ic-violet" style="width:40px;height:40px;border-radius:12px;">
+              <svg viewBox="0 0 20 20" width="20" height="20" fill="none"><rect x="2.5" y="4" width="15" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 16.5h6M10 14v2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <div style="flex:1;min-width:0;">
+              <div id="sync-status-title" style="font-size:15px;font-weight:680;">Pair with Windows PC</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">AES-256 End-to-End Encrypted · Real-Time Sync</div>
+            </div>
+          </div>
 
-      <div class="drop-compose">
-        <input id="m-drop-input" type="text" placeholder="Send any link or text note to PC...">
-        <button type="button" class="pill-btn primary" style="height:44px;padding:0 16px;" onclick="sendMobileDrop()">Send</button>
+          <button type="button" id="btn-m-send-tab" class="cta-btn" onclick="call('sendCurrentTabToPc')">
+            <svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M3 14L14 4M14 4H7.5M14 4v6.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span id="btn-m-send-tab-lbl">Send Current Tab to Windows PC</span>
+          </button>
+
+          <div class="compose-row">
+            <input id="m-drop-input" type="text" placeholder="Send any link or text note to PC...">
+            <button type="button" class="pill-btn primary" style="height:44px;padding:0 16px;border-radius:14px;" onclick="sendMobileDrop()">Send</button>
+          </div>
+        </div>
+
+        <!-- Pairing Section -->
+        <div class="g-card" style="display:flex;flex-direction:column;gap:10px;background:var(--group-bg);box-shadow:none;">
+          <div class="sec-hdr" style="padding:0;"><span>Device Pairing Code</span></div>
+          <div id="m-code-box" class="code-pill">DJV-0000-0000</div>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="pill-btn primary" style="flex:1;height:40px;border-radius:13px;" onclick="call('scanQr')">Scan PC QR Code</button>
+            <button type="button" class="pill-btn" style="height:40px;border-radius:13px;" onclick="copyPairCode()">Copy Code</button>
+          </div>
+          <div class="compose-row">
+            <input id="m-pair-input" type="text" placeholder="Enter code from PC (DJV-XXXX-XXXX)" style="text-transform:uppercase;font-family:monospace;">
+            <button type="button" class="pill-btn" style="height:44px;border-radius:14px;" onclick="pairCode()">Pair</button>
+          </div>
+        </div>
+
+        <div class="sec-hdr"><span>Shared Links, Tabs &amp; Text</span></div>
+        <div id="m-drops-list" style="display:flex;flex-direction:column;gap:9px;"></div>
       </div>
     </div>
+  </div>
 
-    <!-- Pair with Windows PC -->
-    <div class="g-card" style="display:flex;flex-direction:column;gap:10px;">
-      <div class="sec-hdr" style="padding:0;"><span>Connect PC &amp; Phone</span></div>
-      <div id="m-code-box" class="code-display">DJV-0000-0000</div>
-      <div style="display:flex;gap:8px;">
-        <button type="button" class="pill-btn primary" style="flex:1;height:40px;" onclick="call('scanQr')">Scan PC QR Code</button>
-        <button type="button" class="pill-btn" style="height:40px;" onclick="copyPairCode()">Copy</button>
+  <!-- ===================================================================
+       SHEET C: SETTINGS / OPTIONS (iOS 18 x OneUI Grouped Settings)
+       =================================================================== -->
+  <div id="scr-settings" class="sheet-backdrop hidden" onclick="backdropClose(event)">
+    <div class="sheet-panel" onclick="event.stopPropagation()">
+      <div class="sheet-head" data-swipe-dismiss="1">
+        <div class="sheet-grab"></div>
+        <div class="sheet-title-row">
+          <h2 class="sheet-title">Settings</h2>
+          <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
+        </div>
       </div>
-      <div class="drop-compose">
-        <input id="m-pair-input" type="text" placeholder="Enter code from PC (DJV-XXXX-XXXX)" style="text-transform:uppercase;font-family:monospace;">
-        <button type="button" class="pill-btn" style="height:44px;" onclick="pairCode()">Pair</button>
-      </div>
-    </div>
 
-    <div class="sec-hdr"><span>Shared Links, Tabs &amp; Text</span></div>
-    <div id="m-drops-list" style="display:flex;flex-direction:column;gap:9px;"></div>
-  </section>
+      <div class="sheet-body">
+        <!-- Appearance Card -->
+        <div class="sec-hdr"><span>Appearance</span></div>
+        <div class="g-group">
+          <div class="theme-cards">
+            <button type="button" id="m-th-dark-btn" class="theme-card active" onclick="call('setThemeMode','dark')">
+              <div class="mini-phone mp-dark">
+                <div class="mp-dots"><span></span><span></span><span></span><span></span></div>
+                <div class="mp-pill"></div>
+              </div>
+              <span style="font-size:12.5px;font-weight:640;">Dark Obsidian</span>
+            </button>
+            <button type="button" id="m-th-light-btn" class="theme-card" onclick="call('setThemeMode','light')">
+              <div class="mini-phone mp-light">
+                <div class="mp-dots"><span></span><span></span><span></span><span></span></div>
+                <div class="mp-pill"></div>
+              </div>
+              <span style="font-size:12.5px;font-weight:640;">Light Porcelain</span>
+            </button>
+          </div>
+          <div class="accent-row">
+            <span style="font-size:14px;font-weight:580;">Accent Color</span>
+            <div id="opt-m-accents" class="orb-group"></div>
+          </div>
+        </div>
 
-  <!-- Screen 4: Samsung Internet x Safari Mobile Menu -->
-  <section id="scr-menu" class="screen sheet hidden">
-    <div class="top-row">
-      <h2 class="screen-title">Menu</h2>
-      <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
-    </div>
+        <!-- Layout & Navigation Card -->
+        <div class="sec-hdr"><span>Browser Layout</span></div>
+        <div class="g-group">
+          <div style="padding:12px 14px 8px;font-size:13.5px;font-weight:580;">Address Bar Position</div>
+          <div class="bar-seg">
+            <button type="button" id="opt-bar-bottom" class="active" onclick="call('setBarPosition','bottom')">Bottom (Safari)</button>
+            <button type="button" id="opt-bar-top" onclick="call('setBarPosition','top')">Top (Chrome)</button>
+          </div>
+          <div class="g-row plain" onclick="call('toggleAutoHideBar')">
+            <div class="g-row-meta">
+              <div class="g-row-title">Auto-Hide Bar on Scroll</div>
+              <div class="g-row-sub">Tuck toolbar into sleek domain pill while reading</div>
+            </div>
+            <button type="button" id="sw-autohide" class="sw on" aria-label="Auto hide toolbar"></button>
+          </div>
+          <div class="g-row plain" onclick="call('toggleDarkWebPages')">
+            <div class="g-row-meta">
+              <div class="g-row-title">Dark Mode for Websites</div>
+              <div class="g-row-sub">Adapt bright web pages for comfortable night reading</div>
+            </div>
+            <button type="button" id="sw-darkweb" class="sw" aria-label="Dark web pages"></button>
+          </div>
+        </div>
 
-    <div class="menu-grid">
-      <button type="button" class="menu-tile" onclick="call('sendCurrentTabToPc')">
-        <span class="m-ico ic-violet"><svg viewBox="0 0 18 18" fill="none"><rect x="2.2" y="3.5" width="10" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 13.5h3.4M7.2 11v2.5M11.5 9.5L16 5M16 5h-3.4M16 5v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span>Send to PC</span>
-      </button>
-      <button type="button" id="m-bm-tile" class="menu-tile" onclick="call('toggleBookmark')">
-        <span class="m-ico ic-amber"><svg viewBox="0 0 18 18" fill="none"><path d="M9 2.5l2 4.1 4.5.6-3.2 3.2.8 4.5L9 12.8l-4.1 2.1.8-4.5L2.5 7.2 7 6.6 9 2.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
-        <span id="m-bm-lbl">Bookmark</span>
-      </button>
-      <button type="button" id="m-rl-tile" class="menu-tile" onclick="call('toggleReadingList')">
-        <span class="m-ico ic-sky"><svg viewBox="0 0 18 18" fill="none"><circle cx="5.8" cy="9.5" r="2.7" stroke="currentColor" stroke-width="1.5"/><circle cx="12.2" cy="9.5" r="2.7" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 9.5h1" stroke="currentColor" stroke-width="1.5"/></svg></span>
-        <span id="m-rl-lbl">Read Later</span>
-      </button>
-      <button type="button" id="m-desk-tile" class="menu-tile" onclick="call('toggleDesktopMode')">
-        <span class="m-ico ic-slate"><svg viewBox="0 0 18 18" fill="none"><rect x="2.4" y="3.2" width="13.2" height="9" rx="1.6" stroke="currentColor" stroke-width="1.5"/><path d="M6.2 14.8h5.6M9 12.2v2.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-        <span>Desktop Site</span>
-      </button>
-      <button type="button" class="menu-tile" onclick="call('openReaderMode')">
-        <span class="m-ico ic-teal"><svg viewBox="0 0 18 18" fill="none"><path d="M3.2 4.6h11.6M3.2 8h11.6M3.2 11.4h8.2M3.2 14.5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
-        <span>Reader View</span>
-      </button>
-      <button type="button" class="menu-tile" onclick="call('openFindInPage')">
-        <span class="m-ico ic-indigo"><svg viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="4.8" stroke="currentColor" stroke-width="1.55"/><path d="M11.6 11.6L15 15" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg></span>
-        <span>Find in Page</span>
-      </button>
-      <button type="button" class="menu-tile" onclick="call('shareNative')">
-        <span class="m-ico ic-sky"><svg viewBox="0 0 18 18" fill="none"><path d="M9 11.5V3.5M6.2 6.2L9 3.5l2.8 2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.2 9.5v4.3a1.2 1.2 0 0 0 1.2 1.2h7.2a1.2 1.2 0 0 0 1.2-1.2V9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-        <span>Share App</span>
-      </button>
-      <button type="button" class="menu-tile" onclick="call('openScreen','wallpapers')">
-        <span class="m-ico ic-rose"><svg viewBox="0 0 18 18" fill="none"><rect x="2.6" y="3.5" width="12.8" height="11" rx="2.2" stroke="currentColor" stroke-width="1.5"/><circle cx="6.6" cy="7.2" r="1.2" fill="currentColor"/><path d="M3.2 12.8l3.2-3.1 2.4 2.2 2.2-2.2 3.5 3.1" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span>Wallpapers</span>
-      </button>
-      <button type="button" class="menu-tile" onclick="call('openScreen','settings')">
-        <span class="m-ico ic-plum"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 2.8v1.5M9 13.7v1.5M2.8 9h1.5M13.7 9h1.5M4.6 4.6l1.1 1.1M12.3 12.3l1.1 1.1M13.4 4.6l-1.1 1.1M5.7 12.3l-1.1 1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
-        <span>Options</span>
-      </button>
-    </div>
+        <!-- Search Engine Grouped Radio List (Zero Awkward Wrapping!) -->
+        <div class="sec-hdr"><span>Default Search Engine</span></div>
+        <div id="opt-m-engines" class="g-group"></div>
 
-    <div class="seg" id="menu-subtabs">
-      <button type="button" class="seg-btn active" onclick="setMenuList('bookmarks', this)">Bookmarks</button>
-      <button type="button" class="seg-btn" onclick="setMenuList('reading', this)">Reading List</button>
-      <button type="button" class="seg-btn" onclick="setMenuList('history', this)">History</button>
-    </div>
-    <div id="menu-list-box" style="display:flex;flex-direction:column;gap:8px;"></div>
-  </section>
+        <!-- Privacy & Shield -->
+        <div class="sec-hdr"><span>Privacy &amp; Shield</span></div>
+        <div class="g-group">
+          <div class="g-row plain" onclick="call('toggleAdBlock')">
+            <div class="g-row-meta">
+              <div class="g-row-title">Ad &amp; Tracker Blocker</div>
+              <div id="opt-m-ab-sub" class="g-row-sub">Active</div>
+            </div>
+            <button type="button" id="sw-adblock" class="sw on" aria-label="Ad blocker"></button>
+          </div>
+          <button type="button" class="g-row plain" onclick="call('clearHistory')">
+            <div class="g-row-meta">
+              <div class="g-row-title" style="color:var(--danger);">Clear Browsing History</div>
+              <div class="g-row-sub">Keeps your Favorites, Wallpapers &amp; PC Link</div>
+            </div>
+          </button>
+        </div>
 
-  <!-- Screen 5: HD Mobile Wallpapers -->
-  <section id="scr-wallpapers" class="screen sheet hidden">
-    <div class="top-row">
-      <h2 class="screen-title">HD Wallpapers</h2>
-      <button type="button" class="pill-btn primary" onclick="call('openScreen','start')">Done</button>
-    </div>
-    <div id="m-wp-grid" class="wp-grid"></div>
-  </section>
-
-  <!-- Screen 6: Mobile Safari Options -->
-  <section id="scr-settings" class="screen sheet hidden">
-    <div class="top-row">
-      <h2 class="screen-title">dejavu Options</h2>
-      <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
-    </div>
-
-    <div class="g-card" style="display:flex;flex-direction:column;gap:10px;">
-      <div class="sec-hdr" style="padding:0;"><span>Appearance Theme</span></div>
-      <div class="m-theme-grid">
-        <button type="button" id="m-th-dark-btn" class="m-theme-card active" onclick="call('setThemeMode','dark')">
-          <div class="m-th-prev m-th-dark"><span class="m-th-bar"></span><span class="m-th-box"></span></div>
-          <span style="font-size:12.5px;font-weight:630;">Dark Obsidian</span>
-        </button>
-        <button type="button" id="m-th-light-btn" class="m-theme-card" onclick="call('setThemeMode','light')">
-          <div class="m-th-prev m-th-light"><span class="m-th-bar"></span><span class="m-th-box"></span></div>
-          <span style="font-size:12.5px;font-weight:630;">Light Porcelain</span>
-        </button>
+        <div style="text-align:center;font-size:11.5px;color:var(--subtle);padding:4px 0 8px;">
+          dejavu Mobile v3.3.0 · Butterfly Edition
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="g-card" style="display:flex;flex-direction:column;gap:10px;">
-      <div class="sec-hdr" style="padding:0;"><span>Default Search Engine</span></div>
-      <div id="opt-m-engines" class="seg"></div>
-    </div>
-
-    <div class="g-card" style="display:flex;flex-direction:column;gap:10px;">
-      <div class="sec-hdr" style="padding:0;"><span>Butterfly Accent Color</span></div>
-      <div id="opt-m-accents" class="seg"></div>
-    </div>
-
-    <div class="g-card" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <div>
-        <div style="font-size:14px;font-weight:600;">Built-in Ad &amp; Tracker Blocker</div>
-        <div id="opt-m-ab-sub" style="font-size:12px;color:var(--muted);margin-top:2px;">Active</div>
+  <!-- ===================================================================
+       SHEET D: HD WALLPAPERS GALLERY (12 HD Butterfly + Live Prism)
+       =================================================================== -->
+  <div id="scr-wallpapers" class="sheet-backdrop hidden" onclick="backdropClose(event)">
+    <div class="sheet-panel" onclick="event.stopPropagation()">
+      <div class="sheet-head" data-swipe-dismiss="1">
+        <div class="sheet-grab"></div>
+        <div class="sheet-title-row">
+          <h2 class="sheet-title">HD Wallpapers</h2>
+          <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
+        </div>
       </div>
-      <button type="button" id="opt-m-ab-btn" class="pill-btn primary" onclick="call('toggleAdBlock')">On</button>
-    </div>
-
-    <div class="g-card" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <div>
-        <div style="font-size:14px;font-weight:600;">Clear Mobile History</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Keeps your bookmarks, wallpapers &amp; PC link</div>
+      <div class="sheet-body">
+        <div id="m-wp-grid" class="wp-grid"></div>
       </div>
-      <button type="button" class="pill-btn danger" onclick="call('clearHistory')">Clear</button>
     </div>
-  </section>
+  </div>
+
+  <!-- Inline Add Favorite Modal -->
+  <div id="add-fav-modal" class="mini-modal hidden" onclick="closeAddFav()">
+    <div class="mini-modal-card" onclick="event.stopPropagation()">
+      <h3 style="margin:0;font-size:17px;font-weight:700;">Pin to Favorites</h3>
+      <input id="fav-in-name" type="text" placeholder="Site name (e.g. Spotify)">
+      <input id="fav-in-url" type="url" placeholder="Website URL (e.g. spotify.com)">
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
+        <button type="button" class="pill-btn" onclick="closeAddFav()">Cancel</button>
+        <button type="button" class="pill-btn primary" onclick="submitAddFav()">Save</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     const WALLPAPERS = [
-      { id: 'wp-velvet-mirage.jpg', name: 'Velvet Mirage' },
-      { id: 'wp-prism-cascade.jpg', name: 'Prism Cascade' },
-      { id: 'wp-midnight-orchid.jpg', name: 'Midnight Orchid' },
-      { id: 'wp-phantom-lotus.jpg', name: 'Phantom Lotus' },
-      { id: 'wp-amethyst.jpg', name: 'Amethyst Glasswing' },
-      { id: 'wp-aurora.jpg', name: 'Aurora Glasswing' },
-      { id: 'obsidian', name: 'Obsidian Prism' }
+      { id: 'wp-velvet-mirage.jpg',     name: 'Velvet Mirage' },
+      { id: 'wp-prism-cascade.jpg',     name: 'Prism Cascade' },
+      { id: 'wp-midnight-orchid.jpg',   name: 'Midnight Orchid' },
+      { id: 'wp-phantom-lotus.jpg',     name: 'Phantom Lotus' },
+      { id: 'wp-opal-horizon.jpg',      name: 'Opal Horizon' },
+      { id: 'wp-stardust-sanctuary.jpg',name: 'Stardust Sanctuary' },
+      { id: 'wp-amethyst.jpg',          name: 'Amethyst Glasswing' },
+      { id: 'wp-aurora.jpg',            name: 'Aurora Glasswing' },
+      { id: 'wp-celestial.jpg',         name: 'Celestial Dusk' },
+      { id: 'wp-sakura.jpg',            name: 'Sakura Bloom' },
+      { id: 'wp-morpho.jpg',            name: 'Blue Morpho' },
+      { id: 'wp-rosequartz.jpg',        name: 'Rose Quartz' },
+      { id: 'obsidian',                 name: 'Obsidian Prism' }
     ];
     const ENGINES = [
-      ['google', 'Google'], ['duckduckgo', 'DuckDuckGo'], ['brave', 'Brave'], ['bing', 'Bing'], ['perplexity', 'Perplexity']
+      ['google',     'Google',     'G', '#4285f4'],
+      ['duckduckgo', 'DuckDuckGo', 'D', '#de5833'],
+      ['brave',      'Brave',      'B', '#fb542b'],
+      ['bing',       'Bing',       'b', '#008373'],
+      ['perplexity', 'Perplexity', 'P', '#20b2aa']
     ];
     const ACCENTS = [
-      ['amethyst', 'Amethyst'], ['sapphire', 'Sapphire'], ['aurora', 'Aurora'], ['rose', 'Rose'], ['gold', 'Gold']
+      ['amethyst', '#b688ff'],
+      ['sapphire', '#4da6ff'],
+      ['aurora',   '#38d9a9'],
+      ['rose',     '#f472b6'],
+      ['gold',     '#f5b942']
     ];
 
     let state = {};
-    let menuListMode = 'bookmarks';
+    let favEditMode = false;
+    let tabViewPrivate = false;
+    let menuSubView = 'main'; // 'main' | 'bookmarks' | 'reading' | 'history'
 
     function call(fn, ...args) {
       try {
@@ -577,13 +1287,127 @@
         }
       } catch (e) {}
     }
-    function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-    function goStartSearch() {
-      const inp = document.getElementById('sp-search-in');
-      const v = (inp.value || '').trim();
-      if (!v) return;
-      inp.value = '';
-      call('navigate', v);
+    function esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function getHost(url) {
+      try {
+        return new URL(url).hostname.replace(/^www\./, '').replace(/^m\./, '');
+      } catch (e) {
+        return String(url || '').replace(/^https?:\/\//, '').split('/')[0];
+      }
+    }
+
+    // Crisp Brand SVG Icons + Live High-Res Favicons with Gradient Fallback
+    function getSiteIconHtml(url, title, sizePx) {
+      const sz = sizePx || 32;
+      const rad = Math.round(sz * 0.29);
+      const host = getHost(url).toLowerCase();
+      const ch = esc(((title || host || 'D').trim().charAt(0) || 'D').toUpperCase());
+
+      if (host.includes('youtube.com') || host === 'youtu.be') {
+        return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:#ff0033;"><svg viewBox="0 0 24 24" width="${Math.round(sz*0.58)}" height="${Math.round(sz*0.58)}" fill="#fff"><path d="M9.5 7.5v9l7.5-4.5-7.5-4.5z"/></svg></span>`;
+      }
+      if (host.includes('gemini.google.com')) {
+        return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:linear-gradient(135deg,#3b82f6,#8b5cf6,#ec4899);"><svg viewBox="0 0 24 24" width="${Math.round(sz*0.56)}" height="${Math.round(sz*0.56)}" fill="#fff"><path d="M12 2.5C13.2 8.2 15.8 10.8 21.5 12c-5.7 1.2-8.3 3.8-9.5 9.5-1.2-5.7-3.8-8.3-9.5-9.5 5.7-1.2 8.3-3.8 9.5-9.5z"/></svg></span>`;
+      }
+      if (host.includes('github.com')) {
+        return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:#1f2328;"><svg viewBox="0 0 24 24" width="${Math.round(sz*0.6)}" height="${Math.round(sz*0.6)}" fill="#fff"><path d="M12 2.5a9.5 9.5 0 0 0-3 18.5c.5.1.7-.2.7-.5v-1.7c-2.7.6-3.2-1.1-3.2-1.1-.4-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.1-.2-4.4-1.1-4.4-4.8 0-1.1.4-1.9 1-2.6-.1-.2-.4-1.2.1-2.6 0 0 .8-.3 2.6 1a9 9 0 0 1 4.8 0c1.8-1.3 2.6-1 2.6-1 .5 1.4.2 2.4.1 2.6.6.7 1 1.5 1 2.6 0 3.7-2.3 4.6-4.4 4.8.4.3.7.9.7 1.8v2.7c0 .3.2.6.7.5A9.5 9.5 0 0 0 12 2.5z"/></svg></span>`;
+      }
+      if (host.includes('reddit.com')) {
+        return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:#ff4500;"><svg viewBox="0 0 24 24" width="${Math.round(sz*0.6)}" height="${Math.round(sz*0.6)}" fill="#fff"><circle cx="12" cy="13.5" r="5.5"/><circle cx="7" cy="10.5" r="1.6"/><circle cx="17" cy="10.5" r="1.6"/><circle cx="10" cy="13" r="1" fill="#ff4500"/><circle cx="14" cy="13" r="1" fill="#ff4500"/><path d="M12 8l1.6-3.4 3 .6" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/><circle cx="17.5" cy="5.5" r="1.2"/></svg></span>`;
+      }
+      if (host.includes('wikipedia.org')) {
+        return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:linear-gradient(145deg,#334155,#0f172a);font-family:Georgia,serif;font-size:${Math.round(sz*0.54)}px;">W</span>`;
+      }
+      if (host === 'x.com' || host.includes('twitter.com')) {
+        return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:#0f0f12;"><svg viewBox="0 0 24 24" width="${Math.round(sz*0.52)}" height="${Math.round(sz*0.52)}" fill="#fff"><path d="M17.5 3.5h2.8l-6.1 7 7.2 10h-5.6l-4.4-5.8-5.1 5.8H3.5l6.5-7.5L3 3.5h5.8l4 5.3 4.7-5.3z"/></svg></span>`;
+      }
+      if (host.includes('dathevinci.github.io')) {
+        return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:linear-gradient(145deg,#26184c,#0e0a1d);border:1px solid rgba(196,162,255,0.34);"><img src="logo-transparent.png" style="padding:4px;object-fit:contain;filter:brightness(1.25);" alt="D"></span>`;
+      }
+      if (host.includes('google.com')) {
+        return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:#4285f4;font-size:${Math.round(sz*0.54)}px;">G</span>`;
+      }
+
+      const grads = [
+        'linear-gradient(145deg,#7c4dff,#5b21b6)',
+        'linear-gradient(145deg,#0ea5e9,#0369a1)',
+        'linear-gradient(145deg,#10b981,#047857)',
+        'linear-gradient(145deg,#ec4899,#be185d)',
+        'linear-gradient(145deg,#f59e0b,#b45309)'
+      ];
+      let h = 0;
+      for (let i = 0; i < host.length; i++) h = (h * 31 + host.charCodeAt(i)) & 0xffff;
+      const g = grads[h % grads.length];
+      const favSrc = host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128` : '';
+      return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${g};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
+    }
+
+    function updateClockGreeting() {
+      const el = document.getElementById('sp-date');
+      if (!el) return;
+      const d = new Date();
+      const hr = d.getHours();
+      const greet = hr < 12 ? 'Good morning' : (hr < 18 ? 'Good afternoon' : 'Good evening');
+      const day = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+      el.textContent = `${greet} · ${day}`;
+    }
+
+    function backdropClose(ev) {
+      if (ev.target === ev.currentTarget) call('closeScreen');
+    }
+
+    // Touch swipe-down-to-dismiss on bottom sheet grab handle header
+    document.querySelectorAll('[data-swipe-dismiss]').forEach((hdr) => {
+      let startY = 0;
+      const panel = hdr.closest('.sheet-panel');
+      hdr.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+        panel.style.transition = 'none';
+      }, { passive: true });
+      hdr.addEventListener('touchmove', (e) => {
+        const dy = Math.max(0, e.touches[0].clientY - startY);
+        panel.style.transform = `translateY(${dy}px)`;
+      }, { passive: true });
+      hdr.addEventListener('touchend', (e) => {
+        const dy = Math.max(0, e.changedTouches[0].clientY - startY);
+        panel.style.transition = 'transform 0.2s ease';
+        if (dy > 85) {
+          panel.style.transform = 'translateY(100%)';
+          setTimeout(() => { panel.style.transform = ''; call('closeScreen'); }, 150);
+        } else {
+          panel.style.transform = '';
+        }
+      }, { passive: true });
+    });
+
+    function toggleFavEdit() {
+      favEditMode = !favEditMode;
+      renderStartPage();
+    }
+    function openAddFav() {
+      document.getElementById('fav-in-name').value = '';
+      document.getElementById('fav-in-url').value = '';
+      document.getElementById('add-fav-modal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('fav-in-name').focus(), 60);
+    }
+    function closeAddFav() {
+      document.getElementById('add-fav-modal').classList.add('hidden');
+    }
+    function submitAddFav() {
+      const name = document.getElementById('fav-in-name').value.trim();
+      const url = document.getElementById('fav-in-url').value.trim();
+      if (!url) return;
+      closeAddFav();
+      call('addFavorite', name, url);
+    }
+
+    function copyActiveUrl() {
+      if (state.activeUrl) call('copyText', state.activeUrl);
+    }
+    function goClipboard() {
+      if (state.clipboardText) call('navigate', state.clipboardText);
     }
     function sendMobileDrop() {
       const inp = document.getElementById('m-drop-input');
@@ -603,160 +1427,385 @@
       const code = (state.sync && state.sync.pairingCode) || '';
       if (code) call('copyText', code);
     }
-    function setMenuList(mode, btn) {
-      menuListMode = mode;
-      document.querySelectorAll('#menu-subtabs .seg-btn').forEach((b) => b.classList.toggle('active', b === btn));
-      renderMenuList();
+    function setTabViewMode(isPriv) {
+      tabViewPrivate = !!isPriv;
+      renderTabsScreen();
+    }
+    function openNewInMode() {
+      if (tabViewPrivate) call('openNewPrivateTab', '');
+      else call('openNewTab', '');
+    }
+    function closeAllInMode() {
+      call('closeAllTabs', !!tabViewPrivate);
+    }
+    function stepZoom(delta) {
+      const cur = Number(state.pageZoom || 100);
+      call('setPageZoom', Math.max(75, Math.min(150, cur + delta)));
+    }
+    function setMenuSubView(mode) {
+      menuSubView = mode;
+      const isMain = mode === 'main';
+      document.getElementById('menu-view-main').style.display = isMain ? 'flex' : 'none';
+      document.getElementById('menu-view-list').style.display = isMain ? 'none' : 'flex';
+      document.getElementById('menu-back-btn').style.display = isMain ? 'none' : 'inline-flex';
+      const titles = { main: 'Menu', bookmarks: 'Bookmarks', reading: 'Reading List', history: 'History' };
+      document.getElementById('menu-sheet-title').textContent = titles[mode] || 'Menu';
+      if (!isMain) renderMenuSubList();
     }
 
-    function renderMenuList() {
-      const box = document.getElementById('menu-list-box');
-      const arr = menuListMode === 'bookmarks' ? (state.bookmarks || []) : (menuListMode === 'reading' ? (state.readingList || []) : (state.history || []));
+    function renderMenuSubList() {
+      const box = document.getElementById('menu-list-group');
+      const arr = menuSubView === 'bookmarks' ? (state.bookmarks || [])
+        : (menuSubView === 'reading' ? (state.readingList || []) : (state.history || []));
       box.innerHTML = '';
       if (!arr.length) {
-        box.innerHTML = `<div class="empty">Nothing saved in ${esc(menuListMode)} yet.</div>`;
+        box.innerHTML = `<div class="empty">Nothing saved in ${esc(menuSubView)} yet.</div>`;
         return;
       }
       arr.forEach((it) => {
         const row = document.createElement('div');
-        row.className = 'list-row';
-        row.innerHTML = `<div class="list-meta"><div class="list-title">${esc(it.title || it.url)}</div><div class="list-sub">${esc(it.url)}</div></div>`;
+        row.className = 'g-row';
+        row.innerHTML = `
+          ${getSiteIconHtml(it.url, it.title, 30)}
+          <div class="g-row-meta">
+            <div class="g-row-title">${esc(it.title || it.url)}</div>
+            <div class="g-row-sub">${esc(getHost(it.url) || it.url)}</div>
+          </div>
+          <button type="button" class="tab-card-x" aria-label="Remove">×</button>
+        `;
         row.onclick = () => call('navigate', it.url);
+        row.querySelector('.tab-card-x').onclick = (e) => {
+          e.stopPropagation();
+          if (menuSubView === 'bookmarks') call('removeFavorite', it.url);
+          else if (menuSubView === 'reading') call('removeReadingItem', it.url);
+          else call('removeHistoryItem', it.url);
+        };
         box.appendChild(row);
       });
     }
 
-    window.__onDejavuState = function (st) {
-      state = st || {};
-      const accent = state.accentColor || 'amethyst';
-      const isLight = state.themeMode === 'light';
-      document.documentElement.dataset.accent = accent;
-      document.body.dataset.accent = accent;
-      document.body.classList.toggle('theme-light', isLight);
-
-      const thDark = document.getElementById('m-th-dark-btn');
-      const thLight = document.getElementById('m-th-light-btn');
-      if (thDark) thDark.classList.toggle('active', !isLight);
-      if (thLight) thLight.classList.toggle('active', isLight);
-
-      // Wallpaper
-      const wpBg = document.getElementById('wp-bg');
-      if (state.wallpaper && state.wallpaper !== 'obsidian') {
-        wpBg.style.backgroundImage = `url("file:///android_asset/wallpapers/${state.wallpaper}")`;
-      } else {
-        wpBg.style.backgroundImage = isLight
-          ? 'radial-gradient(circle at 28% 22%, #e6dcff 0%, #f4f1fc 52%, #e8e1fb 100%)'
-          : 'radial-gradient(circle at 28% 22%, #3a1f78 0%, #140d2a 48%, #07060d 100%)';
-      }
-
-      // Show active screen
-      const scr = state.screen || 'start';
-      ['start', 'tabs', 'sync', 'menu', 'wallpapers', 'settings'].forEach((k) => {
-        const el = document.getElementById('scr-' + k);
-        if (el) el.classList.toggle('hidden', scr !== k);
-      });
+    function renderStartPage() {
+      updateClockGreeting();
+      const isPriv = !!state.activePrivate;
+      document.body.classList.toggle('mode-private', isPriv);
+      document.getElementById('sp-hero-normal').style.display = isPriv ? 'none' : 'flex';
+      document.getElementById('sp-hero-private').style.display = isPriv ? 'flex' : 'none';
+      document.getElementById('sp-fav-section').style.display = isPriv ? 'none' : 'flex';
 
       const sync = state.sync || {};
       const connected = !!sync.connected;
       const linkPill = document.getElementById('sp-link-pill');
       linkPill.classList.toggle('on', connected);
       document.getElementById('sp-link-txt').textContent = connected
-        ? `Connected to ${sync.peerName || 'Windows PC'}`
-        : `Pair with PC · ${sync.pairingCode || ''}`;
+        ? (sync.peerName || 'Windows PC')
+        : 'Link PC';
 
       document.getElementById('sp-blocked').textContent = Number(state.totalBlocked || 0).toLocaleString();
+      const shStatus = document.getElementById('sp-shield-status');
+      shStatus.textContent = state.adBlockEnabled ? 'Active' : 'Paused';
+      shStatus.style.color = state.adBlockEnabled ? 'var(--mint)' : 'var(--muted)';
 
-      // Start Page Favorites
+      document.getElementById('sp-fav-edit-btn').textContent = favEditMode ? 'Done' : 'Edit';
+
+      // Favorites Grid with Real Favicons + Add Shortcut Tile
       const fg = document.getElementById('sp-fav-grid');
       fg.innerHTML = '';
-      (state.bookmarks || []).slice(0, 8).forEach((b) => {
-        const btn = document.createElement('button');
-        btn.type = 'button'; btn.className = 'fav-tile';
-        const ch = (b.title || b.url || 'D').trim().charAt(0).toUpperCase();
-        btn.innerHTML = `<div class="fav-sq">${esc(ch)}</div><div class="fav-lbl">${esc(b.title || b.url)}</div>`;
-        btn.onclick = () => call('navigate', b.url);
-        fg.appendChild(btn);
+      (state.bookmarks || []).slice(0, 11).forEach((b) => {
+        const tile = document.createElement('button');
+        tile.type = 'button'; tile.className = 'fav-tile';
+        tile.innerHTML = `
+          ${favEditMode ? '<span class="fav-del">−</span>' : ''}
+          <div class="fav-sq">${getSiteIconHtml(b.url, b.title, 34)}</div>
+          <div class="fav-lbl">${esc(b.title || getHost(b.url))}</div>
+        `;
+        tile.onclick = () => {
+          if (favEditMode) call('removeFavorite', b.url);
+          else call('navigate', b.url);
+        };
+        fg.appendChild(tile);
       });
 
-      // Latest Shared Drop on Start Page
+      const addTile = document.createElement('button');
+      addTile.type = 'button'; addTile.className = 'fav-tile';
+      addTile.innerHTML = `
+        <div class="fav-sq add-sq">
+          <svg viewBox="0 0 20 20" width="22" height="22" fill="none"><path d="M10 4.5v11M4.5 10h11" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </div>
+        <div class="fav-lbl" style="color:var(--muted);">Add</div>
+      `;
+      addTile.onclick = openAddFav;
+      fg.appendChild(addTile);
+
+      // Continue from Windows PC Carousel (PC Tabs + Shared Drops)
+      const pcSec = document.getElementById('sp-pc-section');
+      const car = document.getElementById('sp-pc-carousel');
+      const rtabs = Array.isArray(sync.remoteTabs) ? sync.remoteTabs : [];
       const drops = Array.isArray(sync.drops) ? sync.drops : [];
-      const latestWrap = document.getElementById('sp-latest-drop-wrap');
-      if (drops.length > 0) {
-        latestWrap.style.display = 'flex';
-        const d = drops[0];
-        const card = document.getElementById('sp-latest-drop');
-        card.innerHTML = `
-          <div class="drop-meta"><span>${esc(d.fromName || 'Device')} · ${esc(d.dropType || 'link')}</span></div>
-          <div class="drop-text" style="margin-top:4px;">${esc(d.dropType === 'text' ? d.text : (d.title || d.url))}</div>
-          ${d.url ? `<div class="drop-url" style="margin-top:2px;">${esc(d.url)}</div>` : ''}
-          <div class="drop-acts">
-            ${d.url ? `<button type="button" class="pill-btn primary" id="sp-d-open">Open</button>` : ''}
-            <button type="button" class="pill-btn" id="sp-d-copy">Copy</button>
-          </div>
-        `;
-        const ob = document.getElementById('sp-d-open');
-        if (ob) ob.onclick = () => call('openNewTab', d.url);
-        document.getElementById('sp-d-copy').onclick = () => call('copyText', d.url || d.text || d.title || '');
+      const cards = [];
+      drops.slice(0, 3).forEach((d) => cards.push({ kind: d.dropType === 'text' ? 'Note from PC' : 'Shared from PC', title: d.title || d.text || d.url, url: d.url || '', text: d.text || '' }));
+      rtabs.slice(0, 6).forEach((rt) => cards.push({ kind: 'Open on PC', title: rt.title || rt.url, url: rt.url || '', text: '' }));
+
+      if (!isPriv && cards.length > 0) {
+        pcSec.style.display = 'flex';
+        car.innerHTML = '';
+        cards.forEach((c) => {
+          const btn = document.createElement('button');
+          btn.type = 'button'; btn.className = 'pc-card';
+          btn.innerHTML = `
+            ${c.url ? getSiteIconHtml(c.url, c.title, 34) : '<span class="sq-ico ic-violet" style="width:34px;height:34px;">✦</span>'}
+            <div class="pc-card-meta">
+              <div class="pc-card-eyebrow">${esc(c.kind)}</div>
+              <div class="pc-card-title">${esc(c.title)}</div>
+              <div class="pc-card-host">${esc(c.url ? getHost(c.url) : 'Tap to copy note')}</div>
+            </div>
+          `;
+          btn.onclick = () => {
+            if (c.url) call('openNewTab', c.url);
+            else call('copyText', c.text || c.title);
+          };
+          car.appendChild(btn);
+        });
       } else {
-        latestWrap.style.display = 'none';
+        pcSec.style.display = 'none';
+      }
+    }
+
+    function renderOmnibox() {
+      const q = (state.omniboxQuery || '').trim();
+      const activeCard = document.getElementById('omni-active-card');
+      if (!q && state.activeUrl) {
+        activeCard.style.display = 'flex';
+        document.getElementById('omni-active-ico').innerHTML = getSiteIconHtml(state.activeUrl, state.activeTitle, 32);
+        document.getElementById('omni-active-title').textContent = state.activeTitle || getHost(state.activeUrl);
+        document.getElementById('omni-active-url').textContent = state.activeUrl;
+      } else {
+        activeCard.style.display = 'none';
       }
 
-      // Tabs Grid + Remote PC Open Tabs
+      const pasteBtn = document.getElementById('omni-paste-btn');
+      if (!q && state.clipboardText && state.clipboardText !== state.activeUrl) {
+        pasteBtn.style.display = 'flex';
+        document.getElementById('omni-paste-txt').textContent = state.clipboardText;
+      } else {
+        pasteBtn.style.display = 'none';
+      }
+
+      const listGroup = document.getElementById('omni-list-group');
+      const quickWrap = document.getElementById('omni-quick-wrap');
+      listGroup.innerHTML = '';
+
+      if (q.length > 0) {
+        quickWrap.style.display = 'none';
+        listGroup.style.display = 'block';
+        document.getElementById('omni-hdr-lbl').textContent = 'Search & Matches';
+
+        const looksUrl = !q.includes(' ') && q.includes('.');
+        const directRow = document.createElement('button');
+        directRow.type = 'button'; directRow.className = 'sug-row';
+        const engMatch = ENGINES.find((e) => e[0] === (state.searchEngine || 'google'));
+        const engName = engMatch ? engMatch[1] : 'Google';
+        directRow.innerHTML = `
+          <span class="sug-ico" style="background:var(--accent-soft);color:var(--accent-bright);">
+            <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><circle cx="8" cy="8" r="4.8" stroke="currentColor" stroke-width="1.6"/><path d="M11.6 11.6L15 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </span>
+          <div class="g-row-meta">
+            <div class="g-row-title">${esc(q)}</div>
+            <div class="g-row-sub">${looksUrl ? 'Open website' : ('Search with ' + esc(engName))}</div>
+          </div>
+        `;
+        directRow.onclick = () => call('navigate', q);
+        listGroup.appendChild(directRow);
+
+        const ql = q.toLowerCase();
+        const localSeen = new Set();
+        const combined = [...(state.bookmarks || []), ...(state.history || [])];
+        combined.filter((it) => {
+          const u = (it.url || '').toLowerCase();
+          const t = (it.title || '').toLowerCase();
+          if (localSeen.has(u)) return false;
+          if (u.includes(ql) || t.includes(ql)) { localSeen.add(u); return true; }
+          return false;
+        }).slice(0, 3).forEach((it) => {
+          const r = document.createElement('button');
+          r.type = 'button'; r.className = 'sug-row';
+          r.innerHTML = `
+            ${getSiteIconHtml(it.url, it.title, 28)}
+            <div class="g-row-meta">
+              <div class="g-row-title">${esc(it.title || getHost(it.url))}</div>
+              <div class="g-row-sub">${esc(getHost(it.url))}</div>
+            </div>
+          `;
+          r.onclick = () => call('navigate', it.url);
+          listGroup.appendChild(r);
+        });
+
+        (state.suggestions || []).forEach((s) => {
+          if (s.toLowerCase() === ql) return;
+          const r = document.createElement('div');
+          r.className = 'sug-row';
+          r.innerHTML = `
+            <span class="sug-ico"><svg viewBox="0 0 18 18" width="14" height="14" fill="none"><circle cx="8" cy="8" r="4.6" stroke="currentColor" stroke-width="1.55"/><path d="M11.5 11.5L14.8 14.8" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg></span>
+            <div class="g-row-meta"><div class="g-row-title">${esc(s)}</div></div>
+            <button type="button" class="sug-fill" aria-label="Insert"><svg viewBox="0 0 18 18" width="15" height="15" fill="none"><path d="M13 13L5 5M5 5h5.5M5 5v5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          `;
+          r.onclick = () => call('navigate', s);
+          r.querySelector('.sug-fill').onclick = (e) => { e.stopPropagation(); call('fillOmnibox', s + ' '); };
+          listGroup.appendChild(r);
+        });
+      } else {
+        document.getElementById('omni-hdr-lbl').textContent = 'Quick Access';
+        quickWrap.style.display = 'flex';
+        const qBox = document.getElementById('omni-quick-chips');
+        qBox.innerHTML = '';
+        (state.bookmarks || []).slice(0, 8).forEach((b) => {
+          const ch = document.createElement('button');
+          ch.type = 'button'; ch.className = 'q-chip';
+          ch.innerHTML = `${getSiteIconHtml(b.url, b.title, 22)}<span>${esc(b.title || getHost(b.url))}</span>`;
+          ch.onclick = () => call('navigate', b.url);
+          qBox.appendChild(ch);
+        });
+
+        const recents = (state.history || []).slice(0, 5);
+        if (recents.length) {
+          listGroup.style.display = 'block';
+          recents.forEach((h) => {
+            const r = document.createElement('button');
+            r.type = 'button'; r.className = 'sug-row';
+            r.innerHTML = `
+              ${getSiteIconHtml(h.url, h.title, 28)}
+              <div class="g-row-meta">
+                <div class="g-row-title">${esc(h.title || getHost(h.url))}</div>
+                <div class="g-row-sub">${esc(getHost(h.url))}</div>
+              </div>
+            `;
+            r.onclick = () => call('navigate', h.url);
+            listGroup.appendChild(r);
+          });
+        } else {
+          listGroup.style.display = 'none';
+        }
+      }
+    }
+
+    function renderTabsScreen() {
+      const allTabs = state.tabs || [];
+      const normalTabs = allTabs.filter((t) => !t.isPrivate);
+      const privTabs = allTabs.filter((t) => !!t.isPrivate);
+      const shown = tabViewPrivate ? privTabs : normalTabs;
+
+      const nBtn = document.getElementById('seg-tabs-normal');
+      const pBtn = document.getElementById('seg-tabs-priv');
+      nBtn.classList.toggle('active', !tabViewPrivate);
+      pBtn.classList.toggle('active', tabViewPrivate);
+      pBtn.classList.toggle('priv', tabViewPrivate);
+      document.getElementById('seg-tabs-normal-lbl').textContent = `Tabs (${normalTabs.length})`;
+      document.getElementById('seg-tabs-priv-lbl').textContent = privTabs.length ? `Private (${privTabs.length})` : 'Private';
+
+      const fab = document.getElementById('btn-tabs-new');
+      fab.classList.toggle('priv', tabViewPrivate);
+      document.getElementById('btn-tabs-new-lbl').textContent = tabViewPrivate ? 'New Private' : 'New Tab';
+
       const tg = document.getElementById('tabs-grid');
       tg.innerHTML = '';
-      (state.tabs || []).forEach((t) => {
-        const card = document.createElement('div');
-        card.className = 'tab-card' + (t.id === state.activeTabId ? ' active' : '');
-        card.innerHTML = `
-          <div class="tab-card-title">${esc(t.title || 'Start Page')}</div>
-          <div class="tab-card-url">${esc(t.isNewTab ? 'dejavu Start Page' : t.url)}</div>
-          <button type="button" class="tab-card-x" aria-label="Close tab">×</button>
-        `;
-        card.onclick = () => call('switchTab', t.id);
-        card.querySelector('.tab-card-x').onclick = (e) => { e.stopPropagation(); call('closeTabById', t.id); };
-        tg.appendChild(card);
-      });
+      if (!shown.length) {
+        tg.innerHTML = `<div class="empty" style="grid-column:1/-1;">${tabViewPrivate ? 'No Private tabs open.<br>Tap <b>+ New Private</b> to browse without saving history.' : 'No open tabs.'}</div>`;
+      } else {
+        const wpUrl = (state.wallpaper && state.wallpaper !== 'obsidian') ? `wallpapers/${state.wallpaper}` : '';
+        shown.forEach((t) => {
+          const card = document.createElement('div');
+          card.className = 'tab-card' + (t.id === state.activeTabId ? ' active' : '');
+          const previewHtml = (!t.isNewTab && t.thumb)
+            ? `<img class="live-shot" src="${t.thumb}" alt=""><div class="tab-card-host">${esc(getHost(t.url))}</div>`
+            : `<div class="tab-card-start-prev" style="${wpUrl ? `background-image:url('${wpUrl}')` : 'background:radial-gradient(circle at 30% 25%,#4c26a8,#120c26 70%);'}">
+                 <img src="logo-transparent.png" width="32" height="32" style="object-fit:contain;" alt="" onerror="this.style.display='none'">
+                 <span style="font-size:12px;font-weight:600;color:#f6f4ff;">${t.isPrivate ? 'Private Tab' : (t.isNewTab ? 'Start Page' : esc(getHost(t.url)))}</span>
+               </div>`;
+          card.innerHTML = `
+            <div class="tab-card-hdr">
+              ${t.isNewTab ? '<span class="sq-ico ic-violet" style="width:18px;height:18px;border-radius:5px;font-size:10px;">✦</span>' : getSiteIconHtml(t.url, t.title, 18)}
+              <div class="tab-card-title">${esc(t.title || 'Start Page')}</div>
+              <button type="button" class="tab-card-x" aria-label="Close tab">×</button>
+            </div>
+            <div class="tab-card-preview">${previewHtml}</div>
+          `;
+          card.onclick = () => call('switchTab', t.id);
+          card.querySelector('.tab-card-x').onclick = (e) => { e.stopPropagation(); call('closeTabById', t.id); };
+          tg.appendChild(card);
+        });
+      }
 
+      const pcWrap = document.getElementById('pc-tabs-wrap');
       const pcTabs = document.getElementById('pc-tabs-list');
-      const rtabs = Array.isArray(sync.remoteTabs) ? sync.remoteTabs : [];
+      const rtabs = (state.sync && Array.isArray(state.sync.remoteTabs)) ? state.sync.remoteTabs : [];
+      pcWrap.style.display = tabViewPrivate ? 'none' : 'flex';
       pcTabs.innerHTML = '';
       if (!rtabs.length) {
-        pcTabs.innerHTML = '<div class="empty">Pair with dejavu on Windows PC to view your open PC tabs right here.</div>';
+        pcTabs.innerHTML = '<div class="empty">Pair with dejavu on Windows PC to view &amp; open your PC tabs here.</div>';
       } else {
         rtabs.forEach((rt) => {
-          const row = document.createElement('div');
-          row.className = 'list-row';
+          const row = document.createElement('button');
+          row.type = 'button'; row.className = 'g-row';
           row.innerHTML = `
-            <span class="m-ico ic-violet" style="width:28px;height:28px;border-radius:8px;flex-shrink:0;">
-              <svg viewBox="0 0 18 18" width="14" height="14" fill="none"><rect x="2.4" y="3.4" width="13.2" height="8.6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M6.2 14.5h5.6M9 12v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            </span>
-            <div class="list-meta"><div class="list-title">${esc(rt.title || rt.url)}</div><div class="list-sub">${esc(rt.url)}</div></div>
+            ${getSiteIconHtml(rt.url, rt.title, 30)}
+            <div class="g-row-meta">
+              <div class="g-row-title">${esc(rt.title || getHost(rt.url))}</div>
+              <div class="g-row-sub">${esc(getHost(rt.url))}</div>
+            </div>
+            <span class="g-chev">›</span>
           `;
           row.onclick = () => call('openNewTab', rt.url);
           pcTabs.appendChild(row);
         });
       }
+    }
 
-      // Sync Hub
+    function renderMenuSheet() {
+      const hasWeb = !!state.activeUrl;
+      const hdr = document.getElementById('menu-page-hdr');
+      hdr.style.display = hasWeb ? 'flex' : 'none';
+      if (hasWeb) {
+        document.getElementById('menu-page-ico').innerHTML = getSiteIconHtml(state.activeUrl, state.activeTitle, 34);
+        document.getElementById('menu-page-title').textContent = state.activeTitle || getHost(state.activeUrl);
+        document.getElementById('menu-page-host').textContent = getHost(state.activeUrl);
+        document.getElementById('menu-bm-btn').classList.toggle('gold', !!state.isBookmarked);
+      }
+
+      document.getElementById('m-rl-tile').classList.toggle('active', !!state.isInReading);
+      document.getElementById('m-desk-tile').classList.toggle('active', !!state.desktopMode);
+      document.getElementById('m-darkweb-tile').classList.toggle('active', !!state.darkWebPages);
+      document.getElementById('m-zoom-val').textContent = `${state.pageZoom || 100}%`;
+
+      document.getElementById('m-cnt-bm').textContent = String((state.bookmarks || []).length);
+      document.getElementById('m-cnt-rl').textContent = String((state.readingList || []).length);
+      document.getElementById('m-cnt-hi').textContent = String((state.history || []).length);
+      if (menuSubView !== 'main') renderMenuSubList();
+    }
+
+    function renderSyncSheet() {
+      const sync = state.sync || {};
+      const connected = !!sync.connected;
       document.getElementById('sync-status-title').textContent = connected
         ? `Connected to ${sync.peerName || 'Windows PC'}`
-        : 'Ready to Pair with Windows PC';
+        : 'Pair with Windows PC';
+      document.getElementById('sync-dev-ico').className = 'sq-ico ' + (connected ? 'ic-emerald' : 'ic-violet');
       document.getElementById('m-code-box').textContent = sync.pairingCode || 'DJV-0000-0000';
+
       const sendBtn = document.getElementById('btn-m-send-tab');
       const sendLbl = document.getElementById('btn-m-send-tab-lbl');
       sendLbl.textContent = state.activeUrl
-        ? `Send "${(state.activeTitle || state.activeUrl).slice(0, 26)}" to PC`
+        ? `Send "${(state.activeTitle || getHost(state.activeUrl)).slice(0, 26)}" to PC`
         : 'Open a website to send tab to PC';
       sendBtn.style.opacity = state.activeUrl ? '1' : '0.52';
 
+      const drops = Array.isArray(sync.drops) ? sync.drops : [];
       const dl = document.getElementById('m-drops-list');
       dl.innerHTML = '';
       if (!drops.length) {
-        dl.innerHTML = '<div class="empty">No shared links, tabs, or text yet.<br>Scan the QR code in dejavu on PC to start syncing!</div>';
+        dl.innerHTML = '<div class="empty">No shared links, tabs, or text yet.<br>Scan the QR code in dejavu on Windows PC to start instant sharing.</div>';
       } else {
         drops.forEach((it) => {
           const card = document.createElement('div');
-          card.className = 'drop-item';
+          card.className = 'drop-card';
           const isTxt = it.dropType === 'text' && !it.url;
           card.innerHTML = `
             <div class="drop-meta">
@@ -777,58 +1826,123 @@
           dl.appendChild(card);
         });
       }
+    }
 
-      // Menu states
-      document.getElementById('m-bm-tile').classList.toggle('active', !!state.isBookmarked);
-      document.getElementById('m-bm-lbl').textContent = state.isBookmarked ? 'Bookmarked' : 'Bookmark';
-      document.getElementById('m-rl-tile').classList.toggle('active', !!state.isInReading);
-      document.getElementById('m-desk-tile').classList.toggle('active', !!state.desktopMode);
-      renderMenuList();
+    function renderSettingsSheet() {
+      const isLight = state.themeMode === 'light';
+      document.getElementById('m-th-dark-btn').classList.toggle('active', !isLight);
+      document.getElementById('m-th-light-btn').classList.toggle('active', isLight);
 
-      // Wallpapers
+      const accBox = document.getElementById('opt-m-accents');
+      accBox.innerHTML = '';
+      ACCENTS.forEach(([id, hex]) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'acc-orb' + ((state.accentColor || 'amethyst') === id ? ' active' : '');
+        b.style.background = hex;
+        b.setAttribute('aria-label', id);
+        b.onclick = () => call('setAccent', id);
+        accBox.appendChild(b);
+      });
+
+      const isTop = state.barPosition === 'top';
+      document.getElementById('opt-bar-bottom').classList.toggle('active', !isTop);
+      document.getElementById('opt-bar-top').classList.toggle('active', isTop);
+      document.getElementById('sw-autohide').classList.toggle('on', state.autoHideBar !== false);
+      document.getElementById('sw-darkweb').classList.toggle('on', !!state.darkWebPages);
+      document.getElementById('sw-adblock').classList.toggle('on', state.adBlockEnabled !== false);
+      document.getElementById('opt-m-ab-sub').textContent = state.adBlockEnabled !== false
+        ? `Active · ${Number(state.totalBlocked || 0).toLocaleString()} blocked`
+        : 'Paused';
+
+      const engBox = document.getElementById('opt-m-engines');
+      engBox.innerHTML = '';
+      ENGINES.forEach(([id, label, glyph, bg]) => {
+        const on = (state.searchEngine || 'google') === id;
+        const r = document.createElement('button');
+        r.type = 'button'; r.className = 'g-row';
+        r.innerHTML = `
+          <span class="sq-ico" style="background:${bg};font-size:13px;font-weight:700;">${glyph}</span>
+          <span class="g-row-meta"><span class="g-row-title">${label}</span></span>
+          <span class="radio-dot${on ? ' on' : ''}">${on ? '<svg viewBox="0 0 14 14" width="11" height="11" fill="none"><path d="M3 7.2l2.6 2.6L11 4.2" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</span>
+        `;
+        r.onclick = () => call('setSearchEngine', id);
+        engBox.appendChild(r);
+      });
+    }
+
+    function renderWallpapersSheet() {
       const wg = document.getElementById('m-wp-grid');
       wg.innerHTML = '';
+      const isLight = state.themeMode === 'light';
       WALLPAPERS.forEach((w) => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'wp-tile' + (state.wallpaper === w.id ? ' active' : '');
         const thumb = w.id === 'obsidian'
-          ? '<div class="wp-live-thumb" style="background:radial-gradient(circle at 30% 30%,#5b31b8,#140d2a 60%,#07060d);"></div>'
-          : `<img src="file:///android_asset/wallpapers/${w.id}" alt="${esc(w.name)}">`;
-        btn.innerHTML = `${thumb}<div class="wp-tile-name">${esc(w.name)}</div>`;
+          ? `<div class="wp-live-thumb" style="background:${isLight ? 'radial-gradient(circle at 30% 25%,#dcd0ff,#f4f1fc 65%,#e4dcfa)' : 'radial-gradient(circle at 30% 25%,#5b31b8,#140d2a 60%,#07060d)'};"></div>`
+          : `<img src="wallpapers/${w.id}" alt="${esc(w.name)}">`;
+        btn.innerHTML = `
+          ${thumb}
+          <span class="wp-check"><svg viewBox="0 0 14 14" width="11" height="11" fill="none"><path d="M3 7.2l2.6 2.6L11 4.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <div class="wp-tile-name">${esc(w.name)}</div>
+        `;
         btn.onclick = () => call('setWallpaper', w.id);
         wg.appendChild(btn);
       });
+    }
 
-      // Settings
-      const engBox = document.getElementById('opt-m-engines');
-      engBox.innerHTML = '';
-      ENGINES.forEach(([id, label]) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'seg-btn' + (state.searchEngine === id ? ' active' : '');
-        b.textContent = label;
-        b.onclick = () => call('setSearchEngine', id);
-        engBox.appendChild(b);
-      });
+    let lastScreen = '';
+    window.__onDejavuState = function (st) {
+      state = st || {};
+      const accent = state.accentColor || 'amethyst';
+      const isLight = state.themeMode === 'light';
+      document.documentElement.dataset.accent = accent;
+      document.body.dataset.accent = accent;
+      document.body.classList.toggle('theme-light', isLight);
 
-      const accBox = document.getElementById('opt-m-accents');
-      accBox.innerHTML = '';
-      ACCENTS.forEach(([id, label]) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'seg-btn' + (state.accentColor === id ? ' active' : '');
-        b.textContent = label;
-        b.onclick = () => call('setAccent', id);
-        accBox.appendChild(b);
-      });
+      // Safe-area insets pushed live from Android WindowInsets
+      if (typeof state.safeTop === 'number') document.documentElement.style.setProperty('--safe-top', state.safeTop + 'px');
+      if (typeof state.safeBottom === 'number') document.documentElement.style.setProperty('--safe-bottom', state.safeBottom + 'px');
+      if (typeof state.sysBottom === 'number') document.documentElement.style.setProperty('--sys-bottom', Math.max(10, state.sysBottom) + 'px');
 
-      document.getElementById('opt-m-ab-sub').textContent = state.adBlockEnabled
-        ? `Active · ${Number(state.totalBlocked || 0).toLocaleString()} blocked`
-        : 'Paused';
-      const abBtn = document.getElementById('opt-m-ab-btn');
-      abBtn.textContent = state.adBlockEnabled ? 'On' : 'Off';
-      abBtn.classList.toggle('primary', !!state.adBlockEnabled);
+      // Wallpaper
+      const wpBg = document.getElementById('wp-bg');
+      if (state.wallpaper && state.wallpaper !== 'obsidian') {
+        wpBg.style.backgroundImage = `url("wallpapers/${state.wallpaper}")`;
+      } else {
+        wpBg.style.backgroundImage = isLight
+          ? 'radial-gradient(circle at 28% 22%, #dfd4ff 0%, #f4f1fc 52%, #e6defa 100%)'
+          : 'radial-gradient(circle at 28% 22%, #3a1f78 0%, #140d2a 48%, #07060d 100%)';
+      }
+
+      const scr = state.screen || 'start';
+      const isModal = scr === 'menu' || scr === 'sync' || scr === 'settings' || scr === 'wallpapers';
+      const showStartBehind = scr === 'start' || (isModal && !state.activeUrl);
+
+      if (scr !== lastScreen) {
+        if (scr === 'menu') setMenuSubView('main');
+        if (scr === 'tabs') tabViewPrivate = !!state.activePrivate;
+        if (scr !== 'start') favEditMode = false;
+        lastScreen = scr;
+      }
+
+      document.getElementById('wp-layer').classList.toggle('show', showStartBehind);
+      document.getElementById('scr-start').classList.toggle('hidden', !showStartBehind);
+      document.getElementById('scr-omnibox').classList.toggle('hidden', scr !== 'omnibox');
+      document.getElementById('scr-tabs').classList.toggle('hidden', scr !== 'tabs');
+      document.getElementById('scr-menu').classList.toggle('hidden', scr !== 'menu');
+      document.getElementById('scr-sync').classList.toggle('hidden', scr !== 'sync');
+      document.getElementById('scr-settings').classList.toggle('hidden', scr !== 'settings');
+      document.getElementById('scr-wallpapers').classList.toggle('hidden', scr !== 'wallpapers');
+
+      if (showStartBehind) renderStartPage();
+      if (scr === 'omnibox') renderOmnibox();
+      if (scr === 'tabs') renderTabsScreen();
+      if (scr === 'menu') renderMenuSheet();
+      if (scr === 'sync') renderSyncSheet();
+      if (scr === 'settings') renderSettingsSheet();
+      if (scr === 'wallpapers') renderWallpapersSheet();
     };
   </script>
 </body>

@@ -3,6 +3,7 @@ package com.dathevinci.dejavu;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.DownloadManager;
 import android.app.role.RoleManager;
 import android.content.ClipData;
@@ -16,6 +17,8 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,6 +28,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.provider.Settings;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Base64;
 import android.view.Gravity;
@@ -34,6 +38,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.Window;
 import android.view.animation.Interpolator;
 import android.view.animation.PathInterpolator;
 import android.view.inputmethod.EditorInfo;
@@ -60,12 +65,15 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
@@ -227,12 +235,18 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
     private final class MobileGoogleBridge {
         private final MobileTab tab;
+        private final boolean fromAuthPopup;
         MobileGoogleBridge(MobileTab tab) {
+            this(tab, false);
+        }
+        MobileGoogleBridge(MobileTab tab, boolean fromAuthPopup) {
             this.tab = tab;
+            this.fromAuthPopup = fromAuthPopup;
         }
         @JavascriptInterface
         public void onGoogleAccountDetected(final String displayName, final String email, final String avatarUrl) {
-            if (tab == null || tab.isPrivate || !isGoogleHost(tab.url)) return;
+            if (tab != null && tab.isPrivate) return;
+            if (!fromAuthPopup && (tab == null || !isGoogleHost(tab.url))) return;
             mainHandler.post(() -> applyDetectedGoogleAccount(displayName, email, avatarUrl));
         }
     }
@@ -283,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private boolean httpsFirst = true;
     private boolean doNotTrack = true;
     private boolean blockPopups = true;
-    private boolean blockThirdPartyCookies = true;
+    private boolean blockThirdPartyCookies = false;
     private boolean pullToRefresh = true;
     private boolean openLinksInBackground = false;
     private String defaultYoutubeQuality = "auto"; // "auto" | "1080p" | "720p" | "360p" | "m4a"
@@ -388,6 +402,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private boolean swipeConsumed = false;
     private JSONObject pendingContextMenu = null;
     private ObjectAnimator progressAnimator = null;
+    private Dialog activeAuthDialog = null;
+    private WebView activeAuthWebView = null;
 
     private final ActivityResultLauncher<Intent> defaultBrowserLauncher = registerForActivityResult(
         new ActivityResultContracts.StartActivityForResult(),
@@ -440,6 +456,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             prefs.getBoolean("adBlockEnabled", true)
         );
         syncManager = new SyncManager(this, this);
+        activateGoogleAutoSyncIfSignedIn(false);
         autoUpdater = new MobileAutoUpdater(this, this);
         downloadManager = new MobileDownloadManager(this, this);
 
@@ -1617,6 +1634,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         ws.setSupportMultipleWindows(true);
         ws.setMediaPlaybackRequiresUserGesture(false);
         ws.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+        enableWebAuthnSupport(ws);
         if (tab.desktopMode) {
             ws.setUserAgentString(DESKTOP_UA);
         } else {
@@ -1733,6 +1751,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     recordHistory(tab.title, tab.url);
                     saveLocalCollections();
                     publishOpenTabsToPc();
+                    if (syncManager != null) syncManager.publishCollection("history", history);
                 }
                 if (tab.id == activeTabId) {
                     swipeRefresh.setRefreshing(false);
@@ -1751,22 +1770,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 }
                 WebView.HitTestResult hit = view.getHitTestResult();
                 String extra = hit != null ? hit.getExtra() : null;
-                boolean activate = !openLinksInBackground;
-                if (extra != null && (extra.startsWith("http://") || extra.startsWith("https://"))) {
+                boolean hasDirectLinkHit = extra != null && (extra.startsWith("http://") || extra.startsWith("https://"));
+                if (!isDialog && hasDirectLinkHit && !isLikelyAuthPopupUrl(extra)) {
+                    boolean activate = !openLinksInBackground;
                     createTab(extra, activate, tab.isPrivate);
                     if (!activate) {
                         Toast.makeText(MainActivity.this, "Opened in background tab", Toast.LENGTH_SHORT).show();
                     }
                     return false;
                 }
-                MobileTab child = createTabInternal(null, activate, tab.isPrivate, true);
-                if (!activate) {
-                    Toast.makeText(MainActivity.this, "Opened in background tab", Toast.LENGTH_SHORT).show();
-                }
-                if (resultMsg != null && resultMsg.obj instanceof WebView.WebViewTransport && child.webView != null) {
-                    ((WebView.WebViewTransport) resultMsg.obj).setWebView(child.webView);
-                    resultMsg.sendToTarget();
-                    return true;
+                if (resultMsg != null && resultMsg.obj instanceof WebView.WebViewTransport) {
+                    return openAuthPopupDialog(tab, resultMsg);
                 }
                 return false;
             }
@@ -1842,6 +1856,369 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         tab.webView = wv;
         webContainer.addView(wv);
+    }
+
+    private void enableWebAuthnSupport(WebSettings ws) {
+        if (ws == null) return;
+        try {
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_AUTHENTICATION)) {
+                WebSettingsCompat.setWebAuthenticationSupport(
+                    ws,
+                    WebSettingsCompat.WEB_AUTHENTICATION_SUPPORT_FOR_APP
+                );
+            }
+        } catch (Throwable ignored) { }
+    }
+
+    private static boolean isLikelyAuthPopupUrl(String url) {
+        if (url == null || url.isEmpty()) return false;
+        String low = url.toLowerCase(Locale.US);
+        return low.contains("accounts.google.com")
+            || low.contains("appleid.apple.com")
+            || low.contains("login.microsoftonline.com")
+            || low.contains("login.live.com")
+            || low.contains("github.com/login")
+            || low.contains("discord.com/oauth")
+            || low.contains("discord.com/login")
+            || low.contains("firebaseapp.com/__/auth")
+            || low.contains("auth0.com")
+            || low.contains("okta.com")
+            || low.contains("/oauth")
+            || low.contains("/authorize")
+            || low.contains("/signin")
+            || low.contains("/sign-in")
+            || low.contains("/sso")
+            || low.contains("/auth/");
+    }
+
+    private void openInSystemCustomTab(String url) {
+        if (url == null || url.trim().isEmpty()) return;
+        String clean = url.trim();
+        if (!clean.startsWith("http://") && !clean.startsWith("https://")) return;
+        try {
+            boolean isLight = isEffectiveLightTheme();
+            int barColor = isLight ? 0xFFFEF7FF : 0xFF141218;
+            CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+            builder.setShowTitle(true);
+            builder.setUrlBarHidingEnabled(false);
+            try {
+                androidx.browser.customtabs.CustomTabColorSchemeParams colorParams =
+                    new androidx.browser.customtabs.CustomTabColorSchemeParams.Builder()
+                        .setToolbarColor(barColor)
+                        .build();
+                builder.setDefaultColorSchemeParams(colorParams);
+            } catch (Throwable ignored) { }
+            CustomTabsIntent customTabsIntent = builder.build();
+            customTabsIntent.launchUrl(this, Uri.parse(clean));
+        } catch (Exception ex) {
+            try {
+                Intent fallback = new Intent(Intent.ACTION_VIEW, Uri.parse(clean));
+                startActivity(fallback);
+            } catch (Exception ignored) {
+                Toast.makeText(this, "No system browser tab available", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void dismissActiveAuthDialog() {
+        if (activeAuthWebView != null) {
+            try {
+                ViewParent p = activeAuthWebView.getParent();
+                if (p instanceof ViewGroup) ((ViewGroup) p).removeView(activeAuthWebView);
+                activeAuthWebView.stopLoading();
+                activeAuthWebView.destroy();
+            } catch (Exception ignored) { }
+            activeAuthWebView = null;
+        }
+        if (activeAuthDialog != null) {
+            try {
+                if (activeAuthDialog.isShowing()) activeAuthDialog.dismiss();
+            } catch (Exception ignored) { }
+            activeAuthDialog = null;
+        }
+        try { CookieManager.getInstance().flush(); } catch (Exception ignored) { }
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private boolean openAuthPopupDialog(final MobileTab parentTab, Message resultMsg) {
+        try {
+            dismissActiveAuthDialog();
+
+            boolean isLight = isEffectiveLightTheme();
+            int surfaceBg = isLight ? 0xFFFEF7FF : 0xFF16141A;
+            int headerBg = isLight ? 0xFFF3EDF7 : 0xFF222028;
+            int dividerColor = isLight ? 0xFFEBE5F0 : 0xFF35323D;
+            int inkPrimary = isLight ? 0xFF1D1B20 : 0xFFE6E0E9;
+            int inkMuted = isLight ? 0xFF49454F : 0xFFCAC4D0;
+            int accent = resolveAccentInt(isLight);
+            int accentContainer = isLight ? 0xFFEADDFF : 0xFF4F378B;
+            int onAccentContainer = isLight ? 0xFF21005D : 0xFFEADDFF;
+            int secureMint = isLight ? 0xFF006A60 : 0xFF7BD8C6;
+
+            final Dialog dialog = new Dialog(this);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setCancelable(true);
+            dialog.setCanceledOnTouchOutside(true);
+
+            LinearLayout container = new LinearLayout(this);
+            container.setOrientation(LinearLayout.VERTICAL);
+            GradientDrawable cardBg = new GradientDrawable();
+            cardBg.setColor(surfaceBg);
+            cardBg.setCornerRadius(dp(24));
+            cardBg.setStroke(dp(1), dividerColor);
+            container.setBackground(cardBg);
+            container.setClipToOutline(true);
+
+            // Read-Only Material Design 3 HTTPS Origin Header Bar
+            LinearLayout header = new LinearLayout(this);
+            header.setOrientation(LinearLayout.HORIZONTAL);
+            header.setGravity(Gravity.CENTER_VERTICAL);
+            header.setBackgroundColor(headerBg);
+            header.setPadding(dp(14), dp(10), dp(10), dp(10));
+
+            final ImageView lockIcon = new ImageView(this);
+            lockIcon.setImageResource(R.drawable.ic_lock);
+            lockIcon.setColorFilter(secureMint);
+            LinearLayout.LayoutParams lockLp = new LinearLayout.LayoutParams(dp(16), dp(16));
+            lockLp.setMarginEnd(dp(8));
+            header.addView(lockIcon, lockLp);
+
+            LinearLayout titleStack = new LinearLayout(this);
+            titleStack.setOrientation(LinearLayout.VERTICAL);
+            LinearLayout.LayoutParams stackLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            stackLp.setMarginEnd(dp(8));
+
+            final TextView titleView = new TextView(this);
+            titleView.setText("Sign in");
+            titleView.setTextColor(inkPrimary);
+            titleView.setTextSize(14f);
+            titleView.setTypeface(null, android.graphics.Typeface.BOLD);
+            titleView.setSingleLine(true);
+            titleView.setEllipsize(TextUtils.TruncateAt.END);
+            titleStack.addView(titleView);
+
+            final TextView originView = new TextView(this);
+            originView.setText("Secure verification");
+            originView.setTextColor(inkMuted);
+            originView.setTextSize(11.5f);
+            originView.setSingleLine(true);
+            originView.setEllipsize(TextUtils.TruncateAt.END);
+            titleStack.addView(originView);
+
+            header.addView(titleStack, stackLp);
+
+            final String[] currentPopupUrl = new String[] { "" };
+
+            // "System Tab" Helper Pill for Hardware / Credential Manager Passkeys
+            TextView sysTabBtn = new TextView(this);
+            sysTabBtn.setText("System Tab");
+            sysTabBtn.setContentDescription("Open Passkey or Sign-In in System Tab");
+            sysTabBtn.setTextColor(onAccentContainer);
+            sysTabBtn.setTextSize(11.5f);
+            sysTabBtn.setTypeface(null, android.graphics.Typeface.BOLD);
+            sysTabBtn.setGravity(Gravity.CENTER);
+            sysTabBtn.setPadding(dp(12), dp(6), dp(12), dp(6));
+            GradientDrawable pillBg = new GradientDrawable();
+            pillBg.setColor(accentContainer);
+            pillBg.setCornerRadius(dp(999));
+            sysTabBtn.setBackground(pillBg);
+            LinearLayout.LayoutParams sysLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                dp(30)
+            );
+            sysLp.setMarginEnd(dp(6));
+            sysTabBtn.setOnClickListener(v -> {
+                String target = currentPopupUrl[0];
+                if ((target == null || target.isEmpty()) && parentTab != null && !parentTab.isNewTab) {
+                    target = parentTab.url;
+                }
+                if (target != null && !target.isEmpty()) {
+                    openInSystemCustomTab(target);
+                } else {
+                    Toast.makeText(MainActivity.this, "Wait for sign-in page to load", Toast.LENGTH_SHORT).show();
+                }
+            });
+            header.addView(sysTabBtn, sysLp);
+
+            ImageView closeBtn = new ImageView(this);
+            closeBtn.setImageResource(R.drawable.ic_close);
+            closeBtn.setColorFilter(inkMuted);
+            closeBtn.setContentDescription("Close sign-in popup");
+            closeBtn.setPadding(dp(7), dp(7), dp(7), dp(7));
+            LinearLayout.LayoutParams closeLp = new LinearLayout.LayoutParams(dp(34), dp(34));
+            closeBtn.setOnClickListener(v -> dialog.dismiss());
+            header.addView(closeBtn, closeLp);
+
+            container.addView(header, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ));
+
+            final ProgressBar popupProgress = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+            popupProgress.setMax(100);
+            popupProgress.setProgress(15);
+            popupProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(accent));
+            container.addView(popupProgress, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(2)
+            ));
+
+            final WebView popupWv = new WebView(this);
+            WebSettings pws = popupWv.getSettings();
+            pws.setJavaScriptEnabled(true);
+            pws.setDomStorageEnabled(true);
+            pws.setDatabaseEnabled(parentTab == null || !parentTab.isPrivate);
+            pws.setLoadWithOverviewMode(true);
+            pws.setUseWideViewPort(true);
+            pws.setSupportMultipleWindows(true);
+            pws.setJavaScriptCanOpenWindowsAutomatically(true);
+            pws.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+            String mua = resolveMobileUserAgent();
+            if (mua != null && !mua.isEmpty()) pws.setUserAgentString(mua);
+            enableWebAuthnSupport(pws);
+
+            CookieManager cm = CookieManager.getInstance();
+            cm.setAcceptCookie(true);
+            cm.setAcceptThirdPartyCookies(popupWv, true);
+
+            if (parentTab != null && !parentTab.isPrivate) {
+                popupWv.addJavascriptInterface(new MobileGoogleBridge(parentTab, true), "__djvGoogle");
+            }
+
+            popupWv.setWebViewClient(new WebViewClient() {
+                private void updateOriginBar(String url) {
+                    if (url == null || url.isEmpty()) return;
+                    currentPopupUrl[0] = url;
+                    boolean isHttps = url.startsWith("https://");
+                    lockIcon.setColorFilter(isHttps ? secureMint : inkMuted);
+                    String host = formatHost(url);
+                    originView.setText(isHttps ? ("https://" + host) : (host.isEmpty() ? url : host));
+                }
+
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                    if (request == null || request.getUrl() == null) return false;
+                    String u = request.getUrl().toString();
+                    if (u.startsWith("http://") || u.startsWith("https://")) {
+                        updateOriginBar(u);
+                        return false;
+                    }
+                    try {
+                        Intent ext = new Intent(Intent.ACTION_VIEW, request.getUrl());
+                        startActivity(ext);
+                        return true;
+                    } catch (Exception ignored) {
+                        return false;
+                    }
+                }
+
+                @Override
+                public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                    updateOriginBar(url);
+                    popupProgress.setVisibility(View.VISIBLE);
+                    popupProgress.setProgress(22);
+                }
+
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    updateOriginBar(url);
+                    popupProgress.setVisibility(View.GONE);
+                    if (view.getTitle() != null && !view.getTitle().trim().isEmpty()) {
+                        titleView.setText(view.getTitle().trim());
+                    }
+                    try { CookieManager.getInstance().flush(); } catch (Exception ignored) { }
+                    if (parentTab != null && !parentTab.isPrivate && isGoogleHost(url)) {
+                        injectGoogleAccountSyncScript(view);
+                    }
+                }
+            });
+
+            popupWv.setWebChromeClient(new WebChromeClient() {
+                @Override
+                public void onProgressChanged(WebView view, int newProgress) {
+                    if (newProgress < 100) {
+                        popupProgress.setVisibility(View.VISIBLE);
+                        popupProgress.setProgress(Math.max(12, newProgress));
+                    } else {
+                        popupProgress.setVisibility(View.GONE);
+                    }
+                }
+
+                @Override
+                public void onReceivedTitle(WebView view, String title) {
+                    if (title != null && !title.trim().isEmpty()) {
+                        titleView.setText(title.trim());
+                    }
+                }
+
+                @Override
+                public void onCloseWindow(WebView window) {
+                    try { CookieManager.getInstance().flush(); } catch (Exception ignored) { }
+                    dialog.dismiss();
+                }
+
+                @Override
+                public boolean onCreateWindow(WebView view, boolean isChildDialog, boolean isChildGesture, Message childMsg) {
+                    WebView.HitTestResult childHit = view.getHitTestResult();
+                    String childExtra = childHit != null ? childHit.getExtra() : null;
+                    if (childExtra != null && (childExtra.startsWith("http://") || childExtra.startsWith("https://"))) {
+                        view.loadUrl(childExtra);
+                        return false;
+                    }
+                    return false;
+                }
+            });
+
+            container.addView(popupWv, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                0,
+                1f
+            ));
+
+            dialog.setContentView(container);
+            dialog.setOnKeyListener((d, keyCode, event) -> {
+                if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
+                    if (popupWv.canGoBack()) {
+                        popupWv.goBack();
+                        return true;
+                    }
+                }
+                return false;
+            });
+            dialog.setOnDismissListener(d -> {
+                if (activeAuthWebView == popupWv) {
+                    activeAuthWebView = null;
+                }
+                if (activeAuthDialog == dialog) {
+                    activeAuthDialog = null;
+                }
+                try {
+                    ViewParent vp = popupWv.getParent();
+                    if (vp instanceof ViewGroup) ((ViewGroup) vp).removeView(popupWv);
+                    popupWv.stopLoading();
+                    popupWv.destroy();
+                } catch (Exception ignored) { }
+                try { CookieManager.getInstance().flush(); } catch (Exception ignored) { }
+            });
+
+            Window win = dialog.getWindow();
+            if (win != null) {
+                win.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                int w = Math.round(getResources().getDisplayMetrics().widthPixels * 0.94f);
+                int h = Math.round(getResources().getDisplayMetrics().heightPixels * 0.86f);
+                win.setLayout(w, h);
+            }
+
+            activeAuthDialog = dialog;
+            activeAuthWebView = popupWv;
+            dialog.show();
+
+            ((WebView.WebViewTransport) resultMsg.obj).setWebView(popupWv);
+            resultMsg.sendToTarget();
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -1981,7 +2358,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v4.8.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v4.9.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -2353,18 +2730,24 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         navTabsBadge.setText(tabCount > 99 ? "∞" : String.valueOf(Math.max(1, tabCount)));
 
         JSONObject syncSnap = syncManager.getSnapshot();
-        boolean connected = syncSnap.optBoolean("connected", false);
-        navSyncDot.setVisibility(connected ? View.VISIBLE : View.GONE);
+        boolean syncReady = syncSnap.optBoolean("connected", false)
+            || ("google".equals(syncSnap.optString("syncMode", "")) && syncSnap.optBoolean("paired", false));
+        navSyncDot.setVisibility(syncReady ? View.VISIBLE : View.GONE);
     }
 
     private String peekClipboardText() {
+        String full = readFullClipboardText();
+        return full.length() > 160 ? full.substring(0, 160) : full;
+    }
+
+    private String readFullClipboardText() {
         try {
             ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
             if (cm != null && cm.hasPrimaryClip()) {
                 ClipData cd = cm.getPrimaryClip();
                 if (cd != null && cd.getItemCount() > 0 && cd.getItemAt(0).getText() != null) {
                     String s = cd.getItemAt(0).getText().toString().trim();
-                    if (s.length() > 160) s = s.substring(0, 160);
+                    if (s.length() > 1600) s = s.substring(0, 1600);
                     return s;
                 }
             }
@@ -2478,6 +2861,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         publishOpenTabsToPc();
         syncManager.publishCollection("bookmarks", bookmarks);
         syncManager.publishCollection("reading", readingList);
+        syncManager.publishCollection("history", history);
     }
 
     private void injectReaderMode() {
@@ -2594,6 +2978,20 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         return profiles.optJSONObject(0);
     }
 
+    private void activateGoogleAutoSyncIfSignedIn(boolean syncCollectionsNow) {
+        if (syncManager == null) return;
+        JSONObject p = getActiveProfileObject();
+        if (p == null) return;
+        boolean signedIn = p.optBoolean("isGoogleSignedIn", false);
+        String email = p.optString("googleEmail", "").trim();
+        if (signedIn && email.contains("@")) {
+            String savedPass = syncManager.getSavedPassphraseForEmail(email);
+            if (syncManager.configureGoogleAccountSync(email, savedPass) && syncCollectionsNow) {
+                syncAllCollectionsToPc();
+            }
+        }
+    }
+
     private void applyDetectedGoogleAccount(String displayName, String email, String avatarUrl) {
         if (email == null || !email.contains("@")) return;
         String cleanEmail = email.trim();
@@ -2610,9 +3008,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             if (!cleanAvatar.isEmpty()) p.put("googleAvatarUrl", cleanAvatar);
         } catch (Exception ignored) { }
         saveLocalCollections();
+        if (syncManager != null) {
+            String savedPass = syncManager.getSavedPassphraseForEmail(cleanEmail);
+            syncManager.configureGoogleAccountSync(cleanEmail, savedPass);
+            syncAllCollectionsToPc();
+        }
+        updateChromeUi();
         pushStateToUi();
         if (!wasSignedIn || !cleanEmail.equalsIgnoreCase(prevEmail)) {
-            Toast.makeText(this, "Signed in with Google: " + cleanEmail, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Signed in & Auto-Synced via Google: " + cleanEmail, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -2630,7 +3034,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         httpsFirst = prefs.getBoolean("httpsFirst", true);
         doNotTrack = prefs.getBoolean("doNotTrack", true);
         blockPopups = prefs.getBoolean("blockPopups", true);
-        blockThirdPartyCookies = prefs.getBoolean("blockThirdPartyCookies", true);
+        blockThirdPartyCookies = prefs.getBoolean("blockThirdPartyCookies", false);
         pullToRefresh = prefs.getBoolean("pullToRefresh", true);
         openLinksInBackground = prefs.getBoolean("openLinksInBackground", false);
         defaultYoutubeQuality = normalizeYoutubeQuality(prefs.getString("defaultYoutubeQuality", "auto"));
@@ -2858,11 +3262,20 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         mainHandler.post(() -> {
             latestIncomingDrop = drop;
             String from = drop.optString("fromName", "Windows PC");
+            String dropType = drop.optString("dropType", "link");
             String url = drop.optString("url", "");
             String text = drop.optString("text", "");
             String title = drop.optString("title", "");
             boolean isTextOnly = url.isEmpty();
-            incomingTitle.setText(isTextOnly ? ("Text from " + from) : ("From " + from + ": " + (title.isEmpty() ? formatHost(url) : title)));
+            String bannerHeading;
+            if ("clipboard".equals(dropType)) {
+                bannerHeading = "Clipboard from " + from;
+            } else if (isTextOnly) {
+                bannerHeading = "Text from " + from;
+            } else {
+                bannerHeading = "From " + from + ": " + (title.isEmpty() ? formatHost(url) : title);
+            }
+            incomingTitle.setText(bannerHeading);
             incomingBody.setText(isTextOnly ? text : url);
             btnIncomingOpen.setVisibility(isTextOnly ? View.GONE : View.VISIBLE);
             incomingBanner.setVisibility(View.VISIBLE);
@@ -2906,6 +3319,33 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (u.isEmpty() || hasUrl(readingList, u)) continue;
                 readingList.put(o);
                 changed = true;
+            }
+            if (changed) {
+                saveLocalCollections();
+                pushStateToUi();
+            }
+        });
+    }
+
+    @Override
+    public void onRemoteHistory(final JSONArray items) {
+        mainHandler.post(() -> {
+            boolean changed = false;
+            for (int i = 0; i < items.length(); i++) {
+                JSONObject o = items.optJSONObject(i);
+                if (o == null) continue;
+                String u = o.optString("url", "");
+                if (u.isEmpty() || u.startsWith("dejavu://") || hasUrl(history, u)) continue;
+                try {
+                    JSONObject item = new JSONObject();
+                    item.put("title", o.optString("title", formatHost(u)));
+                    item.put("url", u);
+                    item.put("ts", System.currentTimeMillis());
+                    if (history.length() < 60) {
+                        history.put(item);
+                        changed = true;
+                    }
+                } catch (Exception ignored) { }
             }
             if (changed) {
                 saveLocalCollections();
@@ -3052,6 +3492,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        dismissActiveAuthDialog();
         saveLocalCollections();
         if (downloadManager != null) downloadManager.shutdown();
         if (syncManager != null) syncManager.shutdown();
@@ -3325,6 +3766,83 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     syncManager.sendDrop("text", "Text from Phone", "", s);
                 }
                 Toast.makeText(MainActivity.this, "Sent to Windows PC!", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void sendClipboardToPc() {
+            mainHandler.post(() -> {
+                String clip = readFullClipboardText();
+                if (clip.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Clipboard is empty", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                syncManager.sendClipboard(clip);
+                Toast.makeText(MainActivity.this, "Clipboard sent to Windows PC!", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void enableGoogleAutoSync(final String email, final String passphrase) {
+            mainHandler.post(() -> {
+                String targetEmail = (email != null && !email.trim().isEmpty()) ? email.trim() : "";
+                if (targetEmail.isEmpty()) {
+                    JSONObject p = getActiveProfileObject();
+                    if (p != null) targetEmail = p.optString("googleEmail", "").trim();
+                }
+                if (!targetEmail.contains("@")) {
+                    Toast.makeText(MainActivity.this, "Sign in with Google first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                boolean ok = syncManager.configureGoogleAccountSync(targetEmail, passphrase != null ? passphrase : "");
+                if (ok) {
+                    syncAllCollectionsToPc();
+                    updateChromeUi();
+                    pushStateToUi();
+                    String msg = (passphrase != null && !passphrase.trim().isEmpty())
+                        ? "Google Auto-Sync updated with extra passphrase"
+                        : "Google Auto-Sync active";
+                    Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void switchSyncToManual() {
+            mainHandler.post(() -> {
+                syncManager.switchToManualMode();
+                updateChromeUi();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleSyncPref(final String prefKey) {
+            mainHandler.post(() -> {
+                syncManager.toggleSyncPref(prefKey);
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void clearDrops() {
+            mainHandler.post(() -> {
+                syncManager.clearDrops();
+                Toast.makeText(MainActivity.this, "Cleared shared drops", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void openInSystemTab(final String rawUrl) {
+            mainHandler.post(() -> {
+                String target = (rawUrl != null && !rawUrl.trim().isEmpty()) ? rawUrl.trim() : "";
+                if (target.isEmpty()) {
+                    MobileTab t = getActiveTab();
+                    if (t != null && !t.isNewTab && t.url != null) target = t.url;
+                }
+                if (!target.isEmpty()) {
+                    openInSystemCustomTab(target);
+                }
             });
         }
 
@@ -3907,7 +4425,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                         p.put("googleAvatarUrl", "");
                     } catch (Exception ignored) { }
                 }
+                if (syncManager != null) syncManager.switchToManualMode();
                 saveLocalCollections();
+                updateChromeUi();
                 pushStateToUi();
                 Toast.makeText(MainActivity.this, "Signed out of Google Account", Toast.LENGTH_SHORT).show();
             });
@@ -3943,6 +4463,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                         activeProfileId = profileId;
                         accentColor = normalizeAccent(p.optString("accentColor", accentColor));
                         saveLocalCollections();
+                        activateGoogleAutoSyncIfSignedIn(true);
                         applyNativeTheme();
                         updateChromeUi();
                         pushStateToUi();
@@ -4046,7 +4567,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 httpsFirst = true;
                 doNotTrack = true;
                 blockPopups = true;
-                blockThirdPartyCookies = true;
+                blockThirdPartyCookies = false;
                 defaultYoutubeQuality = "auto";
                 floatingDownloadButton = true;
                 if (adBlocker != null) adBlocker.setEnabled(true);

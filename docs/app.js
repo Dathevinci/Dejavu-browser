@@ -1,13 +1,14 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Engine (v4.8.0)
+ * dejavu Official Website — Google Material Design 3 Interactive Engine (v4.9.0)
  * 6 Harmonized HCT Dynamic Color Seeds · Dynamic M3 Butterfly Logo · Dark/Light Polarity
+ * Zero-QR Google Account Auto-Sync (dejavu Link) + Shared Clipboard + Passkeys Showcase
  * Interactive Chrome Extensions Manager + Draggable Tabs + M3 Right-Click Context Menu
- * Decluttered Zero-Duplicate Chrome + Navigation Rail 6-View Dual-Device Showcase
- * Live Multi-Profile & Google Studio · 52x32 Spring Switches · 4K->MP3 Video Demo · 16-Wallpaper Harmonizer
+ * Decluttered Zero-Duplicate Chrome + Navigation Rail 5-View Dual-Device Showcase
+ * 52x32 Spring Switches · 4K->MP3 Video Demo · 16-Wallpaper Harmonizer
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v4.8.0';
+  const FALLBACK_VERSION = 'v4.9.0';
   const root = document.documentElement;
 
   const THEME_META_COLORS = {
@@ -176,14 +177,13 @@
     });
   }
 
-  // 2. Clean 6-View Dual-Device Browser Showcase (v4.8.0 Chrome + Extensions + Draggable Tabs + M3 Context Menu)
+  // 2. Clean 5-View Dual-Device Browser Showcase (v4.9.0 Zero-QR Google Sync + Extensions + Draggable Tabs)
   const VIEW_META = {
     start:      { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
+    sync:       { url: 'dejavu://link · Auto-Synced via Google (alex@gmail.com)', title: 'Google Auto-Sync · Pixel Online' },
     extensions: { url: 'dejavu://extensions · Chrome MV3 Manager', title: 'Chrome Extensions · 3 Active' },
-    profiles:   { url: 'dejavu://profiles · Personal + Work Windows', title: 'Multi-Profile · 2 Windows' },
     video:      { url: 'youtube.com/watch?v=material-you-4k', title: 'Material You 4K Film' },
-    vpn:        { url: 'gemini.google.com/app', title: 'Google Gemini · Smart VPN' },
-    sync:       { url: 'dejavu://link · Paired with Pixel', title: 'dejavu Link · E2EE Sync' }
+    vpn:        { url: 'gemini.google.com/app', title: 'Google Gemini · Smart VPN' }
   };
 
   let activeView = 'start';
@@ -299,7 +299,7 @@
           { icon: CTX_SVG.pin, label: 'Pin tab', onClick: () => showSnackbar('Pinned tab to left strip') },
           { icon: CTX_SVG.phone, label: 'Send tab to Pixel Phone', onClick: () => { beamToPixel(); showSnackbar('Beamed tab straight to Android Pixel'); } },
           { sep: true },
-          { icon: CTX_SVG.tab, label: 'Move to New Window', kbd: 'Ctrl+N', onClick: () => { selectShowcase('profiles'); showSnackbar('Moved tab to side-by-side window'); } },
+          { icon: CTX_SVG.tab, label: 'Move to New Window', kbd: 'Ctrl+N', onClick: () => { selectShowcase('sync'); showSnackbar('Opened in new window · Auto-Synced via Google'); } },
           { icon: CTX_SVG.copy, label: 'Copy tab URL', onClick: () => showSnackbar('Copied tab URL to clipboard') }
         ]
       : [
@@ -466,7 +466,7 @@
     });
   }
 
-  // 2e. Interactive Chrome Extensions Manager Showcase (v4.8.0)
+  // 2e. Interactive Chrome Extensions Manager Showcase (v4.9.0)
   const DEMO_EXTS = {
     ublock:     { label: 'uB', name: 'uBlock Origin Lite',    enabled: true,  pinned: true },
     darkreader: { label: 'DR', name: 'Dark Reader',           enabled: true,  pinned: true },
@@ -769,19 +769,43 @@
     });
   });
 
-  // 5. PC <-> Phone Live Beam Toast
+  // 5. PC <-> Phone Live Beam & Shared Clipboard Toast
   let toastTimer = null;
-  function beamToPixel() {
+  function beamToPixel(mode) {
     const toast = document.getElementById('px-toast');
+    const eyebrowEl = document.getElementById('px-toast-eyebrow');
     const titleEl = document.getElementById('px-toast-title');
+    const actEl = document.getElementById('px-toast-act');
     if (!toast || !titleEl) return;
-    titleEl.textContent = VIEW_META[activeView].title;
+    if (mode === 'clipboard') {
+      if (eyebrowEl) eyebrowEl.textContent = 'Shared Clipboard · Google E2EE';
+      titleEl.textContent = 'Copied text beamed from Windows PC';
+      if (actEl) actEl.textContent = 'Copy';
+    } else {
+      if (eyebrowEl) eyebrowEl.textContent = 'From Windows PC · Google E2EE';
+      titleEl.textContent = VIEW_META[activeView].title;
+      if (actEl) actEl.textContent = 'Open Tab';
+    }
     toast.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { toast.hidden = true; }, 4200);
   }
-  document.getElementById('demo-send-phone')?.addEventListener('click', beamToPixel);
-  document.getElementById('dk-beam-btn')?.addEventListener('click', beamToPixel);
+  document.getElementById('demo-send-phone')?.addEventListener('click', () => {
+    beamToPixel('tab');
+    showSnackbar('Beamed active tab to Pixel 9 Pro · Auto-Synced via Google');
+  });
+  document.getElementById('demo-send-clipboard')?.addEventListener('click', () => {
+    beamToPixel('clipboard');
+    showSnackbar('Beamed Shared Clipboard to Pixel 9 Pro · AES-256 E2EE');
+  });
+  document.getElementById('demo-copy-clip')?.addEventListener('click', () => {
+    const clipTxt = document.getElementById('demo-clip-preview')?.textContent || '';
+    if (clipTxt && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(clipTxt).catch(() => {});
+    }
+    showSnackbar('Copied Shared Clipboard item from Pixel 9 Pro');
+  });
+  document.getElementById('dk-beam-btn')?.addEventListener('click', () => beamToPixel('tab'));
 
   // 6. Interactive Material Design 3 Wallpaper Gallery + Live Seed/Polarity Harmonizer
   const wpCards = Array.from(document.querySelectorAll('.wp-card'));
@@ -831,120 +855,14 @@
     });
   });
 
-  // 7. Interactive Multi-Profile & Google Account Studio + Official 52x32 M3 Switches
-  const demoWinCards = Array.from(document.querySelectorAll('[data-demo-profile]'));
-  const toolbarAvatar = document.getElementById('dk-toolbar-avatar');
-  const toolbarProfileName = document.getElementById('dk-toolbar-profile-name');
-  const profWinBadge = document.getElementById('prof-win-badge');
-  const profHeading = document.getElementById('prof-g-heading');
-  const profSub = document.getElementById('prof-g-sub');
-  const profStatusPill = document.getElementById('prof-g-status-pill');
-  const personalEmailEl = document.getElementById('mini-personal-email');
-  const personalMainPill = document.getElementById('mini-personal-main-pill');
-
-  let activeDemoProfile = 'personal';
-  let openWindowCount = 2;
-  let privateWindowOpen = false;
-
-  function renderWindowBadge() {
-    if (!profWinBadge) return;
-    const textSpan = profWinBadge.querySelector('span:last-child');
-    if (!textSpan) return;
-    textSpan.textContent = privateWindowOpen
-      ? `${openWindowCount} Windows + Private`
-      : `${openWindowCount} Windows Open`;
-  }
-
-  function focusDemoProfile(key) {
-    activeDemoProfile = key === 'work' ? 'work' : 'personal';
-    demoWinCards.forEach((card) => {
-      const isMatch = card.dataset.demoProfile === activeDemoProfile;
-      card.classList.toggle('active', isMatch);
-      card.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
-    });
-
-    if (activeDemoProfile === 'work') {
-      if (toolbarAvatar) toolbarAvatar.textContent = 'W';
-      if (toolbarProfileName) toolbarProfileName.textContent = 'Work';
-      if (profHeading) profHeading.textContent = 'Work · Google Workspace';
-      if (profSub) profSub.textContent = 'Signed in as alex@studio.dev · Isolated';
-      if (profStatusPill) profStatusPill.textContent = 'Isolated';
-    } else {
-      if (toolbarAvatar) toolbarAvatar.textContent = 'A';
-      if (toolbarProfileName) toolbarProfileName.textContent = 'Personal';
-      if (profHeading) profHeading.textContent = 'Google Profile Studio';
-      if (profSub) profSub.textContent = 'Signed in as alex@gmail.com';
-      if (profStatusPill) profStatusPill.textContent = 'Synced';
-    }
-  }
-
-  demoWinCards.forEach((card) => {
-    card.addEventListener('click', () => focusDemoProfile(card.dataset.demoProfile));
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        focusDemoProfile(card.dataset.demoProfile);
-      }
-    });
-  });
-
-  document.getElementById('demo-new-window-btn')?.addEventListener('click', () => {
-    openWindowCount = openWindowCount >= 4 ? 2 : openWindowCount + 1;
-    renderWindowBadge();
-    const profLabel = activeDemoProfile === 'work' ? 'Work' : 'Personal';
-    showSnackbar(`Opened New Window (Ctrl+N) · ${openWindowCount} active (${profLabel})`);
-  });
-
-  document.getElementById('demo-private-win-btn')?.addEventListener('click', () => {
-    privateWindowOpen = !privateWindowOpen;
-    renderWindowBadge();
-    showSnackbar(
-      privateWindowOpen
-        ? 'Opened Private Window (Ctrl+Shift+N) · Isolated session'
-        : 'Closed Private Window · Personal & Work stay open'
-    );
-  });
-
-  document.getElementById('demo-google-signin')?.addEventListener('click', () => {
-    focusDemoProfile('personal');
-    if (profHeading) profHeading.textContent = 'Google Profile Studio';
-    if (profSub) profSub.textContent = 'Signed in as alex@gmail.com';
-    if (profStatusPill) profStatusPill.textContent = 'Synced';
-    if (personalEmailEl) personalEmailEl.textContent = 'alex@gmail.com · Google Signed-In';
-    showSnackbar('Google Account active · Main Profile synced across windows');
-  });
-
-  document.getElementById('demo-google-create')?.addEventListener('click', () => {
-    if (profHeading) profHeading.textContent = 'Create Google Account';
-    if (profSub) profSub.textContent = 'Opens native Google Sign-Up in dejavu';
-    if (profStatusPill) profStatusPill.textContent = 'New Account';
-    showSnackbar('Ready to create a new Google Account for your Main Profile');
-  });
-
-  document.getElementById('demo-google-guest')?.addEventListener('click', () => {
-    if (profHeading) profHeading.textContent = 'Local Offline Profile';
-    if (profSub) profSub.textContent = 'Private local storage · Zero cloud account';
-    if (profStatusPill) profStatusPill.textContent = 'Local Only';
-    if (personalEmailEl) personalEmailEl.textContent = 'Local Profile · Private Storage';
-    showSnackbar('Continuing without an account · 100% local profile');
-  });
-
-  // Official Crisp 52x32 Material Design 3 Switches
+  // 7. Official Crisp 52x32 Material Design 3 Switches
   document.querySelectorAll('.m3-switch').forEach((sw) => {
     sw.addEventListener('click', () => {
       const next = !sw.classList.contains('is-on');
       sw.classList.toggle('is-on', next);
       sw.setAttribute('aria-checked', next ? 'true' : 'false');
 
-      if (sw.id === 'demo-sw-main' && personalMainPill) {
-        personalMainPill.textContent = next ? 'Main' : 'Standard';
-      } else if (sw.id === 'demo-sw-side') {
-        showSnackbar(
-          next
-            ? 'Side-by-side multi-profile windows enabled'
-            : 'Profiles switch in current window'
-        );
-      } else if (sw.id === 'demo-ext-devmode') {
+      if (sw.id === 'demo-ext-devmode') {
         const drawer = document.getElementById('demo-ext-dev-drawer');
         if (drawer) drawer.hidden = !next;
         showSnackbar(next ? 'Developer mode ON · Load unpacked & .crx/.zip ready' : 'Developer mode OFF');
@@ -953,11 +871,14 @@
         DEMO_EXTS[id].enabled = next;
         syncDemoExtensionsUi();
         showSnackbar(`${DEMO_EXTS[id].name} ${next ? 'enabled' : 'disabled'}`);
+      } else if (sw.dataset.syncPref) {
+        const lbl = sw.dataset.syncPref === 'clipboard' ? 'Shared Clipboard & History' : 'Live Tabs & Bookmarks';
+        showSnackbar(`${lbl} auto-sync ${next ? 'enabled' : 'paused'}`);
       }
     });
   });
 
-  // 8. GitHub Releases API Dynamic Hydration (Fallback: v4.8.0)
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v4.9.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

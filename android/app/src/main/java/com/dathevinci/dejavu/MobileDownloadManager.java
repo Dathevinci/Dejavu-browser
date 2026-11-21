@@ -62,7 +62,7 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * AntDM-Style 8-Thread Accelerated Turbo Download Manager + Native YouTube InnerTube
  * Multi-Client Quality/Audio Resolver + Android MediaMuxer + HLS .m3u8 Assembler
- * for dejavu Mobile v4.8.0.
+ * for dejavu Mobile v4.9.0.
  */
 public class MobileDownloadManager {
     public interface Listener {
@@ -2718,7 +2718,7 @@ public class MobileDownloadManager {
 
     /**
      * Zero-Idle-CPU Isolated Shadow DOM Material Design 3 Floating Video/Audio Quality Downloader.
-     * - Event-driven + MutationObserver (ZERO setInterval polling, ZERO CSS blur!)
+     * - Event-driven + MutationObserver (zero polling timers, zero CSS blur!)
      * - On YouTube & video pages, calls window.__djvMedia.probeVideoFormats(location.href)
      *   -> populates real quality & audio pills (1080p MP4, 720p MP4, 480p MP4, 360p MP4, Audio M4A, Audio WebM)
      *   right inside the mobile floating Material 3 menu

@@ -743,7 +743,7 @@
     .zoom-val { font-size: 12.5px; font-weight: 700; min-width: 44px; text-align: center; color: var(--accent-bright); }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK (AirDrop-Style Sync Hub)
+       SHEET B: DEJAVU LINK v4.9.0 (Tab-Free Pixel Material 3 Auto-Sync Hub)
        ===================================================================== */
     .cta-btn {
       width: 100%; height: 46px; border-radius: 999px; border: none;
@@ -752,32 +752,141 @@
       display: flex; align-items: center; justify-content: center; gap: 8px;
       box-shadow: none;
     }
+    .sync-hero {
+      background: var(--group-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 26px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .sync-id-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .sync-g-av {
+      width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+      background: var(--accent-soft); color: #1d1b20;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; position: relative;
+      border: 2px solid var(--accent);
+    }
+    .sync-g-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+    .sync-status-pill {
+      height: 24px; padding: 0 10px; border-radius: 999px;
+      background: rgba(123, 216, 198, 0.18); color: var(--mint);
+      font-size: 11px; font-weight: 750;
+      display: inline-flex; align-items: center; gap: 6px; width: fit-content;
+    }
+    body.theme-light .sync-status-pill { background: #d4f4ec; color: #006a60; }
+    .sync-status-pill .s-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0;
+    }
+    .sync-status-pill.manual {
+      background: var(--accent-soft); color: var(--accent-bright);
+    }
+    body.theme-light .sync-status-pill.manual { color: var(--accent); }
+    .sync-pc-card {
+      padding: 12px 13px; border-radius: 18px;
+      background: var(--sheet-elev);
+      display: flex; align-items: center; gap: 11px;
+    }
+    .sync-pc-dot {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--mint); margin-right: 5px; vertical-align: middle;
+    }
+    .sync-pc-dot.idle { background: var(--subtle); }
+    .sync-pass-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding-top: 2px; border-top: 1px solid var(--divider);
+    }
+    .sync-act-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .sync-act-btn {
+      padding: 13px 12px; border-radius: 20px; border: none;
+      background: var(--accent-soft); color: var(--accent-bright);
+      font-family: inherit; text-align: left;
+      display: flex; flex-direction: column; gap: 8px; cursor: pointer;
+      transition: transform 0.2s var(--md-ease-spring), opacity 0.16s ease;
+    }
+    body.theme-light .sync-act-btn { color: var(--accent); }
+    .sync-act-btn.tonal {
+      background: var(--sheet-elev); color: var(--ink);
+    }
+    .sync-act-btn:active { transform: scale(0.96); }
+    .sync-act-btn-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .sync-act-btn-title { font-size: 13.5px; font-weight: 700; line-height: 1.2; }
+    .sync-act-btn-sub {
+      font-size: 11px; opacity: 0.82;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sync-clip-hero {
+      padding: 14px 15px; border-radius: 22px;
+      background: var(--accent-soft);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .sync-clip-hero-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-size: 11px; font-weight: 760; letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--accent-bright);
+    }
+    body.theme-light .sync-clip-hero-head { color: var(--accent); }
+    .sync-clip-hero-txt {
+      font-size: 13.5px; line-height: 1.45; color: var(--ink);
+      word-break: break-word;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .sync-manual-disclosure {
+      background: var(--group-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 22px;
+      overflow: hidden;
+    }
+    .sync-manual-toggle {
+      width: 100%; border: none; background: transparent; color: var(--muted);
+      font-family: inherit; font-size: 13px; font-weight: 640;
+      padding: 13px 16px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      cursor: pointer; text-align: left;
+    }
+    .sync-manual-toggle:active { background: var(--group-press); }
+    .sync-manual-body {
+      padding: 0 14px 14px;
+      display: none; flex-direction: column; gap: 10px;
+      border-top: 1px solid var(--divider);
+      padding-top: 12px;
+    }
+    .sync-manual-body.open { display: flex; }
     .compose-row { display: flex; gap: 8px; }
     .compose-row input {
-      flex: 1; min-width: 0; height: 44px; padding: 0 14px; border-radius: 14px;
-      border: 1px solid var(--border); background: var(--input-bg);
-      color: var(--ink); font-size: 14px; font-family: inherit; outline: none;
+      flex: 1; min-width: 0; height: 44px; padding: 0 16px; border-radius: 999px;
+      border: 1px solid var(--border-subtle); background: var(--input-bg);
+      color: var(--ink); font-size: 13.5px; font-family: inherit; outline: none;
     }
     .compose-row input:focus { border-color: var(--accent); }
     .code-pill {
-      font-family: ui-monospace, 'SF Mono', monospace; font-size: 19px; font-weight: 700;
+      font-family: ui-monospace, 'SF Mono', monospace; font-size: 18px; font-weight: 700;
       letter-spacing: 0.14em; color: var(--accent-bright);
       padding: 11px 14px; border-radius: 14px;
-      background: var(--input-bg); border: 1px solid var(--border);
+      background: var(--input-bg); border: 1px solid var(--border-subtle);
       text-align: center;
     }
+    body.theme-light .code-pill { color: var(--accent); }
     .drop-card {
-      padding: 12px 13px; border-radius: 16px;
-      background: var(--group-bg); border: 1px solid var(--border);
+      padding: 13px 14px; border-radius: 20px;
+      background: var(--group-bg); border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow);
       display: flex; flex-direction: column; gap: 6px;
     }
     .drop-meta {
       display: flex; justify-content: space-between; align-items: center;
-      font-size: 11px; color: var(--accent-bright); font-weight: 680; text-transform: uppercase;
+      font-size: 11px; color: var(--accent-bright); font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.03em;
     }
-    .drop-text { font-size: 14px; color: var(--ink); word-break: break-word; line-height: 1.4; }
+    body.theme-light .drop-meta { color: var(--accent); }
+    .drop-text { font-size: 14px; font-weight: 560; color: var(--ink); word-break: break-word; line-height: 1.4; }
     .drop-url { font-size: 11.5px; color: var(--muted); word-break: break-all; }
-    .drop-acts { display: flex; gap: 8px; margin-top: 2px; }
+    .drop-acts { display: flex; gap: 8px; margin-top: 3px; }
 
     /* =====================================================================
        SHEET C: SETTINGS / OPTIONS (iOS 18 x OneUI Grouped Settings)
@@ -1879,61 +1988,200 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK (AirDrop-Style Cross-Device Sync Sheet)
+       SHEET B: DEJAVU LINK v4.9.0 (Tab-Free Pixel Material 3 Auto-Sync Hub)
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
       <div class="sheet-head" data-swipe-dismiss="1">
         <div class="sheet-grab"></div>
         <div class="sheet-title-row">
-          <h2 class="sheet-title">dejavu Link</h2>
+          <div style="display:flex;align-items:center;gap:9px;">
+            <span id="sync-brand-mark" class="brand-mini-svg" aria-hidden="true"></span>
+            <h2 class="sheet-title">dejavu Link</h2>
+          </div>
           <div style="display:flex;gap:7px;">
-            <button type="button" class="pill-btn" onclick="call('syncNow')">Sync</button>
+            <button type="button" class="pill-btn" onclick="call('syncNow')">Sync Now</button>
             <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
           </div>
         </div>
       </div>
 
       <div class="sheet-body">
-        <!-- Connection Device Card -->
-        <div class="g-card" style="display:flex;flex-direction:column;gap:12px;background:var(--group-bg);box-shadow:none;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <span id="sync-dev-ico" class="sq-ico ic-violet" style="width:40px;height:40px;border-radius:12px;">
-              <svg viewBox="0 0 20 20" width="20" height="20" fill="none"><rect x="2.5" y="4" width="15" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 16.5h6M10 14v2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-            </span>
-            <div style="flex:1;min-width:0;">
-              <div id="sync-status-title" style="font-size:15px;font-weight:680;">Pair with Windows PC</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px;">AES-256 End-to-End Encrypted · Real-Time Sync</div>
+        <!-- 1. Google Account Auto-Sync Hero Card (Zero QR Required!) -->
+        <div id="sync-hero-card" class="sync-hero">
+          <!-- Signed-In Auto-Sync Active State -->
+          <div id="sync-google-active" style="display:none;flex-direction:column;gap:12px;">
+            <div class="sync-id-row">
+              <div id="sync-g-avatar" class="sync-g-av">A</div>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+                <div id="sync-g-name" style="font-size:15.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Personal</div>
+                <div id="sync-g-email" style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">alex@gmail.com</div>
+                <div id="sync-mode-pill" class="sync-status-pill" style="margin-top:2px;">
+                  <span class="s-dot" aria-hidden="true"></span>
+                  <span>Auto-Synced via Google</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Connected Windows PC Presence Card -->
+            <div class="sync-pc-card">
+              <span id="sync-dev-ico" class="sq-ico ic-emerald" style="width:38px;height:38px;border-radius:12px;">
+                <svg viewBox="0 0 20 20" width="19" height="19" fill="none"><rect x="2.5" y="4" width="15" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 16.5h6M10 14v2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </span>
+              <div style="flex:1;min-width:0;">
+                <div id="sync-status-title" style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Windows PC</div>
+                <div id="sync-status-sub" style="font-size:11.5px;color:var(--muted);margin-top:1px;">
+                  <span id="sync-pc-dot" class="sync-pc-dot"></span>
+                  <span id="sync-pc-presence">Online now · AES-256 E2EE</span>
+                </div>
+              </div>
+              <button type="button" class="pill-btn" style="height:32px;padding:0 12px;font-size:12px;flex-shrink:0;" onclick="call('syncNow')">Sync</button>
+            </div>
+
+            <!-- Optional Extra E2EE Sync Passphrase (collapsed by default) -->
+            <div class="sync-pass-bar">
+              <span id="sync-pass-status" style="font-size:12px;color:var(--muted);">AES-256-CBC + HMAC-SHA256 E2EE</span>
+              <button type="button" id="sync-pass-toggle" class="sec-act" onclick="toggleSyncPassphraseBox()">+ Extra Passphrase</button>
+            </div>
+            <div id="sync-pass-box" class="compose-row" style="display:none;">
+              <input id="m-sync-pass-in" type="password" placeholder="Optional extra E2EE passphrase">
+              <button type="button" class="pill-btn primary" style="height:44px;padding:0 16px;" onclick="applySyncPassphrase()">Save</button>
             </div>
           </div>
 
-          <button type="button" id="btn-m-send-tab" class="cta-btn" onclick="call('sendCurrentTabToPc')">
-            <svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M3 14L14 4M14 4H7.5M14 4v6.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span id="btn-m-send-tab-lbl">Send Current Tab to Windows PC</span>
-          </button>
-
-          <div class="compose-row">
-            <input id="m-drop-input" type="text" placeholder="Send any link or text note to PC...">
-            <button type="button" class="pill-btn primary" style="height:44px;padding:0 16px;border-radius:14px;" onclick="sendMobileDrop()">Send</button>
+          <!-- Not Signed In -> 1-Tap Zero-QR Google Sign-In -->
+          <div id="sync-google-signin" style="display:flex;flex-direction:column;gap:11px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="sq-ico ic-violet" style="width:42px;height:42px;border-radius:14px;">
+                <svg viewBox="0 0 20 20" width="20" height="20" fill="none"><rect x="2.5" y="4" width="15" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 16.5h6M10 14v2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </span>
+              <div style="flex:1;min-width:0;">
+                <div id="sync-anon-title" style="font-size:15.5px;font-weight:700;">Auto-Sync with Google</div>
+                <div id="sync-anon-sub" style="font-size:12px;color:var(--muted);margin-top:2px;line-height:1.38;">Sign in once on Android &amp; Windows PC. Zero QR codes, end-to-end encrypted.</div>
+              </div>
+            </div>
+            <button type="button" class="yg-google-btn" onclick="call('googleSignIn')">
+              <span class="yg-google-g-pill" id="sync-g-btn-ico"></span>
+              <span>Sign in with Google</span>
+            </button>
           </div>
         </div>
 
-        <!-- Pairing Section -->
-        <div class="g-card" style="display:flex;flex-direction:column;gap:10px;background:var(--group-bg);box-shadow:none;">
-          <div class="sec-hdr" style="padding:0;"><span>Device Pairing Code</span></div>
-          <div id="m-code-box" class="code-pill">DJV-0000-0000</div>
-          <div style="display:flex;gap:8px;">
-            <button type="button" class="pill-btn primary" style="flex:1;height:40px;border-radius:13px;" onclick="call('scanQr')">Scan PC QR Code</button>
-            <button type="button" class="pill-btn" style="height:40px;border-radius:13px;" onclick="copyPairCode()">Copy Code</button>
+        <!-- 2. Instant Actions Row: Send Tab + Send Clipboard + Single-Line Quick Drop -->
+        <div class="sync-hero" style="gap:11px;">
+          <div class="sync-act-grid">
+            <button type="button" id="btn-m-send-tab" class="sync-act-btn" onclick="call('sendCurrentTabToPc')">
+              <div class="sync-act-btn-top">
+                <svg viewBox="0 0 18 18" width="17" height="17" fill="none"><path d="M3.5 14.5L14.5 3.5M14.5 3.5H7.5M14.5 3.5v7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span style="font-size:10px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;opacity:0.8;">Tab</span>
+              </div>
+              <div>
+                <div class="sync-act-btn-title">Send Tab to PC</div>
+                <div id="btn-m-send-tab-lbl" class="sync-act-btn-sub">Beam active webpage</div>
+              </div>
+            </button>
+
+            <button type="button" id="btn-m-send-clip" class="sync-act-btn tonal" onclick="call('sendClipboardToPc')">
+              <div class="sync-act-btn-top">
+                <svg viewBox="0 0 18 18" width="17" height="17" fill="none"><path d="M6.5 3.5h5a1 1 0 0 1 1 1v.5h1A1.5 1.5 0 0 1 15 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 14.5v-8A1.5 1.5 0 0 1 4.5 5h1v-.5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.55"/></svg>
+                <span style="font-size:10px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:var(--accent);">Shared</span>
+              </div>
+              <div>
+                <div class="sync-act-btn-title">Send Clipboard</div>
+                <div class="sync-act-btn-sub">Beam copied text to PC</div>
+              </div>
+            </button>
           </div>
+
           <div class="compose-row">
-            <input id="m-pair-input" type="text" placeholder="Enter code from PC (DJV-XXXX-XXXX)" style="text-transform:uppercase;font-family:monospace;">
-            <button type="button" class="pill-btn" style="height:44px;border-radius:14px;" onclick="pairCode()">Pair</button>
+            <input id="m-drop-input" type="text" placeholder="Quick Drop a link or note to PC..." onkeydown="if(event.key==='Enter')sendMobileDrop()">
+            <button type="button" class="pill-btn primary" style="height:44px;padding:0 18px;" onclick="sendMobileDrop()">Send</button>
           </div>
         </div>
 
-        <div class="sec-hdr"><span>Shared Links, Tabs &amp; Text</span></div>
+        <!-- 3. PC Open Tabs ("Continue on Phone") -->
+        <div class="sec-hdr">
+          <span>Continue on Phone</span>
+          <span id="m-pc-tabs-cnt" style="font-size:11.5px;color:var(--muted);text-transform:none;letter-spacing:0;">0 PC tabs</span>
+        </div>
+        <div id="m-pc-tabs-list" class="g-group"></div>
+
+        <!-- 4. Shared Clipboard & Quick Drops -->
+        <div class="sec-hdr">
+          <span>Shared Clipboard &amp; Quick Drops</span>
+          <button type="button" id="m-drops-clear-btn" class="sec-act" style="display:none;" onclick="call('clearDrops')">Clear</button>
+        </div>
+        <div id="m-latest-clip-card" class="sync-clip-hero" style="display:none;">
+          <div class="sync-clip-hero-head">
+            <span id="m-latest-clip-meta">Shared Clipboard · Windows PC</span>
+            <button type="button" class="pill-btn primary" style="height:28px;padding:0 12px;font-size:11.5px;" onclick="copyLatestSharedClipboard()">Copy</button>
+          </div>
+          <div id="m-latest-clip-txt" class="sync-clip-hero-txt"></div>
+        </div>
         <div id="m-drops-list" style="display:flex;flex-direction:column;gap:9px;"></div>
+
+        <!-- 5. Auto-Sync Toggles (52x32 M3 Checkmark Switches) -->
+        <div class="sec-hdr">
+          <span>Auto-Sync Data</span>
+          <span style="font-size:11px;color:var(--muted);text-transform:none;letter-spacing:0;">E2EE</span>
+        </div>
+        <div class="g-group">
+          <div class="g-row plain" onclick="call('toggleSyncPref','tabs')">
+            <div class="g-row-meta">
+              <div class="g-row-title">Open Tabs</div>
+              <div class="g-row-sub">Continue browsing across Windows PC &amp; Phone</div>
+            </div>
+            <button type="button" id="sw-sync-tabs" class="sw on" aria-label="Sync open tabs"></button>
+          </div>
+          <div class="g-row plain" onclick="call('toggleSyncPref','bookmarks')">
+            <div class="g-row-meta">
+              <div class="g-row-title">Bookmarks</div>
+              <div class="g-row-sub">Keep favorites and Quick Access tiles synced</div>
+            </div>
+            <button type="button" id="sw-sync-bookmarks" class="sw on" aria-label="Sync bookmarks"></button>
+          </div>
+          <div class="g-row plain" onclick="call('toggleSyncPref','readingList')">
+            <div class="g-row-meta">
+              <div class="g-row-title">Reading List</div>
+              <div class="g-row-sub">Sync saved articles to read later</div>
+            </div>
+            <button type="button" id="sw-sync-reading" class="sw on" aria-label="Sync reading list"></button>
+          </div>
+          <div class="g-row plain" onclick="call('toggleSyncPref','clipboard')">
+            <div class="g-row-meta">
+              <div class="g-row-title">Shared Clipboard</div>
+              <div class="g-row-sub">Send &amp; receive copied text instantly</div>
+            </div>
+            <button type="button" id="sw-sync-clipboard" class="sw on" aria-label="Sync shared clipboard"></button>
+          </div>
+          <div class="g-row plain" onclick="call('toggleSyncPref','history')">
+            <div class="g-row-meta">
+              <div class="g-row-title">Browsing History</div>
+              <div class="g-row-sub">Sync recently visited sites across devices</div>
+            </div>
+            <button type="button" id="sw-sync-history" class="sw on" aria-label="Sync browsing history"></button>
+          </div>
+        </div>
+
+        <!-- 6. Discreet Collapsible "Pair without Google (Manual Code / QR)" -->
+        <div class="sync-manual-disclosure">
+          <button type="button" id="m-manual-pair-toggle" class="sync-manual-toggle" aria-expanded="false" onclick="toggleManualPairSection()">
+            <span>Pair without Google (Manual Code / QR)</span>
+            <span id="m-manual-pair-chev" style="font-size:15px;">▾</span>
+          </button>
+          <div id="m-manual-pair-body" class="sync-manual-body">
+            <div style="font-size:11.5px;color:var(--muted);line-height:1.4;">Prefer local code pairing without signing into Google? Scan the QR code or enter your pairing code from dejavu on Windows PC.</div>
+            <div id="m-code-box" class="code-pill">DJV-4900-M3UI</div>
+            <div style="display:flex;gap:8px;">
+              <button type="button" class="pill-btn primary" style="flex:1;height:40px;" onclick="call('scanQr')">Scan PC QR Code</button>
+              <button type="button" class="pill-btn" style="height:40px;" onclick="copyPairCode()">Copy Code</button>
+            </div>
+            <div class="compose-row">
+              <input id="m-pair-input" type="text" placeholder="Enter code from PC (DJV-XXXX-XXXX)" style="text-transform:uppercase;font-family:monospace;">
+              <button type="button" class="pill-btn" style="height:44px;" onclick="pairCode()">Pair</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2108,12 +2356,12 @@
               <button type="button" id="sw-popups" class="sw on" aria-label="Block pop-ups"></button>
             </div>
 
-            <div class="g-row plain set-item" data-search="block third party cookies tracking cross site" onclick="call('toggleBlockThirdPartyCookies')">
+            <div class="g-row plain set-item" data-search="block third party cookies tracking cross site oauth sso sign in" onclick="call('toggleBlockThirdPartyCookies')">
               <div class="g-row-meta">
                 <div class="g-row-title">Block Third-Party Cookies</div>
-                <div class="g-row-sub">Prevent cross-site tracking cookies</div>
+                <div class="g-row-sub">Off by default so Google, Discord &amp; SSO sign-ins work</div>
               </div>
-              <button type="button" id="sw-3pcookies" class="sw on" aria-label="Block third-party cookies"></button>
+              <button type="button" id="sw-3pcookies" class="sw" aria-label="Block third-party cookies"></button>
             </div>
 
             <button type="button" class="g-row set-item" data-search="clear browsing data history cookies cache downloads delete wipe" onclick="openClearDataFromSettings()">
@@ -2203,10 +2451,10 @@
           </div>
         </div>
 
-        <!-- 6. SYSTEM, SYNC & ABOUT v4.8.0 -->
-        <div class="set-section" data-search="system default browser role apps http https links sync dejavu link pc mobile software update auto updater apk version 4.8.0 about reset defaults">
+        <!-- 6. SYSTEM, SYNC & ABOUT v4.9.0 -->
+        <div class="set-section" data-search="system default browser role apps http https links sync dejavu link google auto sync pc mobile passkeys webauthn software update auto updater apk version 4.9.0 about reset defaults">
           <div class="sec-hdr">
-            <span>System, Sync &amp; About v4.8.0</span>
+            <span>System, Sync &amp; About v4.9.0</span>
             <span class="set-match-pill"></span>
           </div>
           <div class="g-group">
@@ -2219,19 +2467,19 @@
               <button type="button" id="opt-def-browser-btn" class="pill-btn primary" onclick="event.stopPropagation();call('requestDefaultBrowser')">Set as Default</button>
             </div>
 
-            <button type="button" class="g-row set-item" data-search="dejavu link pc mobile sync qr pairing e2ee" onclick="call('openScreen','sync')">
+            <button type="button" class="g-row set-item" data-search="dejavu link google auto sync clipboard pc mobile qr pairing e2ee" onclick="call('openScreen','sync')">
               <span class="sq-ico ic-violet"><svg viewBox="0 0 18 18" fill="none"><rect x="2.2" y="3.5" width="10" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 13.5h3.4M7.2 11v2.5M11.5 9.5L16 5M16 5h-3.4M16 5v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               <div class="g-row-meta">
-                <div class="g-row-title">dejavu Link PC↔Mobile Sync</div>
-                <div id="opt-sync-sub" class="g-row-sub">Pair with Windows PC · AES-256 E2EE</div>
+                <div class="g-row-title">dejavu Link Auto-Sync</div>
+                <div id="opt-sync-sub" class="g-row-sub">Sign in with Google to auto-sync · AES-256 E2EE</div>
               </div>
               <span class="g-chev">›</span>
             </button>
 
-            <div class="g-row set-item" data-search="software update auto updater github releases apk version 4.8.0 about butterfly">
+            <div class="g-row set-item" data-search="software update auto updater github releases apk version 4.9.0 about butterfly">
               <span id="opt-about-logo" class="brand-mini-svg" style="width:34px;height:34px;" aria-hidden="true"></span>
               <div class="g-row-meta">
-                <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.8.0</div>
+                <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.9.0</div>
                 <div id="opt-upd-sub" class="g-row-sub">Permanent V1-V3 signing · Auto-checks GitHub Releases</div>
               </div>
               <button type="button" id="opt-upd-btn" class="pill-btn" onclick="handleUpdateBtn()">Check</button>
@@ -2252,7 +2500,7 @@
             </div>
 
             <div id="opt-upd-note" class="upd-signing-note">
-              Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.8.0 &mdash; all future updates will install automatically in-place!
+              Upgrading from v4.2.0 or earlier? Uninstall dejavu once, then install v4.9.0 &mdash; all future updates will install automatically in-place!
             </div>
 
             <button type="button" class="g-row plain set-item" data-search="reset settings defaults restore factory preferences" onclick="openResetSettingsModal()">
@@ -2271,7 +2519,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:11.5px;color:var(--subtle);padding:4px 0 8px;">
-          dejavu Mobile v4.8.0 · Google Pixel Material Design 3
+          dejavu Mobile v4.9.0 · Google Pixel Material Design 3
         </div>
       </div>
     </div>
@@ -2593,7 +2841,7 @@
     <div class="mini-modal-card" style="border-radius:28px;padding:22px;" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:700;">Reset Settings to Defaults?</h3>
       <div style="font-size:13px;line-height:1.5;color:var(--muted);">
-        This restores Appearance, Privacy, Search, Tabs, and Downloads settings to dejavu v4.8.0 defaults. Your Favorites, Profiles, Custom Userscripts, and PC Link stay safe.
+        This restores Appearance, Privacy, Search, Tabs, and Downloads settings to dejavu v4.9.0 defaults. Your Favorites, Profiles, Custom Userscripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn" onclick="closeResetSettingsModal()">Cancel</button>
@@ -2674,6 +2922,10 @@
     (function hydrateStaticBrandSvgs() {
       const mBrand = document.getElementById('menu-brand-mark');
       if (mBrand) mBrand.innerHTML = getDynamicButterflySvg(28);
+      const sBrand = document.getElementById('sync-brand-mark');
+      if (sBrand) sBrand.innerHTML = getDynamicButterflySvg(28);
+      const sGIco = document.getElementById('sync-g-btn-ico');
+      if (sGIco) sGIco.innerHTML = GOOGLE_G_SVG;
       const aLogo = document.getElementById('opt-about-logo');
       if (aLogo) aLogo.innerHTML = getDynamicButterflySvg(34);
     })();
@@ -3241,6 +3493,53 @@
       const code = (state.sync && state.sync.pairingCode) || '';
       if (code) call('copyText', code);
     }
+    let manualPairExpanded = false;
+    let syncPassBoxOpen = false;
+    function toggleManualPairSection() {
+      manualPairExpanded = !manualPairExpanded;
+      const body = document.getElementById('m-manual-pair-body');
+      const tog = document.getElementById('m-manual-pair-toggle');
+      const chev = document.getElementById('m-manual-pair-chev');
+      if (body) body.classList.toggle('open', manualPairExpanded);
+      if (tog) tog.setAttribute('aria-expanded', manualPairExpanded ? 'true' : 'false');
+      if (chev) chev.textContent = manualPairExpanded ? '▴' : '▾';
+    }
+    function toggleSyncPassphraseBox() {
+      syncPassBoxOpen = !syncPassBoxOpen;
+      const box = document.getElementById('sync-pass-box');
+      if (box) box.style.display = syncPassBoxOpen ? 'flex' : 'none';
+      if (syncPassBoxOpen) {
+        setTimeout(() => {
+          const inp = document.getElementById('m-sync-pass-in');
+          if (inp) inp.focus();
+        }, 40);
+      }
+    }
+    function applySyncPassphrase() {
+      const inp = document.getElementById('m-sync-pass-in');
+      const pass = inp ? inp.value.trim() : '';
+      if (inp) inp.value = '';
+      syncPassBoxOpen = false;
+      const box = document.getElementById('sync-pass-box');
+      if (box) box.style.display = 'none';
+      const sync = state.sync || {};
+      const prof = getActiveProfile();
+      const email = sync.googleEmail || (prof && prof.googleEmail) || '';
+      call('enableGoogleAutoSync', email, pass);
+    }
+    function copyLatestSharedClipboard() {
+      const clip = state.sync && state.sync.latestClipboard;
+      if (clip && clip.text) call('copyText', clip.text);
+    }
+    function formatAgoShort(ts) {
+      const n = Number(ts || 0);
+      if (!n) return '';
+      const sec = Math.max(0, Math.floor((Date.now() - n) / 1000));
+      if (sec < 90) return 'Just now';
+      if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+      if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+      return `${Math.floor(sec / 86400)}d ago`;
+    }
     function setTabViewMode(isPriv) {
       tabViewPrivate = !!isPriv;
       renderTabsScreen();
@@ -3443,12 +3742,13 @@
       document.getElementById('sp-fav-section').style.display = isPriv ? 'none' : 'flex';
 
       const sync = state.sync || {};
-      const connected = !!sync.connected;
+      const isGoogleSync = sync.syncMode === 'google' && !!sync.googleEmail;
+      const connected = !!sync.connected || !!sync.peerOnline;
       const linkPill = document.getElementById('sp-link-pill');
-      linkPill.classList.toggle('on', connected);
-      document.getElementById('sp-link-txt').textContent = connected
+      linkPill.classList.toggle('on', connected || isGoogleSync);
+      document.getElementById('sp-link-txt').textContent = sync.peerOnline
         ? (sync.peerName || 'Windows PC')
-        : 'Link PC';
+        : (isGoogleSync ? 'Google Sync' : (connected ? (sync.peerName || 'Windows PC') : 'Link PC'));
 
       document.getElementById('sp-blocked').textContent = Number(state.totalBlocked || 0).toLocaleString();
       const updDot = document.getElementById('sp-upd-dot');
@@ -3807,49 +4107,181 @@
 
     function renderSyncSheet() {
       const sync = state.sync || {};
-      const connected = !!sync.connected;
-      document.getElementById('sync-status-title').textContent = connected
-        ? `Connected to ${sync.peerName || 'Windows PC'}`
-        : 'Pair with Windows PC';
-      document.getElementById('sync-dev-ico').className = 'sq-ico ' + (connected ? 'ic-emerald' : 'ic-violet');
-      document.getElementById('m-code-box').textContent = sync.pairingCode || 'DJV-0000-0000';
+      const prof = getActiveProfile();
+      const isGoogleMode = sync.syncMode === 'google' && !!sync.googleEmail;
+      const hasGoogleEmail = isGoogleMode || (prof && prof.isGoogleSignedIn && !!prof.googleEmail);
+      const effectiveEmail = sync.googleEmail || (prof && prof.googleEmail) || '';
+      const peerOnline = !!sync.peerOnline;
+      const connected = !!sync.connected || peerOnline;
+      const peerLabel = sync.peerName || 'Windows PC';
 
+      // 1. Google Account Auto-Sync Hero Card
+      const gActiveBox = document.getElementById('sync-google-active');
+      const gSignInBox = document.getElementById('sync-google-signin');
+      if (gActiveBox && gSignInBox) {
+        if (hasGoogleEmail) {
+          gActiveBox.style.display = 'flex';
+          gSignInBox.style.display = 'none';
+          renderAvatarContent(document.getElementById('sync-g-avatar'), Object.assign({}, prof, { isGoogleSignedIn: true, googleEmail: effectiveEmail }), true);
+          const dispName = (prof && prof.googleDisplayName) ? prof.googleDisplayName : (prof && prof.name ? prof.name : 'Google Account');
+          const gNameEl = document.getElementById('sync-g-name');
+          const gEmailEl = document.getElementById('sync-g-email');
+          if (gNameEl) gNameEl.textContent = dispName;
+          if (gEmailEl) gEmailEl.textContent = effectiveEmail;
+
+          const modePill = document.getElementById('sync-mode-pill');
+          if (modePill) {
+            modePill.classList.toggle('manual', !isGoogleMode);
+            modePill.innerHTML = isGoogleMode
+              ? '<span class="s-dot" aria-hidden="true"></span><span>Auto-Synced via Google</span>'
+              : '<span class="s-dot" aria-hidden="true"></span><span>Manual Pair Active</span>';
+          }
+
+          const pcTitle = document.getElementById('sync-status-title');
+          const pcDot = document.getElementById('sync-pc-dot');
+          const pcPres = document.getElementById('sync-pc-presence');
+          const devIco = document.getElementById('sync-dev-ico');
+          if (pcTitle) pcTitle.textContent = connected ? peerLabel : 'Windows PC (Ready)';
+          if (pcDot) pcDot.classList.toggle('idle', !peerOnline);
+          if (devIco) devIco.className = 'sq-ico ' + (peerOnline ? 'ic-emerald' : 'ic-violet');
+          if (pcPres) {
+            if (peerOnline) pcPres.textContent = 'Online now · Real-Time E2EE';
+            else if (connected && sync.peerLastSeenMs) pcPres.textContent = `Last seen ${formatAgoShort(sync.peerLastSeenMs)} · Ready`;
+            else pcPres.textContent = 'Sign into this Google account on PC · Zero QR';
+          }
+
+          const passStat = document.getElementById('sync-pass-status');
+          const passTog = document.getElementById('sync-pass-toggle');
+          if (passStat) {
+            passStat.textContent = sync.hasPassphrase
+              ? 'Custom E2EE Passphrase Active'
+              : 'AES-256-CBC + HMAC-SHA256 E2EE';
+          }
+          if (passTog) {
+            passTog.textContent = sync.hasPassphrase ? 'Change Passphrase' : '+ Extra Passphrase';
+          }
+        } else {
+          gActiveBox.style.display = 'none';
+          gSignInBox.style.display = 'flex';
+          const anonTitle = document.getElementById('sync-anon-title');
+          const anonSub = document.getElementById('sync-anon-sub');
+          if (anonTitle) {
+            anonTitle.textContent = connected ? `Paired with ${peerLabel}` : 'Auto-Sync with Google';
+          }
+          if (anonSub) {
+            anonSub.textContent = connected
+              ? `${peerOnline ? 'PC online now · ' : ''}Sign in with Google anytime to sync without QR codes.`
+              : 'Sign in once on Android & Windows PC. Zero QR codes, end-to-end encrypted.';
+          }
+        }
+      }
+
+      // 2. Instant Actions (Send Tab + Send Clipboard + Quick Drop)
       const sendBtn = document.getElementById('btn-m-send-tab');
       const sendLbl = document.getElementById('btn-m-send-tab-lbl');
-      sendLbl.textContent = state.activeUrl
-        ? `Send "${(state.activeTitle || getHost(state.activeUrl)).slice(0, 26)}" to PC`
-        : 'Open a website to send tab to PC';
-      sendBtn.style.opacity = state.activeUrl ? '1' : '0.52';
+      if (sendLbl) {
+        sendLbl.textContent = state.activeUrl
+          ? (state.activeTitle || getHost(state.activeUrl)).slice(0, 26)
+          : 'Open a webpage first';
+      }
+      if (sendBtn) sendBtn.style.opacity = state.activeUrl ? '1' : '0.62';
+
+      // 3. PC Open Tabs ("Continue on Phone")
+      const rtabs = Array.isArray(sync.remoteTabs) ? sync.remoteTabs : [];
+      const pcCnt = document.getElementById('m-pc-tabs-cnt');
+      const pcList = document.getElementById('m-pc-tabs-list');
+      if (pcCnt) pcCnt.textContent = rtabs.length === 1 ? '1 PC tab' : `${rtabs.length} PC tabs`;
+      if (pcList) {
+        pcList.innerHTML = '';
+        if (!rtabs.length) {
+          pcList.innerHTML = '<div class="empty" style="padding:18px 14px;">Open tabs on your Windows PC appear here automatically for 1-tap handoff.</div>';
+        } else {
+          rtabs.slice(0, 8).forEach((rt) => {
+            const row = document.createElement('div');
+            row.className = 'g-row';
+            row.innerHTML = `
+              ${getSiteIconHtml(rt.url, rt.title, 30)}
+              <div class="g-row-meta">
+                <div class="g-row-title">${esc(rt.title || getHost(rt.url))}</div>
+                <div class="g-row-sub">${esc(getHost(rt.url))}</div>
+              </div>
+              <button type="button" class="pill-btn primary" style="height:30px;padding:0 12px;font-size:11.5px;flex-shrink:0;">Open</button>
+            `;
+            row.onclick = () => call('openNewTab', rt.url);
+            pcList.appendChild(row);
+          });
+        }
+      }
+
+      // 4. Latest Shared Clipboard & Quick Drops
+      const clipCard = document.getElementById('m-latest-clip-card');
+      const clipMeta = document.getElementById('m-latest-clip-meta');
+      const clipTxt = document.getElementById('m-latest-clip-txt');
+      const latestClip = sync.latestClipboard && sync.latestClipboard.text ? sync.latestClipboard : null;
+      if (clipCard && clipMeta && clipTxt) {
+        if (latestClip) {
+          clipCard.style.display = 'flex';
+          const ago = formatAgoShort(latestClip.ts);
+          clipMeta.textContent = `Shared Clipboard · ${latestClip.fromName || 'Device'}${ago ? ' · ' + ago : ''}`;
+          clipTxt.textContent = latestClip.text;
+        } else {
+          clipCard.style.display = 'none';
+        }
+      }
 
       const drops = Array.isArray(sync.drops) ? sync.drops : [];
+      const clrBtn = document.getElementById('m-drops-clear-btn');
+      if (clrBtn) clrBtn.style.display = drops.length ? 'inline-block' : 'none';
       const dl = document.getElementById('m-drops-list');
-      dl.innerHTML = '';
-      if (!drops.length) {
-        dl.innerHTML = '<div class="empty">No shared links, tabs, or text yet.<br>Scan the QR code in dejavu on Windows PC to start instant sharing.</div>';
-      } else {
-        drops.forEach((it) => {
-          const card = document.createElement('div');
-          card.className = 'drop-card';
-          const isTxt = it.dropType === 'text' && !it.url;
-          card.innerHTML = `
-            <div class="drop-meta">
-              <span>${esc(it.fromName || 'Device')} · ${esc(it.dropType || 'link')}</span>
-              <span class="rm" style="color:var(--muted);padding:2px 6px;">✕</span>
-            </div>
-            <div class="drop-text">${esc(isTxt ? it.text : (it.title || it.url))}</div>
-            ${it.url ? `<div class="drop-url">${esc(it.url)}</div>` : ''}
-            <div class="drop-acts">
-              ${it.url ? '<button type="button" class="pill-btn primary o-btn">Open Tab</button>' : ''}
-              <button type="button" class="pill-btn c-btn">Copy</button>
-            </div>
-          `;
-          card.querySelector('.rm').onclick = () => call('deleteDrop', it.id);
-          const ob = card.querySelector('.o-btn');
-          if (ob) ob.onclick = () => call('openNewTab', it.url);
-          card.querySelector('.c-btn').onclick = () => call('copyText', it.url || it.text || it.title || '');
-          dl.appendChild(card);
-        });
+      if (dl) {
+        dl.innerHTML = '';
+        const visibleDrops = latestClip ? drops.filter((d) => d && d.id !== latestClip.id) : drops;
+        if (!visibleDrops.length && !latestClip) {
+          dl.innerHTML = '<div class="empty" style="padding:18px 14px;">Shared clipboard items, beamed tabs &amp; quick notes appear here instantaneously.</div>';
+        } else {
+          visibleDrops.slice(0, 12).forEach((it) => {
+            const card = document.createElement('div');
+            card.className = 'drop-card';
+            const isTxt = (it.dropType === 'text' || it.dropType === 'clipboard') && !it.url;
+            const kindLabel = it.dropType === 'clipboard' ? 'Clipboard' : (it.dropType === 'tab' ? 'Tab' : (it.dropType === 'text' ? 'Note' : 'Link'));
+            const ago = formatAgoShort(it.ts);
+            card.innerHTML = `
+              <div class="drop-meta">
+                <span>${esc(it.fromName || 'Device')} · ${kindLabel}${ago ? ' · ' + esc(ago) : ''}</span>
+                <span class="rm" style="color:var(--muted);padding:2px 6px;cursor:pointer;">✕</span>
+              </div>
+              <div class="drop-text">${esc(isTxt ? it.text : (it.title || it.url))}</div>
+              ${it.url ? `<div class="drop-url">${esc(it.url)}</div>` : ''}
+              <div class="drop-acts">
+                ${it.url ? '<button type="button" class="pill-btn primary o-btn" style="height:32px;font-size:12px;">Open</button>' : ''}
+                <button type="button" class="pill-btn c-btn" style="height:32px;font-size:12px;">Copy</button>
+              </div>
+            `;
+            card.querySelector('.rm').onclick = () => call('deleteDrop', it.id);
+            const ob = card.querySelector('.o-btn');
+            if (ob) ob.onclick = () => call('openNewTab', it.url);
+            card.querySelector('.c-btn').onclick = () => call('copyText', it.url || it.text || it.title || '');
+            dl.appendChild(card);
+          });
+        }
       }
+
+      // 5. Auto-Sync Pref Toggles
+      const sp = sync.prefs || {};
+      const swTabs = document.getElementById('sw-sync-tabs');
+      const swBm = document.getElementById('sw-sync-bookmarks');
+      const swRl = document.getElementById('sw-sync-reading');
+      const swClip = document.getElementById('sw-sync-clipboard');
+      const swHist = document.getElementById('sw-sync-history');
+      if (swTabs) swTabs.classList.toggle('on', sp.tabs !== false);
+      if (swBm) swBm.classList.toggle('on', sp.bookmarks !== false);
+      if (swRl) swRl.classList.toggle('on', sp.readingList !== false);
+      if (swClip) swClip.classList.toggle('on', sp.clipboard !== false);
+      if (swHist) swHist.classList.toggle('on', sp.history !== false);
+
+      // 6. Collapsible Manual Fallback Code
+      const codeBox = document.getElementById('m-code-box');
+      if (codeBox) codeBox.textContent = sync.pairingCode || 'DJV-4900-M3UI';
     }
 
     function renderAvatarContent(el, prof, showGoogleDot) {
@@ -4008,7 +4440,7 @@
       const swPop = document.getElementById('sw-popups');
       if (swPop) swPop.classList.toggle('on', state.blockPopups !== false);
       const sw3p = document.getElementById('sw-3pcookies');
-      if (sw3p) sw3p.classList.toggle('on', state.blockThirdPartyCookies !== false);
+      if (sw3p) sw3p.classList.toggle('on', !!state.blockThirdPartyCookies);
       const cbdSub = document.getElementById('opt-cbd-sub');
       if (cbdSub) {
         const hLen = (state.history || []).length;
@@ -4070,9 +4502,13 @@
       const sync = state.sync || {};
       const syncSub = document.getElementById('opt-sync-sub');
       if (syncSub) {
-        syncSub.textContent = sync.connected
-          ? `Connected to ${sync.peerName || 'Windows PC'} · Real-time E2EE`
-          : 'Pair with Windows PC · AES-256 E2EE';
+        if (sync.syncMode === 'google' && sync.googleEmail) {
+          syncSub.textContent = `Auto-Synced via Google · ${sync.googleEmail}`;
+        } else if (sync.connected) {
+          syncSub.textContent = `Connected to ${sync.peerName || 'Windows PC'} · Real-time E2EE`;
+        } else {
+          syncSub.textContent = 'Sign in with Google to auto-sync · AES-256 E2EE';
+        }
       }
 
       const optExtSub = document.getElementById('opt-ext-sub');
@@ -4084,7 +4520,7 @@
       }
 
       const u = state.update || {};
-      const curV = u.currentVersion || '4.8.0';
+      const curV = u.currentVersion || '4.9.0';
       const uTitle = document.getElementById('opt-upd-title');
       const uSub = document.getElementById('opt-upd-sub');
       const uBtn = document.getElementById('opt-upd-btn');
@@ -4138,7 +4574,7 @@
         } else if (u.status === 'ready') {
           uTitle.textContent = `v${u.latestVersion} Ready to Install`;
           uSub.textContent = u.signatureMismatch
-            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '4.8.0')
+            ? 'Older signing key detected — uninstall once, then install v' + (u.latestVersion || '4.9.0')
             : 'Verified V1-V3 permanent signature · Tap Install to upgrade';
           uBtn.textContent = 'Install';
           uBtn.classList.add('primary');
@@ -4625,7 +5061,7 @@
     };
 
     // =========================================================================
-    // PIXEL MATERIAL DESIGN 3 EXTENSIONS & CUSTOM USERSCRIPTS MANAGER (v4.8.0)
+    // PIXEL MATERIAL DESIGN 3 EXTENSIONS & CUSTOM USERSCRIPTS MANAGER (v4.9.0)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & Annoyance Cleaner',      desc: 'Hides sponsored promos, newsletter popups & app-install nags', category: 'Privacy',    enabled: true },
@@ -4961,10 +5397,72 @@
           cur.activeCount = (cur.builtins || []).filter((b) => b.enabled).length + cur.userscripts.filter((u) => u.enabled !== false).length;
           st.extensions = cur;
         }
+        else if (fn === 'toggleSyncPref') {
+          const pk = args[0];
+          const cur = Object.assign({}, st.sync || {});
+          cur.prefs = Object.assign({ tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true }, cur.prefs || {});
+          if (pk in cur.prefs) cur.prefs[pk] = !cur.prefs[pk];
+          st.sync = cur;
+        }
+        else if (fn === 'sendClipboardToPc') {
+          const cur = Object.assign({}, st.sync || {});
+          const clipItem = {
+            id: 'clip_' + Date.now(),
+            dropType: 'clipboard',
+            title: 'Clipboard from Pixel 9 Pro',
+            url: '',
+            text: 'https://m3.material.io/styles/color/roles — Material Design 3 tokens',
+            fromName: 'Pixel 9 Pro',
+            platform: 'android',
+            ts: Date.now()
+          };
+          cur.latestClipboard = { id: clipItem.id, text: clipItem.text, fromName: clipItem.fromName, platform: 'android', ts: clipItem.ts };
+          cur.drops = [clipItem, ...(cur.drops || [])];
+          st.sync = cur;
+        }
+        else if (fn === 'sendDropToPc') {
+          const raw = String(args[0] || '').trim();
+          if (raw) {
+            const cur = Object.assign({}, st.sync || {});
+            const isUrl = /^https?:\/\//i.test(raw) || (!raw.includes(' ') && raw.includes('.'));
+            const item = {
+              id: 'drop_' + Date.now(),
+              dropType: isUrl ? 'link' : 'text',
+              title: isUrl ? getHost(raw) : 'Note from Phone',
+              url: isUrl ? (raw.startsWith('http') ? raw : 'https://' + raw) : '',
+              text: isUrl ? '' : raw,
+              fromName: 'Pixel 9 Pro',
+              platform: 'android',
+              ts: Date.now()
+            };
+            cur.drops = [item, ...(cur.drops || [])];
+            st.sync = cur;
+          }
+        }
+        else if (fn === 'deleteDrop') {
+          const cur = Object.assign({}, st.sync || {});
+          cur.drops = (cur.drops || []).filter((d) => d && d.id !== args[0]);
+          if (cur.latestClipboard && cur.latestClipboard.id === args[0]) cur.latestClipboard = null;
+          st.sync = cur;
+        }
+        else if (fn === 'clearDrops') {
+          const cur = Object.assign({}, st.sync || {});
+          cur.drops = [];
+          cur.latestClipboard = null;
+          st.sync = cur;
+        }
+        else if (fn === 'enableGoogleAutoSync') {
+          const cur = Object.assign({}, st.sync || {});
+          cur.syncMode = 'google';
+          cur.googleEmail = args[0] || cur.googleEmail || 'alex@gmail.com';
+          cur.hasPassphrase = !!(args[1] && String(args[1]).trim());
+          cur.paired = true;
+          st.sync = cur;
+        }
         else if (fn === 'resetSettings') {
           st.themeMode = 'dark'; st.effectiveTheme = 'dark'; st.accentColor = 'amethyst'; st.pageZoom = 100;
           st.desktopSiteDefault = false; st.httpsFirst = true; st.doNotTrack = true; st.blockPopups = true;
-          st.blockThirdPartyCookies = true; st.searchEngine = 'google'; st.pullToRefresh = true;
+          st.blockThirdPartyCookies = false; st.searchEngine = 'google'; st.pullToRefresh = true;
           st.openLinksInBackground = false; st.defaultYoutubeQuality = 'auto'; st.floatingDownloadButton = true;
         }
         window.__onDejavuState(st);
@@ -4979,14 +5477,14 @@
             const initMode = qp.get('theme') || initMeta.mode || 'dark';
             const initSeed = qp.get('accent') || initMeta.seed || 'amethyst';
             const initScreen = qp.get('screen') || 'start';
-            const signedIn = qp.get('signedin') === '1';
+            const signedIn = qp.has('signedin') ? (qp.get('signedin') === '1') : (initScreen === 'sync');
             const isDefBrowser = qp.get('defaultBrowser') === '1';
             const ctxKind = qp.get('ctx') || 'image-link';
             const previewCtx = initScreen === 'context-menu' ? {
               source: 'web',
               kind: ctxKind,
-              title: ctxKind === 'image' ? 'Amethyst Origami · Material Design 3' : 'dejavu Browser v4.8.0 Release',
-              linkUrl: ctxKind === 'image' ? '' : 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v4.8.0',
+              title: ctxKind === 'image' ? 'Amethyst Origami · Material Design 3' : 'dejavu Browser v4.9.0 Release',
+              linkUrl: ctxKind === 'image' ? '' : 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v4.9.0',
               imageUrl: ctxKind === 'link' ? '' : 'wallpapers/wp-m3-butterfly-obsidian.jpg',
               pageTitle: 'dejavu — Material Design 3 Browser',
               pageUrl: 'https://dathevinci.github.io/Dejavu-browser/',
@@ -4998,7 +5496,7 @@
               accentColor: initSeed,
               isMainProfile: true,
               isGoogleSignedIn: signedIn,
-              googleEmail: signedIn ? 'alex.pixel@gmail.com' : '',
+              googleEmail: signedIn ? 'alex@gmail.com' : '',
               googleDisplayName: signedIn ? 'Alex Rivera' : '',
               googleAvatarUrl: ''
             };
@@ -5012,9 +5510,76 @@
               googleDisplayName: '',
               googleAvatarUrl: ''
             };
+            const nowMs = Date.now();
+            const previewSync = signedIn ? {
+              enabled: true,
+              syncMode: 'google',
+              googleEmail: 'alex@gmail.com',
+              hasPassphrase: false,
+              paired: true,
+              connected: true,
+              peerName: 'Windows 11 Desktop',
+              peerPlatform: 'windows',
+              peerOnline: true,
+              peerLastSeenMs: nowMs - 8000,
+              pairingCode: 'DJV-4900-M3UI',
+              latestClipboard: {
+                id: 'clip_pc_1',
+                text: 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v4.9.0 — Zero-QR Google Auto-Sync & Passkeys',
+                fromName: 'Windows 11 Desktop',
+                platform: 'windows',
+                ts: nowMs - 25000
+              },
+              prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true },
+              remoteTabs: [
+                { title: 'Material Design 3 — Color & Surface Tokens', url: 'https://m3.material.io/styles/color/roles' },
+                { title: 'GitHub — Dathevinci/Dejavu-browser', url: 'https://github.com/Dathevinci/Dejavu-browser' },
+                { title: 'YouTube — Material You Showcase 4K', url: 'https://m.youtube.com' }
+              ],
+              drops: [
+                {
+                  id: 'clip_pc_1',
+                  dropType: 'clipboard',
+                  title: 'Clipboard from Windows 11 Desktop',
+                  url: '',
+                  text: 'https://github.com/Dathevinci/Dejavu-browser/releases/tag/v4.9.0 — Zero-QR Google Auto-Sync & Passkeys',
+                  fromName: 'Windows 11 Desktop',
+                  platform: 'windows',
+                  ts: nowMs - 25000
+                },
+                {
+                  id: 'drop_pc_2',
+                  dropType: 'tab',
+                  title: 'WebAuthn Passkeys Guide — MDN',
+                  url: 'https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API',
+                  text: '',
+                  fromName: 'Windows 11 Desktop',
+                  platform: 'windows',
+                  ts: nowMs - 180000
+                }
+              ]
+            } : {
+              enabled: true,
+              syncMode: 'manual',
+              googleEmail: '',
+              hasPassphrase: false,
+              paired: false,
+              connected: false,
+              peerName: '',
+              peerPlatform: 'windows',
+              peerOnline: false,
+              peerLastSeenMs: 0,
+              pairingCode: 'DJV-4900-M3UI',
+              latestClipboard: null,
+              prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true },
+              remoteTabs: [],
+              drops: []
+            };
             window.__onDejavuState({
               screen: initScreen,
               activeTabId: 1,
+              activeUrl: initScreen === 'sync' ? 'https://m3.material.io/styles/color/roles' : '',
+              activeTitle: initScreen === 'sync' ? 'Material Design 3' : 'Start Page',
               searchEngine: 'google',
               wallpaper: initWp,
               accentColor: initSeed,
@@ -5028,7 +5593,7 @@
               httpsFirst: true,
               doNotTrack: true,
               blockPopups: true,
-              blockThirdPartyCookies: true,
+              blockThirdPartyCookies: false,
               pullToRefresh: true,
               openLinksInBackground: false,
               defaultYoutubeQuality: '1080p',
@@ -5063,8 +5628,8 @@
                 { title: 'GitHub — Dathevinci/Dejavu-browser', url: 'https://github.com/Dathevinci/Dejavu-browser' },
                 { title: 'YouTube', url: 'https://m.youtube.com' }
               ],
-              sync: { connected: false, pairingCode: 'DJV-4800-M3UI', remoteTabs: [], drops: [] },
-              update: { currentVersion: '4.8.0', status: 'uptodate', latestVersion: '4.8.0', available: false, hasDownloadedApk: false },
+              sync: previewSync,
+              update: { currentVersion: '4.9.0', status: 'uptodate', latestVersion: '4.9.0', available: false, hasDownloadedApk: false },
               turboDownloads: [],
               pageMedia: [],
               extensions: {

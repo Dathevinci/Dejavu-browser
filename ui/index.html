@@ -414,6 +414,20 @@
 
               <span class="m3-glance-div" aria-hidden="true"></span>
 
+              <button type="button" id="newtab-link-chip" class="m3-glance-item m3-glance-link" title="Open dejavu Link Hub (Google Auto-Sync PC ↔ Phone)">
+                <span class="m3-glance-ico secondary">
+                  <svg viewBox="0 0 18 18" fill="none" width="14" height="14">
+                    <rect x="2.2" y="4" width="8.6" height="6.8" rx="1.4" stroke="currentColor" stroke-width="1.45"/>
+                    <path d="M5 13h3.2M6.6 10.8V13" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+                    <rect x="11.2" y="5.2" width="4.6" height="8.6" rx="1.2" stroke="currentColor" stroke-width="1.45"/>
+                    <circle cx="13.5" cy="12" r="0.65" fill="currentColor"/>
+                  </svg>
+                </span>
+                <span id="newtab-link-text" class="m3-glance-lbl strong">dejavu Link</span>
+              </button>
+
+              <span class="m3-glance-div" aria-hidden="true"></span>
+
               <button type="button" id="newtab-ext-chip" class="m3-glance-item m3-glance-ext" title="Manage Chrome Extensions">
                 <span class="m3-glance-ico secondary">
                   <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
@@ -563,7 +577,7 @@
               <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
             </svg>
             <span class="m3-appbar-title">Settings</span>
-            <span id="settings-version-sub" class="m3-tonal-badge">v4.8.0</span>
+            <span id="settings-version-sub" class="m3-tonal-badge">v4.9.0</span>
           </div>
 
           <div class="m3-appbar-search">
@@ -1452,6 +1466,16 @@
                         </div>
                         <button type="button" id="btn-open-google-passwords" class="m3-btn m3-btn-tonal sm">Open Manager</button>
                       </div>
+                      <div class="opt-row" id="row-passkeys-status">
+                        <div class="m3-row-ico tertiary">
+                          <svg viewBox="0 0 20 20" width="20" height="20" fill="none"><path d="M10 2.6L4 5v4.7c0 3.9 2.5 6.8 6 8.1 3.5-1.3 6-4.2 6-8.1V5l-6-2.4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.3 10.1l1.9 1.9 3.6-3.8" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Passkeys &amp; Modern Sign-In</div>
+                          <div class="opt-desc">Windows Hello biometric passkeys (WebAuthn), FIDO2 security keys &amp; OAuth sign-in pop-up windows are supported on all sites</div>
+                        </div>
+                        <span id="autofill-passkeys-badge" class="m3-status-chip tertiary m3-passkey-badge">Passkeys (Windows Hello / WebAuthn) &amp; OAuth Sign-In Popups Active</span>
+                      </div>
                     </div>
                   </div>
 
@@ -1666,8 +1690,8 @@
                         </svg>
                       </div>
                       <div class="m3-about-copy">
-                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v4.8.0</span></div>
-                        <div class="m3-about-sub">Pure Material Design 3 Browser · Chrome Extensions, Multi-Window &amp; Multi-Profile Edition</div>
+                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v4.9.0</span></div>
+                        <div class="m3-about-sub">Pure Material Design 3 Browser · Google Auto-Sync, Passkeys &amp; Chrome Extensions</div>
                         <div id="about-update-status" class="m3-about-update-line">Checking update status…</div>
                       </div>
                       <button type="button" id="btn-about-check-update" class="m3-btn m3-btn-filled sm">Check for Updates</button>
@@ -1700,7 +1724,7 @@
                       <div class="opt-row">
                         <div class="opt-meta">
                           <div class="opt-title opt-row-title">GitHub Releases</div>
-                          <div class="opt-desc">View v4.8.0 release notes, Windows Setup installer, and Android APK</div>
+                          <div class="opt-desc">View v4.9.0 release notes, Windows Setup installer, and Android APK</div>
                         </div>
                         <button type="button" id="btn-about-github" class="m3-btn m3-btn-outlined sm">Open GitHub</button>
                       </div>
@@ -1932,7 +1956,7 @@
     <section id="reset-confirm-overlay" class="m3-modal-scrim hidden" aria-label="Reset Settings">
       <div id="reset-confirm-modal" class="m3-dialog-card compact" role="dialog" aria-modal="true">
         <h3 class="m3-dialog-title">Reset dejavu settings?</h3>
-        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v4.8.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
+        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v4.9.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
         <div class="m3-dialog-actions">
           <button type="button" id="btn-reset-cancel" class="m3-btn m3-btn-text">Cancel</button>
           <button type="button" id="btn-reset-confirm" class="m3-btn m3-btn-danger">Reset Settings</button>
@@ -2177,6 +2201,260 @@
               </button>
             </div>
             <div id="ext-details-body" class="ext-details-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Full-Viewport Material Design 3 dejavu Link Hub (Single-Scroll · Zero Sub-Tabs · Google Auto-Sync) -->
+    <section id="link-overlay" class="settings-overlay link-hub-overlay hidden" aria-label="dejavu Link Sync Hub">
+      <div id="link-hub-window" class="settings-window m3-link-workspace">
+        <!-- Top M3 App Bar -->
+        <header class="m3-link-appbar">
+          <div class="m3-appbar-brand">
+            <svg class="djv-m3-logo" viewBox="0 0 64 64" width="32" height="32" fill="none" aria-hidden="true">
+              <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
+              <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" stroke="var(--md-primary)" stroke-opacity="0.24" stroke-width="1.5"/>
+              <path d="M30.5 31.6L15.2 15.2C13 12.9 9.2 14.7 9.9 18L12.8 30.4C13.5 33.2 16 35.2 18.9 35.2H30.5V31.6Z" fill="var(--md-primary)"/>
+              <path d="M30.5 31.6L15.2 15.2C13.9 13.8 11.9 13.9 10.8 15L25.2 31.6H30.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+              <path d="M33.5 31.6L48.8 15.2C51 12.9 54.8 14.7 54.1 18L51.2 30.4C50.5 33.2 48 35.2 45.1 35.2H33.5V31.6Z" fill="var(--md-primary)"/>
+              <path d="M33.5 31.6L48.8 15.2C50.1 13.8 52.1 13.9 53.2 15L38.8 31.6H33.5Z" fill="var(--md-on-primary-container)" fill-opacity="0.88"/>
+              <path d="M30.5 36.8H18.4C15.8 36.8 14.1 39.4 15.2 41.8L18.5 48.8C19.8 51.4 23.4 51.8 25.2 49.5L30.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+              <path d="M30.5 36.8H22.2L30.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+              <path d="M33.5 36.8H45.6C48.2 36.8 49.9 39.4 48.8 41.8L45.5 48.8C44.2 51.4 40.6 51.8 38.8 49.5L33.5 42.7V36.8Z" fill="var(--md-on-primary-container)" fill-opacity="0.74"/>
+              <path d="M33.5 36.8H41.8L33.5 42.7V36.8Z" fill="var(--md-primary)" fill-opacity="0.68"/>
+              <rect x="30" y="23.4" width="4" height="22.4" rx="2" fill="var(--md-on-primary-container)"/>
+              <path d="M30.8 24.2C29.4 21 27.6 18.8 25.8 17.8M33.2 24.2C34.6 21 36.4 18.8 38.2 17.8" stroke="var(--md-on-primary-container)" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="m3-appbar-title">dejavu Link</span>
+            <span id="link-header-status" class="m3-status-chip">Sign in to Sync</span>
+          </div>
+
+          <div class="m3-link-appbar-actions">
+            <button type="button" id="btn-link-sync-now" class="m3-btn m3-btn-tonal sm" title="Sync tabs, bookmarks, reading list &amp; clipboard now">
+              <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true">
+                <path d="M14.4 9a5.4 5.4 0 1 1-1.5-3.7M14.4 3.6v3.1h-3.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>Sync Now</span>
+            </button>
+            <button type="button" id="btn-link-done" class="m3-btn m3-btn-filled sm" title="Close dejavu Link Hub (Esc)">Done</button>
+          </div>
+        </header>
+
+        <!-- Clean Single-Scroll Google Pixel Material Design 3 Body (Zero Inner Sub-Tabs) -->
+        <div id="link-hub-scroll" class="link-hub-scroll">
+          <div class="m3-link-column">
+            <!-- Card 1: Google Account Automatic Sync & Connected Devices -->
+            <section id="link-card-account" class="link-card link-hero-card" aria-label="Google Account Auto-Sync and Connected Devices">
+              <!-- State A: Google Account Auto-Sync Active -->
+              <div id="link-google-active-box" class="link-google-active hidden">
+                <div class="link-account-row">
+                  <div id="link-google-avatar" class="link-account-avatar"></div>
+                  <div class="link-account-meta">
+                    <div class="link-account-title-row">
+                      <span id="link-google-name" class="link-account-name">Google Account</span>
+                      <span id="link-e2ee-badge" class="m3-status-chip tertiary">
+                        <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true"><path d="M8 1.8L3 3.8v3.9c0 3.2 2.1 5.6 5 6.6 2.9-1 5-3.4 5-6.6V3.8L8 1.8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M5.7 8.1l1.5 1.5 3.1-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span>Automatic E2EE Sync via Google Account</span>
+                      </span>
+                    </div>
+                    <div id="link-google-email" class="link-account-email"></div>
+                  </div>
+                </div>
+
+                <!-- Side-by-Side Device Presence Cards -->
+                <div id="link-devices-grid" class="link-devices-grid"></div>
+
+                <!-- Optional Expandable Extra Sync Passphrase (Collapsed by default) -->
+                <details id="link-passphrase-details" class="link-accordion">
+                  <summary class="link-accordion-summary">
+                    <span class="link-acc-left">
+                      <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><rect x="4" y="8" width="10" height="7.2" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6.3 8V5.9a2.7 2.7 0 0 1 5.4 0V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                      <span>Add extra Sync Passphrase</span>
+                      <span id="link-passphrase-badge" class="m3-status-chip tertiary hidden" style="height:20px;font-size:10.5px;">Active</span>
+                    </span>
+                    <svg class="link-acc-chev" viewBox="0 0 16 16" width="15" height="15" fill="none" aria-hidden="true"><path d="M4.5 6.2L8 9.8l3.5-3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </summary>
+                  <div class="link-accordion-body">
+                    <p class="link-acc-desc">Optional extra secret layered into your AES-256 sync key. Enter the exact same passphrase on your Android phone if you set one.</p>
+                    <div class="link-inline-row">
+                      <input id="link-passphrase-input" class="m3-text-input" type="password" maxlength="64" placeholder="Enter optional sync passphrase…" autocomplete="off">
+                      <button type="button" id="btn-link-save-passphrase" class="m3-btn m3-btn-tonal sm">Save Passphrase</button>
+                      <button type="button" id="btn-link-clear-passphrase" class="m3-btn m3-btn-text sm hidden">Remove</button>
+                    </div>
+                  </div>
+                </details>
+              </div>
+
+              <!-- State B: Not Signed Into Google -->
+              <div id="link-google-signin-box" class="link-signin-hero">
+                <div class="link-signin-top">
+                  <div class="link-google-emblem" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="28" height="28">
+                      <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3.01h3.89c2.27-2.09 3.57-5.18 3.57-8.82z"/>
+                      <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.89-3.01c-1.08.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.72-4.95H1.28v3.11A12 12 0 0 0 12 24z"/>
+                      <path fill="#FBBC05" d="M5.28 14.28A7.22 7.22 0 0 1 4.9 12c0-.79.14-1.56.38-2.28V6.61H1.28A12 12 0 0 0 0 12c0 1.94.46 3.77 1.28 5.39l4-3.11z"/>
+                      <path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.58 1.79l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.28 6.61l4 3.11C6.23 6.88 8.88 4.77 12 4.77z"/>
+                    </svg>
+                  </div>
+                  <div class="link-signin-copy">
+                    <h2 class="link-signin-title">Automatic Sync with your Google Account</h2>
+                    <p class="link-signin-sub">Sign in with the same Google Account on Windows and Android to sync open tabs, shared clipboard, bookmarks, and quick drops automatically — end-to-end encrypted, zero QR codes needed.</p>
+                  </div>
+                </div>
+                <div class="link-signin-actions">
+                  <button type="button" id="btn-link-google-signin" class="m3-btn m3-btn-filled">
+                    <svg viewBox="0 0 18 18" width="15" height="15" aria-hidden="true">
+                      <path fill="currentColor" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/>
+                      <path fill="currentColor" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z" opacity="0.9"/>
+                      <path fill="currentColor" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z" opacity="0.8"/>
+                      <path fill="currentColor" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" opacity="0.95"/>
+                    </svg>
+                    <span id="link-google-signin-lbl">Sign in with Google to Auto-Sync</span>
+                  </button>
+                  <button type="button" id="btn-link-google-signup" class="m3-btn m3-btn-tonal">Create Google Account</button>
+                </div>
+              </div>
+
+              <!-- Discreet Collapsible Manual Fallback (ALWAYS Closed by Default — Zero QR Forced on Screen) -->
+              <details id="link-manual-details" class="link-accordion">
+                <summary class="link-accordion-summary">
+                  <span class="link-acc-left">
+                    <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true">
+                      <rect x="2.6" y="2.6" width="4.8" height="4.8" rx="1" stroke="currentColor" stroke-width="1.4"/>
+                      <rect x="10.6" y="2.6" width="4.8" height="4.8" rx="1" stroke="currentColor" stroke-width="1.4"/>
+                      <rect x="2.6" y="10.6" width="4.8" height="4.8" rx="1" stroke="currentColor" stroke-width="1.4"/>
+                      <path d="M10.8 10.8h2v2h-2zM13.4 13.4h2v2h-2z" fill="currentColor"/>
+                    </svg>
+                    <span>Pair without Google (Manual Code / QR)</span>
+                    <span id="link-manual-active-chip" class="m3-status-chip primary hidden" style="height:20px;font-size:10.5px;">Manual Mode</span>
+                  </span>
+                  <svg class="link-acc-chev" viewBox="0 0 16 16" width="15" height="15" fill="none" aria-hidden="true"><path d="M4.5 6.2L8 9.8l3.5-3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </summary>
+                <div class="link-accordion-body">
+                  <div class="link-manual-grid">
+                    <div class="link-qr-wrap">
+                      <img id="link-qr-img" class="link-qr-img hidden" width="132" height="132" alt="Manual Pairing QR Code" draggable="false">
+                      <div id="link-qr-fallback" class="link-qr-fallback">Manual Code Ready</div>
+                    </div>
+                    <div class="link-manual-controls">
+                      <div class="link-code-row">
+                        <span id="link-code-display" class="link-code-pill">DJV-0000-0000</span>
+                        <button type="button" id="btn-link-copy-code" class="m3-btn m3-btn-tonal sm">Copy Code</button>
+                        <button type="button" id="btn-link-regen-code" class="m3-btn m3-btn-outlined sm">New Code</button>
+                      </div>
+                      <p class="link-acc-desc">Enter this code in dejavu Mobile → <strong>Pair without Google</strong>, or paste your phone's code below.</p>
+                      <div class="link-inline-row">
+                        <input id="link-join-input" class="m3-text-input" type="text" maxlength="24" placeholder="Enter phone code (DJV-XXXX-XXXX)" spellcheck="false" autocomplete="off">
+                        <button type="button" id="btn-link-join-code" class="m3-btn m3-btn-filled sm">Pair</button>
+                        <button type="button" id="btn-link-back-google" class="m3-btn m3-btn-tonal sm hidden">Use Google Auto-Sync</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </section>
+
+            <!-- Card 2: Instant Cross-Device Actions -->
+            <section id="link-card-actions" class="link-card" aria-label="Instant Cross-Device Actions">
+              <div class="link-card-head">
+                <div class="link-card-title">Instant Cross-Device Actions</div>
+                <span class="link-card-sub">AES-256 encrypted over LAN &amp; cloud relay</span>
+              </div>
+
+              <div class="link-instant-row">
+                <button type="button" id="btn-link-send-tab" class="m3-btn m3-btn-filled link-action-pill">
+                  <svg viewBox="0 0 18 18" width="16" height="16" fill="none" aria-hidden="true">
+                    <path d="M3 9h10.5M9.5 4.8L13.7 9l-4.2 4.2" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <span id="link-send-tab-lbl">Send Current Tab to Phone</span>
+                </button>
+                <button type="button" id="btn-link-send-clipboard" class="m3-btn m3-btn-tonal link-action-pill">
+                  <svg viewBox="0 0 18 18" width="16" height="16" fill="none" aria-hidden="true">
+                    <rect x="4.2" y="4.2" width="9.6" height="11.2" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M6.8 4.2V3.4a1.2 1.2 0 0 1 1.2-1.2h2a1.2 1.2 0 0 1 1.2 1.2v.8" stroke="currentColor" stroke-width="1.5"/>
+                  </svg>
+                  <span>Send Clipboard to Phone</span>
+                </button>
+              </div>
+
+              <form id="link-drop-form" class="link-drop-bar">
+                <svg viewBox="0 0 18 18" width="16" height="16" fill="none" class="link-drop-ico" aria-hidden="true">
+                  <path d="M7.6 10.4a3.3 3.3 0 0 0 4.6 0l2-2a3.3 3.3 0 0 0-4.6-4.6L8.4 5M10.4 7.6a3.3 3.3 0 0 0-4.6 0l-2 2a3.3 3.3 0 0 0 4.6 4.6l1.2-1.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <input id="link-drop-input" type="text" placeholder="Paste a link, YouTube URL, or note to beam to your phone..." spellcheck="false" autocomplete="off">
+                <button type="submit" id="btn-link-beam" class="m3-btn m3-btn-filled sm link-beam-btn">Beam</button>
+              </form>
+            </section>
+
+            <!-- Card 3: Live Phone Tabs ("Continue on PC") & Shared Clipboard / Quick Drops -->
+            <section id="link-card-live" class="link-split-grid" aria-label="Live Phone Tabs and Shared Clipboard">
+              <!-- Left: Phone Open Tabs -->
+              <div class="link-card link-panel-card">
+                <div class="link-card-head">
+                  <div class="link-card-title-group">
+                    <span class="link-card-title">Phone Open Tabs</span>
+                    <span id="link-rtabs-count" class="m3-tonal-badge sm">0</span>
+                  </div>
+                  <span class="link-card-sub">Continue on PC</span>
+                </div>
+                <div id="link-rtabs-list" class="link-items-list"></div>
+              </div>
+
+              <!-- Right: Shared Clipboard & Quick Drops -->
+              <div class="link-card link-panel-card">
+                <div class="link-card-head">
+                  <div class="link-card-title-group">
+                    <span class="link-card-title">Shared Clipboard &amp; Quick Drops</span>
+                    <span id="link-drops-count" class="m3-tonal-badge sm">0</span>
+                  </div>
+                  <button type="button" id="btn-link-clear-drops" class="m3-btn m3-btn-text sm hidden">Clear</button>
+                </div>
+                <div id="link-drops-list" class="link-items-list"></div>
+              </div>
+            </section>
+
+            <!-- Card 4: What Syncs Automatically (24px Pixel Grouped Card with 52x32 M3 Checkmark Switches) -->
+            <section id="link-card-prefs" class="m3-pref-section" aria-label="What Syncs Automatically">
+              <div class="m3-pref-heading">What Syncs Automatically</div>
+              <div class="m3-pref-card">
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Open Tabs</div>
+                    <div class="opt-desc">View and continue open tabs between your Windows PC and Android phone</div>
+                  </div>
+                  <button type="button" id="link-pref-tabs" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Bookmarks &amp; Shortcuts</div>
+                    <div class="opt-desc">Keep your pinned Quick Access sites and bookmarks aligned across devices</div>
+                  </div>
+                  <button type="button" id="link-pref-bookmarks" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Reading List</div>
+                    <div class="opt-desc">Save articles on PC and pick them up later on Android (and vice versa)</div>
+                  </div>
+                  <button type="button" id="link-pref-reading" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Shared Clipboard &amp; Quick Drops</div>
+                    <div class="opt-desc">Instantly copy clips, notes, links, and video URLs sent between PC and Phone</div>
+                  </div>
+                  <button type="button" id="link-pref-clipboard" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                </div>
+                <div class="opt-row">
+                  <div class="opt-meta">
+                    <div class="opt-title">Browsing History</div>
+                    <div class="opt-desc">Sync recent visited websites for faster omnibox search across devices</div>
+                  </div>
+                  <button type="button" id="link-pref-history" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </div>

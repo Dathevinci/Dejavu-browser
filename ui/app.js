@@ -1,6 +1,6 @@
 /**
- * dejavu v4.8.0 Native Shell Controller — Authentic Google Material Design 3 Expressive
- * Dynamic M3 Butterfly Logo, Pixel Home, Live Tab/Bookmark/Shortcut Drag-to-Reorder,
+ * dejavu v4.9.0 Native Shell Controller — Authentic Google Material Design 3 Expressive
+ * Dynamic M3 Butterfly Logo, Pixel Home, Google Auto-Sync dejavu Link Hub,
  * Real Chrome Extensions Manager, 10-Category Settings, M3 Context Menus & 8x Turbo Downloader.
  */
 (function () {
@@ -148,6 +148,8 @@
   const newtabVpnChip = document.getElementById('newtab-vpn-chip');
   const newtabVpnText = document.getElementById('newtab-vpn-text');
   const newtabVpnSub = document.getElementById('newtab-vpn-sub');
+  const newtabLinkChip = document.getElementById('newtab-link-chip');
+  const newtabLinkText = document.getElementById('newtab-link-text');
   const newtabExtChip = document.getElementById('newtab-ext-chip');
   const newtabExtText = document.getElementById('newtab-ext-text');
 
@@ -460,6 +462,50 @@
   const btnChromeImportRescan = document.getElementById('btn-chrome-import-rescan');
   const btnChromeImportDone = document.getElementById('btn-chrome-import-done');
 
+  // Full-Viewport Material Design 3 dejavu Link Hub
+  const linkOverlay = document.getElementById('link-overlay');
+  const linkHeaderStatus = document.getElementById('link-header-status');
+  const btnLinkSyncNow = document.getElementById('btn-link-sync-now');
+  const btnLinkDone = document.getElementById('btn-link-done');
+  const linkGoogleActiveBox = document.getElementById('link-google-active-box');
+  const linkGoogleAvatar = document.getElementById('link-google-avatar');
+  const linkGoogleName = document.getElementById('link-google-name');
+  const linkGoogleEmail = document.getElementById('link-google-email');
+  const linkDevicesGrid = document.getElementById('link-devices-grid');
+  const linkPassphraseBadge = document.getElementById('link-passphrase-badge');
+  const linkPassphraseInput = document.getElementById('link-passphrase-input');
+  const btnLinkSavePassphrase = document.getElementById('btn-link-save-passphrase');
+  const btnLinkClearPassphrase = document.getElementById('btn-link-clear-passphrase');
+  const linkGoogleSigninBox = document.getElementById('link-google-signin-box');
+  const btnLinkGoogleSignin = document.getElementById('btn-link-google-signin');
+  const linkGoogleSigninLbl = document.getElementById('link-google-signin-lbl');
+  const btnLinkGoogleSignup = document.getElementById('btn-link-google-signup');
+  const linkManualDetails = document.getElementById('link-manual-details');
+  const linkManualActiveChip = document.getElementById('link-manual-active-chip');
+  const linkQrImg = document.getElementById('link-qr-img');
+  const linkQrFallback = document.getElementById('link-qr-fallback');
+  const linkCodeDisplay = document.getElementById('link-code-display');
+  const btnLinkCopyCode = document.getElementById('btn-link-copy-code');
+  const btnLinkRegenCode = document.getElementById('btn-link-regen-code');
+  const linkJoinInput = document.getElementById('link-join-input');
+  const btnLinkJoinCode = document.getElementById('btn-link-join-code');
+  const btnLinkBackGoogle = document.getElementById('btn-link-back-google');
+  const btnLinkSendTab = document.getElementById('btn-link-send-tab');
+  const linkSendTabLbl = document.getElementById('link-send-tab-lbl');
+  const btnLinkSendClipboard = document.getElementById('btn-link-send-clipboard');
+  const linkDropForm = document.getElementById('link-drop-form');
+  const linkDropInput = document.getElementById('link-drop-input');
+  const linkRtabsCount = document.getElementById('link-rtabs-count');
+  const linkRtabsList = document.getElementById('link-rtabs-list');
+  const linkDropsCount = document.getElementById('link-drops-count');
+  const btnLinkClearDrops = document.getElementById('btn-link-clear-drops');
+  const linkDropsList = document.getElementById('link-drops-list');
+  const linkPrefTabs = document.getElementById('link-pref-tabs');
+  const linkPrefBookmarks = document.getElementById('link-pref-bookmarks');
+  const linkPrefReading = document.getElementById('link-pref-reading');
+  const linkPrefClipboard = document.getElementById('link-pref-clipboard');
+  const linkPrefHistory = document.getElementById('link-pref-history');
+
   const SEED_COLORS = {
     amethyst: '#d0bcff',
     sapphire: '#a8c7fa',
@@ -469,7 +515,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v4.8.0 — 16 HD + 1 Live = 17 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v4.9.0 — 16 HD + 1 Live = 17 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 12 Sculptural / Architectural Material Design 3 HD Wallpapers
@@ -649,10 +695,33 @@
     dlManagerOpen: false,
     dlManagerTab: 'all',
     extensionsOpen: false,
+    linkOpen: false,
     extensionsSupported: bootData.extensionsSupported !== false,
     extensionsDevMode: !!bootData.extensionsDevMode,
     extensionsBusy: false,
     extensions: Array.isArray(bootData.extensions) ? bootData.extensions : [],
+    sync: bootData.sync || {
+      enabled: true,
+      syncMode: 'manual',
+      googleEmail: '',
+      hasPassphrase: false,
+      paired: false,
+      connected: false,
+      deviceId: '',
+      deviceName: 'Windows PC',
+      peerName: '',
+      peerPlatform: '',
+      peerOnline: false,
+      peerLastSeenMs: 0,
+      devices: [],
+      pairingCode: '',
+      qrPayload: '',
+      qrDataUrl: '',
+      remoteTabs: [],
+      drops: [],
+      latestClipboard: null,
+      prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true }
+    },
     turboDownloads: [],
     pageMedia: [],
     activeTabUrl: '',
@@ -673,7 +742,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '4.8.0',
+    appVersion: bootData.appVersion || '4.9.0',
     isDefaultBrowser: !!bootData.isDefaultBrowser,
     canReopenClosedTab: !!bootData.canReopenClosedTab,
     updateStatus: bootData.updateStatus || '',
@@ -843,6 +912,7 @@
   btnVpn.addEventListener('click', openVpnPopover);
   if (newtabShieldChip) newtabShieldChip.addEventListener('click', openShieldPopover);
   if (newtabVpnChip) newtabVpnChip.addEventListener('click', openVpnPopover);
+  if (newtabLinkChip) newtabLinkChip.addEventListener('click', () => send({ type: 'openLinkHub' }));
   if (newtabExtChip) newtabExtChip.addEventListener('click', () => send({ type: 'openExtensions' }));
 
   if (btnExtensions) {
@@ -864,6 +934,10 @@
 
   if (btnSync) {
     btnSync.addEventListener('click', () => {
+      if (state.linkOpen) {
+        send({ type: 'closeLinkHub' });
+        return;
+      }
       const r = btnSync.getBoundingClientRect();
       send({ type: 'openSync', anchorRight: Math.round(r.right + 128) });
     });
@@ -1648,7 +1722,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v4.8.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v4.9.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -1865,7 +1939,7 @@
 
     const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
     const onNewTab = !active || active.isNewTab;
-    applyThemePolarity(o.appearanceMode || 'auto', active, onNewTab, !!state.tabOverviewOpen, !!state.settingsOpen || !!state.dlManagerOpen || !!state.extensionsOpen);
+    applyThemePolarity(o.appearanceMode || 'auto', active, onNewTab, !!state.tabOverviewOpen, !!state.settingsOpen || !!state.dlManagerOpen || !!state.extensionsOpen || !!state.linkOpen);
     if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
       window.DejavuNewTabCanvas.setOptions({
         reduceMotion: !!o.reduceWallpaperMotion,
@@ -1880,7 +1954,7 @@
   function syncSettingsUi() {
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
-    const ver = state.appVersion || '4.8.0';
+    const ver = state.appVersion || '4.9.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -2759,9 +2833,11 @@
     const optOpen = !!state.settingsOpen;
     const dlOpen = !!state.dlManagerOpen;
     const extOpen = !!state.extensionsOpen;
-    if (railHome) railHome.classList.toggle('active', onNewTab && !ovOpen && !optOpen && !dlOpen && !extOpen);
+    const lnkOpen = !!state.linkOpen;
+    if (railHome) railHome.classList.toggle('active', onNewTab && !ovOpen && !optOpen && !dlOpen && !extOpen && !lnkOpen);
     if (railDownloads) railDownloads.classList.toggle('active', dlOpen && activeDlTab !== 'media');
     if (railMedia) railMedia.classList.toggle('active', dlOpen && activeDlTab === 'media');
+    if (railSync) railSync.classList.toggle('active', lnkOpen);
     if (railTabs) railTabs.classList.toggle('active', ovOpen);
     if (railSettings) railSettings.classList.toggle('active', optOpen);
     const dlCnt = Number(state.downloadsCount || 0);
@@ -2772,13 +2848,15 @@
     }
     const mCnt = (Array.isArray(state.pageMedia) ? state.pageMedia.length : 0) + (state.activeTabIsVideoSite ? 1 : 0);
     if (railMediaDot) railMediaDot.classList.toggle('hidden', mCnt <= 0);
-    const syncConn = !!(state.sync && state.sync.connected);
+    const syncObj = state.sync || {};
+    const syncConn = !!(syncObj.paired || syncObj.connected || (syncObj.syncMode === 'google' && syncObj.googleEmail));
     if (railSyncDot) railSyncDot.classList.toggle('hidden', !syncConn);
   }
 
   if (railHome) railHome.addEventListener('click', () => {
     wallpaperStore.classList.add('hidden');
     shortcutModal.classList.add('hidden');
+    if (state.linkOpen) send({ type: 'closeLinkHub' });
     if (state.extensionsOpen) send({ type: 'closeExtensions' });
     if (state.dlManagerOpen) send({ type: 'closeDlManager' });
     if (state.settingsOpen) send({ type: 'toggleSettings', open: false });
@@ -2789,6 +2867,7 @@
   if (railDownloads) railDownloads.addEventListener('click', () => {
     wallpaperStore.classList.add('hidden');
     shortcutModal.classList.add('hidden');
+    if (state.linkOpen) send({ type: 'closeLinkHub' });
     if (state.extensionsOpen) send({ type: 'closeExtensions' });
     if (state.dlManagerOpen && activeDlTab !== 'media') send({ type: 'closeDlManager' });
     else { activeDlTab = 'all'; send({ type: 'openDlManager', tab: 'all' }); }
@@ -2796,13 +2875,18 @@
   if (railMedia) railMedia.addEventListener('click', () => {
     wallpaperStore.classList.add('hidden');
     shortcutModal.classList.add('hidden');
+    if (state.linkOpen) send({ type: 'closeLinkHub' });
     if (state.extensionsOpen) send({ type: 'closeExtensions' });
     if (state.dlManagerOpen && activeDlTab === 'media') send({ type: 'closeDlManager' });
     else { activeDlTab = 'media'; send({ type: 'openDlManager', tab: 'media' }); }
   });
   if (railSync) railSync.addEventListener('click', () => {
-    // Anchor Sync popover (412px wide) cleanly right next to the 56px Left Navigation Rail
-    send({ type: 'openSync', anchorRight: 480 });
+    if (state.linkOpen) {
+      send({ type: 'closeLinkHub' });
+      return;
+    }
+    // Anchor quick dejavu Link popover cleanly right next to the 56px Left Navigation Rail
+    send({ type: 'openSync', anchorRight: 440 });
   });
   if (railHistory) railHistory.addEventListener('click', () => {
     // Anchor History popover (396px wide) cleanly right next to the 56px Left Navigation Rail
@@ -2811,12 +2895,14 @@
   if (railTabs) railTabs.addEventListener('click', () => {
     wallpaperStore.classList.add('hidden');
     shortcutModal.classList.add('hidden');
+    if (state.linkOpen) send({ type: 'closeLinkHub' });
     if (state.extensionsOpen) send({ type: 'closeExtensions' });
     send({ type: 'toggleTabOverview', open: !state.tabOverviewOpen });
   });
   if (railSettings) railSettings.addEventListener('click', () => {
     wallpaperStore.classList.add('hidden');
     shortcutModal.classList.add('hidden');
+    if (state.linkOpen) send({ type: 'closeLinkHub' });
     if (state.extensionsOpen) send({ type: 'closeExtensions' });
     send({ type: 'toggleSettings', open: !state.settingsOpen, pane: activeSettingsPane });
   });
@@ -2899,6 +2985,8 @@
         closeClearDataModal();
       } else if (profileSetupOverlay && !profileSetupOverlay.classList.contains('hidden')) {
         closeProfileSetupModal();
+      } else if (state.linkOpen) {
+        send({ type: 'closeLinkHub' });
       } else if (state.extensionsOpen) {
         if (activeExtensionDetailId) {
           activeExtensionDetailId = null;
@@ -3040,6 +3128,7 @@
       !!state.settingsOpen ||
       !!state.dlManagerOpen ||
       !!state.extensionsOpen ||
+      !!state.linkOpen ||
       body.classList.contains('modal-open')
     );
   }
@@ -3909,6 +3998,24 @@
     }
   }
 
+  function updateNewtabLinkChip(sync) {
+    if (!newtabLinkChip || !newtabLinkText) return;
+    const s = sync || {};
+    const isGoogle = s.syncMode === 'google' && !!s.googleEmail;
+    const isPaired = !!(s.paired || s.connected || isGoogle);
+    newtabLinkChip.classList.toggle('synced', isPaired);
+    if (isGoogle) {
+      newtabLinkText.textContent = s.peerOnline ? 'Link · Phone Online' : 'Link · Google Sync';
+      newtabLinkChip.title = `dejavu Link · Auto-Synced via ${s.googleEmail}`;
+    } else if (s.connected) {
+      newtabLinkText.textContent = `Link · ${s.peerName || 'Paired'}`;
+      newtabLinkChip.title = `dejavu Link · Connected to ${s.peerName || 'Phone'}`;
+    } else {
+      newtabLinkText.textContent = 'dejavu Link';
+      newtabLinkChip.title = 'Open dejavu Link Hub (Google Auto-Sync PC ↔ Phone)';
+    }
+  }
+
   function updateNewtabExtChip(extensions) {
     if (!newtabExtChip || !newtabExtText) return;
     const list = Array.isArray(extensions) ? extensions : [];
@@ -4202,6 +4309,18 @@
       window.DejavuNewTabCanvas.start();
     }
 
+    const linkOpen = !!next.linkOpen;
+    body.classList.toggle('link-hub-open', linkOpen);
+    if (linkOverlay) linkOverlay.classList.toggle('hidden', !linkOpen);
+    if (btnSync) btnSync.classList.toggle('is-active', linkOpen);
+    updateNewtabLinkChip(state.sync);
+    if (linkOpen) {
+      wallpaperStore.classList.add('hidden');
+      shortcutModal.classList.add('hidden');
+      renderLinkHub();
+      window.DejavuNewTabCanvas.start();
+    }
+
     applyBrowserOptions(next.browserOptions || state.browserOptions);
     if (optOpen) {
       wallpaperStore.classList.add('hidden');
@@ -4244,20 +4363,20 @@
     btnReload.title = (active && active.loading) ? 'Stop loading' : 'Reload (Ctrl+R)';
 
     const apMode = (next.browserOptions && next.browserOptions.appearanceMode) || 'auto';
-    applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen || dlOpen || extOpen);
+    applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen || dlOpen || extOpen || linkOpen);
 
     if (onNewTab) {
       body.classList.add('on-newtab');
       window.DejavuNewTabCanvas.start();
-      if (ovOpen || optOpen || dlOpen || extOpen) hideStartPageStatus();
-      if (!ovOpen && !optOpen && !dlOpen && !extOpen && !body.classList.contains('modal-open') && lastActiveId !== next.activeTabId) {
+      if (ovOpen || optOpen || dlOpen || extOpen || linkOpen) hideStartPageStatus();
+      if (!ovOpen && !optOpen && !dlOpen && !extOpen && !linkOpen && !body.classList.contains('modal-open') && lastActiveId !== next.activeTabId) {
         newtabSearchInput.value = '';
         setTimeout(() => newtabSearchInput.focus(), 40);
       }
     } else {
       hideStartPageStatus();
       body.classList.remove('on-newtab');
-      if (!ovOpen && !optOpen && !dlOpen && !extOpen && !body.classList.contains('modal-open')) window.DejavuNewTabCanvas.stop();
+      if (!ovOpen && !optOpen && !dlOpen && !extOpen && !linkOpen && !body.classList.contains('modal-open')) window.DejavuNewTabCanvas.stop();
     }
     if (lastActiveId !== -1 && lastActiveId !== next.activeTabId) {
       hideM3ContextMenu();
@@ -4290,12 +4409,16 @@
     shieldCount.textContent = onNewTab ? '' : String(active.blockedCount || 0);
 
     if (next.sync && btnSync && syncDot) {
-      const sc = !!next.sync.connected;
+      const sObj = next.sync;
+      const isGoogleSync = sObj.syncMode === 'google' && !!sObj.googleEmail;
+      const sc = !!(sObj.paired || sObj.connected || isGoogleSync);
       syncDot.classList.toggle('hidden', !sc);
       btnSync.classList.toggle('sync-connected', sc);
-      btnSync.title = sc
-        ? `dejavu Link · Connected to ${next.sync.peerName || 'Mobile'} (${next.sync.pairingCode || ''})`
-        : `dejavu Link · Pair Android Mobile (${next.sync.pairingCode || ''})`;
+      btnSync.title = isGoogleSync
+        ? `dejavu Link · Google Auto-Sync (${sObj.googleEmail})`
+        : (sObj.connected
+          ? `dejavu Link · Connected to ${sObj.peerName || 'Android Phone'}`
+          : 'dejavu Link · Sync Tabs, Clipboard & Drops with Phone');
     }
 
     if (next.vpn) {
@@ -5292,6 +5415,450 @@
   }
 
   // =========================================================================
+  // Full-Viewport Material Design 3 dejavu Link Hub (Single-Scroll · Zero Sub-Tabs)
+  // =========================================================================
+  function formatLinkRelativeTime(ms) {
+    const t = Number(ms || 0);
+    if (!t || t <= 0) return '';
+    const diffSec = Math.max(0, Math.floor((Date.now() - t) / 1000));
+    if (diffSec < 45) return 'Just now';
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+    return `${Math.floor(diffSec / 86400)}d ago`;
+  }
+
+  function isDownloadableDropUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    if (isSupportedVideoUrl(url)) return true;
+    return /\.(mp4|mkv|webm|mov|m4v|mp3|m4a|flac|wav|ogg|pdf|zip|rar|7z|tar|gz|exe|msi|apk|iso|dmg|m3u8)(\?|#|$)/i.test(url);
+  }
+
+  const LINK_DESKTOP_SVG = '<svg viewBox="0 0 20 20" width="20" height="20" fill="none"><rect x="2.6" y="3.8" width="14.8" height="10.2" rx="2.2" stroke="currentColor" stroke-width="1.55"/><path d="M7.2 16.6h5.6M10 14v2.6" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg>';
+  const LINK_PHONE_SVG = '<svg viewBox="0 0 20 20" width="20" height="20" fill="none"><rect x="5.4" y="2.4" width="9.2" height="15.2" rx="2.2" stroke="currentColor" stroke-width="1.55"/><circle cx="10" cy="14.4" r="0.9" fill="currentColor"/></svg>';
+  const LINK_BRIDGE_SVG = '<svg viewBox="0 0 18 18" width="16" height="16" fill="none"><path d="M3.2 6.6h11.6M11.6 3.6L14.8 6.6l-3.2 3M14.8 11.4H3.2M6.4 8.4l-3.2 3 3.2 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function renderLinkDevices(s) {
+    if (!linkDevicesGrid) return;
+    const pcTabsCount = Array.isArray(state.tabs) ? state.tabs.filter((t) => t && !t.isNewTab).length : 0;
+    const remoteTabsCount = Array.isArray(s.remoteTabs) ? s.remoteTabs.length : 0;
+    const devices = Array.isArray(s.devices) ? s.devices : [];
+
+    const selfDev = devices.find((d) => d && d.isSelf) || {
+      id: s.deviceId || 'self',
+      name: s.deviceName || 'This Windows PC',
+      platform: 'windows',
+      isSelf: true,
+      isOnline: true,
+      lastSeenMs: Date.now(),
+      tabCount: pcTabsCount
+    };
+
+    const peers = devices.filter((d) => d && !d.isSelf);
+    const hasCustomPeers = peers.length > 1;
+    linkDevicesGrid.classList.toggle('is-multi', hasCustomPeers);
+    linkDevicesGrid.innerHTML = '';
+
+    const buildDeviceCard = (dev, isPhoneSlot) => {
+      const card = document.createElement('div');
+      const online = !!dev.isOnline;
+      const synced = !online && Number(dev.lastSeenMs || 0) > 0;
+      const isPhone = isPhoneSlot || String(dev.platform || '').toLowerCase() === 'android';
+      card.className = 'link-device-card' + (isPhone ? ' is-phone' : '') + (online ? ' is-online' : '');
+
+      const badgeCls = online ? 'online' : (synced ? 'synced' : '');
+      const badgeText = online ? 'Online' : (synced ? `Seen ${formatLinkRelativeTime(dev.lastSeenMs)}` : 'Waiting');
+      const tabCnt = typeof dev.tabCount === 'number' ? dev.tabCount : (dev.isSelf ? pcTabsCount : remoteTabsCount);
+      let subLine = '';
+      if (dev.isSelf) {
+        subLine = `This Windows PC · ${tabCnt} ${tabCnt === 1 ? 'open tab' : 'open tabs'}`;
+      } else if (online || synced) {
+        subLine = `${tabCnt} ${tabCnt === 1 ? 'synced tab' : 'synced tabs'}${dev.lastSeenMs ? ' · ' + formatLinkRelativeTime(dev.lastSeenMs) : ''}`;
+      } else {
+        subLine = 'Sign in with the same Google Account in dejavu Mobile';
+      }
+
+      card.innerHTML = `
+        <span class="link-device-ico" aria-hidden="true">${isPhone ? LINK_PHONE_SVG : LINK_DESKTOP_SVG}</span>
+        <div class="link-device-meta">
+          <div class="link-device-name-row">
+            <span class="link-device-name"></span>
+            <span class="link-presence-pill ${badgeCls}"><span class="link-presence-dot"></span><span>${escapeSugHtml(badgeText)}</span></span>
+          </div>
+          <div class="link-device-sub"></div>
+        </div>
+      `;
+      card.querySelector('.link-device-name').textContent = dev.name || (isPhone ? 'Android Phone' : 'This Windows PC');
+      card.querySelector('.link-device-sub').textContent = subLine;
+      return card;
+    };
+
+    if (hasCustomPeers) {
+      linkDevicesGrid.appendChild(buildDeviceCard(selfDev, false));
+      peers.forEach((p) => linkDevicesGrid.appendChild(buildDeviceCard(p, true)));
+    } else {
+      const peerDev = peers[0] || {
+        id: 'android-slot',
+        name: s.peerName || 'Android Phone',
+        platform: s.peerPlatform || 'android',
+        isSelf: false,
+        isOnline: !!s.peerOnline,
+        lastSeenMs: Number(s.peerLastSeenMs || 0),
+        tabCount: remoteTabsCount
+      };
+      linkDevicesGrid.appendChild(buildDeviceCard(selfDev, false));
+      const bridge = document.createElement('div');
+      bridge.className = 'link-device-bridge' + ((peerDev.isOnline || s.connected) ? ' is-live' : '');
+      bridge.setAttribute('aria-hidden', 'true');
+      bridge.innerHTML = LINK_BRIDGE_SVG;
+      linkDevicesGrid.appendChild(bridge);
+      linkDevicesGrid.appendChild(buildDeviceCard(peerDev, true));
+    }
+  }
+
+  function renderLinkHub() {
+    if (!linkOverlay) return;
+    const s = state.sync || {};
+    const ap = state.activeProfile || {};
+    const isGoogleMode = s.syncMode === 'google' && !!s.googleEmail;
+    const profileGoogleEmail = (ap.isGoogleSignedIn && ap.googleEmail) ? ap.googleEmail : '';
+
+    // Header Status Pill
+    if (linkHeaderStatus) {
+      linkHeaderStatus.classList.remove('primary', 'tertiary');
+      if (isGoogleMode) {
+        linkHeaderStatus.textContent = s.peerOnline ? 'Google Auto-Sync · Phone Online' : 'Google Auto-Sync Active';
+        linkHeaderStatus.classList.add('tertiary');
+      } else if (s.connected) {
+        linkHeaderStatus.textContent = `Paired · ${s.peerName || 'Android Phone'}`;
+        linkHeaderStatus.classList.add('primary');
+      } else {
+        linkHeaderStatus.textContent = 'Sign in to Sync';
+      }
+    }
+
+    // Card 1: Google Account Active vs Sign-In CTA
+    if (linkGoogleActiveBox) linkGoogleActiveBox.classList.toggle('hidden', !isGoogleMode);
+    if (linkGoogleSigninBox) linkGoogleSigninBox.classList.toggle('hidden', isGoogleMode);
+
+    if (isGoogleMode) {
+      const dispName = (ap.googleEmail && ap.googleEmail.toLowerCase() === String(s.googleEmail || '').toLowerCase() && ap.googleDisplayName)
+        ? ap.googleDisplayName
+        : (String(s.googleEmail || '').split('@')[0] || 'Google Account');
+      if (linkGoogleAvatar) {
+        if (ap.googleAvatarUrl && (!ap.googleEmail || ap.googleEmail.toLowerCase() === String(s.googleEmail || '').toLowerCase())) {
+          linkGoogleAvatar.innerHTML = renderProfileAvatarHtml(ap, 52);
+        } else {
+          linkGoogleAvatar.textContent = (dispName[0] || 'G').toUpperCase();
+        }
+      }
+      if (linkGoogleName) linkGoogleName.textContent = dispName;
+      if (linkGoogleEmail) linkGoogleEmail.textContent = s.googleEmail || '';
+      renderLinkDevices(s);
+      if (linkPassphraseBadge) linkPassphraseBadge.classList.toggle('hidden', !s.hasPassphrase);
+      if (btnLinkClearPassphrase) btnLinkClearPassphrase.classList.toggle('hidden', !s.hasPassphrase);
+    } else {
+      if (linkGoogleSigninLbl) {
+        linkGoogleSigninLbl.textContent = profileGoogleEmail
+          ? `Enable Auto-Sync with ${profileGoogleEmail}`
+          : 'Sign in with Google to Auto-Sync';
+      }
+      if (btnLinkGoogleSignup) {
+        btnLinkGoogleSignup.classList.toggle('hidden', !!profileGoogleEmail);
+      }
+    }
+
+    // Collapsible Manual Fallback (never forced open!)
+    const isManualActive = !isGoogleMode && !!s.connected;
+    if (linkManualActiveChip) linkManualActiveChip.classList.toggle('hidden', !isManualActive);
+    if (linkCodeDisplay) linkCodeDisplay.textContent = s.pairingCode || 'DJV-0000-0000';
+    if (linkQrImg && linkQrFallback) {
+      if (s.qrDataUrl) {
+        if (linkQrImg.getAttribute('src') !== s.qrDataUrl) linkQrImg.src = s.qrDataUrl;
+        linkQrImg.classList.remove('hidden');
+        linkQrFallback.classList.add('hidden');
+      } else {
+        linkQrImg.classList.add('hidden');
+        linkQrFallback.classList.remove('hidden');
+        linkQrFallback.textContent = s.pairingCode || 'Manual Code Ready';
+      }
+    }
+    if (btnLinkBackGoogle) {
+      btnLinkBackGoogle.classList.toggle('hidden', isGoogleMode || !profileGoogleEmail);
+    }
+
+    // Card 2: Instant Actions (Send Current Tab)
+    const activeTab = (state.tabs || []).find((t) => t.id === state.activeTabId);
+    const hasWebTab = !!(activeTab && !activeTab.isNewTab && activeTab.url);
+    if (btnLinkSendTab) btnLinkSendTab.disabled = !hasWebTab;
+    if (linkSendTabLbl) {
+      if (hasWebTab) {
+        const shortT = (activeTab.title || extractCleanDomain(activeTab.url, activeTab.url) || 'Tab').slice(0, 28);
+        linkSendTabLbl.textContent = `Send "${shortT}" to Phone`;
+      } else {
+        linkSendTabLbl.textContent = 'Send Current Tab to Phone';
+      }
+    }
+
+    // Card 3 Left: Phone Open Tabs ("Continue on PC")
+    const rtabs = Array.isArray(s.remoteTabs) ? s.remoteTabs : [];
+    if (linkRtabsCount) linkRtabsCount.textContent = String(rtabs.length);
+    if (linkRtabsList) {
+      linkRtabsList.innerHTML = '';
+      if (!rtabs.length) {
+        linkRtabsList.innerHTML = '<div class="link-empty-box">No open phone tabs synced yet.<br>Open any page in <strong>dejavu Mobile</strong> and click to continue right here on PC.</div>';
+      } else {
+        const frag = document.createDocumentFragment();
+        rtabs.forEach((rt) => {
+          if (!rt || !rt.url) return;
+          const host = extractHost(rt.url) || rt.url;
+          const icoSrc = host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : '';
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'link-tab-row';
+          btn.title = rt.url;
+          btn.innerHTML = `
+            <span class="link-tab-fav">${icoSrc ? '<img alt="" draggable="false">' : ''}</span>
+            <div class="link-tab-meta">
+              <div class="link-tab-title"></div>
+              <div class="link-tab-host"></div>
+            </div>
+            <svg class="link-tab-go" viewBox="0 0 16 16" width="15" height="15" fill="none" aria-hidden="true"><path d="M5.5 3.5h7v7M12.5 3.5L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          `;
+          const favSlot = btn.querySelector('.link-tab-fav');
+          const img = favSlot.querySelector('img');
+          if (img && icoSrc) {
+            img.src = icoSrc;
+            img.onerror = () => swapImgToM3Logo(img, 18, '');
+          } else {
+            favSlot.appendChild(makeM3LogoSpan(18, ''));
+          }
+          btn.querySelector('.link-tab-title').textContent = rt.title || host;
+          btn.querySelector('.link-tab-host').textContent = host;
+          btn.addEventListener('click', () => {
+            send({ type: 'closeLinkHub' });
+            send({ type: 'syncOpenUrl', url: rt.url });
+          });
+          frag.appendChild(btn);
+        });
+        linkRtabsList.appendChild(frag);
+      }
+    }
+
+    // Card 3 Right: Shared Clipboard & Quick Drops
+    const drops = Array.isArray(s.drops) ? s.drops : [];
+    if (linkDropsCount) linkDropsCount.textContent = String(drops.length);
+    if (btnLinkClearDrops) btnLinkClearDrops.classList.toggle('hidden', drops.length === 0);
+    if (linkDropsList) {
+      linkDropsList.innerHTML = '';
+      if (!drops.length) {
+        linkDropsList.innerHTML = '<div class="link-empty-box">No shared clips or drops yet.<br>Send your clipboard or beam a link above — incoming clips from Android show up here with 1-click Copy, Open &amp; 8× Download.</div>';
+      } else {
+        const frag = document.createDocumentFragment();
+        drops.forEach((it) => {
+          if (!it) return;
+          const dt = String(it.dropType || 'link').toLowerCase();
+          const typeLabel = dt === 'clipboard' ? 'Clipboard' : (dt === 'tab' ? 'Tab' : (dt === 'text' ? 'Note' : 'Link'));
+          const chipCls = dt === 'clipboard' ? 'is-clip' : (dt === 'tab' ? 'is-tab' : '');
+          const primaryText = (dt === 'clipboard' || dt === 'text') ? (it.text || it.title || it.url || '') : (it.title || it.url || it.text || '');
+          const showUrl = !!(it.url && it.url !== primaryText);
+          const canDownload = !!(it.url && isDownloadableDropUrl(it.url));
+          const when = formatLinkRelativeTime(it.ts);
+
+          const card = document.createElement('div');
+          card.className = 'link-drop-item';
+          card.innerHTML = `
+            <div class="link-drop-item-top">
+              <div class="link-drop-badge-row">
+                <span class="link-drop-type-chip ${chipCls}">${escapeSugHtml(typeLabel)}</span>
+                <span class="link-drop-sender">${escapeSugHtml(it.fromName || 'Device')}${when ? ' · ' + escapeSugHtml(when) : ''}</span>
+              </div>
+              <button type="button" class="link-drop-rm" title="Remove">×</button>
+            </div>
+            <div class="link-drop-text"></div>
+            ${showUrl ? '<div class="link-drop-url"></div>' : ''}
+            <div class="link-drop-actions">
+              <button type="button" class="link-chip-btn act-copy">Copy</button>
+              ${it.url ? '<button type="button" class="link-chip-btn primary act-open">Open</button>' : ''}
+              ${canDownload ? '<button type="button" class="link-chip-btn turbo act-dl8x">Download 8×</button>' : ''}
+            </div>
+          `;
+          card.querySelector('.link-drop-text').textContent = primaryText;
+          if (showUrl) card.querySelector('.link-drop-url').textContent = it.url;
+          card.querySelector('.link-drop-rm').addEventListener('click', () => send({ type: 'syncDeleteDrop', id: it.id }));
+
+          const copyBtn = card.querySelector('.act-copy');
+          copyBtn.addEventListener('click', () => {
+            const payloadText = it.url || it.text || it.title || '';
+            send({ type: 'syncCopyDrop', text: payloadText });
+            copyBtn.textContent = 'Copied ✓';
+            setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1100);
+          });
+
+          const openBtn = card.querySelector('.act-open');
+          if (openBtn) {
+            openBtn.addEventListener('click', () => {
+              send({ type: 'closeLinkHub' });
+              send({ type: 'syncOpenUrl', url: it.url });
+            });
+          }
+
+          const dlBtn = card.querySelector('.act-dl8x');
+          if (dlBtn) {
+            dlBtn.addEventListener('click', () => {
+              send({ type: 'syncDownloadDropUrl', url: it.url });
+              dlBtn.textContent = 'Queued 8× ✓';
+              dlBtn.disabled = true;
+            });
+          }
+
+          frag.appendChild(card);
+        });
+        linkDropsList.appendChild(frag);
+      }
+    }
+
+    // Card 4: What Syncs Automatically Switches
+    const prefs = s.prefs || {};
+    setSwitchState(linkPrefTabs, prefs.tabs !== false);
+    setSwitchState(linkPrefBookmarks, prefs.bookmarks !== false);
+    setSwitchState(linkPrefReading, prefs.readingList !== false);
+    setSwitchState(linkPrefClipboard, prefs.clipboard !== false);
+    setSwitchState(linkPrefHistory, prefs.history !== false);
+  }
+
+  // dejavu Link Hub Event Bindings
+  if (btnLinkDone) btnLinkDone.addEventListener('click', () => send({ type: 'closeLinkHub' }));
+  if (linkOverlay) {
+    linkOverlay.addEventListener('click', (e) => {
+      if (e.target === linkOverlay) send({ type: 'closeLinkHub' });
+    });
+  }
+  if (btnLinkSyncNow) {
+    btnLinkSyncNow.addEventListener('click', () => {
+      btnLinkSyncNow.classList.add('is-syncing');
+      send({ type: 'syncNow' });
+      showToast('Syncing with dejavu Link…', 'info');
+      setTimeout(() => btnLinkSyncNow.classList.remove('is-syncing'), 900);
+    });
+  }
+  if (btnLinkGoogleSignin) {
+    btnLinkGoogleSignin.addEventListener('click', () => {
+      const ap = state.activeProfile || {};
+      if (ap.isGoogleSignedIn && ap.googleEmail) {
+        send({ type: 'syncEnableGoogle', email: ap.googleEmail });
+        showToast(`Google Auto-Sync enabled for ${ap.googleEmail}`, 'success');
+      } else {
+        send({ type: 'closeLinkHub' });
+        openProfileSetupModal('setup');
+      }
+    });
+  }
+  if (btnLinkGoogleSignup) {
+    btnLinkGoogleSignup.addEventListener('click', () => {
+      send({ type: 'closeLinkHub' });
+      send({ type: 'googleSignUp' });
+    });
+  }
+  if (btnLinkSavePassphrase && linkPassphraseInput) {
+    const savePass = () => {
+      const pass = (linkPassphraseInput.value || '').trim();
+      const email = (state.sync && state.sync.googleEmail) || (state.activeProfile && state.activeProfile.googleEmail) || '';
+      if (!email) return;
+      send({ type: 'syncEnableGoogle', email, passphrase: pass });
+      linkPassphraseInput.value = '';
+      showToast(pass ? 'Extra Sync Passphrase saved' : 'Sync Passphrase cleared', 'success');
+    };
+    btnLinkSavePassphrase.addEventListener('click', savePass);
+    linkPassphraseInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') savePass(); });
+  }
+  if (btnLinkClearPassphrase) {
+    btnLinkClearPassphrase.addEventListener('click', () => {
+      const email = (state.sync && state.sync.googleEmail) || (state.activeProfile && state.activeProfile.googleEmail) || '';
+      if (!email) return;
+      if (linkPassphraseInput) linkPassphraseInput.value = '';
+      send({ type: 'syncEnableGoogle', email, passphrase: '' });
+      showToast('Extra Sync Passphrase removed', 'info');
+    });
+  }
+  if (btnLinkCopyCode) {
+    btnLinkCopyCode.addEventListener('click', () => {
+      const code = (state.sync && state.sync.pairingCode) || '';
+      if (!code) return;
+      send({ type: 'syncCopyDrop', text: code });
+      btnLinkCopyCode.textContent = 'Copied ✓';
+      setTimeout(() => { btnLinkCopyCode.textContent = 'Copy Code'; }, 1200);
+    });
+  }
+  if (btnLinkRegenCode) btnLinkRegenCode.addEventListener('click', () => send({ type: 'syncRegenCode' }));
+  if (btnLinkJoinCode && linkJoinInput) {
+    const submitJoin = () => {
+      const code = (linkJoinInput.value || '').trim();
+      if (code.length < 6) return;
+      linkJoinInput.value = '';
+      send({ type: 'syncPair', input: code });
+      showToast('Pairing with manual code…', 'info');
+    };
+    btnLinkJoinCode.addEventListener('click', submitJoin);
+    linkJoinInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitJoin(); });
+  }
+  if (btnLinkBackGoogle) {
+    btnLinkBackGoogle.addEventListener('click', () => {
+      const email = (state.activeProfile && state.activeProfile.googleEmail) || '';
+      if (!email) return;
+      send({ type: 'syncEnableGoogle', email });
+      if (linkManualDetails) linkManualDetails.open = false;
+      showToast(`Switched to Google Auto-Sync (${email})`, 'success');
+    });
+  }
+  if (btnLinkSendTab) {
+    btnLinkSendTab.addEventListener('click', () => {
+      if (btnLinkSendTab.disabled) return;
+      send({ type: 'syncSendCurrentTab' });
+      if (linkSendTabLbl) linkSendTabLbl.textContent = 'Sent to Phone ✓';
+      setTimeout(() => { if (state.linkOpen) renderLinkHub(); }, 1300);
+    });
+  }
+  if (btnLinkSendClipboard) {
+    btnLinkSendClipboard.addEventListener('click', () => {
+      send({ type: 'syncSendClipboard' });
+      const sp = btnLinkSendClipboard.querySelector('span');
+      if (sp) {
+        sp.textContent = 'Clipboard Sent ✓';
+        setTimeout(() => { sp.textContent = 'Send Clipboard to Phone'; }, 1300);
+      }
+    });
+  }
+  if (linkDropForm && linkDropInput) {
+    linkDropForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const txt = (linkDropInput.value || '').trim();
+      if (!txt) return;
+      linkDropInput.value = '';
+      send({ type: 'syncSendDrop', text: txt });
+    });
+  }
+  if (btnLinkClearDrops) {
+    btnLinkClearDrops.addEventListener('click', () => send({ type: 'syncClearDrops' }));
+  }
+
+  function bindLinkPrefSwitch(btn, prefKey) {
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const nextVal = !btn.classList.contains('on');
+      setSwitchState(btn, nextVal);
+      state.sync = state.sync || {};
+      state.sync.prefs = Object.assign({ tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true }, state.sync.prefs || {});
+      state.sync.prefs[prefKey] = nextVal;
+      send({ type: 'syncUpdatePrefs', [prefKey]: nextVal });
+    });
+  }
+  bindLinkPrefSwitch(linkPrefTabs, 'tabs');
+  bindLinkPrefSwitch(linkPrefBookmarks, 'bookmarks');
+  bindLinkPrefSwitch(linkPrefReading, 'readingList');
+  bindLinkPrefSwitch(linkPrefClipboard, 'clipboard');
+  bindLinkPrefSwitch(linkPrefHistory, 'history');
+
+  // =========================================================================
   // Native C# BrowserForm Message Receiver
   // =========================================================================
   if (window.chrome && window.chrome.webview) {
@@ -5350,7 +5917,7 @@
       } else if (msg.type === 'settingsToast') {
         showToast(msg.text || msg.message || '', msg.tone || 'info');
       } else if (msg.type === 'palette') {
-        if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open') && !body.classList.contains('settings-open') && !body.classList.contains('dl-manager-open') && !body.classList.contains('extensions-open') && !body.classList.contains('modal-open')) {
+        if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open') && !body.classList.contains('settings-open') && !body.classList.contains('dl-manager-open') && !body.classList.contains('extensions-open') && !body.classList.contains('link-hub-open') && !body.classList.contains('modal-open')) {
           const apMode = (state.browserOptions && state.browserOptions.appearanceMode) || 'auto';
           const effLight = (apMode === 'light') ? true : (apMode === 'dark' ? false : !!msg.isLight);
           body.classList.toggle('theme-light', effLight);
@@ -5391,6 +5958,7 @@
   if (bootData.readingList) renderReadingListSection(bootData.readingList, state.startPagePrefs.hideReadingList);
   if (bootData.favorites) renderFavoritesBar(bootData.favorites, bootData.showFavoritesBar);
   updateStatText(state.globalAdBlockEnabled, state.totalBlocked);
+  updateNewtabLinkChip(state.sync);
   updateNewtabExtChip(state.extensions || []);
   renderPinnedExtensions(state.extensions || []);
   if (bootData.activeProfile) syncTopProfilePill(bootData.activeProfile);

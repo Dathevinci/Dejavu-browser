@@ -47,7 +47,13 @@ namespace DejavuBrowser
             "studio.youtube.com",
             "www.google.com",
             "accounts.google.com",
+            "myaccount.google.com",
             "apis.google.com",
+            "oauth2.googleapis.com",
+            "identitytoolkit.googleapis.com",
+            "securetoken.googleapis.com",
+            "gstatic.com",
+            "ssl.gstatic.com",
             "www.gstatic.com",
             "fonts.googleapis.com",
             "fonts.gstatic.com",
@@ -77,21 +83,96 @@ namespace DejavuBrowser
             "challenges.cloudflare.com",
             "hcaptcha.com",
             "js.hcaptcha.com",
+            "newassets.hcaptcha.com",
+            "recaptcha.net",
             "www.recaptcha.net",
+            "stripe.com",
             "js.stripe.com",
             "checkout.stripe.com",
+            "connect.stripe.com",
             "api.stripe.com",
+            "paypal.com",
             "www.paypal.com",
             "www.paypalobjects.com",
             "login.microsoftonline.com",
             "login.live.com",
+            "login.windows.net",
+            "account.live.com",
+            "account.microsoft.com",
+            "aadcdn.msauth.net",
+            "aadcdn.msftauth.net",
             "appleid.apple.com",
-            "www.netflix.com",
+            "idmsa.apple.com",
+            "appleid.cdn-apple.com",
+            "accounts.spotify.com",
             "open.spotify.com",
+            "na.account.amazon.com",
+            "signin.aws.amazon.com",
+            "www.linkedin.com",
+            "steamcommunity.com",
+            "store.steampowered.com",
+            "id.atlassian.com",
+            "auth.atlassian.com",
+            "auth.openai.com",
+            "auth0.openai.com",
+            "webauthn.io",
+            "passkeys.io",
+            "passkeys.dev",
+            "www.netflix.com",
             "chatgpt.com",
             "openai.com",
             "en.wikipedia.org",
             "upload.wikimedia.org"
+        };
+
+        // Safe Auth / SSO / Passkey / Captcha / Identity / Payment suffixes (never blocked, including tenant subdomains!)
+        private static readonly string[] SafeAuthSuffixes = new string[]
+        {
+            "gstatic.com",
+            "identitytoolkit.googleapis.com",
+            "securetoken.googleapis.com",
+            "firebaseapp.com",
+            "web.app",
+            "auth0.com",
+            "okta.com",
+            "oktacdn.com",
+            "okta-emea.com",
+            "clerk.accounts.dev",
+            "clerk.dev",
+            "supabase.co",
+            "aadcdn.msauth.net",
+            "aadcdn.msftauth.net",
+            "msauth.net",
+            "msftauth.net",
+            "appleid.cdn-apple.com",
+            "recaptcha.net",
+            "hcaptcha.com",
+            "arkoselabs.com",
+            "duosecurity.com",
+            "stripe.com",
+            "paypal.com",
+            "paypalobjects.com",
+            "webauthn.io",
+            "passkeys.io",
+            "passkeys.dev"
+        };
+
+        // Dedicated sign-in / passkey page hosts where AdBlocker stays completely hands-off
+        private static readonly string[] ProtectedAuthPageSuffixes = new string[]
+        {
+            "accounts.google.com",
+            "login.microsoftonline.com",
+            "login.live.com",
+            "appleid.apple.com",
+            "idmsa.apple.com",
+            "auth0.com",
+            "okta.com",
+            "clerk.accounts.dev",
+            "clerk.dev",
+            "duosecurity.com",
+            "webauthn.io",
+            "passkeys.io",
+            "passkeys.dev"
         };
 
         // Safe media/CDN suffixes required for core video & site rendering (never ad hosts)
@@ -666,9 +747,33 @@ namespace DejavuBrowser
         {
             if (string.IsNullOrEmpty(host)) return false;
             if (ExactSafeHosts.Contains(host)) return true;
+            for (int i = 0; i < SafeAuthSuffixes.Length; i++)
+            {
+                string suf = SafeAuthSuffixes[i];
+                if (string.Equals(host, suf, StringComparison.OrdinalIgnoreCase) ||
+                    host.EndsWith("." + suf, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
             for (int i = 0; i < SafeMediaSuffixes.Length; i++)
             {
                 string suf = SafeMediaSuffixes[i];
+                if (string.Equals(host, suf, StringComparison.OrdinalIgnoreCase) ||
+                    host.EndsWith("." + suf, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool IsProtectedAuthPage(string host)
+        {
+            if (string.IsNullOrEmpty(host)) return false;
+            for (int i = 0; i < ProtectedAuthPageSuffixes.Length; i++)
+            {
+                string suf = ProtectedAuthPageSuffixes[i];
                 if (string.Equals(host, suf, StringComparison.OrdinalIgnoreCase) ||
                     host.EndsWith("." + suf, StringComparison.OrdinalIgnoreCase))
                 {
@@ -815,7 +920,7 @@ namespace DejavuBrowser
             }
 
             string pageHost = ExtractHost(pageUrl);
-            if (!string.IsNullOrEmpty(pageHost) && IsPausedForHost(pageHost))
+            if (!string.IsNullOrEmpty(pageHost) && (IsPausedForHost(pageHost) || IsProtectedAuthPage(pageHost)))
             {
                 return false;
             }

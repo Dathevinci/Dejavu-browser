@@ -47,13 +47,13 @@ namespace DejavuBrowser
         public bool hideNavRail { get; set; }
         public bool hideFloatingMediaButton { get; set; }
 
-        // v4.8.0 — Appearance
+        // v4.9.0 — Appearance
         public string fontSize { get; set; }
         public string fontFamily { get; set; }
         public bool showHomeButton { get; set; }
         public bool smoothScrolling { get; set; }
 
-        // v4.8.0 — Privacy & Security
+        // v4.9.0 — Privacy & Security
         public bool doNotTrack { get; set; }
         public bool httpsFirst { get; set; }
         public bool blockThirdPartyCookies { get; set; }
@@ -67,29 +67,29 @@ namespace DejavuBrowser
         public string permClipboard { get; set; }
         public string permAutoplay { get; set; }
 
-        // v4.8.0 — Search
+        // v4.9.0 — Search
         public string customSearchUrl { get; set; }
         public bool addressBarSuggestions { get; set; }
 
-        // v4.8.0 — Tabs & Performance
+        // v4.9.0 — Tabs & Performance
         public bool memorySaverEnabled { get; set; }
         public int memorySaverMinutes { get; set; }
         public bool confirmCloseMultipleTabs { get; set; }
         public bool tabHoverPreview { get; set; }
 
-        // v4.8.0 — Downloads
+        // v4.9.0 — Downloads
         public string downloadFolder { get; set; }
         public bool askDownloadLocation { get; set; }
         public int turboThreads { get; set; }
         public string defaultVideoQuality { get; set; }
         public bool autoOpenDownloads { get; set; }
 
-        // v4.8.0 — Passwords & Autofill
+        // v4.9.0 — Passwords & Autofill
         public bool savePasswords { get; set; }
         public bool autofillAddresses { get; set; }
         public bool autofillPayments { get; set; }
 
-        // v4.8.0 — VPN & System
+        // v4.9.0 — VPN & System
         public bool vpnWebRtcProtection { get; set; }
         public bool hardwareAcceleration { get; set; }
         public bool spellcheckEnabled { get; set; }
@@ -124,7 +124,7 @@ namespace DejavuBrowser
             hideNavRail = false;
             hideFloatingMediaButton = false;
 
-            // v4.8.0 defaults
+            // v4.9.0 defaults
             fontSize = "medium";
             fontFamily = "system";
             showHomeButton = true;
@@ -132,7 +132,7 @@ namespace DejavuBrowser
 
             doNotTrack = true;
             httpsFirst = false;
-            blockThirdPartyCookies = true;
+            blockThirdPartyCookies = false;
             blockPopups = true;
             clearCookiesOnExit = false;
             safeBrowsing = true;
@@ -275,7 +275,7 @@ namespace DejavuBrowser
                             if (loaded.lastSessionUrls == null) loaded.lastSessionUrls = new List<string>();
                             if (string.IsNullOrEmpty(loaded.wallpaperDim)) loaded.wallpaperDim = "balanced";
 
-                            // v4.8.0 normalizations
+                            // v4.9.0 normalizations
                             loaded.fontSize = NormalizeFontSize(loaded.fontSize);
                             loaded.fontFamily = NormalizeFontFamily(loaded.fontFamily);
                             loaded.permCamera = NormalizePermission(loaded.permCamera, "ask");

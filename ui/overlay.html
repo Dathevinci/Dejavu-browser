@@ -1253,15 +1253,15 @@
     }
 
     /* =========================================================================
-       Mode 9: Material Design 3 Side Panel
+       Mode 9: Material Design 3 Side Panel (Calm Grouped Tonal Cards)
        ========================================================================= */
     .sb-box {
       width: 100%;
       height: 100%;
-      padding: 13px 12px 12px;
+      padding: 16px 14px 14px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       overflow: hidden;
     }
 
@@ -1270,29 +1270,55 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding: 0 2px 9px;
-      border-bottom: 1px solid var(--md-outline-variant);
+      padding: 2px 4px 10px;
+      border-bottom: 1px solid color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
       flex-shrink: 0;
     }
 
-    .sb-prof { display: flex; align-items: center; gap: 9px; min-width: 0; }
-    .sb-prof-name { font-size: 13.6px; font-weight: 600; color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sb-prof-sub { font-size: 10.6px; color: var(--md-on-surface-variant); }
+    .sb-prof { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .sb-prof-name { font-size: 14px; font-weight: 600; color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sb-prof-sub { font-size: 11px; color: var(--md-on-surface-variant); margin-top: 1px; }
 
-    .sb-scroll { gap: 12px; }
-    .sb-sec { display: flex; flex-direction: column; gap: 3px; }
-    .sb-sec-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 6px 3px; }
-    .sb-sec-title { font-size: 10.6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--md-primary); }
+    .sb-scroll { gap: 12px; padding-right: 4px; }
+
+    .sb-sec {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 10px 8px;
+      border-radius: 18px;
+      background: var(--md-surface-container);
+      flex-shrink: 0;
+    }
+
+    body.theme-light .sb-sec {
+      background: var(--md-surface-container-lowest);
+    }
+
+    .sb-sec-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 2px 8px 6px;
+    }
+
+    .sb-sec-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--md-primary);
+    }
 
     .sb-mini-pill {
-      height: 22px;
-      padding: 0 9px;
+      height: 24px;
+      padding: 0 10px;
       border-radius: var(--md-shape-full);
       border: none;
       background: var(--md-secondary-container);
       color: var(--md-on-secondary-container);
       font-family: inherit;
-      font-size: 10.4px;
+      font-size: 10.6px;
       font-weight: 600;
       cursor: pointer;
       transition: filter var(--md-dur-short) ease;
@@ -1304,8 +1330,8 @@
     .sb-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      height: 32px;
+      gap: 9px;
+      height: 36px;
       padding: 0 10px;
       border-radius: var(--md-shape-full);
       cursor: pointer;
@@ -1322,17 +1348,17 @@
     }
 
     .sb-dot { width: 8px; height: 8px; border-radius: var(--md-shape-full); flex-shrink: 0; }
-    .sb-ico { width: 15px; height: 15px; border-radius: 3.5px; object-fit: contain; flex-shrink: 0; }
-    .sb-label { flex: 1; min-width: 0; font-size: 12.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sb-ico { width: 16px; height: 16px; border-radius: 4px; object-fit: contain; flex-shrink: 0; }
+    .sb-label { flex: 1; min-width: 0; font-size: 12.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .sb-rm {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       border-radius: var(--md-shape-full);
       border: none;
       background: transparent;
       color: var(--md-on-surface-variant);
-      font-size: 12px;
+      font-size: 13px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1344,29 +1370,32 @@
 
     .sb-row:hover .sb-rm { opacity: 0.85; }
     .sb-rm:hover { opacity: 1 !important; background: var(--md-error-container); color: var(--md-on-error-container); }
-    .sb-empty { font-size: 11.4px; color: var(--md-on-surface-variant); padding: 4px 10px; }
+    .sb-empty { font-size: 11.6px; color: var(--md-on-surface-variant); padding: 6px 10px; line-height: 1.45; }
 
     .sb-new-group-box {
       padding: 10px;
-      border-radius: var(--md-shape-md);
-      background: var(--md-surface-container);
-      border: 1px solid var(--md-outline-variant);
+      border-radius: 14px;
+      background: var(--md-surface-container-high);
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin: 2px 0 4px;
+      margin: 2px 2px 6px;
+    }
+
+    body.theme-light .sb-new-group-box {
+      background: var(--md-surface-container);
     }
 
     .sb-new-group-box input {
       width: 100%;
-      height: 32px;
-      padding: 0 11px;
-      border-radius: var(--md-shape-sm);
+      height: 34px;
+      padding: 0 12px;
+      border-radius: var(--md-shape-md);
       border: 1.5px solid var(--md-outline-variant);
       background: var(--md-surface-container-low);
       color: var(--md-on-surface);
       font-family: inherit;
-      font-size: 12px;
+      font-size: 12.2px;
       outline: none;
       user-select: text;
     }
@@ -1481,171 +1510,258 @@
     .dls-acts { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 
     /* =========================================================================
-       Mode 13 & 14: Material Design 3 dejavu Link (PC <-> Android Sync)
+       Mode 13 & 14: Streamlined Tab-Free Material Design 3 dejavu Link Popover
+       Zero Sub-Tabs · Zero QR Clutter · Google Account Auto-Sync First
        ========================================================================= */
-    .sync-status-pill {
-      padding: 2.5px 9px;
-      border-radius: var(--md-shape-full);
-      font-size: 10.6px;
-      font-weight: 600;
-      background: var(--md-surface-container-highest);
-      color: var(--md-on-surface-variant);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 152px;
+    .sync-pop-box {
+      padding: 15px 15px 13px;
+      gap: 10px;
     }
 
-    .sync-status-pill.connected {
+    .sync-status-card {
+      padding: 12px 13px;
+      border-radius: 18px;
+      background: var(--md-surface-container);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    body.theme-light .sync-status-card {
+      background: var(--md-surface-container-lowest);
+    }
+
+    .sync-status-card.is-google {
       background: var(--md-tertiary-container);
       color: var(--md-on-tertiary-container);
     }
 
-    .sync-tabs {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 3px;
-      padding: 3px;
+    .sync-status-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .sync-live-dot {
+      width: 8px;
+      height: 8px;
       border-radius: var(--md-shape-full);
-      background: var(--md-surface-container);
-      border: 1px solid var(--md-outline-variant);
+      background: var(--md-outline);
       flex-shrink: 0;
     }
 
-    .sync-tab {
-      height: 28px;
+    .sync-live-dot.online {
+      background: #4ade80;
+    }
+
+    body.theme-light .sync-live-dot.online {
+      background: #15803d;
+    }
+
+    .sync-status-email {
+      font-size: 12.6px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sync-status-meta {
+      font-size: 11.2px;
+      opacity: 0.86;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sync-signin-copy {
+      font-size: 11.8px;
+      color: var(--md-on-surface-variant);
+      line-height: 1.42;
+    }
+
+    .sync-signin-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .sync-signin-row .pill-btn {
+      height: 32px;
+      padding: 0 13px;
+      font-size: 11.6px;
+    }
+
+    .sync-quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+
+    .sync-act-pill {
+      height: 36px;
+      padding: 0 12px;
       border-radius: var(--md-shape-full);
       border: none;
       outline: none;
-      background: transparent;
-      color: var(--md-on-surface-variant);
-      font-family: inherit;
-      font-size: 11.4px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .sync-tab.active {
       background: var(--md-secondary-container);
       color: var(--md-on-secondary-container);
-    }
-
-    .sync-quick-bar { display: flex; gap: 6px; flex-shrink: 0; }
-
-    .sync-send-tab-btn {
-      flex: 1;
-      height: 36px;
-      padding: 0 14px;
-      border-radius: var(--md-shape-full);
-      border: none;
-      outline: none;
-      background: var(--md-primary);
-      color: var(--md-on-primary);
       font-family: inherit;
-      font-size: 12.2px;
+      font-size: 12px;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
+      gap: 6px;
       cursor: pointer;
-      transition: filter var(--md-dur-short) ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: filter var(--md-dur-short) ease, transform var(--md-dur-press) ease;
     }
 
-    .sync-send-tab-btn:hover:not(:disabled) { filter: brightness(1.06); }
-    .sync-send-tab-btn:disabled { opacity: 0.40; cursor: default; }
+    .sync-act-pill.primary {
+      background: var(--md-primary);
+      color: var(--md-on-primary);
+    }
 
-    .sync-compose { display: flex; gap: 6px; flex-shrink: 0; }
+    .sync-act-pill:hover:not(:disabled) { filter: brightness(1.06); }
+    .sync-act-pill:active:not(:disabled) { transform: scale(0.97); }
+    .sync-act-pill:disabled { opacity: 0.42; cursor: default; }
+
+    .sync-compose {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 4px 3px 13px;
+      border-radius: var(--md-shape-full);
+      border: 1.5px solid color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
+      background: var(--md-surface-container);
+      flex-shrink: 0;
+      transition: border-color var(--md-dur-short) ease;
+    }
+
+    body.theme-light .sync-compose {
+      background: var(--md-surface-container-lowest);
+    }
+
+    .sync-compose:focus-within { border-color: var(--md-primary); }
 
     .sync-compose input {
       flex: 1;
       min-width: 0;
-      height: 34px;
-      padding: 0 13px;
-      border-radius: var(--md-shape-full);
-      border: 1.5px solid var(--md-outline-variant);
-      background: var(--md-surface-container);
+      height: 30px;
+      border: none;
+      outline: none;
+      background: transparent;
       color: var(--md-on-surface);
       font-family: inherit;
-      font-size: 12.2px;
-      outline: none;
+      font-size: 12px;
       user-select: text;
     }
 
-    .sync-compose input:focus { border-color: var(--md-primary); }
+    .sync-compose input::placeholder { color: var(--md-on-surface-variant); }
 
-    .sync-drop-card {
-      padding: 10px 12px;
-      border-radius: var(--md-shape-md);
-      background: var(--md-surface-container);
-      border: 1px solid var(--md-outline-variant);
+    .sync-micro-hdr {
+      font-size: 10.4px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--md-primary);
+      padding: 4px 4px 1px;
+      flex-shrink: 0;
+    }
+
+    .sync-recent-row {
       display: flex;
-      flex-direction: column;
-      gap: 5px;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: var(--md-surface-container);
       flex-shrink: 0;
       contain: layout style;
+      transition: background-color var(--md-dur-short) ease;
     }
 
-    .sync-drop-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-    .sync-drop-from { font-size: 10.4px; font-weight: 700; color: var(--md-primary); text-transform: uppercase; letter-spacing: 0.04em; }
-    .sync-drop-title { font-size: 12.4px; font-weight: 600; color: var(--md-on-surface); word-break: break-word; }
-    .sync-drop-body { font-size: 11.4px; color: var(--md-on-surface-variant); word-break: break-word; max-height: 54px; overflow: hidden; }
-    .sync-drop-acts { display: flex; gap: 6px; margin-top: 2px; }
+    body.theme-light .sync-recent-row {
+      background: var(--md-surface-container-lowest);
+    }
 
-    .sync-pair-card {
-      padding: 14px;
-      border-radius: var(--md-shape-lg);
+    .sync-recent-row:hover {
+      background: var(--md-surface-container-highest);
+    }
+
+    body.theme-light .sync-recent-row:hover {
       background: var(--md-surface-container);
-      border: 1px solid var(--md-outline-variant);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      text-align: center;
     }
 
-    .sync-qr-frame {
-      padding: 10px;
-      border-radius: var(--md-shape-lg);
-      background: #ffffff;
-      border: 1px solid var(--md-outline-variant);
+    .sync-recent-ico {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--md-surface-container-high);
+      color: var(--md-primary);
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
     }
 
-    .sync-code-box {
-      font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: 0.10em;
-      padding: 7px 14px;
-      border-radius: var(--md-shape-md);
-      background: var(--md-secondary-container);
-      color: var(--md-on-secondary-container);
-      user-select: text;
-    }
+    .sync-recent-ico img { width: 15px; height: 15px; object-fit: contain; display: block; }
 
-    .sync-pair-sub { font-size: 11.2px; color: var(--md-on-surface-variant); line-height: 1.45; }
-    .sync-pair-row { display: flex; gap: 6px; width: 100%; }
-
-    .sync-pair-row input {
+    .sync-recent-meta {
       flex: 1;
       min-width: 0;
-      height: 34px;
-      padding: 0 12px;
-      border-radius: var(--md-shape-full);
-      border: 1.5px solid var(--md-outline-variant);
-      background: var(--md-surface-container);
-      color: var(--md-on-surface);
-      font-family: ui-monospace, Consolas, monospace;
-      font-size: 12px;
-      text-transform: uppercase;
-      outline: none;
-      user-select: text;
     }
 
-    .sync-pair-row input:focus { border-color: var(--md-primary); }
+    .sync-recent-title {
+      font-size: 12.2px;
+      font-weight: 600;
+      color: var(--md-on-surface);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sync-recent-sub {
+      font-size: 10.6px;
+      color: var(--md-on-surface-variant);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
+    .sync-recent-acts {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .sync-pop-foot {
+      padding-top: 8px;
+      border-top: 1px solid color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
+      display: flex;
+      flex-shrink: 0;
+    }
+
+    .sync-pop-foot .pill-btn {
+      width: 100%;
+      height: 36px;
+      font-size: 12.2px;
+    }
 
     /* Mode 17: Chrome-Grade Material Design 3 Toolbar Extensions Puzzle Popover */
     #mode-extensions:focus { outline: none; }
@@ -1946,7 +2062,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v4.8.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v4.9.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -2300,69 +2416,57 @@
     </div>
   </div>
 
-  <!-- Mode 13: dejavu Link (PC <-> Android Sync Hub) -->
+  <!-- Mode 13: Streamlined Tab-Free Material Design 3 dejavu Link Quick Popover -->
   <div id="mode-sync" class="overlay-shell hidden">
-    <div class="panel-box">
+    <div class="panel-box sync-pop-box">
       <div class="panel-head">
-        <div class="panel-title" style="min-width:0;white-space:nowrap;">
+        <div class="panel-title">
           <svg viewBox="0 0 18 18" width="16" height="16" fill="none" style="flex-shrink:0;color:var(--md-primary);">
-            <rect x="2.2" y="4" width="8.6" height="6.8" rx="1.4" stroke="currentColor" stroke-width="1.4"/>
-            <path d="M5 13h3.2M6.6 10.8V13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            <rect x="11.2" y="5.2" width="4.6" height="8.6" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
+            <rect x="2.2" y="4" width="8.6" height="6.8" rx="1.4" stroke="currentColor" stroke-width="1.45"/>
+            <path d="M5 13h3.2M6.6 10.8V13" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+            <rect x="11.2" y="5.2" width="4.6" height="8.6" rx="1.2" stroke="currentColor" stroke-width="1.45"/>
             <circle cx="13.5" cy="12" r="0.65" fill="currentColor"/>
           </svg>
-          <span style="flex-shrink:0;">dejavu Link</span>
-          <span id="sync-badge" class="sync-status-pill">Ready to Pair</span>
+          <span>dejavu Link</span>
         </div>
         <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
-          <button id="btn-sync-now" class="pill-btn" type="button" title="Sync Open Tabs, Favorites &amp; Reading List">Sync</button>
+          <button id="btn-sync-now" class="pill-btn" type="button" title="Sync now">Sync</button>
           <button id="btn-sync-close" class="icon-btn sm" type="button" title="Close">
             <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           </button>
         </div>
       </div>
 
-      <div id="sync-subtabs" class="sync-tabs">
-        <button type="button" class="sync-tab active" data-stab="feed">Shared Feed</button>
-        <button type="button" class="sync-tab" data-stab="tabs">Phone Tabs (<span id="sync-rtabs-count">0</span>)</button>
-        <button type="button" class="sync-tab" data-stab="pair">Pair Phone</button>
+      <!-- Top: Google Auto-Sync Status Pill OR Sign-In CTA (Zero QR Clutter, Zero Sub-Tabs) -->
+      <div id="sync-status-card" class="sync-status-card"></div>
+
+      <!-- Quick Action Row -->
+      <div class="sync-quick-actions">
+        <button id="btn-sync-send-tab" class="sync-act-pill primary" type="button">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M2.5 8h10M8.8 4.2L12.6 8l-3.8 3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="sync-send-tab-lbl">Send Tab</span>
+        </button>
+        <button id="btn-sync-send-clip" class="sync-act-pill" type="button">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><rect x="3.8" y="3.8" width="8.4" height="9.8" rx="1.7" stroke="currentColor" stroke-width="1.4"/><path d="M6 3.8V3.1a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v.7" stroke="currentColor" stroke-width="1.4"/></svg>
+          <span id="sync-send-clip-lbl">Send Clipboard</span>
+        </button>
       </div>
 
-      <div id="sync-pane-feed" style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;">
-        <div class="sync-quick-bar">
-          <button id="btn-sync-send-tab" class="sync-send-tab-btn" type="button">
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M2.5 8h10M8.8 4.2L12.6 8l-3.8 3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span id="sync-send-tab-lbl">Send Current Tab to Mobile</span>
-          </button>
-        </div>
-        <div class="sync-compose">
-          <input id="sync-drop-input" type="text" placeholder="Send link or text note to your phone…" autocomplete="off">
-          <button id="btn-sync-send-drop" class="pill-btn primary" type="button">Send</button>
-        </div>
-        <div id="sync-feed-list" class="panel-scroll"></div>
+      <!-- Compact Quick Drop Input -->
+      <div class="sync-compose">
+        <input id="sync-drop-input" type="text" placeholder="Beam a link, YouTube URL, or note…" autocomplete="off">
+        <button id="btn-sync-send-drop" class="pill-btn primary" type="button" style="height:28px;padding:0 13px;">Beam</button>
       </div>
 
-      <div id="sync-pane-tabs" class="hidden" style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;">
-        <div id="sync-rtabs-list" class="panel-scroll"></div>
-      </div>
+      <!-- Top 3 Recent Phone Tabs & Clips (Zero Inner Sub-Tabs) -->
+      <div id="sync-recent-list" class="panel-scroll"></div>
 
-      <div id="sync-pane-pair" class="hidden" style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow-y:auto;">
-        <div class="sync-pair-card">
-          <div class="sync-qr-frame"><canvas id="sync-qr-canvas" width="148" height="148"></canvas></div>
-          <div id="sync-code-display" class="sync-code-box">DJV-0000-0000</div>
-          <div style="display:flex;gap:6px;">
-            <button id="btn-sync-copy-code" class="pill-btn primary" type="button">Copy Code</button>
-            <button id="btn-sync-regen" class="pill-btn" type="button">New Code</button>
-          </div>
-          <div class="sync-pair-sub">
-            Open <strong>dejavu Mobile (.apk)</strong> → tap <strong>Link PC</strong> → scan this QR or enter the code.<br>
-            End-to-end encrypted (AES-256 + HMAC) over Wi-Fi &amp; mobile data.
-          </div>
-        </div>
-        <div class="sync-pair-row">
-          <input id="sync-join-input" type="text" placeholder="Or enter phone code (DJV-XXXX-XXXX)" maxlength="20">
-          <button id="btn-sync-join" class="pill-btn" type="button">Pair</button>
-        </div>
+      <!-- Footer: Full Hub CTA -->
+      <div class="sync-pop-foot">
+        <button id="btn-sync-open-hub" class="pill-btn" type="button">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><rect x="2" y="3.4" width="7.4" height="6" rx="1.2" stroke="currentColor" stroke-width="1.35"/><path d="M4.4 11.4h2.6M5.7 9.4v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><rect x="10" y="4.6" width="4" height="7.6" rx="1" stroke="currentColor" stroke-width="1.35"/></svg>
+          <span>Open Full dejavu Link Hub</span>
+        </button>
       </div>
     </div>
   </div>
@@ -2432,6 +2536,10 @@
         <span class="menu-item-label">History</span>
         <span class="menu-kbd">Ctrl+H</span>
       </button>
+      <button id="mn-link" class="menu-item" type="button">
+        <svg viewBox="0 0 18 18" fill="none"><rect x="2.2" y="4" width="8.6" height="6.8" rx="1.4" stroke="currentColor" stroke-width="1.4"/><path d="M5 13h3.2M6.6 10.8V13" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><rect x="11.2" y="5.2" width="4.6" height="8.6" rx="1.2" stroke="currentColor" stroke-width="1.4"/><circle cx="13.5" cy="12" r="0.65" fill="currentColor"/></svg>
+        <span class="menu-item-label">dejavu Link (PC ↔ Phone)</span>
+      </button>
       <button id="mn-extensions" class="menu-item" type="button">
         <svg viewBox="0 0 20 20" fill="none"><path d="M11.6 3.2a1.7 1.7 0 0 1 1.7 1.7v.9h1.9a1.4 1.4 0 0 1 1.4 1.4v2.1h-.9a1.7 1.7 0 0 0 0 3.4h.9v2.1a1.4 1.4 0 0 1-1.4 1.4h-2.1v-.9a1.7 1.7 0 0 0-3.4 0v.9H7.2a1.4 1.4 0 0 1-1.4-1.4v-2.1h.9a1.7 1.7 0 0 0 0-3.4h-.9V7.2a1.4 1.4 0 0 1 1.4-1.4h2.7v-.9a1.7 1.7 0 0 1 1.7-1.7z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg>
         <span class="menu-item-label">Extensions</span>
@@ -2460,7 +2568,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v4.8.0</span>
+        <span id="mn-version-lbl">dejavu v4.9.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -2854,7 +2962,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.8.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.9.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -3734,38 +3842,39 @@
     }
 
     // =========================================================================
-    // Mode 13 & 14: dejavu Link (PC <-> Mobile Sync + ISO QR Encoder)
+    // Mode 13 & 14: Streamlined Tab-Free Material Design 3 dejavu Link Popover
     // =========================================================================
-    const syncBadge = document.getElementById('sync-badge');
-    const syncSubtabs = document.getElementById('sync-subtabs');
-    const syncPaneFeed = document.getElementById('sync-pane-feed');
-    const syncPaneTabs = document.getElementById('sync-pane-tabs');
-    const syncPanePair = document.getElementById('sync-pane-pair');
-    const syncRtabsCount = document.getElementById('sync-rtabs-count');
+    const syncStatusCard = document.getElementById('sync-status-card');
     const btnSyncSendTab = document.getElementById('btn-sync-send-tab');
     const syncSendTabLbl = document.getElementById('sync-send-tab-lbl');
+    const btnSyncSendClip = document.getElementById('btn-sync-send-clip');
+    const syncSendClipLbl = document.getElementById('sync-send-clip-lbl');
     const syncDropInput = document.getElementById('sync-drop-input');
     const btnSyncSendDrop = document.getElementById('btn-sync-send-drop');
-    const syncFeedList = document.getElementById('sync-feed-list');
-    const syncRtabsList = document.getElementById('sync-rtabs-list');
-    const syncQrCanvas = document.getElementById('sync-qr-canvas');
-    const syncCodeDisplay = document.getElementById('sync-code-display');
-    const btnSyncCopyCode = document.getElementById('btn-sync-copy-code');
-    const btnSyncRegen = document.getElementById('btn-sync-regen');
-    const syncJoinInput = document.getElementById('sync-join-input');
-    const btnSyncJoin = document.getElementById('btn-sync-join');
-    let syncActiveTab = 'feed';
-    let lastQrText = '';
-    let lastSyncCode = '';
+    const syncRecentList = document.getElementById('sync-recent-list');
+    const btnSyncOpenHub = document.getElementById('btn-sync-open-hub');
 
     document.getElementById('btn-sync-close').addEventListener('click', () => send({ type: 'closePanel' }));
     document.getElementById('btn-sync-now').addEventListener('click', () => send({ type: 'syncNow' }));
+    if (btnSyncOpenHub) btnSyncOpenHub.addEventListener('click', () => send({ type: 'openLinkHub' }));
+
     btnSyncSendTab.addEventListener('click', () => {
       if (btnSyncSendTab.disabled) return;
       send({ type: 'syncSendCurrentTab' });
-      syncSendTabLbl.textContent = 'Sent to Mobile!';
-      setTimeout(() => { syncSendTabLbl.textContent = 'Send Current Tab to Mobile'; }, 1300);
+      syncSendTabLbl.textContent = 'Sent ✓';
+      setTimeout(() => { syncSendTabLbl.textContent = 'Send Tab'; }, 1200);
     });
+
+    if (btnSyncSendClip) {
+      btnSyncSendClip.addEventListener('click', () => {
+        send({ type: 'syncSendClipboard' });
+        if (syncSendClipLbl) {
+          syncSendClipLbl.textContent = 'Sent ✓';
+          setTimeout(() => { syncSendClipLbl.textContent = 'Send Clipboard'; }, 1200);
+        }
+      });
+    }
+
     function submitSyncDrop() {
       const txt = (syncDropInput.value || '').trim();
       if (!txt) return;
@@ -3775,236 +3884,156 @@
     btnSyncSendDrop.addEventListener('click', submitSyncDrop);
     syncDropInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitSyncDrop(); });
 
-    btnSyncCopyCode.addEventListener('click', () => {
-      if (!lastSyncCode) return;
-      send({ type: 'syncCopyText', text: lastSyncCode });
-      btnSyncCopyCode.textContent = 'Copied!';
-      setTimeout(() => { btnSyncCopyCode.textContent = 'Copy Code'; }, 1200);
-    });
-    btnSyncRegen.addEventListener('click', () => send({ type: 'syncRegenCode' }));
-    btnSyncJoin.addEventListener('click', () => {
-      const c = (syncJoinInput.value || '').trim();
-      if (c.length < 6) return;
-      syncJoinInput.value = '';
-      send({ type: 'syncSetCode', code: c });
-    });
-
-    function setSyncSubtab(tab) {
-      syncActiveTab = tab;
-      syncSubtabs.querySelectorAll('.sync-tab').forEach((b) => b.classList.toggle('active', b.dataset.stab === tab));
-      syncPaneFeed.classList.toggle('hidden', tab !== 'feed');
-      syncPaneTabs.classList.toggle('hidden', tab !== 'tabs');
-      syncPanePair.classList.toggle('hidden', tab !== 'pair');
-      syncPaneFeed.style.display = tab === 'feed' ? 'flex' : 'none';
-      syncPaneTabs.style.display = tab === 'tabs' ? 'flex' : 'none';
-      syncPanePair.style.display = tab === 'pair' ? 'flex' : 'none';
-    }
-    syncSubtabs.addEventListener('click', (e) => {
-      const b = e.target.closest('.sync-tab');
-      if (b) setSyncSubtab(b.dataset.stab || 'feed');
-    });
-
-    // Compact ISO/IEC 18004 QR Code (ECC Level L, Versions 1..6, Byte mode)
-    const QrEnc = (() => {
-      const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
-      for (let i = 0, v = 1; i < 255; i++) { EXP[i] = v; LOG[v] = i; v = (v << 1) ^ (v & 128 ? 0x11d : 0); }
-      for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
-      function rsPoly(ec) {
-        let p = [1];
-        for (let i = 0; i < ec; i++) {
-          const n = new Array(p.length + 1).fill(0);
-          for (let j = 0; j < p.length; j++) {
-            n[j] ^= p[j];
-            n[j + 1] ^= EXP[LOG[p[j]] + i];
-          }
-          p = n;
-        }
-        return p;
-      }
-      function rsRem(data, ec) {
-        const g = rsPoly(ec), r = new Uint8Array(ec);
-        for (let i = 0; i < data.length; i++) {
-          const f = data[i] ^ r[0];
-          for (let j = 0; j < ec - 1; j++) r[j] = r[j + 1];
-          r[ec - 1] = 0;
-          if (f) for (let j = 0; j < ec; j++) r[j] ^= EXP[LOG[g[j + 1]] + LOG[f]];
-        }
-        return r;
-      }
-      const SPECS = [
-        [1, 21, 19, 7, 1, []],
-        [2, 25, 34, 10, 1, [6, 18]],
-        [3, 29, 55, 15, 1, [6, 22]],
-        [4, 33, 80, 20, 1, [6, 26]],
-        [5, 37, 108, 26, 1, [6, 30]],
-        [6, 41, 136, 18, 2, [6, 34]]
-      ];
-      function encode(text) {
-        const bytes = Array.from(new TextEncoder().encode(text));
-        const spec = SPECS.find((s) => bytes.length <= s[2] - 2) || SPECS[SPECS.length - 1];
-        const [ver, sz, dataLen, ecLen, blocks, align] = spec;
-        const bits = [];
-        const push = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); };
-        push(4, 4); push(Math.min(bytes.length, dataLen - 2), 8);
-        for (let i = 0; i < Math.min(bytes.length, dataLen - 2); i++) push(bytes[i], 8);
-        push(0, Math.min(4, dataLen * 8 - bits.length));
-        while (bits.length % 8) bits.push(0);
-        const cw = [];
-        for (let i = 0; i < bits.length; i += 8) {
-          let b = 0; for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
-          cw.push(b);
-        }
-        for (let p = 0; cw.length < dataLen; p++) cw.push(p % 2 === 0 ? 0xec : 0x11);
-        const bSz = dataLen / blocks;
-        const dBlocks = [], eBlocks = [];
-        for (let b = 0; b < blocks; b++) {
-          const sl = cw.slice(b * bSz, (b + 1) * bSz);
-          dBlocks.push(sl); eBlocks.push(rsRem(sl, ecLen));
-        }
-        const finalCw = [];
-        for (let i = 0; i < bSz; i++) for (let b = 0; b < blocks; b++) finalCw.push(dBlocks[b][i]);
-        for (let i = 0; i < ecLen; i++) for (let b = 0; b < blocks; b++) finalCw.push(eBlocks[b][i]);
-
-        const mod = Array.from({ length: sz }, () => new Int8Array(sz));
-        const res = Array.from({ length: sz }, () => new Uint8Array(sz));
-        const set = (r, c, v, isRes) => { if (r >= 0 && c >= 0 && r < sz && c < sz) { mod[r][c] = v ? 1 : 0; if (isRes) res[r][c] = 1; } };
-        const finder = (r0, c0) => {
-          for (let dr = -1; dr <= 7; dr++) for (let dc = -1; dc <= 7; dc++) {
-            const on = dr >= 0 && dr <= 6 && dc >= 0 && dc <= 6 && (dr === 0 || dr === 6 || dc === 0 || dc === 6 || (dr >= 2 && dr <= 4 && dc >= 2 && dc <= 4));
-            set(r0 + dr, c0 + dc, on, true);
-          }
-        };
-        finder(0, 0); finder(0, sz - 7); finder(sz - 7, 0);
-        for (let i = 8; i < sz - 8; i++) { set(6, i, i % 2 === 0, true); set(i, 6, i % 2 === 0, true); }
-        for (const r of align) for (const c of align) {
-          if (res[r][c]) continue;
-          for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++)
-            set(r + dr, c + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1, true);
-        }
-        set(4 * ver + 9, 8, 1, true);
-        for (let i = 0; i < 9; i++) { if (i !== 6) { res[8][i] = 1; res[i][8] = 1; } }
-        for (let i = 0; i < 8; i++) { res[8][sz - 1 - i] = 1; res[sz - 1 - i][8] = 1; }
-
-        let bi = 0;
-        for (let col = sz - 1; col >= 1; col -= 2) {
-          if (col === 6) col--;
-          const up = ((sz - 1 - col) >> 1) % 2 === 0;
-          for (let step = 0; step < sz; step++) {
-            const row = up ? (sz - 1 - step) : step;
-            for (let k = 0; k < 2; k++) {
-              const c = col - k;
-              if (res[row][c]) continue;
-              const bit = bi < finalCw.length * 8 ? ((finalCw[bi >> 3] >> (7 - (bi & 7))) & 1) : 0;
-              bi++;
-              mod[row][c] = ((row + c) % 2 === 0) ? (bit ^ 1) : bit;
-            }
-          }
-        }
-        const fmt = 0x77c4;
-        const fpos1 = [[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8]];
-        const fpos2 = [[sz-1,8],[sz-2,8],[sz-3,8],[sz-4,8],[sz-5,8],[sz-6,8],[sz-7,8],[8,sz-8],[8,sz-7],[8,sz-6],[8,sz-5],[8,sz-4],[8,sz-3],[8,sz-2],[8,sz-1]];
-        for (let i = 0; i < 15; i++) {
-          const b = (fmt >> (14 - i)) & 1;
-          mod[fpos1[i][0]][fpos1[i][1]] = b;
-          mod[fpos2[i][0]][fpos2[i][1]] = b;
-        }
-        return { sz, mod };
-      }
-      return { encode };
-    })();
-
-    function drawQrCanvas(text) {
-      if (!syncQrCanvas || !text || text === lastQrText) return;
-      lastQrText = text;
-      const qr = QrEnc.encode(text);
-      const qctx = syncQrCanvas.getContext('2d');
-      const W = syncQrCanvas.width;
-      const quiet = 2;
-      const cell = Math.floor(W / (qr.sz + quiet * 2));
-      const pad = Math.floor((W - cell * qr.sz) / 2);
-      qctx.fillStyle = '#ffffff';
-      qctx.fillRect(0, 0, W, W);
-      qctx.fillStyle = '#1d1b20';
-      for (let r = 0; r < qr.sz; r++) {
-        for (let c = 0; c < qr.sz; c++) {
-          if (qr.mod[r][c]) qctx.fillRect(pad + c * cell, pad + r * cell, cell, cell);
-        }
-      }
+    function isOvDownloadableUrl(url) {
+      if (!url || typeof url !== 'string') return false;
+      return /^https?:\/\/([^/]*\.)?(youtube\.com\/(watch|shorts|live|embed)|youtu\.be\/|tiktok\.com\/|instagram\.com\/(reel|p|tv)\/|x\.com\/|twitter\.com\/|vimeo\.com\/|reddit\.com\/|twitch\.tv\/|soundcloud\.com\/)/i.test(url) ||
+        /\.(mp4|mkv|webm|mov|mp3|m4a|flac|wav|pdf|zip|rar|7z|exe|msi|apk|iso|m3u8)(\?|#|$)/i.test(url);
     }
 
     function renderSyncPanel(d) {
       const s = d.sync || {};
-      const connected = !!s.connected;
-      syncBadge.classList.toggle('connected', connected);
-      syncBadge.textContent = connected ? `Connected · ${s.peerName || 'Mobile'}` : 'Ready to Pair';
+      const isGoogle = s.syncMode === 'google' && !!s.googleEmail;
+      const peerOnline = !!s.peerOnline;
+      const connected = !!(s.connected || s.paired);
+      const rtabs = Array.isArray(s.remoteTabs) ? s.remoteTabs : [];
+      const drops = Array.isArray(s.drops) ? s.drops : [];
+
+      if (syncStatusCard) {
+        syncStatusCard.classList.toggle('is-google', isGoogle);
+        if (isGoogle) {
+          const peerLine = peerOnline
+            ? `${s.peerName || 'Android Phone'} · Online · ${rtabs.length} ${rtabs.length === 1 ? 'tab' : 'tabs'}`
+            : (connected
+              ? `${s.peerName || 'Android Phone'} · Synced · ${rtabs.length} ${rtabs.length === 1 ? 'tab' : 'tabs'}`
+              : 'Waiting for Android phone with same Google Account');
+          syncStatusCard.innerHTML = `
+            <div class="sync-status-top">
+              <span class="sync-live-dot ${peerOnline ? 'online' : ''}"></span>
+              <span class="sync-status-email"></span>
+            </div>
+            <div class="sync-status-meta"></div>
+          `;
+          syncStatusCard.querySelector('.sync-status-email').textContent = `Synced via ${s.googleEmail}`;
+          syncStatusCard.querySelector('.sync-status-meta').textContent = peerLine;
+        } else if (s.connected) {
+          syncStatusCard.innerHTML = `
+            <div class="sync-status-top">
+              <span class="sync-live-dot ${peerOnline ? 'online' : ''}"></span>
+              <span class="sync-status-email"></span>
+            </div>
+            <div class="sync-status-meta">Manual E2EE Link active · Sign in with Google for automatic sync</div>
+          `;
+          syncStatusCard.querySelector('.sync-status-email').textContent = `Connected · ${s.peerName || 'Android Phone'}`;
+        } else {
+          const gSvg = '<svg viewBox="0 0 18 18" width="13" height="13" aria-hidden="true"><path fill="currentColor" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/><path fill="currentColor" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z" opacity="0.9"/><path fill="currentColor" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z" opacity="0.8"/><path fill="currentColor" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" opacity="0.95"/></svg>';
+          syncStatusCard.innerHTML = `
+            <div class="sync-signin-copy">Sign in with Google on Windows &amp; Android to auto-sync tabs and clipboard — zero QR codes needed.</div>
+            <div class="sync-signin-row">
+              <button type="button" id="btn-sync-google-cta" class="pill-btn primary">${gSvg}<span>Sign in with Google</span></button>
+              <button type="button" id="btn-sync-manual-cta" class="pill-btn">Link Hub</button>
+            </div>
+          `;
+          const gBtn = syncStatusCard.querySelector('#btn-sync-google-cta');
+          if (gBtn) gBtn.addEventListener('click', () => send({ type: 'googleSignIn' }));
+          const mBtn = syncStatusCard.querySelector('#btn-sync-manual-cta');
+          if (mBtn) mBtn.addEventListener('click', () => send({ type: 'openLinkHub' }));
+        }
+      }
 
       const hasActiveTab = !!(d.activeTabUrl && d.activeTabUrl.length > 0);
       btnSyncSendTab.disabled = !hasActiveTab;
-      if (hasActiveTab) {
-        syncSendTabLbl.textContent = `Send "${(d.activeTabTitle || d.activeTabUrl).slice(0, 26)}" to Mobile`;
-      } else {
-        syncSendTabLbl.textContent = 'Open a website to send tab to Mobile';
+      syncSendTabLbl.textContent = 'Send Tab';
+      btnSyncSendTab.title = hasActiveTab ? `Send "${d.activeTabTitle || d.activeTabUrl}" to Phone` : 'Open a website to send tab';
+
+      if (!syncRecentList) return;
+      syncRecentList.innerHTML = '';
+
+      const topTabs = rtabs.slice(0, 3);
+      const topDrops = drops.slice(0, 3);
+
+      if (!topTabs.length && !topDrops.length) {
+        syncRecentList.innerHTML = '<div class="empty-msg" style="padding:20px 10px;">No recent phone tabs or clips yet.<br>Beam a link or click <strong>Send Clipboard</strong> above!</div>';
+        return;
       }
 
-      lastSyncCode = s.pairingCode || 'DJV-0000-0000';
-      syncCodeDisplay.textContent = lastSyncCode;
-      if (s.qrPayload) drawQrCanvas(s.qrPayload);
+      const frag = document.createDocumentFragment();
 
-      const drops = Array.isArray(s.drops) ? s.drops : [];
-      syncFeedList.innerHTML = '';
-      if (!drops.length) {
-        syncFeedList.innerHTML = '<div class="empty-msg">No shared tabs, links, or text yet.<br>Pair dejavu Mobile (.apk) in <strong>Pair Phone</strong> or drop a link above!</div>';
-      } else {
-        drops.forEach((it) => {
-          const card = document.createElement('div');
-          card.className = 'sync-drop-card';
-          const badgeLbl = it.dropType === 'tab' ? 'Tab' : (it.dropType === 'text' ? 'Text' : 'Link');
-          const primaryText = it.dropType === 'text' ? (it.text || '') : (it.title || it.url || '');
-          const secondary = it.dropType === 'text' ? '' : (it.url || '');
-          card.innerHTML = `
-            <div class="sync-drop-top">
-              <span class="sync-drop-from">${escapeHtml(it.fromName || 'Device')} · ${badgeLbl}</span>
-              <button type="button" class="mini-act del" title="Remove">×</button>
+      if (topTabs.length) {
+        const hdr = document.createElement('div');
+        hdr.className = 'sync-micro-hdr';
+        hdr.textContent = `Phone Tabs (${rtabs.length})`;
+        frag.appendChild(hdr);
+
+        topTabs.forEach((rt) => {
+          const host = extractHost(rt.url);
+          const icoSrc = host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : '';
+          const row = document.createElement('div');
+          row.className = 'sync-recent-row';
+          row.innerHTML = `
+            <span class="sync-recent-ico">${icoSrc ? '<img alt="" draggable="false">' : makeM3LogoSpan(15, '')}</span>
+            <div class="sync-recent-meta">
+              <div class="sync-recent-title"></div>
+              <div class="sync-recent-sub"></div>
             </div>
-            <div class="sync-drop-title"></div>
-            ${secondary ? '<div class="sync-drop-body"></div>' : ''}
-            <div class="sync-drop-acts">
-              ${it.url ? '<button type="button" class="dl-act-btn s-open">Open Tab</button>' : ''}
+            <div class="sync-recent-acts">
+              <button type="button" class="dl-act-btn s-open">Open</button>
+            </div>
+          `;
+          const img = row.querySelector('.sync-recent-ico img');
+          if (img && icoSrc) {
+            img.src = icoSrc;
+            img.onerror = () => swapImgToM3Logo(img, 15, '');
+          }
+          row.querySelector('.sync-recent-title').textContent = rt.title || host || rt.url;
+          row.querySelector('.sync-recent-sub').textContent = host || rt.url;
+          row.querySelector('.s-open').addEventListener('click', () => send({ type: 'syncOpenUrl', url: rt.url }));
+          frag.appendChild(row);
+        });
+      }
+
+      if (topDrops.length) {
+        const hdr = document.createElement('div');
+        hdr.className = 'sync-micro-hdr';
+        hdr.textContent = `Recent Clips & Drops (${drops.length})`;
+        frag.appendChild(hdr);
+
+        topDrops.forEach((it) => {
+          const dt = String(it.dropType || 'link').toLowerCase();
+          const badgeLbl = dt === 'clipboard' ? 'Clip' : (dt === 'tab' ? 'Tab' : (dt === 'text' ? 'Note' : 'Link'));
+          const primary = (dt === 'clipboard' || dt === 'text') ? (it.text || it.title || it.url || '') : (it.title || it.url || it.text || '');
+          const sub = `${it.fromName || 'Device'} · ${badgeLbl}`;
+          const canDl = !!(it.url && isOvDownloadableUrl(it.url));
+
+          const row = document.createElement('div');
+          row.className = 'sync-recent-row';
+          row.innerHTML = `
+            <div class="sync-recent-meta">
+              <div class="sync-recent-title"></div>
+              <div class="sync-recent-sub"></div>
+            </div>
+            <div class="sync-recent-acts">
+              ${it.url ? '<button type="button" class="dl-act-btn s-open">Open</button>' : ''}
+              ${canDl ? '<button type="button" class="dl-act-btn s-dl8x" title="Download 8x">8×</button>' : ''}
               <button type="button" class="dl-act-btn s-copy">Copy</button>
             </div>
           `;
-          card.querySelector('.sync-drop-title').textContent = primaryText;
-          if (secondary) card.querySelector('.sync-drop-body').textContent = secondary;
-          card.querySelector('.del').addEventListener('click', () => send({ type: 'syncDeleteDrop', id: it.id }));
-          const ob = card.querySelector('.s-open');
+          row.querySelector('.sync-recent-title').textContent = primary;
+          row.querySelector('.sync-recent-sub').textContent = sub;
+          const ob = row.querySelector('.s-open');
           if (ob) ob.addEventListener('click', () => send({ type: 'syncOpenUrl', url: it.url }));
-          const cb = card.querySelector('.s-copy');
+          const dl = row.querySelector('.s-dl8x');
+          if (dl) dl.addEventListener('click', () => send({ type: 'syncDownloadDropUrl', url: it.url }));
+          const cb = row.querySelector('.s-copy');
           cb.addEventListener('click', () => {
-            send({ type: 'syncCopyText', text: it.url || it.text || it.title || '' });
-            cb.textContent = 'Copied!';
+            send({ type: 'syncCopyDrop', text: it.url || it.text || it.title || '' });
+            cb.textContent = '✓';
             setTimeout(() => { cb.textContent = 'Copy'; }, 1000);
           });
-          syncFeedList.appendChild(card);
+          frag.appendChild(row);
         });
       }
 
-      const rtabs = Array.isArray(s.remoteTabs) ? s.remoteTabs : [];
-      syncRtabsCount.textContent = String(rtabs.length);
-      syncRtabsList.innerHTML = '';
-      if (!rtabs.length) {
-        syncRtabsList.innerHTML = '<div class="empty-msg">No open mobile tabs synced yet.<br>Open websites in <strong>dejavu Mobile</strong> and they appear here!</div>';
-      } else {
-        rtabs.forEach((rt) => {
-          const row = document.createElement('div');
-          row.className = 'hist-row';
-          row.innerHTML = `<div class="hist-meta"><div class="hist-title"></div><div class="hist-url"></div></div>`;
-          row.querySelector('.hist-title').textContent = rt.title || rt.url;
-          row.querySelector('.hist-url').textContent = rt.url;
-          row.addEventListener('click', () => send({ type: 'syncOpenUrl', url: rt.url }));
-          syncRtabsList.appendChild(row);
-        });
-      }
-      setSyncSubtab(syncActiveTab);
+      syncRecentList.appendChild(frag);
     }
 
     // Mode 14: Incoming Drop HUD Toast
@@ -4017,7 +4046,7 @@
     stDismiss.addEventListener('click', () => send({ type: 'syncDismissToast' }));
     stCopy.addEventListener('click', () => {
       if (!latestToastDrop) return;
-      send({ type: 'syncCopyText', text: latestToastDrop.url || latestToastDrop.text || latestToastDrop.title || '' });
+      send({ type: 'syncCopyDrop', text: latestToastDrop.url || latestToastDrop.text || latestToastDrop.title || '' });
     });
     stOpen.addEventListener('click', () => {
       if (latestToastDrop && latestToastDrop.url) send({ type: 'syncOpenUrl', url: latestToastDrop.url });
@@ -4026,8 +4055,12 @@
     function renderSyncToast(drop) {
       latestToastDrop = drop || {};
       const from = drop.fromName || 'Mobile';
-      const isText = drop.dropType === 'text' && !drop.url;
-      stTitle.textContent = isText ? `Text from ${from}` : `From ${from}: ${drop.title || 'Shared Tab'}`;
+      const dt = String(drop.dropType || '').toLowerCase();
+      const isClip = dt === 'clipboard';
+      const isText = (dt === 'text' || isClip) && !drop.url;
+      stTitle.textContent = isClip
+        ? `Clipboard from ${from}`
+        : (isText ? `Note from ${from}` : `From ${from}: ${drop.title || 'Shared Tab'}`);
       stSub.textContent = isText ? (drop.text || '') : (drop.url || '');
       stOpen.classList.toggle('hidden', !drop.url);
     }
@@ -4045,6 +4078,8 @@
     document.getElementById('mn-profiles').addEventListener('click', () => send({ type: 'openProfiles' }));
     document.getElementById('mn-downloads').addEventListener('click', () => send({ type: 'openDlManager', tab: 'all' }));
     document.getElementById('mn-history').addEventListener('click', () => send({ type: 'openHistory' }));
+    const mnLink = document.getElementById('mn-link');
+    if (mnLink) mnLink.addEventListener('click', () => send({ type: 'openLinkHub' }));
     const mnExtensions = document.getElementById('mn-extensions');
     if (mnExtensions) mnExtensions.addEventListener('click', () => send({ type: 'openExtensions' }));
     document.getElementById('mn-devtools').addEventListener('click', () => send({ type: 'openDevTools' }));
@@ -4059,7 +4094,7 @@
     function renderMenuPanel(d) {
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '4.8.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '4.9.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');
@@ -4253,7 +4288,7 @@
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && currentOverlayMode === 'extensions') {
+      if (e.key === 'Escape' && (currentOverlayMode === 'extensions' || currentOverlayMode === 'sync' || currentOverlayMode === 'sidebar' || currentOverlayMode === 'menu')) {
         e.preventDefault();
         send({ type: 'closePanel' });
         return;

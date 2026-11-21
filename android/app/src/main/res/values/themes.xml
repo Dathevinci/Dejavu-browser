@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Dejavu" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.Dejavu" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/amethyst</item>
-        <item name="colorPrimaryVariant">@color/obsidian_surface</item>
+        <item name="colorOnPrimary">@color/m3_on_primary</item>
+        <item name="colorPrimaryContainer">@color/m3_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/amethyst_bright</item>
         <item name="colorSecondary">@color/emerald_mint</item>
+        <item name="colorSurface">@color/obsidian_bg</item>
+        <item name="colorOnSurface">@color/ink_primary</item>
         <item name="android:windowBackground">@color/obsidian_bg</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>

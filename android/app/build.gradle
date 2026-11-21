@@ -10,18 +10,24 @@ android {
         applicationId "com.dathevinci.dejavu"
         minSdk 26
         targetSdk 35
-        versionCode 420
-        versionName "4.2.0"
+        versionCode 430
+        versionName "4.3.0"
     }
 
     signingConfigs {
         release {
-            def ksPath = System.getenv("DEJAVU_KEYSTORE_PATH")
-            if (ksPath != null && file(ksPath).exists()) {
-                storeFile file(ksPath)
+            def envPath = System.getenv("DEJAVU_KEYSTORE_PATH")
+            def defaultKs = file("../keystore/dejavu-release.jks")
+            def ksFile = (envPath != null && !envPath.trim().isEmpty() && file(envPath).exists())
+                ? file(envPath)
+                : defaultKs
+            if (ksFile.exists()) {
+                storeFile ksFile
                 storePassword System.getenv("DEJAVU_KEYSTORE_PASS") ?: "dejavu2026"
                 keyAlias System.getenv("DEJAVU_KEY_ALIAS") ?: "dejavu"
                 keyPassword System.getenv("DEJAVU_KEY_PASS") ?: "dejavu2026"
+                enableV1Signing true
+                enableV2Signing true
             }
         }
     }
@@ -30,10 +36,10 @@ android {
         release {
             minifyEnabled false
             shrinkResources false
-            if (signingConfigs.release.storeFile != null) {
+            if (signingConfigs.release.storeFile != null && signingConfigs.release.storeFile.exists()) {
                 signingConfig signingConfigs.release
             } else {
-                signingConfig signingConfigs.debug
+                throw new GradleException("Persistent release keystore missing! Expected android/keystore/dejavu-release.jks or DEJAVU_KEYSTORE_PATH.")
             }
         }
         debug {

@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Pipes;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -43,7 +44,6 @@ namespace DejavuBrowser
         public string ThumbnailDataUrl;
         public int[] BaseRgb;
         public List<int[]> AccentPalette;
-        public string PaletteCapturedUrl;
         public WebView2 WebView;
         public bool CoreReady;
         public string PendingNavigateUrl;
@@ -98,12 +98,13 @@ namespace DejavuBrowser
         private WebView2 _shellView;
         private bool _shellReady;
 
-        // Lightweight reusable Liquid Glass overlay windows
+        // Lightweight reusable Material Design 3 overlay windows (0ms instant open, zero backdrop captures!)
         private OverlayPopup _popoverPopup;   // Auto-dismiss on click outside: Shield, VPN, Profiles, History
         private OverlayPopup _hudPopup;       // Non-stealing or explicit close: Find, Download, Update
         private OverlayPopup _suggestPopup;   // Never-activating Omnibox Suggestions dropdown (floats over webpages!)
         private System.Windows.Forms.Timer _downloadHideTimer;
         private System.Windows.Forms.Timer _vpnTelemetryTimer;
+        private System.Windows.Forms.Timer _statePushTimer;
         private string _activePopoverMode = "";
         private string _activeHudMode = "";
         private string _lastHiddenPopoverMode = "";
@@ -113,15 +114,6 @@ namespace DejavuBrowser
         private int _suggestSeq;
         private List<SuggestItem> _lastSuggestItems = new List<SuggestItem>();
         private int _suggestSelectedIndex = -1;
-        private string _suggestBackdropCache = "";
-        private Rectangle _suggestLastRect = Rectangle.Empty;
-
-        // Fast 1.4s JPEG viewport cache so switching VPN / Profile / History / Shield is 0ms instant!
-        private byte[] _cachedBackdropJpeg;
-        private int _cachedBackdropTabId = -1;
-        private bool _cachedBackdropIsShell;
-        private DateTime _cachedBackdropUtc = DateTime.MinValue;
-        private int _popoverBackdropSeq;
 
         private readonly List<BrowserTab> _tabs = new List<BrowserTab>();
         private readonly Stack<string> _closedTabUrls = new Stack<string>();
@@ -142,12 +134,12 @@ namespace DejavuBrowser
         private Rectangle _preFsBounds;
 
         private string _lastDownloadPath = "";
+        private string _activeToastTurboId = "";
+        private DateTime _lastToastUpdateUtc = DateTime.MinValue;
         private string _updateStatusText = "";
         private string _docStartScript;
         private string _floatingMediaScript;
         private readonly Dictionary<int, DateTime> _tabMediaPushUtc = new Dictionary<int, DateTime>();
-        private DateTime _lastPaletteCapture = DateTime.MinValue;
-        private bool _paletteCaptureBusy;
 
         private static readonly string[] OAuthHosts = new string[]
         {
@@ -182,22 +174,31 @@ namespace DejavuBrowser
             _sync.RemoteBookmarksReceived += OnSyncRemoteBookmarks;
             _sync.RemoteReadingReceived += OnSyncRemoteReading;
 
-            _turboDownloads = new TurboDownloadManager(SettingsStore.AppDataDir, OnTurboDownloadsChanged);
+            _turboDownloads = new TurboDownloadManager(SettingsStore.AppDataDir, OnTurboDownloadsChanged, GetTurboDownloadProxy);
 
             Text = "dejavu";
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.CenterScreen;
             Size = new Size(1380, 880);
             MinimumSize = new Size(760, 520);
-            BackColor = Color.FromArgb(7, 6, 13);
+            bool initialLight = (_settings != null && _settings.appearanceMode == "light");
+            BackColor = initialLight ? Color.FromArgb(247, 242, 250) : Color.FromArgb(20, 18, 24);
             DoubleBuffered = true;
 
             LoadEmbeddedIcon();
 
             _shellView = new WebView2();
-            _shellView.DefaultBackgroundColor = Color.FromArgb(7, 6, 13);
+            _shellView.DefaultBackgroundColor = BackColor;
             Controls.Add(_shellView);
             _favoritesBarHidden = _settings.favoritesBarHidden;
+
+            _statePushTimer = new System.Windows.Forms.Timer();
+            _statePushTimer.Interval = 40;
+            _statePushTimer.Tick += (s, e) =>
+            {
+                _statePushTimer.Stop();
+                if (!IsDisposed) PushFullStateToShell();
+            };
 
             _downloadHideTimer = new System.Windows.Forms.Timer();
             _downloadHideTimer.Interval = 9000;
@@ -269,6 +270,11 @@ namespace DejavuBrowser
                     _profiles.SaveActiveSettings(_settings);
                 }
                 catch { }
+                if (_statePushTimer != null)
+                {
+                    _statePushTimer.Stop();
+                    _statePushTimer.Dispose();
+                }
                 if (_vpnTelemetryTimer != null)
                 {
                     _vpnTelemetryTimer.Stop();
@@ -1114,12 +1120,6 @@ namespace DejavuBrowser
 
         private void ActivateTab(int tabId)
         {
-            BrowserTab prev = GetActiveTab();
-            if (prev != null && prev.Id != tabId && !prev.IsNewTab && prev.CoreReady)
-            {
-                Task ignoreThumb = CaptureTabThumbnailAsync(prev);
-            }
-
             BrowserTab tab = FindTab(tabId);
             if (tab == null) return;
             _activeTabId = tabId;
@@ -1143,11 +1143,6 @@ namespace DejavuBrowser
 
             LayoutViews();
             PushFullStateToShell();
-
-            if (!tab.IsNewTab && tab.CoreReady && !string.Equals(tab.PaletteCapturedUrl, tab.Url, StringComparison.Ordinal))
-            {
-                CaptureActiveSitePaletteAsync(tab, true);
-            }
         }
 
         private void RecordClosedTabUrl(string url)
@@ -1336,7 +1331,8 @@ namespace DejavuBrowser
             CoreWebView2Environment envForTab = _activeProfileEnv;
 
             WebView2 wv = new WebView2();
-            wv.DefaultBackgroundColor = Color.White;
+            bool isLightTheme = (_settings != null && _settings.appearanceMode == "light");
+            wv.DefaultBackgroundColor = isLightTheme ? Color.White : Color.FromArgb(20, 18, 24);
             wv.Visible = (tab.Id == _activeTabId && !tab.IsNewTab);
             int topH = TopBarHeightPx;
             wv.Bounds = new Rectangle(0, topH, Math.Max(100, ClientSize.Width), Math.Max(100, ClientSize.Height - topH));
@@ -1387,7 +1383,7 @@ namespace DejavuBrowser
                         "window.__dejavuAdblockPaused = " + (paused ? "true" : "false") + ";" +
                         "window.__dejavuFloatingBtnEnabled = " + (floatBtnOn ? "true" : "false") + ";" +
                         "if(window.__dejavuSetFloatingBtnEnabled)window.__dejavuSetFloatingBtnEnabled(" + (floatBtnOn ? "true" : "false") + ");");
-                    PushFullStateToShell();
+                    SchedulePushFullStateToShell();
                 };
 
                 core.WebResourceResponseReceived += (s, e) => OnTabWebResourceResponseReceived(tab, e);
@@ -1395,7 +1391,7 @@ namespace DejavuBrowser
                 core.SourceChanged += (s, e) =>
                 {
                     tab.Url = core.Source;
-                    PushFullStateToShell();
+                    SchedulePushFullStateToShell();
                 };
 
                 core.DOMContentLoaded += (s, e) =>
@@ -1414,12 +1410,8 @@ namespace DejavuBrowser
                     {
                         _profiles.RecordHistory(tab.Url, tab.Title, tab.Favicon);
                     }
-                    PushFullStateToShell();
+                    SchedulePushFullStateToShell();
                     PushSniffedMediaToTabWidget(tab);
-                    if (tab.Id == _activeTabId && !tab.IsNewTab)
-                    {
-                        CaptureActiveSitePaletteAsync(tab, true);
-                    }
                 };
 
                 core.DocumentTitleChanged += (s, e) =>
@@ -1430,22 +1422,29 @@ namespace DejavuBrowser
                     {
                         Text = (string.IsNullOrEmpty(tab.Title) ? FormatDisplayUrl(tab.Url) : tab.Title) + " — dejavu";
                     }
-                    PushFullStateToShell();
+                    SchedulePushFullStateToShell();
                 };
 
                 core.FaviconChanged += (s, e) =>
                 {
                     tab.Favicon = core.FaviconUri ?? "";
                     _profiles.UpdateLatestHistoryMeta(tab.Url, tab.Title, tab.Favicon);
-                    PushFullStateToShell();
+                    SchedulePushFullStateToShell();
                 };
 
-                core.HistoryChanged += (s, e) => PushFullStateToShell();
-                core.IsDocumentPlayingAudioChanged += (s, e) => PushFullStateToShell();
-                core.IsMutedChanged += (s, e) => PushFullStateToShell();
+                core.HistoryChanged += (s, e) => SchedulePushFullStateToShell();
+                core.IsDocumentPlayingAudioChanged += (s, e) => SchedulePushFullStateToShell();
+                core.IsMutedChanged += (s, e) => SchedulePushFullStateToShell();
                 core.ContainsFullScreenElementChanged += (s, e) => SetHtmlFullscreen(core.ContainsFullScreenElement);
                 core.NewWindowRequested += (s, e) => HandleNewWindowRequested(envForTab, e);
-                core.DownloadStarting += (s, e) => HandleDownloadStarting(e);
+                core.DownloadStarting += (s, e) => HandleDownloadStarting(tab, e);
+                core.PermissionRequested += (s, e) =>
+                {
+                    if (e.PermissionKind == CoreWebView2PermissionKind.MultipleAutomaticDownloads)
+                    {
+                        e.State = CoreWebView2PermissionState.Allow;
+                    }
+                };
 
                 if (!string.IsNullOrEmpty(tab.PendingNavigateUrl))
                 {
@@ -1563,12 +1562,22 @@ namespace DejavuBrowser
             return false;
         }
 
+        private IWebProxy GetTurboDownloadProxy()
+        {
+            if (_proxyBridge != null && _proxyBridge.VpnEnabled && _proxyBridge.ListenPort > 0)
+            {
+                return new WebProxy("http://127.0.0.1:" + _proxyBridge.ListenPort, true);
+            }
+            return null;
+        }
+
         private void OnTabWebResourceResponseReceived(BrowserTab tab, CoreWebView2WebResourceResponseReceivedEventArgs e)
         {
             try
             {
                 if (_turboDownloads == null || tab == null || e == null || e.Request == null || e.Response == null) return;
-                if (e.Response.StatusCode < 200 || e.Response.StatusCode >= 300) return;
+                int status = e.Response.StatusCode;
+                if (status < 200 || status >= 300) return;
                 string uri = e.Request.Uri;
                 if (string.IsNullOrEmpty(uri)) return;
                 string mime = "";
@@ -1579,13 +1588,20 @@ namespace DejavuBrowser
                     {
                         if (e.Response.Headers.Contains("Content-Type"))
                             mime = e.Response.Headers.GetHeader("Content-Type") ?? "";
-                        if (e.Response.Headers.Contains("Content-Length"))
+                        if (status == 206 && e.Response.Headers.Contains("Content-Range"))
+                        {
+                            long totalFromRange = TurboDownloadManager.ParseContentRangeTotal(e.Response.Headers.GetHeader("Content-Range"));
+                            if (totalFromRange > 0) cl = totalFromRange;
+                        }
+                        if (cl <= 0 && e.Response.Headers.Contains("Content-Length"))
                             long.TryParse(e.Response.Headers.GetHeader("Content-Length"), out cl);
                     }
                 }
                 catch { }
-                _turboDownloads.RecordSniffedMedia(tab.Id, uri, mime, cl, "", tab.Title ?? "");
-                PushSniffedMediaToTabWidget(tab);
+                if (_turboDownloads.RecordSniffedMedia(tab.Id, uri, mime, cl, "", tab.Title ?? ""))
+                {
+                    PushSniffedMediaToTabWidget(tab);
+                }
             }
             catch { }
         }
@@ -1596,7 +1612,7 @@ namespace DejavuBrowser
             if (_settings != null && _settings.hideFloatingMediaButton) return;
             DateTime now = DateTime.UtcNow;
             DateTime last;
-            if (_tabMediaPushUtc.TryGetValue(tab.Id, out last) && (now - last).TotalMilliseconds < 420)
+            if (_tabMediaPushUtc.TryGetValue(tab.Id, out last) && (now - last).TotalMilliseconds < 320)
             {
                 return;
             }
@@ -1626,7 +1642,21 @@ namespace DejavuBrowser
                     string fn = msg.ContainsKey("fileName") ? Convert.ToString(msg["fileName"]) : "";
                     if (!string.IsNullOrWhiteSpace(u))
                     {
-                        EnqueueFromActiveTabContextAsync(u, fn);
+                        EnqueueFromTabContextAsync(tab, u, fn);
+                    }
+                }
+                else if (action == "sniffed")
+                {
+                    string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : "";
+                    string mime = msg.ContainsKey("mime") ? Convert.ToString(msg["mime"]) : "";
+                    string title = msg.ContainsKey("title") ? Convert.ToString(msg["title"]) : "";
+                    string quality = msg.ContainsKey("quality") ? Convert.ToString(msg["quality"]) : "";
+                    if (_turboDownloads != null && tab != null && !string.IsNullOrWhiteSpace(u))
+                    {
+                        if (_turboDownloads.RecordSniffedMedia(tab.Id, u, mime, 0, title, tab.Title ?? "", quality))
+                        {
+                            PushSniffedMediaToTabWidget(tab);
+                        }
                     }
                 }
                 else if (action == "openManager")
@@ -1649,6 +1679,24 @@ namespace DejavuBrowser
                     if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "downloads")
                     {
                         _popoverPopup.UpdateState(BuildDownloadsPayloadJson(null));
+                    }
+                    if (!string.IsNullOrEmpty(_activeToastTurboId) && _turboDownloads != null)
+                    {
+                        TurboDownloadEntry te = _turboDownloads.FindEntry(_activeToastTurboId);
+                        if (te != null)
+                        {
+                            _lastDownloadPath = te.SavePath;
+                            bool terminal = (te.Status == "completed" || te.Status == "failed" || te.Status == "cancelled");
+                            if (!_dlManagerOpen && (terminal || (DateTime.UtcNow - _lastToastUpdateUtc).TotalMilliseconds >= 320))
+                            {
+                                _lastToastUpdateUtc = DateTime.UtcNow;
+                                string toastState = te.Status == "completed"
+                                    ? "completed"
+                                    : (te.Status == "failed" || te.Status == "cancelled" ? "interrupted" : "progressing");
+                                ShowDownloadToast(te.FileName, te.SavePath, te.ReceivedBytes, te.TotalBytes, toastState);
+                            }
+                            if (terminal) _activeToastTurboId = "";
+                        }
                     }
                 }));
             }
@@ -1697,19 +1745,26 @@ namespace DejavuBrowser
             string js =
                 "(function(){try{" +
                 "var out=[];var seen={};" +
-                "function add(u,cat,title,mime){if(!u||typeof u!=='string')return;try{u=new URL(u,location.href).href;}catch(e){return;}" +
-                "if(!/^https?:\\/\\//i.test(u)||seen[u])return;seen[u]=1;out.push({url:u,category:cat,title:(title||'').slice(0,110),mime:mime||''});}" +
-                "document.querySelectorAll('video,video source').forEach(function(el){add(el.currentSrc||el.src,'video',document.title+' (Video)',el.type||'video/mp4');});" +
-                "document.querySelectorAll('audio,audio source').forEach(function(el){add(el.currentSrc||el.src,'audio',document.title+' (Audio)',el.type||'audio/mpeg');});" +
+                "function add(u,cat,title,mime,qual,sz){if(!u||typeof u!=='string')return;try{u=new URL(u,location.href).href;}catch(e){return;}" +
+                "if(!/^https?:\\/\\//i.test(u)||seen[u])return;seen[u]=1;out.push({url:u,category:cat,title:(title||'').slice(0,110),mime:mime||'',quality:qual||'',size:Number(sz||0)});}" +
+                "document.querySelectorAll('video,video source').forEach(function(el){add(el.currentSrc||el.src,'video',document.title+' (Video)',el.type||'video/mp4','',0);});" +
+                "document.querySelectorAll('audio,audio source').forEach(function(el){add(el.currentSrc||el.src,'audio',document.title+' (Audio)',el.type||'audio/mpeg','',0);});" +
+                "try{var mp=document.getElementById('movie_player');var pr=(mp&&typeof mp.getPlayerResponse==='function')?mp.getPlayerResponse():window.ytInitialPlayerResponse;" +
+                "if(pr&&pr.streamingData){var vt=(pr.videoDetails&&pr.videoDetails.title)||document.title;var sd=pr.streamingData;" +
+                "if(Array.isArray(sd.formats))sd.formats.forEach(function(f){if(f&&f.url)add(f.url,'video',vt+' ('+(f.qualityLabel||'MP4')+')',f.mimeType||'video/mp4',f.qualityLabel||'MP4',f.contentLength||0);});" +
+                "if(sd.hlsManifestUrl)add(sd.hlsManifestUrl,'video',vt+' (HLS Stream)','application/vnd.apple.mpegurl','HLS',0);" +
+                "if(Array.isArray(sd.adaptiveFormats))sd.adaptiveFormats.forEach(function(f){if(f&&f.url){var mt=(f.mimeType||'').toLowerCase();var a=mt.indexOf('audio/')===0;add(f.url,a?'audio':'video',vt+' ('+(f.qualityLabel||(a?'Audio':'Video'))+')',f.mimeType||'',f.qualityLabel||(a?'Audio':'Video'),f.contentLength||0);}});}}catch(e){}" +
+                "try{if(performance&&performance.getEntriesByType){var res=performance.getEntriesByType('resource');var mrx=/\\.(m3u8|mp4|webm|m4v|mkv|mov|mp3|m4a)(\\?|#|$)|\\/videoplayback\\b/i;" +
+                "for(var i=0;i<res.length;i++){var n=res[i].name||'';if(mrx.test(n)&&!/\\.(ts|m4s|vtt|srt)(\\?|#|$)/i.test(n)){add(n,/\\.(mp3|m4a)(\\?|#|$)/i.test(n)?'audio':'video',document.title,/\\.m3u8/i.test(n)?'application/vnd.apple.mpegurl':'',/\\.m3u8/i.test(n)?'HLS':'',res[i].transferSize||0);}}}}catch(e){}" +
                 "var rx=/\\.(mp4|webm|mkv|mov|m3u8|mp3|m4a|wav|flac|ogg|pdf|docx?|xlsx?|pptx?|epub|zip|rar|7z|tar|gz|exe|msi|apk|iso|dmg)(\\?|#|$)/i;" +
                 "document.querySelectorAll('a[href]').forEach(function(a){var h=a.href||'';var m=h.match(rx);if(m){" +
                 "var ext=m[1].toLowerCase();var c='document';" +
                 "if(/^(mp4|webm|mkv|mov|m3u8)$/.test(ext))c='video';" +
                 "else if(/^(mp3|m4a|wav|flac|ogg)$/.test(ext))c='audio';" +
                 "else if(/^(zip|rar|7z|tar|gz|exe|msi|apk|iso|dmg)$/.test(ext))c='archive';" +
-                "add(h,c,(a.textContent||a.download||'').trim(),ext);}});" +
+                "add(h,c,(a.textContent||a.download||'').trim(),ext,'',0);}});" +
                 "document.querySelectorAll('img[src]').forEach(function(im){if((im.naturalWidth||0)>=360&&(im.naturalHeight||0)>=240){" +
-                "add(im.currentSrc||im.src,'image',im.alt||document.title,'image/jpeg');}});" +
+                "add(im.currentSrc||im.src,'image',im.alt||document.title,'image/jpeg','',0);}});" +
                 "return JSON.stringify(out.slice(0,55));}catch(e){return '[]';}})();";
             try
             {
@@ -1728,6 +1783,9 @@ namespace DejavuBrowser
                     string c = d.ContainsKey("category") ? Convert.ToString(d["category"]) : "other";
                     string t = d.ContainsKey("title") ? Convert.ToString(d["title"]) : "";
                     string mm = d.ContainsKey("mime") ? Convert.ToString(d["mime"]) : "";
+                    string q = d.ContainsKey("quality") ? Convert.ToString(d["quality"]) : "";
+                    long sz = 0;
+                    if (d.ContainsKey("size")) long.TryParse(Convert.ToString(d["size"]), out sz);
                     if (string.IsNullOrEmpty(u)) continue;
                     string fn = "";
                     try
@@ -1744,32 +1802,39 @@ namespace DejavuBrowser
                         FileName = fn,
                         Category = c,
                         Mime = mm,
-                        SizeBytes = 0,
+                        Quality = q,
+                        SizeBytes = sz,
                         SourceTabTitle = tab.Title ?? ""
                     });
                 }
                 if (parsed.Count > 0)
                 {
                     _turboDownloads.MergeDomMediaItems(tab.Id, parsed);
+                    PushSniffedMediaToTabWidget(tab);
                 }
             }
             catch { }
         }
 
-        private async void EnqueueFromActiveTabContextAsync(string url, string suggestedName)
+        private void EnqueueFromActiveTabContextAsync(string url, string suggestedName)
+        {
+            EnqueueFromTabContextAsync(GetActiveTab(), url, suggestedName);
+        }
+
+        private async void EnqueueFromTabContextAsync(BrowserTab sourceTab, string url, string suggestedName)
         {
             if (_turboDownloads == null || string.IsNullOrWhiteSpace(url)) return;
             string referer = "";
             string ua = "";
             string cookieHeader = "";
-            BrowserTab active = GetActiveTab();
-            if (active != null && !active.IsNewTab && active.CoreReady && active.WebView != null && !active.WebView.IsDisposed)
+            BrowserTab ctx = sourceTab ?? GetActiveTab();
+            if (ctx != null && !ctx.IsNewTab && ctx.CoreReady && ctx.WebView != null && !ctx.WebView.IsDisposed)
             {
-                referer = active.Url ?? "";
-                try { ua = active.WebView.CoreWebView2.Settings.UserAgent ?? ""; } catch { }
+                referer = ctx.Url ?? "";
+                try { ua = ctx.WebView.CoreWebView2.Settings.UserAgent ?? ""; } catch { }
                 try
                 {
-                    var cookies = await active.WebView.CoreWebView2.CookieManager.GetCookiesAsync(url);
+                    var cookies = await ctx.WebView.CoreWebView2.CookieManager.GetCookiesAsync(url);
                     if (cookies != null && cookies.Count > 0)
                     {
                         List<string> parts = new List<string>();
@@ -1786,6 +1851,8 @@ namespace DejavuBrowser
             if (entry != null)
             {
                 _lastDownloadPath = entry.SavePath;
+                _activeToastTurboId = entry.Id;
+                _lastToastUpdateUtc = DateTime.UtcNow;
                 if (!_dlManagerOpen)
                 {
                     ShowDownloadToast(entry.FileName, entry.SavePath, 0, entry.TotalBytes, "progressing");
@@ -1793,7 +1860,7 @@ namespace DejavuBrowser
             }
         }
 
-        private void HandleDownloadStarting(CoreWebView2DownloadStartingEventArgs e)
+        private void HandleDownloadStarting(BrowserTab tab, CoreWebView2DownloadStartingEventArgs e)
         {
             try
             {
@@ -1802,20 +1869,21 @@ namespace DejavuBrowser
                 if (string.IsNullOrEmpty(origName)) origName = "download";
 
                 // Route all HTTP/HTTPS downloads through our 8-thread AntDM-style Turbo Download Manager!
+                // (blob: and data: downloads stay on native WebView2 so browser-generated files never break.)
                 if (_turboDownloads != null &&
                     (dlUri.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
                      dlUri.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
                 {
                     e.Cancel = true;
                     e.Handled = true;
-                    EnqueueFromActiveTabContextAsync(dlUri, origName);
+                    EnqueueFromTabContextAsync(tab, dlUri, origName);
                     return;
                 }
 
                 e.Handled = true;
-                string downloadsDir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                    "Downloads");
+                string downloadsDir = (_turboDownloads != null && !string.IsNullOrEmpty(_turboDownloads.DownloadsDirectory))
+                    ? _turboDownloads.DownloadsDirectory
+                    : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
                 Directory.CreateDirectory(downloadsDir);
 
                 string target = Path.Combine(downloadsDir, origName);
@@ -1871,209 +1939,7 @@ namespace DejavuBrowser
         }
 
         // =====================================================================
-        // Site-Adaptive Live Palette & Backdrop Capture for Liquid Glass Overlays
-        // =====================================================================
-        private async void CaptureActiveSitePaletteAsync(BrowserTab tab, bool force)
-        {
-            if (tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed) return;
-            if (_paletteCaptureBusy) return;
-            if (!force && (DateTime.UtcNow - _lastPaletteCapture).TotalMilliseconds < 350) return;
-
-            _paletteCaptureBusy = true;
-            _lastPaletteCapture = DateTime.UtcNow;
-
-            try
-            {
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    await tab.WebView.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Jpeg, ms);
-                    byte[] imgBytes = ms.ToArray();
-
-                    // Run pixel color extraction completely off the UI thread so animations stay 120fps smooth!
-                    var extracted = await Task.Run(() =>
-                    {
-                        using (MemoryStream bgMs = new MemoryStream(imgBytes))
-                        using (Bitmap bmp = new Bitmap(bgMs))
-                        {
-                            int sampleW = Math.Max(16, bmp.Width - 26);
-                            int sampleH = Math.Min(56, Math.Max(4, bmp.Height));
-                            long rSum = 0, gSum = 0, bSum = 0;
-                            int count = 0;
-                            List<int[]> acc = new List<int[]>();
-
-                            int cols = 10;
-                            for (int c = 0; c < cols; c++)
-                            {
-                                int x = Math.Min(bmp.Width - 1, (int)((c + 0.5) * sampleW / cols));
-                                int zr = 0, zg = 0, zb = 0, zc = 0;
-                                for (int row = 0; row < 3; row++)
-                                {
-                                    int y = Math.Min(bmp.Height - 1, (row * sampleH) / 3);
-                                    Color px = bmp.GetPixel(x, y);
-                                    zr += px.R; zg += px.G; zb += px.B; zc++;
-                                }
-                                zr /= zc; zg /= zc; zb /= zc;
-                                rSum += zr; gSum += zg; bSum += zb; count++;
-
-                                if (c % 2 == 1)
-                                {
-                                    int maxC = Math.Max(zr, Math.Max(zg, zb));
-                                    int minC = Math.Min(zr, Math.Min(zg, zb));
-                                    if (maxC - minC >= 24) acc.Add(new int[] { zr, zg, zb });
-                                }
-                            }
-
-                            int br = (int)(rSum / Math.Max(1, count));
-                            int bg = (int)(gSum / Math.Max(1, count));
-                            int bb = (int)(bSum / Math.Max(1, count));
-                            double lum = (0.2126 * br + 0.7152 * bg + 0.0722 * bb) / 255.0;
-                            bool light = lum > 0.56;
-
-                            if (acc.Count == 0)
-                            {
-                                acc.Add(light ? new int[] { 146, 122, 238 } : new int[] { 132, 94, 236 });
-                                acc.Add(light ? new int[] { 96, 178, 245 } : new int[] { 76, 162, 228 });
-                            }
-
-                            string thumbDataUrl = "";
-                            try
-                            {
-                                using (Bitmap small = new Bitmap(320, 200))
-                                using (Graphics g = Graphics.FromImage(small))
-                                {
-                                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
-                                    g.DrawImage(bmp, new Rectangle(0, 0, 320, 200));
-                                    using (MemoryStream tms = new MemoryStream())
-                                    {
-                                        small.Save(tms, ImageFormat.Jpeg);
-                                        thumbDataUrl = "data:image/jpeg;base64," + Convert.ToBase64String(tms.ToArray());
-                                    }
-                                }
-                            }
-                            catch { }
-
-                            return new Tuple<bool, int[], List<int[]>, string>(light, new int[] { br, bg, bb }, acc, thumbDataUrl);
-                        }
-                    });
-
-                    tab.IsLight = extracted.Item1;
-                    tab.BaseRgb = extracted.Item2;
-                    tab.AccentPalette = extracted.Item3;
-                    tab.PaletteCapturedUrl = tab.Url;
-                    if (!string.IsNullOrEmpty(extracted.Item4))
-                    {
-                        tab.ThumbnailDataUrl = extracted.Item4;
-                    }
-
-                    if (tab.Id == _activeTabId && !tab.IsNewTab && !IsDisposed)
-                    {
-                        PushPaletteToShell(tab);
-                    }
-                }
-            }
-            catch { }
-            finally
-            {
-                _paletteCaptureBusy = false;
-            }
-        }
-
-        private string TryCropCachedBackdrop(Rectangle clientRect, bool captureShell, int activeId, bool isLight)
-        {
-            if (_cachedBackdropJpeg == null ||
-                _cachedBackdropTabId != activeId ||
-                _cachedBackdropIsShell != captureShell ||
-                (DateTime.UtcNow - _cachedBackdropUtc).TotalMilliseconds > 1400)
-            {
-                return null;
-            }
-            int topOffset = captureShell ? 0 : TopBarHeightPx;
-            return CropJpegBytesToDataUrl(_cachedBackdropJpeg, clientRect, topOffset, isLight);
-        }
-
-        private static string CropJpegBytesToDataUrl(byte[] jpegBytes, Rectangle clientRect, int topOffset, bool isLight)
-        {
-            try
-            {
-                using (MemoryStream bgMs = new MemoryStream(jpegBytes))
-                using (Bitmap full = new Bitmap(bgMs))
-                {
-                    int rx = Math.Max(0, Math.Min(full.Width - 1, clientRect.X));
-                    int ry = Math.Max(0, Math.Min(full.Height - 1, clientRect.Y - topOffset));
-                    int rw = Math.Max(1, Math.Min(full.Width - rx, clientRect.Width));
-                    int rh = Math.Max(1, Math.Min(full.Height - ry, clientRect.Height));
-
-                    using (Bitmap crop = new Bitmap(clientRect.Width, clientRect.Height))
-                    using (Graphics g = Graphics.FromImage(crop))
-                    {
-                        g.Clear(isLight ? Color.FromArgb(245, 244, 250) : Color.FromArgb(12, 10, 22));
-                        g.DrawImage(full, new Rectangle(0, 0, rw, rh), new Rectangle(rx, ry, rw, rh), GraphicsUnit.Pixel);
-                        using (MemoryStream outMs = new MemoryStream())
-                        {
-                            crop.Save(outMs, ImageFormat.Jpeg);
-                            return "data:image/jpeg;base64," + Convert.ToBase64String(outMs.ToArray());
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                return "";
-            }
-        }
-
-        private async Task<string> CaptureBackdropCropAsync(Rectangle clientRect)
-        {
-            BrowserTab tab = GetActiveTab();
-            bool captureShell = (tab == null || tab.IsNewTab);
-            int tabId = tab != null ? tab.Id : -1;
-            WebView2 sourceWv = captureShell ? _shellView : tab.WebView;
-            if (sourceWv == null || sourceWv.IsDisposed || sourceWv.CoreWebView2 == null) return "";
-
-            int topOffset = captureShell ? 0 : TopBarHeightPx;
-            bool isLight = GetEffectiveIsLight(tab, captureShell);
-
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tabId, isLight);
-            if (cached != null) return cached;
-
-            try
-            {
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    await sourceWv.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Jpeg, ms);
-                    byte[] jpegBytes = ms.ToArray();
-                    _cachedBackdropJpeg = jpegBytes;
-                    _cachedBackdropTabId = tabId;
-                    _cachedBackdropIsShell = captureShell;
-                    _cachedBackdropUtc = DateTime.UtcNow;
-
-                    return await Task.Run(() => CropJpegBytesToDataUrl(jpegBytes, clientRect, topOffset, isLight));
-                }
-            }
-            catch
-            {
-                return "";
-            }
-        }
-
-        private async void StreamBackdropToPopupAsync(OverlayPopup popup, Rectangle clientRect, string expectedPopoverMode)
-        {
-            int seq = ++_popoverBackdropSeq;
-            string dataUrl = await CaptureBackdropCropAsync(clientRect);
-            if (IsDisposed || string.IsNullOrEmpty(dataUrl) || popup == null || !popup.IsPopupOpen) return;
-            if (!string.IsNullOrEmpty(expectedPopoverMode) && _activePopoverMode != expectedPopoverMode) return;
-            if (!string.IsNullOrEmpty(expectedPopoverMode) && seq != _popoverBackdropSeq) return;
-
-            var patch = new Dictionary<string, object>
-            {
-                { "mode", "backdrop" },
-                { "backdrop", dataUrl }
-            };
-            popup.UpdateState(_json.Serialize(patch));
-        }
-
-        // =====================================================================
-        // Floating Native Windows-11-Rounded Liquid Glass Popovers (Zero-Lag Instant Open!)
+        // Floating Native Windows-11-Rounded Material Design 3 Popovers (0ms Instant Open, 0% CPU!)
         // =====================================================================
         private void ShowShieldPopoverAt(int anchorRightCss)
         {
@@ -2097,10 +1963,7 @@ namespace DejavuBrowser
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
 
-            Rectangle clientRect = new Rectangle(x, y, popW, popH);
             bool isLight = GetEffectiveIsLight(tab, captureShell);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, isLight);
-
             string host = (tab != null && !tab.IsNewTab) ? AdBlocker.ExtractHost(tab.Url) : "";
             bool activeForSite = _adBlocker.IsActiveForHost(host);
 
@@ -2109,7 +1972,7 @@ namespace DejavuBrowser
                 { "mode", "shield" },
                 { "isLight", isLight },
                 { "accentColor", _settings.accentColor ?? "amethyst" },
-                { "backdrop", cached ?? "" },
+                { "backdrop", "" },
                 { "host", host },
                 { "tabBlocked", tab != null ? tab.BlockedCount : 0 },
                 { "totalBlocked", _adBlocker.TotalBlocked },
@@ -2123,7 +1986,6 @@ namespace DejavuBrowser
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), _json.Serialize(payload), true);
             SyncVpnTelemetryTimer();
-            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "shield");
         }
 
         private void ShowProfilesPopoverAt(int anchorRightCss)
@@ -2145,15 +2007,9 @@ namespace DejavuBrowser
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
 
-            Rectangle clientRect = new Rectangle(x, y, popW, popH);
-            BrowserTab tab = GetActiveTab();
-            bool captureShell = (tab == null || tab.IsNewTab);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, GetEffectiveIsLight(tab, captureShell));
-
             Point screenPt = PointToScreen(new Point(x, y));
-            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildProfilesPayloadJson(cached ?? ""), true);
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildProfilesPayloadJson(""), true);
             SyncVpnTelemetryTimer();
-            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "profiles");
         }
 
         private string BuildProfilesPayloadJson(string backdrop)
@@ -2202,15 +2058,9 @@ namespace DejavuBrowser
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
 
-            Rectangle clientRect = new Rectangle(x, y, popW, popH);
-            BrowserTab tab = GetActiveTab();
-            bool captureShell = (tab == null || tab.IsNewTab);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, GetEffectiveIsLight(tab, captureShell));
-
             Point screenPt = PointToScreen(new Point(x, y));
-            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildHistoryPayloadJson(cached ?? ""), true);
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildHistoryPayloadJson(""), true);
             SyncVpnTelemetryTimer();
-            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "history");
         }
 
         private void ShowSyncPopoverAt(int anchorRightCss)
@@ -2232,16 +2082,9 @@ namespace DejavuBrowser
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
 
-            Rectangle clientRect = new Rectangle(x, y, popW, popH);
-            BrowserTab tab = GetActiveTab();
-            bool captureShell = (tab == null || tab.IsNewTab);
-            bool isLight = GetEffectiveIsLight(tab, captureShell);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, isLight);
-
             Point screenPt = PointToScreen(new Point(x, y));
-            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildSyncPayloadJson(cached ?? ""), true);
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildSyncPayloadJson(""), true);
             SyncVpnTelemetryTimer();
-            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "sync");
             _sync.SendPingAsync();
             PublishOpenTabsToSync();
         }
@@ -2412,18 +2255,16 @@ namespace DejavuBrowser
             BrowserTab tab = GetActiveTab();
             bool captureShell = (tab == null || tab.IsNewTab);
             bool isLight = GetEffectiveIsLight(tab, captureShell);
-            string cached = TryCropCachedBackdrop(r, captureShell, tab != null ? tab.Id : -1, isLight);
             var payload = new Dictionary<string, object>
             {
                 { "mode", "synctoast" },
                 { "isLight", isLight },
                 { "accentColor", _settings.accentColor ?? "amethyst" },
-                { "backdrop", cached ?? "" },
+                { "backdrop", "" },
                 { "drop", item }
             };
             Point sp = PointToScreen(new Point(r.X, r.Y));
             _hudPopup.ShowAt(new Rectangle(sp.X, sp.Y, r.Width, r.Height), _json.Serialize(payload), false);
-            if (cached == null) StreamBackdropToPopupAsync(_hudPopup, r, "synctoast");
             _downloadHideTimer.Stop();
             _downloadHideTimer.Start();
         }
@@ -2447,15 +2288,9 @@ namespace DejavuBrowser
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
 
-            Rectangle clientRect = new Rectangle(x, y, popW, popH);
-            BrowserTab tab = GetActiveTab();
-            bool captureShell = (tab == null || tab.IsNewTab);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, GetEffectiveIsLight(tab, captureShell));
-
             Point screenPt = PointToScreen(new Point(x, y));
-            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildVpnPayloadJson(cached ?? ""), true);
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildVpnPayloadJson(""), true);
             SyncVpnTelemetryTimer();
-            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "vpn");
         }
 
         private string BuildVpnPayloadJson(string backdrop)
@@ -2489,8 +2324,6 @@ namespace DejavuBrowser
             }
             _lastSuggestItems = new List<SuggestItem>();
             _suggestSelectedIndex = -1;
-            _suggestBackdropCache = "";
-            _suggestLastRect = Rectangle.Empty;
             if (_suggestPopup != null && _suggestPopup.IsPopupOpen)
             {
                 _suggestPopup.HidePopup(false);
@@ -2589,28 +2422,13 @@ namespace DejavuBrowser
             BrowserTab tab = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
             bool isLight = GetEffectiveIsLight(tab, captureShell);
-            bool needBackdrop = string.IsNullOrEmpty(_suggestBackdropCache) || !_suggestPopup.IsPopupOpen ||
-                Math.Abs(_suggestLastRect.X - clientRect.X) > 20 || Math.Abs(_suggestLastRect.Width - clientRect.Width) > 20;
-
-            string initialBackdrop = _suggestBackdropCache;
-            if (needBackdrop)
-            {
-                Rectangle capRect = new Rectangle(clientRect.X, clientRect.Y, clientRect.Width, (int)Math.Round(392 * sc));
-                string cached = TryCropCachedBackdrop(capRect, captureShell, tab != null ? tab.Id : -1, isLight);
-                initialBackdrop = cached ?? "";
-                _suggestBackdropCache = initialBackdrop;
-                _suggestLastRect = clientRect;
-                if (cached == null)
-                {
-                    StreamBackdropToPopupAsync(_suggestPopup, capRect, "");
-                }
-            }
 
             var payload = new Dictionary<string, object>
             {
                 { "mode", "suggest" },
                 { "isLight", isLight },
-                { "backdrop", initialBackdrop },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
+                { "backdrop", "" },
                 { "items", items },
                 { "selectedIndex", _suggestSelectedIndex }
             };
@@ -2687,20 +2505,19 @@ namespace DejavuBrowser
             return _json.Serialize(payload);
         }
 
-        private async void OpenFindPopup()
+        private void OpenFindPopup()
         {
             BrowserTab tab = GetActiveTab();
             if (_hudPopup == null || tab == null || tab.IsNewTab) return;
 
             _activeHudMode = "find";
             Rectangle clientRect = GetFindClientRect();
-            string backdropDataUrl = await CaptureBackdropCropAsync(clientRect);
             var payload = new Dictionary<string, object>
             {
                 { "mode", "find" },
                 { "isLight", GetEffectiveIsLight(tab, false) },
                 { "accentColor", _settings.accentColor ?? "amethyst" },
-                { "backdrop", backdropDataUrl }
+                { "backdrop", "" }
             };
 
             Point screenPt = PointToScreen(new Point(clientRect.X, clientRect.Y));
@@ -2727,16 +2544,14 @@ namespace DejavuBrowser
             return new Rectangle(x, y, w, h);
         }
 
-        private async void ShowDownloadToast(string filename, string filePath, long received, long total, string state)
+        private void ShowDownloadToast(string filename, string filePath, long received, long total, string state)
         {
             if (_hudPopup == null) return;
             _downloadHideTimer.Stop();
-            bool wasVisible = _hudPopup.IsPopupOpen && _activeHudMode == "download";
             _activeHudMode = "download";
 
             BrowserTab tab = GetActiveTab();
             Rectangle r = GetDownloadClientRect();
-            string backdrop = wasVisible ? null : await CaptureBackdropCropAsync(r);
             Point sp = PointToScreen(new Point(r.X, r.Y));
 
             var payload = new Dictionary<string, object>
@@ -2744,13 +2559,13 @@ namespace DejavuBrowser
                 { "mode", "download" },
                 { "isLight", GetEffectiveIsLight(tab, tab == null || tab.IsNewTab) },
                 { "accentColor", _settings.accentColor ?? "amethyst" },
+                { "backdrop", "" },
                 { "filename", filename },
                 { "filePath", filePath },
                 { "received", received },
                 { "total", total },
                 { "state", state }
             };
-            if (backdrop != null) payload["backdrop"] = backdrop;
 
             _hudPopup.ShowAt(new Rectangle(sp.X, sp.Y, r.Width, r.Height), _json.Serialize(payload), false);
             if (state == "completed" || state == "interrupted") _downloadHideTimer.Start();
@@ -2766,13 +2581,12 @@ namespace DejavuBrowser
             return new Rectangle(x, y, w, h);
         }
 
-        private async void ShowUpdateToast(UpdateInfo info)
+        private void ShowUpdateToast(UpdateInfo info)
         {
             if (_hudPopup == null || info == null) return;
             _activeHudMode = "update";
             BrowserTab tab = GetActiveTab();
             Rectangle r = GetUpdateClientRect();
-            string backdrop = await CaptureBackdropCropAsync(r);
             Point sp = PointToScreen(new Point(r.X, r.Y));
 
             var payload = new Dictionary<string, object>
@@ -2780,7 +2594,7 @@ namespace DejavuBrowser
                 { "mode", "update" },
                 { "isLight", GetEffectiveIsLight(tab, tab == null || tab.IsNewTab) },
                 { "accentColor", _settings.accentColor ?? "amethyst" },
-                { "backdrop", backdrop ?? "" },
+                { "backdrop", "" },
                 { "version", info.Version },
                 { "currentVersion", AutoUpdater.CurrentVersion }
             };
@@ -2945,10 +2759,9 @@ namespace DejavuBrowser
                 if (am == "auto" || am == "dark" || am == "light")
                 {
                     _settings.appearanceMode = am;
-                    _cachedBackdropJpeg = null;
                     bool isLightForced = (am == "light");
                     NativeWin32.SetImmersiveDarkMode(Handle, !isLightForced);
-                    BackColor = isLightForced ? Color.FromArgb(245, 244, 250) : Color.FromArgb(7, 6, 13);
+                    BackColor = isLightForced ? Color.FromArgb(247, 242, 250) : Color.FromArgb(20, 18, 24);
                     if (_shellView != null && !_shellView.IsDisposed)
                     {
                         _shellView.DefaultBackgroundColor = BackColor;
@@ -3135,9 +2948,8 @@ namespace DejavuBrowser
         {
             _settings.searchEngine = "google";
             _settings.appearanceMode = "auto";
-            _cachedBackdropJpeg = null;
             NativeWin32.SetImmersiveDarkMode(Handle, true);
-            BackColor = Color.FromArgb(7, 6, 13);
+            BackColor = Color.FromArgb(20, 18, 24);
             if (_shellView != null && !_shellView.IsDisposed) _shellView.DefaultBackgroundColor = BackColor;
             _settings.accentColor = "amethyst";
             _settings.showFullWebsiteAddress = false;
@@ -3363,7 +3175,7 @@ namespace DejavuBrowser
                 "<button data-t=\"sepia\" style=\"width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,0.35);background:#f6eedc;cursor:pointer;\"></button>'+'" +
                 "<button data-t=\"light\" style=\"width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,0.35);background:#ffffff;cursor:pointer;\"></button>'+'" +
                 "<button data-a=\"close\" style=\"background:linear-gradient(135deg,#8b5cf6,#a855f7);border:none;border-radius:999px;color:#fff;cursor:pointer;padding:4px 12px;font-weight:600;\">Done</button></div>'+'" +
-                "<div id=\"__dj_r_body\" style=\"max-width:680px;margin:0 auto;\"><div style=\"font-family:Segoe UI,system-ui,sans-serif;font-size:11.5px;text-transform:uppercase;letter-spacing:0.09em;opacity:0.58;margin-bottom:10px;\">'+host+' · Safari Reader</div><h1>'+h1.replace(/</g,'&lt;')+'</h1>'+parts.join('')+'</div>';" +
+                "<div id=\"__dj_r_body\" style=\"max-width:680px;margin:0 auto;\"><div style=\"font-family:Segoe UI,system-ui,sans-serif;font-size:11.5px;text-transform:uppercase;letter-spacing:0.09em;opacity:0.58;margin-bottom:10px;\">'+host+' · dejavu Reader</div><h1>'+h1.replace(/</g,'&lt;')+'</h1>'+parts.join('')+'</div>';" +
                 "var sz=19,serif=true;" +
                 "ov.addEventListener('click',function(e){" +
                 "  var a=e.target.getAttribute('data-a'),t=e.target.getAttribute('data-t');" +
@@ -3407,14 +3219,8 @@ namespace DejavuBrowser
             int popH = Math.Max((int)Math.Round(340 * sc), ClientSize.Height - topY - (int)Math.Round(12 * sc));
             int x = NavRailWidthPx + (int)Math.Round(10 * sc);
 
-            Rectangle clientRect = new Rectangle(x, topY, popW, popH);
-            BrowserTab tab = GetActiveTab();
-            bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, GetEffectiveIsLight(tab, captureShell));
-
             Point screenPt = PointToScreen(new Point(x, topY));
-            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildSidebarPayloadJson(cached ?? ""), true);
-            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "sidebar");
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildSidebarPayloadJson(""), true);
         }
 
         private void RefreshSidebarIfOpen()
@@ -3485,18 +3291,16 @@ namespace DejavuBrowser
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
 
-            Rectangle clientRect = new Rectangle(x, y, popW, popH);
             BrowserTab tab = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
             bool isLight = GetEffectiveIsLight(tab, captureShell);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, isLight);
 
             var payload = new Dictionary<string, object>
             {
                 { "mode", "share" },
                 { "isLight", isLight },
                 { "accentColor", _settings.accentColor ?? "amethyst" },
-                { "backdrop", cached ?? "" },
+                { "backdrop", "" },
                 { "isNewTab", tab == null || tab.IsNewTab },
                 { "title", (tab != null && !tab.IsNewTab) ? (string.IsNullOrEmpty(tab.Title) ? FormatDisplayUrl(tab.Url) : tab.Title) : "Start Page" },
                 { "url", (tab != null && !tab.IsNewTab) ? tab.Url : "" },
@@ -3510,7 +3314,6 @@ namespace DejavuBrowser
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), _json.Serialize(payload), true);
-            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "share");
         }
 
         private void ShowDownloadsPopoverAt(int anchorRightCss)
@@ -3532,14 +3335,8 @@ namespace DejavuBrowser
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
             int y = (int)Math.Round(50 * sc);
 
-            Rectangle clientRect = new Rectangle(x, y, popW, popH);
-            BrowserTab tab = GetActiveTab();
-            bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, tab != null ? tab.Id : -1, GetEffectiveIsLight(tab, captureShell));
-
             Point screenPt = PointToScreen(new Point(x, y));
-            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildDownloadsPayloadJson(cached ?? ""), true);
-            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "downloads");
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildDownloadsPayloadJson(""), true);
         }
 
         private string BuildDownloadsPayloadJson(string backdrop)
@@ -3575,11 +3372,9 @@ namespace DejavuBrowser
             int x = Math.Max((int)(8 * sc), Math.Min(ClientSize.Width - popW - (int)(8 * sc), (int)Math.Round(xCss * sc)));
             int y = Math.Max((int)(46 * sc), Math.Min(ClientSize.Height - popH - (int)(8 * sc), (int)Math.Round(yCss * sc)));
 
-            Rectangle clientRect = new Rectangle(x, y, popW, popH);
             BrowserTab active = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || active == null || active.IsNewTab);
             bool isLight = GetEffectiveIsLight(active, captureShell);
-            string cached = TryCropCachedBackdrop(clientRect, captureShell, active != null ? active.Id : -1, isLight);
             bool isMuted = target.CoreReady && target.WebView != null && target.WebView.CoreWebView2.IsMuted;
 
             var payload = new Dictionary<string, object>
@@ -3587,7 +3382,7 @@ namespace DejavuBrowser
                 { "mode", "tabmenu" },
                 { "isLight", isLight },
                 { "accentColor", _settings.accentColor ?? "amethyst" },
-                { "backdrop", cached ?? "" },
+                { "backdrop", "" },
                 { "tabId", target.Id },
                 { "isPinned", target.IsPinned },
                 { "isMuted", isMuted },
@@ -3596,7 +3391,6 @@ namespace DejavuBrowser
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), _json.Serialize(payload), true);
-            if (cached == null) StreamBackdropToPopupAsync(_popoverPopup, clientRect, "tabmenu");
         }
 
         private void FocusShellOmnibox()
@@ -4441,9 +4235,46 @@ namespace DejavuBrowser
             catch { }
         }
 
+        private void SchedulePushFullStateToShell()
+        {
+            if (!_shellReady || IsDisposed) return;
+            if (_statePushTimer != null && !_statePushTimer.Enabled)
+            {
+                _statePushTimer.Start();
+            }
+            else if (_statePushTimer == null)
+            {
+                PushFullStateToShell();
+            }
+        }
+
+        private static Dictionary<string, object> BuildShellVpnSummary(VpnStatusSnapshot snap)
+        {
+            if (snap == null) return null;
+            return new Dictionary<string, object>
+            {
+                { "state", snap.state ?? "disconnected" },
+                { "mode", snap.mode ?? "smart" },
+                { "activeEngine", snap.activeEngine ?? "smart" },
+                { "countryCode", snap.countryCode ?? "AUTO" },
+                { "countryName", snap.countryName ?? "" },
+                { "statusText", snap.statusText ?? "" },
+                { "progress", snap.progress },
+                { "exitIp", snap.exitIp ?? "" },
+                { "exitCity", snap.exitCity ?? "" },
+                { "exitCountry", snap.exitCountry ?? "" },
+                { "exitCountryCode", snap.exitCountryCode ?? "" },
+                { "latencyMs", snap.latencyMs },
+                { "autoConnect", snap.autoConnect },
+                { "protocol", snap.protocol ?? "" },
+                { "countriesCount", snap.countries != null ? snap.countries.Count : 86 }
+            };
+        }
+
         private void PushFullStateToShell()
         {
             if (!_shellReady || _shellView == null || _shellView.CoreWebView2 == null) return;
+            if (_statePushTimer != null && _statePushTimer.Enabled) _statePushTimer.Stop();
 
             List<Dictionary<string, object>> tabList = new List<Dictionary<string, object>>();
             for (int i = 0; i < _tabs.Count; i++)
@@ -4531,11 +4362,11 @@ namespace DejavuBrowser
                 { "globalAdBlockEnabled", _adBlocker.GlobalEnabled },
                 { "activeForSite", _adBlocker.IsActiveForHost(host) },
                 { "totalBlocked", _adBlocker.TotalBlocked },
-                { "vpn", _vpn.GetSnapshot() },
+                { "vpn", BuildShellVpnSummary(_vpn.GetSnapshot()) },
                 { "sync", _sync != null ? _sync.GetSnapshot() : null },
                 { "wallpaper", _settings.wallpaper ?? "art:wp-m3-amethyst.jpg" },
                 { "hasCustomWallpaper", !string.IsNullOrEmpty(_settings.customWallpaperPath) && File.Exists(_settings.customWallpaperPath) },
-                { "baseRgb", active != null ? active.BaseRgb : new int[] { 11, 9, 20 } },
+                { "baseRgb", active != null ? active.BaseRgb : new int[] { 20, 18, 24 } },
                 { "accents", active != null ? active.AccentPalette : null }
             };
 
@@ -4551,19 +4382,6 @@ namespace DejavuBrowser
                 { "tabId", tabId },
                 { "tabBlocked", tabBlocked },
                 { "totalBlocked", totalBlocked }
-            };
-            try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(msg)); } catch { }
-        }
-
-        private void PushPaletteToShell(BrowserTab tab)
-        {
-            if (!_shellReady || _shellView == null || _shellView.CoreWebView2 == null) return;
-            var msg = new Dictionary<string, object>
-            {
-                { "type", "palette" },
-                { "isLight", tab.IsLight },
-                { "baseRgb", tab.BaseRgb },
-                { "accents", tab.AccentPalette }
             };
             try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(msg)); } catch { }
         }

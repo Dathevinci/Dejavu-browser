@@ -51,28 +51,31 @@ jobs:
 
       - name: Prepare Android release signing keystore
         run: |
-          mkdir -p /tmp/dejavu-sign
           if [ -n "${{ secrets.DEJAVU_ANDROID_KEYSTORE_B64 }}" ]; then
+            mkdir -p /tmp/dejavu-sign
             echo "${{ secrets.DEJAVU_ANDROID_KEYSTORE_B64 }}" | base64 -d > /tmp/dejavu-sign/dejavu-release.jks
+            KS_PATH="/tmp/dejavu-sign/dejavu-release.jks"
+            echo "Using repository secret signing keystore."
           else
-            keytool -genkeypair -v \
-              -keystore /tmp/dejavu-sign/dejavu-release.jks \
-              -storepass dejavu2026 \
-              -keypass dejavu2026 \
-              -alias dejavu \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -dname "CN=dejavu Browser, OU=Mobile, O=Dathevinci, L=Web, S=Web, C=US"
+            KS_PATH="$GITHUB_WORKSPACE/android/keystore/dejavu-release.jks"
+            if [ ! -f "$KS_PATH" ]; then
+              echo "ERROR: Persistent Android signing keystore missing at $KS_PATH" >&2
+              exit 1
+            fi
+            echo "Using persistent repository signing keystore: $KS_PATH"
           fi
+          echo "DEJAVU_KEYSTORE_PATH=$KS_PATH" >> "$GITHUB_ENV"
+          LC_ALL=C keytool -list -v \
+            -keystore "$KS_PATH" \
+            -storepass "${{ secrets.DEJAVU_ANDROID_KEYSTORE_PASS || 'dejavu2026' }}" \
+            -alias "${{ secrets.DEJAVU_ANDROID_KEY_ALIAS || 'dejavu' }}" | grep -E "Alias name:|Owner:|Valid from:|SHA256:"
 
       - name: Build signed dejavu-mobile.apk
         working-directory: android
         env:
-          DEJAVU_KEYSTORE_PATH: /tmp/dejavu-sign/dejavu-release.jks
-          DEJAVU_KEYSTORE_PASS: dejavu2026
-          DEJAVU_KEY_ALIAS: dejavu
-          DEJAVU_KEY_PASS: dejavu2026
+          DEJAVU_KEYSTORE_PASS: ${{ secrets.DEJAVU_ANDROID_KEYSTORE_PASS || 'dejavu2026' }}
+          DEJAVU_KEY_ALIAS: ${{ secrets.DEJAVU_ANDROID_KEY_ALIAS || 'dejavu' }}
+          DEJAVU_KEY_PASS: ${{ secrets.DEJAVU_ANDROID_KEY_PASS || 'dejavu2026' }}
         run: |
           gradle assembleRelease --no-daemon --stacktrace
           mkdir -p ../dist
@@ -83,7 +86,7 @@ jobs:
         run: |
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -n 1)
           echo "Using $APKSIGNER"
-          "$APKSIGNER" verify --verbose dist/dejavu-mobile.apk
+          "$APKSIGNER" verify --verbose --print-certs dist/dejavu-mobile.apk
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
@@ -113,25 +116,27 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ github.ref_name }}"
-          cat > /tmp/release_notes.md <<EOF
-          ### dejavu $TAG — macOS Safari Liquid Glass Browser + Android Mobile & PC Sync
+          cat > /tmp/release_notes.md <<'EOF'
+          ### dejavu __TAG__ — A-to-Z Simple Material Design 3, Fixed 8x Video & HLS Downloader & Permanent Android Signing
 
-          - **NEW: dejavu Mobile (dejavu-mobile.apk)** — Thumb-friendly Samsung Internet x Safari Butterfly Liquid Glass browser for Android (Android 8.0+) with multi-tab browsing, built-in Ad Blocker, 6 HD wallpapers, Reader Mode, Desktop Site, QR scanner, and system-wide Share to dejavu to beam links/text straight to your PC
-          - **NEW: dejavu Link (PC <-> Mobile E2EE Sync)** — Pair PC and Android with a QR code or short code (DJV-XXXX-XXXX). Send tabs, links, and text notes between PC and phone in real time (AES-256-CBC + HMAC-SHA256 encrypted over Wi-Fi & mobile data), view each other's open tabs, and sync Bookmarks & Reading List
-          - **macOS Safari Options Suite (Ctrl+,)** — 6 customization panes: Search Engines (Google, DuckDuckGo, Brave, Bing, Perplexity), Appearance Polarity, 6 Butterfly Accent Colors, Full URL mode, Compact Tab Bar, Default Zoom, Start Page toggles, and Browsing Data controls
-          - **26 Butterfly Studio HD & Live Themes** — 16 crisp 2K (2560x1440) dejavu artworks + 10 live 60fps themes + custom wallpaper upload
-          - **46-Country 3-Hop Encrypted VPN** & **100/100 Native Ad Blocker**
+          - **A-to-Z Google Pixel Material Design 3 (Windows, Android & Website)** — Pure HCT tonal surface container hierarchy (`surface` -> `surface-container-highest`), 6 Dynamic Material You color seeds across Dark & Light polarity, fluid GPU-composited `Emphasized Decelerate` motion, Samsung M3 Left Navigation Rail, and strictly zero CSS blur or heavy glassmorphism.
+          - **Fixed AntDM-Class 8x Video & HLS `.m3u8` Downloader (Windows & Android)** — Native HLS master/media playlist resolver + multi-threaded `.ts`/fMP4 segment downloader with AES-128 decryption & video assembly, YouTube / MSE `googlevideo.com` `&range=` stripping + `ytInitialPlayerResponse` format extraction, bulletproof `301/302/303/307/308` redirect & header preservation, chunked unknown-length support, and automatic single-stream fallback when servers reject `Range` requests.
+          - **Permanent Android Signing Key (Fixes `"It cannot be installed"` Update Error)** — Checked-in persistent release keystore (`dejavu-release.jks`), `FileProvider` `Download/` fix, and pre-install APK ZIP/PackageArchiveInfo/signature verification in `MobileAutoUpdater`.
+            > **Android Upgrade Note:** If upgrading from `v4.2.0` or earlier shows *"Cannot be installed"* (due to earlier ephemeral CI signing keys), uninstall the old app once and install `__TAG__` — **all future updates will install seamlessly in-place with a permanent signing key!**
+          - **8 Brand-New Material Design 3 Architectural Wallpapers** — *Obsidian Monolith*, *Cobalt Ribbons*, *Eucalyptus Calm*, *Velvet Petals*, *Ochre Solitude* (Dark) and *Porcelain Steps*, *Jade Pebbles*, *Terracotta Ribbon* (Light) — synced across Windows, Android, and the redesigned Simple Material Design 3 website.
+          - **Near-0% Idle CPU & Native Speed** — Eliminated background screenshot/blur loops and polling `setInterval` timers on both Windows (`~0.85%` idle CPU) and Android, while keeping the 86-Country AI-Ready Smart VPN, 100/100 Ad Blocker (279k+ rules), and E2EE `dejavu Link` PC <-> Phone Sync.
 
           #### Downloads
           - **dejavu-Setup.exe** — Windows 10/11 Guided Installer
           - **dejavu.exe** — Windows 10/11 Portable Single-File
-          - **dejavu-mobile.apk** — Android Mobile Browser App (with PC <-> Phone Sync)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (permanently signed, Android 8.0+)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
+          sed -i "s/__TAG__/$TAG/g" /tmp/release_notes.md
           gh release create "$TAG" \
             --repo "${{ github.repository }}" \
             release-files/dejavu-Setup.exe \
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
-            --title "dejavu $TAG — Desktop + Android Mobile (.apk) & Cross-Device Sync" \
+            --title "dejavu $TAG — A-to-Z Material Design 3, Fixed 8x Video/HLS Downloader & Permanent Android Signing" \
             --notes-file /tmp/release_notes.md

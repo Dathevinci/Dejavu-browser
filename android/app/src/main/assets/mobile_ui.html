@@ -10,49 +10,51 @@
       --safe-bottom: 112px;
       --sys-bottom: 16px;
 
-      /* Google Pixel Material Design 3 Expressive — Dark HCT Tonal Tokens */
-      --bg: #131218;
-      --canvas-bg: #131218;
-      --sheet-bg: #1c1b23;
-      --sheet-elev: #262430;
-      --group-bg: #23212c;
-      --group-press: #2f2c3b;
-      --card: #22202b;
-      --card-hi: #2b2937;
+      /* Google Pixel Material Design 3 — Official Dark HCT Surface Container Tokens */
+      --bg: #141218;
+      --canvas-bg: #141218;
+      --sheet-bg: #1d1b20;
+      --sheet-elev: #2b2930;
+      --group-bg: #211f26;
+      --group-press: #2b2930;
+      --card: #211f26;
+      --card-hi: #2b2930;
       --scrim: rgba(10, 9, 14, 0.56);
-      --input-bg: #312e3e;
-      --divider: #383444;
-      --border: #484454;
+      --input-bg: #36343b;
+      --divider: #36343b;
+      --border: #49454f;
       --rim-top: transparent;
 
-      --ink: #e6e1ec;
-      --muted: #c8c2d4;
-      --subtle: #928d9e;
+      --ink: #e6e0e9;
+      --muted: #cac4d0;
+      --subtle: #938f99;
 
       --accent: #d0bcff;
       --accent-bright: #eaddff;
-      --accent-soft: #3c3454;
+      --accent-soft: #4f378b;
       --accent-glow: rgba(208, 188, 255, 0.20);
       --accent-ink: #381e72;
       --mint: #7bd8c6;
       --danger: #ffb4ab;
-      --shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
+      --m3-decel: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+      --m3-std: cubic-bezier(0.2, 0, 0, 1);
       --font: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     body.theme-light {
-      /* Google Pixel Material Design 3 Expressive — Light HCT Tonal Tokens */
-      --bg: #fdfbff;
-      --canvas-bg: #fdfbff;
-      --sheet-bg: #f6f2fa;
+      /* Google Pixel Material Design 3 — Official Light HCT Surface Container Tokens */
+      --bg: #fef7ff;
+      --canvas-bg: #fef7ff;
+      --sheet-bg: #f7f2fa;
       --sheet-elev: #ffffff;
-      --group-bg: #ffffff;
-      --group-press: #efeaf5;
-      --card: #f1ecf7;
+      --group-bg: #f3edf7;
+      --group-press: #ece6f0;
+      --card: #f3edf7;
       --card-hi: #ffffff;
-      --scrim: rgba(29, 27, 32, 0.34);
-      --input-bg: #e8e1f0;
-      --divider: #e2dce8;
+      --scrim: rgba(29, 27, 32, 0.32);
+      --input-bg: #e6e0e9;
+      --divider: #e6e0e9;
       --border: #cac4d0;
       --rim-top: transparent;
 
@@ -61,13 +63,13 @@
       --subtle: #79747e;
 
       --accent: #6750a4;
-      --accent-bright: #6750a4;
+      --accent-bright: #21005d;
       --accent-soft: #eaddff;
       --accent-glow: rgba(103, 80, 164, 0.16);
       --accent-ink: #ffffff;
       --mint: #006a60;
       --danger: #b3261e;
-      --shadow: 0 4px 14px rgba(29, 27, 32, 0.10);
+      --shadow: 0 2px 10px rgba(29, 27, 32, 0.08);
     }
 
     :root[data-accent="sapphire"] { --accent: #a8c7fa; --accent-bright: #d3e3fd; --accent-soft: #2b3a55; --accent-ink: #062e6f; --accent-glow: rgba(168,199,250,0.22); }
@@ -132,110 +134,108 @@
     .screen.hidden { display: none !important; }
     .screen.solid-canvas { background: var(--canvas-bg); }
 
-    /* True Modal Bottom Sheet Layer (Menu, Sync, Settings, Wallpapers) */
+    /* Material Design 3 Modal Bottom Sheet (28dp Top Radius + Emphasized Decelerate Motion) */
     .sheet-backdrop {
       position: fixed; inset: 0; z-index: 20;
       background: var(--scrim);
       display: flex; flex-direction: column; justify-content: flex-end;
-      animation: fadeScrim 0.2s ease-out both;
+      animation: fadeScrim 0.2s var(--m3-decel) both;
     }
     .sheet-backdrop.hidden { display: none !important; }
     .sheet-panel {
       width: 100%; max-height: 88vh;
       background: var(--sheet-bg);
       border-top: 1px solid var(--border);
-      border-radius: 26px 26px 0 0;
-      box-shadow: inset 0 1px 0 var(--rim-top), 0 -14px 40px rgba(0, 0, 0, 0.42);
+      border-radius: 28px 28px 0 0;
+      box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.32);
       display: flex; flex-direction: column;
       overflow: hidden;
-      animation: sheetRise 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
-      will-change: transform;
+      animation: sheetRise 0.28s var(--m3-decel) both;
+      will-change: transform, opacity;
     }
     @keyframes fadeScrim { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes sheetRise { from { transform: translateY(42px); opacity: 0.72; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes sheetRise { from { transform: translateY(36px); opacity: 0.78; } to { transform: translateY(0); opacity: 1; } }
 
     .sheet-head {
       flex-shrink: 0;
-      padding: 8px 18px 12px;
-      display: flex; flex-direction: column; gap: 10px;
+      padding: 10px 20px 14px;
+      display: flex; flex-direction: column; gap: 12px;
       border-bottom: 1px solid var(--divider);
       touch-action: none;
     }
     .sheet-grab {
-      width: 38px; height: 4.5px; border-radius: 99px;
+      width: 32px; height: 4px; border-radius: 999px;
       background: var(--subtle); margin: 2px auto 0;
-      opacity: 0.65;
+      opacity: 0.55;
     }
     .sheet-title-row {
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
     }
     .sheet-title {
-      margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.025em;
+      margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.015em;
     }
     .sheet-body {
       flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
-      padding: 14px 16px calc(var(--sys-bottom) + 22px);
+      padding: 16px 16px calc(var(--sys-bottom) + 24px);
       display: flex; flex-direction: column; gap: 14px;
       -webkit-overflow-scrolling: touch;
     }
 
-    /* Shared Buttons & Chips */
+    /* Shared Material 3 Buttons & Chips */
     .icon-circle {
-      width: 36px; height: 36px; border-radius: 50%;
+      width: 40px; height: 40px; border-radius: 50%;
       border: 1px solid var(--border); background: var(--card);
       color: var(--ink); display: inline-flex; align-items: center; justify-content: center;
       cursor: pointer; flex-shrink: 0;
-      box-shadow: inset 0 1px 0 var(--rim-top);
-      transition: transform 0.14s ease, background 0.14s ease;
+      transition: transform 0.16s var(--m3-decel), opacity 0.16s ease;
     }
     .icon-circle:active { transform: scale(0.92); }
-    .icon-circle.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-bright); }
+    .icon-circle.on { background: var(--accent-soft); border-color: transparent; color: var(--accent-bright); }
     .icon-circle.gold { background: rgba(245, 185, 66, 0.22); border-color: rgba(245, 185, 66, 0.56); color: #f5b942; }
 
     .pill-btn {
-      height: 32px; padding: 0 14px; border-radius: 999px;
+      height: 36px; padding: 0 16px; border-radius: 999px;
       border: 1px solid var(--border); background: var(--group-bg);
-      color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 620;
+      color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 600;
       display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      cursor: pointer; transition: transform 0.14s ease, opacity 0.14s ease;
+      cursor: pointer; transition: transform 0.16s var(--m3-decel), opacity 0.16s ease;
     }
     .pill-btn:active, .fav-tile:active, .q-tile:active, .g-row:active, .tab-card:active, .cta-btn:active {
       transform: scale(0.97);
     }
     .pill-btn.primary {
       background: var(--accent); border-color: transparent;
-      color: var(--accent-ink); box-shadow: 0 4px 14px var(--accent-glow);
+      color: var(--accent-ink); box-shadow: none;
     }
-    .pill-btn.ghost { background: transparent; border-color: transparent; color: var(--accent-bright); padding: 0 8px; }
+    .pill-btn.ghost { background: transparent; border-color: transparent; color: var(--accent); padding: 0 10px; }
     .pill-btn.danger {
-      background: rgba(225, 29, 72, 0.14); border-color: rgba(225, 29, 72, 0.32);
+      background: rgba(179, 38, 30, 0.14); border-color: rgba(179, 38, 30, 0.30);
       color: var(--danger);
     }
 
     .sec-hdr {
       display: flex; align-items: center; justify-content: space-between;
-      font-size: 11.5px; font-weight: 680; text-transform: uppercase;
-      letter-spacing: 0.07em; color: var(--muted); padding: 0 4px;
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--muted); padding: 0 4px;
     }
     .sec-act {
-      font-size: 12px; font-weight: 620; text-transform: none; letter-spacing: 0;
-      color: var(--accent-bright); background: none; border: none; padding: 2px 4px; font-family: inherit;
+      font-size: 12.5px; font-weight: 600; text-transform: none; letter-spacing: 0;
+      color: var(--accent); background: none; border: none; padding: 2px 4px; font-family: inherit;
     }
 
-    /* iOS / OneUI Grouped Card + Rows */
+    /* Material Design 3 Tonal Container Groups & List Items */
     .g-group {
       background: var(--group-bg);
       border: 1px solid var(--border);
-      border-radius: 18px;
+      border-radius: 24px;
       overflow: hidden;
-      box-shadow: inset 0 1px 0 var(--rim-top);
     }
     .g-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      box-shadow: inset 0 1px 0 var(--rim-top), var(--shadow);
-      padding: 14px;
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 16px;
     }
     .g-row {
       width: 100%; background: transparent; border: none; color: var(--ink);
@@ -336,18 +336,17 @@
 
     .sp-hero {
       display: flex; flex-direction: column; align-items: center; text-align: center;
-      padding: 14px 8px 4px; gap: 6px;
+      padding: 12px 8px 4px; gap: 6px;
     }
     .sp-logo {
-      width: 56px; height: 56px; object-fit: contain;
-      filter: drop-shadow(0 4px 16px var(--accent-glow));
+      width: 52px; height: 52px; object-fit: contain;
     }
     .sp-brand {
-      margin: 0; font-size: 30px; font-weight: 300; letter-spacing: 0.14em;
-      text-indent: 0.14em;
+      margin: 0; font-size: 30px; font-weight: 400; letter-spacing: 0.12em;
+      text-indent: 0.12em;
     }
     .sp-date {
-      font-size: 11.5px; font-weight: 620; letter-spacing: 0.08em;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.05em;
       text-transform: uppercase; color: var(--muted);
     }
 
@@ -805,24 +804,34 @@
        SHEET D: HD WALLPAPERS GALLERY
        ===================================================================== */
     .wp-grid {
-      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px;
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
     }
     .wp-tile {
-      position: relative; border-radius: 16px; overflow: hidden;
-      border: 2px solid var(--border); background: var(--sheet-elev);
+      position: relative; border-radius: 20px; overflow: hidden;
+      border: 1.5px solid var(--border); background: var(--group-bg);
       padding: 0; text-align: left; color: var(--ink); font-family: inherit;
+      transition: transform 0.16s var(--m3-decel), border-color 0.16s ease;
     }
-    .wp-tile.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 8px 20px var(--accent-glow); }
-    .wp-tile img, .wp-live-thumb { width: 100%; height: 118px; object-fit: cover; display: block; }
-    .wp-tile-name { padding: 8px 10px; font-size: 12.5px; font-weight: 620; }
+    .wp-tile:active { transform: scale(0.97); }
+    .wp-tile.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .wp-tile img, .wp-live-thumb { width: 100%; height: 116px; object-fit: cover; display: block; }
+    .wp-tile-meta { padding: 9px 11px 10px; display: flex; flex-direction: column; gap: 2px; }
+    .wp-tile-name { font-size: 13px; font-weight: 620; line-height: 1.2; }
+    .wp-tile-desc { font-size: 10.5px; color: var(--muted); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .wp-check {
       position: absolute; top: 8px; right: 8px;
-      width: 22px; height: 22px; border-radius: 50%;
+      width: 24px; height: 24px; border-radius: 50%;
       background: var(--accent); color: var(--accent-ink);
       display: none; align-items: center; justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     }
     .wp-tile.active .wp-check { display: inline-flex; }
+    .upd-signing-note {
+      padding: 10px 14px 12px;
+      border-top: 1px solid var(--divider);
+      font-size: 11.5px; line-height: 1.45;
+      color: var(--muted);
+      background: var(--sheet-bg);
+    }
 
     /* Inline Add Favorite Modal */
     .mini-modal {
@@ -1119,7 +1128,7 @@
               <span class="sq-ico ic-indigo"><svg viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="4.8" stroke="currentColor" stroke-width="1.55"/><path d="M11.6 11.6L15 15" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg></span>
               <span>Find Page</span>
             </button>
-            <button type="button" class="q-tile" onclick="dlTab='media';call('openDownloads')">
+            <button type="button" class="q-tile" onclick="mobileDlTab='media';call('openDownloads')">
               <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 3.2v8.2M5.8 8.4L9 11.6l3.2-3.2M3.6 14.4h10.8" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               <span>Grab 8x</span>
             </button>
@@ -1338,7 +1347,7 @@
           <div class="g-row">
             <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 14V4M5.6 7.4L9 4l3.4 3.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.8 14.5h10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
             <div class="g-row-meta">
-              <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.2.0</div>
+              <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.3.0</div>
               <div id="opt-upd-sub" class="g-row-sub">Automatic updates via GitHub Releases</div>
             </div>
             <button type="button" id="opt-upd-btn" class="pill-btn" onclick="handleUpdateBtn()">Check</button>
@@ -1348,10 +1357,13 @@
               <div id="opt-upd-prog-fill" style="height:100%;width:0%;background:var(--accent);transition:width 0.18s ease;"></div>
             </div>
           </div>
+          <div id="opt-upd-note" class="upd-signing-note">
+            If upgrading from v4.2.0 or earlier shows &lsquo;Cannot be installed&rsquo;, uninstall once and install v4.3.0 &mdash; all future updates will install seamlessly with a permanent signing key!
+          </div>
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:11.5px;color:var(--subtle);padding:4px 0 8px;">
-          dejavu Mobile v4.2.0 · Material You Edition
+          dejavu Mobile v4.3.0 · Material Design 3
         </div>
       </div>
     </div>
@@ -1429,14 +1441,15 @@
 
   <script>
     const WALLPAPERS = [
-      { id: 'wp-m3-amethyst.jpg',       name: 'Material Amethyst',   m3: true },
-      { id: 'wp-m3-pixel-blue.jpg',     name: 'Pixel Blue Tonal',    m3: true },
-      { id: 'wp-m3-sage.jpg',           name: 'Material Sage',       m3: true },
-      { id: 'wp-m3-blossom.jpg',        name: 'Material Blossom',    m3: true },
-      { id: 'wp-m3-honey.jpg',          name: 'Material Honey',      m3: true },
-      { id: 'wp-m3-porcelain.jpg',      name: 'Porcelain Light',     m3: true },
-      { id: 'wp-m3-meadow.jpg',         name: 'Meadow Light',        m3: true },
-      { id: 'wp-m3-blush.jpg',          name: 'Blush Quartz Light',  m3: true },
+      { id: 'wp-m3-amethyst.jpg',       name: 'Obsidian Monolith',   m3: true, mode: 'dark',  seed: 'amethyst', desc: 'Deep plum-obsidian ceramic monoliths & sweeping lavender arch' },
+      { id: 'wp-m3-pixel-blue.jpg',     name: 'Cobalt Ribbons',      m3: true, mode: 'dark',  seed: 'sapphire', desc: 'Midnight cobalt slate & Pixel periwinkle carved sandstone waves' },
+      { id: 'wp-m3-sage.jpg',           name: 'Eucalyptus Calm',     m3: true, mode: 'dark',  seed: 'aurora',   desc: 'Dark forest plaster curved alcove & matte sage stoneware spheres' },
+      { id: 'wp-m3-blossom.jpg',        name: 'Velvet Petals',       m3: true, mode: 'dark',  seed: 'rose',     desc: 'Velvet espresso & dusty terracotta-rose Swirling Petals ceramic' },
+      { id: 'wp-m3-honey.jpg',          name: 'Ochre Solitude',      m3: true, mode: 'dark',  seed: 'gold',     desc: 'Warm obsidian-espresso & burnished matte amber Bauhaus arcs' },
+      { id: 'wp-m3-porcelain.jpg',      name: 'Porcelain Steps',     m3: true, mode: 'light', seed: 'amethyst', desc: 'Sunlit alabaster stepped terraces & soft lavender-stone curved wall' },
+      { id: 'wp-m3-meadow.jpg',         name: 'Jade Pebbles',        m3: true, mode: 'light', seed: 'aurora',   desc: 'Airy off-white porcelain & organic matte stoneware pebbles with celadon hill' },
+      { id: 'wp-m3-blush.jpg',          name: 'Terracotta Ribbon',   m3: true, mode: 'light', seed: 'rose',     desc: 'Warm sunlit ivory plaster & minimalist folded clay-blush ceramic wave' },
+      { id: 'obsidian',                 name: 'Material You Tonal',  m3: true, mode: '',      seed: '',         desc: 'Clean dynamic tonal surface harmonized with your accent color' },
       { id: 'wp-velvet-mirage.jpg',     name: 'Velvet Mirage' },
       { id: 'wp-prism-cascade.jpg',     name: 'Prism Cascade' },
       { id: 'wp-midnight-orchid.jpg',   name: 'Midnight Orchid' },
@@ -1448,8 +1461,7 @@
       { id: 'wp-celestial.jpg',         name: 'Celestial Dusk' },
       { id: 'wp-sakura.jpg',            name: 'Sakura Bloom' },
       { id: 'wp-morpho.jpg',            name: 'Blue Morpho' },
-      { id: 'wp-rosequartz.jpg',        name: 'Rose Quartz' },
-      { id: 'obsidian',                 name: 'Material You Tonal' }
+      { id: 'wp-rosequartz.jpg',        name: 'Rose Quartz' }
     ];
     const ENGINES = [
       ['google',     'Google',     'G', '#4285f4'],
@@ -1564,10 +1576,10 @@
       }, { passive: true });
       hdr.addEventListener('touchend', (e) => {
         const dy = Math.max(0, e.changedTouches[0].clientY - startY);
-        panel.style.transition = 'transform 0.2s ease';
+        panel.style.transition = 'transform 0.24s cubic-bezier(0.05, 0.7, 0.1, 1.0)';
         if (dy > 85) {
           panel.style.transform = 'translateY(100%)';
-          setTimeout(() => { panel.style.transform = ''; call('closeScreen'); }, 150);
+          setTimeout(() => { panel.style.transform = ''; call('closeScreen'); }, 170);
         } else {
           panel.style.transform = '';
         }
@@ -2078,14 +2090,16 @@
 
       // Software Update Card
       const u = state.update || {};
-      const curV = u.currentVersion || '4.2.0';
+      const curV = u.currentVersion || '4.3.0';
       const uTitle = document.getElementById('opt-upd-title');
       const uSub = document.getElementById('opt-upd-sub');
       const uBtn = document.getElementById('opt-upd-btn');
       const uProgW = document.getElementById('opt-upd-prog-wrap');
       const uProgF = document.getElementById('opt-upd-prog-fill');
       const uFoot = document.getElementById('opt-ver-footer');
-      if (uFoot) uFoot.textContent = `dejavu Mobile v${curV} · Material You Edition`;
+      const uNote = document.getElementById('opt-upd-note');
+      if (uFoot) uFoot.textContent = `dejavu Mobile v${curV} · Material Design 3`;
+      if (uNote && u.upgradeNote) uNote.textContent = u.upgradeNote;
       if (uTitle && uSub && uBtn) {
         if (u.status === 'checking') {
           uTitle.textContent = 'Checking for updates...';
@@ -2108,13 +2122,15 @@
           uProgF.style.width = `${Math.max(4, u.percent || 0)}%`;
         } else if (u.status === 'ready') {
           uTitle.textContent = `v${u.latestVersion} Ready to Install`;
-          uSub.textContent = 'Tap Install to upgrade cleanly';
+          uSub.textContent = u.signatureMismatch
+            ? 'Signing key changed — uninstall old build once if Android blocks install'
+            : 'Verified permanent signature · Tap Install to upgrade cleanly';
           uBtn.textContent = 'Install';
           uBtn.classList.add('primary');
           uProgW.style.display = 'none';
         } else if (u.status === 'uptodate') {
           uTitle.textContent = `Up to date · v${curV}`;
-          uSub.textContent = 'You have the latest dejavu Mobile release';
+          uSub.textContent = 'Permanent signing key active · Seamless updates ready';
           uBtn.textContent = 'Check';
           uBtn.classList.remove('primary');
           uProgW.style.display = 'none';
@@ -2126,7 +2142,7 @@
           uProgW.style.display = 'none';
         } else {
           uTitle.textContent = `dejavu Mobile v${curV}`;
-          uSub.textContent = 'Checks GitHub Releases automatically';
+          uSub.textContent = 'Permanent signing key active · Auto-checks GitHub Releases';
           uBtn.textContent = 'Check';
           uBtn.classList.remove('primary');
           uProgW.style.display = 'none';
@@ -2143,15 +2159,23 @@
         btn.type = 'button';
         btn.className = 'wp-tile' + (state.wallpaper === w.id ? ' active' : '');
         const thumb = w.id === 'obsidian'
-          ? `<div class="wp-live-thumb" style="background:${isLight ? 'linear-gradient(135deg,#eaddff 0%,#fef7ff 55%,#ffd8e4 100%)' : 'linear-gradient(135deg,#4f378b 0%,#1c1b23 55%,#633b48 100%)'};"></div>`
+          ? `<div class="wp-live-thumb" style="background:${isLight ? 'linear-gradient(135deg,#eaddff 0%,#fef7ff 55%,#ffd8e4 100%)' : 'linear-gradient(135deg,#4f378b 0%,#141218 55%,#633b48 100%)'};"></div>`
           : `<img src="wallpapers/${w.id}" alt="${esc(w.name)}">`;
+        const tagLbl = w.m3 ? (w.mode === 'light' ? 'M3 · Light' : (w.mode === 'dark' ? 'M3 · Dark' : 'Material You')) : '';
         btn.innerHTML = `
           ${thumb}
-          ${w.m3 ? '<span class="wp-m3-tag">Material You</span>' : ''}
+          ${tagLbl ? `<span class="wp-m3-tag">${tagLbl}</span>` : ''}
           <span class="wp-check"><svg viewBox="0 0 14 14" width="11" height="11" fill="none"><path d="M3 7.2l2.6 2.6L11 4.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          <div class="wp-tile-name">${esc(w.name)}</div>
+          <div class="wp-tile-meta">
+            <div class="wp-tile-name">${esc(w.name)}</div>
+            ${w.desc ? `<div class="wp-tile-desc">${esc(w.desc)}</div>` : ''}
+          </div>
         `;
-        btn.onclick = () => call('setWallpaper', w.id);
+        btn.onclick = () => {
+          call('setWallpaper', w.id);
+          if (w.m3 && w.seed) call('setAccent', w.seed);
+          if (w.m3 && w.mode) call('setThemeMode', w.mode);
+        };
         wg.appendChild(btn);
       });
     }
@@ -2258,10 +2282,12 @@
         card.className = 'dl-card' + (isRun ? ' active' : '') + (isPaused ? ' paused' : '');
         const segs = Array.isArray(d.segments) && d.segments.length ? d.segments : [{ pct: isDone ? 100 : (d.percent || 0) }];
         const segHtml = segs.map((s) => `<div class="m-seg"><div class="m-seg-fill" style="width:${Math.max(0, Math.min(100, isDone ? 100 : (s.pct || 0)))}%"></div></div>`).join('');
-        const chipLbl = isDone ? 'Done' : (isErr ? 'Retry' : (isPaused ? 'Paused' : `${d.threads || 1}x Turbo`));
+        const chipLbl = isDone ? (d.isHls ? 'HLS Done' : 'Done') : (isErr ? 'Retry' : (isPaused ? 'Paused' : (d.isHls ? `HLS · ${d.threads || 6}x` : `${d.threads || 1}x Turbo`)));
         const chipCls = isDone ? 'done' : (isErr ? 'err' : '');
         const spd = (isRun && d.speedBps > 0) ? ` · ${fmtMb(d.speedBps)}/s` : '';
-        const sz = d.totalBytes > 0 ? (isDone ? fmtMb(d.totalBytes) : `${fmtMb(d.receivedBytes)} / ${fmtMb(d.totalBytes)} (${Math.round(d.percent || 0)}%)`) : (d.receivedBytes > 0 ? fmtMb(d.receivedBytes) : 'Connecting…');
+        const sz = (isErr && d.error)
+          ? d.error
+          : (d.totalBytes > 0 ? (isDone ? fmtMb(d.totalBytes) : `${fmtMb(d.receivedBytes)} / ${fmtMb(d.totalBytes)} (${Math.round(d.percent || 0)}%)`) : (d.receivedBytes > 0 ? fmtMb(d.receivedBytes) : 'Connecting…'));
 
         let acts = '';
         if (isRun) {
@@ -2369,6 +2395,49 @@
       if (scr === 'wallpapers') renderWallpapersSheet();
       if (scr === 'downloads') renderDownloadsSheet();
     };
+
+    // Standalone browser preview fallback (no-op inside Android WebView where DejavuMobile bridge exists)
+    if (typeof window.DejavuMobile === 'undefined') {
+      window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          if (!state || !state.screen) {
+            window.__onDejavuState({
+              screen: 'start',
+              activeTabId: 1,
+              searchEngine: 'google',
+              wallpaper: 'wp-m3-amethyst.jpg',
+              accentColor: 'amethyst',
+              themeMode: 'dark',
+              barPosition: 'bottom',
+              autoHideBar: true,
+              darkWebPages: false,
+              pageZoom: 100,
+              adBlockEnabled: true,
+              totalBlocked: 128,
+              safeTop: 28,
+              safeBottom: 24,
+              sysBottom: 16,
+              tabs: [{ id: 1, title: 'Start Page', url: 'dejavu://newtab', isNewTab: true, isPrivate: false }],
+              bookmarks: [
+                { title: 'YouTube', url: 'https://m.youtube.com' },
+                { title: 'Gemini', url: 'https://gemini.google.com' },
+                { title: 'GitHub', url: 'https://github.com' },
+                { title: 'Reddit', url: 'https://www.reddit.com' },
+                { title: 'Wikipedia', url: 'https://en.wikipedia.org' },
+                { title: 'X', url: 'https://x.com' },
+                { title: 'dejavu', url: 'https://dathevinci.github.io/Dejavu-browser/' }
+              ],
+              readingList: [],
+              history: [],
+              sync: { connected: false, pairingCode: 'DJV-4300-M3UI', remoteTabs: [], drops: [] },
+              update: { currentVersion: '4.3.0', status: 'uptodate', latestVersion: '4.3.0', available: false },
+              turboDownloads: [],
+              pageMedia: []
+            });
+          }
+        }, 80);
+      });
+    }
   </script>
 </body>
 </html>

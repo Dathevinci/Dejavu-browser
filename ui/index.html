@@ -8,18 +8,12 @@
   <link rel="stylesheet" href="https://dejavu.local/styles.css">
 </head>
 <body class="theme-dark on-newtab app-booting">
-  <!-- Living Fluid Optical Butterfly Canvas (Start Page & Tab Overview) -->
+  <!-- Zero-Idle-CPU Material Design 3 Wallpaper Surface -->
   <canvas id="newtab-canvas"></canvas>
 
-  <!-- Live Site-Adaptive Optical Light-Guide Backdrop (when browsing real websites) -->
-  <div id="top-backdrop-wrap" aria-hidden="true">
-    <canvas id="optical-top-backdrop"></canvas>
-    <div class="top-backdrop-sheen"></div>
-  </div>
-
-  <!-- Samsung Internet PC × Google Pixel Material Design 3 Expressive Chrome (88px base / 122px with Quick Access Bar) -->
+  <!-- Samsung Internet PC × Google Pixel Material Design 3 Top Chrome (88px base / 122px with Quick Access Bar) -->
   <header id="chrome-header">
-    <!-- Row 1: Samsung Internet Top Tab Strip + Window Controls (40px) -->
+    <!-- Row 1: Material Design 3 Top Tab Strip + Window Controls (40px) -->
     <div id="tabbar" class="chrome-row tabbar-row">
       <div class="tabbar-brand-slot">
         <button id="btn-home" class="brand-inner-btn" title="dejavu Start Page">
@@ -35,7 +29,7 @@
         <div id="tabs-strip" role="tablist">
           <div id="active-tab-glide" aria-hidden="true"></div>
         </div>
-        <button id="btn-new-tab" class="m3-icon-btn circle-btn" title="New Tab (Ctrl+T)">
+        <button id="btn-new-tab" class="m3-icon-btn" title="New Tab (Ctrl+T)">
           <svg viewBox="0 0 18 18" fill="none"><path d="M9 4.2v9.6M4.2 9h9.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
         <div id="drag-spacer" class="drag-spacer"></div>
@@ -55,9 +49,8 @@
       </div>
     </div>
 
-    <!-- Row 2: Samsung Internet PC Navigation + Google Pixel Material 3 Pill Omnibox + Utility Dock (48px) -->
+    <!-- Row 2: Navigation Controls + Google Pixel M3 Pill Omnibox + Utility Dock (48px) -->
     <div id="toolbar" class="chrome-row toolbar-row">
-      <!-- Left: Samsung Side Panel Toggle + Back / Forward / Reload -->
       <div class="toolbar-left">
         <button id="btn-sidebar" class="icon-btn m3-nav-btn" title="Toggle Side Panel (Ctrl+Shift+L)">
           <svg viewBox="0 0 20 20" fill="none">
@@ -78,7 +71,7 @@
         </button>
       </div>
 
-      <!-- Center: Google Pixel Material 3 Pill Omnibox -->
+      <!-- Center: Google Pixel Material Design 3 Pill Address Bar -->
       <div id="omnibox-pill" class="omnibox-pill">
         <div class="omnibox-left-actions">
           <button id="btn-shield" class="shield-chip active" title="Privacy Report &amp; 100/100 Ad Blocker">
@@ -118,7 +111,7 @@
           <button id="btn-fav-star" class="fav-star-btn hidden" title="Pin to Quick Access Bar (Ctrl+D)">
             <svg viewBox="0 0 18 18" fill="none"><path d="M9 2.4l2.05 4.15 4.55.66-3.3 3.22.78 4.55L9 12.82 4.92 14.98l.78-4.55-3.3-3.22 4.55-.66L9 2.4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
           </button>
-          <button id="btn-share" class="icon-btn omni-share-btn" title="Share / Send Page">
+          <button id="btn-share" class="icon-btn omni-share-btn" title="Share / Page Actions">
             <svg viewBox="0 0 18 18" fill="none">
               <path d="M9 11.2V3.4M6.3 5.9L9 3.2l2.7 2.7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M4.8 8.4H4a1.4 1.4 0 0 0-1.4 1.4v4.4A1.4 1.4 0 0 0 4 15.6h10a1.4 1.4 0 0 0 1.4-1.4V9.8A1.4 1.4 0 0 0 14 8.4h-.8" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/>
@@ -129,7 +122,7 @@
         <div id="load-progress" class="load-progress"></div>
       </div>
 
-      <!-- Right: Samsung Internet × Pixel Utility Action Strip -->
+      <!-- Right: Material Design 3 Utility Action Dock -->
       <div class="toolbar-right">
         <div class="util-pill">
           <button id="btn-vpn" class="vpn-trigger" title="dejavu Global VPN (86+ Countries)">
@@ -187,26 +180,26 @@
       </div>
     </div>
 
-    <!-- Row 3: Optional Samsung Internet Quick Access / Favorites Ribbon (34px when active) -->
+    <!-- Row 3: Optional Quick Access / Favorites Bar (34px when active) -->
     <nav id="favbar" class="favbar hidden" aria-label="Quick Access websites">
       <div id="favbar-list" class="favbar-list"></div>
     </nav>
   </header>
 
-  <!-- Samsung Internet PC × Google Pixel Material Design 3 Left Navigation Rail (56px) -->
-  <aside id="m3-nav-rail" class="m3-nav-rail" aria-label="dejavu Quick Navigation Rail">
+  <!-- Google Pixel Material Design 3 Left Navigation Rail (56px) -->
+  <aside id="m3-nav-rail" class="m3-nav-rail" aria-label="dejavu Navigation Rail">
     <div class="m3-rail-top">
       <button type="button" id="rail-newtab" class="m3-rail-fab" title="New Tab (Ctrl+T)">
         <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M10 4.2v11.6M4.2 10h11.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
 
-      <button type="button" id="rail-home" class="m3-rail-item active" title="Quick Access / Start Page">
+      <button type="button" id="rail-home" class="m3-rail-item active" title="Start Page &amp; Quick Access">
         <span class="m3-rail-pill">
           <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M3.5 9.6L10 4l6.5 5.6v6.2a1.2 1.2 0 0 1-1.2 1.2h-3.6v-4.4H8.3V17H4.7a1.2 1.2 0 0 1-1.2-1.2V9.6z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
         </span>
       </button>
 
-      <button type="button" id="rail-sidebar" class="m3-rail-item" title="Samsung Side Panel (Bookmarks, Reading List &amp; Tab Groups · Ctrl+Shift+L)">
+      <button type="button" id="rail-sidebar" class="m3-rail-item" title="Side Panel (Bookmarks, Reading List &amp; Tab Groups · Ctrl+Shift+L)">
         <span class="m3-rail-pill">
           <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M5.2 3.8h9.6a1.4 1.4 0 0 1 1.4 1.4v11.6L10 13.4l-6.2 3.4V5.2a1.4 1.4 0 0 1 1.4-1.4z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
         </span>
@@ -219,7 +212,7 @@
         </span>
       </button>
 
-      <button type="button" id="rail-media" class="m3-rail-item" title="Grab Page Videos, Audio &amp; Media (8x)">
+      <button type="button" id="rail-media" class="m3-rail-item" title="Grab Page Videos, Audio &amp; Streams (8x)">
         <span class="m3-rail-pill">
           <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><rect x="3" y="4.5" width="14" height="11" rx="2.5" stroke="currentColor" stroke-width="1.55"/><path d="M8.5 7.6L13.2 10l-4.7 2.4V7.6z" fill="currentColor"/></svg>
           <span id="rail-media-dot" class="m3-rail-dot hidden"></span>
@@ -268,19 +261,18 @@
     </div>
   </aside>
 
-  <!-- Main Viewport: Safari Start Page & Safari Tab Overview Grid -->
+  <!-- Main Viewport: Material Design 3 Start Page, Tab Overview, Settings & Turbo Downloads -->
   <main id="viewport">
-    <!-- Authentic macOS Safari Start Page — Butterfly Amethyst Liquid Glass Edition -->
     <section id="newtab-view">
       <div class="startpage-scroll">
         <div class="startpage-container">
-          <!-- Butterfly Hero Brand + Safari Profile Greeting + Smart Search Pill -->
+          <!-- Calm Material 3 Brand Header & Profile Greeting Chip -->
           <div class="hero-brand anim-rise-1">
             <div class="hero-logo-wrap">
-              <img src="https://dejavu.local/logo-transparent.png" id="newtab-logo" alt="dejavu butterfly logo" draggable="false">
+              <img src="https://dejavu.local/logo-transparent.png" id="newtab-logo" alt="dejavu" draggable="false">
             </div>
             <h1 class="hero-title">dejavu</h1>
-            <button type="button" id="startpage-profile-badge" class="glass-pill sp-profile-badge" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10" title="Switch Profile &amp; Updates">
+            <button type="button" id="startpage-profile-badge" class="sp-profile-badge" title="Switch Profile &amp; Updates">
               <span id="sp-badge-avatar" class="sp-badge-avatar"></span>
               <span id="sp-badge-greeting" class="sp-badge-greeting">Good day</span>
               <span class="sp-badge-dot" aria-hidden="true"></span>
@@ -288,8 +280,9 @@
             </button>
           </div>
 
+          <!-- Google Pixel Material 3 Pill Search Bar -->
           <div class="hero-search-wrap anim-rise-2">
-            <form id="newtab-search-form" class="glass-pill hero-search" data-liquid-glass data-lg-bezel="22" data-lg-scale="26" data-lg-dispersion="1.18" data-lg-dome="0.04">
+            <form id="newtab-search-form" class="hero-search">
               <svg class="hero-search-ico" viewBox="0 0 20 20" fill="none">
                 <circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.55"/>
                 <path d="M13.4 13.4L16.8 16.8" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/>
@@ -306,31 +299,31 @@
                 <svg viewBox="0 0 18 18" fill="none"><path d="M4.2 9h9.6M9.8 4.6L14.2 9l-4.4 4.4" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
             </form>
-            <div id="newtab-suggest" class="glass-card hero-suggest hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="18"></div>
+            <div id="newtab-suggest" class="hero-suggest hidden"></div>
           </div>
 
-          <!-- Samsung Internet Quick Access (Material 3 Rounded Tiles) -->
+          <!-- Quick Access Board (Material Design 3 Tonal Tiles) -->
           <div id="sp-sec-favorites" class="sp-section anim-rise-3">
             <div class="sp-section-head">
               <h2 class="sp-section-title">Quick Access</h2>
             </div>
-            <div id="shortcuts-grid" class="safari-fav-grid"></div>
+            <div id="shortcuts-grid" class="m3-fav-grid"></div>
           </div>
 
-          <!-- Safari Section 2: Frequently Visited (Auto-populated from History) -->
+          <!-- Frequently Visited -->
           <div id="sp-sec-frequent" class="sp-section hidden anim-rise-4">
             <div class="sp-section-head">
               <h2 class="sp-section-title">Frequently Visited</h2>
             </div>
-            <div id="frequent-grid" class="safari-frequent-grid"></div>
+            <div id="frequent-grid" class="m3-frequent-grid"></div>
           </div>
 
-          <!-- Safari Section 3: Privacy Report Banner Card + Live VPN Chip -->
+          <!-- Privacy Report Card + Live VPN Chip -->
           <div id="sp-sec-privacy" class="sp-section anim-rise-4">
             <div class="sp-section-head">
               <h2 class="sp-section-title">Privacy Report</h2>
             </div>
-            <div id="privacy-report-card" class="glass-card safari-privacy-card" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="16">
+            <div id="privacy-report-card" class="m3-privacy-card">
               <button type="button" id="newtab-shield-chip" class="sp-privacy-main" title="Open Ad Blocker &amp; Privacy Settings">
                 <div class="sp-shield-medallion">
                   <svg viewBox="0 0 22 22" fill="none" width="20" height="20">
@@ -360,17 +353,17 @@
             </div>
           </div>
 
-          <!-- Safari Section 4: Reading List Shelf -->
+          <!-- Reading List Shelf -->
           <div id="sp-sec-reading" class="sp-section hidden anim-rise-4">
             <div class="sp-section-head">
               <h2 class="sp-section-title">Reading List</h2>
             </div>
-            <div id="reading-grid" class="safari-reading-grid"></div>
+            <div id="reading-grid" class="m3-reading-grid"></div>
           </div>
         </div>
       </div>
 
-      <!-- MacBook Safari Bottom-Left Link Hover Status Pill -->
+      <!-- Bottom-Left Link Hover Status Pill -->
       <div id="startpage-status-pill" class="sp-status-pill" aria-hidden="true">
         <span id="sp-status-lock" class="sp-status-lock">
           <svg viewBox="0 0 14 14" fill="none" width="11" height="11"><rect x="3.2" y="6.2" width="7.6" height="5.4" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M4.9 6.2V4.7a2.1 2.1 0 0 1 4.2 0v1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -378,9 +371,9 @@
         <span id="startpage-status-text" class="sp-status-text"></span>
       </div>
 
-      <!-- Iconic Bottom-Right Safari Customize Sliders Button -->
-      <button id="btn-wallpaper-store" class="glass-pill customize-trigger" data-liquid-glass data-lg-fast="1" data-lg-bezel="12" data-lg-scale="15" title="Customize Start Page &amp; Butterfly Wallpapers">
-        <svg viewBox="0 0 18 18" fill="none" width="14" height="14">
+      <!-- Google Pixel M3 Extended FAB: Customize Start Page -->
+      <button id="btn-wallpaper-store" class="customize-trigger" title="Customize Start Page &amp; Material You Wallpapers">
+        <svg viewBox="0 0 18 18" fill="none" width="15" height="15">
           <path d="M3 5.2h12M3 9h12M3 12.8h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.72"/>
           <circle cx="6.2" cy="5.2" r="1.7" fill="currentColor"/>
           <circle cx="11.8" cy="9" r="1.7" fill="currentColor"/>
@@ -390,24 +383,24 @@
       </button>
     </section>
 
-    <!-- Authentic macOS Safari Tab Overview Grid (Full-Window GPU Spring Zoom) -->
+    <!-- Material Design 3 Tab Overview Grid (Ctrl+Shift+O) -->
     <section id="tab-overview" class="tab-overview hidden" aria-label="Tab Overview">
       <div class="overview-bar">
         <div class="overview-bar-left">
-          <button id="btn-ov-group" class="glass-pill ov-group-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="9" data-lg-scale="12" title="Switch Tab Group">
+          <button id="btn-ov-group" class="ov-group-pill" title="Switch Tab Group">
             <span id="ov-group-dot" class="group-badge-dot"></span>
             <span id="ov-group-name">Start Tabs</span>
             <span id="ov-tab-count" class="ov-count-badge">1</span>
           </button>
         </div>
 
-        <div class="glass-pill ov-search-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="9" data-lg-scale="12">
-          <svg viewBox="0 0 16 16" fill="none" width="13" height="13"><circle cx="7.2" cy="7.2" r="4.3" stroke="currentColor" stroke-width="1.45"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div class="ov-search-pill">
+          <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="7.2" cy="7.2" r="4.3" stroke="currentColor" stroke-width="1.45"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           <input id="ov-search-input" type="text" placeholder="Search Tabs" spellcheck="false" autocomplete="off">
         </div>
 
         <div class="overview-bar-right">
-          <button id="btn-ov-new" class="glass-pill ov-act-btn" data-liquid-glass data-lg-fast="1" data-lg-bezel="9" data-lg-scale="12" title="New Tab">+ New Tab</button>
+          <button id="btn-ov-new" class="ov-act-btn" title="New Tab">+ New Tab</button>
           <button id="btn-ov-done" class="ov-done-btn" title="Exit Tab Overview (Esc)">Done</button>
         </div>
       </div>
@@ -415,8 +408,8 @@
       <div id="overview-grid" class="overview-grid"></div>
     </section>
 
-    <!-- Right-Click Safari Tab Context Menu -->
-    <div id="tab-context-menu" class="glass-card tab-ctx-menu hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="12" data-lg-scale="14" role="menu">
+    <!-- Right-Click Tab Context Menu (Fallback) -->
+    <div id="tab-context-menu" class="tab-ctx-menu hidden" role="menu">
       <button type="button" class="ctx-item" data-act="pin">
         <svg viewBox="0 0 16 16" fill="none"><path d="M9.8 2.8l3.4 3.4-1.4 1.4-.9-.4-2.5 2.5.4 1.8-1.2 1.2-2.2-2.2-2.6 2.6-.7-.7 2.6-2.6-2.2-2.2 1.2-1.2 1.8.4 2.5-2.5-.4-.9 1.4-1.4z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
         <span id="ctx-pin-label">Pin Tab</span>
@@ -436,19 +429,19 @@
       </button>
     </div>
 
-    <!-- Safari Start Page Customize + Butterfly Studio Modal -->
-    <div id="wallpaper-store" class="glass-card wallpaper-store hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="20" data-lg-scale="24" data-lg-dome="0.03">
+    <!-- Customize Start Page & Material Design 3 Wallpaper Gallery Modal -->
+    <div id="wallpaper-store" class="wallpaper-store hidden">
       <div class="store-head">
         <div class="store-brand">
           <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
           <div>
             <div class="store-title">Customize Start Page</div>
-            <div class="store-sub">Quick Access sections &amp; 35 Material You HD themes</div>
+            <div class="store-sub">Quick Access sections &amp; Material Design 3 HD wallpapers</div>
           </div>
         </div>
         <div class="store-controls">
           <div class="store-tabs" id="store-tabs">
-            <button class="store-tab active" data-cat="m3">Material You (9)</button>
+            <button class="store-tab active" data-cat="m3">Material 3 (9)</button>
             <button class="store-tab" data-cat="all">All (35)</button>
             <button class="store-tab" data-cat="art">HD Art (24)</button>
             <button class="store-tab" data-cat="live">Live (11)</button>
@@ -461,10 +454,10 @@
         </div>
       </div>
 
-      <!-- Safari Start Page Visibility Switches -->
+      <!-- Start Page Section Toggles -->
       <div class="sp-prefs-bar">
         <label class="sp-pref-chip">
-          <span>Favorites</span>
+          <span>Quick Access</span>
           <button type="button" id="pref-favorites" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
         </label>
         <label class="sp-pref-chip">
@@ -486,58 +479,45 @@
 
     <!-- Google Pixel Material Design 3 Settings Window (Ctrl+,) -->
     <section id="settings-overlay" class="settings-overlay hidden" aria-label="dejavu Settings">
-      <div id="settings-window" class="glass-card settings-window">
-        <!-- Left Material 3 Navigation Rail / Drawer -->
+      <div id="settings-window" class="settings-window">
         <aside class="settings-sidebar">
           <div class="settings-brand">
             <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
             <div>
               <div class="settings-brand-title">dejavu Settings</div>
-              <div id="settings-version-sub" class="settings-brand-sub">Material You · v4.2.0</div>
+              <div id="settings-version-sub" class="settings-brand-sub">Material You · v4.3.0</div>
             </div>
           </div>
 
           <div class="settings-search-box">
-            <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><circle cx="7.2" cy="7.2" r="4.4" stroke="currentColor" stroke-width="1.45"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><circle cx="7.2" cy="7.2" r="4.4" stroke="currentColor" stroke-width="1.45"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             <input id="settings-search-input" type="text" placeholder="Search settings…" spellcheck="false" autocomplete="off">
           </div>
 
           <nav id="settings-nav" class="settings-nav" role="tablist">
             <button type="button" class="settings-nav-item active" data-pane="general" role="tab">
-              <span class="snav-ico ico-general">
-                <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M9 2.6v1.5M9 13.9v1.5M2.6 9h1.5M13.9 9h1.5M4.5 4.5l1.1 1.1M12.4 12.4l1.1 1.1M13.5 4.5l-1.1 1.1M5.6 12.4l-1.1 1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-              </span>
+              <span class="snav-ico"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M9 2.6v1.5M9 13.9v1.5M2.6 9h1.5M13.9 9h1.5M4.5 4.5l1.1 1.1M12.4 12.4l1.1 1.1M13.5 4.5l-1.1 1.1M5.6 12.4l-1.1 1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
               <span>General</span>
             </button>
             <button type="button" class="settings-nav-item" data-pane="appearance" role="tab">
-              <span class="snav-ico ico-appearance">
-                <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="5.6" stroke="currentColor" stroke-width="1.5"/><path d="M9 3.4a5.6 5.6 0 0 1 0 11.2V3.4z" fill="currentColor" opacity="0.72"/></svg>
-              </span>
+              <span class="snav-ico"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="5.6" stroke="currentColor" stroke-width="1.5"/><path d="M9 3.4a5.6 5.6 0 0 1 0 11.2V3.4z" fill="currentColor" opacity="0.72"/></svg></span>
               <span>Appearance</span>
             </button>
             <button type="button" class="settings-nav-item" data-pane="startpage" role="tab">
-              <span class="snav-ico ico-startpage">
-                <svg viewBox="0 0 18 18" fill="none"><rect x="3" y="3.5" width="12" height="11" rx="2.4" stroke="currentColor" stroke-width="1.45"/><path d="M3 7h12M7.2 7v7.5" stroke="currentColor" stroke-width="1.35"/></svg>
-              </span>
+              <span class="snav-ico"><svg viewBox="0 0 18 18" fill="none"><rect x="3" y="3.5" width="12" height="11" rx="2.4" stroke="currentColor" stroke-width="1.45"/><path d="M3 7h12M7.2 7v7.5" stroke="currentColor" stroke-width="1.35"/></svg></span>
               <span>Start Page</span>
             </button>
             <button type="button" class="settings-nav-item" data-pane="wallpapers" role="tab">
-              <span class="snav-ico ico-wallpapers">
-                <svg viewBox="0 0 18 18" fill="none"><rect x="2.8" y="3.6" width="12.4" height="10.8" rx="2.3" stroke="currentColor" stroke-width="1.45"/><circle cx="6.7" cy="7.3" r="1.2" fill="currentColor"/><path d="M3.4 12.7l3.2-3.1 2.4 2.2 2.2-2.2 3.3 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
+              <span class="snav-ico"><svg viewBox="0 0 18 18" fill="none"><rect x="2.8" y="3.6" width="12.4" height="10.8" rx="2.3" stroke="currentColor" stroke-width="1.45"/><circle cx="6.7" cy="7.3" r="1.2" fill="currentColor"/><path d="M3.4 12.7l3.2-3.1 2.4 2.2 2.2-2.2 3.3 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               <span>Wallpapers</span>
               <span class="settings-nav-pill">35</span>
             </button>
             <button type="button" class="settings-nav-item" data-pane="privacy" role="tab">
-              <span class="snav-ico ico-privacy">
-                <svg viewBox="0 0 18 18" fill="none"><path d="M9 2.4L3.6 4.6v4.3c0 3.5 2.3 6.2 5.4 7.3 3.1-1.1 5.4-3.8 5.4-7.3V4.6L9 2.4z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M6.6 9.1l1.7 1.7 3.3-3.5" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
+              <span class="snav-ico"><svg viewBox="0 0 18 18" fill="none"><path d="M9 2.4L3.6 4.6v4.3c0 3.5 2.3 6.2 5.4 7.3 3.1-1.1 5.4-3.8 5.4-7.3V4.6L9 2.4z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M6.6 9.1l1.7 1.7 3.3-3.5" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               <span>Privacy &amp; VPN</span>
             </button>
             <button type="button" class="settings-nav-item" data-pane="shortcuts" role="tab">
-              <span class="snav-ico ico-shortcuts">
-                <svg viewBox="0 0 18 18" fill="none"><rect x="2.5" y="4.5" width="13" height="9" rx="2" stroke="currentColor" stroke-width="1.45"/><path d="M5.2 7.6h1.2M8.4 7.6h1.2M11.6 7.6h1.2M6 10.6h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-              </span>
+              <span class="snav-ico"><svg viewBox="0 0 18 18" fill="none"><rect x="2.5" y="4.5" width="13" height="9" rx="2" stroke="currentColor" stroke-width="1.45"/><path d="M5.2 7.6h1.2M8.4 7.6h1.2M11.6 7.6h1.2M6 10.6h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
               <span>Tabs &amp; Shortcuts</span>
             </button>
           </nav>
@@ -547,14 +527,13 @@
           </div>
         </aside>
 
-        <!-- Right Pane Content -->
         <div class="settings-main">
           <div class="settings-main-head">
             <div>
               <h2 id="settings-pane-title" class="settings-pane-title">General</h2>
               <p id="settings-pane-sub" class="settings-pane-sub">Search engine, startup tabs, homepage &amp; toolbar behavior</p>
             </div>
-            <button type="button" id="btn-settings-done" class="settings-done-btn" title="Close Options (Esc)">Done</button>
+            <button type="button" id="btn-settings-done" class="settings-done-btn" title="Close Settings (Esc)">Done</button>
           </div>
 
           <div class="settings-scroll">
@@ -565,7 +544,7 @@
                 <div class="opt-row stacked">
                   <div class="opt-meta">
                     <div class="opt-title">Default Search Engine</div>
-                    <div class="opt-desc">Used by the Smart Search Field and Start Page search bar</div>
+                    <div class="opt-desc">Used by the top address bar and Start Page search bar</div>
                   </div>
                   <div class="opt-seg" id="opt-search-engine">
                     <button type="button" class="opt-seg-btn active" data-val="google">Google</button>
@@ -612,25 +591,25 @@
               </div>
 
               <div class="opt-group">
-                <div class="opt-group-label">Toolbar, Sidebar &amp; Turbo Downloads</div>
+                <div class="opt-group-label">Navigation Rail, Toolbar &amp; Turbo Downloads</div>
                 <div class="opt-row">
                   <div class="opt-meta">
-                    <div class="opt-title">Show Samsung Navigation Rail</div>
-                    <div class="opt-desc">Keep the Google Pixel Material 3 quick-access sidebar rail docked on the left edge</div>
+                    <div class="opt-title">Show Material 3 Navigation Rail</div>
+                    <div class="opt-desc">Keep the quick-access navigation rail docked along the left edge</div>
                   </div>
                   <button type="button" id="opt-show-navrail" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
                 </div>
                 <div class="opt-row">
                   <div class="opt-meta">
                     <div class="opt-title">Floating Video Download Button (IDM / AntDM)</div>
-                    <div class="opt-desc">Display a compact 8x Turbo Download button in the top-right corner of webpage videos &amp; audio players</div>
+                    <div class="opt-desc">Display a compact 8x Turbo Download pill in the top-right corner of webpage videos &amp; HLS streams</div>
                   </div>
                   <button type="button" id="opt-floating-media-btn" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
                 </div>
                 <div class="opt-row">
                   <div class="opt-meta">
-                    <div class="opt-title">Show Favorites Bar</div>
-                    <div class="opt-desc">Display pinned bookmarks directly below the tab strip (Ctrl+Shift+B)</div>
+                    <div class="opt-title">Show Quick Access Favorites Bar</div>
+                    <div class="opt-desc">Display pinned bookmarks directly below the toolbar (Ctrl+Shift+B)</div>
                   </div>
                   <button type="button" id="opt-show-favbar" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
                 </div>
@@ -644,7 +623,7 @@
                 <div class="opt-row stacked">
                   <div class="opt-meta">
                     <div class="opt-title">Theme Mode</div>
-                    <div class="opt-desc">Instantly adapts Material 3 tonal surfaces across tabs, toolbar, Start Page &amp; popovers</div>
+                    <div class="opt-desc">Instantly adapts Material Design 3 tonal surfaces across tabs, toolbar, Start Page &amp; popovers</div>
                   </div>
                   <div class="appearance-cards" id="opt-appearance-mode">
                     <button type="button" class="appearance-card opt-seg-btn active" data-val="auto">
@@ -678,15 +657,15 @@
                 <div class="opt-row stacked">
                   <div class="opt-meta">
                     <div class="opt-title">Dynamic Color Seed</div>
-                    <div class="opt-desc">Generates Material You primary, tonal container &amp; indicator palettes across the browser</div>
+                    <div class="opt-desc">Generates Material You primary, tonal container &amp; indicator palettes across the entire browser</div>
                   </div>
                   <div class="accent-swatches" id="opt-accent-swatches">
                     <button type="button" class="accent-swatch active" data-accent-choice="amethyst"><span class="sw-dot" style="--sw:#d0bcff"></span><span>Amethyst</span></button>
                     <button type="button" class="accent-swatch" data-accent-choice="sapphire"><span class="sw-dot" style="--sw:#a8c7fa"></span><span>Pixel Blue</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="aurora"><span class="sw-dot" style="--sw:#7bd8c6"></span><span>Sage</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="rose"><span class="sw-dot" style="--sw:#ffb0ce"></span><span>Blossom</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="gold"><span class="sw-dot" style="--sw:#ffb951"></span><span>Honey</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="silver"><span class="sw-dot" style="--sw:#b4c8e8"></span><span>Slate</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="aurora"><span class="sw-dot" style="--sw:#82d5c4"></span><span>Sage</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="rose"><span class="sw-dot" style="--sw:#ffb0cc"></span><span>Blossom</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="gold"><span class="sw-dot" style="--sw:#f6bd60"></span><span>Honey</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="silver"><span class="sw-dot" style="--sw:#b8c8e2"></span><span>Slate</span></button>
                   </div>
                 </div>
               </div>
@@ -735,7 +714,7 @@
                 <div class="opt-row">
                   <div class="opt-meta">
                     <div class="opt-title">Wallpaper Dimming</div>
-                    <div class="opt-desc">Tune vignette contrast behind Start Page icons &amp; typography</div>
+                    <div class="opt-desc">Tune scrim contrast behind Start Page tiles &amp; typography</div>
                   </div>
                   <div class="opt-seg compact" id="opt-wp-dim">
                     <button type="button" class="opt-seg-btn" data-val="vivid">Vivid</button>
@@ -745,8 +724,8 @@
                 </div>
                 <div class="opt-row">
                   <div class="opt-meta">
-                    <div class="opt-title">Reduce Wallpaper Motion &amp; Parallax</div>
-                    <div class="opt-desc">Keeps wallpapers calm &amp; stationary for focus or battery savings</div>
+                    <div class="opt-title">Reduce Live Wallpaper Motion</div>
+                    <div class="opt-desc">Pauses live theme animations for maximum battery &amp; CPU savings</div>
                   </div>
                   <button type="button" id="opt-reduce-motion" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
                 </div>
@@ -759,8 +738,8 @@
                 <div class="opt-group-label">Visible Start Page Sections</div>
                 <div class="opt-row">
                   <div class="opt-meta">
-                    <div class="opt-title">Favorites Grid</div>
-                    <div class="opt-desc">Quick-access squircle tiles on your Start Page</div>
+                    <div class="opt-title">Quick Access Grid</div>
+                    <div class="opt-desc">Tonal rounded site tiles on your Start Page</div>
                   </div>
                   <button type="button" id="opt-sp-favorites" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
                 </div>
@@ -787,15 +766,15 @@
                 </div>
                 <div class="opt-row">
                   <div class="opt-meta">
-                    <div class="opt-title">Profile Greeting Badge</div>
-                    <div class="opt-desc">Shows time-of-day greeting &amp; active Butterfly profile pill</div>
+                    <div class="opt-title">Profile Greeting Chip</div>
+                    <div class="opt-desc">Shows time-of-day greeting &amp; active profile badge</div>
                   </div>
                   <button type="button" id="opt-sp-greeting" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
                 </div>
                 <div class="opt-row">
                   <div class="opt-meta">
                     <div class="opt-title">Center Start Page Search Bar</div>
-                    <div class="opt-desc">Turn off for an ultra-minimal Safari look using only the top Smart Search Field</div>
+                    <div class="opt-desc">Turn off for an ultra-minimal Start Page using only the top pill address bar</div>
                   </div>
                   <button type="button" id="opt-sp-search" class="liquid-switch sm on" role="switch"><span class="switch-knob"></span></button>
                 </div>
@@ -805,8 +784,8 @@
                 <div class="opt-group-label">Background Artwork</div>
                 <div class="opt-row">
                   <div class="opt-meta">
-                    <div class="opt-title">Material You &amp; Butterfly HD Studio</div>
-                    <div class="opt-desc">Browse 9 Google Pixel Material You wallpapers, 16 classic artworks, 11 live themes, or upload your own</div>
+                    <div class="opt-title">Material Design 3 &amp; HD Wallpaper Gallery</div>
+                    <div class="opt-desc">8 Google Pixel Material Design 3 ceramic artworks, 16 HD classics, 11 live themes, or your own photo</div>
                   </div>
                   <div style="display:flex;gap:8px;flex-shrink:0;">
                     <button type="button" id="btn-sp-goto-wallpapers" class="opt-mini-btn primary">Browse 35 Themes</button>
@@ -816,11 +795,11 @@
               </div>
             </div>
 
-            <!-- Pane 4: Embedded 35-Theme Material You & HD Wallpaper Gallery -->
+            <!-- Pane 4: Embedded 35-Theme Material Design 3 & HD Wallpaper Gallery -->
             <div class="settings-pane hidden" data-pane-body="wallpapers">
               <div class="opt-wp-toolbar">
                 <div class="opt-seg compact" id="opt-wp-filter">
-                  <button type="button" class="opt-seg-btn active" data-cat="m3">Material You (9)</button>
+                  <button type="button" class="opt-seg-btn active" data-cat="m3">Material 3 (9)</button>
                   <button type="button" class="opt-seg-btn" data-cat="all">All (35)</button>
                   <button type="button" class="opt-seg-btn" data-cat="art">HD Art (24)</button>
                   <button type="button" class="opt-seg-btn" data-cat="live">Live (11)</button>
@@ -904,7 +883,7 @@
                 <div class="opt-row">
                   <div class="opt-meta">
                     <div class="opt-title">Compact Tab Bar</div>
-                    <div class="opt-desc">Use a tighter 32px Safari-style tab bar</div>
+                    <div class="opt-desc">Use a tighter 34px top tab strip</div>
                   </div>
                   <button type="button" id="opt-tabs-compact-mirror" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
                 </div>
@@ -925,10 +904,10 @@
                   <div class="kbd-row"><span>Close Tab</span><kbd>Ctrl + W</kbd></div>
                   <div class="kbd-row"><span>Reopen Closed Tab</span><kbd>Ctrl + Shift + T</kbd></div>
                   <div class="kbd-row"><span>Tab Overview Grid</span><kbd>Ctrl + Shift + O</kbd></div>
-                  <div class="kbd-row"><span>Samsung Side Panel</span><kbd>Ctrl + Shift + L</kbd></div>
+                  <div class="kbd-row"><span>Side Panel</span><kbd>Ctrl + Shift + L</kbd></div>
                   <div class="kbd-row"><span>Quick Access Bar</span><kbd>Ctrl + Shift + B</kbd></div>
                   <div class="kbd-row"><span>Reader View</span><kbd>Ctrl + Shift + R</kbd></div>
-                  <div class="kbd-row"><span>Focus Smart Search</span><kbd>Ctrl + L</kbd></div>
+                  <div class="kbd-row"><span>Focus Address Bar</span><kbd>Ctrl + L</kbd></div>
                   <div class="kbd-row"><span>Mute / Unmute Tab</span><kbd>Ctrl + M</kbd></div>
                   <div class="kbd-row"><span>Bookmark / Pin Favorite</span><kbd>Ctrl + D</kbd></div>
                   <div class="kbd-row"><span>Add to Reading List</span><kbd>Ctrl + Shift + D</kbd></div>
@@ -946,10 +925,9 @@
       </div>
     </section>
 
-    <!-- AntDM-Style Material Design 3 Turbo Download Manager (8-Thread Accelerator & Page Media Sniffer) -->
+    <!-- AntDM-Class Material Design 3 Turbo Download Manager (8-Thread Accelerator, HLS Stream Assembler & Media Sniffer) -->
     <section id="dl-manager-overlay" class="settings-overlay dl-manager-overlay hidden" aria-label="dejavu Turbo Download Manager">
       <div id="dl-manager-window" class="settings-window dl-manager-window">
-        <!-- Left M3 Navigation Drawer -->
         <aside class="settings-sidebar dlm-sidebar">
           <div class="settings-brand">
             <div class="dlm-brand-badge">
@@ -959,7 +937,7 @@
             </div>
             <div>
               <div class="settings-brand-title">Turbo Downloads</div>
-              <div class="settings-brand-sub">8-Thread Accelerator · AntDM</div>
+              <div class="settings-brand-sub">8x Accelerator · HLS &amp; Video</div>
             </div>
           </div>
 
@@ -1007,12 +985,11 @@
           </div>
         </aside>
 
-        <!-- Right Main Workspace -->
         <div class="settings-main dlm-main">
           <div class="settings-main-head dlm-head">
             <div>
               <h2 id="dlm-title" class="settings-pane-title">All Downloads</h2>
-              <p id="dlm-sub" class="settings-pane-sub">8-thread byte-range acceleration · Auto-resumes paused transfers · Grab videos, files &amp; links</p>
+              <p id="dlm-sub" class="settings-pane-sub">8-thread byte-range &amp; HLS .m3u8 stream assembler · Grab videos, audio &amp; files</p>
             </div>
             <div class="dlm-head-acts">
               <button type="button" id="btn-dlm-pause-all" class="opt-mini-btn">Pause All</button>
@@ -1022,22 +999,20 @@
             </div>
           </div>
 
-          <!-- AntDM + Paste Direct URL Bar -->
           <div class="dlm-url-bar">
             <div class="dlm-url-pill">
               <svg viewBox="0 0 18 18" width="15" height="15" fill="none" style="flex-shrink:0;opacity:0.75;"><path d="M7.6 10.4a3.4 3.4 0 0 0 4.8 0l2.1-2.1a3.4 3.4 0 0 0-4.8-4.8L8.5 4.7M10.4 7.6a3.4 3.4 0 0 0-4.8 0L3.5 9.7a3.4 3.4 0 0 0 4.8 4.8l1.2-1.2" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>
-              <input id="dlm-url-input" type="text" placeholder="Paste any direct file, video, audio, ZIP, ISO, or PDF URL for 8x Turbo Download…" spellcheck="false" autocomplete="off">
+              <input id="dlm-url-input" type="text" placeholder="Paste any direct file, MP4, HLS .m3u8, audio, ZIP, ISO, or PDF URL for 8x Turbo Download…" spellcheck="false" autocomplete="off">
             </div>
             <button type="button" id="btn-dlm-add-url" class="opt-mini-btn primary dlm-go-btn">+ 8x Download</button>
-            <button type="button" id="btn-dlm-scan-media" class="opt-mini-btn dlm-scan-btn" title="Sniff videos, audio, documents &amp; high-res images from the active tab">Grab Page Media</button>
+            <button type="button" id="btn-dlm-scan-media" class="opt-mini-btn dlm-scan-btn" title="Sniff videos, HLS streams, audio, documents &amp; images from the active tab">Grab Page Media</button>
           </div>
 
-          <!-- Dynamic List Area -->
           <div id="dlm-scroll" class="settings-scroll dlm-scroll">
             <div id="dlm-media-banner" class="dlm-media-banner hidden">
               <div>
                 <div class="dlm-mb-title">Download Everything from Active Page</div>
-                <div id="dlm-mb-sub" class="dlm-mb-sub">Detected videos, audio tracks, archives, documents &amp; high-res images</div>
+                <div id="dlm-mb-sub" class="dlm-mb-sub">Detected videos, HLS streams, audio tracks, archives, documents &amp; images</div>
               </div>
               <div style="display:flex;gap:8px;flex-shrink:0;">
                 <button type="button" id="btn-dlm-rescan" class="opt-mini-btn">Rescan Tab</button>
@@ -1050,9 +1025,9 @@
       </div>
     </section>
 
-    <!-- Add Favorite Site Modal -->
-    <div id="shortcut-modal" class="glass-card shortcut-modal hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="18" data-lg-scale="22">
-      <div class="modal-title">Add Favorite Site</div>
+    <!-- Add Quick Access Site Dialog -->
+    <div id="shortcut-modal" class="shortcut-modal hidden">
+      <div class="modal-title">Add Quick Access Site</div>
       <input id="sc-name" class="modal-input" type="text" placeholder="Name (e.g. Spotify)" autocomplete="off">
       <input id="sc-url" class="modal-input" type="text" placeholder="Website (e.g. open.spotify.com)" autocomplete="off">
       <div class="modal-actions">

@@ -32,7 +32,7 @@
         android:background="@color/obsidian_bg"
         android:visibility="gone" />
 
-    <!-- Layer 3: Full-Bleed Edge-to-Edge Butterfly UI / Transparent Modal Sheets / Omnibox -->
+    <!-- Layer 3: Full-Bleed Edge-to-Edge Material Design 3 UI / Modal Sheets / Omnibox -->
     <WebView
         android:id="@+id/ui_webview"
         android:layout_width="match_parent"
@@ -40,13 +40,13 @@
         android:background="@android:color/transparent"
         android:overScrollMode="never" />
 
-    <!-- Layer 4: Top Chrome Slot (Top-Bar Chrome Mode + Find-in-Page) -->
+    <!-- Layer 4: Top Chrome Slot (Top-Bar Mode + Find-in-Page) -->
     <LinearLayout
         android:id="@+id/top_chrome"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
-        android:elevation="12dp"
+        android:elevation="6dp"
         android:orientation="vertical"
         android:visibility="gone">
 
@@ -61,12 +61,12 @@
             android:paddingBottom="8dp"
             android:visibility="gone" />
 
-        <!-- Find-in-Page Bar -->
+        <!-- Find-in-Page Bar (Material 3 Surface Container) -->
         <LinearLayout
             android:id="@+id/find_bar"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="#F5120F22"
+            android:background="@color/obsidian_surface"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingStart="16dp"
@@ -131,19 +131,19 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- Layer 5: Safari-Style Scroll-Collapsed Floating Domain Capsule -->
+    <!-- Layer 5: Material 3 Scroll-Collapsed Floating Domain Pill -->
     <LinearLayout
         android:id="@+id/collapsed_pill"
         android:layout_width="wrap_content"
-        android:layout_height="34dp"
+        android:layout_height="36dp"
         android:layout_gravity="bottom|center_horizontal"
         android:layout_marginBottom="14dp"
         android:background="@drawable/bg_collapsed_pill"
-        android:elevation="10dp"
+        android:elevation="6dp"
         android:gravity="center"
         android:orientation="horizontal"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:visibility="gone">
 
         <ImageView
@@ -167,14 +167,14 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Layer 6: Safari iOS x Samsung Internet Floating Bottom Chrome Dock -->
+    <!-- Layer 6: Material Design 3 Bottom App Bar & Navigation Dock -->
     <LinearLayout
         android:id="@+id/bottom_chrome"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@drawable/bg_bottom_bar"
-        android:elevation="14dp"
+        android:elevation="6dp"
         android:orientation="vertical">
 
         <!-- Thin Amethyst Page Load Progress Line (Bottom Mode) -->
@@ -332,7 +332,7 @@
                 android:src="@drawable/ic_forward"
                 android:tint="@color/ink_primary" />
 
-            <!-- 3. Center Signature Pill: dejavu Link / PC Sync -->
+            <!-- 3. Center Material 3 Tonal Pill: dejavu Link / PC Sync -->
             <FrameLayout
                 android:id="@+id/nav_sync_wrap"
                 android:layout_width="0dp"
@@ -342,7 +342,7 @@
 
                 <FrameLayout
                     android:id="@+id/nav_sync_pill"
-                    android:layout_width="46dp"
+                    android:layout_width="56dp"
                     android:layout_height="32dp"
                     android:layout_gravity="center"
                     android:background="@drawable/bg_center_action">
@@ -403,7 +403,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Layer 7: Floating Dynamic-Island Style Incoming Drop Banner from Windows PC -->
+    <!-- Layer 7: Material Design 3 Incoming Drop Banner from Windows PC -->
     <LinearLayout
         android:id="@+id/incoming_banner"
         android:layout_width="match_parent"
@@ -413,9 +413,9 @@
         android:layout_marginTop="14dp"
         android:layout_marginEnd="14dp"
         android:background="@drawable/bg_toast_banner"
-        android:elevation="18dp"
+        android:elevation="10dp"
         android:orientation="vertical"
-        android:padding="14dp"
+        android:padding="16dp"
         android:visibility="gone">
 
         <TextView
@@ -487,7 +487,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Layer 7b: Floating Liquid-Glass In-App Auto-Update Banner -->
+    <!-- Layer 7b: Material Design 3 In-App Auto-Update Banner -->
     <LinearLayout
         android:id="@+id/update_banner"
         android:layout_width="match_parent"
@@ -497,9 +497,9 @@
         android:layout_marginTop="14dp"
         android:layout_marginEnd="14dp"
         android:background="@drawable/bg_toast_banner"
-        android:elevation="19dp"
+        android:elevation="12dp"
         android:orientation="vertical"
-        android:padding="14dp"
+        android:padding="16dp"
         android:visibility="gone">
 
         <TextView

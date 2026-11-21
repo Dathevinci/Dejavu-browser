@@ -1,5 +1,6 @@
 /**
- * dejavu v2.9 Native Shell Controller — A-to-Z macOS Safari Tahoe Butterfly Liquid Glass Edition
+ * dejavu v4.3.0 Native Shell Controller — A-to-Z Google Pixel Material Design 3
+ * Pure M3 tonal surfaces, zero layout thrashing, zero idle CPU on static wallpapers.
  */
 (function () {
   const send = (msg) => {
@@ -36,7 +37,6 @@
   const btnReader = document.getElementById('btn-reader');
 
   const tabsStrip = document.getElementById('tabs-strip');
-  const activeTabGlide = document.getElementById('active-tab-glide');
   const btnNewTab = document.getElementById('btn-new-tab');
 
   const btnDownloads = document.getElementById('btn-downloads');
@@ -96,7 +96,6 @@
   const overviewGrid = document.getElementById('overview-grid');
 
   const tabContextMenu = document.getElementById('tab-context-menu');
-  const ctxPinLabel = document.getElementById('ctx-pin-label');
 
   const shortcutModal = document.getElementById('shortcut-modal');
   const scName = document.getElementById('sc-name');
@@ -115,7 +114,6 @@
   const heroSearchWrap = document.querySelector('.hero-search-wrap');
 
   const settingsOverlay = document.getElementById('settings-overlay');
-  const settingsWindow = document.getElementById('settings-window');
   const settingsSearchInput = document.getElementById('settings-search-input');
   const settingsNav = document.getElementById('settings-nav');
   const settingsPaneTitle = document.getElementById('settings-pane-title');
@@ -137,7 +135,7 @@
   const optShowFavbar = document.getElementById('opt-show-favbar');
   const optShowNavRail = document.getElementById('opt-show-navrail');
   const optFloatingMediaBtn = document.getElementById('opt-floating-media-btn');
-  const m3NavRail = document.getElementById('m3-nav-rail');
+
   const railNewtab = document.getElementById('rail-newtab');
   const railHome = document.getElementById('rail-home');
   const railSidebar = document.getElementById('rail-sidebar');
@@ -153,6 +151,7 @@
   const railVpnDot = document.getElementById('rail-vpn-dot');
   const railSettings = document.getElementById('rail-settings');
   const railCollapse = document.getElementById('rail-collapse');
+
   const optAppearanceMode = document.getElementById('opt-appearance-mode');
   const optAccentSwatches = document.getElementById('opt-accent-swatches');
   const optFullUrl = document.getElementById('opt-full-url');
@@ -184,55 +183,53 @@
   const prefPrivacy = document.getElementById('pref-privacy');
   const prefReading = document.getElementById('pref-reading');
 
+  // Official Google Pixel 9/10 × Material Design 3 Wallpaper Catalog (v4.3.0)
   const WALLPAPER_CATALOG = [
-    // Brand-New Google Pixel Material Design 3 Expressive ("Material You") Collection
-    { id: 'art:wp-m3-amethyst.jpg', cat: 'art', m3: true, name: 'Material Amethyst', desc: 'Sculpted matte obsidian-lavender paper curves & geometric butterfly', img: 'https://dejavu.local/wp-m3-amethyst.jpg' },
-    { id: 'art:wp-m3-pixel-blue.jpg', cat: 'art', m3: true, name: 'Pixel Blue Tonal', desc: 'Google Pixel deep cobalt-slate layered ceramic ribbons & butterfly', img: 'https://dejavu.local/wp-m3-pixel-blue.jpg' },
-    { id: 'art:wp-m3-sage.jpg', cat: 'art', m3: true, name: 'Material Sage', desc: 'Eucalyptus-charcoal matte paper folds & botanical mint wings', img: 'https://dejavu.local/wp-m3-sage.jpg' },
-    { id: 'art:wp-m3-blossom.jpg', cat: 'art', m3: true, name: 'Material Blossom', desc: 'Velvet espresso-plum & dusty rose sculptural ceramic folds', img: 'https://dejavu.local/wp-m3-blossom.jpg' },
-    { id: 'art:wp-m3-honey.jpg', cat: 'art', m3: true, name: 'Material Honey', desc: 'Warm espresso dark matte golden-amber & apricot curved ribbons', img: 'https://dejavu.local/wp-m3-honey.jpg' },
-    { id: 'art:wp-m3-porcelain.jpg', cat: 'art', m3: true, name: 'Porcelain Light', desc: 'Airy Material You Light lavender-cream sculpted paper arcs', img: 'https://dejavu.local/wp-m3-porcelain.jpg' },
-    { id: 'art:wp-m3-meadow.jpg', cat: 'art', m3: true, name: 'Meadow Light', desc: 'Alabaster-mint Material 3 Expressive flower & clover ceramic tiles', img: 'https://dejavu.local/wp-m3-meadow.jpg' },
-    { id: 'art:wp-m3-blush.jpg', cat: 'art', m3: true, name: 'Blush Quartz Light', desc: 'Bright porcelain-blush pastel petal waves & folded butterfly', img: 'https://dejavu.local/wp-m3-blush.jpg' },
-    { id: 'live:m3-expressive', cat: 'live', m3: true, name: 'Material You Live', desc: 'Adaptive tonal shapes reacting to your Dynamic Color Seed & theme', grad: 'linear-gradient(135deg, #4f378b 0%, #211f26 52%, #633b48 100%)' },
-    // Classic dejavu 2K HD Butterfly Artworks
-    { id: 'art:wp-velvet-mirage.jpg', cat: 'art', name: 'Velvet Mirage', desc: 'Moonlit amethyst mirror lake & prismatic ripples', img: 'https://dejavu.local/wp-velvet-mirage.jpg' },
-    { id: 'art:wp-prism-cascade.jpg', cat: 'art', name: 'Prism Cascade', desc: 'Liquid-crystal silk ribbons & spectral glasswings', img: 'https://dejavu.local/wp-prism-cascade.jpg' },
-    { id: 'art:wp-midnight-orchid.jpg', cat: 'art', name: 'Midnight Orchid', desc: 'Dewy indigo night orchids & crystal butterflies', img: 'https://dejavu.local/wp-midnight-orchid.jpg' },
+    { id: 'art:wp-m3-amethyst.jpg', cat: 'art', m3: true, mode: 'Dark', seed: 'amethyst', name: 'Obsidian Monolith', desc: 'Deep plum-obsidian ceramic monoliths & sweeping lavender arch', img: 'https://dejavu.local/wp-m3-amethyst.jpg' },
+    { id: 'art:wp-m3-pixel-blue.jpg', cat: 'art', m3: true, mode: 'Dark', seed: 'sapphire', name: 'Cobalt Ribbons', desc: 'Midnight cobalt slate & Pixel periwinkle carved sandstone waves', img: 'https://dejavu.local/wp-m3-pixel-blue.jpg' },
+    { id: 'art:wp-m3-sage.jpg', cat: 'art', m3: true, mode: 'Dark', seed: 'aurora', name: 'Eucalyptus Calm', desc: 'Dark forest plaster curved alcove & matte sage stoneware spheres', img: 'https://dejavu.local/wp-m3-sage.jpg' },
+    { id: 'art:wp-m3-blossom.jpg', cat: 'art', m3: true, mode: 'Dark', seed: 'rose', name: 'Velvet Petals', desc: 'Velvet espresso & dusty terracotta-rose Pixel Swirling Petals ceramic', img: 'https://dejavu.local/wp-m3-blossom.jpg' },
+    { id: 'art:wp-m3-honey.jpg', cat: 'art', m3: true, mode: 'Dark', seed: 'gold', name: 'Ochre Solitude', desc: 'Warm obsidian-espresso & burnished matte amber Bauhaus arcs', img: 'https://dejavu.local/wp-m3-honey.jpg' },
+    { id: 'art:wp-m3-porcelain.jpg', cat: 'art', m3: true, mode: 'Light', seed: 'amethyst', name: 'Porcelain Steps', desc: 'Sunlit alabaster stepped terraces & soft lavender-stone curved wall', img: 'https://dejavu.local/wp-m3-porcelain.jpg' },
+    { id: 'art:wp-m3-meadow.jpg', cat: 'art', m3: true, mode: 'Light', seed: 'aurora', name: 'Jade Pebbles', desc: 'Airy off-white porcelain & organic matte stoneware pebbles with celadon hill', img: 'https://dejavu.local/wp-m3-meadow.jpg' },
+    { id: 'art:wp-m3-blush.jpg', cat: 'art', m3: true, mode: 'Light', seed: 'rose', name: 'Terracotta Ribbon', desc: 'Warm sunlit ivory plaster & minimalist folded clay-blush ceramic wave', img: 'https://dejavu.local/wp-m3-blush.jpg' },
+    { id: 'live:m3-expressive', cat: 'live', m3: true, mode: 'Adaptive', name: 'Material You Live', desc: 'Adaptive tonal shapes reacting to your Dynamic Color Seed & theme', grad: 'linear-gradient(135deg, #4f378b 0%, #211f26 52%, #633b48 100%)' },
+    // Classic 2K HD Artworks
+    { id: 'art:wp-velvet-mirage.jpg', cat: 'art', name: 'Velvet Mirage', desc: 'Moonlit amethyst mirror lake & calm twilight ripples', img: 'https://dejavu.local/wp-velvet-mirage.jpg' },
+    { id: 'art:wp-prism-cascade.jpg', cat: 'art', name: 'Prism Cascade', desc: 'Flowing silk ribbons & indigo dusk tones', img: 'https://dejavu.local/wp-prism-cascade.jpg' },
+    { id: 'art:wp-midnight-orchid.jpg', cat: 'art', name: 'Midnight Orchid', desc: 'Dewy indigo night orchids & twilight hues', img: 'https://dejavu.local/wp-midnight-orchid.jpg' },
     { id: 'art:wp-stardust-sanctuary.jpg', cat: 'art', name: 'Stardust Sanctuary', desc: 'Alpine peaks under Milky Way & amethyst aurora', img: 'https://dejavu.local/wp-stardust-sanctuary.jpg' },
-    { id: 'art:wp-opal-horizon.jpg', cat: 'art', name: 'Opal Horizon', desc: 'Iridescent mother-of-pearl clouds & dusk swells', img: 'https://dejavu.local/wp-opal-horizon.jpg' },
-    { id: 'art:wp-phantom-lotus.jpg', cat: 'art', name: 'Phantom Lotus', desc: 'Frosted crystal lotus on zen indigo mirror pond', img: 'https://dejavu.local/wp-phantom-lotus.jpg' },
-    { id: 'art:wp-amethyst.jpg', cat: 'art', name: 'Amethyst Glasswing', desc: 'Faceted amethyst prism-glass in indigo twilight', img: 'https://dejavu.local/wp-amethyst.jpg' },
-    { id: 'art:wp-aurora.jpg', cat: 'art', name: 'Aurora Glasswing', desc: 'Emerald & violet aurora over glacial mirror lake', img: 'https://dejavu.local/wp-aurora.jpg' },
-    { id: 'art:wp-celestial.jpg', cat: 'art', name: 'Celestial Sapphire', desc: 'Iridescent Blue Morpho & moonlit sapphire water', img: 'https://dejavu.local/wp-celestial.jpg' },
-    { id: 'art:wp-rosequartz.jpg', cat: 'art', name: 'Rose Quartz Dusk', desc: 'Rose-quartz glass wings in velvet plum clouds', img: 'https://dejavu.local/wp-rosequartz.jpg' },
-    { id: 'art:wp-arctic.jpg', cat: 'art', name: 'Arctic Diamond', desc: 'Frosted ice butterflies & sapphire cavern prisms', img: 'https://dejavu.local/wp-arctic.jpg' },
-    { id: 'art:wp-nebula.jpg', cat: 'art', name: 'Amethyst Nebula', desc: 'Deep-space ultraviolet cosmic butterfly nebula', img: 'https://dejavu.local/wp-nebula.jpg' },
-    { id: 'art:wp-gilded.jpg', cat: 'art', name: 'Gilded Obsidian', desc: '24k champagne-gold filigree on charcoal slate', img: 'https://dejavu.local/wp-gilded.jpg' },
-    { id: 'art:wp-morpho.jpg', cat: 'art', name: 'Morpho Nocturne', desc: 'Luminous cobalt morphos & dewy nocturnal ferns', img: 'https://dejavu.local/wp-morpho.jpg' },
-    { id: 'art:wp-monarch.jpg', cat: 'art', name: 'Monarch Eclipse', desc: 'Golden eclipse corona & translucent amber wings', img: 'https://dejavu.local/wp-monarch.jpg' },
-    { id: 'art:wp-sakura.jpg', cat: 'art', name: 'Sakura Glasswing', desc: 'Moonlit Kyoto blossoms & pearl mirror pond', img: 'https://dejavu.local/wp-sakura.jpg' },
-    { id: 'live:obsidian-prism', cat: 'live', name: 'Obsidian Prism', desc: 'Violet & cyan caustic ribbons', grad: 'radial-gradient(circle at 30% 35%, #5b31b8 0%, #160f2c 55%, #06050b 100%), linear-gradient(120deg, transparent 35%, rgba(118,212,255,0.45) 55%, transparent 75%)' },
+    { id: 'art:wp-opal-horizon.jpg', cat: 'art', name: 'Opal Horizon', desc: 'Mother-of-pearl clouds & calm dusk swells', img: 'https://dejavu.local/wp-opal-horizon.jpg' },
+    { id: 'art:wp-phantom-lotus.jpg', cat: 'art', name: 'Phantom Lotus', desc: 'Minimalist lotus on zen indigo mirror pond', img: 'https://dejavu.local/wp-phantom-lotus.jpg' },
+    { id: 'art:wp-amethyst.jpg', cat: 'art', name: 'Amethyst Twilight', desc: 'Faceted amethyst sculpture in indigo twilight', img: 'https://dejavu.local/wp-amethyst.jpg' },
+    { id: 'art:wp-aurora.jpg', cat: 'art', name: 'Aurora Lake', desc: 'Emerald & violet aurora over glacial mirror lake', img: 'https://dejavu.local/wp-aurora.jpg' },
+    { id: 'art:wp-celestial.jpg', cat: 'art', name: 'Celestial Sapphire', desc: 'Deep cobalt waves & moonlit sapphire water', img: 'https://dejavu.local/wp-celestial.jpg' },
+    { id: 'art:wp-rosequartz.jpg', cat: 'art', name: 'Rose Quartz Dusk', desc: 'Rose-quartz tones in velvet plum clouds', img: 'https://dejavu.local/wp-rosequartz.jpg' },
+    { id: 'art:wp-arctic.jpg', cat: 'art', name: 'Arctic Diamond', desc: 'Glacial sapphire cavern & crystalline light', img: 'https://dejavu.local/wp-arctic.jpg' },
+    { id: 'art:wp-nebula.jpg', cat: 'art', name: 'Amethyst Nebula', desc: 'Deep-space ultraviolet cosmic nebula', img: 'https://dejavu.local/wp-nebula.jpg' },
+    { id: 'art:wp-gilded.jpg', cat: 'art', name: 'Gilded Obsidian', desc: 'Champagne-gold filigree on charcoal slate', img: 'https://dejavu.local/wp-gilded.jpg' },
+    { id: 'art:wp-morpho.jpg', cat: 'art', name: 'Morpho Nocturne', desc: 'Luminous cobalt tones & dewy nocturnal ferns', img: 'https://dejavu.local/wp-morpho.jpg' },
+    { id: 'art:wp-monarch.jpg', cat: 'art', name: 'Monarch Eclipse', desc: 'Golden eclipse corona & warm amber glow', img: 'https://dejavu.local/wp-monarch.jpg' },
+    { id: 'art:wp-sakura.jpg', cat: 'art', name: 'Sakura Pond', desc: 'Moonlit Kyoto blossoms & pearl mirror pond', img: 'https://dejavu.local/wp-sakura.jpg' },
+    // Live Themes (throttled ~30fps, auto-paused when hidden or reduced motion)
+    { id: 'live:obsidian-prism', cat: 'live', name: 'Obsidian Prism', desc: 'Violet & cyan flowing ribbons', grad: 'radial-gradient(circle at 30% 35%, #5b31b8 0%, #160f2c 55%, #06050b 100%)' },
     { id: 'live:aurora-borealis', cat: 'live', name: 'Aurora Borealis', desc: 'Emerald, violet & arctic cyan waves', grad: 'radial-gradient(circle at 35% 35%, #16b8a0 0%, #1d1646 54%, #03060d 100%)' },
     { id: 'live:crimson-velvet', cat: 'live', name: 'Crimson Velvet', desc: 'Deep ruby & rose gold silk', grad: 'radial-gradient(circle at 60% 32%, #c92c5f 0%, #2a0c1a 56%, #070306 100%)' },
-    { id: 'live:arctic-prism', cat: 'live', name: 'Arctic Prism', desc: 'Glacial diamond & silver-blue caustics', grad: 'radial-gradient(circle at 40% 34%, #5ca8f5 0%, #12213c 56%, #04070e 100%)' },
+    { id: 'live:arctic-prism', cat: 'live', name: 'Arctic Prism', desc: 'Glacial diamond & silver-blue waves', grad: 'radial-gradient(circle at 40% 34%, #5ca8f5 0%, #12213c 56%, #04070e 100%)' },
     { id: 'live:midnight-gold', cat: 'live', name: 'Midnight Gold', desc: 'Royal obsidian & champagne gold', grad: 'radial-gradient(circle at 50% 34%, #d6a244 0%, #201712 56%, #060508 100%)' },
-    { id: 'live:morpho-abyss', cat: 'live', name: 'Morpho Abyss', desc: 'Electric sapphire butterfly wings', grad: 'radial-gradient(circle at 65% 30%, #1d70e8 0%, #091736 56%, #03060f 100%)' },
-    { id: 'live:velvet-monarch', cat: 'live', name: 'Velvet Monarch', desc: 'Molten amber & rose gold', grad: 'radial-gradient(circle at 35% 35%, #d96b27 0%, #2b1210 56%, #080506 100%)' },
+    { id: 'live:morpho-abyss', cat: 'live', name: 'Morpho Abyss', desc: 'Electric sapphire waves', grad: 'radial-gradient(circle at 65% 30%, #1d70e8 0%, #091736 56%, #03060f 100%)' },
+    { id: 'live:velvet-monarch', cat: 'live', name: 'Velvet Monarch', desc: 'Warm amber & rose gold', grad: 'radial-gradient(circle at 35% 35%, #d96b27 0%, #2b1210 56%, #080506 100%)' },
     { id: 'live:sakura-chrysalis', cat: 'live', name: 'Sakura Chrysalis', desc: 'Twilight plum & pastel rose', grad: 'radial-gradient(circle at 60% 30%, #c95ea4 0%, #26112e 55%, #08050d 100%)' },
-    { id: 'live:emerald-glasswing', cat: 'live', name: 'Emerald Glasswing', desc: 'Iridescent jade & aurora mist', grad: 'radial-gradient(circle at 40% 35%, #19a88d 0%, #082325 56%, #03080a 100%)' },
-    { id: 'live:halftone-swarm', cat: 'live', name: 'Halftone Swarm', desc: 'Dotted lavender butterfly matrix', grad: 'radial-gradient(circle at 50% 40%, #8652e6 0%, #160c2c 58%, #040308 100%)' }
+    { id: 'live:emerald-glasswing', cat: 'live', name: 'Emerald Mist', desc: 'Iridescent jade & aurora mist', grad: 'radial-gradient(circle at 40% 35%, #19a88d 0%, #082325 56%, #03080a 100%)' },
+    { id: 'live:halftone-swarm', cat: 'live', name: 'Halftone Lattice', desc: 'Dotted lavender geometric matrix', grad: 'radial-gradient(circle at 50% 40%, #8652e6 0%, #160c2c 58%, #040308 100%)' }
   ];
+
   let storeFilterCat = 'm3';
   let settingsWpFilterCat = 'm3';
   let activeSettingsPane = 'general';
   let toastTimer = null;
 
-  const topBackdropCanvas = document.getElementById('optical-top-backdrop');
-  const topBackdropCtx = topBackdropCanvas.getContext('2d');
-
-  // Boot Real Liquid Glass Optical Engine & Living New Tab Canvas
-  window.LiquidGlass.init();
+  // Boot Zero-CPU Wallpaper Canvas Engine
   window.DejavuNewTabCanvas.init(newtabCanvas);
 
   const bootData = window.__DEJAVU_BOOT__ || {};
@@ -290,11 +287,10 @@
     activeForSite: true,
     totalBlocked: bootData.totalBlocked || 0
   };
-  let currentPalette = null;
   let lastActiveId = -1;
   let ctxTargetTabId = -1;
 
-  // Unified Apple boot reveal (zero flash of default wallpaper or unstyled pills!)
+  // Unified Boot Reveal (zero flash)
   let bootWallpaperReady = false;
   let bootTabsReady = false;
   let bootRevealed = false;
@@ -364,9 +360,14 @@
     topright: 'nesw-resize', bottomleft: 'nesw-resize'
   };
 
+  let lastResizeCursor = '';
   document.addEventListener('pointermove', (e) => {
     const edge = detectResizeEdge(e);
-    document.documentElement.style.cursor = edge ? edgeCursors[edge] : '';
+    const nextCursor = edge ? edgeCursors[edge] : '';
+    if (nextCursor !== lastResizeCursor) {
+      lastResizeCursor = nextCursor;
+      document.documentElement.style.cursor = nextCursor;
+    }
   }, { passive: true });
 
   document.addEventListener('mousedown', (e) => {
@@ -390,45 +391,7 @@
   });
 
   // =========================================================================
-  // Site-Adaptive Top-Bar Optical Light-Guide (Zero Text Glare!)
-  // =========================================================================
-  function getChromeHeight() {
-    const base = body.classList.contains('compact-tabs') ? 82 : 88;
-    return body.classList.contains('has-favorites') ? (base + 34) : base;
-  }
-
-  function resizeTopBackdrop() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = Math.max(1, window.innerWidth);
-    const h = getChromeHeight();
-    topBackdropCanvas.width = Math.round(w * dpr);
-    topBackdropCanvas.height = Math.round(h * dpr);
-    topBackdropCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    if (currentPalette) drawTopLightGuide(currentPalette);
-  }
-  resizeTopBackdrop();
-  window.addEventListener('resize', resizeTopBackdrop);
-
-  function drawTopLightGuide({ baseRgb, accents, isLight }) {
-    currentPalette = { baseRgb, accents, isLight };
-    const w = window.innerWidth;
-    const h = getChromeHeight();
-    const cs = getComputedStyle(body);
-    const row1 = (cs.getPropertyValue('--md-surface-container-low') || '').trim() || (isLight ? '#f6f2fa' : '#1b1a22');
-    const row2 = (cs.getPropertyValue('--md-surface-container') || '').trim() || (isLight ? '#efeaf5' : '#22202b');
-    const div = (cs.getPropertyValue('--md-outline-variant') || '').trim() || (isLight ? '#cac4d0' : '#484454');
-    const tabH = body.classList.contains('compact-tabs') ? 34 : 40;
-
-    topBackdropCtx.fillStyle = row1;
-    topBackdropCtx.fillRect(0, 0, w, tabH);
-    topBackdropCtx.fillStyle = row2;
-    topBackdropCtx.fillRect(0, tabH, w, Math.max(0, h - tabH));
-    topBackdropCtx.fillStyle = div;
-    topBackdropCtx.fillRect(0, h - 1, w, 1);
-  }
-
-  // =========================================================================
-  // Authentic Safari Toolbar Interactions
+  // Top Chrome Toolbar Interactions
   // =========================================================================
   btnHome.addEventListener('click', () => send({ type: 'home' }));
   btnSidebar.addEventListener('click', () => send({ type: 'openSidebar' }));
@@ -437,7 +400,7 @@
   btnForward.addEventListener('click', () => send({ type: 'forward' }));
   btnReload.addEventListener('click', () => send({ type: 'reload' }));
   btnNewTab.addEventListener('click', () => send({ type: 'newTab' }));
-  // Prevent buttons inside #omnibox-pill from triggering address-bar focus/edit collapse on mousedown
+
   [btnShield, btnReader, btnZoomPill, btnFavStar, btnReload].forEach((btn) => {
     if (!btn) return;
     btn.addEventListener('mousedown', (e) => {
@@ -514,8 +477,7 @@
   let lastSpBadgeKey = '';
   function syncStartPageProfileBadge(profile) {
     if (!startpageProfileBadge) return;
-    const greeting = getTimeGreeting();
-    if (spBadgeGreeting) spBadgeGreeting.textContent = greeting;
+    if (spBadgeGreeting) spBadgeGreeting.textContent = getTimeGreeting();
     if (!profile) return;
     const key = `${profile.avatar}_${profile.name}`;
     if (key !== lastSpBadgeKey) {
@@ -542,15 +504,12 @@
   function showStartPageStatus(url) {
     if (!startpageStatusPill || !startpageStatusText || !url) return;
     startpageStatusText.textContent = formatStatusUrl(url);
-    if (spStatusLock) {
-      spStatusLock.classList.toggle('hidden', !/^https:\/\//i.test(url));
-    }
+    if (spStatusLock) spStatusLock.classList.toggle('hidden', !/^https:\/\//i.test(url));
     startpageStatusPill.classList.add('visible');
   }
 
   function hideStartPageStatus() {
-    if (!startpageStatusPill) return;
-    startpageStatusPill.classList.remove('visible');
+    if (startpageStatusPill) startpageStatusPill.classList.remove('visible');
   }
 
   favbarList.addEventListener('wheel', (e) => {
@@ -558,7 +517,7 @@
   }, { passive: true });
 
   // =========================================================================
-  // Safari Smart Search Field & Grouped Autocomplete Suggestions
+  // Material Design 3 Pill Omnibox & Autocomplete Suggestions
   // =========================================================================
   let pendingOmniboxValue = null;
   let ntSuggestItems = [];
@@ -680,7 +639,6 @@
       newtabSuggest.appendChild(row);
     });
     newtabSuggest.classList.remove('hidden');
-    requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(newtabSuggest));
   }
 
   function updateNewtabSuggestHighlight() {
@@ -690,18 +648,14 @@
 
   omniboxPill.addEventListener('click', (e) => {
     if (e.target.closest('button')) return;
-    if (document.activeElement !== omniboxInput) {
-      omniboxInput.focus();
-    }
+    if (document.activeElement !== omniboxInput) omniboxInput.focus();
   });
 
   omniboxInput.addEventListener('focus', () => {
     pendingOmniboxValue = null;
     omniboxPill.classList.add('is-editing');
     const active = state.tabs.find((t) => t.id === state.activeTabId);
-    if (active && !active.isNewTab) {
-      omniboxInput.value = active.url || '';
-    }
+    if (active && !active.isNewTab) omniboxInput.value = active.url || '';
     setTimeout(() => omniboxInput.select(), 0);
   });
 
@@ -750,10 +704,7 @@
 
   newtabSearchInput.addEventListener('input', () => {
     const q = newtabSearchInput.value.trim();
-    if (!q) {
-      hideNewtabSuggestions();
-      return;
-    }
+    if (!q) { hideNewtabSuggestions(); return; }
     send({ type: 'suggestQuery', source: 'newtab', query: q });
   });
 
@@ -797,7 +748,7 @@
   }, { passive: true });
 
   // =========================================================================
-  // Authentic Safari Start Page Sections: Favorites, Frequently Visited, Reading List
+  // Start Page Sections: Quick Access, Frequently Visited, Reading List
   // =========================================================================
   let lastShortcutsSig = '';
   let lastFrequentSig = '';
@@ -813,17 +764,11 @@
       const host = extractHost(sc.url);
       const item = document.createElement('button');
       item.type = 'button';
-      item.className = 'safari-fav-item';
-      item.style.setProperty('--stagger-i', String(index));
+      item.className = 'm3-fav-item';
       item.title = sc.url;
 
       const sq = document.createElement('div');
-      sq.className = 'safari-fav-squircle';
-      sq.setAttribute('data-liquid-glass', '');
-      sq.setAttribute('data-lg-bezel', '15');
-      sq.setAttribute('data-lg-scale', '20');
-      sq.setAttribute('data-lg-dispersion', '1.14');
-      sq.setAttribute('data-lg-dome', '0.055');
+      sq.className = 'm3-fav-squircle';
 
       const letter = (sc.name || host || '?')[0].toUpperCase();
       if (host) {
@@ -834,14 +779,14 @@
         img.onerror = () => {
           img.remove();
           const sp = document.createElement('span');
-          sp.className = 'safari-fav-letter';
+          sp.className = 'm3-fav-letter';
           sp.textContent = letter;
           sq.appendChild(sp);
         };
         sq.appendChild(img);
       } else {
         const sp = document.createElement('span');
-        sp.className = 'safari-fav-letter';
+        sp.className = 'm3-fav-letter';
         sp.textContent = letter;
         sq.appendChild(sp);
       }
@@ -858,7 +803,7 @@
       sq.appendChild(rmBtn);
 
       const label = document.createElement('span');
-      label.className = 'safari-fav-label';
+      label.className = 'm3-fav-label';
       label.textContent = sc.name || host;
 
       item.appendChild(sq);
@@ -875,20 +820,18 @@
     if ((list || []).length < 12) {
       const addItem = document.createElement('button');
       addItem.type = 'button';
-      addItem.className = 'safari-fav-item shortcut-add';
-      addItem.style.setProperty('--stagger-i', String((list || []).length));
-      addItem.title = 'Add favorite site';
+      addItem.className = 'm3-fav-item shortcut-add';
+      addItem.title = 'Add Quick Access site';
       addItem.innerHTML = `
-        <div class="safari-fav-squircle" data-liquid-glass data-lg-bezel="15" data-lg-scale="18">
+        <div class="m3-fav-squircle">
           <svg viewBox="0 0 20 20" width="22" height="22" fill="none"><path d="M10 4.5v11M4.5 10h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </div>
-        <span class="safari-fav-label">Add</span>
+        <span class="m3-fav-label">Add</span>
       `;
       addItem.addEventListener('click', () => {
         scName.value = '';
         scUrl.value = '';
         shortcutModal.classList.remove('hidden');
-        window.LiquidGlass.updateElementGlass(shortcutModal);
         scName.focus();
       });
       shortcutsGrid.appendChild(addItem);
@@ -911,10 +854,6 @@
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'freq-card';
-      card.setAttribute('data-liquid-glass', '');
-      card.setAttribute('data-lg-fast', '1');
-      card.setAttribute('data-lg-bezel', '11');
-      card.setAttribute('data-lg-scale', '14');
       card.title = item.url;
 
       const icoSrc = item.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64` : 'https://dejavu.local/logo-transparent.png');
@@ -955,10 +894,6 @@
       const host = extractHost(item.url);
       const card = document.createElement('div');
       card.className = 'reading-card';
-      card.setAttribute('data-liquid-glass', '');
-      card.setAttribute('data-lg-fast', '1');
-      card.setAttribute('data-lg-bezel', '11');
-      card.setAttribute('data-lg-scale', '14');
       card.title = item.url;
 
       const icoSrc = item.favicon || (host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64` : 'https://dejavu.local/logo-transparent.png');
@@ -1031,7 +966,7 @@
   scUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') scSave.click(); });
 
   // =========================================================================
-  // Safari Start Page Customize + Butterfly Studio Modal + Safari Options Window
+  // Material Design 3 Wallpaper Gallery & Settings Window
   // =========================================================================
   function renderWallpaperCardsInto(gridEl, catFilter) {
     if (!gridEl) return;
@@ -1071,16 +1006,18 @@
         thumb.appendChild(img);
       } else {
         thumb.style.background = item.grad;
-        thumb.innerHTML = `<svg viewBox="0 0 160 90" style="width:100%;height:100%;opacity:0.62" fill="none">
-          <path d="M0 54 Q40 24 80 48 T160 36" stroke="rgba(255,255,255,0.52)" stroke-width="1.6"/>
-          <path d="M0 66 Q45 38 90 58 T160 48" stroke="rgba(220,200,255,0.34)" stroke-width="1.1"/>
-          <path d="M80 45 C74 30 58 26 55 36 C53 44 60 49 69 48 C62 53 60 62 67 64 C73 66 78 57 80 50 C82 57 87 66 93 64 C100 62 98 53 91 48 C100 49 107 44 105 36 C102 26 86 30 80 45 Z" stroke="rgba(255,255,255,0.68)" fill="rgba(255,255,255,0.14)" stroke-width="1.2"/>
+        thumb.innerHTML = `<svg viewBox="0 0 160 90" style="width:100%;height:100%;opacity:0.55" fill="none">
+          <circle cx="40" cy="36" r="24" fill="rgba(255,255,255,0.12)"/>
+          <rect x="86" y="22" width="56" height="24" rx="12" fill="rgba(255,255,255,0.16)"/>
+          <path d="M0 68 Q45 48 90 64 T160 54 L160 90 L0 90 Z" fill="rgba(255,255,255,0.10)"/>
         </svg>`;
       }
 
       const badge = document.createElement('span');
       badge.className = 'wp-badge';
-      badge.textContent = item.isCustom ? 'Custom' : (item.m3 ? (item.cat === 'live' ? 'Material You Live' : 'Material You') : (item.cat === 'live' ? 'Live 60fps' : '2K HD Art'));
+      if (item.isCustom) badge.textContent = 'Custom';
+      else if (item.m3) badge.textContent = item.cat === 'live' ? 'Material 3 · Live' : `Material 3 · ${item.mode || 'HD'}`;
+      else badge.textContent = item.cat === 'live' ? 'Live 30fps' : 'HD Art';
       thumb.appendChild(badge);
 
       const check = document.createElement('span');
@@ -1117,10 +1054,10 @@
   }
 
   const SETTINGS_PANE_META = {
-    general: { title: 'General', sub: 'Search engine, startup tabs, homepage & Quick Access bar' },
+    general: { title: 'General', sub: 'Search engine, startup tabs, homepage & toolbar behavior' },
     appearance: { title: 'Material You Appearance', sub: 'Theme mode, Dynamic Color seed, address bar & tab layout' },
-    startpage: { title: 'Start Page & Quick Access', sub: 'Choose which Samsung-style Quick Access sections appear on new tabs' },
-    wallpapers: { title: 'Material You & HD Wallpapers', sub: '9 Google Pixel Material You themes, 16 classic artworks, 11 live themes & custom photos' },
+    startpage: { title: 'Start Page & Quick Access', sub: 'Choose which Material Design 3 sections appear on new tabs' },
+    wallpapers: { title: 'Material Design 3 Wallpapers', sub: '8 new Google Pixel ceramic themes, 16 HD classics, 11 live themes & custom photos' },
     privacy: { title: 'Privacy, Ad Blocker & VPN', sub: '100/100 ad shield, paused sites, 86+ country Smart & Tor VPN' },
     shortcuts: { title: 'Tabs & Keyboard Shortcuts', sub: 'Tab behavior preferences & desktop browser hotkeys' }
   };
@@ -1182,16 +1119,12 @@
     body.classList.toggle('compact-tabs', !!o.compactTabBar);
     body.classList.toggle('always-show-tab-close', !!o.alwaysShowTabClose);
     body.classList.toggle('nav-rail-hidden', !!o.hideNavRail);
-    if (startpageProfileBadge) {
-      startpageProfileBadge.classList.toggle('hidden', !!o.hideGreetingBadge);
-    }
-    if (heroSearchWrap) {
-      heroSearchWrap.classList.toggle('hidden', !!o.hideStartPageSearch);
-    }
+    if (startpageProfileBadge) startpageProfileBadge.classList.toggle('hidden', !!o.hideGreetingBadge);
+    if (heroSearchWrap) heroSearchWrap.classList.toggle('hidden', !!o.hideStartPageSearch);
+
     const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
     const onNewTab = !active || active.isNewTab;
-    const effLight = applyThemePolarity(o.appearanceMode || 'auto', active, onNewTab, !!state.tabOverviewOpen, !!state.settingsOpen || !!state.dlManagerOpen);
-    drawTopLightGuide({ baseRgb: null, accents: null, isLight: effLight });
+    applyThemePolarity(o.appearanceMode || 'auto', active, onNewTab, !!state.tabOverviewOpen, !!state.settingsOpen || !!state.dlManagerOpen);
     if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
       window.DejavuNewTabCanvas.setOptions({
         reduceMotion: !!o.reduceWallpaperMotion,
@@ -1207,7 +1140,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     if (settingsVersionSub) {
-      settingsVersionSub.textContent = `Material You · v${state.appVersion || '4.2.0'}`;
+      settingsVersionSub.textContent = `Material You · v${state.appVersion || '4.3.0'}`;
     }
     setSegmentedVal(optSearchEngine, o.searchEngine || state.searchEngine || 'google');
     setSegmentedVal(optStartup, o.startupBehavior || 'startpage');
@@ -1275,7 +1208,7 @@
     if (optVpnAuto) optVpnAuto.classList.toggle('on', !!o.vpnAutoConnect);
     if (optVpnSummary && state.vpn) {
       const st = state.vpn.state || 'disconnected';
-      const totalLoc = Array.isArray(state.vpn.countries) && state.vpn.countries.length ? state.vpn.countries.length : 86;
+      const totalLoc = state.vpn.countriesCount || (Array.isArray(state.vpn.countries) && state.vpn.countries.length ? state.vpn.countries.length : 86);
       optVpnSummary.textContent = st === 'connected'
         ? `Connected via ${state.vpn.exitCountry || state.vpn.countryName || 'VPN'} (${state.vpn.exitIp || 'Encrypted'})`
         : `Disconnected · ${totalLoc} global countries (Nepal, US, UK, India, Japan…)`;
@@ -1358,9 +1291,7 @@
       }
       if (paneHasHit && !firstMatchPane) firstMatchPane = pKey;
     });
-    if (firstMatchPane) {
-      setActiveSettingsPane(firstMatchPane);
-    }
+    if (firstMatchPane) setActiveSettingsPane(firstMatchPane);
   }
   if (settingsSearchInput) {
     settingsSearchInput.addEventListener('input', () => filterSettingsOptions(settingsSearchInput.value));
@@ -1414,7 +1345,7 @@
   if (optShowNavRail) optShowNavRail.addEventListener('click', () => updateOpt({ hideNavRail: optShowNavRail.classList.contains('on') }));
   if (optFloatingMediaBtn) optFloatingMediaBtn.addEventListener('click', () => updateOpt({ hideFloatingMediaButton: optFloatingMediaBtn.classList.contains('on') }));
 
-  // Samsung Internet PC × Google Pixel Material 3 Left Navigation Rail actions
+  // Material Design 3 Left Navigation Rail
   function updateRailIndicators() {
     const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
     const onNewTab = !active || active.isNewTab;
@@ -1472,6 +1403,7 @@
   });
   if (railSettings) railSettings.addEventListener('click', () => send({ type: 'toggleSettings', open: !state.settingsOpen }));
   if (railCollapse) railCollapse.addEventListener('click', () => send({ type: 'toggleNavRail' }));
+
   if (optFullUrl) optFullUrl.addEventListener('click', () => updateOpt({ showFullWebsiteAddress: !optFullUrl.classList.contains('on') }));
   if (optCompactTabs) optCompactTabs.addEventListener('click', () => updateOpt({ compactTabBar: !optCompactTabs.classList.contains('on') }));
   if (optAlwaysClose) optAlwaysClose.addEventListener('click', () => updateOpt({ alwaysShowTabClose: !optAlwaysClose.classList.contains('on') }));
@@ -1520,7 +1452,6 @@
     if (opening) {
       applyStartPagePrefs(state.startPagePrefs);
       renderWallpaperGrid();
-      requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(wallpaperStore));
     }
   });
 
@@ -1536,16 +1467,14 @@
   });
 
   // =========================================================================
-  // Authentic Safari Tab Overview Grid
+  // Material Design 3 Tab Overview Grid
   // =========================================================================
   btnOvDone.addEventListener('click', () => send({ type: 'toggleTabOverview', open: false }));
   btnOvNew.addEventListener('click', () => send({ type: 'newTab' }));
   btnOvGroup.addEventListener('click', () => send({ type: 'openSidebar' }));
   ovSearchInput.addEventListener('input', () => renderTabOverview());
   ovSearchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      send({ type: 'toggleTabOverview', open: false });
-    }
+    if (e.key === 'Escape') send({ type: 'toggleTabOverview', open: false });
   });
 
   document.addEventListener('keydown', (e) => {
@@ -1572,17 +1501,15 @@
       : tabs;
 
     const grp = (state.tabGroups || []).find((g) => g.id === state.activeTabGroupId);
-    const grpColor = grp ? grp.color : '#b688ff';
+    const grpColor = grp ? grp.color : '#d0bcff';
     ovGroupDot.style.background = grpColor;
-    ovGroupDot.style.boxShadow = `0 0 8px ${grpColor}`;
     ovGroupName.textContent = state.activeTabGroupName || 'Start Tabs';
     ovTabCount.textContent = String(tabs.length);
 
     overviewGrid.innerHTML = '';
-    filtered.forEach((tab, idx) => {
+    filtered.forEach((tab) => {
       const card = document.createElement('div');
       card.className = 'ov-card' + (tab.id === state.activeTabId ? ' active' : '');
-      card.style.setProperty('--stagger-i', String(idx));
 
       const favSrc = tab.favicon || 'https://dejavu.local/logo-transparent.png';
       const titleText = tab.isNewTab ? 'Start Page' : (tab.title || tab.displayUrl || 'Tab');
@@ -1619,7 +1546,7 @@
   }
 
   // =========================================================================
-  // Right-Click Safari Tab Context Menu
+  // Right-Click Tab Context Menu
   // =========================================================================
   function hideTabContextMenu() {
     tabContextMenu.classList.add('hidden');
@@ -1627,7 +1554,6 @@
   }
 
   function showTabContextMenu(tab, clientX, clientY) {
-    // Open as native floating Liquid Glass overlay so it NEVER clips on live webpages!
     send({
       type: 'openTabMenu',
       id: tab.id,
@@ -1661,39 +1587,14 @@
   });
 
   // =========================================================================
-  // Authentic Safari Tabs (Pinned + Equal-Width Flex + Left '×' + Audio Mute + GPU Glide)
+  // Top Tab Strip (Material Design 3 Connected Tabs)
   // =========================================================================
   const tabEls = new Map();
   const closingTabIds = new Set();
 
-  function updateActiveTabGlide(activeId) {
-    if (!activeTabGlide) return;
-    const activeEl = tabEls.get(activeId);
-    if (!activeEl || !activeEl.isConnected) {
-      activeTabGlide.style.opacity = '0';
-      return;
-    }
-    const left = activeEl.offsetLeft;
-    const top = activeEl.offsetTop;
-    const width = activeEl.offsetWidth;
-    if (width > 10) {
-      activeTabGlide.style.top = `${top}px`;
-      activeTabGlide.style.transform = `translate3d(${left}px, 0, 0)`;
-      activeTabGlide.style.width = `${width}px`;
-      activeTabGlide.style.opacity = '1';
-    }
-  }
-
-  window.addEventListener('resize', () => {
-    requestAnimationFrame(() => updateActiveTabGlide(state.activeTabId));
-  });
-
   if (typeof ResizeObserver !== 'undefined') {
     const tabResizeObserver = new ResizeObserver(() => {
-      requestAnimationFrame(() => {
-        tabsStrip.classList.toggle('scrollable', tabsStrip.scrollWidth > tabsStrip.clientWidth + 4);
-        updateActiveTabGlide(state.activeTabId);
-      });
+      tabsStrip.classList.toggle('scrollable', tabsStrip.scrollWidth > tabsStrip.clientWidth + 4);
     });
     tabResizeObserver.observe(tabsStrip);
   }
@@ -1701,8 +1602,7 @@
   function requestCloseTab(tabId, el) {
     if (closingTabIds.has(tabId)) return;
     if ((state.tabs || []).length <= 1) {
-      el.classList.remove('closing');
-      el.classList.remove('reset-pulse');
+      el.classList.remove('closing', 'reset-pulse');
       void el.offsetWidth;
       el.classList.add('reset-pulse');
       send({ type: 'closeTab', id: tabId });
@@ -1712,11 +1612,8 @@
     el.classList.add('closing');
     setTimeout(() => {
       send({ type: 'closeTab', id: tabId });
-      setTimeout(() => {
-        closingTabIds.delete(tabId);
-        updateActiveTabGlide(state.activeTabId);
-      }, 240);
-    }, 110);
+      setTimeout(() => closingTabIds.delete(tabId), 200);
+    }, 95);
   }
 
   function syncTabs(tabs, activeId) {
@@ -1737,9 +1634,6 @@
         el.className = 'tab-pill';
         el.setAttribute('role', 'tab');
         el.innerHTML = `
-          <button type="button" class="tab-close" title="Close tab (Ctrl+W)" aria-label="Close tab">
-            <svg viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          </button>
           <span class="tab-content">
             <span class="tab-spinner hidden"></span>
             <img class="tab-favicon" alt="" draggable="false">
@@ -1749,38 +1643,26 @@
             <svg class="ico-vol-on" viewBox="0 0 16 16" fill="none"><path d="M3 6.4h2.4l3-2.6v8.4l-3-2.6H3V6.4z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M10.8 5.6a3.4 3.4 0 0 1 0 4.8M12.5 4a5.6 5.6 0 0 1 0 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
             <svg class="ico-vol-off hidden" viewBox="0 0 16 16" fill="none"><path d="M3 6.4h2.4l3-2.6v8.4l-3-2.6H3V6.4z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M10.6 6.2l3.2 3.6M13.8 6.2l-3.2 3.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           </button>
+          <button type="button" class="tab-close" title="Close tab (Ctrl+W)" aria-label="Close tab">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
           <span class="tab-sep" aria-hidden="true"></span>
         `;
 
         const closeBtn = el.querySelector('.tab-close');
-        closeBtn.addEventListener('mousedown', (e) => {
-          e.stopPropagation();
-          e.preventDefault();
-        });
-        closeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          requestCloseTab(tab.id, el);
-        });
+        closeBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); e.preventDefault(); });
+        closeBtn.addEventListener('click', (e) => { e.stopPropagation(); requestCloseTab(tab.id, el); });
 
         const audioBtn = el.querySelector('.tab-audio-btn');
-        audioBtn.addEventListener('mousedown', (e) => {
-          e.stopPropagation();
-          e.preventDefault();
-        });
-        audioBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          send({ type: 'toggleTabMute', id: tab.id });
-        });
+        audioBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); e.preventDefault(); });
+        audioBtn.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'toggleTabMute', id: tab.id }); });
 
         el.addEventListener('click', (e) => {
           if (e.target.closest('.tab-close') || e.target.closest('.tab-audio-btn')) return;
           send({ type: 'activateTab', id: tab.id });
         });
         el.addEventListener('auxclick', (e) => {
-          if (e.button === 1) {
-            e.preventDefault();
-            requestCloseTab(tab.id, el);
-          }
+          if (e.button === 1) { e.preventDefault(); requestCloseTab(tab.id, el); }
         });
         el.addEventListener('contextmenu', (e) => {
           e.preventDefault();
@@ -1790,17 +1672,11 @@
         tabsStrip.appendChild(el);
         tabEls.set(tab.id, el);
       } else {
-        // CRITICAL: Only move DOM node if order ACTUALLY changed (e.g. pin/unpin)!
-        // Unconditional appendChild detaches the tab mid-click and kills hover/close clicks!
-        const desiredAt = tabsStrip.children[idx + 1]; // index 0 is #active-tab-glide
-        if (el !== desiredAt) {
-          tabsStrip.insertBefore(el, desiredAt || null);
-        }
+        const desiredAt = tabsStrip.children[idx + 1];
+        if (el !== desiredAt) tabsStrip.insertBefore(el, desiredAt || null);
       }
 
-      if (!closingTabIds.has(tab.id)) {
-        el.classList.remove('closing');
-      }
+      if (!closingTabIds.has(tab.id)) el.classList.remove('closing');
       el.classList.toggle('pinned', !!tab.isPinned);
 
       const wasActive = el.classList.contains('active');
@@ -1835,7 +1711,6 @@
 
     requestAnimationFrame(() => {
       tabsStrip.classList.toggle('scrollable', tabsStrip.scrollWidth > tabsStrip.clientWidth + 4);
-      updateActiveTabGlide(activeId);
     });
   }
 
@@ -1845,20 +1720,18 @@
       if (newtabStatCount) newtabStatCount.textContent = 'Paused';
       if (newtabStatLabel) newtabStatLabel.textContent = '· Ad Blocker off';
       if (newtabStatText) newtabStatText.textContent = 'Click to re-enable tracker & ad protection';
-      statDot.style.background = 'rgba(255,255,255,0.35)';
-      statDot.style.boxShadow = 'none';
+      statDot.style.background = 'var(--md-outline)';
     } else {
       if (newtabStatCount) newtabStatCount.textContent = n.toLocaleString();
       if (newtabStatLabel) newtabStatLabel.textContent = n === 1 ? 'tracker & ad prevented' : 'trackers & ads prevented';
       if (newtabStatText) newtabStatText.textContent = 'Built-in 100/100 Ad Blocker is actively protecting your browsing';
       statDot.style.background = '';
-      statDot.style.boxShadow = '';
     }
   }
 
   function updateNewtabVpnChip(vpn) {
     if (!newtabVpnChip || !newtabVpnText) return;
-    const totalLoc = (vpn && Array.isArray(vpn.countries) && vpn.countries.length) ? vpn.countries.length : 86;
+    const totalLoc = (vpn && vpn.countriesCount) || ((vpn && Array.isArray(vpn.countries) && vpn.countries.length) ? vpn.countries.length : 86);
     if (!vpn) {
       newtabVpnChip.classList.remove('connected', 'connecting');
       newtabVpnText.textContent = 'VPN: Off';
@@ -1891,13 +1764,8 @@
   function renderFavoritesBar(list, showFavoritesBar) {
     const favs = Array.isArray(list) ? list : [];
     const hasFavs = showFavoritesBar !== false && favs.length > 0;
-    const changedVisibility = body.classList.contains('has-favorites') !== hasFavs;
-
     body.classList.toggle('has-favorites', hasFavs);
     favbar.classList.toggle('hidden', !hasFavs);
-    if (changedVisibility) {
-      resizeTopBackdrop();
-    }
 
     const sig = JSON.stringify(favs);
     if (sig === lastFavoritesSig) return;
@@ -1906,11 +1774,7 @@
     favbarList.innerHTML = '';
     favs.forEach((fav) => {
       const chip = document.createElement('div');
-      chip.className = 'glass-pill fav-chip';
-      chip.setAttribute('data-liquid-glass', '');
-      chip.setAttribute('data-lg-fast', '1');
-      chip.setAttribute('data-lg-bezel', '9');
-      chip.setAttribute('data-lg-scale', '12');
+      chip.className = 'fav-chip';
       chip.title = fav.url;
 
       const host = extractHost(fav.url);
@@ -1973,23 +1837,19 @@
     body.classList.toggle('is-maximized', !!next.isMaximized);
     if (winMaxBtn) winMaxBtn.title = next.isMaximized ? 'Restore' : 'Maximize';
 
-    // Tab Group pill in toolbar (shown neatly whenever user switches into a custom group)
     const isCustomGroup = next.activeTabGroupId && next.activeTabGroupId !== 'default';
     btnGroupPill.classList.toggle('hidden', !isCustomGroup);
     if (isCustomGroup) {
       const grp = (next.tabGroups || []).find((g) => g.id === next.activeTabGroupId);
-      const col = grp ? grp.color : '#b688ff';
+      const col = grp ? grp.color : '#d0bcff';
       groupBadgeDot.style.background = col;
-      groupBadgeDot.style.boxShadow = `0 0 8px ${col}`;
       groupBadgeName.textContent = next.activeTabGroupName || 'Tab Group';
     }
 
-    // Downloads toolbar indicator
     const hasDl = Number(next.downloadsCount || 0) > 0;
     dlDot.classList.toggle('hidden', !hasDl);
     btnDownloads.classList.toggle('downloading', !!next.hasActiveDownload);
 
-    // Tab Overview Grid
     const ovOpen = !!next.tabOverviewOpen;
     body.classList.toggle('tab-overview-open', ovOpen);
     tabOverview.classList.toggle('hidden', !ovOpen);
@@ -2000,14 +1860,12 @@
       window.DejavuNewTabCanvas.start();
     }
 
-    // Material Design 3 Settings Window
     const optOpen = !!next.settingsOpen;
     const wasOptOpen = body.classList.contains('settings-open');
     body.classList.toggle('settings-open', optOpen);
     if (settingsOverlay) settingsOverlay.classList.toggle('hidden', !optOpen);
     if (btnSettings) btnSettings.classList.toggle('is-active', optOpen);
 
-    // AntDM-Style Material Design 3 Turbo Download Manager
     const dlOpen = !!next.dlManagerOpen;
     const wasDlOpen = body.classList.contains('dl-manager-open');
     body.classList.toggle('dl-manager-open', dlOpen);
@@ -2023,7 +1881,6 @@
     if (optOpen) {
       if (!wasOptOpen) {
         setActiveSettingsPane(next.settingsPane || activeSettingsPane || 'general');
-        if (settingsWindow) requestAnimationFrame(() => window.LiquidGlass.updateElementGlass(settingsWindow));
       } else if (activeSettingsPane === 'wallpapers') {
         renderSettingsWallpaperGrid();
       }
@@ -2041,19 +1898,15 @@
     }
     profileUpdateDot.classList.toggle('hidden', !next.updateAvailable);
 
-    if (next.wallpaper) {
-      window.DejavuNewTabCanvas.setWallpaper(next.wallpaper);
-    }
-    if (!wallpaperStore.classList.contains('hidden')) {
-      renderWallpaperGrid();
-    }
+    if (next.wallpaper) window.DejavuNewTabCanvas.setWallpaper(next.wallpaper);
+    if (!wallpaperStore.classList.contains('hidden')) renderWallpaperGrid();
 
     const active = (next.tabs || []).find((t) => t.id === next.activeTabId);
     const onNewTab = !active || active.isNewTab;
 
     btnFavStar.classList.toggle('hidden', onNewTab);
     btnFavStar.classList.toggle('starred', !!next.isCurrentFavorite);
-    btnFavStar.title = next.isCurrentFavorite ? 'Remove from Favorites Bar (Ctrl+D)' : 'Pin to Favorites Bar (Ctrl+D)';
+    btnFavStar.title = next.isCurrentFavorite ? 'Remove from Quick Access Bar (Ctrl+D)' : 'Pin to Quick Access Bar (Ctrl+D)';
 
     if (btnZoomPill) {
       const zp = (!onNewTab && active && active.zoomPercent) ? active.zoomPercent : 100;
@@ -2070,7 +1923,8 @@
     btnReload.title = (active && active.loading) ? 'Stop loading' : 'Reload (Ctrl+R)';
 
     const apMode = (next.browserOptions && next.browserOptions.appearanceMode) || 'auto';
-    const effLight = applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen || dlOpen);
+    applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen || dlOpen);
+
     if (onNewTab) {
       body.classList.add('on-newtab');
       window.DejavuNewTabCanvas.start();
@@ -2083,11 +1937,6 @@
       hideStartPageStatus();
       body.classList.remove('on-newtab');
       if (!ovOpen && !optOpen && !dlOpen) window.DejavuNewTabCanvas.stop();
-      drawTopLightGuide({
-        baseRgb: effLight && apMode === 'light' ? [246, 244, 253] : next.baseRgb,
-        accents: next.accents,
-        isLight: effLight
-      });
     }
     lastActiveId = next.activeTabId;
 
@@ -2102,7 +1951,7 @@
       setTimeout(() => {
         loadProgress.classList.remove('active');
         loadProgress.style.transform = 'scaleX(0)';
-      }, 200);
+      }, 180);
     }
 
     omniboxIcon.classList.toggle('secure', !!(active && !active.isNewTab && /^https:\/\//i.test(active.url || '')));
@@ -2140,7 +1989,7 @@
       } else if (isBusy) {
         vpnChipCode.textContent = `${Math.max(5, next.vpn.progress || 10)}%`;
         vpnChipCode.classList.remove('hidden');
-        btnVpn.title = next.vpn.statusText || 'dejavu VPN · Connecting...';
+        btnVpn.title = next.vpn.statusText || 'dejavu VPN · Connecting…';
       } else {
         vpnChipCode.textContent = '';
         vpnChipCode.classList.add('hidden');
@@ -2151,7 +2000,7 @@
   }
 
   // =========================================================================
-  // AntDM-Style Material Design 3 Turbo Download Manager Controller (8x Threads)
+  // AntDM-Class Material Design 3 Turbo Download Manager (8x + HLS Streams)
   // =========================================================================
   const dlManagerOverlay = document.getElementById('dl-manager-overlay');
   const dlmNav = document.getElementById('dlm-nav');
@@ -2177,10 +2026,10 @@
   let activeDlTab = 'all';
 
   const DLM_TAB_META = {
-    all: { title: 'All Downloads', sub: '8-thread byte-range acceleration · Pause, resume & organize all files' },
-    active: { title: 'Active Downloads (8x)', sub: 'Live multi-segment HTTP transfers running right now' },
-    media: { title: 'Page Media Sniffer', sub: 'Download videos, audio, documents, archives & HD images detected on the active tab' },
-    video: { title: 'Videos', sub: 'MP4, WebM, MKV & stream downloads' },
+    all: { title: 'All Downloads', sub: '8-thread byte-range & HLS .m3u8 stream assembler · Pause, resume & organize all files' },
+    active: { title: 'Active Downloads (8x)', sub: 'Live multi-segment HTTP & HLS video transfers running right now' },
+    media: { title: 'Page Media Sniffer', sub: 'Download videos, HLS streams, audio, documents & HD images detected on the active tab' },
+    video: { title: 'Videos', sub: 'MP4, WebM, MKV & assembled HLS stream downloads' },
     audio: { title: 'Audio', sub: 'MP3, M4A, WAV & FLAC music and podcasts' },
     document: { title: 'Documents', sub: 'PDFs, eBooks, Word, Excel & presentations' },
     archive: { title: 'Archives & Apps', sub: 'ZIP, RAR, 7Z, EXE, MSI, APK & ISO files' },
@@ -2247,8 +2096,8 @@
     if (isMediaTab) {
       if (dlmMbSub) {
         dlmMbSub.textContent = media.length
-          ? `${media.length} downloadable videos, audio, files & HD images captured on the active webpage`
-          : 'Open a webpage with videos, PDFs, archives or images and click Rescan Tab';
+          ? `${media.length} downloadable videos, HLS streams, audio & files captured on the active webpage`
+          : 'Open a webpage with videos, HLS streams, PDFs, archives or images and click Rescan Tab';
       }
       if (btnDlmGrabAll) {
         btnDlmGrabAll.disabled = media.length === 0;
@@ -2259,7 +2108,7 @@
           <div class="dlm-empty">
             <div class="dlm-empty-ico"><svg viewBox="0 0 22 22" width="24" height="24" fill="none"><circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.6"/><path d="M9.2 8.2L14.5 11l-5.3 2.8V8.2z" fill="currentColor"/></svg></div>
             <div class="dlm-empty-title">No Page Media Detected Yet</div>
-            <div class="dlm-empty-sub">Visit any website with videos, music, PDFs, ZIPs or high-res photos, then open Page Media or click <strong>Rescan Tab</strong> to download everything at 8x speed.</div>
+            <div class="dlm-empty-sub">Visit any website with videos, HLS streams, music, PDFs or images, then open Page Media or click <strong>Rescan Tab</strong> to download at 8x speed.</div>
           </div>`;
         return;
       }
@@ -2267,21 +2116,24 @@
         const card = document.createElement('div');
         card.className = 'dlm-card';
         const cat = m.category || 'other';
+        const isHls = !!m.isHls || (m.url && m.url.toLowerCase().includes('.m3u8'));
+        const qLabel = (m.quality || '').trim();
         card.innerHTML = `
           <div class="dlm-card-top">
-            <span class="dlm-cat-ico cat-${escapeSugHtml(cat)}">${catBadgeLabel(cat)}</span>
+            <span class="dlm-cat-ico cat-${escapeSugHtml(cat)}">${isHls ? 'HLS' : catBadgeLabel(cat)}</span>
             <div class="dlm-card-meta">
               <div class="dlm-card-name-row">
                 <div class="dlm-card-name"></div>
-                <span class="dlm-turbo-chip">${escapeSugHtml(cat.toUpperCase())}</span>
+                ${isHls ? '<span class="dlm-turbo-chip hls">HLS Stream</span>' : `<span class="dlm-turbo-chip">${escapeSugHtml(cat.toUpperCase())}</span>`}
+                ${qLabel ? `<span class="dlm-quality-chip">${escapeSugHtml(qLabel)}</span>` : ''}
               </div>
               <div class="dlm-card-sub">
-                <span>${m.sizeBytes > 0 ? fmtBytes(m.sizeBytes) : (escapeSugHtml(m.mime || 'Direct link'))}</span>
-                <span class="dlm-m-url" style="opacity:0.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px;"></span>
+                <span>${m.sizeBytes > 0 ? fmtBytes(m.sizeBytes) : (isHls ? 'Multi-segment HLS video' : escapeSugHtml(m.mime || 'Direct link'))}</span>
+                <span class="dlm-m-url" style="opacity:0.72;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px;"></span>
               </div>
             </div>
             <div class="dlm-card-acts">
-              <button type="button" class="dlm-act-btn primary m-dl">8x Download</button>
+              <button type="button" class="dlm-act-btn primary m-dl">${isHls ? 'Assemble 8x' : '8x Download'}</button>
             </div>
           </div>`;
         card.querySelector('.dlm-card-name').textContent = m.title || m.fileName || 'Media File';
@@ -2307,7 +2159,7 @@
         <div class="dlm-empty">
           <div class="dlm-empty-ico"><svg viewBox="0 0 22 22" width="24" height="24" fill="none"><path d="M11 3.5v10.2M7 10l4 4 4-4M4.2 17.6h13.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="dlm-empty-title">Ready for 8x Turbo Downloads</div>
-          <div class="dlm-empty-sub">Paste any direct URL above, click any download link while browsing, or switch to <strong>Page Media</strong> to grab videos, audio, documents &amp; images from the active tab.</div>
+          <div class="dlm-empty-sub">Paste any direct URL or HLS <code>.m3u8</code> link above, click the floating video button while browsing, or open <strong>Page Media</strong>.</div>
         </div>`;
       return;
     }
@@ -2318,14 +2170,15 @@
       const isPaused = d.status === 'paused';
       const isDone = d.status === 'completed';
       const isErr = d.status === 'failed' || d.status === 'cancelled';
+      const isHls = (d.streamType === 'hls');
       card.className = 'dlm-card' + (isRun ? ' is-active' : '') + (isPaused ? ' is-paused' : '') + (isDone ? ' is-done' : '');
 
       const cat = d.category || 'other';
       const threads = Number(d.threads || 1);
       const chipText = isDone
-        ? (d.rangeSupported ? `${threads}x Done` : 'Completed')
-        : (isErr ? (d.status === 'cancelled' ? 'Cancelled' : 'Failed') : (isPaused ? 'Paused' : `${threads}x Turbo`));
-      const chipCls = isDone ? 'done' : (isErr ? 'err' : '');
+        ? (isHls ? 'HLS Done' : (d.rangeSupported ? `${threads}x Done` : 'Completed'))
+        : (isErr ? (d.status === 'cancelled' ? 'Cancelled' : 'Failed') : (isPaused ? 'Paused' : (isHls ? `HLS ${threads}x` : `${threads}x Turbo`)));
+      const chipCls = isDone ? 'done' : (isErr ? 'err' : (isHls ? 'hls' : ''));
 
       const segs = Array.isArray(d.segments) && d.segments.length > 0
         ? d.segments
@@ -2334,6 +2187,9 @@
 
       const speedStr = (isRun && d.speedBps > 0) ? `${fmtBytes(d.speedBps)}/s` : '';
       const etaStr = (isRun && d.etaSeconds > 0) ? fmtEta(d.etaSeconds) : '';
+      const hlsSegStr = (isHls && d.hlsTotalSegments > 0)
+        ? (isDone ? `${d.hlsTotalSegments} segments` : `${d.hlsDoneSegments || 0}/${d.hlsTotalSegments} segments`)
+        : '';
       const sizeStr = d.totalBytes > 0
         ? (isDone ? fmtBytes(d.totalBytes) : `${fmtBytes(d.receivedBytes)} / ${fmtBytes(d.totalBytes)} (${Number(d.percent || 0).toFixed(0)}%)`)
         : (d.receivedBytes > 0 ? fmtBytes(d.receivedBytes) : (d.status === 'probing' ? 'Connecting…' : ''));
@@ -2349,7 +2205,7 @@
 
       card.innerHTML = `
         <div class="dlm-card-top">
-          <span class="dlm-cat-ico cat-${escapeSugHtml(cat)}">${catBadgeLabel(cat)}</span>
+          <span class="dlm-cat-ico cat-${escapeSugHtml(cat)}">${isHls ? 'HLS' : catBadgeLabel(cat)}</span>
           <div class="dlm-card-meta">
             <div class="dlm-card-name-row">
               <div class="dlm-card-name"></div>
@@ -2357,6 +2213,7 @@
             </div>
             <div class="dlm-card-sub">
               <span>${escapeSugHtml(d.host || '')}</span>
+              ${hlsSegStr ? `<span>· ${escapeSugHtml(hlsSegStr)}</span>` : ''}
               ${sizeStr ? `<span>· ${escapeSugHtml(sizeStr)}</span>` : ''}
               ${speedStr ? `<span class="dlm-speed-val">· ${escapeSugHtml(speedStr)}</span>` : ''}
               ${etaStr ? `<span>· ${escapeSugHtml(etaStr)}</span>` : ''}
@@ -2434,9 +2291,7 @@
     });
   }
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && state.dlManagerOpen) {
-      send({ type: 'closeDlManager' });
-    }
+    if (e.key === 'Escape' && state.dlManagerOpen) send({ type: 'closeDlManager' });
   });
 
   // Receive messages from native C# BrowserForm
@@ -2464,11 +2319,6 @@
           const effLight = (apMode === 'light') ? true : (apMode === 'dark' ? false : !!msg.isLight);
           body.classList.toggle('theme-light', effLight);
           body.classList.toggle('theme-dark', !effLight);
-          drawTopLightGuide({
-            baseRgb: msg.baseRgb,
-            accents: msg.accents,
-            isLight: effLight
-          });
         }
       } else if (msg.type === 'adBlocked') {
         state.totalBlocked = msg.totalBlocked;
@@ -2476,7 +2326,7 @@
         if (msg.tabId === state.activeTabId) {
           shieldCount.textContent = String(msg.tabBlocked || 0);
           btnShield.classList.add('pulse');
-          setTimeout(() => btnShield.classList.remove('pulse'), 320);
+          setTimeout(() => btnShield.classList.remove('pulse'), 280);
         }
       } else if (msg.type === 'focusOmnibox') {
         omniboxInput.focus();
@@ -2491,7 +2341,7 @@
     });
   }
 
-  // Hydrate boot state synchronously BEFORE first paint (zero flash!)
+  // Hydrate boot state synchronously BEFORE first paint
   applyStartPagePrefs(state.startPagePrefs);
   applyBrowserOptions(state.browserOptions);
   if (bootData.shortcuts) renderShortcuts(bootData.shortcuts);

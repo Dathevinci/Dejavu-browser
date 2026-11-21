@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
@@ -22,12 +25,14 @@ namespace DejavuBrowser
         public string Id { get; set; }
         public string Url { get; set; }
         public string Referer { get; set; }
+        public string Origin { get; set; }
         public string UserAgent { get; set; }
         public string Cookies { get; set; }
         public string FileName { get; set; }
         public string SavePath { get; set; }
         public string PartPath { get; set; }
         public string Category { get; set; } // "video" | "audio" | "image" | "document" | "archive" | "other"
+        public string StreamType { get; set; } // "http" | "hls"
         public string Status { get; set; }   // "queued" | "probing" | "downloading" | "paused" | "completed" | "failed" | "cancelled"
         public string Error { get; set; }
         public long TotalBytes { get; set; }
@@ -36,6 +41,8 @@ namespace DejavuBrowser
         public int EtaSeconds { get; set; }
         public int Threads { get; set; }
         public bool RangeSupported { get; set; }
+        public int HlsTotalSegments { get; set; }
+        public int HlsDoneSegments { get; set; }
         public long CreatedMs { get; set; }
         public List<TurboSegmentState> Segments { get; set; }
 
@@ -47,6 +54,7 @@ namespace DejavuBrowser
 
         public TurboDownloadEntry()
         {
+            StreamType = "http";
             Segments = new List<TurboSegmentState>();
             FileLock = new object();
         }
@@ -59,8 +67,11 @@ namespace DejavuBrowser
         public string FileName { get; set; }
         public string Category { get; set; } // "video" | "audio" | "image" | "document" | "archive"
         public string Mime { get; set; }
+        public string Quality { get; set; }
         public long SizeBytes { get; set; }
         public string SourceTabTitle { get; set; }
+        public string DedupeKey { get; set; }
+        public int Priority { get; set; }
     }
 
     internal sealed class TurboDownloadManager : IDisposable
@@ -68,6 +79,7 @@ namespace DejavuBrowser
         private const int MAX_THREADS = 8;
         private const long MIN_SEGMENTED_BYTES = 256 * 1024;
         private const int MAX_HISTORY = 120;
+        private const int MAX_REDIRECTS = 10;
 
         private readonly string _storePath;
         private readonly string _downloadsDir;
@@ -76,12 +88,95 @@ namespace DejavuBrowser
         private readonly List<TurboDownloadEntry> _entries = new List<TurboDownloadEntry>();
         private readonly Dictionary<int, List<SniffedMediaItem>> _tabMedia = new Dictionary<int, List<SniffedMediaItem>>();
         private readonly Action _onChanged;
+        private readonly Func<IWebProxy> _proxyProvider;
         private DateTime _lastEmitUtc = DateTime.MinValue;
         private bool _disposed;
 
+        private sealed class RedirectResponse : IDisposable
+        {
+            public HttpWebResponse Response;
+            public string FinalUrl;
+
+            public void Dispose()
+            {
+                if (Response != null)
+                {
+                    try { Response.Dispose(); } catch { }
+                    Response = null;
+                }
+            }
+        }
+
+        private sealed class HttpStatusException : IOException
+        {
+            public int StatusCode;
+
+            public HttpStatusException(int code, string message)
+                : base(message)
+            {
+                StatusCode = code;
+            }
+        }
+
+        private sealed class RangeRejectedException : IOException
+        {
+            public RangeRejectedException(string message) : base(message) { }
+        }
+
+        private sealed class DetectedHlsException : Exception
+        {
+            public string PlaylistUrl;
+
+            public DetectedHlsException(string url)
+            {
+                PlaylistUrl = url;
+            }
+        }
+
+        private sealed class ProbeResult
+        {
+            public long ContentLength;
+            public bool AcceptsRanges;
+            public string ContentType;
+            public string SuggestedName;
+            public string FinalUrl;
+            public bool LooksLikeM3u8;
+        }
+
+        private sealed class HlsKeyInfo
+        {
+            public string Method;
+            public string Uri;
+            public byte[] ExplicitIv;
+        }
+
+        private sealed class HlsSegSpec
+        {
+            public int Index;
+            public long MediaSeq;
+            public string Url;
+            public HlsKeyInfo Key;
+            public long ByteRangeStart;
+            public long ByteRangeEnd;
+            public int BucketIndex;
+        }
+
+        private sealed class HlsVariant
+        {
+            public long Bandwidth;
+            public bool HasVideo;
+            public string Url;
+        }
+
         public TurboDownloadManager(string dataDir, Action onChanged)
+            : this(dataDir, onChanged, null)
+        {
+        }
+
+        public TurboDownloadManager(string dataDir, Action onChanged, Func<IWebProxy> proxyProvider)
         {
             _onChanged = onChanged;
+            _proxyProvider = proxyProvider;
             _storePath = Path.Combine(dataDir, "turbo_downloads.json");
             _downloadsDir = ResolveDownloadsFolder();
             try
@@ -90,7 +185,10 @@ namespace DejavuBrowser
                 ServicePointManager.Expect100Continue = false;
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | (SecurityProtocolType)3072 | (SecurityProtocolType)12288;
             }
-            catch { }
+            catch
+            {
+                try { ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12; } catch { }
+            }
             LoadPersisted();
         }
 
@@ -98,6 +196,16 @@ namespace DejavuBrowser
 
         private static string ResolveDownloadsFolder()
         {
+            try
+            {
+                string envDl = Environment.GetEnvironmentVariable("DEJAVU_DOWNLOADS_DIR");
+                if (!string.IsNullOrWhiteSpace(envDl))
+                {
+                    Directory.CreateDirectory(envDl.Trim());
+                    return envDl.Trim();
+                }
+            }
+            catch { }
             try
             {
                 string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -130,6 +238,7 @@ namespace DejavuBrowser
                         if (e == null || string.IsNullOrEmpty(e.Url)) continue;
                         if (e.FileLock == null) e.FileLock = new object();
                         if (e.Segments == null) e.Segments = new List<TurboSegmentState>();
+                        if (string.IsNullOrEmpty(e.StreamType)) e.StreamType = "http";
                         if (e.Status == "downloading" || e.Status == "probing" || e.Status == "queued")
                         {
                             e.Status = "paused";
@@ -189,30 +298,47 @@ namespace DejavuBrowser
         public TurboDownloadEntry EnqueueDownload(string url, string suggestedName, string referer, string userAgent, string cookies, int threads)
         {
             if (string.IsNullOrWhiteSpace(url)) return null;
-            string cleanUrl = url.Trim();
+            string cleanUrl = NormalizeDownloadUrl(url.Trim());
             if (!cleanUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
                 !cleanUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             {
                 cleanUrl = "https://" + cleanUrl;
             }
 
-            string name = SanitizeFileName(string.IsNullOrWhiteSpace(suggestedName) ? GuessFileNameFromUrl(cleanUrl) : suggestedName);
+            bool looksHls = IsHlsUrl(cleanUrl, "");
+            string rawName = string.IsNullOrWhiteSpace(suggestedName) ? GuessFileNameFromUrl(cleanUrl) : suggestedName;
+            string name = SanitizeFileName(rawName);
+            if (looksHls)
+            {
+                name = EnsureVideoExtensionForHls(name, ".ts");
+            }
+            else if (name.IndexOf('.') < 0)
+            {
+                string qMime = ExtractQueryParam(cleanUrl, "mime");
+                string ext = GuessExtFromMime(qMime);
+                if (!string.IsNullOrEmpty(ext)) name = SanitizeFileName(name + ext);
+            }
+
+            Directory.CreateDirectory(_downloadsDir);
             string savePath = MakeUniqueFilePath(_downloadsDir, name);
             string finalName = Path.GetFileName(savePath);
+            string origin = ExtractOriginFromUrl(referer);
 
             var entry = new TurboDownloadEntry
             {
                 Id = "tdl_" + Guid.NewGuid().ToString("N").Substring(0, 12),
                 Url = cleanUrl,
                 Referer = referer ?? "",
+                Origin = origin,
                 UserAgent = string.IsNullOrWhiteSpace(userAgent)
-                    ? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+                    ? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
                     : userAgent,
                 Cookies = cookies ?? "",
                 FileName = finalName,
                 SavePath = savePath,
                 PartPath = savePath + ".djvpart",
-                Category = ClassifyCategory(finalName, ""),
+                Category = looksHls ? "video" : ClassifyCategory(finalName, ExtractQueryParam(cleanUrl, "mime")),
+                StreamType = looksHls ? "hls" : "http",
                 Status = "probing",
                 Error = "",
                 TotalBytes = 0,
@@ -221,6 +347,8 @@ namespace DejavuBrowser
                 EtaSeconds = 0,
                 Threads = Math.Max(1, Math.Min(MAX_THREADS, threads > 0 ? threads : MAX_THREADS)),
                 RangeSupported = false,
+                HlsTotalSegments = 0,
+                HlsDoneSegments = 0,
                 CreatedMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 Segments = new List<TurboSegmentState>(),
                 FileLock = new object()
@@ -301,7 +429,7 @@ namespace DejavuBrowser
                 e.EtaSeconds = 0;
                 try { if (e.Cts != null) e.Cts.Cancel(); } catch { }
             }
-            try { if (!string.IsNullOrEmpty(e.PartPath) && File.Exists(e.PartPath)) File.Delete(e.PartPath); } catch { }
+            CleanupPartArtifacts(e.PartPath);
             SavePersisted();
             EmitChanged(true);
         }
@@ -315,7 +443,10 @@ namespace DejavuBrowser
                 try { if (e.Cts != null) e.Cts.Cancel(); } catch { }
                 _entries.Remove(e);
             }
-            try { if (e.Status != "completed" && !string.IsNullOrEmpty(e.PartPath) && File.Exists(e.PartPath)) File.Delete(e.PartPath); } catch { }
+            if (e.Status != "completed")
+            {
+                CleanupPartArtifacts(e.PartPath);
+            }
             SavePersisted();
             EmitChanged(true);
         }
@@ -339,25 +470,147 @@ namespace DejavuBrowser
             }
         }
 
-        // =====================================================================
-        // AntDM-Style Page Media Sniffer (Per-Tab Captured Videos / Audio / Files)
-        // =====================================================================
-        public void RecordSniffedMedia(int tabId, string url, string mime, long contentLength, string title, string tabTitle)
+        private static void CleanupPartArtifacts(string partPath)
         {
-            if (tabId <= 0 || string.IsNullOrWhiteSpace(url)) return;
-            if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
-                !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return;
-
-            string cat = DetectMediaCategory(url, mime, contentLength);
-            if (string.IsNullOrEmpty(cat)) return;
-
-            string fname = SanitizeFileName(GuessFileNameFromUrl(url));
-            if (fname.IndexOf('.') < 0)
+            if (string.IsNullOrEmpty(partPath)) return;
+            try { if (File.Exists(partPath)) File.Delete(partPath); } catch { }
+            try
             {
-                string ext = GuessExtFromMime(mime);
-                if (!string.IsNullOrEmpty(ext)) fname += ext;
+                string hlsDir = partPath + ".hls";
+                if (Directory.Exists(hlsDir)) Directory.Delete(hlsDir, true);
+            }
+            catch { }
+        }
+
+        // =====================================================================
+        // AntDM-Style Page Media Sniffer (YouTube, HLS .m3u8, Vimeo, HTML5, Files)
+        // =====================================================================
+        public bool RecordSniffedMedia(int tabId, string url, string mime, long contentLength, string title, string tabTitle)
+        {
+            return RecordSniffedMedia(tabId, url, mime, contentLength, title, tabTitle, "");
+        }
+
+        public bool RecordSniffedMedia(int tabId, string url, string mime, long contentLength, string title, string tabTitle, string qualityHint)
+        {
+            if (tabId <= 0 || string.IsNullOrWhiteSpace(url)) return false;
+            if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return false;
+
+            // Ignore individual HLS/DASH media segment chunks — the .m3u8 playlist captures the complete video!
+            if (IsRawStreamChunk(url, mime)) return false;
+
+            string normalizedUrl = NormalizeDownloadUrl(url);
+            bool isGoogleVideo = IsGoogleVideoPlaybackUrl(normalizedUrl);
+            bool isHls = IsHlsUrl(normalizedUrl, mime);
+
+            string effectiveMime = mime ?? "";
+            long effectiveSize = contentLength > 0 ? contentLength : 0;
+            string quality = qualityHint ?? "";
+            int priority = 20;
+            string dedupeKey = normalizedUrl.ToLowerInvariant();
+            string cat = "";
+
+            if (isGoogleVideo)
+            {
+                string qMime = ExtractQueryParam(normalizedUrl, "mime");
+                if (!string.IsNullOrEmpty(qMime)) effectiveMime = qMime;
+                string itag = ExtractQueryParam(normalizedUrl, "itag");
+                long clen;
+                if (long.TryParse(ExtractQueryParam(normalizedUrl, "clen"), out clen) && clen > effectiveSize)
+                {
+                    effectiveSize = clen;
+                }
+                string idParam = ExtractQueryParam(normalizedUrl, "id");
+                if (string.IsNullOrEmpty(idParam)) idParam = ExtractQueryParam(normalizedUrl, "ei");
+
+                string mLow = effectiveMime.ToLowerInvariant();
+                if (mLow.StartsWith("audio/")) cat = "audio";
+                else if (mLow.StartsWith("video/") || !string.IsNullOrEmpty(itag)) cat = "video";
+                else return false;
+
+                int ytPri;
+                string ytQual = DescribeYoutubeItag(itag, effectiveMime, out ytPri);
+                if (string.IsNullOrEmpty(quality)) quality = ytQual;
+                priority = ytPri;
+
+                string host = "";
+                try { host = new Uri(normalizedUrl).Host.ToLowerInvariant(); } catch { }
+                if (!string.IsNullOrEmpty(itag))
+                {
+                    dedupeKey = "yt|" + idParam + "|" + itag;
+                }
+                else
+                {
+                    dedupeKey = "yt|" + host + "|" + idParam + "|" + mLow;
+                }
+            }
+            else if (isHls)
+            {
+                cat = "video";
+                string lp = normalizedUrl.Split('?')[0].ToLowerInvariant();
+                if (string.IsNullOrEmpty(quality)) quality = "HLS";
+                priority = (lp.Contains("master") || lp.Contains("index") || lp.Contains("playlist") || lp.Contains("manifest")) ? 94 : 88;
+                dedupeKey = "hls|" + normalizedUrl.ToLowerInvariant();
+            }
+            else
+            {
+                cat = DetectMediaCategory(normalizedUrl, effectiveMime, effectiveSize);
+                if (string.IsNullOrEmpty(cat)) return false;
+
+                // Ignore tiny video/audio preflight pings (<16KB) unless unknown length
+                if ((cat == "video" || cat == "audio") && effectiveSize > 0 && effectiveSize < 16384)
+                {
+                    return false;
+                }
+
+                if (cat == "video")
+                {
+                    priority = 96;
+                    if (string.IsNullOrEmpty(quality)) quality = GuessFormatTag(normalizedUrl, effectiveMime);
+                }
+                else if (cat == "audio")
+                {
+                    priority = 56;
+                    if (string.IsNullOrEmpty(quality)) quality = GuessFormatTag(normalizedUrl, effectiveMime);
+                }
+                else if (cat == "document" || cat == "archive")
+                {
+                    priority = 32;
+                }
+                else
+                {
+                    priority = 12;
+                }
             }
 
+            string cleanTabTitle = CleanMediaTitle(tabTitle);
+            string ext = isHls ? ".ts" : GuessExtFromMime(effectiveMime);
+            string urlName = GuessFileNameFromUrl(normalizedUrl);
+            string fname;
+            if (isGoogleVideo || isHls || IsGenericMediaFileName(urlName))
+            {
+                string baseTitle = !string.IsNullOrWhiteSpace(title) ? CleanMediaTitle(title) : cleanTabTitle;
+                if (string.IsNullOrWhiteSpace(baseTitle)) baseTitle = "dejavu-video";
+                string suffix = (!string.IsNullOrEmpty(quality) && isGoogleVideo) ? (" [" + quality + "]") : "";
+                string useExt = !string.IsNullOrEmpty(ext) ? ext : (cat == "audio" ? ".m4a" : ".mp4");
+                fname = SanitizeFileName(baseTitle + suffix + useExt);
+            }
+            else
+            {
+                fname = SanitizeFileName(urlName);
+                if (fname.IndexOf('.') < 0 && !string.IsNullOrEmpty(ext))
+                {
+                    fname = SanitizeFileName(fname + ext);
+                }
+            }
+
+            string displayTitle = !string.IsNullOrWhiteSpace(title)
+                ? title.Trim()
+                : (!string.IsNullOrWhiteSpace(cleanTabTitle) && (cat == "video" || cat == "audio")
+                    ? (string.IsNullOrEmpty(quality) ? cleanTabTitle : (cleanTabTitle + " (" + quality + ")"))
+                    : fname);
+
+            bool changed = false;
             lock (_gate)
             {
                 List<SniffedMediaItem> list;
@@ -366,47 +619,74 @@ namespace DejavuBrowser
                     list = new List<SniffedMediaItem>();
                     _tabMedia[tabId] = list;
                 }
-                var existing = list.FirstOrDefault(x => string.Equals(x.Url, url, StringComparison.OrdinalIgnoreCase));
+                var existing = list.FirstOrDefault(x =>
+                    string.Equals(x.DedupeKey, dedupeKey, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(x.Url, normalizedUrl, StringComparison.OrdinalIgnoreCase));
                 if (existing != null)
                 {
-                    if (contentLength > existing.SizeBytes) existing.SizeBytes = contentLength;
-                    return;
+                    if (effectiveSize > existing.SizeBytes)
+                    {
+                        existing.SizeBytes = effectiveSize;
+                        changed = true;
+                    }
+                    if (!string.IsNullOrEmpty(quality) && string.IsNullOrEmpty(existing.Quality))
+                    {
+                        existing.Quality = quality;
+                        changed = true;
+                    }
+                    if (priority > existing.Priority)
+                    {
+                        existing.Priority = priority;
+                        changed = true;
+                    }
+                    // Keep freshest signed URL for videoplayback streams
+                    if (isGoogleVideo && !string.Equals(existing.Url, normalizedUrl, StringComparison.Ordinal))
+                    {
+                        existing.Url = normalizedUrl;
+                    }
                 }
-                list.Insert(0, new SniffedMediaItem
+                else
                 {
-                    Url = url,
-                    Title = string.IsNullOrWhiteSpace(title) ? fname : title.Trim(),
-                    FileName = fname,
-                    Category = cat,
-                    Mime = mime ?? "",
-                    SizeBytes = contentLength > 0 ? contentLength : 0,
-                    SourceTabTitle = tabTitle ?? ""
-                });
-                if (list.Count > 60) list.RemoveRange(60, list.Count - 60);
+                    list.Add(new SniffedMediaItem
+                    {
+                        Url = normalizedUrl,
+                        Title = displayTitle,
+                        FileName = fname,
+                        Category = cat,
+                        Mime = effectiveMime,
+                        Quality = quality,
+                        SizeBytes = effectiveSize,
+                        SourceTabTitle = tabTitle ?? "",
+                        DedupeKey = dedupeKey,
+                        Priority = priority
+                    });
+                    list.Sort((a, b) =>
+                    {
+                        int p = b.Priority.CompareTo(a.Priority);
+                        if (p != 0) return p;
+                        return b.SizeBytes.CompareTo(a.SizeBytes);
+                    });
+                    if (list.Count > 60) list.RemoveRange(60, list.Count - 60);
+                    changed = true;
+                }
             }
-            EmitChanged(false);
+            if (changed) EmitChanged(false);
+            return changed;
         }
 
         public void MergeDomMediaItems(int tabId, IEnumerable<SniffedMediaItem> items)
         {
             if (tabId <= 0 || items == null) return;
-            lock (_gate)
+            bool anyAdded = false;
+            foreach (var it in items)
             {
-                List<SniffedMediaItem> list;
-                if (!_tabMedia.TryGetValue(tabId, out list))
+                if (it == null || string.IsNullOrWhiteSpace(it.Url)) continue;
+                if (RecordSniffedMedia(tabId, it.Url, it.Mime, it.SizeBytes, it.Title, it.SourceTabTitle, it.Quality))
                 {
-                    list = new List<SniffedMediaItem>();
-                    _tabMedia[tabId] = list;
-                }
-                foreach (var it in items)
-                {
-                    if (it == null || string.IsNullOrWhiteSpace(it.Url)) continue;
-                    if (list.Any(x => string.Equals(x.Url, it.Url, StringComparison.OrdinalIgnoreCase))) continue;
-                    list.Add(it);
-                    if (list.Count >= 80) break;
+                    anyAdded = true;
                 }
             }
-            EmitChanged(true);
+            if (anyAdded) EmitChanged(true);
         }
 
         public void ClearTabMedia(int tabId)
@@ -440,12 +720,28 @@ namespace DejavuBrowser
                         }
                     }
 
-                    double pct = e.TotalBytes > 0
-                        ? Math.Max(0, Math.Min(100, (e.ReceivedBytes * 100.0) / e.TotalBytes))
-                        : (e.Status == "completed" ? 100.0 : 0.0);
+                    double pct;
+                    if (e.Status == "completed")
+                    {
+                        pct = 100.0;
+                    }
+                    else if (string.Equals(e.StreamType, "hls", StringComparison.OrdinalIgnoreCase) && e.HlsTotalSegments > 0)
+                    {
+                        pct = Math.Max(0, Math.Min(99.9, (e.HlsDoneSegments * 100.0) / e.HlsTotalSegments));
+                    }
+                    else if (e.TotalBytes > 0)
+                    {
+                        pct = Math.Max(0, Math.Min(100, (e.ReceivedBytes * 100.0) / e.TotalBytes));
+                    }
+                    else
+                    {
+                        pct = 0.0;
+                    }
 
                     string host = "";
                     try { host = new Uri(e.Url).Host; } catch { }
+
+                    bool isMulti = e.RangeSupported || string.Equals(e.StreamType, "hls", StringComparison.OrdinalIgnoreCase);
 
                     outList.Add(new Dictionary<string, object>
                     {
@@ -455,6 +751,7 @@ namespace DejavuBrowser
                         { "fileName", e.FileName },
                         { "savePath", e.SavePath },
                         { "category", e.Category ?? "other" },
+                        { "streamType", e.StreamType ?? "http" },
                         { "status", e.Status ?? "queued" },
                         { "error", e.Error ?? "" },
                         { "totalBytes", e.TotalBytes },
@@ -462,8 +759,10 @@ namespace DejavuBrowser
                         { "percent", Math.Round(pct, 1) },
                         { "speedBps", Math.Round(e.SpeedBps, 0) },
                         { "etaSeconds", e.EtaSeconds },
-                        { "threads", e.RangeSupported ? e.Threads : 1 },
-                        { "rangeSupported", e.RangeSupported },
+                        { "threads", isMulti ? Math.Max(1, e.Threads) : 1 },
+                        { "rangeSupported", isMulti },
+                        { "hlsTotalSegments", e.HlsTotalSegments },
+                        { "hlsDoneSegments", e.HlsDoneSegments },
                         { "createdMs", e.CreatedMs },
                         { "segments", segs }
                     });
@@ -489,6 +788,8 @@ namespace DejavuBrowser
                             { "fileName", m.FileName },
                             { "category", m.Category },
                             { "mime", m.Mime },
+                            { "quality", m.Quality ?? "" },
+                            { "isHls", IsHlsUrl(m.Url, m.Mime) },
                             { "sizeBytes", m.SizeBytes }
                         });
                     }
@@ -498,7 +799,7 @@ namespace DejavuBrowser
         }
 
         // =====================================================================
-        // Multi-Threaded 8-Segment Accelerated HTTP Download Engine
+        // Multi-Threaded 8-Segment HTTP + Native HLS .m3u8 Download Engine
         // =====================================================================
         private void StartEntryWorker(TurboDownloadEntry entry)
         {
@@ -516,10 +817,17 @@ namespace DejavuBrowser
         {
             try
             {
+                if (string.Equals(entry.StreamType, "hls", StringComparison.OrdinalIgnoreCase) || IsHlsUrl(entry.Url, ""))
+                {
+                    await RunHlsDownloadAsync(entry, entry.Url, ct).ConfigureAwait(false);
+                    return;
+                }
+
                 bool resumingSegmented = false;
+                string effectiveUrl = entry.Url;
                 lock (_gate)
                 {
-                    if (entry.RangeSupported && entry.TotalBytes > 0 && entry.Segments != null && entry.Segments.Count > 0 && File.Exists(entry.PartPath))
+                    if (entry.RangeSupported && entry.TotalBytes > 0 && entry.Segments != null && entry.Segments.Count > 1 && File.Exists(entry.PartPath))
                     {
                         resumingSegmented = true;
                     }
@@ -530,20 +838,21 @@ namespace DejavuBrowser
                     ProbeResult probe = await ProbeRemoteAsync(entry, ct).ConfigureAwait(false);
                     ct.ThrowIfCancellationRequested();
 
+                    if (!string.IsNullOrEmpty(probe.FinalUrl))
+                    {
+                        effectiveUrl = probe.FinalUrl;
+                    }
+
+                    // If probe revealed an HLS playlist (by MIME, final URL, or #EXTM3U header), escalate directly to HLS engine!
+                    if (probe.LooksLikeM3u8 || IsHlsUrl(effectiveUrl, probe.ContentType))
+                    {
+                        await RunHlsDownloadAsync(entry, effectiveUrl, ct).ConfigureAwait(false);
+                        return;
+                    }
+
                     lock (_gate)
                     {
-                        if (!string.IsNullOrEmpty(probe.SuggestedName))
-                        {
-                            string clean = SanitizeFileName(probe.SuggestedName);
-                            if (!string.Equals(clean, entry.FileName, StringComparison.OrdinalIgnoreCase))
-                            {
-                                string unique = MakeUniqueFilePath(_downloadsDir, clean);
-                                entry.SavePath = unique;
-                                entry.PartPath = unique + ".djvpart";
-                                entry.FileName = Path.GetFileName(unique);
-                            }
-                        }
-                        entry.Category = ClassifyCategory(entry.FileName, probe.ContentType);
+                        ApplyResolvedMetadataLocked(entry, probe.SuggestedName, probe.ContentType, effectiveUrl);
                         entry.TotalBytes = probe.ContentLength;
                         entry.RangeSupported = probe.AcceptsRanges && probe.ContentLength >= MIN_SEGMENTED_BYTES;
                         entry.Segments = new List<TurboSegmentState>();
@@ -575,11 +884,10 @@ namespace DejavuBrowser
                         entry.Status = "downloading";
                     }
 
-                    // Pre-allocate .djvpart file for zero-fragmentation parallel writes
                     Directory.CreateDirectory(_downloadsDir);
                     using (var fs = new FileStream(entry.PartPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
                     {
-                        if (entry.TotalBytes > 0) fs.SetLength(entry.TotalBytes);
+                        if (entry.RangeSupported && entry.TotalBytes > 0) fs.SetLength(entry.TotalBytes);
                     }
                     SavePersisted();
                     EmitChanged(true);
@@ -593,22 +901,78 @@ namespace DejavuBrowser
                 // Launch live speed & ETA sampler loop
                 var speedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 Task speedTask = RunSpeedSamplerAsync(entry, speedCts.Token);
+                string escalatedHlsUrl = null;
+                bool fallbackToSingle = false;
 
                 try
                 {
                     if (entry.RangeSupported && entry.Segments.Count > 1)
                     {
-                        var workerTasks = new List<Task>();
-                        for (int i = 0; i < entry.Segments.Count; i++)
+                        try
                         {
-                            int idx = i;
-                            workerTasks.Add(DownloadSegmentAsync(entry, entry.Segments[idx], ct));
+                            var workerTasks = new List<Task>();
+                            for (int i = 0; i < entry.Segments.Count; i++)
+                            {
+                                int idx = i;
+                                workerTasks.Add(DownloadSegmentAsync(entry, effectiveUrl, entry.Segments[idx], ct));
+                            }
+                            await Task.WhenAll(workerTasks.ToArray()).ConfigureAwait(false);
                         }
-                        await Task.WhenAll(workerTasks.ToArray()).ConfigureAwait(false);
+                        catch (RangeRejectedException)
+                        {
+                            fallbackToSingle = true;
+                        }
+                        catch (HttpStatusException hex)
+                        {
+                            if (hex.StatusCode == 403 || hex.StatusCode == 416 || hex.StatusCode == 429 || hex.StatusCode == 501)
+                            {
+                                fallbackToSingle = true;
+                            }
+                            else
+                            {
+                                throw;
+                            }
+                        }
+
+                        if (fallbackToSingle)
+                        {
+                            ct.ThrowIfCancellationRequested();
+                            lock (_gate)
+                            {
+                                entry.RangeSupported = false;
+                                entry.Threads = 1;
+                                entry.ReceivedBytes = 0;
+                                entry.Segments = new List<TurboSegmentState>
+                                {
+                                    new TurboSegmentState
+                                    {
+                                        Start = 0,
+                                        End = entry.TotalBytes > 0 ? (entry.TotalBytes - 1) : 0,
+                                        Done = 0
+                                    }
+                                };
+                            }
+                            EmitChanged(true);
+                            try
+                            {
+                                await DownloadSingleStreamAsync(entry, effectiveUrl, ct).ConfigureAwait(false);
+                            }
+                            catch (DetectedHlsException hlsEx)
+                            {
+                                escalatedHlsUrl = hlsEx.PlaylistUrl;
+                            }
+                        }
                     }
                     else
                     {
-                        await DownloadSingleStreamAsync(entry, ct).ConfigureAwait(false);
+                        try
+                        {
+                            await DownloadSingleStreamAsync(entry, effectiveUrl, ct).ConfigureAwait(false);
+                        }
+                        catch (DetectedHlsException hlsEx)
+                        {
+                            escalatedHlsUrl = hlsEx.PlaylistUrl;
+                        }
                     }
                 }
                 finally
@@ -620,22 +984,43 @@ namespace DejavuBrowser
 
                 ct.ThrowIfCancellationRequested();
 
-                // Finalize .djvpart -> final SavePath cleanly
-                if (File.Exists(entry.SavePath))
+                if (!string.IsNullOrEmpty(escalatedHlsUrl))
                 {
-                    entry.SavePath = MakeUniqueFilePath(_downloadsDir, entry.FileName);
-                    entry.FileName = Path.GetFileName(entry.SavePath);
+                    CleanupPartArtifacts(entry.PartPath);
+                    await RunHlsDownloadAsync(entry, escalatedHlsUrl, ct).ConfigureAwait(false);
+                    return;
                 }
-                File.Move(entry.PartPath, entry.SavePath);
+
+                // Verify non-zero file before marking completed (NEVER save 0-byte broken files!)
+                long finalLength = 0;
+                if (File.Exists(entry.PartPath))
+                {
+                    try { finalLength = new FileInfo(entry.PartPath).Length; } catch { }
+                }
+                if (finalLength <= 0 || entry.ReceivedBytes <= 0)
+                {
+                    CleanupPartArtifacts(entry.PartPath);
+                    throw new IOException("Server returned 0 bytes");
+                }
+
+                // Finalize .djvpart -> SavePath atomically
+                string finalSavePath;
+                lock (_gate)
+                {
+                    if (File.Exists(entry.SavePath))
+                    {
+                        entry.SavePath = MakeUniqueFilePath(_downloadsDir, entry.FileName);
+                        entry.FileName = Path.GetFileName(entry.SavePath);
+                    }
+                    finalSavePath = entry.SavePath;
+                }
+                File.Move(entry.PartPath, finalSavePath);
 
                 lock (_gate)
                 {
                     entry.Status = "completed";
-                    if (entry.TotalBytes <= 0)
-                    {
-                        try { entry.TotalBytes = new FileInfo(entry.SavePath).Length; } catch { }
-                    }
-                    entry.ReceivedBytes = entry.TotalBytes;
+                    entry.TotalBytes = finalLength;
+                    entry.ReceivedBytes = finalLength;
                     entry.SpeedBps = 0;
                     entry.EtaSeconds = 0;
                     entry.Error = "";
@@ -655,22 +1040,626 @@ namespace DejavuBrowser
             }
             catch (Exception ex)
             {
+                bool shouldCleanup = false;
                 lock (_gate)
                 {
                     if (entry.Status != "paused" && entry.Status != "cancelled")
                     {
                         entry.Status = "failed";
-                        entry.Error = (ex.Message ?? "Download failed");
-                        if (entry.Error.Length > 120) entry.Error = entry.Error.Substring(0, 120);
+                        entry.Error = CleanErrorMessage(ex);
                         entry.SpeedBps = 0;
                         entry.EtaSeconds = 0;
+                        if (entry.ReceivedBytes <= 0) shouldCleanup = true;
                     }
                 }
+                if (shouldCleanup) CleanupPartArtifacts(entry.PartPath);
                 SavePersisted();
                 EmitChanged(true);
             }
         }
 
+        // =====================================================================
+        // Native HLS (.m3u8) Master/Media Playlist Resolver + 8-Thread Assembler
+        // =====================================================================
+        private async Task RunHlsDownloadAsync(TurboDownloadEntry entry, string initialPlaylistUrl, CancellationToken ct)
+        {
+            lock (_gate)
+            {
+                entry.StreamType = "hls";
+                entry.Category = "video";
+                entry.Status = "probing";
+                entry.Error = "";
+            }
+            EmitChanged(true);
+
+            string currentUrl = initialPlaylistUrl;
+            string playlistText = null;
+            string playlistFinalUrl = currentUrl;
+
+            // Resolve up to 4 master -> variant playlist hops
+            for (int hop = 0; hop < 4; hop++)
+            {
+                ct.ThrowIfCancellationRequested();
+                Tuple<string, string> fetched = await FetchTextWithRedirectsAsync(entry, currentUrl, ct).ConfigureAwait(false);
+                playlistText = fetched.Item1 ?? "";
+                playlistFinalUrl = fetched.Item2 ?? currentUrl;
+
+                if (playlistText.IndexOf("#EXTM3U", StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    throw new IOException("Invalid HLS playlist response");
+                }
+
+                if (playlistText.IndexOf("#EXT-X-STREAM-INF", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    string bestVariant = PickBestHlsVariant(playlistText, playlistFinalUrl);
+                    if (string.IsNullOrEmpty(bestVariant))
+                    {
+                        throw new IOException("No playable stream variant in HLS master playlist");
+                    }
+                    currentUrl = bestVariant;
+                    continue;
+                }
+                break;
+            }
+
+            HlsSegSpec initSegment;
+            List<HlsSegSpec> segSpecs = ParseHlsMediaPlaylist(playlistText, playlistFinalUrl, out initSegment);
+            if (segSpecs.Count == 0)
+            {
+                throw new IOException("HLS playlist has no media segments");
+            }
+
+            // Pick real playable container extension (.mp4 for fMP4/CMAF, .ts for MPEG-TS)
+            string targetExt = ".ts";
+            if (initSegment != null)
+            {
+                targetExt = ".mp4";
+            }
+            else
+            {
+                string firstPath = segSpecs[0].Url.Split('?')[0].ToLowerInvariant();
+                if (firstPath.EndsWith(".m4s") || firstPath.EndsWith(".mp4") || firstPath.EndsWith(".m4v"))
+                    targetExt = ".mp4";
+                else if (firstPath.EndsWith(".aac"))
+                    targetExt = ".aac";
+                else if (firstPath.EndsWith(".m4a"))
+                    targetExt = ".m4a";
+                else if (firstPath.EndsWith(".mp3"))
+                    targetExt = ".mp3";
+            }
+
+            string hlsDir;
+            int workerCount = Math.Max(1, Math.Min(MAX_THREADS, segSpecs.Count));
+            lock (_gate)
+            {
+                string newFileName = EnsureVideoExtensionForHls(entry.FileName, targetExt);
+                if (!string.Equals(newFileName, entry.FileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Preserve existing .hls dir when resuming the same filename
+                    string existingHlsDir = entry.PartPath + ".hls";
+                    if (!Directory.Exists(existingHlsDir))
+                    {
+                        string unique = MakeUniqueFilePath(_downloadsDir, newFileName);
+                        entry.SavePath = unique;
+                        entry.PartPath = unique + ".djvpart";
+                        entry.FileName = Path.GetFileName(unique);
+                    }
+                }
+                entry.Category = (targetExt == ".aac" || targetExt == ".m4a" || targetExt == ".mp3") ? "audio" : "video";
+                entry.Threads = workerCount;
+                entry.RangeSupported = true;
+                entry.HlsTotalSegments = segSpecs.Count;
+                entry.HlsDoneSegments = 0;
+                entry.ReceivedBytes = 0;
+                entry.TotalBytes = 0;
+                entry.Segments = new List<TurboSegmentState>();
+
+                // Partition segment indices across up to 8 visual progress lanes
+                int baseBucket = segSpecs.Count / workerCount;
+                int rem = segSpecs.Count % workerCount;
+                int cursor = 0;
+                for (int b = 0; b < workerCount; b++)
+                {
+                    int cnt = baseBucket + (b < rem ? 1 : 0);
+                    for (int k = 0; k < cnt; k++)
+                    {
+                        segSpecs[cursor + k].BucketIndex = b;
+                    }
+                    entry.Segments.Add(new TurboSegmentState { Start = 0, End = Math.Max(0, cnt - 1), Done = 0 });
+                    cursor += cnt;
+                }
+                entry.Status = "downloading";
+                hlsDir = entry.PartPath + ".hls";
+            }
+
+            Directory.CreateDirectory(_downloadsDir);
+            Directory.CreateDirectory(hlsDir);
+            SavePersisted();
+            EmitChanged(true);
+
+            // Pre-fetch open RFC 8216 AES-128 keys (if playlist specifies METHOD=AES-128)
+            var keyCache = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+            foreach (var sp in segSpecs)
+            {
+                if (sp.Key != null && !string.IsNullOrEmpty(sp.Key.Uri) && !keyCache.ContainsKey(sp.Key.Uri))
+                {
+                    byte[] keyBytes = await FetchBytesWithRedirectsAsync(entry, sp.Key.Uri, -1, -1, ct).ConfigureAwait(false);
+                    if (keyBytes == null || keyBytes.Length != 16)
+                    {
+                        throw new IOException("Invalid HLS AES-128 key length");
+                    }
+                    keyCache[sp.Key.Uri] = keyBytes;
+                }
+            }
+
+            // Download fMP4/CMAF init segment if present
+            string initFilePath = null;
+            if (initSegment != null)
+            {
+                initFilePath = Path.Combine(hlsDir, "init.bin");
+                if (!File.Exists(initFilePath) || new FileInfo(initFilePath).Length <= 0)
+                {
+                    byte[] initBytes = await FetchBytesWithRedirectsAsync(entry, initSegment.Url, initSegment.ByteRangeStart, initSegment.ByteRangeEnd, ct).ConfigureAwait(false);
+                    if (initBytes != null && initBytes.Length > 0)
+                    {
+                        File.WriteAllBytes(initFilePath, initBytes);
+                    }
+                }
+            }
+
+            // Download all media segments in parallel across up to 8 workers
+            var speedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            Task speedTask = RunSpeedSamplerAsync(entry, speedCts.Token);
+            var sem = new SemaphoreSlim(workerCount, workerCount);
+
+            try
+            {
+                var tasks = new List<Task>(segSpecs.Count);
+                for (int i = 0; i < segSpecs.Count; i++)
+                {
+                    HlsSegSpec spec = segSpecs[i];
+                    tasks.Add(DownloadHlsSegmentWithThrottleAsync(entry, spec, hlsDir, keyCache, sem, ct));
+                }
+                await Task.WhenAll(tasks.ToArray()).ConfigureAwait(false);
+            }
+            finally
+            {
+                try { speedCts.Cancel(); } catch { }
+                try { speedCts.Dispose(); } catch { }
+                try { sem.Dispose(); } catch { }
+            }
+            try { await speedTask.ConfigureAwait(false); } catch { }
+
+            ct.ThrowIfCancellationRequested();
+
+            // Sequentially assemble init + all media segments into final playable video file
+            long totalWritten = 0;
+            byte[] copyBuf = new byte[131072];
+            using (var outFs = new FileStream(entry.PartPath, FileMode.Create, FileAccess.Write, FileShare.None, 131072))
+            {
+                if (!string.IsNullOrEmpty(initFilePath) && File.Exists(initFilePath))
+                {
+                    totalWritten += AppendFileToStream(initFilePath, outFs, copyBuf, ct);
+                }
+                for (int i = 0; i < segSpecs.Count; i++)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    string segPath = Path.Combine(hlsDir, "seg_" + i.ToString("D6", CultureInfo.InvariantCulture) + ".bin");
+                    if (!File.Exists(segPath))
+                    {
+                        throw new IOException("Missing HLS segment #" + i);
+                    }
+                    totalWritten += AppendFileToStream(segPath, outFs, copyBuf, ct);
+                }
+                outFs.Flush();
+            }
+
+            if (totalWritten <= 0)
+            {
+                CleanupPartArtifacts(entry.PartPath);
+                throw new IOException("Assembled HLS video is 0 bytes");
+            }
+
+            try { if (Directory.Exists(hlsDir)) Directory.Delete(hlsDir, true); } catch { }
+
+            string finalSavePath;
+            lock (_gate)
+            {
+                if (File.Exists(entry.SavePath))
+                {
+                    entry.SavePath = MakeUniqueFilePath(_downloadsDir, entry.FileName);
+                    entry.FileName = Path.GetFileName(entry.SavePath);
+                }
+                finalSavePath = entry.SavePath;
+            }
+            File.Move(entry.PartPath, finalSavePath);
+
+            lock (_gate)
+            {
+                entry.Status = "completed";
+                entry.TotalBytes = totalWritten;
+                entry.ReceivedBytes = totalWritten;
+                entry.HlsDoneSegments = entry.HlsTotalSegments;
+                entry.SpeedBps = 0;
+                entry.EtaSeconds = 0;
+                entry.Error = "";
+            }
+            SavePersisted();
+            EmitChanged(true);
+        }
+
+        private async Task DownloadHlsSegmentWithThrottleAsync(
+            TurboDownloadEntry entry,
+            HlsSegSpec spec,
+            string hlsDir,
+            Dictionary<string, byte[]> keyCache,
+            SemaphoreSlim sem,
+            CancellationToken ct)
+        {
+            await sem.WaitAsync(ct).ConfigureAwait(false);
+            try
+            {
+                string finalSegPath = Path.Combine(hlsDir, "seg_" + spec.Index.ToString("D6", CultureInfo.InvariantCulture) + ".bin");
+                if (File.Exists(finalSegPath))
+                {
+                    long existingLen = 0;
+                    try { existingLen = new FileInfo(finalSegPath).Length; } catch { }
+                    if (existingLen > 0)
+                    {
+                        RecordHlsSegmentDone(entry, spec.BucketIndex, existingLen);
+                        return;
+                    }
+                }
+
+                int retries = 0;
+                while (true)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    bool shouldBackoff = false;
+                    try
+                    {
+                        byte[] raw = await FetchBytesWithRedirectsAsync(entry, spec.Url, spec.ByteRangeStart, spec.ByteRangeEnd, ct).ConfigureAwait(false);
+                        if (raw == null || raw.Length == 0)
+                        {
+                            throw new IOException("Empty HLS segment");
+                        }
+
+                        if (spec.Key != null && string.Equals(spec.Key.Method, "AES-128", StringComparison.OrdinalIgnoreCase))
+                        {
+                            byte[] keyBytes;
+                            if (!keyCache.TryGetValue(spec.Key.Uri, out keyBytes))
+                            {
+                                throw new IOException("Missing AES-128 key");
+                            }
+                            byte[] iv = spec.Key.ExplicitIv ?? BuildHlsSequenceIv(spec.MediaSeq);
+                            raw = DecryptAes128Cbc(raw, keyBytes, iv);
+                        }
+
+                        string tmpSegPath = finalSegPath + ".tmp";
+                        File.WriteAllBytes(tmpSegPath, raw);
+                        if (File.Exists(finalSegPath)) File.Delete(finalSegPath);
+                        File.Move(tmpSegPath, finalSegPath);
+
+                        RecordHlsSegmentDone(entry, spec.BucketIndex, raw.Length);
+                        return;
+                    }
+                    catch (OperationCanceledException) { throw; }
+                    catch
+                    {
+                        if (ct.IsCancellationRequested) throw new OperationCanceledException();
+                        retries++;
+                        if (retries > 3) throw;
+                        shouldBackoff = true;
+                    }
+                    if (shouldBackoff)
+                    {
+                        await Task.Delay(400 * retries, ct).ConfigureAwait(false);
+                    }
+                }
+            }
+            finally
+            {
+                try { sem.Release(); } catch { }
+            }
+        }
+
+        private void RecordHlsSegmentDone(TurboDownloadEntry entry, int bucketIdx, long bytes)
+        {
+            lock (_gate)
+            {
+                entry.ReceivedBytes += bytes;
+                entry.HlsDoneSegments++;
+                if (bucketIdx >= 0 && bucketIdx < entry.Segments.Count)
+                {
+                    entry.Segments[bucketIdx].Done++;
+                }
+                if (entry.HlsTotalSegments > 0 && entry.HlsDoneSegments > 0)
+                {
+                    long est = (long)Math.Round((entry.ReceivedBytes / (double)entry.HlsDoneSegments) * entry.HlsTotalSegments);
+                    entry.TotalBytes = Math.Max(entry.ReceivedBytes, est);
+                }
+            }
+            EmitChanged(false);
+        }
+
+        private static long AppendFileToStream(string srcPath, FileStream dst, byte[] buf, CancellationToken ct)
+        {
+            long written = 0;
+            using (var src = new FileStream(srcPath, FileMode.Open, FileAccess.Read, FileShare.Read, 131072))
+            {
+                int n;
+                while ((n = src.Read(buf, 0, buf.Length)) > 0)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    dst.Write(buf, 0, n);
+                    written += n;
+                }
+            }
+            return written;
+        }
+
+        private static string PickBestHlsVariant(string playlistText, string baseUrl)
+        {
+            var variants = new List<HlsVariant>();
+            Uri baseUri = new Uri(baseUrl);
+            string[] lines = playlistText.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (!line.StartsWith("#EXT-X-STREAM-INF:", StringComparison.OrdinalIgnoreCase)) continue;
+                string attrs = line.Substring("#EXT-X-STREAM-INF:".Length);
+                long bw = ParseHlsLongAttr(attrs, "BANDWIDTH");
+                if (bw <= 0) bw = ParseHlsLongAttr(attrs, "AVERAGE-BANDWIDTH");
+                string res = ParseHlsAttrValue(attrs, "RESOLUTION");
+                string codecs = (ParseHlsAttrValue(attrs, "CODECS") ?? "").ToLowerInvariant();
+                bool hasVideo = !string.IsNullOrEmpty(res) || string.IsNullOrEmpty(codecs) ||
+                                codecs.Contains("avc") || codecs.Contains("hev") || codecs.Contains("hvc") ||
+                                codecs.Contains("vp9") || codecs.Contains("av01");
+
+                // Next non-empty non-comment line is the variant URI
+                string uriLine = "";
+                for (int j = i + 1; j < lines.Length; j++)
+                {
+                    string cand = lines[j].Trim();
+                    if (string.IsNullOrEmpty(cand)) continue;
+                    if (cand.StartsWith("#")) continue;
+                    uriLine = cand;
+                    i = j;
+                    break;
+                }
+                if (string.IsNullOrEmpty(uriLine)) continue;
+                try
+                {
+                    string resolved = new Uri(baseUri, uriLine).AbsoluteUri;
+                    variants.Add(new HlsVariant { Bandwidth = bw, HasVideo = hasVideo, Url = resolved });
+                }
+                catch { }
+            }
+
+            if (variants.Count == 0) return "";
+            variants.Sort((a, b) =>
+            {
+                if (a.HasVideo != b.HasVideo) return b.HasVideo.CompareTo(a.HasVideo);
+                return b.Bandwidth.CompareTo(a.Bandwidth);
+            });
+            return variants[0].Url;
+        }
+
+        private static List<HlsSegSpec> ParseHlsMediaPlaylist(string playlistText, string baseUrl, out HlsSegSpec initSegment)
+        {
+            initSegment = null;
+            var list = new List<HlsSegSpec>();
+            Uri baseUri = new Uri(baseUrl);
+            string[] lines = playlistText.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+
+            long mediaSeq = 0;
+            HlsKeyInfo curKey = null;
+            long pendingRangeLen = -1;
+            long pendingRangeOff = -1;
+            long lastRangeEnd = 0;
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (string.IsNullOrEmpty(line)) continue;
+
+                if (line.StartsWith("#EXT-X-MEDIA-SEQUENCE:", StringComparison.OrdinalIgnoreCase))
+                {
+                    long parsedSeq;
+                    if (long.TryParse(line.Substring("#EXT-X-MEDIA-SEQUENCE:".Length).Trim(), out parsedSeq))
+                    {
+                        mediaSeq = parsedSeq;
+                    }
+                    continue;
+                }
+
+                if (line.StartsWith("#EXT-X-KEY:", StringComparison.OrdinalIgnoreCase))
+                {
+                    string attrs = line.Substring("#EXT-X-KEY:".Length);
+                    string method = (ParseHlsAttrValue(attrs, "METHOD") ?? "NONE").Trim().ToUpperInvariant();
+                    string keyFmt = (ParseHlsAttrValue(attrs, "KEYFORMAT") ?? "").Trim().ToLowerInvariant();
+                    if (method.StartsWith("SAMPLE-AES", StringComparison.OrdinalIgnoreCase) ||
+                        keyFmt.Contains("widevine") || keyFmt.Contains("fairplay") ||
+                        keyFmt.Contains("playready") || keyFmt.Contains("streamingkeydelivery"))
+                    {
+                        throw new NotSupportedException("DRM-protected HLS stream cannot be downloaded");
+                    }
+                    if (method == "NONE")
+                    {
+                        curKey = null;
+                    }
+                    else if (method == "AES-128")
+                    {
+                        string kUri = ParseHlsAttrValue(attrs, "URI");
+                        if (string.IsNullOrEmpty(kUri))
+                        {
+                            throw new IOException("HLS AES-128 key URI missing");
+                        }
+                        string absKeyUri = new Uri(baseUri, kUri).AbsoluteUri;
+                        string ivHex = ParseHlsAttrValue(attrs, "IV");
+                        curKey = new HlsKeyInfo
+                        {
+                            Method = "AES-128",
+                            Uri = absKeyUri,
+                            ExplicitIv = ParseHexBytes(ivHex)
+                        };
+                    }
+                    continue;
+                }
+
+                if (line.StartsWith("#EXT-X-MAP:", StringComparison.OrdinalIgnoreCase))
+                {
+                    string attrs = line.Substring("#EXT-X-MAP:".Length);
+                    string mapUri = ParseHlsAttrValue(attrs, "URI");
+                    if (!string.IsNullOrEmpty(mapUri))
+                    {
+                        long mStart = -1;
+                        long mEnd = -1;
+                        string br = ParseHlsAttrValue(attrs, "BYTERANGE");
+                        if (!string.IsNullOrEmpty(br))
+                        {
+                            long blen, boff;
+                            if (ParseHlsByteRange(br, 0, out blen, out boff))
+                            {
+                                mStart = boff;
+                                mEnd = boff + blen - 1;
+                            }
+                        }
+                        initSegment = new HlsSegSpec
+                        {
+                            Index = -1,
+                            Url = new Uri(baseUri, mapUri).AbsoluteUri,
+                            ByteRangeStart = mStart,
+                            ByteRangeEnd = mEnd
+                        };
+                    }
+                    continue;
+                }
+
+                if (line.StartsWith("#EXT-X-BYTERANGE:", StringComparison.OrdinalIgnoreCase))
+                {
+                    string br = line.Substring("#EXT-X-BYTERANGE:".Length).Trim();
+                    long blen, boff;
+                    if (ParseHlsByteRange(br, lastRangeEnd, out blen, out boff))
+                    {
+                        pendingRangeLen = blen;
+                        pendingRangeOff = boff;
+                        lastRangeEnd = boff + blen;
+                    }
+                    continue;
+                }
+
+                if (line.StartsWith("#")) continue;
+
+                try
+                {
+                    string segUrl = new Uri(baseUri, line).AbsoluteUri;
+                    long rStart = -1;
+                    long rEnd = -1;
+                    if (pendingRangeLen > 0 && pendingRangeOff >= 0)
+                    {
+                        rStart = pendingRangeOff;
+                        rEnd = pendingRangeOff + pendingRangeLen - 1;
+                    }
+                    pendingRangeLen = -1;
+                    pendingRangeOff = -1;
+
+                    list.Add(new HlsSegSpec
+                    {
+                        Index = list.Count,
+                        MediaSeq = mediaSeq + list.Count,
+                        Url = segUrl,
+                        Key = curKey,
+                        ByteRangeStart = rStart,
+                        ByteRangeEnd = rEnd
+                    });
+                }
+                catch { }
+            }
+
+            return list;
+        }
+
+        private static bool ParseHlsByteRange(string expr, long defaultOffset, out long length, out long offset)
+        {
+            length = 0;
+            offset = defaultOffset;
+            if (string.IsNullOrEmpty(expr)) return false;
+            string[] parts = expr.Trim().Trim('"').Split('@');
+            if (!long.TryParse(parts[0].Trim(), out length) || length <= 0) return false;
+            if (parts.Length > 1)
+            {
+                long o;
+                if (long.TryParse(parts[1].Trim(), out o) && o >= 0) offset = o;
+            }
+            return true;
+        }
+
+        private static string ParseHlsAttrValue(string attrs, string key)
+        {
+            if (string.IsNullOrEmpty(attrs) || string.IsNullOrEmpty(key)) return "";
+            var m = Regex.Match(attrs, "(?:^|,)\\s*" + Regex.Escape(key) + "\\s*=\\s*(?:\"([^\"]*)\"|([^,]*))", RegexOptions.IgnoreCase);
+            if (!m.Success) return "";
+            return m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value.Trim();
+        }
+
+        private static long ParseHlsLongAttr(string attrs, string key)
+        {
+            string s = ParseHlsAttrValue(attrs, key);
+            long v;
+            return long.TryParse(s, out v) ? v : 0;
+        }
+
+        private static byte[] ParseHexBytes(string hex)
+        {
+            if (string.IsNullOrWhiteSpace(hex)) return null;
+            string s = hex.Trim();
+            if (s.StartsWith("0x", StringComparison.OrdinalIgnoreCase)) s = s.Substring(2);
+            if (s.Length != 32) return null;
+            byte[] res = new byte[16];
+            for (int i = 0; i < 16; i++)
+            {
+                byte b;
+                if (!byte.TryParse(s.Substring(i * 2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out b))
+                    return null;
+                res[i] = b;
+            }
+            return res;
+        }
+
+        private static byte[] BuildHlsSequenceIv(long seq)
+        {
+            byte[] iv = new byte[16];
+            ulong u = (ulong)Math.Max(0L, seq);
+            for (int i = 15; i >= 8; i--)
+            {
+                iv[i] = (byte)(u & 0xFF);
+                u >>= 8;
+            }
+            return iv;
+        }
+
+        private static byte[] DecryptAes128Cbc(byte[] cipher, byte[] key, byte[] iv)
+        {
+            using (Aes aes = Aes.Create())
+            {
+                aes.Mode = CipherMode.CBC;
+                aes.Padding = PaddingMode.PKCS7;
+                aes.Key = key;
+                aes.IV = iv;
+                using (var ms = new MemoryStream())
+                using (var cs = new CryptoStream(ms, aes.CreateDecryptor(), CryptoStreamMode.Write))
+                {
+                    cs.Write(cipher, 0, cipher.Length);
+                    cs.FlushFinalBlock();
+                    return ms.ToArray();
+                }
+            }
+        }
+
+        // =====================================================================
+        // Speed & ETA Sampler + HTTP Transport (Redirects, Proxy, Cookies, Headers)
+        // =====================================================================
         private async Task RunSpeedSamplerAsync(TurboDownloadEntry entry, CancellationToken ct)
         {
             long prevBytes;
@@ -711,61 +1700,220 @@ namespace DejavuBrowser
             }
         }
 
-        private HttpWebRequest CreateRequest(TurboDownloadEntry entry, string method)
+        private HttpWebRequest CreateHttpRequest(
+            string targetUrl,
+            string method,
+            TurboDownloadEntry entry,
+            bool sendCookies,
+            bool decompressText,
+            long rangeStart,
+            long rangeEnd)
         {
-            var req = (HttpWebRequest)WebRequest.Create(entry.Url);
+            var req = (HttpWebRequest)WebRequest.Create(targetUrl);
             req.Method = method;
-            req.AllowAutoRedirect = true;
-            req.MaximumAutomaticRedirections = 8;
-            req.Timeout = 20000;
-            req.ReadWriteTimeout = 30000;
+            req.AllowAutoRedirect = false; // Manual redirect follower supports 301/302/303/307/308 & safe cookies!
+            req.Timeout = 25000;
+            req.ReadWriteTimeout = 45000;
+            req.KeepAlive = true;
             req.UserAgent = entry.UserAgent;
             req.Accept = "*/*";
-            req.AutomaticDecompression = DecompressionMethods.None;
+            req.AutomaticDecompression = decompressText
+                ? (DecompressionMethods.GZip | DecompressionMethods.Deflate)
+                : DecompressionMethods.None;
+
+            try { req.Headers["Accept-Language"] = "en-US,en;q=0.9"; } catch { }
+
             if (!string.IsNullOrEmpty(entry.Referer))
             {
                 try { req.Referer = entry.Referer; } catch { }
             }
-            if (!string.IsNullOrEmpty(entry.Cookies))
+            if (!string.IsNullOrEmpty(entry.Origin))
+            {
+                try { req.Headers["Origin"] = entry.Origin; } catch { }
+            }
+            if (sendCookies && !string.IsNullOrEmpty(entry.Cookies))
             {
                 try { req.Headers[HttpRequestHeader.Cookie] = entry.Cookies; } catch { }
+            }
+            if (rangeStart >= 0)
+            {
+                if (rangeEnd >= rangeStart) req.AddRange(rangeStart, rangeEnd);
+                else req.AddRange(rangeStart);
+            }
+
+            if (_proxyProvider != null && !IsLoopbackUrl(targetUrl))
+            {
+                try
+                {
+                    IWebProxy px = _proxyProvider();
+                    if (px != null) req.Proxy = px;
+                }
+                catch { }
             }
             return req;
         }
 
-        private sealed class ProbeResult
+        private async Task<RedirectResponse> GetResponseWithRedirectsAsync(
+            TurboDownloadEntry entry,
+            string startUrl,
+            string method,
+            bool decompressText,
+            long rangeStart,
+            long rangeEnd,
+            CancellationToken ct)
         {
-            public long ContentLength;
-            public bool AcceptsRanges;
-            public string ContentType;
-            public string SuggestedName;
+            string curUrl = startUrl;
+            string curMethod = method;
+            string origHost = ExtractHostSafe(entry.Url);
+
+            for (int hop = 0; hop <= MAX_REDIRECTS; hop++)
+            {
+                ct.ThrowIfCancellationRequested();
+                string curHost = ExtractHostSafe(curUrl);
+                bool sendCookies = IsSameRootDomain(origHost, curHost);
+                var req = CreateHttpRequest(curUrl, curMethod, entry, sendCookies, decompressText, rangeStart, rangeEnd);
+
+                HttpWebResponse resp = null;
+                try
+                {
+                    using (ct.Register(() => { try { req.Abort(); } catch { } }))
+                    {
+                        resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false);
+                    }
+                }
+                catch (WebException wex)
+                {
+                    if (ct.IsCancellationRequested) throw new OperationCanceledException();
+                    HttpWebResponse errResp = wex.Response as HttpWebResponse;
+                    if (errResp != null)
+                    {
+                        int errCode = (int)errResp.StatusCode;
+                        if (IsRedirectCode(errCode))
+                        {
+                            string loc = errResp.Headers["Location"];
+                            try { errResp.Dispose(); } catch { }
+                            if (string.IsNullOrEmpty(loc))
+                            {
+                                throw new HttpStatusException(errCode, "HTTP " + errCode + " redirect missing Location");
+                            }
+                            curUrl = new Uri(new Uri(curUrl), loc).AbsoluteUri;
+                            if (errCode == 303) curMethod = "GET";
+                            continue;
+                        }
+                        string desc = errResp.StatusDescription ?? "";
+                        try { errResp.Dispose(); } catch { }
+                        throw new HttpStatusException(errCode, "HTTP " + errCode + (string.IsNullOrEmpty(desc) ? "" : (" " + desc)));
+                    }
+                    throw;
+                }
+
+                int code = (int)resp.StatusCode;
+                if (IsRedirectCode(code))
+                {
+                    string loc = resp.Headers["Location"];
+                    try { resp.Dispose(); } catch { }
+                    if (string.IsNullOrEmpty(loc))
+                    {
+                        throw new HttpStatusException(code, "HTTP " + code + " redirect missing Location");
+                    }
+                    curUrl = new Uri(new Uri(curUrl), loc).AbsoluteUri;
+                    if (code == 303) curMethod = "GET";
+                    continue;
+                }
+
+                if (code < 200 || code >= 300)
+                {
+                    string desc = resp.StatusDescription ?? "";
+                    try { resp.Dispose(); } catch { }
+                    throw new HttpStatusException(code, "HTTP " + code + (string.IsNullOrEmpty(desc) ? "" : (" " + desc)));
+                }
+
+                return new RedirectResponse
+                {
+                    Response = resp,
+                    FinalUrl = resp.ResponseUri != null ? resp.ResponseUri.AbsoluteUri : curUrl
+                };
+            }
+
+            throw new IOException("Too many HTTP redirects");
+        }
+
+        private async Task<Tuple<string, string>> FetchTextWithRedirectsAsync(TurboDownloadEntry entry, string url, CancellationToken ct)
+        {
+            using (var rr = await GetResponseWithRedirectsAsync(entry, url, "GET", true, -1, -1, ct).ConfigureAwait(false))
+            using (var stream = rr.Response.GetResponseStream())
+            using (var sr = new StreamReader(stream, Encoding.UTF8))
+            {
+                string txt = await sr.ReadToEndAsync().ConfigureAwait(false);
+                return new Tuple<string, string>(txt, rr.FinalUrl);
+            }
+        }
+
+        private async Task<byte[]> FetchBytesWithRedirectsAsync(TurboDownloadEntry entry, string url, long rangeStart, long rangeEnd, CancellationToken ct)
+        {
+            using (var rr = await GetResponseWithRedirectsAsync(entry, url, "GET", false, rangeStart, rangeEnd, ct).ConfigureAwait(false))
+            using (var stream = rr.Response.GetResponseStream())
+            using (var ms = new MemoryStream())
+            {
+                if (stream == null) return new byte[0];
+                byte[] buf = new byte[65536];
+                int read;
+                while ((read = await stream.ReadAsync(buf, 0, buf.Length, ct).ConfigureAwait(false)) > 0)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    ms.Write(buf, 0, read);
+                }
+                return ms.ToArray();
+            }
         }
 
         private async Task<ProbeResult> ProbeRemoteAsync(TurboDownloadEntry entry, CancellationToken ct)
         {
-            var res = new ProbeResult();
+            var res = new ProbeResult { FinalUrl = entry.Url };
+
             // 1. Try lightweight 1-byte Range GET (works even on CDNs that reject HEAD!)
             try
             {
-                var req = CreateRequest(entry, "GET");
-                req.AddRange(0L, 0L);
-                using (ct.Register(() => { try { req.Abort(); } catch { } }))
-                using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
+                using (var rr = await GetResponseWithRedirectsAsync(entry, entry.Url, "GET", false, 0L, 0L, ct).ConfigureAwait(false))
                 {
+                    var resp = rr.Response;
+                    res.FinalUrl = rr.FinalUrl;
                     res.ContentType = resp.ContentType ?? "";
                     res.SuggestedName = ExtractDispositionFileName(resp.Headers["Content-Disposition"]);
+
                     if (resp.StatusCode == HttpStatusCode.PartialContent)
                     {
-                        res.AcceptsRanges = true;
                         string cr = resp.Headers["Content-Range"];
                         long parsed = ParseContentRangeTotal(cr);
-                        if (parsed > 0) res.ContentLength = parsed;
+                        if (parsed > 0)
+                        {
+                            res.ContentLength = parsed;
+                            res.AcceptsRanges = true;
+                        }
                     }
                     else
                     {
+                        // Server ignored Range: bytes=0-0 and returned 200 OK -> do NOT run parallel range threads!
                         res.ContentLength = resp.ContentLength > 0 ? resp.ContentLength : 0;
-                        string ar = resp.Headers["Accept-Ranges"] ?? "";
-                        res.AcceptsRanges = ar.IndexOf("bytes", StringComparison.OrdinalIgnoreCase) >= 0 && res.ContentLength > 0;
+                        res.AcceptsRanges = false;
+                        // Peek first 8 bytes to detect extensionless #EXTM3U HLS playlists
+                        if (res.ContentLength <= 2 * 1024 * 1024)
+                        {
+                            try
+                            {
+                                var st = resp.GetResponseStream();
+                                if (st != null)
+                                {
+                                    byte[] head = new byte[16];
+                                    int got = await st.ReadAsync(head, 0, head.Length, ct).ConfigureAwait(false);
+                                    if (got >= 7 && LooksLikeExtM3uBytes(head, got))
+                                    {
+                                        res.LooksLikeM3u8 = true;
+                                    }
+                                }
+                            }
+                            catch { }
+                        }
                     }
                     return res;
                 }
@@ -773,13 +1921,13 @@ namespace DejavuBrowser
             catch (OperationCanceledException) { throw; }
             catch { }
 
-            // 2. Fallback to standard HEAD probe
+            // 2. Fallback to standard HEAD probe (for servers returning 416/400 on Range: 0-0)
             try
             {
-                var req = CreateRequest(entry, "HEAD");
-                using (ct.Register(() => { try { req.Abort(); } catch { } }))
-                using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
+                using (var rr = await GetResponseWithRedirectsAsync(entry, entry.Url, "HEAD", false, -1, -1, ct).ConfigureAwait(false))
                 {
+                    var resp = rr.Response;
+                    res.FinalUrl = rr.FinalUrl;
                     res.ContentType = resp.ContentType ?? "";
                     res.SuggestedName = ExtractDispositionFileName(resp.Headers["Content-Disposition"]);
                     res.ContentLength = resp.ContentLength > 0 ? resp.ContentLength : 0;
@@ -793,7 +1941,7 @@ namespace DejavuBrowser
             return res;
         }
 
-        private async Task DownloadSegmentAsync(TurboDownloadEntry entry, TurboSegmentState seg, CancellationToken ct)
+        private async Task DownloadSegmentAsync(TurboDownloadEntry entry, string effectiveUrl, TurboSegmentState seg, CancellationToken ct)
         {
             int retries = 0;
             while (true)
@@ -805,36 +1953,40 @@ namespace DejavuBrowser
                 bool shouldBackoff = false;
                 try
                 {
-                    var req = CreateRequest(entry, "GET");
-                    req.AddRange(curPos, seg.End);
-
-                    using (ct.Register(() => { try { req.Abort(); } catch { } }))
-                    using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
-                    using (var stream = resp.GetResponseStream())
-                    using (var fs = new FileStream(entry.PartPath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite, 65536))
+                    using (var rr = await GetResponseWithRedirectsAsync(entry, effectiveUrl, "GET", false, curPos, seg.End, ct).ConfigureAwait(false))
                     {
-                        if (stream == null) throw new IOException("Empty response stream");
-                        byte[] buf = new byte[65536];
-                        long writePos = curPos;
-                        fs.Seek(writePos, SeekOrigin.Begin);
-                        int read;
-                        while ((read = await stream.ReadAsync(buf, 0, buf.Length, ct).ConfigureAwait(false)) > 0)
+                        var resp = rr.Response;
+                        if (resp.StatusCode != HttpStatusCode.PartialContent)
                         {
-                            ct.ThrowIfCancellationRequested();
-                            long remaining = (seg.End - writePos) + 1;
-                            int toWrite = (int)Math.Min(read, remaining);
-                            if (toWrite <= 0) break;
-
-                            fs.Write(buf, 0, toWrite);
-                            writePos += toWrite;
-                            lock (_gate)
-                            {
-                                seg.Done += toWrite;
-                                entry.ReceivedBytes += toWrite;
-                            }
-                            if (writePos > seg.End) break;
+                            throw new RangeRejectedException("Server returned HTTP " + (int)resp.StatusCode + " instead of 206 Partial Content");
                         }
-                        fs.Flush();
+
+                        using (var stream = resp.GetResponseStream())
+                        using (var fs = new FileStream(entry.PartPath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite, 65536))
+                        {
+                            if (stream == null) throw new IOException("Empty response stream");
+                            byte[] buf = new byte[65536];
+                            long writePos = curPos;
+                            fs.Seek(writePos, SeekOrigin.Begin);
+                            int read;
+                            while ((read = await stream.ReadAsync(buf, 0, buf.Length, ct).ConfigureAwait(false)) > 0)
+                            {
+                                ct.ThrowIfCancellationRequested();
+                                long remaining = (seg.End - writePos) + 1;
+                                int toWrite = (int)Math.Min(read, remaining);
+                                if (toWrite <= 0) break;
+
+                                fs.Write(buf, 0, toWrite);
+                                writePos += toWrite;
+                                lock (_gate)
+                                {
+                                    seg.Done += toWrite;
+                                    entry.ReceivedBytes += toWrite;
+                                }
+                                if (writePos > seg.End) break;
+                            }
+                            fs.Flush();
+                        }
                     }
 
                     if (seg.Start + seg.Done > seg.End) return;
@@ -842,6 +1994,18 @@ namespace DejavuBrowser
                     if (retries > 4) throw new IOException("Segment incomplete");
                 }
                 catch (OperationCanceledException) { throw; }
+                catch (RangeRejectedException) { throw; }
+                catch (HttpStatusException hex)
+                {
+                    if (hex.StatusCode == 403 || hex.StatusCode == 404 || hex.StatusCode == 416 || hex.StatusCode == 501)
+                    {
+                        throw;
+                    }
+                    if (ct.IsCancellationRequested) throw new OperationCanceledException();
+                    retries++;
+                    if (retries > 3) throw;
+                    shouldBackoff = true;
+                }
                 catch
                 {
                     if (ct.IsCancellationRequested) throw new OperationCanceledException();
@@ -856,39 +2020,362 @@ namespace DejavuBrowser
             }
         }
 
-        private async Task DownloadSingleStreamAsync(TurboDownloadEntry entry, CancellationToken ct)
+        private async Task DownloadSingleStreamAsync(TurboDownloadEntry entry, string effectiveUrl, CancellationToken ct)
         {
-            var req = CreateRequest(entry, "GET");
-            using (ct.Register(() => { try { req.Abort(); } catch { } }))
-            using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
-            using (var stream = resp.GetResponseStream())
-            using (var fs = new FileStream(entry.PartPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+            using (var rr = await GetResponseWithRedirectsAsync(entry, effectiveUrl, "GET", false, -1, -1, ct).ConfigureAwait(false))
             {
-                if (resp.ContentLength > 0)
+                var resp = rr.Response;
+                string contentType = resp.ContentType ?? "";
+                string dispName = ExtractDispositionFileName(resp.Headers["Content-Disposition"]);
+
+                if (IsHlsUrl(rr.FinalUrl, contentType))
                 {
+                    throw new DetectedHlsException(rr.FinalUrl);
+                }
+
+                using (var stream = resp.GetResponseStream())
+                {
+                    if (stream == null) throw new IOException("Empty response stream");
+
+                    byte[] buf = new byte[65536];
+                    int firstRead = await stream.ReadAsync(buf, 0, buf.Length, ct).ConfigureAwait(false);
+                    if (firstRead <= 0)
+                    {
+                        throw new IOException("Server returned empty body");
+                    }
+
+                    // Detect extensionless HLS playlists on the very first chunk!
+                    if (resp.ContentLength <= 2 * 1024 * 1024 && LooksLikeExtM3uBytes(buf, firstRead))
+                    {
+                        throw new DetectedHlsException(rr.FinalUrl);
+                    }
+
+                    string partPath;
                     lock (_gate)
                     {
-                        entry.TotalBytes = resp.ContentLength;
-                        if (entry.Segments.Count > 0) entry.Segments[0].End = resp.ContentLength - 1;
+                        // Resolve filename/extension from GET response headers if probe didn't have them
+                        if (entry.ReceivedBytes == 0)
+                        {
+                            string oldPart = entry.PartPath;
+                            ApplyResolvedMetadataLocked(entry, dispName, contentType, rr.FinalUrl);
+                            if (!string.Equals(oldPart, entry.PartPath, StringComparison.OrdinalIgnoreCase))
+                            {
+                                try { if (File.Exists(oldPart)) File.Delete(oldPart); } catch { }
+                            }
+                        }
+                        if (resp.ContentLength > 0)
+                        {
+                            entry.TotalBytes = resp.ContentLength;
+                            if (entry.Segments.Count > 0) entry.Segments[0].End = resp.ContentLength - 1;
+                        }
+                        partPath = entry.PartPath;
                     }
-                }
-                byte[] buf = new byte[65536];
-                int read;
-                while ((read = await stream.ReadAsync(buf, 0, buf.Length, ct).ConfigureAwait(false)) > 0)
-                {
-                    ct.ThrowIfCancellationRequested();
-                    fs.Write(buf, 0, read);
-                    lock (_gate)
+
+                    using (var fs = new FileStream(partPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, 65536))
                     {
-                        entry.ReceivedBytes += read;
-                        if (entry.Segments.Count > 0) entry.Segments[0].Done += read;
+                        fs.Write(buf, 0, firstRead);
+                        lock (_gate)
+                        {
+                            entry.ReceivedBytes += firstRead;
+                            if (entry.Segments.Count > 0) entry.Segments[0].Done += firstRead;
+                        }
+
+                        int read;
+                        while ((read = await stream.ReadAsync(buf, 0, buf.Length, ct).ConfigureAwait(false)) > 0)
+                        {
+                            ct.ThrowIfCancellationRequested();
+                            fs.Write(buf, 0, read);
+                            lock (_gate)
+                            {
+                                entry.ReceivedBytes += read;
+                                if (entry.Segments.Count > 0) entry.Segments[0].Done += read;
+                            }
+                        }
+                        fs.Flush();
                     }
                 }
-                fs.Flush();
             }
         }
 
-        private static long ParseContentRangeTotal(string cr)
+        private void ApplyResolvedMetadataLocked(TurboDownloadEntry entry, string dispName, string contentType, string finalUrl)
+        {
+            string candidate = null;
+            if (!string.IsNullOrWhiteSpace(dispName))
+            {
+                candidate = SanitizeFileName(dispName);
+            }
+            else if (IsGenericMediaFileName(entry.FileName) || entry.FileName.IndexOf('.') < 0)
+            {
+                string ext = GuessExtFromMime(contentType);
+                if (string.IsNullOrEmpty(ext) && !string.IsNullOrEmpty(finalUrl))
+                {
+                    string fGuess = GuessFileNameFromUrl(finalUrl);
+                    string fExt = Path.GetExtension(fGuess);
+                    if (!string.IsNullOrEmpty(fExt) && fExt.Length <= 6) ext = fExt;
+                }
+                if (!string.IsNullOrEmpty(ext) && !entry.FileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                {
+                    string stem = Path.GetFileNameWithoutExtension(entry.FileName);
+                    if (string.IsNullOrWhiteSpace(stem)) stem = "dejavu-download";
+                    candidate = SanitizeFileName(stem + ext);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(candidate) && !string.Equals(candidate, entry.FileName, StringComparison.OrdinalIgnoreCase))
+            {
+                string unique = MakeUniqueFilePath(_downloadsDir, candidate);
+                entry.SavePath = unique;
+                entry.PartPath = unique + ".djvpart";
+                entry.FileName = Path.GetFileName(unique);
+            }
+            entry.Category = ClassifyCategory(entry.FileName, contentType);
+        }
+
+        // =====================================================================
+        // URL, MIME, YouTube & Filename Helpers
+        // =====================================================================
+        private static bool IsRedirectCode(int code)
+        {
+            return code == 301 || code == 302 || code == 303 || code == 307 || code == 308;
+        }
+
+        private static bool LooksLikeExtM3uBytes(byte[] buf, int count)
+        {
+            if (buf == null || count < 7) return false;
+            int off = 0;
+            // Skip UTF-8 BOM if present
+            if (count >= 10 && buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF) off = 3;
+            while (off < count && (buf[off] == ' ' || buf[off] == '\t' || buf[off] == '\r' || buf[off] == '\n')) off++;
+            if (count - off < 7) return false;
+            string head = Encoding.ASCII.GetString(buf, off, 7);
+            return string.Equals(head, "#EXTM3U", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsLoopbackUrl(string url)
+        {
+            try
+            {
+                Uri u = new Uri(url);
+                string h = u.Host.ToLowerInvariant();
+                return h == "localhost" || h == "127.0.0.1" || h == "::1" || h == "[::1]";
+            }
+            catch { return false; }
+        }
+
+        private static string ExtractHostSafe(string url)
+        {
+            try { return new Uri(url).Host.ToLowerInvariant(); }
+            catch { return ""; }
+        }
+
+        private static string ExtractOriginFromUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return "";
+            try
+            {
+                Uri u = new Uri(url);
+                if (u.Scheme != "http" && u.Scheme != "https") return "";
+                return u.GetLeftPart(UriPartial.Authority);
+            }
+            catch { return ""; }
+        }
+
+        private static bool IsSameRootDomain(string hostA, string hostB)
+        {
+            if (string.IsNullOrEmpty(hostA) || string.IsNullOrEmpty(hostB)) return false;
+            if (string.Equals(hostA, hostB, StringComparison.OrdinalIgnoreCase)) return true;
+            string[] pa = hostA.Split('.');
+            string[] pb = hostB.Split('.');
+            if (pa.Length < 2 || pb.Length < 2) return false;
+            string ra = pa[pa.Length - 2] + "." + pa[pa.Length - 1];
+            string rb = pb[pb.Length - 2] + "." + pb[pb.Length - 1];
+            return string.Equals(ra, rb, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string CleanErrorMessage(Exception ex)
+        {
+            if (ex == null) return "Download failed";
+            var agg = ex as AggregateException;
+            if (agg != null && agg.InnerExceptions.Count > 0)
+            {
+                ex = agg.Flatten().InnerExceptions[0];
+            }
+            string msg = ex.Message ?? "Download failed";
+            if (msg.Length > 120) msg = msg.Substring(0, 120);
+            return msg;
+        }
+
+        public static bool IsHlsUrl(string url, string mime)
+        {
+            string m = (mime ?? "").ToLowerInvariant();
+            if (m.Contains("mpegurl") || m.Contains("m3u8")) return true;
+            if (string.IsNullOrWhiteSpace(url)) return false;
+            string path = url.Split('?')[0].Split('#')[0].ToLowerInvariant();
+            return path.EndsWith(".m3u8") || path.EndsWith(".m3u");
+        }
+
+        private static bool IsRawStreamChunk(string url, string mime)
+        {
+            string m = (mime ?? "").ToLowerInvariant();
+            if (m.Contains("video/mp2t") || m.Contains("iso.segment") || m.Contains("text/vtt")) return true;
+            string path = url.Split('?')[0].Split('#')[0].ToLowerInvariant();
+            return path.EndsWith(".ts") || path.EndsWith(".m4s") || path.EndsWith(".cmfv") ||
+                   path.EndsWith(".cmfa") || path.EndsWith(".vtt") || path.EndsWith(".srt") ||
+                   path.EndsWith(".key");
+        }
+
+        private static bool IsGoogleVideoPlaybackUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return false;
+            string low = url.ToLowerInvariant();
+            return low.Contains("googlevideo.com/videoplayback") || low.Contains("/videoplayback?");
+        }
+
+        public static string NormalizeDownloadUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return "";
+            if (!IsGoogleVideoPlaybackUrl(url)) return url;
+
+            // Strip chunk-slicing params from googlevideo.com/videoplayback so we download the FULL video!
+            try
+            {
+                int qIdx = url.IndexOf('?');
+                if (qIdx < 0) return url;
+                string basePart = url.Substring(0, qIdx);
+                string query = url.Substring(qIdx + 1);
+                string[] pairs = query.Split('&');
+                var kept = new List<string>(pairs.Length);
+                for (int i = 0; i < pairs.Length; i++)
+                {
+                    string p = pairs[i];
+                    if (string.IsNullOrEmpty(p)) continue;
+                    int eq = p.IndexOf('=');
+                    string k = (eq > 0 ? p.Substring(0, eq) : p).ToLowerInvariant();
+                    if (k == "range" || k == "rn" || k == "rbuf" || k == "alr" || k == "ump" || k == "srfvp")
+                    {
+                        continue;
+                    }
+                    kept.Add(p);
+                }
+                return kept.Count > 0 ? (basePart + "?" + string.Join("&", kept.ToArray())) : basePart;
+            }
+            catch
+            {
+                return url;
+            }
+        }
+
+        private static string ExtractQueryParam(string url, string key)
+        {
+            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(key)) return "";
+            int qIdx = url.IndexOf('?');
+            if (qIdx < 0) return "";
+            string query = url.Substring(qIdx + 1);
+            int hash = query.IndexOf('#');
+            if (hash >= 0) query = query.Substring(0, hash);
+            string[] pairs = query.Split('&');
+            for (int i = 0; i < pairs.Length; i++)
+            {
+                int eq = pairs[i].IndexOf('=');
+                if (eq <= 0) continue;
+                string k = pairs[i].Substring(0, eq);
+                if (string.Equals(k, key, StringComparison.OrdinalIgnoreCase))
+                {
+                    try { return Uri.UnescapeDataString(pairs[i].Substring(eq + 1)); }
+                    catch { return pairs[i].Substring(eq + 1); }
+                }
+            }
+            return "";
+        }
+
+        private static string DescribeYoutubeItag(string itag, string mime, out int priority)
+        {
+            switch (itag)
+            {
+                case "37": priority = 100; return "1080p MP4";
+                case "22": priority = 100; return "720p MP4";
+                case "18": priority = 98; return "360p MP4";
+                case "313": priority = 86; return "4K WebM (Video)";
+                case "271": priority = 85; return "1440p WebM (Video)";
+                case "299":
+                case "137": priority = 84; return "1080p MP4 (Video)";
+                case "303":
+                case "248": priority = 82; return "1080p WebM (Video)";
+                case "298":
+                case "136": priority = 80; return "720p MP4 (Video)";
+                case "302":
+                case "247": priority = 78; return "720p WebM (Video)";
+                case "135": priority = 76; return "480p MP4 (Video)";
+                case "244": priority = 75; return "480p WebM (Video)";
+                case "134": priority = 74; return "360p MP4 (Video)";
+                case "141": priority = 58; return "M4A HQ Audio";
+                case "140": priority = 56; return "M4A Audio";
+                case "251": priority = 54; return "Opus Audio";
+                case "250":
+                case "249": priority = 50; return "WebM Audio";
+                default:
+                    string m = (mime ?? "").ToLowerInvariant();
+                    if (m.StartsWith("audio/")) { priority = 52; return "Audio"; }
+                    priority = 72;
+                    return m.Contains("webm") ? "WebM Video" : "MP4 Video";
+            }
+        }
+
+        private static string CleanMediaTitle(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return "";
+            string s = raw.Trim();
+            s = Regex.Replace(s, "\\s*[-|·]\\s*(YouTube|Vimeo|Twitch|X|Twitter|Dailymotion)\\s*$", "", RegexOptions.IgnoreCase);
+            s = Regex.Replace(s, "^\\(\\d+\\)\\s*", "");
+            return s.Trim();
+        }
+
+        private static bool IsGenericMediaFileName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return true;
+            string low = name.Trim().ToLowerInvariant();
+            string stem = Path.GetFileNameWithoutExtension(low);
+            return low == "videoplayback" || low == "download" || low == "media" || low == "video" ||
+                   low == "stream" || low == "manifest" ||
+                   stem == "master" || stem == "index" || stem == "playlist" || stem == "chunklist" ||
+                   stem == "manifest" || stem == "videoplayback" || stem == "video" || stem == "stream" ||
+                   low.StartsWith("download_");
+        }
+
+        private static string EnsureVideoExtensionForHls(string fileName, string targetExt)
+        {
+            string clean = SanitizeFileName(string.IsNullOrWhiteSpace(fileName) ? "dejavu-video" : fileName);
+            string ext = (Path.GetExtension(clean) ?? "").ToLowerInvariant();
+            if (ext == ".m3u8" || ext == ".m3u" || ext == ".txt" || string.IsNullOrEmpty(ext))
+            {
+                string stem = Path.GetFileNameWithoutExtension(clean);
+                if (string.IsNullOrWhiteSpace(stem)) stem = "dejavu-video";
+                return SanitizeFileName(stem + targetExt);
+            }
+            if (ext != ".ts" && ext != ".mp4" && ext != ".mkv" && ext != ".aac" && ext != ".m4a" && ext != ".mp3")
+            {
+                return SanitizeFileName(clean + targetExt);
+            }
+            return clean;
+        }
+
+        private static string GuessFormatTag(string url, string mime)
+        {
+            string s = ((mime ?? "") + " " + (url ?? "")).ToLowerInvariant();
+            if (s.Contains("m3u8") || s.Contains("mpegurl")) return "HLS";
+            if (s.Contains("webm")) return "WEBM";
+            if (s.Contains("mp4") || s.Contains("m4v")) return "MP4";
+            if (s.Contains("mkv") || s.Contains("matroska")) return "MKV";
+            if (s.Contains("quicktime") || s.Contains(".mov")) return "MOV";
+            if (s.Contains("audio/mpeg") || s.Contains(".mp3")) return "MP3";
+            if (s.Contains("audio/mp4") || s.Contains("m4a") || s.Contains("aac")) return "M4A";
+            if (s.Contains("flac")) return "FLAC";
+            if (s.Contains("wav")) return "WAV";
+            if (s.Contains("ogg")) return "OGG";
+            return "";
+        }
+
+        public static long ParseContentRangeTotal(string cr)
         {
             if (string.IsNullOrEmpty(cr)) return 0;
             int slash = cr.LastIndexOf('/');
@@ -951,7 +2438,7 @@ namespace DejavuBrowser
             string ext = Path.GetExtension(fileName);
             string candidate = Path.Combine(dir, fileName);
             int i = 1;
-            while (File.Exists(candidate) || File.Exists(candidate + ".djvpart"))
+            while (File.Exists(candidate) || File.Exists(candidate + ".djvpart") || Directory.Exists(candidate + ".djvpart.hls"))
             {
                 candidate = Path.Combine(dir, baseName + " (" + i + ")" + ext);
                 i++;
@@ -963,7 +2450,7 @@ namespace DejavuBrowser
         {
             string ext = (Path.GetExtension(fileName ?? "") ?? "").ToLowerInvariant();
             string m = (mime ?? "").ToLowerInvariant();
-            if (m.StartsWith("video/") || ext == ".mp4" || ext == ".webm" || ext == ".mkv" || ext == ".mov" || ext == ".avi" || ext == ".m3u8" || ext == ".ts") return "video";
+            if (m.StartsWith("video/") || m.Contains("mpegurl") || ext == ".mp4" || ext == ".webm" || ext == ".mkv" || ext == ".mov" || ext == ".m4v" || ext == ".avi" || ext == ".m3u8" || ext == ".ts") return "video";
             if (m.StartsWith("audio/") || ext == ".mp3" || ext == ".m4a" || ext == ".wav" || ext == ".flac" || ext == ".ogg" || ext == ".aac") return "audio";
             if (m.StartsWith("image/") || ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".webp" || ext == ".gif" || ext == ".svg" || ext == ".avif") return "image";
             if (ext == ".pdf" || ext == ".doc" || ext == ".docx" || ext == ".xls" || ext == ".xlsx" || ext == ".ppt" || ext == ".pptx" || ext == ".txt" || ext == ".epub" || ext == ".csv") return "document";
@@ -974,10 +2461,10 @@ namespace DejavuBrowser
         private static string DetectMediaCategory(string url, string mime, long size)
         {
             string m = (mime ?? "").ToLowerInvariant();
-            string cleanPath = url.Split('?')[0].ToLowerInvariant();
-            if (m.StartsWith("video/") || cleanPath.EndsWith(".mp4") || cleanPath.EndsWith(".webm") || cleanPath.EndsWith(".m3u8") || cleanPath.EndsWith(".mkv") || cleanPath.EndsWith(".mov"))
+            string cleanPath = url.Split('?')[0].Split('#')[0].ToLowerInvariant();
+            if (m.StartsWith("video/") || m.Contains("mpegurl") || cleanPath.EndsWith(".mp4") || cleanPath.EndsWith(".webm") || cleanPath.EndsWith(".m3u8") || cleanPath.EndsWith(".mkv") || cleanPath.EndsWith(".mov") || cleanPath.EndsWith(".m4v"))
                 return "video";
-            if (m.StartsWith("audio/") || cleanPath.EndsWith(".mp3") || cleanPath.EndsWith(".m4a") || cleanPath.EndsWith(".wav") || cleanPath.EndsWith(".flac") || cleanPath.EndsWith(".ogg"))
+            if (m.StartsWith("audio/") || cleanPath.EndsWith(".mp3") || cleanPath.EndsWith(".m4a") || cleanPath.EndsWith(".wav") || cleanPath.EndsWith(".flac") || cleanPath.EndsWith(".ogg") || cleanPath.EndsWith(".aac"))
                 return "audio";
             if (cleanPath.EndsWith(".pdf") || cleanPath.EndsWith(".docx") || cleanPath.EndsWith(".pptx") || cleanPath.EndsWith(".xlsx") || cleanPath.EndsWith(".epub"))
                 return "document";
@@ -991,11 +2478,16 @@ namespace DejavuBrowser
         private static string GuessExtFromMime(string mime)
         {
             string m = (mime ?? "").ToLowerInvariant();
+            if (m.Contains("mpegurl") || m.Contains("m3u8")) return ".ts";
+            if (m.Contains("audio/mp4") || m.Contains("aac")) return ".m4a";
             if (m.Contains("mp4")) return ".mp4";
             if (m.Contains("webm")) return ".webm";
-            if (m.Contains("mpegurl") || m.Contains("m3u8")) return ".m3u8";
+            if (m.Contains("matroska")) return ".mkv";
+            if (m.Contains("quicktime")) return ".mov";
             if (m.Contains("mpeg") && m.StartsWith("audio")) return ".mp3";
-            if (m.Contains("audio/mp4") || m.Contains("aac")) return ".m4a";
+            if (m.Contains("ogg")) return ".ogg";
+            if (m.Contains("wav")) return ".wav";
+            if (m.Contains("flac")) return ".flac";
             if (m.Contains("pdf")) return ".pdf";
             if (m.Contains("zip")) return ".zip";
             if (m.Contains("png")) return ".png";
@@ -1006,9 +2498,10 @@ namespace DejavuBrowser
 
         public static string GetFloatingDownloadButtonScript()
         {
-            // Isolated Shadow DOM IDM / AntDM-Style Floating Material Design 3 Download Button
-            // Attaches cleanly to the top-right corner of visible <video> & <audio> players
-            // and bridges native network-sniffed media streams into an 8x Turbo Download dropdown.
+            // Zero-Idle-CPU Shadow DOM Material Design 3 IDM/AntDM Floating Download Button
+            // - ZERO setInterval polling! Event-driven + filtered MutationObserver + lazy scroll/ResizeObserver
+            // - Lightweight URL-only fetch()/XHR sniffer (zero body buffering)
+            // - Extracts HTML5 <video>/<audio>, YouTube player formats/adaptiveFormats/HLS, HLS .m3u8, & native sniffed streams
             return @"(function(){
 if(window!==window.top)return;
 if(window.__dejavuAntDmInstalled)return;
@@ -1018,10 +2511,12 @@ if(typeof window.__dejavuFloatingBtnEnabled==='undefined')window.__dejavuFloatin
 var dismissed=false;
 var menuOpen=false;
 var sniffed=[];
+var intercepted=[];
 var hostEl=null;
 var wrapEl=null;
 var mainBtn=null;
 var labelEl=null;
+var badgeEl=null;
 var dropBtn=null;
 var closeBtn=null;
 var menuEl=null;
@@ -1029,6 +2524,13 @@ var menuListEl=null;
 var currentTarget=null;
 var feedbackUntil=0;
 var scanTimer=null;
+var rafPending=false;
+var trackingActive=false;
+var resizeObs=null;
+var observedTarget=null;
+var lastPageUrl=location.href;
+var MEDIA_URL_RX=/\.(m3u8|mp4|webm|m4v|mkv|mov|mp3|m4a|ogg|wav|flac)(\?|#|$)|\/videoplayback\b/i;
+var CHUNK_RX=/\.(ts|m4s|cmfv|cmfa|vtt|srt|key)(\?|#|$)/i;
 
 function postNative(payload){
   try{
@@ -1038,6 +2540,75 @@ function postNative(payload){
     }
   }catch(e){}
 }
+
+function normalizeUrl(u){
+  if(!u||typeof u!=='string')return '';
+  try{u=new URL(u,location.href).href;}catch(e){return '';}
+  if(!/^https?:\/\//i.test(u))return '';
+  if(u.toLowerCase().indexOf('/videoplayback')>=0){
+    try{
+      var pu=new URL(u);
+      pu.searchParams.delete('range');
+      pu.searchParams.delete('rn');
+      pu.searchParams.delete('rbuf');
+      pu.searchParams.delete('alr');
+      pu.searchParams.delete('ump');
+      pu.searchParams.delete('srfvp');
+      u=pu.href;
+    }catch(e){}
+  }
+  return u;
+}
+
+function recordIntercepted(rawUrl,mime){
+  var u=normalizeUrl(rawUrl);
+  if(!u||!MEDIA_URL_RX.test(u)||CHUNK_RX.test(u))return;
+  var low=u.toLowerCase();
+  for(var i=0;i<intercepted.length;i++){
+    if(intercepted[i].url.toLowerCase()===low)return;
+  }
+  var isHls=/\.m3u8(\?|#|$)/i.test(u)||(mime&&mime.toLowerCase().indexOf('mpegurl')>=0);
+  intercepted.unshift({
+    url:u,
+    mime:mime||(isHls?'application/vnd.apple.mpegurl':''),
+    title:cleanDocTitle(),
+    quality:isHls?'HLS':''
+  });
+  if(intercepted.length>24)intercepted.length=24;
+  postNative({action:'sniffed',url:u,mime:mime||'',title:cleanDocTitle(),quality:isHls?'HLS':''});
+  scheduleScan();
+}
+
+// Lightweight URL-only fetch & XHR media sniffer (zero body buffering / zero memory overhead)
+try{
+  if(typeof window.fetch==='function'&&!window.fetch.__djvHooked){
+    var origFetch=window.fetch;
+    var wrappedFetch=function(input,init){
+      try{
+        var reqUrl=typeof input==='string'?input:(input&&input.url?input.url:'');
+        if(reqUrl&&MEDIA_URL_RX.test(reqUrl)&&!CHUNK_RX.test(reqUrl)){
+          recordIntercepted(reqUrl,'');
+        }
+      }catch(e){}
+      return origFetch.apply(this,arguments);
+    };
+    wrappedFetch.__djvHooked=true;
+    window.fetch=wrappedFetch;
+  }
+  if(typeof XMLHttpRequest!=='undefined'&&XMLHttpRequest.prototype&&!XMLHttpRequest.prototype.open.__djvHooked){
+    var origOpen=XMLHttpRequest.prototype.open;
+    var wrappedOpen=function(method,url){
+      try{
+        if(typeof url==='string'&&MEDIA_URL_RX.test(url)&&!CHUNK_RX.test(url)){
+          recordIntercepted(url,'');
+        }
+      }catch(e){}
+      return origOpen.apply(this,arguments);
+    };
+    wrappedOpen.__djvHooked=true;
+    XMLHttpRequest.prototype.open=wrappedOpen;
+  }
+}catch(e){}
 
 function fmtSize(b){
   var n=Number(b||0);
@@ -1051,73 +2622,150 @@ function guessFmt(u,mime){
   var s=((mime||'')+' '+(u||'')).toLowerCase();
   if(s.indexOf('m3u8')>=0||s.indexOf('mpegurl')>=0)return 'HLS';
   if(s.indexOf('webm')>=0)return 'WEBM';
+  if(s.indexOf('audio/mp4')>=0||s.indexOf('m4a')>=0||s.indexOf('aac')>=0)return 'M4A';
   if(s.indexOf('mp4')>=0||s.indexOf('m4v')>=0)return 'MP4';
   if(s.indexOf('mkv')>=0)return 'MKV';
   if(s.indexOf('mp3')>=0||s.indexOf('audio/mpeg')>=0)return 'MP3';
-  if(s.indexOf('m4a')>=0||s.indexOf('aac')>=0)return 'M4A';
   if(s.indexOf('ogg')>=0)return 'OGG';
   if(s.indexOf('wav')>=0)return 'WAV';
   if(s.indexOf('audio')>=0)return 'AUDIO';
   return 'VIDEO';
 }
 
-function safeNameFromDoc(ext){
-  var t=(document.title||'video').replace(/[\\/:*?""<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,72);
+function cleanDocTitle(){
+  var t=(document.title||'video').replace(/\s*[-|·]\s*(YouTube|Vimeo|Twitch|X|Twitter)\s*$/i,'').replace(/^\(\d+\)\s*/,'').trim();
+  return t||'dejavu-video';
+}
+
+function safeNameFromDoc(ext,suffix){
+  var t=cleanDocTitle().replace(/[\\/:*?""<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,72);
   if(!t)t='dejavu-media';
-  return t+(ext||'');
+  return t+(suffix?' ['+suffix+']':'')+(ext||'');
+}
+
+function isGenericName(seg){
+  var s=(seg||'').toLowerCase();
+  return !s||s.indexOf('.')<=0||/^(master|index|playlist|chunklist|manifest|videoplayback|video|stream|media)(\.[a-z0-9]+)?$/i.test(s);
+}
+
+function extractYoutubeStreams(){
+  var res=[];
+  try{
+    var pr=null;
+    var mp=document.getElementById('movie_player');
+    if(mp&&typeof mp.getPlayerResponse==='function'){pr=mp.getPlayerResponse();}
+    if(!pr&&window.ytInitialPlayerResponse){pr=window.ytInitialPlayerResponse;}
+    if(!pr||!pr.streamingData)return res;
+    // Verify SPA video ID matches current watch?v= param on YouTube
+    if(/youtube\.com$/i.test(location.hostname)){
+      var curVid=new URLSearchParams(location.search).get('v')||'';
+      var prVid=(pr.videoDetails&&pr.videoDetails.videoId)||'';
+      if(curVid&&prVid&&curVid!==prVid)return res;
+    }
+    var title=(pr.videoDetails&&pr.videoDetails.title)||cleanDocTitle();
+    var sd=pr.streamingData;
+    if(Array.isArray(sd.formats)){
+      for(var i=0;i<sd.formats.length;i++){
+        var f=sd.formats[i];
+        if(f&&f.url&&/^https?:\/\//i.test(f.url)){
+          var q=f.qualityLabel||(f.height?(f.height+'p'):'MP4');
+          res.push({url:f.url,title:title+' ('+q+')',mime:f.mimeType||'video/mp4',size:Number(f.contentLength||0),cat:'video',res:q,pri:100});
+        }
+      }
+    }
+    if(sd.hlsManifestUrl&&/^https?:\/\//i.test(sd.hlsManifestUrl)){
+      res.push({url:sd.hlsManifestUrl,title:title+' (HLS Stream)',mime:'application/vnd.apple.mpegurl',size:0,cat:'video',res:'HLS',pri:94});
+    }
+    if(Array.isArray(sd.adaptiveFormats)){
+      for(var j=0;j<sd.adaptiveFormats.length;j++){
+        var af=sd.adaptiveFormats[j];
+        if(!af||!af.url||!/^https?:\/\//i.test(af.url))continue;
+        var mt=(af.mimeType||'').toLowerCase();
+        var isAud=mt.indexOf('audio/')===0;
+        var aq=isAud?(mt.indexOf('mp4')>=0?'M4A Audio':'Opus Audio'):(af.qualityLabel||(af.height?(af.height+'p'):'Video'));
+        res.push({url:af.url,title:title+' ('+aq+')',mime:af.mimeType||'',size:Number(af.contentLength||0),cat:isAud?'audio':'video',res:aq,pri:isAud?55:(af.height>=1080?84:(af.height>=720?80:74))});
+      }
+    }
+  }catch(e){}
+  return res;
 }
 
 function collectSources(mediaEl){
   var out=[];
   var seen={};
-  function pushItem(url,title,mime,size,cat,res){
-    if(!url||typeof url!=='string')return;
-    if(!/^https?:\/\//i.test(url))return;
-    if(seen[url])return;
-    seen[url]=1;
-    var fmt=guessFmt(url,mime);
+  function pushItem(url,title,mime,size,cat,res,pri){
+    var u=normalizeUrl(url);
+    if(!u||CHUNK_RX.test(u))return;
+    var key=u.toLowerCase();
+    if(seen[key])return;
+    seen[key]=1;
+    var fmt=guessFmt(u,mime);
     var fn='';
     try{
-      var p=new URL(url).pathname||'';
+      var p=new URL(u).pathname||'';
       var seg=decodeURIComponent(p.split('/').pop()||'').trim();
-      if(seg&&seg.indexOf('.')>0&&seg.length<96)fn=seg;
+      if(!isGenericName(seg)&&seg.length<96)fn=seg;
     }catch(e){}
     if(!fn){
-      var ext=(fmt==='MP3'?'.mp3':(fmt==='WEBM'?'.webm':(fmt==='HLS'?'.m3u8':(fmt==='M4A'?'.m4a':'.mp4'))));
-      fn=safeNameFromDoc(ext);
+      var ext=(fmt==='MP3'?'.mp3':(fmt==='WEBM'?'.webm':(fmt==='HLS'?'.ts':(fmt==='M4A'?'.m4a':'.mp4'))));
+      fn=safeNameFromDoc(ext,res&&res!==fmt?res:'');
     }
     out.push({
-      url:url,
+      url:u,
       title:(title||fn).slice(0,74),
       fileName:fn,
       fmt:fmt,
       size:Number(size||0),
       cat:cat||(fmt==='MP3'||fmt==='M4A'||fmt==='OGG'||fmt==='WAV'||fmt==='AUDIO'?'audio':'video'),
-      res:res||''
+      res:res||'',
+      pri:pri||60
     });
   }
 
+  // 1. Direct HTML5 <video>/<audio>/<source> URLs
   if(mediaEl){
     var res=(mediaEl.tagName==='VIDEO'&&mediaEl.videoHeight>=240)?(mediaEl.videoHeight+'p'):'';
     var cs=mediaEl.currentSrc||mediaEl.src||'';
     if(cs&&/^https?:\/\//i.test(cs)){
-      pushItem(cs,document.title||'Page Video',mediaEl.tagName==='AUDIO'?'audio/mpeg':'video/mp4',0,mediaEl.tagName==='AUDIO'?'audio':'video',res);
+      pushItem(cs,cleanDocTitle(),mediaEl.tagName==='AUDIO'?'audio/mpeg':'video/mp4',0,mediaEl.tagName==='AUDIO'?'audio':'video',res,98);
     }
     var srcs=mediaEl.querySelectorAll('source');
     for(var i=0;i<srcs.length;i++){
       var su=srcs[i].src||'';
       if(su&&/^https?:\/\//i.test(su)){
-        pushItem(su,document.title||'Media Stream',srcs[i].type||'',0,mediaEl.tagName==='AUDIO'?'audio':'video',res);
+        pushItem(su,cleanDocTitle(),srcs[i].type||'',0,mediaEl.tagName==='AUDIO'?'audio':'video',res,96);
       }
     }
   }
+
+  // 2. YouTube direct player formats (muxed MP4, HLS, adaptive)
+  var ytList=extractYoutubeStreams();
+  for(var y=0;y<ytList.length;y++){
+    var yi=ytList[y];
+    pushItem(yi.url,yi.title,yi.mime,yi.size,yi.cat,yi.res,yi.pri);
+  }
+
+  // 3. In-page intercepted fetch/XHR streams (.m3u8, .mp4, videoplayback)
+  for(var k=0;k<intercepted.length;k++){
+    var ic=intercepted[k];
+    var isHls=guessFmt(ic.url,ic.mime)==='HLS';
+    pushItem(ic.url,ic.title||cleanDocTitle(),ic.mime||'',0,'video',ic.quality||(isHls?'HLS':''),isHls?93:86);
+  }
+
+  // 4. Native WebView2 network-sniffed media streams
   for(var j=0;j<sniffed.length;j++){
     var m=sniffed[j];
     if(!m||!m.url)continue;
     if(m.category==='video'||m.category==='audio'){
-      pushItem(m.url,m.title||m.fileName||document.title,m.mime||'',m.sizeBytes||0,m.category,'');
+      var isM3u=!!m.isHls||guessFmt(m.url,m.mime)==='HLS';
+      pushItem(m.url,m.title||m.fileName||cleanDocTitle(),m.mime||'',m.sizeBytes||0,m.category,m.quality||(isM3u?'HLS':''),isM3u?92:(m.category==='video'?85:54));
     }
   }
+
+  out.sort(function(a,b){
+    if(b.pri!==a.pri)return b.pri-a.pri;
+    return (b.size||0)-(a.size||0);
+  });
   return out;
 }
 
@@ -1131,40 +2779,40 @@ function ensureHost(){
   var sh=hostEl.attachShadow({mode:'open'});
   sh.innerHTML='<style>'+
     ':host{all:initial;font-family:""Segoe UI Variable"",""Segoe UI"",system-ui,-apple-system,sans-serif;}'+
-    '.wrap{position:fixed;pointer-events:auto;display:none;flex-direction:column;align-items:flex-end;gap:6px;transition:opacity .16s ease;}'+
-    '.pill{display:inline-flex;align-items:center;height:32px;border-radius:999px;background:#231f2e;color:#f2ecff;border:1px solid #4d455e;box-shadow:0 4px 14px rgba(0,0,0,.38);overflow:hidden;user-select:none;}'+
+    '.wrap{position:fixed;pointer-events:auto;display:none;flex-direction:column;align-items:flex-end;gap:6px;transition:opacity .16s cubic-bezier(.05,.7,.1,1);}'+
+    '.pill{display:inline-flex;align-items:center;height:34px;border-radius:999px;background:#211f26;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 4px 14px rgba(0,0,0,.38);overflow:hidden;user-select:none;}'+
     '.pill:hover{border-color:#d0bcff;}'+
-    '.mbtn{appearance:none;border:none;background:transparent;color:#f2ecff;height:32px;padding:0 11px 0 8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:650;letter-spacing:.01em;white-space:nowrap;}'+
-    '.mbtn:hover{background:#322c42;}'+
-    '.mbtn:active{background:#3e3652;}'+
-    '.ico{width:20px;height:20px;border-radius:999px;background:#d0bcff;color:#2e165e;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}'+
-    '.ico.ok{background:#7bd8c6;color:#00382e;}'+
-    '.badge{height:18px;padding:0 6px;border-radius:999px;background:#4f378b;color:#eaddff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;letter-spacing:.02em;}'+
-    '.sep{width:1px;height:16px;background:#494458;flex-shrink:0;}'+
-    '.dbtn,.xbtn{appearance:none;border:none;background:transparent;color:#cfc4e6;height:32px;width:27px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;}'+
-    '.dbtn:hover{background:#322c42;color:#ffffff;}'+
+    '.mbtn{appearance:none;border:none;background:transparent;color:#e6e0e9;height:34px;padding:0 11px 0 8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.01em;white-space:nowrap;}'+
+    '.mbtn:hover{background:#2b2930;}'+
+    '.mbtn:active{background:#36343b;}'+
+    '.ico{width:20px;height:20px;border-radius:999px;background:#d0bcff;color:#381e72;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}'+
+    '.ico.ok{background:#80d5c0;color:#00382e;}'+
+    '.badge{height:18px;padding:0 6px;border-radius:999px;background:#4f378b;color:#eaddff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;letter-spacing:.02em;}'+
+    '.sep{width:1px;height:16px;background:#49454f;flex-shrink:0;}'+
+    '.dbtn,.xbtn{appearance:none;border:none;background:transparent;color:#cac4d0;height:34px;width:28px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;}'+
+    '.dbtn:hover{background:#2b2930;color:#ffffff;}'+
     '.xbtn{width:0;opacity:0;overflow:hidden;transition:width .14s ease,opacity .14s ease,background-color .14s ease;}'+
     '.pill:hover .xbtn,.wrap.open .xbtn{width:26px;opacity:1;}'+
-    '.xbtn:hover{background:#5a2634;color:#ffd9e2;}'+
-    '.menu{display:none;width:292px;max-width:calc(100vw - 20px);border-radius:20px;background:#1e1b26;color:#f0eaff;border:1px solid #494458;box-shadow:0 14px 36px rgba(0,0,0,.52);overflow:hidden;}'+
+    '.xbtn:hover{background:#601410;color:#f9dedc;}'+
+    '.menu{display:none;width:304px;max-width:calc(100vw - 20px);border-radius:20px;background:#1d1b20;color:#e6e0e9;border:1px solid #49454f;box-shadow:0 14px 36px rgba(0,0,0,.52);overflow:hidden;}'+
     '.wrap.open .menu{display:block;}'+
-    '.mhead{padding:11px 14px 9px;border-bottom:1px solid #353042;display:flex;align-items:center;justify-content:space-between;background:#262231;}'+
+    '.mhead{padding:11px 14px 9px;border-bottom:1px solid #36343b;display:flex;align-items:center;justify-content:space-between;background:#2b2930;}'+
     '.mht{font-size:12px;font-weight:700;color:#eaddff;display:flex;align-items:center;gap:6px;}'+
-    '.mhs{font-size:10.5px;color:#b8aecb;font-weight:600;}'+
-    '.mlist{max-height:220px;overflow-y:auto;padding:6px;}'+
+    '.mhs{font-size:10.5px;color:#cac4d0;font-weight:600;}'+
+    '.mlist{max-height:230px;overflow-y:auto;padding:6px;}'+
     '.mrow{width:100%;appearance:none;border:none;background:transparent;color:inherit;text-align:left;padding:8px 9px;border-radius:12px;display:flex;align-items:center;gap:9px;cursor:pointer;font-family:inherit;}'+
-    '.mrow:hover{background:#312b40;}'+
-    '.mfmt{min-width:40px;height:22px;padding:0 6px;border-radius:999px;background:#4f378b;color:#eaddff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}'+
+    '.mrow:hover{background:#2b2930;}'+
+    '.mfmt{min-width:42px;height:22px;padding:0 6px;border-radius:999px;background:#4f378b;color:#eaddff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}'+
     '.mmeta{flex:1;min-width:0;}'+
-    '.mname{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f5f0ff;}'+
-    '.msub{font-size:10.5px;color:#b8aecb;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'+
+    '.mname{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f5eff7;}'+
+    '.msub{font-size:10.5px;color:#cac4d0;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'+
     '.mgo{font-size:11px;font-weight:700;color:#d0bcff;flex-shrink:0;}'+
-    '.mempty{padding:12px 10px;font-size:11.5px;color:#c2b8d6;line-height:1.45;}'+
-    '.mfoot{padding:7px;border-top:1px solid #353042;display:flex;gap:6px;background:#231f2e;}'+
-    '.fbtn{flex:1;appearance:none;border:none;border-radius:999px;height:30px;padding:0 11px;font-family:inherit;font-size:11.5px;font-weight:650;cursor:pointer;background:#3a334a;color:#eaddff;}'+
-    '.fbtn:hover{background:#49405e;}'+
-    '.fbtn.pri{background:#d0bcff;color:#2e165e;}'+
-    '.fbtn.pri:hover{filter:brightness(1.06);}'+
+    '.mempty{padding:12px 10px;font-size:11.5px;color:#cac4d0;line-height:1.45;}'+
+    '.mfoot{padding:7px;border-top:1px solid #36343b;display:flex;gap:6px;background:#211f26;}'+
+    '.fbtn{flex:1;appearance:none;border:none;border-radius:999px;height:30px;padding:0 11px;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;background:#36343b;color:#e6e0e9;}'+
+    '.fbtn:hover{background:#49454f;}'+
+    '.fbtn.pri{background:#d0bcff;color:#381e72;}'+
+    '.fbtn.pri:hover{background:#eaddff;}'+
     '</style>'+
     '<div class=""wrap"">'+
       '<div class=""pill"">'+
@@ -1182,7 +2830,7 @@ function ensureHost(){
         '</button>'+
       '</div>'+
       '<div class=""menu"">'+
-        '<div class=""mhead""><span class=""mht"">dejavu Turbo</span><span class=""mhs"">8-Thread AntDM</span></div>'+
+        '<div class=""mhead""><span class=""mht"">dejavu Turbo</span><span class=""mhs"">8x Video &amp; HLS</span></div>'+
         '<div class=""mlist""></div>'+
         '<div class=""mfoot"">'+
           '<button type=""button"" class=""fbtn pri f-all"">Grab All Page Media</button>'+
@@ -1195,22 +2843,23 @@ function ensureHost(){
   wrapEl=sh.querySelector('.wrap');
   mainBtn=sh.querySelector('.mbtn');
   labelEl=sh.querySelector('.lbl');
+  badgeEl=sh.querySelector('.badge');
   dropBtn=sh.querySelector('.dbtn');
   closeBtn=sh.querySelector('.xbtn');
   menuEl=sh.querySelector('.menu');
   menuListEl=sh.querySelector('.mlist');
   var icoEl=sh.querySelector('.ico');
 
-  function flashQueued(){
-    feedbackUntil=Date.now()+2200;
-    labelEl.textContent='Queued 8x';
+  function flashQueued(isHls){
+    feedbackUntil=Date.now()+2400;
+    labelEl.textContent=isHls?'Downloading HLS':'Queued 8x';
     icoEl.classList.add('ok');
     setTimeout(function(){
       if(Date.now()>=feedbackUntil-50){
         icoEl.classList.remove('ok');
         updatePillLabel();
       }
-    },2250);
+    },2450);
   }
 
   mainBtn.addEventListener('click',function(ev){
@@ -1219,7 +2868,7 @@ function ensureHost(){
     var items=collectSources(currentTarget);
     if(items.length>0){
       postNative({action:'download',url:items[0].url,fileName:items[0].fileName});
-      flashQueued();
+      flashQueued(items[0].fmt==='HLS');
       menuOpen=false;
       wrapEl.classList.remove('open');
     }else{
@@ -1241,6 +2890,7 @@ function ensureHost(){
     dismissed=true;
     menuOpen=false;
     wrapEl.style.display='none';
+    setActiveTracking(false,null);
   });
 
   sh.querySelector('.f-all').addEventListener('click',function(ev){
@@ -1257,6 +2907,7 @@ function ensureHost(){
     dismissed=true;
     menuOpen=false;
     wrapEl.style.display='none';
+    setActiveTracking(false,null);
   });
 
   document.addEventListener('click',function(ev){
@@ -1276,21 +2927,21 @@ function renderMenu(){
   if(!items.length){
     var em=document.createElement('div');
     em.className='mempty';
-    em.textContent='Streaming player detected. Play the video for a second or click ""Grab All Page Media"" below to inspect every captured stream & link.';
+    em.textContent='Streaming player detected. Press play for a moment or click ""Grab All Page Media"" below to inspect captured streams.';
     menuListEl.appendChild(em);
     return;
   }
-  for(var i=0;i<items.length&&i<8;i++){
+  for(var i=0;i<items.length&&i<10;i++){
     (function(it){
       var row=document.createElement('button');
       row.type='button';
       row.className='mrow';
       var subParts=[];
-      if(it.res)subParts.push(it.res);
+      if(it.res&&it.res!==it.fmt)subParts.push(it.res);
       var sz=fmtSize(it.size);
       if(sz)subParts.push(sz);
-      subParts.push(it.cat==='audio'?'Audio':'Video');
-      row.innerHTML='<span class=""mfmt""></span><span class=""mmeta""><div class=""mname""></div><div class=""msub""></div></span><span class=""mgo"">8x ⬇</span>';
+      subParts.push(it.fmt==='HLS'?'HLS Multi-Segment':(it.cat==='audio'?'Audio':'Video'));
+      row.innerHTML='<span class=""mfmt""></span><span class=""mmeta""><div class=""mname""></div><div class=""msub""></div></span><span class=""mgo"">8x</span>';
       row.querySelector('.mfmt').textContent=it.fmt;
       row.querySelector('.mname').textContent=it.title;
       row.querySelector('.msub').textContent=subParts.join(' · ');
@@ -1298,11 +2949,11 @@ function renderMenu(){
         ev.preventDefault();
         ev.stopPropagation();
         postNative({action:'download',url:it.url,fileName:it.fileName});
-        row.querySelector('.mgo').textContent='✓ 8x';
+        row.querySelector('.mgo').textContent='Queued';
         setTimeout(function(){
           menuOpen=false;
           if(wrapEl)wrapEl.classList.remove('open');
-        },420);
+        },380);
       });
       menuListEl.appendChild(row);
     })(items[i]);
@@ -1314,7 +2965,7 @@ function pickBestMedia(){
   var bestScore=-1;
   var vw=window.innerWidth||1280;
   var vh=window.innerHeight||720;
-  var vids=document.querySelectorAll('video');
+  var vids=document.getElementsByTagName('video');
   for(var i=0;i<vids.length;i++){
     var v=vids[i];
     var r=v.getBoundingClientRect();
@@ -1326,7 +2977,7 @@ function pickBestMedia(){
     if(score>bestScore){bestScore=score;best=v;}
   }
   if(best)return best;
-  var auds=document.querySelectorAll('audio');
+  var auds=document.getElementsByTagName('audio');
   for(var j=0;j<auds.length;j++){
     var a=auds[j];
     var ar=a.getBoundingClientRect();
@@ -1337,37 +2988,48 @@ function pickBestMedia(){
   return null;
 }
 
-function updatePillLabel(){
-  if(!labelEl||Date.now()<feedbackUntil)return;
-  var res='';
-  if(currentTarget&&currentTarget.tagName==='VIDEO'&&currentTarget.videoHeight>=360){
-    res=' · '+currentTarget.videoHeight+'p';
-  }
-  labelEl.textContent=(currentTarget&&currentTarget.tagName==='AUDIO')?'Download Audio':'Download'+res;
+function onActiveViewportMove(){
+  if(rafPending)return;
+  rafPending=true;
+  requestAnimationFrame(function(){
+    rafPending=false;
+    positionOnly();
+  });
 }
 
-function updatePosition(){
-  if(dismissed||!window.__dejavuFloatingBtnEnabled||document.fullscreenElement||document.webkitFullscreenElement){
-    if(wrapEl)wrapEl.style.display='none';
-    return;
+function setActiveTracking(enable,targetEl){
+  if(enable&&!trackingActive){
+    trackingActive=true;
+    window.addEventListener('scroll',onActiveViewportMove,{passive:true,capture:true});
+    window.addEventListener('resize',onActiveViewportMove,{passive:true});
+  }else if(!enable&&trackingActive){
+    trackingActive=false;
+    window.removeEventListener('scroll',onActiveViewportMove,{capture:true});
+    window.removeEventListener('resize',onActiveViewportMove);
   }
-  var best=pickBestMedia();
-  currentTarget=best;
-  var hasSniffedMedia=false;
-  for(var i=0;i<sniffed.length;i++){
-    if(sniffed[i]&&(sniffed[i].category==='video'||sniffed[i].category==='audio')){hasSniffedMedia=true;break;}
+  if(typeof ResizeObserver!=='undefined'){
+    if(targetEl&&targetEl!==observedTarget){
+      if(!resizeObs)resizeObs=new ResizeObserver(onActiveViewportMove);
+      if(observedTarget){try{resizeObs.unobserve(observedTarget);}catch(e){}}
+      observedTarget=targetEl;
+      try{resizeObs.observe(targetEl);}catch(e){}
+    }else if(!targetEl&&observedTarget&&resizeObs){
+      try{resizeObs.unobserve(observedTarget);}catch(e){}
+      observedTarget=null;
+    }
   }
-  if(!best&&!hasSniffedMedia){
-    if(wrapEl)wrapEl.style.display='none';
-    return;
-  }
-  if(!ensureHost())return;
-  updatePillLabel();
-  wrapEl.style.display='flex';
+}
+
+function positionOnly(){
+  if(!wrapEl||wrapEl.style.display==='none')return;
   var vw=window.innerWidth||1280;
   var vh=window.innerHeight||720;
-  if(best){
-    var r=best.getBoundingClientRect();
+  if(currentTarget&&currentTarget.isConnected){
+    var r=currentTarget.getBoundingClientRect();
+    if(r.width<120||r.height<20||r.bottom<12||r.top>vh-12){
+      wrapEl.style.display='none';
+      return;
+    }
     var top=Math.max(10,Math.min(vh-48,Math.round(r.top+10)));
     var rightGap=Math.max(10,Math.round(vw-r.right+10));
     wrapEl.style.top=top+'px';
@@ -1376,13 +3038,65 @@ function updatePosition(){
     wrapEl.style.top='12px';
     wrapEl.style.right='16px';
   }
+}
+
+function updatePillLabel(){
+  if(!labelEl||Date.now()<feedbackUntil)return;
+  var items=collectSources(currentTarget);
+  var topItem=items.length>0?items[0]:null;
+  var res='';
+  if(currentTarget&&currentTarget.tagName==='VIDEO'&&currentTarget.videoHeight>=360){
+    res=' · '+currentTarget.videoHeight+'p';
+  }else if(topItem&&topItem.res&&topItem.res!=='HLS'){
+    res=' · '+topItem.res;
+  }
+  if(badgeEl){
+    badgeEl.textContent=(topItem&&topItem.fmt==='HLS')?'HLS':'8x';
+  }
+  labelEl.textContent=(currentTarget&&currentTarget.tagName==='AUDIO')?'Download Audio':'Download'+res;
+}
+
+function checkSpaUrlChange(){
+  if(location.href!==lastPageUrl){
+    lastPageUrl=location.href;
+    intercepted=[];
+    dismissed=false;
+    menuOpen=false;
+  }
+}
+
+function updatePosition(){
+  checkSpaUrlChange();
+  if(document.hidden||dismissed||!window.__dejavuFloatingBtnEnabled||document.fullscreenElement||document.webkitFullscreenElement){
+    if(wrapEl)wrapEl.style.display='none';
+    setActiveTracking(false,null);
+    return;
+  }
+  var best=pickBestMedia();
+  currentTarget=best;
+  var hasCaptured=intercepted.length>0;
+  if(!hasCaptured){
+    for(var i=0;i<sniffed.length;i++){
+      if(sniffed[i]&&(sniffed[i].category==='video'||sniffed[i].category==='audio')){hasCaptured=true;break;}
+    }
+  }
+  if(!best&&!hasCaptured){
+    if(wrapEl)wrapEl.style.display='none';
+    setActiveTracking(false,null);
+    return;
+  }
+  if(!ensureHost())return;
+  updatePillLabel();
+  wrapEl.style.display='flex';
+  positionOnly();
+  setActiveTracking(true,best);
   if(menuOpen)renderMenu();
 }
 
 window.__dejavuUpdateSniffedMedia=function(list){
   if(Array.isArray(list)){
     sniffed=list;
-    updatePosition();
+    scheduleScan();
   }
 };
 window.__dejavuSetFloatingBtnEnabled=function(en){
@@ -1393,22 +3107,61 @@ window.__dejavuSetFloatingBtnEnabled=function(en){
 
 function scheduleScan(){
   if(scanTimer)return;
-  scanTimer=setTimeout(function(){scanTimer=null;updatePosition();},140);
+  scanTimer=setTimeout(function(){scanTimer=null;updatePosition();},180);
 }
 
-window.addEventListener('scroll',scheduleScan,{passive:true,capture:true});
-window.addEventListener('resize',scheduleScan,{passive:true});
+// Event-driven listeners ONLY — ZERO setInterval polling (0.0% idle CPU on normal pages!)
 document.addEventListener('fullscreenchange',updatePosition);
+document.addEventListener('visibilitychange',updatePosition);
 document.addEventListener('play',scheduleScan,true);
 document.addEventListener('loadedmetadata',scheduleScan,true);
+document.addEventListener('emptied',scheduleScan,true);
+window.addEventListener('popstate',scheduleScan);
+window.addEventListener('yt-navigate-finish',function(){setTimeout(scheduleScan,350);});
+
+function nodeHasMedia(n){
+  if(!n||n.nodeType!==1)return false;
+  var t=n.tagName;
+  if(t==='VIDEO'||t==='AUDIO')return true;
+  if(n.childElementCount>0&&typeof n.querySelector==='function'){
+    return !!n.querySelector('video,audio');
+  }
+  return false;
+}
+
 if(typeof MutationObserver!=='undefined'){
   try{
-    var mo=new MutationObserver(scheduleScan);
-    mo.observe(document.documentElement,{childList:true,subtree:true});
+    var mo=new MutationObserver(function(muts){
+      for(var i=0;i<muts.length;i++){
+        var m=muts[i];
+        if(m.addedNodes&&m.addedNodes.length){
+          for(var a=0;a<m.addedNodes.length;a++){
+            if(nodeHasMedia(m.addedNodes[a])){scheduleScan();return;}
+          }
+        }
+        if(currentTarget&&m.removedNodes&&m.removedNodes.length){
+          for(var r=0;r<m.removedNodes.length;r++){
+            if(m.removedNodes[r]===currentTarget||nodeHasMedia(m.removedNodes[r])){scheduleScan();return;}
+          }
+        }
+      }
+    });
+    if(document.documentElement){
+      mo.observe(document.documentElement,{childList:true,subtree:true});
+    }else{
+      document.addEventListener('DOMContentLoaded',function(){
+        if(document.documentElement)mo.observe(document.documentElement,{childList:true,subtree:true});
+        scheduleScan();
+      },{once:true});
+    }
   }catch(e){}
 }
-setInterval(updatePosition,950);
-setTimeout(updatePosition,450);
+
+if(document.readyState==='complete'||document.readyState==='interactive'){
+  setTimeout(updatePosition,250);
+}else{
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(updatePosition,250);},{once:true});
+}
 })();";
         }
 

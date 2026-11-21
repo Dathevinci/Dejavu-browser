@@ -4,7 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.pm.Signature;
+import android.content.pm.SigningInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
@@ -17,12 +22,15 @@ import org.json.JSONObject;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,11 +39,20 @@ public final class MobileAutoUpdater {
     private static final String LATEST_API =
         "https://api.github.com/repos/Dathevinci/Dejavu-browser/releases/latest";
     private static final String PREFS = "dejavu_mobile_updater_v1";
+    private static final long MIN_VALID_APK_BYTES = 500_000L;
+    public static final String UPGRADE_SIGNING_NOTE =
+        "If upgrading from v4.2.0 or earlier shows 'Cannot be installed', uninstall once and install v4.3.0 — all future updates will install seamlessly with a permanent signing key!";
 
     public interface Listener {
         void onUpdateStateChanged();
         void onUpdateBannerPrompt(String version, String sizeLabel, String notes);
         void onUpdateMessage(String message);
+    }
+
+    private static final class ApkValidation {
+        boolean valid;
+        boolean signatureMismatch;
+        String reason = "";
     }
 
     private final Context appCtx;
@@ -44,7 +61,7 @@ public final class MobileAutoUpdater {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private volatile String currentVersion = "4.2.0";
+    private volatile String currentVersion = "4.3.0";
     private volatile String status = "idle"; // "idle" | "checking" | "uptodate" | "available" | "downloading" | "ready" | "error"
     private volatile String latestVersion = "";
     private volatile String downloadUrl = "";
@@ -54,6 +71,8 @@ public final class MobileAutoUpdater {
     private volatile String errorText = "";
     private volatile File downloadedApk = null;
     private volatile boolean awaitingInstallPermission = false;
+    private volatile boolean signatureMismatch = false;
+    private volatile boolean signingVerified = false;
 
     public MobileAutoUpdater(Context context, Listener listener) {
         this.appCtx = context.getApplicationContext();
@@ -70,7 +89,21 @@ public final class MobileAutoUpdater {
                 return cleanVersion(pi.versionName);
             }
         } catch (Exception ignored) { }
-        return "3.4.0";
+        return "4.3.0";
+    }
+
+    @SuppressWarnings("deprecation")
+    private long readInstalledVersionCode() {
+        try {
+            PackageInfo pi = appCtx.getPackageManager().getPackageInfo(appCtx.getPackageName(), 0);
+            if (pi != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    return pi.getLongVersionCode();
+                }
+                return pi.versionCode;
+            }
+        } catch (Exception ignored) { }
+        return 0L;
     }
 
     private void cleanupOldApkFiles() {
@@ -79,10 +112,14 @@ public final class MobileAutoUpdater {
             if (dir.exists() && dir.isDirectory()) {
                 File[] files = dir.listFiles();
                 if (files != null) {
+                    String savedVer = prefs.getString("cachedApkVersion", "");
                     for (File f : files) {
-                        if (f.isFile() && f.getName().endsWith(".apk")) {
-                            // Keep only if it's newer than installed version
-                            String savedVer = prefs.getString("cachedApkVersion", "");
+                        if (!f.isFile()) continue;
+                        String name = f.getName();
+                        if (name.endsWith(".apk.part")) {
+                            //noinspection ResultOfMethodCallIgnored
+                            f.delete();
+                        } else if (name.endsWith(".apk")) {
                             if (savedVer.isEmpty() || compareVersions(savedVer, currentVersion) <= 0) {
                                 //noinspection ResultOfMethodCallIgnored
                                 f.delete();
@@ -98,6 +135,7 @@ public final class MobileAutoUpdater {
     public String getStatus() { return status; }
     public String getLatestVersion() { return latestVersion; }
     public int getDownloadPercent() { return downloadPercent; }
+    public boolean isSignatureMismatch() { return signatureMismatch; }
     public boolean isUpdateAvailable() {
         return "available".equals(status) || "downloading".equals(status) || "ready".equals(status);
     }
@@ -118,6 +156,9 @@ public final class MobileAutoUpdater {
             o.put("percent", downloadPercent);
             o.put("error", errorText);
             o.put("available", isUpdateAvailable());
+            o.put("signatureMismatch", signatureMismatch);
+            o.put("signingVerified", signingVerified);
+            o.put("upgradeNote", UPGRADE_SIGNING_NOTE);
         } catch (Exception ignored) { }
         return o;
     }
@@ -181,12 +222,21 @@ public final class MobileAutoUpdater {
                     releaseNotes = rel.optString("name", "v" + tag);
 
                     File cached = new File(new File(appCtx.getCacheDir(), "updates"), "dejavu-" + tag + ".apk");
-                    if (cached.exists() && cached.length() > 1_000_000L && (apkSize <= 0 || cached.length() == apkSize)) {
+                    ApkValidation cachedVal = cached.exists() ? validateApkFile(cached, apkSize) : null;
+                    if (cachedVal != null && cachedVal.valid) {
                         downloadedApk = cached;
+                        signatureMismatch = cachedVal.signatureMismatch;
+                        signingVerified = !cachedVal.signatureMismatch;
                         downloadPercent = 100;
                         status = "ready";
                     } else {
+                        if (cached.exists()) {
+                            //noinspection ResultOfMethodCallIgnored
+                            cached.delete();
+                        }
                         downloadedApk = null;
+                        signatureMismatch = false;
+                        signingVerified = false;
                         downloadPercent = 0;
                         status = "available";
                     }
@@ -235,38 +285,47 @@ public final class MobileAutoUpdater {
         status = "downloading";
         downloadPercent = 0;
         errorText = "";
+        signatureMismatch = false;
+        signingVerified = false;
         notifyChanged();
 
         final String targetUrl = downloadUrl;
         final String targetVer = latestVersion;
+        final long expectedAssetBytes = assetBytes;
         executor.execute(() -> {
             HttpURLConnection conn = null;
+            File partFile = null;
+            File finalFile = null;
             try {
                 File dir = new File(appCtx.getCacheDir(), "updates");
                 if (!dir.exists()) //noinspection ResultOfMethodCallIgnored
                     dir.mkdirs();
 
-                File partFile = new File(dir, "dejavu-" + targetVer + ".apk.part");
-                File finalFile = new File(dir, "dejavu-" + targetVer + ".apk");
+                partFile = new File(dir, "dejavu-" + targetVer + ".apk.part");
+                finalFile = new File(dir, "dejavu-" + targetVer + ".apk");
+                if (partFile.exists()) {
+                    //noinspection ResultOfMethodCallIgnored
+                    partFile.delete();
+                }
 
-                conn = openFollowingRedirects(targetUrl, 6);
+                conn = openFollowingRedirects(targetUrl, 8);
                 int code = conn.getResponseCode();
                 if (code != 200) throw new Exception("HTTP " + code);
 
-                long total = conn.getContentLengthLong();
-                if (total <= 0) total = assetBytes;
+                long contentLen = conn.getContentLengthLong();
+                long expectedBytes = contentLen > 0 ? contentLen : expectedAssetBytes;
+                long totalRead = 0L;
 
-                try (InputStream in = new BufferedInputStream(conn.getInputStream(), 16384);
+                try (InputStream in = new BufferedInputStream(conn.getInputStream(), 32768);
                      FileOutputStream out = new FileOutputStream(partFile)) {
-                    byte[] buf = new byte[16384];
-                    long read = 0;
+                    byte[] buf = new byte[32768];
                     int lastPct = -1;
                     int n;
                     while ((n = in.read(buf)) != -1) {
                         out.write(buf, 0, n);
-                        read += n;
-                        if (total > 0) {
-                            int pct = (int) Math.min(99, (read * 100L) / total);
+                        totalRead += n;
+                        if (expectedBytes > 0) {
+                            int pct = (int) Math.min(99, (totalRead * 100L) / expectedBytes);
                             if (pct != lastPct) {
                                 lastPct = pct;
                                 downloadPercent = pct;
@@ -277,24 +336,44 @@ public final class MobileAutoUpdater {
                     out.flush();
                 }
 
+                if (totalRead < MIN_VALID_APK_BYTES || (expectedBytes > 0 && totalRead != expectedBytes)) {
+                    throw new Exception("Download interrupted (" + totalRead + " bytes)");
+                }
+
                 if (finalFile.exists()) //noinspection ResultOfMethodCallIgnored
                     finalFile.delete();
                 if (!partFile.renameTo(finalFile)) {
                     throw new Exception("Could not save APK file");
                 }
 
+                // Verify ZIP magic header + Android PackageArchiveInfo + signing certificate BEFORE launching installer
+                ApkValidation val = validateApkFile(finalFile, expectedBytes);
+                if (!val.valid) {
+                    //noinspection ResultOfMethodCallIgnored
+                    finalFile.delete();
+                    throw new Exception(val.reason.isEmpty() ? "Downloaded APK is corrupt" : val.reason);
+                }
+
                 prefs.edit().putString("cachedApkVersion", targetVer).apply();
                 downloadedApk = finalFile;
+                signatureMismatch = val.signatureMismatch;
+                signingVerified = !val.signatureMismatch;
                 downloadPercent = 100;
                 status = "ready";
                 notifyChanged();
 
-                mainHandler.post(() -> launchPackageInstaller(activityCtx, finalFile));
+                final File verifiedApk = finalFile;
+                mainHandler.post(() -> launchPackageInstaller(activityCtx, verifiedApk));
             } catch (Exception e) {
+                if (partFile != null && partFile.exists()) {
+                    //noinspection ResultOfMethodCallIgnored
+                    partFile.delete();
+                }
                 status = "error";
-                errorText = "Download failed";
+                String msg = e.getMessage();
+                errorText = (msg != null && !msg.trim().isEmpty()) ? msg : "Download failed";
                 notifyChanged();
-                notifyMessage("Update download failed. Try again.");
+                notifyMessage("Update failed: " + errorText);
             } finally {
                 if (conn != null) conn.disconnect();
             }
@@ -312,6 +391,22 @@ public final class MobileAutoUpdater {
 
     private void launchPackageInstaller(Context activityCtx, File apkFile) {
         try {
+            ApkValidation val = validateApkFile(apkFile, 0L);
+            if (!val.valid) {
+                if (apkFile != null && apkFile.exists()) {
+                    //noinspection ResultOfMethodCallIgnored
+                    apkFile.delete();
+                }
+                downloadedApk = null;
+                status = "error";
+                errorText = val.reason.isEmpty() ? "Update package incomplete" : val.reason;
+                notifyChanged();
+                notifyMessage("Update package was incomplete — tap Retry to re-download");
+                return;
+            }
+            signatureMismatch = val.signatureMismatch;
+            signingVerified = !val.signatureMismatch;
+
             if (!activityCtx.getPackageManager().canRequestPackageInstalls()) {
                 awaitingInstallPermission = true;
                 notifyMessage("Allow 'Install unknown apps' for dejavu, then press Back");
@@ -323,6 +418,11 @@ public final class MobileAutoUpdater {
                 activityCtx.startActivity(perm);
                 return;
             }
+
+            if (val.signatureMismatch) {
+                notifyMessage("Upgrading signing key: if Android says 'Cannot be installed', uninstall once and install v" + latestVersion);
+            }
+
             Uri apkUri = FileProvider.getUriForFile(
                 activityCtx,
                 activityCtx.getPackageName() + ".fileprovider",
@@ -331,9 +431,126 @@ public final class MobileAutoUpdater {
             Intent install = new Intent(Intent.ACTION_VIEW);
             install.setDataAndType(apkUri, "application/vnd.android.package-archive");
             install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-            activityCtx.startActivity(install);
+
+            // Explicitly grant URI read permission to every resolved system installer (Samsung OneUI / MIUI / Pixel)
+            List<ResolveInfo> installers = activityCtx.getPackageManager()
+                .queryIntentActivities(install, PackageManager.MATCH_DEFAULT_ONLY);
+            if (installers != null) {
+                for (ResolveInfo ri : installers) {
+                    if (ri != null && ri.activityInfo != null && ri.activityInfo.packageName != null) {
+                        activityCtx.grantUriPermission(
+                            ri.activityInfo.packageName,
+                            apkUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        );
+                    }
+                }
+            }
+
+            try {
+                activityCtx.startActivity(install);
+            } catch (Exception primaryEx) {
+                @SuppressWarnings("deprecation")
+                Intent fallback = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+                fallback.setData(apkUri);
+                fallback.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                activityCtx.startActivity(fallback);
+            }
         } catch (Exception e) {
-            notifyMessage("Tap Install again to launch updater");
+            notifyMessage("Tap Install again to launch package installer");
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private ApkValidation validateApkFile(File apkFile, long expectedBytes) {
+        ApkValidation res = new ApkValidation();
+        if (apkFile == null || !apkFile.isFile()) {
+            res.reason = "APK file missing";
+            return res;
+        }
+        long len = apkFile.length();
+        if (len < MIN_VALID_APK_BYTES) {
+            res.reason = "APK file too small or truncated";
+            return res;
+        }
+        if (expectedBytes > 0 && len != expectedBytes) {
+            res.reason = "APK size mismatch (incomplete download)";
+            return res;
+        }
+        // Verify ZIP local file header magic bytes: PK\x03\x04
+        try (FileInputStream fis = new FileInputStream(apkFile)) {
+            byte[] magic = new byte[4];
+            if (fis.read(magic) != 4 || magic[0] != 0x50 || magic[1] != 0x4B || magic[2] != 0x03 || magic[3] != 0x04) {
+                res.reason = "Invalid APK archive header";
+                return res;
+            }
+        } catch (Exception e) {
+            res.reason = "Cannot read APK archive";
+            return res;
+        }
+        // Verify Android manifest / package archive integrity via PackageManager
+        try {
+            PackageManager pm = appCtx.getPackageManager();
+            int flags = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                ? PackageManager.GET_SIGNING_CERTIFICATES
+                : PackageManager.GET_SIGNATURES;
+            PackageInfo archiveInfo = pm.getPackageArchiveInfo(apkFile.getAbsolutePath(), flags);
+            if (archiveInfo == null) {
+                res.reason = "Corrupt APK package";
+                return res;
+            }
+            if (!appCtx.getPackageName().equals(archiveInfo.packageName)) {
+                res.reason = "Unexpected package ID in APK";
+                return res;
+            }
+            long archiveCode = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                ? archiveInfo.getLongVersionCode()
+                : archiveInfo.versionCode;
+            long installedCode = readInstalledVersionCode();
+            if (archiveCode > 0 && installedCode > 0 && archiveCode < installedCode) {
+                res.reason = "APK version is older than installed app";
+                return res;
+            }
+            // Proactively detect signing certificate mismatch vs installed package
+            PackageInfo installedInfo = pm.getPackageInfo(appCtx.getPackageName(), flags);
+            String installedCert = extractCertSha256(installedInfo);
+            String archiveCert = extractCertSha256(archiveInfo);
+            if (!installedCert.isEmpty() && !archiveCert.isEmpty() && !installedCert.equalsIgnoreCase(archiveCert)) {
+                res.signatureMismatch = true;
+            }
+            res.valid = true;
+            return res;
+        } catch (Exception e) {
+            res.reason = "Failed to verify APK signature";
+            return res;
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static String extractCertSha256(PackageInfo pi) {
+        if (pi == null) return "";
+        try {
+            Signature sig = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                SigningInfo si = pi.signingInfo;
+                if (si != null) {
+                    Signature[] arr = si.hasMultipleSigners() ? si.getApkContentsSigners() : si.getSigningCertificateHistory();
+                    if (arr != null && arr.length > 0) sig = arr[0];
+                }
+            }
+            if (sig == null && pi.signatures != null && pi.signatures.length > 0) {
+                sig = pi.signatures[0];
+            }
+            if (sig == null) return "";
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] dig = md.digest(sig.toByteArray());
+            StringBuilder sb = new StringBuilder(dig.length * 2);
+            for (byte b : dig) {
+                sb.append(String.format(Locale.US, "%02X", b));
+            }
+            return sb.toString();
+        } catch (Exception ignored) {
+            return "";
         }
     }
 
@@ -342,9 +559,10 @@ public final class MobileAutoUpdater {
         for (int hop = 0; hop < maxHops; hop++) {
             HttpURLConnection c = (HttpURLConnection) new URL(current).openConnection();
             c.setInstanceFollowRedirects(false);
-            c.setConnectTimeout(10000);
-            c.setReadTimeout(25000);
+            c.setConnectTimeout(12000);
+            c.setReadTimeout(30000);
             c.setRequestProperty("User-Agent", "dejavu-mobile/" + currentVersion);
+            c.setRequestProperty("Accept", "application/octet-stream, */*");
             int code = c.getResponseCode();
             if (code == HttpURLConnection.HTTP_MOVED_PERM ||
                 code == HttpURLConnection.HTTP_MOVED_TEMP ||

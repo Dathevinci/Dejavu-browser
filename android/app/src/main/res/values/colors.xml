@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="obsidian_bg">#131218</color>
-    <color name="obsidian_surface">#1E1C26</color>
-    <color name="obsidian_card">#2B2937</color>
+    <!-- Official Google Material Design 3 Dark Surface Container Hierarchy -->
+    <color name="obsidian_bg">#141218</color>
+    <color name="obsidian_surface">#211F26</color>
+    <color name="obsidian_card">#2B2930</color>
+    <color name="m3_primary_container">#4F378B</color>
+    <color name="m3_on_primary">#381E72</color>
+    <color name="m3_outline_variant">#49454F</color>
     <color name="amethyst">#D0BCFF</color>
     <color name="amethyst_bright">#EADDFF</color>
     <color name="emerald_mint">#7BD8C6</color>
-    <color name="ink_primary">#E6E1EC</color>
-    <color name="ink_muted">#C8C2D4</color>
+    <color name="ink_primary">#E6E0E9</color>
+    <color name="ink_muted">#CAC4D0</color>
 </resources>

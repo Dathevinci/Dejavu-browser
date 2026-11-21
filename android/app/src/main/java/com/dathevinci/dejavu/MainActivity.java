@@ -26,7 +26,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.view.animation.DecelerateInterpolator;
+import android.view.animation.Interpolator;
+import android.view.animation.PathInterpolator;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
@@ -178,10 +179,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
     }
 
+    private static final Interpolator M3_EMPHASIZED_DECEL = new PathInterpolator(0.05f, 0.7f, 0.1f, 1.0f);
+
     private static final class MobileTab {
         int id;
-        String url = "dejavu://newtab";
-        String title = "Start Page";
+        volatile String url = "dejavu://newtab";
+        volatile String title = "Start Page";
         boolean isNewTab = true;
         boolean isPrivate = false;
         boolean loading = false;
@@ -531,9 +534,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         MobileTab active = getActiveTab();
         boolean isPriv = active != null && active.isPrivate;
 
-        int bgColor = isLight ? 0xFFFDFBFF : 0xFF131218;
-        int inkPrimary = isLight ? 0xFF1D1B20 : 0xFFE6E1EC;
-        int inkMuted = isLight ? 0xFF49454F : 0xFFC8C2D4;
+        int bgColor = isLight ? 0xFFFEF7FF : 0xFF141218;
+        int inkPrimary = isLight ? 0xFF1D1B20 : 0xFFE6E0E9;
+        int inkMuted = isLight ? 0xFF49454F : 0xFFCAC4D0;
         int accent = resolveAccentInt(isLight);
 
         try {
@@ -568,7 +571,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (collapsedDomain != null) collapsedDomain.setTextColor(inkPrimary);
         if (collapsedIco != null) collapsedIco.setColorFilter(isPriv ? 0xFFD4B8FF : inkMuted);
 
-        if (findBar != null) findBar.setBackgroundColor(isLight ? 0xFAFFFFFF : 0xF5120F22);
+        if (findBar != null) findBar.setBackgroundColor(isLight ? 0xFFF3EDF7 : 0xFF211F26);
         if (findInput != null) {
             findInput.setTextColor(inkPrimary);
             findInput.setHintTextColor(inkMuted);
@@ -617,8 +620,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             btnUpdateNow.setTextColor(accent);
         }
         if (swipeRefresh != null) {
-            swipeRefresh.setProgressBackgroundColorSchemeColor(isLight ? 0xFFFFFFFF : 0xFF18142C);
-            swipeRefresh.setColorSchemeColors(accent, 0xFF5EEAD4);
+            swipeRefresh.setProgressBackgroundColorSchemeColor(isLight ? 0xFFF3EDF7 : 0xFF211F26);
+            swipeRefresh.setColorSchemeColors(accent, 0xFF7BD8C6);
         }
     }
 
@@ -1005,32 +1008,33 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         boolean isTop = "top".equals(barPosition);
         if (collapsed) {
             if (isTop && topChrome != null) {
-                topChrome.animate().translationY(-topChrome.getHeight()).setDuration(200)
-                    .setInterpolator(new DecelerateInterpolator()).start();
+                topChrome.animate().translationY(-topChrome.getHeight()).setDuration(220)
+                    .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (bottomChrome != null) {
-                bottomChrome.animate().translationY(bottomChrome.getHeight()).setDuration(210)
-                    .setInterpolator(new DecelerateInterpolator()).start();
+                bottomChrome.animate().translationY(bottomChrome.getHeight()).setDuration(230)
+                    .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (collapsedPill != null) {
                 collapsedDomain.setText(formatHost(t.url));
                 collapsedPill.setVisibility(View.VISIBLE);
                 collapsedPill.setAlpha(0f);
                 collapsedPill.setTranslationY(dp(18));
-                collapsedPill.animate().alpha(1f).translationY(0f).setDuration(210)
-                    .setInterpolator(new DecelerateInterpolator()).start();
+                collapsedPill.animate().alpha(1f).translationY(0f).setDuration(240)
+                    .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
         } else {
             if (topChrome != null) {
-                topChrome.animate().translationY(0f).setDuration(200)
-                    .setInterpolator(new DecelerateInterpolator()).start();
+                topChrome.animate().translationY(0f).setDuration(220)
+                    .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (bottomChrome != null) {
-                bottomChrome.animate().translationY(0f).setDuration(200)
-                    .setInterpolator(new DecelerateInterpolator()).start();
+                bottomChrome.animate().translationY(0f).setDuration(220)
+                    .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (collapsedPill != null && collapsedPill.getVisibility() == View.VISIBLE) {
-                collapsedPill.animate().alpha(0f).translationY(dp(16)).setDuration(150)
+                collapsedPill.animate().alpha(0f).translationY(dp(16)).setDuration(160)
+                    .setInterpolator(M3_EMPHASIZED_DECEL)
                     .withEndAction(() -> collapsedPill.setVisibility(View.GONE)).start();
             }
         }
@@ -1321,15 +1325,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     return adBlocker.emptyResponse();
                 }
                 if (downloadManager != null && !request.isForMainFrame()) {
-                    downloadManager.recordSniffedMedia(tab.id, reqUrl, "", "");
-                    final JSONArray mediaSnap = downloadManager.getMediaSnapshot(tab.id);
-                    if (mediaSnap != null && mediaSnap.length() > 0) {
-                        final String snapJson = mediaSnap.toString();
-                        mainHandler.post(() -> {
-                            if (tab.webView != null) {
-                                tab.webView.evaluateJavascript("if(window.__djvUpdateMobileSniffed)window.__djvUpdateMobileSniffed(" + snapJson + ");", null);
-                            }
-                        });
+                    boolean added = downloadManager.recordSniffedMedia(tab.id, reqUrl, "", tab.title);
+                    if (added) {
+                        final JSONArray mediaSnap = downloadManager.getMediaSnapshot(tab.id);
+                        if (mediaSnap != null && mediaSnap.length() > 0) {
+                            final String snapJson = mediaSnap.toString();
+                            mainHandler.post(() -> {
+                                if (tab.webView != null) {
+                                    tab.webView.evaluateJavascript("if(window.__djvUpdateMobileSniffed)window.__djvUpdateMobileSniffed(" + snapJson + ");", null);
+                                }
+                            });
+                        }
                     }
                 }
                 return super.shouldInterceptRequest(view, request);
@@ -1595,7 +1601,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         boolean isLight = "light".equals(themeMode);
         boolean isPriv = t != null && t.isPrivate;
         boolean onWeb = (t != null && !t.isNewTab && "none".equals(activeUiScreen));
-        int inkMuted = isPriv ? 0xFFD4B8FF : (isLight ? 0xFF635B7E : 0xFFAFA6CE);
+        int inkMuted = isPriv ? 0xFFEADDFF : (isLight ? 0xFF49454F : 0xFFCAC4D0);
         int accent = resolveAccentInt(isLight);
 
         if (!urlInput.hasFocus()) {
@@ -1760,15 +1766,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         MobileTab t = getActiveTab();
         if (t == null || t.isNewTab || t.webView == null) return;
         boolean isLight = "light".equals(themeMode);
-        String bg = isLight ? "#faf8ff" : "#0b0916";
-        String fg = isLight ? "#181428" : "#f3effc";
-        String btnBg = isLight ? "#ede7fb" : "#261d42";
+        String bg = isLight ? "#FEF7FF" : "#141218";
+        String fg = isLight ? "#1D1B20" : "#E6E0E9";
+        String btnBg = isLight ? "#EADDFF" : "#4F378B";
+        String btnFg = isLight ? "#21005D" : "#EADDFF";
+        String accentHex = isLight ? "#6750A4" : "#D0BCFF";
         String js = "(function(){var ex=document.getElementById('__djv_m_reader');if(ex){ex.remove();return;}" +
             "var art=document.querySelector('article,main,[role=\"main\"]')||document.body;" +
             "var ps=Array.from(art.querySelectorAll('p,h1,h2,h3,li')).map(function(n){return n.innerText.trim();}).filter(function(s){return s.length>24;}).slice(0,95);" +
             "var ov=document.createElement('div');ov.id='__djv_m_reader';" +
             "ov.style.cssText='position:fixed;inset:0;z-index:2147483647;background:" + bg + ";color:" + fg + ";overflow-y:auto;padding:28px 22px 96px;font:18px/1.75 Georgia,serif;';" +
-            "ov.innerHTML='<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;font-family:-apple-system,sans-serif;\"><span style=\"color:#8b5cf6;font-size:12px;font-weight:700;letter-spacing:.09em;\">DEJAVU READER</span><button onclick=\"this.parentNode.parentNode.remove()\" style=\"background:" + btnBg + ";color:" + fg + ";border:1px solid #9b6dff;border-radius:99px;padding:7px 16px;font-size:13px;font-weight:600;\">Done</button></div><h1 style=\"font-size:26px;line-height:1.26;margin:0 0 20px;\">'+document.title+'</h1>'+ps.map(function(p){return '<p style=\"margin:0 0 16px;\">'+p.replace(/</g,'&lt;')+'</p>';}).join('');" +
+            "ov.innerHTML='<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;font-family:Roboto,system-ui,sans-serif;\"><span style=\"color:" + accentHex + ";font-size:12px;font-weight:700;letter-spacing:.08em;\">DEJAVU READER</span><button onclick=\"this.parentNode.parentNode.remove()\" style=\"background:" + btnBg + ";color:" + btnFg + ";border:none;border-radius:999px;padding:8px 18px;font-size:13px;font-weight:600;\">Done</button></div><h1 style=\"font-size:26px;line-height:1.28;margin:0 0 20px;\">'+document.title+'</h1>'+ps.map(function(p){return '<p style=\"margin:0 0 16px;\">'+p.replace(/</g,'&lt;')+'</p>';}).join('');" +
             "document.body.appendChild(ov);})();";
         t.webView.evaluateJavascript(js, null);
     }
@@ -1976,8 +1984,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             incomingBanner.setVisibility(View.VISIBLE);
             incomingBanner.setAlpha(0f);
             incomingBanner.setTranslationY(-dp(24));
-            incomingBanner.animate().alpha(1f).translationY(0f).setDuration(240)
-                .setInterpolator(new DecelerateInterpolator()).start();
+            incomingBanner.animate().alpha(1f).translationY(0f).setDuration(260)
+                .setInterpolator(M3_EMPHASIZED_DECEL).start();
             mainHandler.removeCallbacks(hideBannerTask);
             mainHandler.postDelayed(hideBannerTask, 10000);
             pushStateToUi();
@@ -2042,7 +2050,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         } else if ("ready".equals(st)) {
             updateBanner.setVisibility(View.VISIBLE);
             updateTitle.setText("dejavu v" + ver + " Ready to Install");
-            updateBody.setText("Tap Install Now to upgrade without losing tabs or PC sync");
+            updateBody.setText(autoUpdater.isSignatureMismatch()
+                ? "If upgrading from v4.2.0 or earlier shows 'Cannot be installed', uninstall once and install v" + ver
+                : "Verified package · Tap Install Now to upgrade without losing tabs or PC sync");
             updateProgress.setVisibility(View.GONE);
             btnUpdateNow.setText("Install Now");
             btnUpdateNow.setEnabled(true);
@@ -2075,8 +2085,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             updateBanner.setVisibility(View.VISIBLE);
             updateBanner.setAlpha(0f);
             updateBanner.setTranslationY(-dp(24));
-            updateBanner.animate().alpha(1f).translationY(0f).setDuration(240)
-                .setInterpolator(new DecelerateInterpolator()).start();
+            updateBanner.animate().alpha(1f).translationY(0f).setDuration(260)
+                .setInterpolator(M3_EMPHASIZED_DECEL).start();
         });
     }
 
@@ -2103,19 +2113,28 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         final MobileTab t = getActiveTab();
         if (downloadManager == null || t == null || t.isNewTab || t.webView == null) return;
         String js = "(function(){try{var out=[];var seen={};" +
-            "function add(u,c,ti,mm){if(!u||typeof u!=='string')return;try{u=new URL(u,location.href).href;}catch(e){return;}" +
-            "if(!/^https?:\\/\\//i.test(u)||seen[u])return;seen[u]=1;out.push({url:u,category:c,title:(ti||'').slice(0,95),mime:mm||''});}" +
-            "document.querySelectorAll('video,video source').forEach(function(el){add(el.currentSrc||el.src,'video',document.title+' (Video)',el.type||'video/mp4');});" +
-            "document.querySelectorAll('audio,audio source').forEach(function(el){add(el.currentSrc||el.src,'audio',document.title+' (Audio)',el.type||'audio/mpeg');});" +
-            "var rx=/\\.(mp4|webm|mkv|mov|m3u8|mp3|m4a|wav|flac|ogg|pdf|docx?|xlsx?|pptx?|epub|zip|rar|7z|tar|gz|apk|exe|msi|iso)(\\?|#|$)/i;" +
+            "function norm(u){if(!u||typeof u!=='string')return '';if(/googlevideo\\.com\\/videoplayback|\\/videoplayback\\?/i.test(u)){" +
+            "u=u.replace(/([?&])(range|rn|rbuf|ump|srfvp)=[^&]*/gi,'$1').replace(/\\?&/g,'?').replace(/&&+/g,'&').replace(/[?&]+$/,'');}return u;}" +
+            "function add(u,c,ti,mm,sz){if(!u||typeof u!=='string'||/^blob:|^data:/i.test(u))return;try{u=new URL(u,location.href).href;}catch(e){return;}" +
+            "u=norm(u);if(!/^https?:\\/\\//i.test(u)||seen[u])return;seen[u]=1;out.push({url:u,category:c,title:(ti||'').slice(0,95),mime:mm||'',sizeBytes:Number(sz||0)});}" +
+            "try{var pr=window.ytInitialPlayerResponse;" +
+            "if(!pr&&window.ytplayer&&window.ytplayer.config&&window.ytplayer.config.args&&window.ytplayer.config.args.raw_player_response)pr=window.ytplayer.config.args.raw_player_response;" +
+            "if(pr&&pr.streamingData){var sd=pr.streamingData,tt=(pr.videoDetails&&pr.videoDetails.title)||document.title||'Video';" +
+            "(sd.formats||[]).forEach(function(f){if(f&&f.url)add(f.url,'video',tt+' ('+(f.qualityLabel||'MP4')+')',f.mimeType||'video/mp4',f.contentLength||0);});" +
+            "(sd.adaptiveFormats||[]).filter(function(f){return f&&f.url&&/video\\//i.test(f.mimeType||'');}).sort(function(a,b){return (b.height||0)-(a.height||0);}).slice(0,4).forEach(function(f){add(f.url,'video',tt+' ('+(f.qualityLabel||(f.height+'p'))+' HD)',f.mimeType||'video/mp4',f.contentLength||0);});" +
+            "(sd.adaptiveFormats||[]).filter(function(f){return f&&f.url&&/audio\\//i.test(f.mimeType||'');}).sort(function(a,b){return (b.bitrate||0)-(a.bitrate||0);}).slice(0,2).forEach(function(f){add(f.url,'audio',tt+' (Audio)',f.mimeType||'audio/mp4',f.contentLength||0);});" +
+            "if(sd.hlsManifestUrl)add(sd.hlsManifestUrl,'video',tt+' (HLS Stream)','application/vnd.apple.mpegurl',0);}}catch(e){}" +
+            "document.querySelectorAll('video,video source').forEach(function(el){add(el.currentSrc||el.src,'video',document.title+' (Video)',el.type||'video/mp4',0);});" +
+            "document.querySelectorAll('audio,audio source').forEach(function(el){add(el.currentSrc||el.src,'audio',document.title+' (Audio)',el.type||'audio/mpeg',0);});" +
+            "var rx=/\\.(mp4|webm|mkv|mov|m3u8|mp3|m4a|wav|flac|ogg|aac|pdf|docx?|xlsx?|pptx?|epub|zip|rar|7z|tar|gz|apk|exe|msi|iso)(\\?|#|$)/i;" +
             "document.querySelectorAll('a[href]').forEach(function(a){var h=a.href||'';var m=h.match(rx);if(m){" +
             "var ext=m[1].toLowerCase();var c='document';" +
             "if(/^(mp4|webm|mkv|mov|m3u8)$/.test(ext))c='video';" +
-            "else if(/^(mp3|m4a|wav|flac|ogg)$/.test(ext))c='audio';" +
+            "else if(/^(mp3|m4a|wav|flac|ogg|aac)$/.test(ext))c='audio';" +
             "else if(/^(zip|rar|7z|tar|gz|apk|exe|msi|iso)$/.test(ext))c='archive';" +
-            "add(h,c,(a.textContent||a.download||'').trim(),ext);}});" +
+            "add(h,c,(a.textContent||a.download||'').trim(),ext,0);}});" +
             "document.querySelectorAll('img[src]').forEach(function(im){if((im.naturalWidth||0)>=320&&(im.naturalHeight||0)>=220){" +
-            "add(im.currentSrc||im.src,'image',im.alt||document.title,'image/jpeg');}});" +
+            "add(im.currentSrc||im.src,'image',im.alt||document.title,'image/jpeg',0);}});" +
             "return JSON.stringify(out.slice(0,45));}catch(e){return '[]';}})();";
         t.webView.evaluateJavascript(js, raw -> {
             try {

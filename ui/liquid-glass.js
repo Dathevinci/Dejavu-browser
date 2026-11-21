@@ -1,7 +1,7 @@
 /**
- * dejavu v4.0 — Material Design 3 Expressive Compatibility Shim
- * Replaces legacy Snell's Law Liquid Glass SVG refraction with zero-overhead
- * Google Pixel Material You tonal surface elevation (0.0ms GPU cost).
+ * dejavu v4.3.0 — Material Design 3 Compatibility Shim (Zero Overhead)
+ * Legacy SVG refraction has been completely removed in favor of
+ * native Google Pixel Material Design 3 tonal surface elevation (0.0ms CPU/GPU).
  */
 (function () {
   window.LiquidGlass = {

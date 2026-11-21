@@ -7,765 +7,762 @@
   <link rel="stylesheet" href="https://dejavu.local/styles.css">
   <style>
     html, body {
-      width: 100%; height: 100%; overflow: hidden;
-      background: var(--md-surface-container-high, #2b2937);
-      color: var(--md-on-surface, #e6e1ec);
-    }
-    body.theme-light {
-      background: var(--md-surface-container-low, #f6f2fa);
-      color: var(--md-on-surface, #1d1b20);
-    }
-    /* Crisp Material Design 3 Elevated Surface Canvas (0.1ms paint, ZERO Liquid Glass) */
-    #glass-backdrop-canvas {
-      position: fixed;
-      inset: 0;
       width: 100%;
       height: 100%;
-      z-index: 0;
-      border-radius: 16px;
-      pointer-events: none;
-      display: block;
-      transform: translateZ(0);
-      contain: strict;
+      overflow: hidden;
+      background: var(--md-surface-container-high);
+      color: var(--md-on-surface);
     }
-    .pill-btn.primary {
-      background: var(--md-primary) !important;
-      border-color: transparent !important;
-      color: var(--md-on-primary) !important;
-      box-shadow: none !important;
-      font-weight: 650 !important;
+
+    body.theme-light {
+      background: var(--md-surface-container-low);
+      color: var(--md-on-surface);
     }
-    .vpn-mode-btn.active,
-    .sb-tab.active,
-    .vpn-country-row.active,
-    .prof-row.active {
-      background: var(--md-secondary-container) !important;
-      color: var(--md-on-secondary-container) !important;
-      border-color: var(--md-primary) !important;
-    }
+
     .overlay-shell {
-      position: fixed; inset: 0; z-index: 2;
-      display: flex; width: 100%; height: 100%;
-      border-radius: 14px;
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      animation: ovPop 0.22s var(--apple-spring);
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      background: var(--md-surface-container-high);
+      border: 1px solid var(--md-outline-variant);
+      animation: m3OverlayIn 190ms var(--md-ease-emphasized-decel);
     }
-    @keyframes ovPop {
-      from { opacity: 0; transform: translateY(-5px) scale(0.955); }
+
+    body.theme-light .overlay-shell {
+      background: var(--md-surface-container-low);
+    }
+
+    @keyframes m3OverlayIn {
+      from { opacity: 0; transform: translateY(-4px) scale(0.98); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
-    @keyframes slideInRight {
-      from { opacity: 0; transform: translateX(16px); }
+
+    @keyframes m3SlideInRight {
+      from { opacity: 0; transform: translateX(14px); }
       to { opacity: 1; transform: translateX(0); }
     }
+
+    @keyframes m3SidebarIn {
+      from { opacity: 0; transform: translateX(-16px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
     #prof-view-editor:not(.hidden) {
-      animation: slideInRight 0.30s var(--apple-fluid);
+      animation: m3SlideInRight 220ms var(--md-ease-emphasized-decel);
     }
 
-    /* Shield, Find, Download, Update Boxes */
-    .shield-box {
-      width: 100%; height: 100%; padding: 15px 16px;
-      display: flex; flex-direction: column; justify-content: space-between; gap: 11px;
-    }
-    .find-box {
-      width: 100%; height: 100%; padding: 0 8px 0 14px;
-      display: flex; align-items: center; gap: 4px;
-    }
-    .find-box input {
-      flex: 1; min-width: 0; border: none; outline: none;
-      background: transparent; color: var(--ink); font-family: inherit; font-size: 13px; user-select: text;
-    }
-    .find-box input::placeholder { color: var(--ink-muted); }
-    .dl-box {
-      width: 100%; height: 100%; padding: 13px 15px;
-      display: flex; flex-direction: column; justify-content: center; gap: 8px;
+    #mode-sidebar {
+      animation: m3SidebarIn 220ms var(--md-ease-emphasized-decel);
     }
 
-    /* Update Toast (generous breathing room, zero clipped buttons!) */
-    .upd-box {
-      width: 100%; height: 100%; padding: 14px 16px;
-      display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
-    }
-    .upd-top { display: flex; align-items: center; gap: 11px; }
-    .upd-top img { width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(176,124,255,0.62)); }
-    .upd-title { font-size: 13.5px; font-weight: 600; line-height: 1.25; }
-    .upd-sub { font-size: 11.2px; color: var(--ink-muted); margin-top: 2px; line-height: 1.25; }
-    .upd-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+    /* Shared M3 Pill Buttons (Tonal default / Filled Primary) */
     .pill-btn {
-      height: 29px; padding: 0 13px; border-radius: 999px;
-      border: 1px solid var(--glass-border); background: transparent; outline: none;
-      color: var(--ink); font-family: inherit; font-size: 11.6px; font-weight: 600;
+      height: 30px;
+      padding: 0 13px;
+      border-radius: var(--md-shape-full);
+      border: none;
+      outline: none;
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+      font-family: inherit;
+      font-size: 11.8px;
+      font-weight: 600;
       cursor: pointer;
-      transition: transform 0.34s var(--apple-spring), background 0.16s ease, filter 0.16s ease, border-color 0.16s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: filter var(--md-dur-short) ease, transform var(--md-dur-short) var(--md-ease-standard);
     }
-    .pill-btn:focus-visible { box-shadow: 0 0 0 2px rgba(182, 136, 255, 0.55); }
-    .pill-btn:hover { background: var(--glass-hover-bg); transform: translateY(-1px); }
-    .pill-btn:active { transform: scale(0.93); transition-duration: 0.09s; }
-    .pill-btn.primary {
-      background: linear-gradient(135deg, #8b5cf6, #a855f7);
-      border-color: rgba(226, 202, 255, 0.56);
-      color: #ffffff;
-      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.34);
-    }
-    .pill-btn.primary:hover { filter: brightness(1.08); }
 
-    /* Shared Panel Layout (Profiles, History, VPN) */
+    .pill-btn:hover { filter: brightness(1.06); }
+    .pill-btn:active { transform: scale(0.95); }
+    .pill-btn:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 1px; }
+
+    .pill-btn.primary {
+      background: var(--md-primary);
+      color: var(--md-on-primary);
+    }
+
+    /* Shield, Find, Download & Update Boxes */
+    .shield-box {
+      width: 100%;
+      height: 100%;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 11px;
+    }
+
+    .find-box {
+      width: 100%;
+      height: 100%;
+      padding: 0 8px 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .find-box input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--md-on-surface);
+      font-family: inherit;
+      font-size: 13px;
+      user-select: text;
+    }
+
+    .find-box input::placeholder { color: var(--md-on-surface-variant); }
+
+    .dl-box {
+      width: 100%;
+      height: 100%;
+      padding: 13px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .upd-box,
+    .sync-toast-box {
+      width: 100%;
+      height: 100%;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .upd-top { display: flex; align-items: center; gap: 11px; }
+    .upd-top img { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
+    .upd-title { font-size: 13.5px; font-weight: 600; color: var(--md-on-surface); line-height: 1.25; }
+    .upd-sub { font-size: 11.4px; color: var(--md-on-surface-variant); margin-top: 2px; line-height: 1.25; }
+    .upd-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+
+    /* Shared Panel Layout (Profiles, History, VPN, Downloads, Sync) */
     .panel-box {
-      width: 100%; height: 100%; padding: 14px 15px 12px;
-      display: flex; flex-direction: column; gap: 10px;
+      width: 100%;
+      height: 100%;
+      padding: 14px 15px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       overflow: hidden;
     }
+
     .panel-head {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
       flex-shrink: 0;
     }
+
     .panel-title {
-      font-size: 14px; font-weight: 600;
-      display: flex; align-items: center; gap: 7px;
-      letter-spacing: -0.005em;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--md-on-surface);
+      display: flex;
+      align-items: center;
+      gap: 7px;
     }
-    .panel-scroll {
+
+    .panel-scroll,
+    .sb-scroll {
       width: 100%;
-      flex: 1 1 0; min-height: 0;
-      overflow-y: auto; overflow-x: hidden;
+      flex: 1 1 0;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
       overscroll-behavior: contain;
       contain: strict;
       transform: translateZ(0);
       will-change: scroll-position;
-      display: flex; flex-direction: column; gap: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
       padding-right: 4px;
     }
+
     .panel-scroll::-webkit-scrollbar,
-    .sb-scroll::-webkit-scrollbar {
-      width: 6px;
-    }
+    .sb-scroll::-webkit-scrollbar { width: 6px; }
     .panel-scroll::-webkit-scrollbar-track,
-    .sb-scroll::-webkit-scrollbar-track {
-      background: transparent;
-      margin: 2px 0;
-    }
+    .sb-scroll::-webkit-scrollbar-track { background: transparent; margin: 2px 0; }
     .panel-scroll::-webkit-scrollbar-thumb,
     .sb-scroll::-webkit-scrollbar-thumb {
-      background: rgba(206, 178, 255, 0.30);
-      border-radius: 999px;
+      background: var(--md-outline-variant);
+      border-radius: var(--md-shape-full);
       border: 1.5px solid transparent;
       background-clip: content-box;
     }
     .panel-scroll::-webkit-scrollbar-thumb:hover,
     .sb-scroll::-webkit-scrollbar-thumb:hover {
-      background: rgba(222, 198, 255, 0.56);
+      background: var(--md-outline);
       border: 1px solid transparent;
       background-clip: content-box;
     }
-    body.theme-light .panel-scroll::-webkit-scrollbar-thumb,
-    body.theme-light .sb-scroll::-webkit-scrollbar-thumb {
-      background: rgba(108, 72, 224, 0.28);
-      border: 1.5px solid transparent;
-      background-clip: content-box;
-    }
-    body.theme-light .panel-scroll::-webkit-scrollbar-thumb:hover,
-    body.theme-light .sb-scroll::-webkit-scrollbar-thumb:hover {
-      background: rgba(108, 72, 224, 0.50);
-      border: 1px solid transparent;
-      background-clip: content-box;
-    }
+
     .prof-row, .hist-row, .sb-row, .dls-row, .vpn-country-row {
       flex-shrink: 0;
       contain: layout style;
     }
 
-    /* Profile Hub */
+    .section-label {
+      font-size: 10.8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--md-on-surface-variant);
+      padding: 2px 4px 0;
+    }
+
+    .empty-msg {
+      padding: 36px 16px;
+      text-align: center;
+      color: var(--md-on-surface-variant);
+      font-size: 12.2px;
+      line-height: 1.45;
+    }
+
+    /* Profile Hub & 16-Avatar Picker */
     .active-profile-card {
-      padding: 13px; border-radius: 16px;
-      background: rgba(176, 124, 255, 0.12);
-      border: 1px solid rgba(196, 158, 255, 0.30);
-      display: flex; align-items: center; gap: 12px;
+      padding: 13px;
+      border-radius: var(--md-shape-lg);
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+      display: flex;
+      align-items: center;
+      gap: 12px;
       flex-shrink: 0;
     }
-    body.theme-light .active-profile-card {
-      background: rgba(124, 77, 255, 0.08);
-      border-color: rgba(124, 77, 255, 0.22);
-    }
+
     .active-prof-meta { flex: 1; min-width: 0; }
     .active-prof-name { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .active-prof-sub { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+    .active-prof-sub { font-size: 11px; opacity: 0.82; margin-top: 2px; }
 
-    .section-label {
-      font-size: 10.6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
-      color: var(--ink-muted); padding: 2px 4px 0;
-    }
     .prof-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 10px; border-radius: 13px;
-      border: 1px solid transparent;
-      background: rgba(128, 118, 168, 0.09);
-      cursor: pointer;
-    }
-    body.theme-light .prof-row {
-      background: rgba(24, 18, 52, 0.045);
-    }
-    .prof-row:hover {
-      background: var(--glass-hover-bg);
-      border-color: var(--glass-border);
-    }
-    .prof-row-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .prof-row-actions { display: flex; align-items: center; gap: 3px; }
-    .mini-act {
-      width: 24px; height: 24px; border-radius: 50%; border: none; background: transparent;
-      color: var(--ink-muted); display: inline-flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: background 0.15s ease, color 0.15s ease;
-    }
-    .mini-act:hover { background: var(--glass-hover-bg); color: var(--ink); }
-    .mini-act.del:hover { background: rgba(255, 86, 118, 0.22); color: #ff6b8b; }
-
-    .prof-footer {
-      flex-shrink: 0;
-      padding-top: 9px;
-      border-top: 1px solid var(--glass-border);
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    }
-    .ver-info { font-size: 11px; color: var(--ink-muted); }
-
-    /* Profile Editor + 16 Butterfly Avatars Grid */
-    .editor-preview { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-    .editor-input {
-      flex: 1; height: 36px; padding: 0 13px; border-radius: 12px;
-      border: 1px solid var(--glass-border);
-      background: rgba(128, 120, 168, 0.12);
-      color: var(--ink); font-family: inherit; font-size: 13px; outline: none; user-select: text;
-    }
-    body.theme-light .editor-input { background: rgba(24, 18, 52, 0.05); }
-    .editor-input:focus { border-color: var(--accent); }
-
-    .avatar-grid {
-      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px;
-      padding: 2px;
-    }
-    .av-choice {
-      padding: 7px 3px 6px; border-radius: 13px;
-      border: 1px solid transparent;
-      background: rgba(128, 120, 168, 0.08);
-      display: flex; flex-direction: column; align-items: center; gap: 5px;
-      cursor: pointer; color: var(--ink-muted); font-family: inherit;
-      min-width: 0; overflow: hidden;
-      transition: transform 0.20s var(--apple-spring), border-color 0.16s ease, background 0.16s ease;
-    }
-    body.theme-light .av-choice { background: rgba(24, 18, 52, 0.04); }
-    .av-choice:hover {
-      transform: translateY(-2px) scale(1.04);
-      background: var(--glass-hover-bg);
-      color: var(--ink);
-    }
-    .av-choice.selected {
-      border-color: var(--accent);
-      background: rgba(176, 124, 255, 0.22);
-      color: var(--ink);
-      box-shadow: 0 0 0 1.5px rgba(176, 124, 255, 0.36);
-    }
-    .av-choice-label {
-      width: 100%; padding: 0 2px;
-      font-size: 9.2px; font-weight: 500; text-align: center;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
-    /* History & VPN Search Inputs */
-    .hist-search {
-      width: 100%; height: 34px; padding: 0 13px; border-radius: 999px;
-      border: 1px solid var(--glass-border);
-      background: rgba(128, 120, 168, 0.12);
-      color: var(--ink); font-family: inherit; font-size: 12.4px; outline: none; user-select: text;
-      flex-shrink: 0;
-      transition: border-color 0.18s ease, background 0.18s ease;
-    }
-    .hist-search::placeholder { color: var(--ink-muted); }
-    .hist-search:focus { border-color: var(--accent); background: rgba(128, 120, 168, 0.16); }
-    body.theme-light .hist-search { background: rgba(24, 18, 52, 0.05); }
-    body.theme-light .hist-search:focus { background: rgba(255, 255, 255, 0.90); }
-
-    .hist-group-title {
-      font-size: 10.6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
-      color: var(--ink-muted); padding: 6px 4px 2px;
-    }
-    .hist-row {
-      display: flex; align-items: center; gap: 9px;
-      padding: 7px 9px; border-radius: 11px;
-      cursor: pointer;
-    }
-    .hist-row:hover {
-      background: var(--glass-hover-bg);
-    }
-    .hist-ico { width: 16px; height: 16px; border-radius: 4px; object-fit: contain; flex-shrink: 0; }
-    .hist-meta { flex: 1; min-width: 0; }
-    .hist-title { font-size: 12.4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .hist-url { font-size: 10.6px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
-    .hist-time { font-size: 10.4px; color: var(--ink-subtle); flex-shrink: 0; }
-    .hist-row-acts { display: none; align-items: center; gap: 2px; flex-shrink: 0; }
-    .hist-row:hover .hist-time { display: none; }
-    .hist-row:hover .hist-row-acts { display: flex; }
-    .empty-msg {
-      padding: 42px 16px; text-align: center; color: var(--ink-muted); font-size: 12.4px;
-    }
-
-    /* =========================================================================
-       Mode 7: Safari Butterfly VPN Control Center (fits 384x536 cleanly!)
-       ========================================================================= */
-    .vpn-panel-box {
-      padding: 13px 14px 11px;
-      gap: 8px;
-    }
-    .vpn-title-ico {
-      width: 17px; height: 17px;
-      color: var(--accent-bright);
-      flex-shrink: 0;
-    }
-    .vpn-hero {
-      padding: 11px 12px;
-      border-radius: 15px;
-      border: 1px solid rgba(196, 164, 255, 0.18);
-      background: linear-gradient(150deg, rgba(136, 104, 226, 0.14), rgba(18, 15, 34, 0.56));
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex-shrink: 0;
-      transition: border-color 0.24s ease, background 0.24s ease, box-shadow 0.24s ease;
-    }
-    body.theme-light .vpn-hero {
-      border-color: rgba(24, 18, 52, 0.11);
-      background: linear-gradient(150deg, rgba(255, 255, 255, 0.90), rgba(242, 238, 254, 0.86));
-    }
-    .vpn-hero.connected {
-      border-color: rgba(94, 234, 212, 0.48);
-      background: linear-gradient(150deg, rgba(45, 212, 191, 0.16), rgba(138, 102, 235, 0.10) 58%, rgba(14, 18, 32, 0.54));
-      box-shadow: 0 8px 22px -10px rgba(45, 212, 191, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.20);
-    }
-    body.theme-light .vpn-hero.connected {
-      border-color: rgba(13, 148, 136, 0.36);
-      background: linear-gradient(150deg, rgba(226, 252, 246, 0.92), rgba(238, 244, 255, 0.90));
-      box-shadow: 0 6px 18px -8px rgba(13, 148, 136, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.92);
-    }
-    .vpn-hero.connecting {
-      border-color: rgba(182, 136, 255, 0.52);
-      background: linear-gradient(150deg, rgba(168, 122, 255, 0.20), rgba(22, 16, 42, 0.54));
-    }
-    body.theme-light .vpn-hero.connecting {
-      border-color: rgba(124, 77, 255, 0.38);
-      background: linear-gradient(150deg, rgba(240, 233, 255, 0.94), rgba(248, 245, 255, 0.92));
-    }
-    .vpn-hero.error {
-      border-color: rgba(255, 118, 146, 0.50);
-      background: linear-gradient(150deg, rgba(255, 107, 139, 0.16), rgba(28, 14, 26, 0.52));
-    }
-    body.theme-light .vpn-hero.error {
-      border-color: rgba(225, 29, 72, 0.34);
-      background: linear-gradient(150deg, rgba(255, 236, 240, 0.94), rgba(255, 246, 248, 0.92));
-    }
-
-    .vpn-hero-top {
       display: flex;
       align-items: center;
       gap: 10px;
-    }
-    .vpn-orb {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 1px solid var(--glass-border);
-      background: rgba(255, 255, 255, 0.07);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--ink-muted);
-      flex-shrink: 0;
-      transition: all 0.24s ease;
-    }
-    body.theme-light .vpn-orb { background: rgba(24, 18, 52, 0.05); }
-    .vpn-hero.connected .vpn-orb {
-      color: #6fffe9;
-      border-color: rgba(94, 234, 212, 0.60);
-      background: rgba(45, 212, 191, 0.18);
-      box-shadow: 0 0 14px rgba(94, 234, 212, 0.34);
-    }
-    body.theme-light .vpn-hero.connected .vpn-orb {
-      color: #0f766e;
-      border-color: rgba(13, 148, 136, 0.44);
-      background: rgba(20, 184, 166, 0.16);
-      box-shadow: 0 0 12px rgba(20, 184, 166, 0.18);
-    }
-    .vpn-hero.connecting .vpn-orb {
-      color: var(--accent-bright);
-      border-color: rgba(196, 156, 255, 0.56);
-      background: rgba(176, 124, 255, 0.20);
-    }
-    .vpn-hero-info { flex: 1; min-width: 0; }
-    .vpn-hero-title {
-      font-size: 13.4px; font-weight: 600; color: var(--ink);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .vpn-hero-sub {
-      font-size: 11px; color: var(--ink-muted); margin-top: 1px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
-    /* Verified IP Strip + 1-Click "New IP" Pill */
-    .vpn-ip-strip {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 6px 8px 6px 10px;
-      border-radius: 10px;
-      background: rgba(8, 11, 22, 0.48);
-      border: 1px solid rgba(94, 234, 212, 0.24);
-    }
-    body.theme-light .vpn-ip-strip {
-      background: rgba(13, 148, 136, 0.08);
-      border-color: rgba(13, 148, 136, 0.22);
-    }
-    .vpn-ip-meta {
-      flex: 1; min-width: 0;
-      display: flex; flex-direction: column; gap: 1px;
-    }
-    .vpn-ip-val {
-      font-family: 'Cascadia Mono', 'Consolas', monospace;
-      font-variant-numeric: tabular-nums;
-      color: #82ffec;
-      font-weight: 600;
-      font-size: 11.4px;
-      line-height: 1.2;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    body.theme-light .vpn-ip-val { color: #0f766e; }
-    .vpn-ip-loc {
-      font-size: 10.4px;
-      color: var(--ink-muted);
-      line-height: 1.2;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .vpn-rotate-btn {
-      height: 25px;
-      padding: 0 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(94, 234, 212, 0.42);
-      background: rgba(45, 212, 191, 0.16);
-      color: #82ffec;
-      font-family: inherit;
-      font-size: 10.6px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background 0.16s ease, transform 0.24s var(--apple-spring), border-color 0.16s ease;
-    }
-    .vpn-rotate-btn svg { width: 11.5px; height: 11.5px; flex-shrink: 0; }
-    .vpn-rotate-btn:hover {
-      background: rgba(45, 212, 191, 0.28);
-      border-color: rgba(130, 255, 236, 0.68);
-      transform: translateY(-1px);
-    }
-    .vpn-rotate-btn:active { transform: scale(0.93); }
-    .vpn-rotate-btn.rotating svg { animation: spin 0.7s linear infinite; }
-    body.theme-light .vpn-rotate-btn {
-      color: #0f766e;
-      background: rgba(20, 184, 166, 0.15);
-      border-color: rgba(13, 148, 136, 0.36);
-    }
-    body.theme-light .vpn-rotate-btn:hover {
-      background: rgba(20, 184, 166, 0.24);
-    }
-
-    /* Compact Live Telemetry Row (Session Timer + Encrypted Data) */
-    .vpn-telemetry-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 5px 9px;
-      border-radius: 9px;
-      background: rgba(255, 255, 255, 0.045);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      font-size: 10.8px;
-      font-variant-numeric: tabular-nums;
-      color: var(--ink-muted);
-    }
-    body.theme-light .vpn-telemetry-row {
-      background: rgba(24, 18, 52, 0.045);
-      border-color: rgba(24, 18, 52, 0.08);
-    }
-    .vpn-telem-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      white-space: nowrap;
-    }
-    .vpn-telem-item strong {
-      color: var(--ink);
-      font-weight: 600;
-    }
-
-    .vpn-prog-track {
-      height: 4px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.10);
-      overflow: hidden;
-    }
-    body.theme-light .vpn-prog-track { background: rgba(24, 18, 52, 0.09); }
-    .vpn-prog-fill {
-      height: 100%;
-      width: 0%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #a778ff, #6fffe9);
-      transition: width 0.30s var(--apple-fluid);
-    }
-    .vpn-badge-live {
-      font-size: 10.4px;
-      font-weight: 600;
-      padding: 2.5px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--glass-border);
-      background: rgba(255, 255, 255, 0.07);
-      color: var(--ink-muted);
-    }
-    body.theme-light .vpn-badge-live { background: rgba(24, 18, 52, 0.05); }
-    .vpn-badge-live.connected {
-      color: #6fffe9;
-      background: rgba(45, 212, 191, 0.18);
-      border-color: rgba(94, 234, 212, 0.48);
-    }
-    body.theme-light .vpn-badge-live.connected {
-      color: #0f766e;
-      background: rgba(20, 184, 166, 0.16);
-      border-color: rgba(13, 148, 136, 0.36);
-    }
-    .vpn-badge-live.connecting {
-      color: var(--accent-bright);
-      background: rgba(176, 124, 255, 0.20);
-      border-color: rgba(196, 156, 255, 0.46);
-    }
-
-    /* VPN Mode Segmented Control (Smart Web & AI vs 3-Hop Tor) */
-    .vpn-mode-seg {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3px;
-      padding: 3px;
-      border-radius: 10px;
-      background: rgba(8, 10, 20, 0.44);
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      flex-shrink: 0;
-    }
-    body.theme-light .vpn-mode-seg {
-      background: rgba(24, 18, 52, 0.055);
-      border-color: rgba(24, 18, 52, 0.09);
-    }
-    .vpn-mode-btn {
-      height: 25px;
-      border-radius: 7.5px;
+      padding: 8px 10px;
+      border-radius: var(--md-shape-md);
+      background: var(--md-surface-container);
       border: 1px solid transparent;
+      cursor: pointer;
+      transition: background-color var(--md-dur-short) ease, border-color var(--md-dur-short) ease;
+    }
+
+    .prof-row:hover {
+      background: var(--md-surface-container-highest);
+      border-color: var(--md-outline-variant);
+    }
+
+    .prof-row-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .prof-row-actions { display: flex; align-items: center; gap: 3px; }
+
+    .mini-act {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--md-shape-full);
+      border: none;
       background: transparent;
-      color: var(--ink-muted);
-      font-family: inherit;
-      font-size: 10.8px;
-      font-weight: 560;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
-    }
-    .vpn-mode-btn:hover { color: var(--ink); }
-    .vpn-mode-btn.active {
-      background: rgba(176, 124, 255, 0.24);
-      border-color: rgba(206, 174, 255, 0.46);
-      color: var(--ink);
-      font-weight: 630;
-    }
-    body.theme-light .vpn-mode-btn.active {
-      background: #ffffff;
-      border-color: rgba(124, 77, 255, 0.34);
-      color: #6435e8;
-      box-shadow: 0 2px 6px -2px rgba(24, 16, 64, 0.12);
-    }
-
-    /* Safari VPN Region Filter Pills */
-    .vpn-region-tabs {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-shrink: 0;
-      overflow-x: auto;
-      scrollbar-width: none;
-      padding: 1px 0;
-    }
-    .vpn-region-tabs::-webkit-scrollbar { display: none; }
-    .vpn-reg-pill {
-      height: 24px;
-      padding: 0 9px;
-      border-radius: 999px;
-      border: 1px solid var(--glass-border);
-      background: rgba(255, 255, 255, 0.045);
-      color: var(--ink-muted);
-      font-family: inherit;
-      font-size: 10.6px;
-      font-weight: 560;
-      white-space: nowrap;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
-    }
-    .vpn-reg-pill:hover {
-      background: var(--glass-hover-bg);
-      color: var(--ink);
-    }
-    .vpn-reg-pill.active {
-      background: rgba(176, 124, 255, 0.26);
-      border-color: rgba(206, 174, 255, 0.50);
-      color: var(--ink);
-    }
-    body.theme-light .vpn-reg-pill {
-      background: rgba(24, 18, 52, 0.045);
-    }
-    body.theme-light .vpn-reg-pill.active {
-      background: rgba(124, 77, 255, 0.14);
-      border-color: rgba(124, 77, 255, 0.34);
-      color: #6435e8;
-    }
-
-    /* Country List Rows + Crisp Green Speed Dot (zero scroll jitter / zero hover churn!) */
-    .vpn-country-row {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 7px 9px;
-      min-height: 44px;
-      flex-shrink: 0;
-      contain: layout style;
-      border-radius: 11px;
-      border: 1px solid transparent;
-      cursor: pointer;
-    }
-    .vpn-country-row:hover {
-      background-color: var(--glass-hover-bg);
-      border-color: rgba(255, 255, 255, 0.08);
-    }
-    body.theme-light .vpn-country-row:hover {
-      border-color: rgba(24, 18, 52, 0.08);
-    }
-    .vpn-country-row.selected {
-      background: rgba(176, 124, 255, 0.16);
-      border-color: rgba(196, 156, 255, 0.38);
-    }
-    .vpn-country-row.active-conn {
-      background: rgba(45, 212, 191, 0.15);
-      border-color: rgba(94, 234, 212, 0.44);
-    }
-    body.theme-light .vpn-country-row.selected {
-      background: rgba(124, 77, 255, 0.10);
-      border-color: rgba(124, 77, 255, 0.26);
-    }
-    body.theme-light .vpn-country-row.active-conn {
-      background: rgba(20, 184, 166, 0.12);
-      border-color: rgba(13, 148, 136, 0.34);
-    }
-    .vpn-cc-pill {
-      width: 32px;
-      height: 21px;
-      border-radius: 6.5px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
+      color: var(--md-on-surface-variant);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: var(--ink);
-      background: rgba(176, 124, 255, 0.16);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      flex-shrink: 0;
+      cursor: pointer;
+      transition: background-color var(--md-dur-short) ease, color var(--md-dur-short) ease;
     }
-    body.theme-light .vpn-cc-pill {
-      background: rgba(124, 77, 255, 0.10);
-      border-color: rgba(124, 77, 255, 0.18);
-    }
-    .vpn-country-row.active-conn .vpn-cc-pill {
-      background: rgba(45, 212, 191, 0.22);
-      border-color: rgba(94, 234, 212, 0.50);
-      color: #82ffec;
-    }
-    body.theme-light .vpn-country-row.active-conn .vpn-cc-pill {
-      background: rgba(20, 184, 166, 0.16);
-      border-color: rgba(13, 148, 136, 0.36);
-      color: #0f766e;
-    }
-    .vpn-c-meta { flex: 1; min-width: 0; }
-    .vpn-c-name { font-size: 12.4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vpn-c-reg { font-size: 10.3px; color: var(--ink-muted); }
-    .vpn-c-right {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-    .vpn-fast-dot {
-      width: 6.5px;
-      height: 6.5px;
-      border-radius: 50%;
-      background: #34d399;
-      box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.22);
-      flex-shrink: 0;
-    }
-    body.theme-light .vpn-fast-dot {
-      background: #10b981;
-      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.18);
-    }
-    .vpn-c-check {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: #6fffe9;
-      flex-shrink: 0;
-    }
-    body.theme-light .vpn-c-check { color: #0d9488; }
 
-    /* VPN Footer: Auto-connect on startup + protocol strip */
-    .vpn-footer {
+    .mini-act:hover { background: var(--md-state-hover); color: var(--md-on-surface); }
+    .mini-act.del:hover { background: var(--md-error-container); color: var(--md-on-error-container); }
+
+    .prof-footer {
       flex-shrink: 0;
-      padding-top: 7px;
-      border-top: 1px solid rgba(255, 255, 255, 0.09);
+      padding-top: 10px;
+      border-top: 1px solid var(--md-outline-variant);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ver-info { font-size: 11.2px; color: var(--md-on-surface-variant); }
+
+    .editor-preview { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+    .editor-input {
+      flex: 1;
+      height: 38px;
+      padding: 0 13px;
+      border-radius: var(--md-shape-md);
+      border: 1.5px solid var(--md-outline-variant);
+      background: var(--md-surface-container);
+      color: var(--md-on-surface);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      user-select: text;
+    }
+
+    .editor-input:focus { border-color: var(--md-primary); }
+
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 7px;
+      padding: 2px;
+    }
+
+    .av-choice {
+      padding: 8px 4px 6px;
+      border-radius: var(--md-shape-md);
+      border: 1.5px solid transparent;
+      background: var(--md-surface-container);
       display: flex;
       flex-direction: column;
-      gap: 5px;
-    }
-    body.theme-light .vpn-footer {
-      border-top-color: rgba(24, 18, 52, 0.10);
-    }
-    .vpn-auto-row {
-      display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
+      gap: 5px;
+      cursor: pointer;
+      color: var(--md-on-surface-variant);
+      font-family: inherit;
+      min-width: 0;
+      overflow: hidden;
+      transition: background-color var(--md-dur-short) ease, border-color var(--md-dur-short) ease, transform var(--md-dur-short) var(--md-ease-standard);
+    }
+
+    .av-choice:hover {
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface);
+    }
+
+    .av-choice.selected {
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+      border-color: var(--md-primary);
+    }
+
+    .av-choice-label {
+      width: 100%;
       padding: 0 2px;
-    }
-    .vpn-auto-label {
-      font-size: 11.4px;
+      font-size: 9.5px;
       font-weight: 500;
-      color: var(--ink);
-    }
-    .vpn-foot-note {
-      font-size: 10.2px;
-      color: var(--ink-muted);
       text-align: center;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    /* Mode 8: Safari Grouped Floating Omnibox Autocomplete */
+    /* Search Pill Input (History & VPN) */
+    .hist-search {
+      width: 100%;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: var(--md-shape-full);
+      border: 1.5px solid transparent;
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface);
+      font-family: inherit;
+      font-size: 12.5px;
+      outline: none;
+      user-select: text;
+      flex-shrink: 0;
+      transition: border-color var(--md-dur-short) ease, background-color var(--md-dur-short) ease;
+    }
+
+    body.theme-light .hist-search {
+      background: var(--md-surface-container-lowest);
+      border-color: var(--md-outline-variant);
+    }
+
+    .hist-search::placeholder { color: var(--md-on-surface-variant); }
+    .hist-search:focus { border-color: var(--md-primary); background: var(--md-surface-container-low); }
+    body.theme-light .hist-search:focus { background: #ffffff; }
+
+    .hist-group-title {
+      font-size: 10.6px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--md-primary);
+      padding: 6px 6px 2px;
+    }
+
+    .hist-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 9px;
+      border-radius: var(--md-shape-md);
+      cursor: pointer;
+    }
+
+    .hist-row:hover { background: var(--md-state-hover); }
+    .hist-ico { width: 16px; height: 16px; border-radius: 4px; object-fit: contain; flex-shrink: 0; }
+    .hist-meta { flex: 1; min-width: 0; }
+    .hist-title { font-size: 12.4px; font-weight: 500; color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hist-url { font-size: 10.8px; color: var(--md-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .hist-time { font-size: 10.6px; color: var(--md-outline); flex-shrink: 0; }
+    .hist-row-acts { display: none; align-items: center; gap: 2px; flex-shrink: 0; }
+    .hist-row:hover .hist-time { display: none; }
+    .hist-row:hover .hist-row-acts { display: flex; }
+
+    /* =========================================================================
+       Mode 7: Material Design 3 86-Country Global VPN Control Center
+       ========================================================================= */
+    .vpn-panel-box {
+      padding: 13px 14px 11px;
+      gap: 8px;
+    }
+
+    .vpn-title-ico {
+      width: 18px;
+      height: 18px;
+      color: var(--md-primary);
+      flex-shrink: 0;
+    }
+
+    .vpn-hero {
+      padding: 12px 13px;
+      border-radius: var(--md-shape-lg);
+      border: 1px solid var(--md-outline-variant);
+      background: var(--md-surface-container);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      transition: background-color var(--md-dur-medium) ease, border-color var(--md-dur-medium) ease;
+    }
+
+    .vpn-hero.connected {
+      background: var(--md-tertiary-container);
+      color: var(--md-on-tertiary-container);
+      border-color: transparent;
+    }
+
+    .vpn-hero.connecting {
+      background: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+      border-color: transparent;
+    }
+
+    .vpn-hero.error {
+      background: var(--md-error-container);
+      color: var(--md-on-error-container);
+      border-color: transparent;
+    }
+
+    .vpn-hero-top { display: flex; align-items: center; gap: 10px; }
+
+    .vpn-orb {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface-variant);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .vpn-hero.connected .vpn-orb {
+      background: var(--md-tertiary);
+      color: var(--md-on-tertiary);
+    }
+
+    .vpn-hero.connecting .vpn-orb {
+      background: var(--md-primary);
+      color: var(--md-on-primary);
+    }
+
+    .vpn-hero.error .vpn-orb {
+      background: var(--md-error);
+      color: var(--md-on-error);
+    }
+
+    .vpn-hero-info { flex: 1; min-width: 0; }
+    .vpn-hero-title { font-size: 13.6px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vpn-hero-sub { font-size: 11px; color: var(--md-on-surface-variant); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vpn-hero.connected .vpn-hero-sub,
+    .vpn-hero.connecting .vpn-hero-sub,
+    .vpn-hero.error .vpn-hero-sub { color: inherit; opacity: 0.84; }
+
+    .vpn-ip-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 8px 7px 11px;
+      border-radius: var(--md-shape-md);
+      background: color-mix(in srgb, var(--md-surface) 38%, transparent);
+    }
+
+    .vpn-ip-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+
+    .vpn-ip-val {
+      font-family: 'Cascadia Mono', 'Consolas', monospace;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      font-size: 11.6px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .vpn-ip-loc {
+      font-size: 10.5px;
+      opacity: 0.84;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .vpn-rotate-btn {
+      height: 26px;
+      padding: 0 10px;
+      border-radius: var(--md-shape-full);
+      border: none;
+      background: var(--md-tertiary);
+      color: var(--md-on-tertiary);
+      font-family: inherit;
+      font-size: 10.8px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: filter var(--md-dur-short) ease, transform var(--md-dur-short) var(--md-ease-standard);
+    }
+
+    .vpn-rotate-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .vpn-rotate-btn:hover { filter: brightness(1.08); }
+    .vpn-rotate-btn:active { transform: scale(0.94); }
+    .vpn-rotate-btn.rotating svg { animation: m3Spin 0.72s linear infinite; }
+
+    .vpn-telemetry-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 5px 10px;
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--md-surface) 28%, transparent);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .vpn-telem-item { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .vpn-telem-item strong { font-weight: 700; }
+
+    .vpn-prog-track {
+      height: 4px;
+      border-radius: var(--md-shape-full);
+      background: color-mix(in srgb, var(--md-on-surface) 16%, transparent);
+      overflow: hidden;
+    }
+
+    .vpn-prog-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: var(--md-shape-full);
+      background: var(--md-primary);
+      transition: width 260ms var(--md-ease-emphasized-decel);
+    }
+
+    .vpn-badge-live {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2.5px 9px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface-variant);
+    }
+
+    .vpn-badge-live.connected {
+      background: var(--md-tertiary-container);
+      color: var(--md-on-tertiary-container);
+    }
+
+    .vpn-badge-live.connecting {
+      background: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+    }
+
+    /* M3 Connected Mode Selector */
+    .vpn-mode-seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px;
+      padding: 3px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-surface-container);
+      border: 1px solid var(--md-outline-variant);
+      flex-shrink: 0;
+    }
+
+    .vpn-mode-btn {
+      height: 27px;
+      border-radius: var(--md-shape-full);
+      border: none;
+      background: transparent;
+      color: var(--md-on-surface-variant);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color var(--md-dur-short) ease, color var(--md-dur-short) ease;
+    }
+
+    .vpn-mode-btn:hover { color: var(--md-on-surface); }
+
+    .vpn-mode-btn.active {
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+    }
+
+    /* M3 Filter Chips */
+    .vpn-region-tabs {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 1px 0;
+    }
+
+    .vpn-region-tabs::-webkit-scrollbar { display: none; }
+
+    .vpn-reg-pill {
+      height: 26px;
+      padding: 0 10px;
+      border-radius: var(--md-shape-sm);
+      border: 1px solid var(--md-outline-variant);
+      background: transparent;
+      color: var(--md-on-surface-variant);
+      font-family: inherit;
+      font-size: 10.8px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background-color var(--md-dur-short) ease, color var(--md-dur-short) ease, border-color var(--md-dur-short) ease;
+    }
+
+    .vpn-reg-pill:hover { background: var(--md-state-hover); color: var(--md-on-surface); }
+
+    .vpn-reg-pill.active {
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+      border-color: transparent;
+    }
+
+    /* Zero-Jank Country Rows */
+    .vpn-country-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      min-height: 44px;
+      border-radius: var(--md-shape-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+
+    .vpn-country-row:hover { background-color: var(--md-state-hover); }
+
+    .vpn-country-row.selected {
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+    }
+
+    .vpn-country-row.active-conn {
+      background: var(--md-tertiary-container);
+      color: var(--md-on-tertiary-container);
+    }
+
+    .vpn-cc-pill {
+      width: 34px;
+      height: 22px;
+      border-radius: 7px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface);
+      flex-shrink: 0;
+    }
+
+    .vpn-country-row.selected .vpn-cc-pill {
+      background: var(--md-primary);
+      color: var(--md-on-primary);
+    }
+
+    .vpn-country-row.active-conn .vpn-cc-pill {
+      background: var(--md-tertiary);
+      color: var(--md-on-tertiary);
+    }
+
+    .vpn-c-meta { flex: 1; min-width: 0; }
+    .vpn-c-name { font-size: 12.6px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vpn-c-reg { font-size: 10.5px; color: var(--md-on-surface-variant); }
+    .vpn-country-row.selected .vpn-c-reg,
+    .vpn-country-row.active-conn .vpn-c-reg { color: inherit; opacity: 0.8; }
+
+    .vpn-c-right { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+    .vpn-fast-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-tertiary);
+      flex-shrink: 0;
+    }
+
+    .vpn-c-check {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: inherit;
+      flex-shrink: 0;
+    }
+
+    .vpn-footer {
+      flex-shrink: 0;
+      padding-top: 8px;
+      border-top: 1px solid var(--md-outline-variant);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .vpn-auto-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 2px; }
+    .vpn-auto-label { font-size: 11.8px; font-weight: 500; color: var(--md-on-surface); }
+    .vpn-foot-note { font-size: 10.4px; color: var(--md-on-surface-variant); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* =========================================================================
+       Mode 8: M3 Floating Omnibox Suggestions Menu
+       ========================================================================= */
     .suggest-box {
       width: 100%;
       height: 100%;
@@ -775,409 +772,469 @@
       gap: 2px;
       overflow: hidden;
     }
+
     .sug-group-hdr {
-      font-size: 10px;
-      font-weight: 650;
+      font-size: 10.2px;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--ink-subtle);
+      color: var(--md-on-surface-variant);
       padding: 4px 10px 2px;
       flex-shrink: 0;
     }
+
     .sug-row {
       display: flex;
       align-items: center;
       gap: 10px;
       height: 38px;
       padding: 0 10px;
-      border-radius: 11px;
+      border-radius: var(--md-shape-md);
       cursor: pointer;
-      color: var(--ink);
-      transition: background 0.14s ease, transform 0.18s var(--apple-spring);
+      color: var(--md-on-surface);
       flex-shrink: 0;
+      transition: background-color var(--md-dur-short) ease;
     }
+
     .sug-row:hover,
     .sug-row.selected {
-      background: rgba(182, 136, 255, 0.22);
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
     }
-    .sug-row.selected {
-      box-shadow: inset 0 0 0 1px rgba(212, 184, 255, 0.36);
-    }
-    body.theme-light .sug-row:hover,
-    body.theme-light .sug-row.selected {
-      background: rgba(124, 77, 255, 0.12);
-      box-shadow: inset 0 0 0 1px rgba(124, 77, 255, 0.24);
-    }
+
     .sug-ico {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       border-radius: 6px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: var(--ink-muted);
+      color: var(--md-on-surface-variant);
       flex-shrink: 0;
     }
+
     .sug-row.top-hit .sug-ico {
-      background: rgba(176, 124, 255, 0.18);
+      background: var(--md-primary-container);
+      color: var(--md-on-primary-container);
     }
+
     .sug-ico img { width: 16px; height: 16px; border-radius: 4px; object-fit: contain; }
-    .sug-ico.is-fav { color: #ffd66b; }
-    .sug-ico.is-url, .sug-ico.is-site { color: #72e0ff; }
-    .sug-ico.is-hist { color: #c7a6ff; }
-    body.theme-light .sug-ico.is-fav { color: #d97706; }
-    body.theme-light .sug-ico.is-url, body.theme-light .sug-ico.is-site { color: #0284c7; }
-    body.theme-light .sug-ico.is-hist { color: #7c4dff; }
-    .sug-text {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-    }
-    .sug-title {
-      font-size: 12.8px;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .sug-sub {
-      font-size: 11px;
-      color: var(--ink-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      flex-shrink: 1;
-    }
+    .sug-ico.is-fav { color: var(--md-primary); }
+    .sug-ico.is-url, .sug-ico.is-site { color: var(--md-tertiary); }
+    .sug-ico.is-hist { color: var(--md-on-surface-variant); }
+
+    .sug-text { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px; }
+    .sug-title { font-size: 12.8px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sug-sub { font-size: 11px; color: var(--md-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sug-row.selected .sug-sub { color: inherit; opacity: 0.8; }
+
     .sug-badge {
-      font-size: 9.8px;
+      font-size: 10px;
       font-weight: 600;
-      color: var(--ink-subtle);
-      padding: 2px 6px;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.06);
+      color: var(--md-on-surface-variant);
+      padding: 2px 7px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-surface-container-highest);
       flex-shrink: 0;
-    }
-    body.theme-light .sug-badge {
-      background: rgba(24, 18, 52, 0.06);
-      color: var(--ink-muted);
     }
 
     /* =========================================================================
-       Mode 9: Floating macOS Tahoe Liquid Glass Safari Sidebar
+       Mode 9: Material Design 3 Side Panel
        ========================================================================= */
-    #mode-sidebar {
-      animation: sidebarSlideIn 0.28s var(--apple-spring);
-    }
-    @keyframes sidebarSlideIn {
-      from { opacity: 0; transform: translateX(-20px) scale(0.98); }
-      to { opacity: 1; transform: translateX(0) scale(1); }
-    }
     .sb-box {
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       padding: 13px 12px 12px;
-      display: flex; flex-direction: column; gap: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       overflow: hidden;
     }
+
     .sb-head {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      padding: 0 2px 8px;
-      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 2px 9px;
+      border-bottom: 1px solid var(--md-outline-variant);
       flex-shrink: 0;
     }
-    .sb-prof {
-      display: flex; align-items: center; gap: 9px; min-width: 0;
-    }
-    .sb-prof-name {
-      font-size: 13.4px; font-weight: 640; color: var(--ink);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .sb-prof-sub {
-      font-size: 10.4px; color: var(--ink-muted);
-    }
-    .sb-scroll {
-      width: 100%;
-      flex: 1 1 0; min-height: 0;
-      overflow-y: auto; overflow-x: hidden;
-      overscroll-behavior: contain;
-      contain: strict;
-      transform: translateZ(0);
-      will-change: scroll-position;
-      display: flex; flex-direction: column; gap: 12px;
-      padding-right: 4px;
-    }
-    .sb-sec {
-      display: flex; flex-direction: column; gap: 3px;
-    }
-    .sb-sec-head {
-      display: flex; align-items: center; justify-content: space-between; gap: 6px;
-      padding: 0 6px 3px;
-    }
-    .sb-sec-title {
-      font-size: 10.5px; font-weight: 660; text-transform: uppercase; letter-spacing: 0.07em;
-      color: var(--ink-muted);
-    }
+
+    .sb-prof { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .sb-prof-name { font-size: 13.6px; font-weight: 600; color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sb-prof-sub { font-size: 10.6px; color: var(--md-on-surface-variant); }
+
+    .sb-scroll { gap: 12px; }
+    .sb-sec { display: flex; flex-direction: column; gap: 3px; }
+    .sb-sec-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 6px 3px; }
+    .sb-sec-title { font-size: 10.6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--md-primary); }
+
     .sb-mini-pill {
-      height: 21px; padding: 0 8px; border-radius: 999px;
-      border: 1px solid rgba(196, 162, 255, 0.34);
-      background: rgba(176, 124, 255, 0.16);
-      color: var(--accent-bright);
-      font-family: inherit; font-size: 10.2px; font-weight: 600;
+      height: 22px;
+      padding: 0 9px;
+      border-radius: var(--md-shape-full);
+      border: none;
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+      font-family: inherit;
+      font-size: 10.4px;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.16s ease, transform 0.20s var(--apple-spring);
+      transition: filter var(--md-dur-short) ease;
     }
-    .sb-mini-pill:hover { background: rgba(176, 124, 255, 0.30); transform: scale(1.03); }
-    .sb-mini-pill:active { transform: scale(0.94); }
-    .sb-mini-pill.saved {
-      border-color: rgba(94, 234, 212, 0.44);
-      background: rgba(45, 212, 191, 0.16);
-      color: #82ffec;
-    }
-    body.theme-light .sb-mini-pill.saved { color: #0f766e; }
+
+    .sb-mini-pill:hover { filter: brightness(1.06); }
+    .sb-mini-pill.saved { background: var(--md-tertiary-container); color: var(--md-on-tertiary-container); }
+
     .sb-row {
-      display: flex; align-items: center; gap: 8px;
-      height: 31px; padding: 0 8px;
-      border-radius: 10px;
-      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: var(--md-shape-full);
       cursor: pointer;
-      color: var(--ink);
+      color: var(--md-on-surface);
+      transition: background-color var(--md-dur-short) ease;
     }
-    .sb-row:hover {
-      background: var(--glass-hover-bg);
-    }
+
+    .sb-row:hover { background: var(--md-state-hover); }
+
     .sb-row.active {
-      background: rgba(176, 124, 255, 0.20);
-      border-color: rgba(196, 162, 255, 0.38);
-      font-weight: 560;
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+      font-weight: 600;
     }
-    body.theme-light .sb-row.active {
-      background: rgba(124, 77, 255, 0.11);
-      border-color: rgba(124, 77, 255, 0.24);
-    }
-    .sb-dot {
-      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-    }
-    .sb-ico {
-      width: 14px; height: 14px; border-radius: 3.5px; object-fit: contain; flex-shrink: 0;
-    }
-    .sb-label {
-      flex: 1; min-width: 0;
-      font-size: 12.2px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+
+    .sb-dot { width: 8px; height: 8px; border-radius: var(--md-shape-full); flex-shrink: 0; }
+    .sb-ico { width: 15px; height: 15px; border-radius: 3.5px; object-fit: contain; flex-shrink: 0; }
+    .sb-label { flex: 1; min-width: 0; font-size: 12.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
     .sb-rm {
-      width: 18px; height: 18px; border-radius: 50%; border: none; background: transparent;
-      color: var(--ink-muted); font-size: 12px; line-height: 1;
-      display: inline-flex; align-items: center; justify-content: center;
-      cursor: pointer; opacity: 0; flex-shrink: 0;
-      transition: opacity 0.14s ease, background 0.14s ease, color 0.14s ease;
+      width: 20px;
+      height: 20px;
+      border-radius: var(--md-shape-full);
+      border: none;
+      background: transparent;
+      color: var(--md-on-surface-variant);
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      flex-shrink: 0;
+      transition: opacity var(--md-dur-short) ease, background-color var(--md-dur-short) ease;
     }
+
     .sb-row:hover .sb-rm { opacity: 0.85; }
-    .sb-rm:hover { opacity: 1 !important; background: rgba(255, 86, 118, 0.26); color: #ff809a; }
-    .sb-empty {
-      font-size: 11.2px; color: var(--ink-subtle); padding: 4px 8px;
-    }
+    .sb-rm:hover { opacity: 1 !important; background: var(--md-error-container); color: var(--md-on-error-container); }
+    .sb-empty { font-size: 11.4px; color: var(--md-on-surface-variant); padding: 4px 10px; }
+
     .sb-new-group-box {
-      padding: 8px; border-radius: 12px;
-      background: rgba(128, 120, 168, 0.10);
-      border: 1px solid var(--glass-border);
-      display: flex; flex-direction: column; gap: 7px;
+      padding: 10px;
+      border-radius: var(--md-shape-md);
+      background: var(--md-surface-container);
+      border: 1px solid var(--md-outline-variant);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       margin: 2px 0 4px;
     }
+
     .sb-new-group-box input {
-      width: 100%; height: 29px; padding: 0 10px; border-radius: 9px;
-      border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.22);
-      color: var(--ink); font-family: inherit; font-size: 12px; outline: none; user-select: text;
+      width: 100%;
+      height: 32px;
+      padding: 0 11px;
+      border-radius: var(--md-shape-sm);
+      border: 1.5px solid var(--md-outline-variant);
+      background: var(--md-surface-container-low);
+      color: var(--md-on-surface);
+      font-family: inherit;
+      font-size: 12px;
+      outline: none;
+      user-select: text;
     }
-    body.theme-light .sb-new-group-box input { background: rgba(255, 255, 255, 0.86); }
-    .sb-new-group-box input:focus { border-color: var(--accent); }
-    .sb-swatches-row {
-      display: flex; align-items: center; justify-content: space-between; gap: 6px;
-    }
-    .sb-swatches { display: flex; align-items: center; gap: 5px; }
-    .sb-swatch {
-      width: 16px; height: 16px; border-radius: 50%; border: 2px solid transparent;
-      cursor: pointer; transition: transform 0.18s var(--apple-spring);
-    }
-    .sb-swatch.sel { border-color: #ffffff; transform: scale(1.16); }
+
+    .sb-new-group-box input:focus { border-color: var(--md-primary); }
+    .sb-swatches-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .sb-swatches { display: flex; align-items: center; gap: 6px; }
+    .sb-swatch { width: 17px; height: 17px; border-radius: var(--md-shape-full); border: 2px solid transparent; cursor: pointer; }
+    .sb-swatch.sel { border-color: var(--md-on-surface); transform: scale(1.12); }
 
     /* =========================================================================
-       Mode 10: Authentic macOS Safari Share Sheet
+       Mode 10 & 12: Material Design 3 Share Menu & Tab Context Menu
        ========================================================================= */
     .share-box {
-      width: 100%; height: 100%; padding: 12px 11px;
-      display: flex; flex-direction: column; gap: 6px;
+      width: 100%;
+      height: 100%;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
+
     .share-head {
-      display: flex; align-items: center; gap: 10px;
-      padding: 6px 7px 10px;
-      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 6px 10px;
+      border-bottom: 1px solid var(--md-outline-variant);
       flex-shrink: 0;
     }
+
     .share-ico-wrap {
-      width: 34px; height: 34px; border-radius: 10px;
-      background: rgba(176, 124, 255, 0.14);
-      border: 1px solid rgba(196, 162, 255, 0.26);
-      display: inline-flex; align-items: center; justify-content: center;
-      flex-shrink: 0; overflow: hidden;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--md-shape-md);
+      background: var(--md-primary-container);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
     }
+
     .share-ico-wrap img { width: 20px; height: 20px; object-fit: contain; }
     .share-meta { flex: 1; min-width: 0; }
-    .share-title { font-size: 12.6px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .share-host { font-size: 10.8px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .share-title { font-size: 12.8px; font-weight: 600; color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .share-host { font-size: 11px; color: var(--md-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
     .share-list { display: flex; flex-direction: column; gap: 2px; }
+
     .share-item {
-      height: 33px; padding: 0 10px;
-      border: none; border-radius: 10px; outline: none;
-      background: transparent; color: var(--ink);
-      font-family: inherit; font-size: 12.4px; font-weight: 500;
-      display: flex; align-items: center; gap: 10px;
-      cursor: pointer; text-align: left;
-      transition: background 0.14s ease, transform 0.20s var(--apple-spring), color 0.14s ease;
+      height: 34px;
+      padding: 0 11px;
+      border: none;
+      border-radius: var(--md-shape-md);
+      outline: none;
+      background: transparent;
+      color: var(--md-on-surface);
+      font-family: inherit;
+      font-size: 12.4px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-align: left;
+      transition: background-color var(--md-dur-short) ease, color var(--md-dur-short) ease;
     }
-    .share-item:focus-visible { box-shadow: inset 0 0 0 1.5px rgba(196, 162, 255, 0.52); }
-    .share-item svg { width: 15px; height: 15px; color: var(--ink-muted); flex-shrink: 0; }
-    .share-item:hover:not(:disabled) { background: rgba(176, 124, 255, 0.20); transform: translateX(2px); }
-    .share-item:hover:not(:disabled) svg { color: var(--accent-bright); }
-    .share-item:active:not(:disabled) { transform: scale(0.97); }
+
+    .share-item svg { width: 15px; height: 15px; color: var(--md-on-surface-variant); flex-shrink: 0; }
+    .share-item:hover:not(:disabled) { background: var(--md-state-hover); }
+    .share-item:hover:not(:disabled) svg { color: var(--md-on-surface); }
     .share-item:disabled { opacity: 0.36; cursor: default; }
-    .share-item.copied { background: rgba(45, 212, 191, 0.20); color: #82ffec; }
-    .share-item.copied svg { color: #5eead4; }
-    body.theme-light .share-item.copied { color: #0f766e; }
-    .share-sep { height: 1px; margin: 3px 6px; background: var(--glass-border); opacity: 0.55; }
+    .share-item.copied { background: var(--md-tertiary-container); color: var(--md-on-tertiary-container); }
+    .share-item.copied svg { color: var(--md-on-tertiary-container); }
+    .share-item.danger { color: var(--md-error); }
+    .share-item.danger svg { color: var(--md-error); }
+    .share-item.danger:hover:not(:disabled) { background: var(--md-error-container); color: var(--md-on-error-container); }
+    .share-item.danger:hover:not(:disabled) svg { color: var(--md-on-error-container); }
+    .share-sep { height: 1px; margin: 3px 6px; background: var(--md-outline-variant); }
 
     /* =========================================================================
-       Mode 11: Authentic macOS Safari Downloads Popover
+       Mode 11: Material Design 3 Quick Downloads Popover
        ========================================================================= */
     .dls-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 9px; border-radius: 12px;
-      background: rgba(128, 120, 168, 0.09);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: var(--md-shape-md);
+      background: var(--md-surface-container);
+      border: 1px solid var(--md-outline-variant);
     }
-    body.theme-light .dls-row { background: rgba(24, 18, 52, 0.045); border-color: rgba(24, 18, 52, 0.08); }
-    .dls-row:hover { background: var(--glass-hover-bg); border-color: var(--glass-border); }
+
+    .dls-row:hover { border-color: var(--md-outline); }
+
     .dls-ico {
-      width: 30px; height: 30px; border-radius: 9px;
-      background: rgba(176, 124, 255, 0.16);
-      color: var(--accent-bright);
-      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
     }
+
     .dls-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-    .dls-name { font-size: 12.2px; font-weight: 560; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .dls-sub { font-size: 10.6px; color: var(--ink-muted); }
+    .dls-name { font-size: 12.4px; font-weight: 600; color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dls-sub { font-size: 10.8px; color: var(--md-on-surface-variant); }
     .dls-acts { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 
     /* =========================================================================
-       Mode 13 & 14: dejavu Link (PC <-> Android Mobile Sync + Incoming Toast)
+       Mode 13 & 14: Material Design 3 dejavu Link (PC <-> Android Sync)
        ========================================================================= */
     .sync-status-pill {
-      padding: 2px 9px; border-radius: 999px;
-      font-size: 10.6px; font-weight: 600;
-      border: 1px solid var(--glass-border);
-      background: rgba(128, 120, 168, 0.14);
-      color: var(--ink-muted);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 152px;
+      padding: 2.5px 9px;
+      border-radius: var(--md-shape-full);
+      font-size: 10.6px;
+      font-weight: 600;
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface-variant);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 152px;
     }
+
     .sync-status-pill.connected {
-      border-color: rgba(94, 234, 212, 0.45);
-      background: rgba(20, 184, 166, 0.16);
-      color: #5eead4;
+      background: var(--md-tertiary-container);
+      color: var(--md-on-tertiary-container);
     }
-    body.theme-light .sync-status-pill.connected { color: #0f766e; }
+
     .sync-tabs {
-      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px;
-      padding: 3px; border-radius: 11px;
-      background: rgba(0, 0, 0, 0.24); border: 1px solid var(--glass-border);
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 3px;
+      padding: 3px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-surface-container);
+      border: 1px solid var(--md-outline-variant);
       flex-shrink: 0;
     }
-    body.theme-light .sync-tabs { background: rgba(24, 18, 52, 0.06); }
+
     .sync-tab {
-      height: 27px; border-radius: 8px; border: 1px solid transparent; outline: none;
-      background: transparent; color: var(--ink-muted); font-family: inherit;
-      font-size: 11.6px; font-weight: 560; cursor: pointer;
-    }
-    .sync-tab.active {
-      background: rgba(255, 255, 255, 0.13); border-color: var(--accent);
-      color: var(--ink); font-weight: 640;
-    }
-    body.theme-light .sync-tab.active { background: #ffffff; color: #120f24; }
-    .sync-quick-bar {
-      display: flex; gap: 6px; flex-shrink: 0;
-    }
-    .sync-send-tab-btn {
-      flex: 1; height: 34px; padding: 0 12px; border-radius: 11px;
-      border: 1px solid var(--accent-bright); outline: none;
-      background: linear-gradient(135deg, rgba(139, 92, 246, 0.88), rgba(168, 85, 247, 0.88));
-      color: #ffffff; font-family: inherit; font-size: 12px; font-weight: 620;
-      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      height: 28px;
+      border-radius: var(--md-shape-full);
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--md-on-surface-variant);
+      font-family: inherit;
+      font-size: 11.4px;
+      font-weight: 600;
       cursor: pointer;
     }
-    .sync-send-tab-btn:disabled { opacity: 0.42; cursor: default; }
-    .sync-compose {
-      display: flex; gap: 6px; flex-shrink: 0;
+
+    .sync-tab.active {
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
     }
+
+    .sync-quick-bar { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .sync-send-tab-btn {
+      flex: 1;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: var(--md-shape-full);
+      border: none;
+      outline: none;
+      background: var(--md-primary);
+      color: var(--md-on-primary);
+      font-family: inherit;
+      font-size: 12.2px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      cursor: pointer;
+      transition: filter var(--md-dur-short) ease;
+    }
+
+    .sync-send-tab-btn:hover:not(:disabled) { filter: brightness(1.06); }
+    .sync-send-tab-btn:disabled { opacity: 0.40; cursor: default; }
+
+    .sync-compose { display: flex; gap: 6px; flex-shrink: 0; }
+
     .sync-compose input {
-      flex: 1; min-width: 0; height: 33px; padding: 0 11px; border-radius: 10px;
-      border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.24);
-      color: var(--ink); font-family: inherit; font-size: 12px; outline: none; user-select: text;
+      flex: 1;
+      min-width: 0;
+      height: 34px;
+      padding: 0 13px;
+      border-radius: var(--md-shape-full);
+      border: 1.5px solid var(--md-outline-variant);
+      background: var(--md-surface-container);
+      color: var(--md-on-surface);
+      font-family: inherit;
+      font-size: 12.2px;
+      outline: none;
+      user-select: text;
     }
-    body.theme-light .sync-compose input { background: rgba(24, 18, 52, 0.05); }
-    .sync-compose input:focus { border-color: var(--accent); }
+
+    .sync-compose input:focus { border-color: var(--md-primary); }
+
     .sync-drop-card {
-      padding: 9px 11px; border-radius: 12px;
-      background: rgba(128, 120, 168, 0.10);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex; flex-direction: column; gap: 5px;
-      flex-shrink: 0; contain: layout style;
+      padding: 10px 12px;
+      border-radius: var(--md-shape-md);
+      background: var(--md-surface-container);
+      border: 1px solid var(--md-outline-variant);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex-shrink: 0;
+      contain: layout style;
     }
-    body.theme-light .sync-drop-card { background: rgba(24, 18, 52, 0.045); border-color: rgba(24, 18, 52, 0.08); }
+
     .sync-drop-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-    .sync-drop-from { font-size: 10.4px; font-weight: 600; color: var(--accent-bright); text-transform: uppercase; letter-spacing: 0.04em; }
-    .sync-drop-title { font-size: 12.4px; font-weight: 580; color: var(--ink); word-break: break-word; }
-    .sync-drop-body { font-size: 11.4px; color: var(--ink-muted); word-break: break-word; max-height: 54px; overflow: hidden; }
+    .sync-drop-from { font-size: 10.4px; font-weight: 700; color: var(--md-primary); text-transform: uppercase; letter-spacing: 0.04em; }
+    .sync-drop-title { font-size: 12.4px; font-weight: 600; color: var(--md-on-surface); word-break: break-word; }
+    .sync-drop-body { font-size: 11.4px; color: var(--md-on-surface-variant); word-break: break-word; max-height: 54px; overflow: hidden; }
     .sync-drop-acts { display: flex; gap: 6px; margin-top: 2px; }
+
     .sync-pair-card {
-      padding: 13px; border-radius: 14px;
-      background: rgba(128, 120, 168, 0.10);
-      border: 1px solid var(--glass-border);
-      display: flex; flex-direction: column; align-items: center; gap: 9px;
+      padding: 14px;
+      border-radius: var(--md-shape-lg);
+      background: var(--md-surface-container);
+      border: 1px solid var(--md-outline-variant);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
       text-align: center;
     }
+
     .sync-qr-frame {
-      padding: 9px; border-radius: 14px; background: #ffffff;
-      display: inline-flex; align-items: center; justify-content: center;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+      padding: 10px;
+      border-radius: var(--md-shape-lg);
+      background: #ffffff;
+      border: 1px solid var(--md-outline-variant);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
+
     .sync-code-box {
       font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-      font-size: 17px; font-weight: 700; letter-spacing: 0.11em;
-      padding: 7px 14px; border-radius: 10px;
-      background: rgba(0, 0, 0, 0.28); border: 1px solid var(--accent);
-      color: var(--ink); user-select: text;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      padding: 7px 14px;
+      border-radius: var(--md-shape-md);
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+      user-select: text;
     }
-    body.theme-light .sync-code-box { background: rgba(124, 77, 255, 0.09); }
-    .sync-pair-sub { font-size: 11px; color: var(--ink-muted); line-height: 1.4; }
+
+    .sync-pair-sub { font-size: 11.2px; color: var(--md-on-surface-variant); line-height: 1.45; }
     .sync-pair-row { display: flex; gap: 6px; width: 100%; }
+
     .sync-pair-row input {
-      flex: 1; min-width: 0; height: 31px; padding: 0 10px; border-radius: 9px;
-      border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.25);
-      color: var(--ink); font-family: ui-monospace, Consolas, monospace; font-size: 12px;
-      text-transform: uppercase; outline: none; user-select: text;
+      flex: 1;
+      min-width: 0;
+      height: 34px;
+      padding: 0 12px;
+      border-radius: var(--md-shape-full);
+      border: 1.5px solid var(--md-outline-variant);
+      background: var(--md-surface-container);
+      color: var(--md-on-surface);
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 12px;
+      text-transform: uppercase;
+      outline: none;
+      user-select: text;
     }
-    body.theme-light .sync-pair-row input { background: rgba(24, 18, 52, 0.05); }
-    .sync-toast-box {
-      width: 100%; height: 100%; padding: 13px 15px;
-      display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
-    }
+
+    .sync-pair-row input:focus { border-color: var(--md-primary); }
   </style>
 </head>
 <body class="theme-dark">
-  <canvas id="glass-backdrop-canvas" aria-hidden="true"></canvas>
-
-  <!-- Mode 1: Ad-Shield Popover -->
+  <!-- Mode 1: Ad Blocker Popover -->
   <div id="mode-shield" class="overlay-shell hidden">
     <div class="shield-box">
       <div class="popover-head">
@@ -1217,10 +1274,10 @@
     </div>
   </div>
 
-  <!-- Mode 2: Find-in-Page Pill -->
+  <!-- Mode 2: Find-in-Page Bar -->
   <div id="mode-find" class="overlay-shell hidden">
     <div class="find-box">
-      <input id="find-q" type="text" placeholder="Find on page..." spellcheck="false" autocomplete="off">
+      <input id="find-q" type="text" placeholder="Find on page…" spellcheck="false" autocomplete="off">
       <button id="f-prev" class="icon-btn sm" title="Previous">
         <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 9.8L8 6.2l3.5 3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
@@ -1233,7 +1290,7 @@
     </div>
   </div>
 
-  <!-- Mode 3: Download Progress Toast -->
+  <!-- Mode 3: Download Progress HUD Toast -->
   <div id="mode-download" class="overlay-shell hidden">
     <div class="dl-box">
       <div class="dl-head">
@@ -1244,7 +1301,7 @@
       </div>
       <div class="dl-bar-track"><div id="dl-fill" class="dl-bar-fill"></div></div>
       <div class="dl-foot">
-        <span id="dl-status" class="dl-status">Starting...</span>
+        <span id="dl-status" class="dl-status">Starting…</span>
         <div id="dl-acts" class="dl-actions hidden">
           <button id="dl-open" class="dl-act-btn">Open</button>
           <button id="dl-reveal" class="dl-act-btn">Folder</button>
@@ -1253,9 +1310,8 @@
     </div>
   </div>
 
-  <!-- Mode 4: Butterfly Profile Hub + 16-Avatar Editor + Auto-Updater -->
+  <!-- Mode 4: Profiles & Updates Hub -->
   <div id="mode-profiles" class="overlay-shell hidden">
-    <!-- List View -->
     <div id="prof-view-list" class="panel-box">
       <div class="panel-head">
         <div class="panel-title">Profiles</div>
@@ -1268,15 +1324,14 @@
       <div id="other-prof-list" class="panel-scroll"></div>
 
       <div class="prof-footer">
-        <div id="prof-ver-text" class="ver-info">dejavu v3.1.0</div>
+        <div id="prof-ver-text" class="ver-info">dejavu v4.3.0</div>
         <div style="display:flex;align-items:center;gap:6px;">
-          <button id="btn-prof-settings" class="pill-btn" title="Browser Settings (Ctrl+,)">Options</button>
+          <button id="btn-prof-settings" class="pill-btn" title="Browser Settings (Ctrl+,)">Settings</button>
           <button id="btn-update-action" class="pill-btn">Check updates</button>
         </div>
       </div>
     </div>
 
-    <!-- Create / Edit Profile + Butterfly Avatar Picker -->
     <div id="prof-view-editor" class="panel-box hidden">
       <div class="panel-head">
         <div id="editor-heading" class="panel-title">Set Up Profile</div>
@@ -1288,7 +1343,7 @@
         <input id="editor-name-input" class="editor-input" type="text" maxlength="28" placeholder="Profile name (e.g. Work, Gaming)">
       </div>
 
-      <div class="section-label">Choose your butterfly (16 styles)</div>
+      <div class="section-label">Choose profile emblem (16 styles)</div>
       <div class="panel-scroll">
         <div id="avatar-picker-grid" class="avatar-grid"></div>
       </div>
@@ -1300,7 +1355,7 @@
     </div>
   </div>
 
-  <!-- Mode 5: Browsing History Panel -->
+  <!-- Mode 5: Browsing History Popover -->
   <div id="mode-history" class="overlay-shell hidden">
     <div class="panel-box">
       <div class="panel-head">
@@ -1315,12 +1370,12 @@
           </button>
         </div>
       </div>
-      <input id="hist-search-input" class="hist-search" type="text" placeholder="Search history..." spellcheck="false" autocomplete="off">
+      <input id="hist-search-input" class="hist-search" type="text" placeholder="Search history…" spellcheck="false" autocomplete="off">
       <div id="hist-list" class="panel-scroll"></div>
     </div>
   </div>
 
-  <!-- Mode 6: Automatic Update Ready Floating Toast -->
+  <!-- Mode 6: Automatic Update Ready Toast -->
   <div id="mode-update" class="overlay-shell hidden">
     <div class="upd-box">
       <div class="upd-top">
@@ -1337,13 +1392,15 @@
     </div>
   </div>
 
-  <!-- Mode 7: Safari Butterfly VPN Control Center -->
+  <!-- Mode 7: Material Design 3 86-Country Global VPN Popover -->
   <div id="mode-vpn" class="overlay-shell hidden">
     <div class="panel-box vpn-panel-box">
       <div class="panel-head">
         <div class="panel-title">
-          <svg class="vpn-title-ico" viewBox="0 0 18 18" fill="none">
-            <path d="M9 9C7.4 5.4 3.5 4.2 2.7 6.8c-.6 2 1.2 3.5 3.4 3.3C4.4 11.4 3.9 13.7 5.6 14.3 7.2 14.9 8.6 12.6 9 10.6c.4 2 1.8 4.3 3.4 3.7 1.7-.6 1.2-2.9-.5-4.2 2.2.2 4-1.3 3.4-3.3C14.5 4.2 10.6 5.4 9 9z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/>
+          <svg class="vpn-title-ico" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
+            <ellipse cx="10" cy="10" rx="3.2" ry="7" stroke="currentColor" stroke-width="1.35"/>
+            <path d="M3.4 7.8h13.2M3.4 12.2h13.2" stroke="currentColor" stroke-width="1.25" opacity="0.78"/>
           </svg>
           <span>dejavu VPN</span>
           <span id="vpn-state-badge" class="vpn-badge-live">Off</span>
@@ -1416,17 +1473,17 @@
           <span class="vpn-auto-label">Auto-connect on startup</span>
           <button id="btn-vpn-autoconnect" class="liquid-switch sm" role="switch" title="Automatically connect VPN when dejavu starts"><span class="switch-knob"></span></button>
         </div>
-        <div id="vpn-protocol-note" class="vpn-foot-note">3-Hop Encrypted · Remote DNS &amp; WebRTC shield</div>
+        <div id="vpn-protocol-note" class="vpn-foot-note">Smart TLS Tunnel · Clean IP · WebRTC shield</div>
       </div>
     </div>
   </div>
 
-  <!-- Mode 8: Safari Grouped Floating Omnibox Autocomplete Suggestions -->
+  <!-- Mode 8: Floating Omnibox Autocomplete Dropdown -->
   <div id="mode-suggest" class="overlay-shell hidden">
     <div id="suggest-list" class="suggest-box"></div>
   </div>
 
-  <!-- Mode 9: Floating macOS Tahoe Liquid Glass Safari Sidebar -->
+  <!-- Mode 9: Material Design 3 Side Panel -->
   <div id="mode-sidebar" class="overlay-shell hidden">
     <div class="sb-box">
       <div class="sb-head">
@@ -1434,16 +1491,15 @@
           <span id="sb-prof-avatar"></span>
           <div style="min-width:0;">
             <div id="sb-prof-name" class="sb-prof-name">Personal</div>
-            <div class="sb-prof-sub">Safari Butterfly Sidebar</div>
+            <div class="sb-prof-sub">dejavu Side Panel</div>
           </div>
         </div>
-        <button id="btn-sb-close" class="icon-btn sm" title="Hide Sidebar (Ctrl+Shift+L)">
+        <button id="btn-sb-close" class="icon-btn sm" title="Hide Side Panel (Ctrl+Shift+L)">
           <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         </button>
       </div>
 
       <div class="sb-scroll">
-        <!-- Tab Groups -->
         <div class="sb-sec">
           <div class="sb-sec-head">
             <span class="sb-sec-title">Tab Groups</span>
@@ -1453,11 +1509,11 @@
             <input id="sb-new-group-input" type="text" maxlength="24" placeholder="Group name (e.g. Work, Research)">
             <div class="sb-swatches-row">
               <div class="sb-swatches" id="sb-swatches">
-                <button type="button" class="sb-swatch sel" data-col="#b688ff" style="background:#b688ff"></button>
-                <button type="button" class="sb-swatch" data-col="#38bdf8" style="background:#38bdf8"></button>
-                <button type="button" class="sb-swatch" data-col="#34d399" style="background:#34d399"></button>
-                <button type="button" class="sb-swatch" data-col="#f472b6" style="background:#f472b6"></button>
-                <button type="button" class="sb-swatch" data-col="#fb923c" style="background:#fb923c"></button>
+                <button type="button" class="sb-swatch sel" data-col="#d0bcff" style="background:#d0bcff"></button>
+                <button type="button" class="sb-swatch" data-col="#a8c7fa" style="background:#a8c7fa"></button>
+                <button type="button" class="sb-swatch" data-col="#82d5c4" style="background:#82d5c4"></button>
+                <button type="button" class="sb-swatch" data-col="#ffb0cc" style="background:#ffb0cc"></button>
+                <button type="button" class="sb-swatch" data-col="#f6bd60" style="background:#f6bd60"></button>
               </div>
               <button id="btn-sb-create-group" class="sb-mini-pill" type="button">Create</button>
             </div>
@@ -1465,23 +1521,16 @@
           <div id="sb-groups-list"></div>
         </div>
 
-        <!-- Open Tabs -->
         <div class="sb-sec">
-          <div class="sb-sec-head">
-            <span class="sb-sec-title">Open Tabs</span>
-          </div>
+          <div class="sb-sec-head"><span class="sb-sec-title">Open Tabs</span></div>
           <div id="sb-tabs-list"></div>
         </div>
 
-        <!-- Favorites -->
         <div class="sb-sec">
-          <div class="sb-sec-head">
-            <span class="sb-sec-title">Favorites</span>
-          </div>
+          <div class="sb-sec-head"><span class="sb-sec-title">Quick Access</span></div>
           <div id="sb-favs-list"></div>
         </div>
 
-        <!-- Reading List -->
         <div class="sb-sec">
           <div class="sb-sec-head">
             <span class="sb-sec-title">Reading List</span>
@@ -1490,18 +1539,15 @@
           <div id="sb-reading-list"></div>
         </div>
 
-        <!-- Recent History -->
         <div class="sb-sec">
-          <div class="sb-sec-head">
-            <span class="sb-sec-title">Recent History</span>
-          </div>
+          <div class="sb-sec-head"><span class="sb-sec-title">Recent History</span></div>
           <div id="sb-hist-list"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Mode 10: Authentic macOS Safari Share Sheet -->
+  <!-- Mode 10: Material Design 3 Share / Page Actions Menu -->
   <div id="mode-share" class="overlay-shell hidden">
     <div class="share-box">
       <div class="share-head">
@@ -1523,7 +1569,7 @@
         </button>
         <button id="sh-fav" class="share-item" type="button">
           <svg viewBox="0 0 16 16" fill="none"><path d="M8 2.2l1.8 3.6 4 .6-2.9 2.8.7 4L8 11.3l-3.6 1.9.7-4-2.9-2.8 4-.6L8 2.2z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/></svg>
-          <span id="sh-fav-lbl">Add to Favorites</span>
+          <span id="sh-fav-lbl">Add to Quick Access</span>
         </button>
         <button id="sh-reading" class="share-item" type="button">
           <svg viewBox="0 0 16 16" fill="none"><circle cx="5.2" cy="8.4" r="2.4" stroke="currentColor" stroke-width="1.35"/><circle cx="10.8" cy="8.4" r="2.4" stroke="currentColor" stroke-width="1.35"/><path d="M7.6 8.4h.8" stroke="currentColor" stroke-width="1.35"/></svg>
@@ -1550,13 +1596,13 @@
     </div>
   </div>
 
-  <!-- Mode 11: Material Design 3 Quick Downloads Popover + 8x Turbo Manager Launcher -->
+  <!-- Mode 11: Material Design 3 Quick Downloads Popover -->
   <div id="mode-downloads" class="overlay-shell hidden">
     <div class="panel-box">
       <div class="panel-head">
         <div class="panel-title">Downloads</div>
         <div style="display:flex;align-items:center;gap:5px;">
-          <button id="btn-dls-media" class="pill-btn" type="button" title="Sniff videos, audio &amp; files from current page">Grab Media</button>
+          <button id="btn-dls-media" class="pill-btn" type="button" title="Sniff videos, HLS streams &amp; files from current page">Grab Media</button>
           <button id="btn-dls-manager" class="pill-btn primary" type="button" title="Open Full 8x Turbo Download Manager (Ctrl+J)">8x Manager</button>
           <button id="btn-dls-clear" class="pill-btn hidden" type="button">Clear</button>
           <button id="btn-dls-close" class="icon-btn sm" title="Close">
@@ -1568,7 +1614,7 @@
     </div>
   </div>
 
-  <!-- Mode 12: Native Floating Safari Right-Click Tab Context Menu (Never clips on webpages!) -->
+  <!-- Mode 12: Material Design 3 Tab Context Menu -->
   <div id="mode-tabmenu" class="overlay-shell hidden">
     <div class="share-box" style="padding:7px;gap:2px;">
       <button type="button" class="share-item" data-tm="pin">
@@ -1592,19 +1638,19 @@
         <svg viewBox="0 0 16 16" fill="none"><rect x="2.5" y="4" width="11" height="8" rx="1.8" stroke="currentColor" stroke-width="1.3"/><path d="M6.4 6.5l3.2 3M9.6 6.5l-3.2 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         <span>Close Other Tabs</span>
       </button>
-      <button type="button" class="share-item" data-tm="close" style="color:#ff94aa;">
+      <button type="button" class="share-item danger" data-tm="close">
         <svg viewBox="0 0 16 16" fill="none"><path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>
         <span>Close Tab</span>
       </button>
     </div>
   </div>
 
-  <!-- Mode 13: dejavu Link (PC <-> Android Mobile Sync Hub) -->
+  <!-- Mode 13: dejavu Link (PC <-> Android Sync Hub) -->
   <div id="mode-sync" class="overlay-shell hidden">
     <div class="panel-box">
       <div class="panel-head">
         <div class="panel-title" style="min-width:0;white-space:nowrap;">
-          <svg viewBox="0 0 18 18" width="16" height="16" fill="none" style="flex-shrink:0;">
+          <svg viewBox="0 0 18 18" width="16" height="16" fill="none" style="flex-shrink:0;color:var(--md-primary);">
             <rect x="2.2" y="4" width="8.6" height="6.8" rx="1.4" stroke="currentColor" stroke-width="1.4"/>
             <path d="M5 13h3.2M6.6 10.8V13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
             <rect x="11.2" y="5.2" width="4.6" height="8.6" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
@@ -1614,7 +1660,7 @@
           <span id="sync-badge" class="sync-status-pill">Ready to Pair</span>
         </div>
         <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
-          <button id="btn-sync-now" class="pill-btn" type="button" style="white-space:nowrap;" title="Sync Open Tabs, Favorites &amp; Reading List">Sync</button>
+          <button id="btn-sync-now" class="pill-btn" type="button" title="Sync Open Tabs, Favorites &amp; Reading List">Sync</button>
           <button id="btn-sync-close" class="icon-btn sm" type="button" title="Close">
             <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           </button>
@@ -1627,7 +1673,6 @@
         <button type="button" class="sync-tab" data-stab="pair">Pair Phone</button>
       </div>
 
-      <!-- Subtab 1: Shared Feed (Tabs, Links, Text Drop) -->
       <div id="sync-pane-feed" style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;">
         <div class="sync-quick-bar">
           <button id="btn-sync-send-tab" class="sync-send-tab-btn" type="button">
@@ -1636,18 +1681,16 @@
           </button>
         </div>
         <div class="sync-compose">
-          <input id="sync-drop-input" type="text" placeholder="Send link or text note to your phone..." autocomplete="off">
+          <input id="sync-drop-input" type="text" placeholder="Send link or text note to your phone…" autocomplete="off">
           <button id="btn-sync-send-drop" class="pill-btn primary" type="button">Send</button>
         </div>
         <div id="sync-feed-list" class="panel-scroll"></div>
       </div>
 
-      <!-- Subtab 2: Remote Mobile Open Tabs -->
       <div id="sync-pane-tabs" class="hidden" style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;">
         <div id="sync-rtabs-list" class="panel-scroll"></div>
       </div>
 
-      <!-- Subtab 3: Pair Phone (QR Code + Pairing Code + Join Code) -->
       <div id="sync-pane-pair" class="hidden" style="display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow-y:auto;">
         <div class="sync-pair-card">
           <div class="sync-qr-frame"><canvas id="sync-qr-canvas" width="148" height="148"></canvas></div>
@@ -1691,347 +1734,9 @@
   <script>
     const send = (msg) => { try { window.chrome.webview.postMessage(msg); } catch {} };
 
-    // =========================================================================
-    // One-Shot Pre-Baked Snell's Law Liquid Glass Surface Renderer
-    // Computes exact convex-squircle meniscus refraction (n = 1.52) + Cauchy
-    // RGB chromatic dispersion + smoked obsidian / light porcelain tint +
-    // Schlick Fresnel specular caustic rim ONCE per backdrop load or resize
-    // (~2ms once, then 0.0ms GPU cost during 120fps scrolling).
-    // =========================================================================
-    const glassCanvas = document.getElementById('glass-backdrop-canvas');
-    const glassCtx = glassCanvas.getContext('2d', { alpha: false });
-    const srcOffCanvas = document.createElement('canvas');
-    const srcOffCtx = srcOffCanvas.getContext('2d', { willReadFrequently: true });
-    const refractOffCanvas = document.createElement('canvas');
-    const refractOffCtx = refractOffCanvas.getContext('2d', { willReadFrequently: true });
-
-    const opticalGeomCache = new Map();
-    let backdropImage = null;
-    let currentBackdropSrc = '';
-    let backdropVersion = 0;
-    let backdropLoadSeq = 0;
-    let lastGlassBakeKey = '';
-    let glassBakeRaf = 0;
-    let glassBakeCount = 0;
+    // Pure Material Design 3 CSS surface telemetry (0.0ms canvas/backdrop overhead)
+    window.__overlaySurfaceMeta = { engine: 'material-design-3-css', backdropCanvas: false };
     let currentOverlayMode = '';
-
-    function sdfRoundRect(px, py, hw, hh, cr) {
-      const qx = Math.abs(px - hw) - (hw - cr);
-      const qy = Math.abs(py - hh) - (hh - cr);
-      const mx = qx > 0 ? qx : 0;
-      const my = qy > 0 ? qy : 0;
-      const inside = qx > qy ? qx : qy;
-      return Math.sqrt(mx * mx + my * my) + (inside < 0 ? inside : 0) - cr;
-    }
-
-    function traceRoundedRectPath(ctx, x, y, w, h, r) {
-      const cr = Math.min(r, w * 0.5, h * 0.5);
-      ctx.beginPath();
-      ctx.moveTo(x + cr, y);
-      ctx.arcTo(x + w, y, x + w, y + h, cr);
-      ctx.arcTo(x + w, y + h, x, y + h, cr);
-      ctx.arcTo(x, y + h, x, y, cr);
-      ctx.arcTo(x, y, x + w, y, cr);
-      ctx.closePath();
-    }
-
-    // Unified optical geometry + Schlick Fresnel rim cache (computed ONCE per popup size)
-    function getOpticalGeometry(W, H, R, bezel) {
-      const key = `${W}x${H}_${R}_${bezel}`;
-      if (opticalGeomCache.has(key)) return opticalGeomCache.get(key);
-      if (opticalGeomCache.size > 12) {
-        const oldestKey = opticalGeomCache.keys().next().value;
-        opticalGeomCache.delete(oldestKey);
-      }
-
-      const hw = W * 0.5;
-      const hh = H * 0.5;
-      const cr = Math.min(R, hw, hh);
-      const invHw = 1 / Math.max(hw, 1);
-      const invHh = 1 / Math.max(hh, 1);
-      const invIor = 1 / 1.52;
-      const dome = 0.024;
-      const margin = Math.ceil(bezel) + 2;
-      const eps = 0.65;
-      const inv2Eps = 1 / (2 * eps);
-      const L1x = -0.64, L1y = -0.77;
-      const L2x = 0.62, L2y = 0.78;
-
-      const maxBevel = Math.min(W * H, (W * margin * 2) + (H * margin * 2));
-      const pxX = new Uint16Array(maxBevel);
-      const pxY = new Uint16Array(maxBevel);
-      const pxDx = new Float32Array(maxBevel);
-      const pxDy = new Float32Array(maxBevel);
-      let count = 0;
-
-      const fresCanvas = document.createElement('canvas');
-      fresCanvas.width = W;
-      fresCanvas.height = H;
-      const fresCtx = fresCanvas.getContext('2d');
-      const fresImg = fresCtx.createImageData(W, H);
-      const fData = fresImg.data;
-
-      for (let y = 0; y < H; y++) {
-        const py = y + 0.5;
-        const inVertBand = (y < margin || y >= H - margin);
-        const domeY = -((py - hh) * invHh) * dome;
-        const rowOff = y * W;
-        for (let x = 0; x < W; x++) {
-          if (!inVertBand && x === margin) {
-            x = W - margin - 1;
-            continue;
-          }
-          const px = x + 0.5;
-          const dist = -sdfRoundRect(px, py, hw, hh, cr);
-          if (dist <= 0 || dist >= bezel) continue;
-
-          const gx = (-sdfRoundRect(px + eps, py, hw, hh, cr) + sdfRoundRect(px - eps, py, hw, hh, cr)) * inv2Eps;
-          const gy = (-sdfRoundRect(px, py + eps, hw, hh, cr) + sdfRoundRect(px, py - eps, hw, hh, cr)) * inv2Eps;
-          const gLen = Math.sqrt(gx * gx + gy * gy) || 1;
-          const nx = gx / gLen;
-          const ny = gy / gLen;
-
-          // Convex squircle meniscus elevation h(u) = (1 - (1 - u)^4)^(1/4)
-          const uRaw = dist / bezel;
-          const u = uRaw < 0.015 ? 0.015 : (uRaw > 1 ? 1 : uRaw);
-          const oneMinusU = 1 - u;
-          const om2 = oneMinusU * oneMinusU;
-          const denom = Math.pow(Math.max(1e-5, 1 - om2 * om2), 0.75);
-          const slope = Math.min(3.4, (om2 * oneMinusU) / denom);
-          const thetaI = Math.atan(slope * 1.42);
-
-          // Exact Snell's Law refraction vector (n = 1.52)
-          const sinT = Math.min(0.999, Math.sin(thetaI) * invIor);
-          const bend = Math.tan(thetaI - Math.asin(sinT));
-          const edgeFeather = dist < 0.85 ? dist / 0.85 : 1;
-          const mag = Math.min(0.96, bend * 1.65) * edgeFeather;
-          let dx = -((px - hw) * invHw) * dome + nx * mag;
-          let dy = domeY + ny * mag;
-          if (dx < -1) dx = -1; else if (dx > 1) dx = 1;
-          if (dy < -1) dy = -1; else if (dy > 1) dy = 1;
-
-          if (count < maxBevel) {
-            pxX[count] = x;
-            pxY[count] = y;
-            pxDx[count] = dx;
-            pxDy[count] = dy;
-            count++;
-          }
-
-          // Exact Schlick Fresnel specular caustic rim from outward normal (-nx, -ny)
-          const fresnel = 0.04 + 0.96 * Math.pow(1 - Math.cos(thetaI), 3.6);
-          const dot1 = Math.max(0, -nx * L1x - ny * L1y);
-          const dot2 = Math.max(0, -nx * L2x - ny * L2y);
-          const dd = (dist - 1.05) / 1.25;
-          const rimBand = Math.exp(-(dd * dd));
-          const innerBand = Math.pow(oneMinusU, 3.6) * 0.08;
-          const primaryCaustic = Math.pow(dot1, 1.8) * (rimBand * 0.62 + innerBand * fresnel);
-          const bounceCaustic = Math.pow(dot2, 2.3) * (rimBand * 0.32 + innerBand * fresnel * 0.45);
-          const specAlpha = Math.min(0.62, primaryCaustic + bounceCaustic + rimBand * 0.08);
-
-          const idx = (rowOff + x) * 4;
-          if (bounceCaustic > primaryCaustic * 0.65) {
-            fData[idx] = 216; fData[idx + 1] = 192; fData[idx + 2] = 255;
-          } else {
-            fData[idx] = 255; fData[idx + 1] = 252; fData[idx + 2] = 255;
-          }
-          fData[idx + 3] = (specAlpha * 255 + 0.5) | 0;
-        }
-      }
-
-      fresCtx.putImageData(fresImg, 0, 0);
-      const entry = { count, pxX, pxY, pxDx, pxDy, fresCanvas };
-      opticalGeomCache.set(key, entry);
-      return entry;
-    }
-
-    function bakeSnellRefractedLayer(img, W, H, geom) {
-      const iw = img.naturalWidth || img.width || W;
-      const ih = img.naturalHeight || img.height || H;
-      const coverScale = Math.max(W / iw, H / ih);
-      const dw = iw * coverScale;
-      const dh = ih * coverScale;
-      const dx0 = (W - dw) * 0.5;
-      const dy0 = (H - dh) * 0.5;
-
-      if (srcOffCanvas.width !== W || srcOffCanvas.height !== H) {
-        srcOffCanvas.width = W;
-        srcOffCanvas.height = H;
-      }
-      srcOffCtx.drawImage(img, dx0, dy0, dw, dh);
-      const src = srcOffCtx.getImageData(0, 0, W, H).data;
-
-      if (refractOffCanvas.width !== W || refractOffCanvas.height !== H) {
-        refractOffCanvas.width = W;
-        refractOffCanvas.height = H;
-      }
-      // Subtle convex lens dome across flat interior (fast drawImage path)
-      const domePadX = W * 0.004;
-      const domePadY = H * 0.004;
-      refractOffCtx.drawImage(srcOffCanvas, -domePadX, -domePadY, W + domePadX * 2, H + domePadY * 2);
-
-      // Apply exact Snell's Law (n = 1.52) + Cauchy RGB dispersion across cached bevel pixels (~1.4ms!)
-      const outImg = refractOffCtx.getImageData(0, 0, W, H);
-      const out = outImg.data;
-      const { count, pxX, pxY, pxDx, pxDy } = geom;
-      const shiftBase = 15 * 0.58;
-      const shiftR = shiftBase * 0.89;
-      const shiftG = shiftBase;
-      const shiftB = shiftBase * 1.14;
-      const sat = 1.16;
-      const maxX = W - 1;
-      const maxY = H - 1;
-
-      for (let i = 0; i < count; i++) {
-        const x = pxX[i];
-        const y = pxY[i];
-        const dx = pxDx[i];
-        const dy = pxDy[i];
-
-        let rx = x + dx * shiftR, ry = y + dy * shiftR;
-        if (rx < 0) rx = 0; else if (rx > maxX) rx = maxX;
-        if (ry < 0) ry = 0; else if (ry > maxY) ry = maxY;
-        const rx0 = rx | 0, ry0 = ry | 0;
-        const rx1 = rx0 < maxX ? rx0 + 1 : maxX, ry1 = ry0 < maxY ? ry0 + 1 : maxY;
-        const rfx = rx - rx0, rfy = ry - ry0;
-        const rt = src[(ry0 * W + rx0) * 4] + (src[(ry0 * W + rx1) * 4] - src[(ry0 * W + rx0) * 4]) * rfx;
-        const rb = src[(ry1 * W + rx0) * 4] + (src[(ry1 * W + rx1) * 4] - src[(ry1 * W + rx0) * 4]) * rfx;
-        const r = rt + (rb - rt) * rfy;
-
-        let gxS = x + dx * shiftG, gyS = y + dy * shiftG;
-        if (gxS < 0) gxS = 0; else if (gxS > maxX) gxS = maxX;
-        if (gyS < 0) gyS = 0; else if (gyS > maxY) gyS = maxY;
-        const gx0 = gxS | 0, gy0 = gyS | 0;
-        const gx1 = gx0 < maxX ? gx0 + 1 : maxX, gy1 = gy0 < maxY ? gy0 + 1 : maxY;
-        const gfx = gxS - gx0, gfy = gyS - gy0;
-        const gt = src[(gy0 * W + gx0) * 4 + 1] + (src[(gy0 * W + gx1) * 4 + 1] - src[(gy0 * W + gx0) * 4 + 1]) * gfx;
-        const gb = src[(gy1 * W + gx0) * 4 + 1] + (src[(gy1 * W + gx1) * 4 + 1] - src[(gy1 * W + gx0) * 4 + 1]) * gfx;
-        const g = gt + (gb - gt) * gfy;
-
-        let bx = x + dx * shiftB, by = y + dy * shiftB;
-        if (bx < 0) bx = 0; else if (bx > maxX) bx = maxX;
-        if (by < 0) by = 0; else if (by > maxY) by = maxY;
-        const bx0 = bx | 0, by0 = by | 0;
-        const bx1 = bx0 < maxX ? bx0 + 1 : maxX, by1 = by0 < maxY ? by0 + 1 : maxY;
-        const bfx = bx - bx0, bfy = by - by0;
-        const bt = src[(by0 * W + bx0) * 4 + 2] + (src[(by0 * W + bx1) * 4 + 2] - src[(by0 * W + bx0) * 4 + 2]) * bfx;
-        const bb = src[(by1 * W + bx0) * 4 + 2] + (src[(by1 * W + bx1) * 4 + 2] - src[(by1 * W + bx0) * 4 + 2]) * bfx;
-        const b = bt + (bb - bt) * bfy;
-
-        const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-        const rr = lum + (r - lum) * sat;
-        const gg = lum + (g - lum) * sat;
-        const bb2 = lum + (b - lum) * sat;
-        const idx = (y * W + x) * 4;
-        out[idx] = rr < 0 ? 0 : (rr > 255 ? 255 : (rr + 0.5) | 0);
-        out[idx + 1] = gg < 0 ? 0 : (gg > 255 ? 255 : (gg + 0.5) | 0);
-        out[idx + 2] = bb2 < 0 ? 0 : (bb2 > 255 ? 255 : (bb2 + 0.5) | 0);
-        out[idx + 3] = 255;
-      }
-
-      refractOffCtx.putImageData(outImg, 0, 0);
-      return refractOffCanvas;
-    }
-
-    function bakeGlassBackdropNow() {
-      const W = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);
-      const H = Math.round(window.innerHeight || document.documentElement.clientHeight || 0);
-      if (W < 12 || H < 12) return;
-
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const isLight = document.body.classList.contains('theme-light');
-      const acc = document.documentElement.dataset.accent || 'amethyst';
-      const bakeKey = `${W}x${H}@${dpr.toFixed(2)}|${isLight ? 'L' : 'D'}|${acc}`;
-      if (bakeKey === lastGlassBakeKey) return;
-      lastGlassBakeKey = bakeKey;
-
-      const t0 = performance.now();
-      const targetW = Math.round(W * dpr);
-      const targetH = Math.round(H * dpr);
-      if (glassCanvas.width !== targetW || glassCanvas.height !== targetH) {
-        glassCanvas.width = targetW;
-        glassCanvas.height = targetH;
-      }
-
-      const cs = getComputedStyle(document.body);
-      const surfBg = (cs.getPropertyValue('--md-surface-container-high') || '').trim() || (isLight ? '#efeaf5' : '#262432');
-      const outline = (cs.getPropertyValue('--md-outline-variant') || '').trim() || (isLight ? '#cac4d0' : '#484454');
-      const R = Math.min(18, Math.floor(Math.min(W, H) * 0.45));
-
-      glassCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      glassCtx.fillStyle = surfBg;
-      glassCtx.fillRect(0, 0, W, H);
-
-      glassCtx.save();
-      traceRoundedRectPath(glassCtx, 0.5, 0.5, W - 1, H - 1, Math.max(1, R - 0.5));
-      glassCtx.strokeStyle = outline;
-      glassCtx.lineWidth = 1;
-      glassCtx.stroke();
-      glassCtx.restore();
-
-      glassBakeCount++;
-      window.__glassBackdropMeta = {
-        engine: 'material-you-m3-surface',
-        bakedCount: glassBakeCount,
-        lastBakeMs: Number((performance.now() - t0).toFixed(2)),
-        width: W,
-        height: H,
-        isLight
-      };
-    }
-
-    function scheduleGlassBake() {
-      if (glassBakeRaf) return;
-      glassBakeRaf = requestAnimationFrame(() => {
-        glassBakeRaf = 0;
-        bakeGlassBackdropNow();
-      });
-    }
-
-    function setGlassBackdrop(src) {
-      if (typeof src !== 'string') {
-        scheduleGlassBake();
-        return;
-      }
-      if (src === '') {
-        if (currentBackdropSrc !== '' || backdropImage !== null) {
-          backdropLoadSeq++;
-          currentBackdropSrc = '';
-          backdropImage = null;
-          backdropVersion++;
-        }
-        bakeGlassBackdropNow();
-        return;
-      }
-      if (src === currentBackdropSrc && backdropImage && backdropImage.complete && backdropImage.naturalWidth > 0) {
-        scheduleGlassBake();
-        return;
-      }
-
-      currentBackdropSrc = src;
-      const seq = ++backdropLoadSeq;
-      const img = new Image();
-      img.decoding = 'async';
-      img.onload = () => {
-        if (seq !== backdropLoadSeq) return;
-        backdropImage = img;
-        backdropVersion++;
-        bakeGlassBackdropNow();
-      };
-      img.onerror = () => {
-        if (seq !== backdropLoadSeq) return;
-        backdropImage = null;
-        backdropVersion++;
-        bakeGlassBackdropNow();
-      };
-      img.src = src;
-    }
-
-    window.addEventListener('resize', scheduleGlassBake, { passive: true });
-    if (typeof ResizeObserver !== 'undefined') {
-      new ResizeObserver(scheduleGlassBake).observe(document.documentElement);
-    }
-    scheduleGlassBake();
 
     const modes = {
       shield: document.getElementById('mode-shield'),
@@ -2081,7 +1786,7 @@
     document.getElementById('f-prev').addEventListener('click', () => send({ type: 'findQuery', query: findQ.value, backwards: true }));
     document.getElementById('f-close').addEventListener('click', () => send({ type: 'closeFind' }));
 
-    // Download bindings
+    // Download HUD bindings
     document.getElementById('dl-open').addEventListener('click', () => send({ type: 'openDownload' }));
     document.getElementById('dl-reveal').addEventListener('click', () => send({ type: 'revealDownload' }));
     document.getElementById('dl-dismiss').addEventListener('click', () => send({ type: 'dismissDownload' }));
@@ -2193,7 +1898,7 @@
             <div class="active-prof-name"></div>
             <div class="active-prof-sub">Active profile · Isolated data</div>
           </div>
-          <button id="btn-edit-active" class="pill-btn">Edit</button>
+          <button id="btn-edit-active" class="pill-btn primary">Edit</button>
         `;
         activeProfCard.querySelector('.active-prof-name').textContent = active.name;
         activeProfCard.querySelector('#btn-edit-active').addEventListener('click', () => openProfileEditor(active));
@@ -2202,7 +1907,7 @@
       otherProfList.innerHTML = '';
       otherProfLabel.style.display = others.length ? '' : 'none';
       if (others.length === 0) {
-        otherProfList.innerHTML = `<div class="empty-msg" style="padding:26px 12px;">Add separate profiles for Work, Gaming, or Personal — each gets its own butterfly icon, logins, favorites &amp; history.</div>`;
+        otherProfList.innerHTML = `<div class="empty-msg" style="padding:26px 12px;">Add separate profiles for Work, Gaming, or Personal — each gets its own icon, logins, favorites &amp; history.</div>`;
       } else {
         others.forEach((p) => {
           const row = document.createElement('div');
@@ -2242,7 +1947,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.2.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.3.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -2263,9 +1968,7 @@
     }
 
     function formatTime(ms) {
-      try {
-        return new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      } catch { return ''; }
+      try { return new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch { return ''; }
     }
 
     function getDayBucket(ms) {
@@ -2361,39 +2064,15 @@
 
     window.chrome.webview.addEventListener('message', (ev) => {
       const d = ev.data;
-      if (!d) return;
-
-      // Fast async backdrop-only patch (one-shot Snell's Law pre-bake, zero DOM rebuild!)
-      if (d.mode === 'backdrop') {
-        if (typeof d.backdrop === 'string' && d.backdrop) {
-          setGlassBackdrop(d.backdrop);
-        }
-        return;
-      }
+      if (!d || d.mode === 'backdrop') return;
 
       const wantLight = !!d.isLight;
       if (d.accentColor) {
         document.documentElement.dataset.accent = d.accentColor;
         document.body.dataset.accent = d.accentColor;
       }
-      const wasLight = document.body.classList.contains('theme-light');
-      const themeChanged = wantLight !== wasLight || !document.body.classList.contains(wantLight ? 'theme-light' : 'theme-dark');
-      if (themeChanged) {
-        document.body.classList.toggle('theme-light', wantLight);
-        document.body.classList.toggle('theme-dark', !wantLight);
-      }
-
-      if (typeof d.backdrop === 'string') {
-        if (themeChanged && d.backdrop && d.backdrop !== currentBackdropSrc) {
-          // Immediately paint new polarity base + Fresnel rim while fresh JPEG decodes (~2ms)
-          backdropImage = null;
-          backdropVersion++;
-          bakeGlassBackdropNow();
-        }
-        setGlassBackdrop(d.backdrop);
-      } else if (themeChanged || !lastGlassBakeKey) {
-        scheduleGlassBake();
-      }
+      document.body.classList.toggle('theme-light', wantLight);
+      document.body.classList.toggle('theme-dark', !wantLight);
 
       if (d.mode !== currentOverlayMode) {
         currentOverlayMode = d.mode || '';
@@ -2467,7 +2146,7 @@
     });
 
     // =========================================================================
-    // Mode 7: Safari Butterfly VPN Control Center Logic
+    // Mode 7: Material Design 3 VPN Control Center
     // =========================================================================
     function escapeHtml(s) {
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -2550,7 +2229,6 @@
       if (lastVpnSnap) renderVpnCountries(lastVpnSnap);
     });
 
-    // Single delegated listener for all 46 country rows (zero per-row listener overhead!)
     vpnCountryList.addEventListener('click', (e) => {
       const row = e.target.closest('.vpn-country-row');
       if (!row || !row.dataset.code) return;
@@ -2579,7 +2257,6 @@
       setTextIfChanged(vpnHeroCountry, v.countryName || 'Fastest Location');
       setTextIfChanged(vpnHeroStatus, v.statusText || 'Disconnected · Direct connection');
 
-      // Clear rotating visual once new IP lands or rotation cycle finishes
       if (isBusy && btnVpnRotate.classList.contains('rotating')) {
         wasBusyWhileRotating = true;
       }
@@ -2706,18 +2383,10 @@
     const suggestList = document.getElementById('suggest-list');
 
     function getSuggestIconHtml(item) {
-      if (item.favicon) {
-        return `<img src="${escapeHtml(item.favicon)}" alt="" onerror="this.remove()">`;
-      }
-      if (item.kind === 'favorite') {
-        return '<svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 2l1.9 3.8 4.1.6-3 2.9.7 4.1L8 11.4l-3.7 2 .7-4.1-3-2.9 4.1-.6L8 2z"/></svg>';
-      }
-      if (item.kind === 'history') {
-        return '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 5.2v3l2 1.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
-      }
-      if (item.kind === 'url' || item.kind === 'site') {
-        return '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><ellipse cx="8" cy="8" rx="2.5" ry="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M2.8 8h10.4" stroke="currentColor" stroke-width="1.2"/></svg>';
-      }
+      if (item.favicon) return `<img src="${escapeHtml(item.favicon)}" alt="" onerror="this.remove()">`;
+      if (item.kind === 'favorite') return '<svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 2l1.9 3.8 4.1.6-3 2.9.7 4.1L8 11.4l-3.7 2 .7-4.1-3-2.9 4.1-.6L8 2z"/></svg>';
+      if (item.kind === 'history') return '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 5.2v3l2 1.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+      if (item.kind === 'url' || item.kind === 'site') return '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><ellipse cx="8" cy="8" rx="2.5" ry="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M2.8 8h10.4" stroke="currentColor" stroke-width="1.2"/></svg>';
       return '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="7.2" cy="7.2" r="4.5" stroke="currentColor" stroke-width="1.45"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
     }
 
@@ -2759,7 +2428,7 @@
     }
 
     // =========================================================================
-    // Mode 9: Floating macOS Tahoe Liquid Glass Safari Sidebar
+    // Mode 9: Material Design 3 Side Panel
     // =========================================================================
     const sbProfAvatar = document.getElementById('sb-prof-avatar');
     const sbProfName = document.getElementById('sb-prof-name');
@@ -2774,7 +2443,7 @@
     const sbSwatches = document.getElementById('sb-swatches');
     const btnSbCreateGroup = document.getElementById('btn-sb-create-group');
     const btnSbSaveRl = document.getElementById('btn-sb-save-rl');
-    let sbGroupColor = '#b688ff';
+    let sbGroupColor = '#d0bcff';
 
     document.getElementById('btn-sb-close').addEventListener('click', () => send({ type: 'closePanel' }));
     btnSbAddGroup.addEventListener('click', () => {
@@ -2788,7 +2457,7 @@
     sbSwatches.addEventListener('click', (e) => {
       const sw = e.target.closest('.sb-swatch');
       if (!sw) return;
-      sbGroupColor = sw.dataset.col || '#b688ff';
+      sbGroupColor = sw.dataset.col || '#d0bcff';
       sbSwatches.querySelectorAll('.sb-swatch').forEach((s) => s.classList.toggle('sel', s === sw));
     });
     function submitNewSidebarGroup() {
@@ -2810,17 +2479,16 @@
         sbProfName.textContent = d.profile.name || 'Personal';
       }
 
-      // Tab Groups
       sbGroupsList.innerHTML = '';
       const groups = Array.isArray(d.tabGroups) && d.tabGroups.length
         ? d.tabGroups
-        : [{ id: 'default', name: 'Start Tabs', color: '#b688ff' }];
+        : [{ id: 'default', name: 'Start Tabs', color: '#d0bcff' }];
       groups.forEach((g) => {
         const row = document.createElement('div');
         row.className = 'sb-row' + (g.id === d.activeGroupId ? ' active' : '');
-        const col = g.color || '#b688ff';
+        const col = g.color || '#d0bcff';
         row.innerHTML = `
-          <span class="sb-dot" style="background:${escapeHtml(col)};box-shadow:0 0 0 2px rgba(255,255,255,0.14);"></span>
+          <span class="sb-dot" style="background:${escapeHtml(col)};"></span>
           <span class="sb-label"></span>
           ${g.id !== 'default' ? '<button class="sb-rm" type="button" title="Delete Tab Group">×</button>' : ''}
         `;
@@ -2839,7 +2507,6 @@
         sbGroupsList.appendChild(row);
       });
 
-      // Open Tabs
       sbTabsList.innerHTML = '';
       (d.tabs || []).forEach((t) => {
         const row = document.createElement('div');
@@ -2862,7 +2529,6 @@
         sbTabsList.appendChild(row);
       });
 
-      // Favorites
       sbFavsList.innerHTML = '';
       const favs = d.favorites || [];
       if (!favs.length) {
@@ -2881,7 +2547,6 @@
         });
       }
 
-      // Reading List
       btnSbSaveRl.classList.toggle('hidden', !d.canSaveCurrent);
       btnSbSaveRl.classList.toggle('saved', !!d.isCurrentInReadingList);
       btnSbSaveRl.textContent = d.isCurrentInReadingList ? '✓ Saved' : '+ Save Page';
@@ -2911,7 +2576,6 @@
         });
       }
 
-      // Recent History
       sbHistList.innerHTML = '';
       const hist = d.recentHistory || [];
       if (!hist.length) {
@@ -2932,13 +2596,14 @@
     }
 
     // =========================================================================
-    // Mode 10: Authentic macOS Safari Share Sheet
+    // Mode 10: Material Design 3 Share / Page Actions Menu
     // =========================================================================
     const shareFav = document.getElementById('share-fav');
     const shareTitle = document.getElementById('share-title');
     const shareHost = document.getElementById('share-host');
     const shCopy = document.getElementById('sh-copy');
     const shCopyLbl = document.getElementById('sh-copy-lbl');
+    const shSendMobile = document.getElementById('sh-send-mobile');
     const shFav = document.getElementById('sh-fav');
     const shFavLbl = document.getElementById('sh-fav-lbl');
     const shReading = document.getElementById('sh-reading');
@@ -2958,8 +2623,9 @@
         shCopy.classList.remove('copied');
         shCopyLbl.textContent = 'Copy Link';
         send({ type: 'closePanel' });
-      }, 720);
+      }, 700);
     });
+    if (shSendMobile) shSendMobile.addEventListener('click', () => send({ type: 'shareSendMobile' }));
     shFav.addEventListener('click', () => send({ type: 'shareToggleFavorite' }));
     shReading.addEventListener('click', () => send({ type: 'shareToggleReadingList' }));
     shReader.addEventListener('click', () => send({ type: 'shareToggleReader' }));
@@ -2982,14 +2648,14 @@
       shReading.disabled = isNt;
       shReader.disabled = isNt;
 
-      shFavLbl.textContent = d.isFavorite ? 'Remove from Favorites' : 'Add to Favorites';
+      shFavLbl.textContent = d.isFavorite ? 'Remove from Quick Access' : 'Add to Quick Access';
       shReadingLbl.textContent = d.isReadingList ? 'Remove from Reading List' : 'Add to Reading List';
       shReaderLbl.textContent = d.readerActive ? 'Hide Reader View' : 'Show Reader View';
       shPinLbl.textContent = d.isPinned ? 'Unpin Tab' : 'Pin Tab';
     }
 
     // =========================================================================
-    // Mode 11: Material Design 3 Downloads Popover + 8x Turbo Manager Bridge
+    // Mode 11: Material Design 3 Quick Downloads Popover
     // =========================================================================
     const dlsList = document.getElementById('dls-list');
     const btnDlsClear = document.getElementById('btn-dls-clear');
@@ -3011,7 +2677,7 @@
       dlsList.innerHTML = '';
 
       if (totalCount === 0) {
-        dlsList.innerHTML = '<div class="empty-msg">No downloads yet.<br>Click <strong>8x Manager</strong> to paste any link or <strong>Grab Media</strong> to download videos &amp; files from this page.</div>';
+        dlsList.innerHTML = '<div class="empty-msg">No downloads yet.<br>Click <strong>8x Manager</strong> to paste any URL or <strong>Grab Media</strong> to download videos &amp; HLS streams from this page.</div>';
         return;
       }
 
@@ -3023,9 +2689,12 @@
         const isPaused = it.status === 'paused';
         const pct = Math.min(100, Math.round(it.percent || 0));
         const spd = (isProg && it.speedBps > 0) ? ` · ${formatBytes(it.speedBps)}/s` : '';
+        const isHls = (it.streamType === 'hls' || it.isHls || (it.url && it.url.toLowerCase().includes('.m3u8')));
+        const hlsTag = isHls ? 'HLS · ' : '';
+        const hlsSegs = (isHls && isProg && it.hlsTotalSegments > 0) ? ` (${it.hlsDoneSegments || 0}/${it.hlsTotalSegments} segs)` : '';
         const subText = isDone
-          ? `${it.threads > 1 ? it.threads + 'x · ' : ''}Completed · ${formatBytes(it.totalBytes || it.receivedBytes)}`
-          : (isProg ? `${it.threads || 1}x Turbo · ${pct}%${spd}` : (isPaused ? `Paused · ${pct}%` : (it.status || 'Failed')));
+          ? `${hlsTag}${it.threads > 1 ? it.threads + 'x · ' : ''}Completed · ${formatBytes(it.totalBytes || it.receivedBytes)}`
+          : (isProg ? `${hlsTag}${it.threads || 1}x Turbo · ${pct}%${hlsSegs}${spd}` : (isPaused ? `Paused · ${pct}%` : (it.error || it.status || 'Failed')));
 
         row.innerHTML = `
           <span class="dls-ico">
@@ -3089,10 +2758,8 @@
     }
 
     // =========================================================================
-    // Mode 12: Floating Safari Tab Context Menu
+    // Mode 12: Material Design 3 Tab Context Menu
     // =========================================================================
-    const shSendMobile = document.getElementById('sh-send-mobile');
-    if (shSendMobile) shSendMobile.addEventListener('click', () => send({ type: 'shareSendMobile' }));
     const tmMobileBtn = document.getElementById('tm-mobile-btn');
     const tmPinLbl = document.getElementById('tm-pin-lbl');
     const tmMuteBtn = document.getElementById('tm-mute-btn');
@@ -3112,7 +2779,7 @@
     }
 
     // =========================================================================
-    // Mode 13 & 14: dejavu Link (Cross-Device PC <-> Mobile Sync + QR Encoder)
+    // Mode 13 & 14: dejavu Link (PC <-> Mobile Sync + ISO QR Encoder)
     // =========================================================================
     const syncBadge = document.getElementById('sync-badge');
     const syncSubtabs = document.getElementById('sync-subtabs');
@@ -3209,7 +2876,6 @@
         }
         return r;
       }
-      // [version, size, totalDataCW, ecPerBlock, blocks, alignPos]
       const SPECS = [
         [1, 21, 19, 7, 1, []],
         [2, 25, 34, 10, 1, [6, 18]],
@@ -3275,12 +2941,10 @@
               if (res[row][c]) continue;
               const bit = bi < finalCw.length * 8 ? ((finalCw[bi >> 3] >> (7 - (bi & 7))) & 1) : 0;
               bi++;
-              const masked = ((row + c) % 2 === 0) ? (bit ^ 1) : bit; // Mask 0
-              mod[row][c] = masked;
+              mod[row][c] = ((row + c) % 2 === 0) ? (bit ^ 1) : bit;
             }
           }
         }
-        // Format info for ECC L (01) + Mask 0 (000) -> 0x77c4 (15 bits)
         const fmt = 0x77c4;
         const fpos1 = [[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8]];
         const fpos2 = [[sz-1,8],[sz-2,8],[sz-3,8],[sz-4,8],[sz-5,8],[sz-6,8],[sz-7,8],[8,sz-8],[8,sz-7],[8,sz-6],[8,sz-5],[8,sz-4],[8,sz-3],[8,sz-2],[8,sz-1]];
@@ -3305,7 +2969,7 @@
       const pad = Math.floor((W - cell * qr.sz) / 2);
       qctx.fillStyle = '#ffffff';
       qctx.fillRect(0, 0, W, W);
-      qctx.fillStyle = '#120d26';
+      qctx.fillStyle = '#1d1b20';
       for (let r = 0; r < qr.sz; r++) {
         for (let c = 0; c < qr.sz; c++) {
           if (qr.mod[r][c]) qctx.fillRect(pad + c * cell, pad + r * cell, cell, cell);

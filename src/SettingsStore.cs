@@ -28,7 +28,7 @@ namespace DejavuBrowser
         public bool hidePrivacyReport { get; set; }
         public bool hideReadingList { get; set; }
 
-        // Safari Options & Customization (v3.0.0+)
+        // Browser Options & Customization (v4.3.0)
         public string appearanceMode { get; set; }
         public string accentColor { get; set; }
         public bool showFullWebsiteAddress { get; set; }

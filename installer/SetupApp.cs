@@ -147,7 +147,7 @@ namespace DejavuSetup
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.CenterScreen;
             Size = new Size(560, 480);
-            BackColor = Color.FromArgb(7, 6, 13);
+            BackColor = Color.FromArgb(20, 18, 24);
 
             try
             {
@@ -161,7 +161,7 @@ namespace DejavuSetup
 
             _wv = new WebView2();
             _wv.Dock = DockStyle.Fill;
-            _wv.DefaultBackgroundColor = Color.FromArgb(7, 6, 13);
+            _wv.DefaultBackgroundColor = Color.FromArgb(20, 18, 24);
             Controls.Add(_wv);
 
             Load += OnSetupLoad;
@@ -346,20 +346,20 @@ namespace DejavuSetup
             });
             await Task.Delay(240);
 
-            Post(new Dictionary<string, object> { { "type", "progress" }, { "percent", 78 }, { "status", "Creating butterfly shortcuts..." } });
+            Post(new Dictionary<string, object> { { "type", "progress" }, { "percent", 78 }, { "status", "Creating desktop shortcuts..." } });
             await Task.Run(() =>
             {
                 if (createDesktop)
                 {
                     string desk = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "dejavu.lnk");
-                    CreateShortcut(desk, InstalledExe, iconPath, "dejavu — Liquid Glass Browser");
+                    CreateShortcut(desk, InstalledExe, iconPath, "dejavu — Material Design 3 Browser");
                 }
                 if (createStartMenu)
                 {
                     string sm = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.Programs),
                         "dejavu.lnk");
-                    CreateShortcut(sm, InstalledExe, iconPath, "dejavu — Liquid Glass Browser");
+                    CreateShortcut(sm, InstalledExe, iconPath, "dejavu — Material Design 3 Browser");
                 }
 
                 // Register cleanly in Windows Settings -> Installed Apps (HKCU, no admin required)
@@ -368,7 +368,7 @@ namespace DejavuSetup
                     if (key != null)
                     {
                         key.SetValue("DisplayName", "dejavu");
-                        key.SetValue("DisplayVersion", "4.2.0");
+                        key.SetValue("DisplayVersion", "4.3.0");
                         key.SetValue("Publisher", "dejavu");
                         key.SetValue("DisplayIcon", iconPath);
                         key.SetValue("InstallLocation", InstallDir);

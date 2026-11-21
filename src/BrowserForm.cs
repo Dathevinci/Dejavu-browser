@@ -1349,14 +1349,15 @@ namespace DejavuBrowser
                 { "vpnMode", _settings.vpnMode ?? "smart" },
                 { "vpnCountry", _settings.vpnCountry ?? "AUTO" },
 
-                // v5.3.0 Appearance & Start Page
+                // v5.4.0 Appearance & Start Page
                 { "fontSize", _settings.fontSize ?? "medium" },
                 { "fontFamily", _settings.fontFamily ?? "system" },
                 { "showHomeButton", _settings.showHomeButton },
                 { "smoothScrolling", _settings.smoothScrolling },
                 { "showMotd", _settings.showMotd },
+                { "autoThemeFromWallpaper", _settings.autoThemeFromWallpaper },
 
-                // v5.3.0 Brave-Grade Shields & Privacy & Security
+                // v5.4.0 Brave-Grade Shields & Privacy & Security
                 { "shieldLevel", _adBlocker.ShieldLevel },
                 { "blockFingerprinting", _adBlocker.BlockFingerprinting },
                 { "blockCookieNotices", _adBlocker.BlockCookieNotices },
@@ -1374,29 +1375,29 @@ namespace DejavuBrowser
                 { "permClipboard", _settings.permClipboard ?? "ask" },
                 { "permAutoplay", _settings.permAutoplay ?? "allow" },
 
-                // v5.3.0 Search
+                // v5.4.0 Search
                 { "customSearchUrl", _settings.customSearchUrl ?? "" },
                 { "addressBarSuggestions", _settings.addressBarSuggestions },
 
-                // v5.3.0 Tabs & Performance
+                // v5.4.0 Tabs & Performance
                 { "memorySaverEnabled", _settings.memorySaverEnabled },
                 { "memorySaverMinutes", _settings.memorySaverMinutes > 0 ? _settings.memorySaverMinutes : 30 },
                 { "confirmCloseMultipleTabs", _settings.confirmCloseMultipleTabs },
                 { "tabHoverPreview", _settings.tabHoverPreview },
 
-                // v5.3.0 Downloads
+                // v5.4.0 Downloads
                 { "downloadFolder", _settings.downloadFolder ?? "" },
                 { "askDownloadLocation", _settings.askDownloadLocation },
                 { "turboThreads", _settings.turboThreads > 0 ? _settings.turboThreads : 8 },
                 { "defaultVideoQuality", _settings.defaultVideoQuality ?? "best" },
                 { "autoOpenDownloads", _settings.autoOpenDownloads },
 
-                // v5.3.0 Passwords & Autofill
+                // v5.4.0 Passwords & Autofill
                 { "savePasswords", _settings.savePasswords },
                 { "autofillAddresses", _settings.autofillAddresses },
                 { "autofillPayments", _settings.autofillPayments },
 
-                // v5.3.0 VPN & System
+                // v5.4.0 VPN & System
                 { "vpnWebRtcProtection", _settings.vpnWebRtcProtection },
                 { "hardwareAcceleration", _settings.hardwareAcceleration },
                 { "spellcheckEnabled", _settings.spellcheckEnabled },
@@ -1604,23 +1605,153 @@ namespace DejavuBrowser
         private Color GetThemeSurfaceColor()
         {
             bool isLightTheme = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
-            string ac = (_settings != null && !string.IsNullOrEmpty(_settings.accentColor)) ? _settings.accentColor : "amethyst";
+            string ac = SettingsStore.NormalizeAccent(_settings != null ? _settings.accentColor : "amethyst");
             if (isLightTheme)
             {
-                if (ac == "sapphire") return Color.FromArgb(249, 249, 255);
+                if (ac == "sapphire") return Color.FromArgb(250, 249, 255);
+                if (ac == "indigo") return Color.FromArgb(251, 248, 255);
                 if (ac == "aurora") return Color.FromArgb(244, 251, 248);
-                if (ac == "rose") return Color.FromArgb(255, 248, 249);
-                if (ac == "gold") return Color.FromArgb(255, 249, 242);
+                if (ac == "emerald") return Color.FromArgb(245, 251, 245);
+                if (ac == "lime") return Color.FromArgb(250, 250, 240);
+                if (ac == "gold") return Color.FromArgb(255, 248, 242);
+                if (ac == "coral") return Color.FromArgb(255, 248, 246);
+                if (ac == "crimson") return Color.FromArgb(255, 248, 247);
+                if (ac == "rose") return Color.FromArgb(255, 248, 248);
+                if (ac == "lavender") return Color.FromArgb(253, 247, 255);
                 if (ac == "silver") return Color.FromArgb(249, 249, 252);
                 return Color.FromArgb(254, 247, 255);
             }
             if (_isPrivateWindow) return Color.FromArgb(19, 19, 26);
             if (ac == "sapphire") return Color.FromArgb(17, 19, 24);
+            if (ac == "indigo") return Color.FromArgb(18, 19, 27);
             if (ac == "aurora") return Color.FromArgb(15, 21, 19);
-            if (ac == "rose") return Color.FromArgb(23, 18, 21);
-            if (ac == "gold") return Color.FromArgb(22, 19, 14);
+            if (ac == "emerald") return Color.FromArgb(16, 21, 17);
+            if (ac == "lime") return Color.FromArgb(20, 21, 14);
+            if (ac == "gold") return Color.FromArgb(23, 19, 13);
+            if (ac == "coral") return Color.FromArgb(25, 18, 16);
+            if (ac == "crimson") return Color.FromArgb(26, 17, 18);
+            if (ac == "rose") return Color.FromArgb(24, 17, 20);
+            if (ac == "lavender") return Color.FromArgb(22, 18, 25);
             if (ac == "silver") return Color.FromArgb(18, 19, 22);
             return Color.FromArgb(20, 18, 24);
+        }
+
+        private int GetToolbarPopoverTopPx(float sc)
+        {
+            int topOffset = (_settings != null && _settings.compactTabBar) ? 84 : 90;
+            return (int)Math.Round(topOffset * sc);
+        }
+
+        private static bool TryGetWallpaperTheme(string id, out string accent, out string mode)
+        {
+            accent = null;
+            mode = null;
+            if (string.IsNullOrEmpty(id)) return false;
+            string key = id.Trim().ToLowerInvariant();
+            if (key.StartsWith("art:", StringComparison.Ordinal))
+            {
+                key = key.Substring(4);
+            }
+            switch (key)
+            {
+                // 16 existing Pure Material Design 3 & Butterfly wallpapers
+                case "wp-m3-amethyst.jpg": accent = "amethyst"; mode = "dark"; return true;
+                case "wp-m3-pixel-blue.jpg": accent = "sapphire"; mode = "dark"; return true;
+                case "wp-m3-sage.jpg": accent = "aurora"; mode = "dark"; return true;
+                case "wp-m3-blossom.jpg": accent = "rose"; mode = "dark"; return true;
+                case "wp-m3-honey.jpg": accent = "gold"; mode = "dark"; return true;
+                case "wp-m3-indigo-dune.jpg": accent = "indigo"; mode = "dark"; return true;
+                case "wp-m3-sienna-arch.jpg": accent = "gold"; mode = "dark"; return true;
+                case "wp-m3-porcelain.jpg": accent = "amethyst"; mode = "light"; return true;
+                case "wp-m3-meadow.jpg": accent = "aurora"; mode = "light"; return true;
+                case "wp-m3-blush.jpg": accent = "rose"; mode = "light"; return true;
+                case "wp-m3-sky-terrace.jpg": accent = "sapphire"; mode = "light"; return true;
+                case "wp-m3-warm-limestone.jpg": accent = "gold"; mode = "light"; return true;
+                case "wp-m3-butterfly-obsidian.jpg": accent = "amethyst"; mode = "dark"; return true;
+                case "wp-m3-butterfly-cobalt.jpg": accent = "sapphire"; mode = "dark"; return true;
+                case "wp-m3-butterfly-porcelain.jpg": accent = "amethyst"; mode = "light"; return true;
+                case "wp-m3-butterfly-sage.jpg": accent = "aurora"; mode = "light"; return true;
+                // 8 new v5.4.0 Pure Material Design 3 & Butterfly wallpapers
+                case "wp-m3-crimson-fold.jpg": accent = "crimson"; mode = "dark"; return true;
+                case "wp-m3-jade-terrace.jpg": accent = "emerald"; mode = "dark"; return true;
+                case "wp-m3-cobalt-prism.jpg": accent = "indigo"; mode = "dark"; return true;
+                case "wp-m3-coral-bloom.jpg": accent = "coral"; mode = "light"; return true;
+                case "wp-m3-lavender-mist.jpg": accent = "lavender"; mode = "light"; return true;
+                case "wp-m3-mint-atelier.jpg": accent = "aurora"; mode = "light"; return true;
+                case "wp-m3-butterfly-coral.jpg": accent = "coral"; mode = "light"; return true;
+                case "wp-m3-butterfly-emerald.jpg": accent = "emerald"; mode = "dark"; return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool TrySampleCustomWallpaperTheme(string imagePath, out string accent, out string mode)
+        {
+            accent = null;
+            mode = null;
+            if (string.IsNullOrEmpty(imagePath) || !File.Exists(imagePath)) return false;
+            try
+            {
+                using (Image src = Image.FromFile(imagePath))
+                using (Bitmap small = new Bitmap(16, 16))
+                {
+                    using (Graphics g = Graphics.FromImage(small))
+                    {
+                        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
+                        g.DrawImage(src, 0, 0, 16, 16);
+                    }
+                    double sumR = 0.0, sumG = 0.0, sumB = 0.0, sumLum = 0.0;
+                    double wSumR = 0.0, wSumG = 0.0, wSumB = 0.0, wTotal = 0.0;
+                    for (int y = 0; y < 16; y++)
+                    {
+                        for (int x = 0; x < 16; x++)
+                        {
+                            Color px = small.GetPixel(x, y);
+                            sumR += px.R;
+                            sumG += px.G;
+                            sumB += px.B;
+                            sumLum += (0.2126 * px.R + 0.7152 * px.G + 0.0722 * px.B) / 255.0;
+                            float sat = px.GetSaturation();
+                            double weight = 0.2 + sat * 2.5;
+                            wSumR += px.R * weight;
+                            wSumG += px.G * weight;
+                            wSumB += px.B * weight;
+                            wTotal += weight;
+                        }
+                    }
+                    double avgLum = sumLum / 256.0;
+                    mode = (avgLum >= 0.56) ? "light" : "dark";
+                    int r = (int)Math.Round(wTotal > 0.0 ? (wSumR / wTotal) : (sumR / 256.0));
+                    int gVal = (int)Math.Round(wTotal > 0.0 ? (wSumG / wTotal) : (sumG / 256.0));
+                    int b = (int)Math.Round(wTotal > 0.0 ? (wSumB / wTotal) : (sumB / 256.0));
+                    Color dom = Color.FromArgb(
+                        Math.Max(0, Math.Min(255, r)),
+                        Math.Max(0, Math.Min(255, gVal)),
+                        Math.Max(0, Math.Min(255, b)));
+                    float domSat = dom.GetSaturation();
+                    float hue = dom.GetHue();
+                    if (domSat < 0.11f)
+                    {
+                        accent = "silver";
+                    }
+                    else if (hue < 14f || hue >= 346f) accent = "crimson";
+                    else if (hue < 32f) accent = "coral";
+                    else if (hue < 60f) accent = "gold";
+                    else if (hue < 102f) accent = "lime";
+                    else if (hue < 152f) accent = "emerald";
+                    else if (hue < 194f) accent = "aurora";
+                    else if (hue < 226f) accent = "sapphire";
+                    else if (hue < 258f) accent = "indigo";
+                    else if (hue < 284f) accent = "amethyst";
+                    else if (hue < 316f) accent = "lavender";
+                    else accent = "rose";
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private void ApplyThemeToAllTabs()
@@ -1639,6 +1770,18 @@ namespace DejavuBrowser
                     if (_shellView.DefaultBackgroundColor != surface) _shellView.DefaultBackgroundColor = surface;
                 }
                 catch { }
+            }
+            if (_popoverPopup != null && !_popoverPopup.IsDisposed)
+            {
+                try { _popoverPopup.UpdateSurfaceTheme(isLightTheme, surface); } catch { }
+            }
+            if (_hudPopup != null && !_hudPopup.IsDisposed)
+            {
+                try { _hudPopup.UpdateSurfaceTheme(isLightTheme, surface); } catch { }
+            }
+            if (_suggestPopup != null && !_suggestPopup.IsDisposed)
+            {
+                try { _suggestPopup.UpdateSurfaceTheme(isLightTheme, surface); } catch { }
             }
             for (int i = 0; i < _tabs.Count; i++)
             {
@@ -2258,6 +2401,7 @@ namespace DejavuBrowser
                     var boot = new Dictionary<string, object>
                     {
                         { "wallpaper", _settings.wallpaper ?? "art:wp-m3-amethyst.jpg" },
+                        { "autoThemeFromWallpaper", _settings.autoThemeFromWallpaper },
                         { "hasCustomWallpaper", GetCachedHasCustomWallpaper(true) },
                         { "activeProfile", _profiles.ActiveProfile },
                         { "profiles", _profiles.Manifest.profiles },
@@ -2315,7 +2459,7 @@ namespace DejavuBrowser
         }
 
         // =====================================================================
-        // Zero-Resize Layout Engine (v5.3.0: 4px native resize rim in Normal mode; 0px Maximized/Fullscreen)
+        // Zero-Resize Layout Engine (v5.4.0: 4px native resize rim in Normal mode; 0px Maximized/Fullscreen)
         // =====================================================================
         private int GetNativeResizeRimPx()
         {
@@ -5049,12 +5193,16 @@ namespace DejavuBrowser
             _activePopoverMode = "shield";
             float sc = DpiScale;
             int popW = (int)Math.Round(348 * sc);
-            int maxH = Math.Max((int)Math.Round(360 * sc), ClientSize.Height - (int)Math.Round(66 * sc));
+            int y = GetToolbarPopoverTopPx(sc);
+            int maxH = Math.Max((int)Math.Round(300 * sc), ClientSize.Height - y - (int)Math.Round(12 * sc));
             int popH = Math.Min(maxH, (int)Math.Round(456 * sc));
 
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
-            int y = (int)Math.Round(50 * sc);
+
+            BrowserTab active = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab);
+            _popoverPopup.UpdateSurfaceTheme(GetEffectiveIsLight(active, captureShell), GetThemeSurfaceColor());
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildShieldPayloadJson(), true);
@@ -5077,11 +5225,15 @@ namespace DejavuBrowser
             _activePopoverMode = "profiles";
             float sc = DpiScale;
             int popW = (int)Math.Round(410 * sc);
-            int maxPopH = Math.Max((int)Math.Round(360 * sc), ClientSize.Height - (int)Math.Round(66 * sc));
+            int y = GetToolbarPopoverTopPx(sc);
+            int maxPopH = Math.Max((int)Math.Round(320 * sc), ClientSize.Height - y - (int)Math.Round(12 * sc));
             int popH = Math.Min(maxPopH, (int)Math.Round(596 * sc));
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
-            int y = (int)Math.Round(50 * sc);
+
+            BrowserTab active = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab);
+            _popoverPopup.UpdateSurfaceTheme(GetEffectiveIsLight(active, captureShell), GetThemeSurfaceColor());
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildProfilesPayloadJson(""), true);
@@ -5139,10 +5291,15 @@ namespace DejavuBrowser
             _activePopoverMode = "history";
             float sc = DpiScale;
             int popW = (int)Math.Round(396 * sc);
-            int popH = (int)Math.Round(520 * sc);
+            int y = GetToolbarPopoverTopPx(sc);
+            int maxPopH = Math.Max((int)Math.Round(300 * sc), ClientSize.Height - y - (int)Math.Round(12 * sc));
+            int popH = Math.Min(maxPopH, (int)Math.Round(520 * sc));
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
-            int y = (int)Math.Round(50 * sc);
+
+            BrowserTab active = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab);
+            _popoverPopup.UpdateSurfaceTheme(GetEffectiveIsLight(active, captureShell), GetThemeSurfaceColor());
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildHistoryPayloadJson(""), true);
@@ -5179,15 +5336,15 @@ namespace DejavuBrowser
             _activePopoverMode = "sync";
             float sc = DpiScale;
             int popW = (int)Math.Round(376 * sc);
-            int maxPopH = Math.Max((int)Math.Round(320 * sc), ClientSize.Height - (int)Math.Round(72 * sc));
+            int y = GetToolbarPopoverTopPx(sc);
+            int maxPopH = Math.Max((int)Math.Round(300 * sc), ClientSize.Height - y - (int)Math.Round(12 * sc));
             int popH = Math.Min(maxPopH, (int)Math.Round(496 * sc));
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
-            int y = (int)Math.Round(((_settings != null && _settings.compactTabBar) ? 84 : 90) * sc);
 
             BrowserTab active = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab);
-            _popoverPopup.UpdateSurfaceTheme(GetEffectiveIsLight(active, captureShell));
+            _popoverPopup.UpdateSurfaceTheme(GetEffectiveIsLight(active, captureShell), GetThemeSurfaceColor());
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildSyncPayloadJson(""), true);
@@ -5661,11 +5818,16 @@ namespace DejavuBrowser
             CloseExclusiveModals(true, false, false, false);
             _activePopoverMode = "vpn";
             float sc = DpiScale;
-            int popW = (int)Math.Round(398 * sc);
-            int popH = (int)Math.Round(592 * sc);
+            int popW = (int)Math.Round(392 * sc);
+            int y = GetToolbarPopoverTopPx(sc);
+            int maxH = Math.Max((int)Math.Round(320 * sc), ClientSize.Height - y - (int)Math.Round(12 * sc));
+            int popH = Math.Min(maxH, (int)Math.Round(584 * sc));
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
-            int y = (int)Math.Round(50 * sc);
+
+            BrowserTab active = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab);
+            _popoverPopup.UpdateSurfaceTheme(GetEffectiveIsLight(active, captureShell), GetThemeSurfaceColor());
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildVpnPayloadJson(""), true);
@@ -6278,9 +6440,10 @@ namespace DejavuBrowser
             }
             if (msg.ContainsKey("accentColor"))
             {
-                string ac = Convert.ToString(msg["accentColor"]);
-                if (ac == "amethyst" || ac == "sapphire" || ac == "aurora" || ac == "rose" || ac == "gold" || ac == "silver")
+                string rawAc = Convert.ToString(msg["accentColor"]);
+                if (SettingsStore.IsValidAccent(rawAc))
                 {
+                    string ac = SettingsStore.NormalizeAccent(rawAc);
                     _settings.accentColor = ac;
                     _profiles.UpdateProfile(_profiles.ActiveProfile.id, null, null, ProfileManager.ColorForAccent(ac), ac, null);
                     ApplyThemeToAllTabs();
@@ -6402,7 +6565,7 @@ namespace DejavuBrowser
                 }
             }
 
-            // v5.3.0 Appearance & Start Page
+            // v5.4.0 Appearance & Start Page
             if (msg.ContainsKey("fontSize"))
             {
                 _settings.fontSize = SettingsStore.NormalizeFontSize(Convert.ToString(msg["fontSize"]));
@@ -6422,8 +6585,10 @@ namespace DejavuBrowser
             }
             if (msg.ContainsKey("showMotd"))
                 _settings.showMotd = Convert.ToBoolean(msg["showMotd"]);
+            if (msg.ContainsKey("autoThemeFromWallpaper"))
+                _settings.autoThemeFromWallpaper = Convert.ToBoolean(msg["autoThemeFromWallpaper"]);
 
-            // v5.3.0 Brave-Grade Shields & Privacy & Security
+            // v5.4.0 Brave-Grade Shields & Privacy & Security
             bool needShieldScriptRefresh = false;
             if (msg.ContainsKey("shieldLevel"))
             {
@@ -6479,7 +6644,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("permAutoplay"))
                 _settings.permAutoplay = SettingsStore.NormalizePermission(Convert.ToString(msg["permAutoplay"]), "allow");
 
-            // v5.3.0 Search
+            // v5.4.0 Search
             if (msg.ContainsKey("customSearchUrl"))
                 _settings.customSearchUrl = (Convert.ToString(msg["customSearchUrl"]) ?? "").Trim();
             if (msg.ContainsKey("addressBarSuggestions"))
@@ -6488,7 +6653,7 @@ namespace DejavuBrowser
                 if (!_settings.addressBarSuggestions) HideSuggestPopup();
             }
 
-            // v5.3.0 Tabs & Performance
+            // v5.4.0 Tabs & Performance
             if (msg.ContainsKey("memorySaverEnabled"))
                 _settings.memorySaverEnabled = Convert.ToBoolean(msg["memorySaverEnabled"]);
             if (msg.ContainsKey("memorySaverMinutes"))
@@ -6501,7 +6666,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("tabHoverPreview"))
                 _settings.tabHoverPreview = Convert.ToBoolean(msg["tabHoverPreview"]);
 
-            // v5.3.0 Downloads
+            // v5.4.0 Downloads
             if (msg.ContainsKey("downloadFolder"))
             {
                 _settings.downloadFolder = (Convert.ToString(msg["downloadFolder"]) ?? "").Trim();
@@ -6523,7 +6688,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("autoOpenDownloads"))
                 _settings.autoOpenDownloads = Convert.ToBoolean(msg["autoOpenDownloads"]);
 
-            // v5.3.0 Passwords & Autofill
+            // v5.4.0 Passwords & Autofill
             if (msg.ContainsKey("savePasswords"))
             {
                 _settings.savePasswords = Convert.ToBoolean(msg["savePasswords"]);
@@ -6537,7 +6702,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("autofillPayments"))
                 _settings.autofillPayments = Convert.ToBoolean(msg["autofillPayments"]);
 
-            // v5.3.0 VPN & System
+            // v5.4.0 VPN & System
             if (msg.ContainsKey("vpnWebRtcProtection"))
                 _settings.vpnWebRtcProtection = Convert.ToBoolean(msg["vpnWebRtcProtection"]);
             if (msg.ContainsKey("hardwareAcceleration"))
@@ -6792,7 +6957,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.3.0 defaults", "success");
+            PushShellToast("Settings restored to v5.4.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -7360,7 +7525,7 @@ namespace DejavuBrowser
 
         private void ShowMenuPopoverAt(int anchorRightCss)
         {
-            ShowActionMenuPopoverAt("menu", anchorRightCss, 304, 464);
+            ShowActionMenuPopoverAt("menu", anchorRightCss, 326, 548);
         }
 
         private void ShowActionMenuPopoverAt(string modeName, int anchorRightCss, int widthCss, int heightCss)
@@ -7378,11 +7543,11 @@ namespace DejavuBrowser
             _activePopoverMode = modeName;
             float sc = DpiScale;
             int popW = (int)Math.Round(widthCss * sc);
-            int maxH = Math.Max((int)Math.Round(280 * sc), ClientSize.Height - (int)Math.Round(66 * sc));
+            int y = GetToolbarPopoverTopPx(sc);
+            int maxH = Math.Max((int)Math.Round(240 * sc), ClientSize.Height - y - (int)Math.Round(12 * sc));
             int popH = Math.Min(maxH, (int)Math.Round(heightCss * sc));
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
-            int y = (int)Math.Round(50 * sc);
 
             BrowserTab tab = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || tab == null || tab.IsNewTab);
@@ -7413,6 +7578,7 @@ namespace DejavuBrowser
                 { "activeProfile", _profiles.ActiveProfile }
             };
 
+            _popoverPopup.UpdateSurfaceTheme(isLight, GetThemeSurfaceColor());
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), _json.Serialize(payload), true);
         }
@@ -7431,10 +7597,15 @@ namespace DejavuBrowser
             _activePopoverMode = "downloads";
             float sc = DpiScale;
             int popW = (int)Math.Round(346 * sc);
-            int popH = (int)Math.Round(320 * sc);
+            int y = GetToolbarPopoverTopPx(sc);
+            int maxH = Math.Max((int)Math.Round(220 * sc), ClientSize.Height - y - (int)Math.Round(12 * sc));
+            int popH = Math.Min(maxH, (int)Math.Round(320 * sc));
             int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
             int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
-            int y = (int)Math.Round(50 * sc);
+
+            BrowserTab active = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab);
+            _popoverPopup.UpdateSurfaceTheme(GetEffectiveIsLight(active, captureShell), GetThemeSurfaceColor());
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildDownloadsPayloadJson(""), true);
@@ -7489,7 +7660,7 @@ namespace DejavuBrowser
             BrowserTab active = GetActiveTab();
             bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab);
             bool isLight = GetEffectiveIsLight(active, captureShell);
-            _popoverPopup.UpdateSurfaceTheme(isLight);
+            _popoverPopup.UpdateSurfaceTheme(isLight, GetThemeSurfaceColor());
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildExtensionsPopoverPayloadJson(), true);
@@ -7589,7 +7760,7 @@ namespace DejavuBrowser
 
                 BrowserTab active = GetActiveTab();
                 bool isLight = GetEffectiveIsLight(active, _tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab);
-                _extActionPopup.UpdateSurfaceTheme(isLight);
+                _extActionPopup.UpdateSurfaceTheme(isLight, GetThemeSurfaceColor());
                 _extActionPopup.NavigateExtensionUrl(info.popupUrl);
 
                 Point screenPt = PointToScreen(new Point(x, y));
@@ -7904,7 +8075,7 @@ namespace DejavuBrowser
             };
 
             Point screenPt = PointToScreen(new Point(x, y));
-            _popoverPopup.UpdateSurfaceTheme(isLight);
+            _popoverPopup.UpdateSurfaceTheme(isLight, GetThemeSurfaceColor());
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), _json.Serialize(payload), true);
         }
 
@@ -8460,7 +8631,7 @@ namespace DejavuBrowser
             };
             if (header != null) payload["header"] = header;
 
-            _popoverPopup.UpdateSurfaceTheme(isLight);
+            _popoverPopup.UpdateSurfaceTheme(isLight, GetThemeSurfaceColor());
             _popoverPopup.ShowAt(new Rectangle(x, y, popW, popH), _json.Serialize(payload), true);
         }
 
@@ -9218,9 +9389,26 @@ namespace DejavuBrowser
                         SaveShortcutsFromMessage(msg);
                         break;
                     case "setWallpaper":
-                        _settings.wallpaper = msg.ContainsKey("wallpaper") ? Convert.ToString(msg["wallpaper"]) : "art:wp-m3-amethyst.jpg";
-                        _profiles.SaveActiveSettings(_settings);
-                        PushFullStateToShell();
+                        HandleSetWallpaperMessage(msg);
+                        break;
+                    case "setAutoThemeFromWallpaper":
+                        {
+                            bool nextAuto = msg.ContainsKey("enabled")
+                                ? Convert.ToBoolean(msg["enabled"])
+                                : (msg.ContainsKey("autoThemeFromWallpaper") ? Convert.ToBoolean(msg["autoThemeFromWallpaper"]) : !_settings.autoThemeFromWallpaper);
+                            _settings.autoThemeFromWallpaper = nextAuto;
+                            _profiles.SaveActiveSettings(_settings);
+                            _appContext.BroadcastSettingsApplied();
+                        }
+                        break;
+                    case "openTabOverview":
+                        ToggleTabOverviewAsync(true);
+                        break;
+                    case "openLink":
+                        SetLinkOpen(true);
+                        break;
+                    case "openBookmarks":
+                        ShowSidebarPopover();
                         break;
                     case "pickCustomWallpaper":
                         PickCustomWallpaper();
@@ -9708,6 +9896,75 @@ namespace DejavuBrowser
                     HidePopover();
                     OpenDevToolsActiveTab();
                 }
+                else if (type == "openTabOverview")
+                {
+                    HidePopover();
+                    ToggleTabOverviewAsync(true);
+                }
+                else if (type == "toggleTabOverview")
+                {
+                    bool wantOv = msg.ContainsKey("open") ? Convert.ToBoolean(msg["open"]) : !_tabOverviewOpen;
+                    HidePopover();
+                    ToggleTabOverviewAsync(wantOv);
+                }
+                else if (type == "openLink")
+                {
+                    HidePopover();
+                    SetLinkOpen(true);
+                }
+                else if (type == "openBookmarks" || type == "openSidebar")
+                {
+                    HidePopover();
+                    ShowSidebarPopover();
+                }
+                else if (type == "openDownloads")
+                {
+                    HidePopover();
+                    SetDlManagerOpen(true, msg.ContainsKey("tab") ? Convert.ToString(msg["tab"]) : "all");
+                }
+                else if (type == "newTab")
+                {
+                    HidePopover();
+                    CreateDefaultNewTab(true);
+                }
+                else if (type == "newWindow")
+                {
+                    HidePopover();
+                    _appContext.OpenWindow(null, false, this, false, false);
+                }
+                else if (type == "newPrivateWindow")
+                {
+                    HidePopover();
+                    _appContext.OpenWindow(null, true, this, false, false);
+                }
+                else if (type == "zoomIn")
+                {
+                    AdjustZoom(0.1);
+                    if (_popoverPopup != null && _popoverPopup.IsPopupOpen && (_activePopoverMode == "share" || _activePopoverMode == "menu"))
+                    {
+                        BrowserTab zt = GetActiveTab();
+                        int zpct = zt != null ? (int)Math.Round(zt.ZoomFactor * 100.0) : 100;
+                        _popoverPopup.UpdateState(_json.Serialize(new Dictionary<string, object> { { "mode", "zoomUpdate" }, { "zoomPercent", zpct } }));
+                    }
+                }
+                else if (type == "zoomOut")
+                {
+                    AdjustZoom(-0.1);
+                    if (_popoverPopup != null && _popoverPopup.IsPopupOpen && (_activePopoverMode == "share" || _activePopoverMode == "menu"))
+                    {
+                        BrowserTab zt = GetActiveTab();
+                        int zpct = zt != null ? (int)Math.Round(zt.ZoomFactor * 100.0) : 100;
+                        _popoverPopup.UpdateState(_json.Serialize(new Dictionary<string, object> { { "mode", "zoomUpdate" }, { "zoomPercent", zpct } }));
+                    }
+                }
+                else if (type == "zoomReset")
+                {
+                    ResetZoom();
+                    if (_popoverPopup != null && _popoverPopup.IsPopupOpen && (_activePopoverMode == "share" || _activePopoverMode == "menu"))
+                    {
+                        _popoverPopup.UpdateState(_json.Serialize(new Dictionary<string, object> { { "mode", "zoomUpdate" }, { "zoomPercent", 100 } }));
+                    }
+                }
                 else if (type == "adjustZoom")
                 {
                     if (msg.ContainsKey("delta")) AdjustZoom(Convert.ToDouble(msg["delta"]));
@@ -10055,6 +10312,101 @@ namespace DejavuBrowser
             PushFullStateToShell();
         }
 
+        private void HandleSetWallpaperMessage(Dictionary<string, object> msg)
+        {
+            string wp = msg.ContainsKey("wallpaper") ? Convert.ToString(msg["wallpaper"]) : "art:wp-m3-amethyst.jpg";
+            if (string.IsNullOrWhiteSpace(wp)) wp = "art:wp-m3-amethyst.jpg";
+            _settings.wallpaper = wp;
+
+            bool skipAuto = msg.ContainsKey("skipAutoTheme") && Convert.ToBoolean(msg["skipAutoTheme"]);
+            bool themeChanged = false;
+            bool modeChanged = false;
+
+            if (_settings.autoThemeFromWallpaper && !skipAuto)
+            {
+                string nextAccent = null;
+                string nextMode = null;
+
+                if (msg.ContainsKey("accentColor"))
+                {
+                    string reqAcc = Convert.ToString(msg["accentColor"]);
+                    if (SettingsStore.IsValidAccent(reqAcc)) nextAccent = SettingsStore.NormalizeAccent(reqAcc);
+                }
+                else if (msg.ContainsKey("seed"))
+                {
+                    string reqSeed = Convert.ToString(msg["seed"]);
+                    if (SettingsStore.IsValidAccent(reqSeed)) nextAccent = SettingsStore.NormalizeAccent(reqSeed);
+                }
+
+                if (msg.ContainsKey("appearanceMode"))
+                {
+                    string reqMode = (Convert.ToString(msg["appearanceMode"]) ?? "").Trim().ToLowerInvariant();
+                    if (reqMode == "dark" || reqMode == "light") nextMode = reqMode;
+                }
+                else if (msg.ContainsKey("mode"))
+                {
+                    string reqMode = (Convert.ToString(msg["mode"]) ?? "").Trim().ToLowerInvariant();
+                    if (reqMode == "dark" || reqMode == "light") nextMode = reqMode;
+                }
+
+                if (string.IsNullOrEmpty(nextAccent) || string.IsNullOrEmpty(nextMode))
+                {
+                    string fallbackAcc;
+                    string fallbackMode;
+                    if (TryGetWallpaperTheme(wp, out fallbackAcc, out fallbackMode))
+                    {
+                        if (string.IsNullOrEmpty(nextAccent)) nextAccent = fallbackAcc;
+                        if (string.IsNullOrEmpty(nextMode)) nextMode = fallbackMode;
+                    }
+                    else if (wp.StartsWith("custom", StringComparison.OrdinalIgnoreCase) &&
+                             !string.IsNullOrEmpty(_settings.customWallpaperPath))
+                    {
+                        if (TrySampleCustomWallpaperTheme(_settings.customWallpaperPath, out fallbackAcc, out fallbackMode))
+                        {
+                            if (string.IsNullOrEmpty(nextAccent)) nextAccent = fallbackAcc;
+                            if (string.IsNullOrEmpty(nextMode)) nextMode = fallbackMode;
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(nextAccent) && SettingsStore.IsValidAccent(nextAccent))
+                {
+                    string normAcc = SettingsStore.NormalizeAccent(nextAccent);
+                    if (!string.Equals(_settings.accentColor, normAcc, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _settings.accentColor = normAcc;
+                        _profiles.UpdateProfile(_profiles.ActiveProfile.id, null, null, ProfileManager.ColorForAccent(normAcc), normAcc, null);
+                        themeChanged = true;
+                    }
+                }
+
+                if (nextMode == "dark" || nextMode == "light")
+                {
+                    if (!string.Equals(_settings.appearanceMode, nextMode, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _settings.appearanceMode = nextMode;
+                        themeChanged = true;
+                        modeChanged = true;
+                    }
+                }
+            }
+
+            if (themeChanged)
+            {
+                ApplyThemeToAllTabs();
+                if (modeChanged)
+                {
+                    for (int i = 0; i < _tabs.Count; i++)
+                    {
+                        ApplySettingsToTab(_tabs[i]);
+                    }
+                }
+            }
+
+            _profiles.SaveActiveSettings(_settings);
+            _appContext.BroadcastSettingsApplied();
+        }
+
         private void PickCustomWallpaper()
         {
             try
@@ -10071,8 +10423,26 @@ namespace DejavuBrowser
                         _settings.customWallpaperPath = dest;
                         _settings.wallpaper = "custom:" + DateTime.UtcNow.Ticks;
                         InvalidateCustomWallpaperCache();
+                        if (_settings.autoThemeFromWallpaper)
+                        {
+                            string sampledAcc;
+                            string sampledMode;
+                            if (TrySampleCustomWallpaperTheme(dest, out sampledAcc, out sampledMode))
+                            {
+                                if (SettingsStore.IsValidAccent(sampledAcc))
+                                {
+                                    _settings.accentColor = SettingsStore.NormalizeAccent(sampledAcc);
+                                    _profiles.UpdateProfile(_profiles.ActiveProfile.id, null, null, ProfileManager.ColorForAccent(_settings.accentColor), _settings.accentColor, null);
+                                }
+                                if (sampledMode == "dark" || sampledMode == "light")
+                                {
+                                    _settings.appearanceMode = sampledMode;
+                                }
+                                ApplyThemeToAllTabs();
+                            }
+                        }
                         _profiles.SaveActiveSettings(_settings);
-                        PushFullStateToShell();
+                        _appContext.BroadcastSettingsApplied();
                     }
                 }
             }
@@ -10311,6 +10681,7 @@ namespace DejavuBrowser
                 { "vpn", BuildShellVpnSummary(_vpn.GetSnapshot()) },
                 { "sync", _sync != null ? _sync.GetSnapshot() : null },
                 { "wallpaper", _settings.wallpaper ?? "art:wp-m3-amethyst.jpg" },
+                { "autoThemeFromWallpaper", _settings.autoThemeFromWallpaper },
                 { "hasCustomWallpaper", GetCachedHasCustomWallpaper(false) },
                 { "baseRgb", active != null ? active.BaseRgb : new int[] { 20, 18, 24 } },
                 { "accents", active != null ? active.AccentPalette : null }

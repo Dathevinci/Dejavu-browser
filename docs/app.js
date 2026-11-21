@@ -1,14 +1,13 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.3.0)
- * Brave-Exact Shields Engine (270K+ Win / 100K+ Android Rules · ERR_BLOCKED_BY_CLIENT · Ad-Iframe & Popunder Blocking · YouTube Skip & ima3.js)
- * Re-Engineered dejavu Link (Direct Wi-Fi LAN + TLS MQTT Retained E2EE) · Iconic Sculpted M3 Butterfly Logo · Pixel MOTD
- * Smooth Native Windows 11 Framing · Fluid Gliding M3 Pill Indicators · 6 Harmonized HCT Seeds
- * Interactive Chrome MV3 Extensions + Draggable Tabs + M3 Right-Click Context Menu
- * 52x32 Spring Switches · 4K->MP3 Video Demo · 16-Wallpaper Harmonizer
+ * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.4.0)
+ * 12 Google Material Design 3 HCT Color Themes (Dark & Light) · 24 Pure M3 & 6 Butterfly Wallpapers (Auto-Harmonizing!)
+ * Redesigned Pixel M3 At-a-Glance MOTD Card · Decluttered ChromeOS 5-Icon Toolbar · Material Symbols Rounded
+ * 100%-Verified Brave-Exact Shields Engine (279K+ Win / 108K+ Android Rules) · Real-Time dejavu Link (Direct LAN + TLS MQTT E2EE)
+ * Interactive Chrome MV3 Extensions + Draggable Tabs + M3 Right-Click Context Menu · 4K->MP3 8x Turbo Demo
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v5.3.0';
+  const FALLBACK_VERSION = 'v5.4.0';
   const root = document.documentElement;
   const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let themeShiftTimer = null;
@@ -47,22 +46,56 @@
     }
   }
 
+  const VALID_SEEDS = [
+    'amethyst', 'sapphire', 'indigo', 'aurora', 'emerald', 'lime',
+    'gold', 'coral', 'crimson', 'rose', 'lavender', 'silver'
+  ];
+
+  const FLAGSHIP_SEEDS = new Set(['amethyst', 'sapphire', 'aurora', 'emerald', 'coral', 'crimson']);
+
+  const THEME_LABELS = {
+    amethyst: 'Amethyst',
+    sapphire: 'Pixel Blue',
+    indigo:   'Royal Indigo',
+    aurora:   'Aurora Teal',
+    emerald:  'Botanical Jade',
+    lime:     'Matcha Olive',
+    gold:     'Honey Amber',
+    coral:    'Sunset Coral',
+    crimson:  'Crimson Clay',
+    rose:     'Velvet Rose',
+    lavender: 'Orchid Mist',
+    silver:   'Titanium Slate'
+  };
+
   const THEME_META_COLORS = {
     dark: {
       amethyst: '#141218',
       sapphire: '#111318',
-      aurora: '#0f1513',
-      rose: '#181114',
-      gold: '#17130d',
-      silver: '#121316'
+      indigo:   '#12131b',
+      aurora:   '#0f1513',
+      emerald:  '#101511',
+      lime:     '#14150e',
+      gold:     '#17130d',
+      coral:    '#191210',
+      crimson:  '#1a1112',
+      rose:     '#181114',
+      lavender: '#161219',
+      silver:   '#121316'
     },
     light: {
       amethyst: '#fef7ff',
       sapphire: '#faf9ff',
-      aurora: '#f4fbf8',
-      rose: '#fff8f8',
-      gold: '#fff8f2',
-      silver: '#f9f9fc'
+      indigo:   '#fbf8ff',
+      aurora:   '#f4fbf8',
+      emerald:  '#f5fbf5',
+      lime:     '#fafaf0',
+      gold:     '#fff8f2',
+      coral:    '#fff8f6',
+      crimson:  '#fff8f7',
+      rose:     '#fff8f8',
+      lavender: '#fdf7ff',
+      silver:   '#f9f9fc'
     }
   };
 
@@ -70,28 +103,59 @@
     dark: {
       amethyst: 'assets/wallpapers/wp-m3-amethyst.jpg',
       sapphire: 'assets/wallpapers/wp-m3-pixel-blue.jpg',
+      indigo:   'assets/wallpapers/wp-m3-cobalt-prism.jpg',
       aurora:   'assets/wallpapers/wp-m3-sage.jpg',
-      rose:     'assets/wallpapers/wp-m3-blossom.jpg',
+      emerald:  'assets/wallpapers/wp-m3-jade-terrace.jpg',
+      lime:     'assets/wallpapers/wp-m3-butterfly-emerald.jpg',
       gold:     'assets/wallpapers/wp-m3-honey.jpg',
+      coral:    'assets/wallpapers/wp-m3-sienna-arch.jpg',
+      crimson:  'assets/wallpapers/wp-m3-crimson-fold.jpg',
+      rose:     'assets/wallpapers/wp-m3-blossom.jpg',
+      lavender: 'assets/wallpapers/wp-m3-butterfly-obsidian.jpg',
       silver:   'assets/wallpapers/wp-m3-indigo-dune.jpg'
     },
     light: {
       amethyst: 'assets/wallpapers/wp-m3-butterfly-porcelain.jpg',
       sapphire: 'assets/wallpapers/wp-m3-sky-terrace.jpg',
-      aurora:   'assets/wallpapers/wp-m3-butterfly-sage.jpg',
-      rose:     'assets/wallpapers/wp-m3-blush.jpg',
+      indigo:   'assets/wallpapers/wp-m3-sky-terrace.jpg',
+      aurora:   'assets/wallpapers/wp-m3-mint-atelier.jpg',
+      emerald:  'assets/wallpapers/wp-m3-butterfly-sage.jpg',
+      lime:     'assets/wallpapers/wp-m3-meadow.jpg',
       gold:     'assets/wallpapers/wp-m3-warm-limestone.jpg',
+      coral:    'assets/wallpapers/wp-m3-coral-bloom.jpg',
+      crimson:  'assets/wallpapers/wp-m3-butterfly-coral.jpg',
+      rose:     'assets/wallpapers/wp-m3-blush.jpg',
+      lavender: 'assets/wallpapers/wp-m3-lavender-mist.jpg',
       silver:   'assets/wallpapers/wp-m3-porcelain.jpg'
     }
   };
   let userPickedWallpaper = false;
+  let autoThemeEnabled = true;
+
+  const MOTD_ICON_DARK = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none"><path d="M19 14.2A7.2 7.2 0 1 1 9.8 5a5.7 5.7 0 0 0 9.2 9.2z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>';
+  const MOTD_ICON_LIGHT = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.9"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/></svg>';
+  const MOTD_ICON_DARK_SM = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none"><path d="M19 14.2A7.2 7.2 0 1 1 9.8 5a5.7 5.7 0 0 0 9.2 9.2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>';
+  const MOTD_ICON_LIGHT_SM = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6" stroke="currentColor" stroke-width="1.95" stroke-linecap="round"/></svg>';
 
   function syncThemeColorMeta() {
     const meta = document.querySelector('meta[name="theme-color"]');
     const mode = root.dataset.theme === 'light' ? 'light' : 'dark';
-    const seed = root.dataset.accent || 'amethyst';
+    const seed = VALID_SEEDS.includes(root.dataset.accent) ? root.dataset.accent : 'amethyst';
     if (meta) {
       meta.content = (THEME_META_COLORS[mode] && THEME_META_COLORS[mode][seed]) || THEME_META_COLORS[mode].amethyst;
+    }
+    const dkMed = document.getElementById('dk-motd-medallion');
+    const pxMed = document.getElementById('px-motd-medallion');
+    const dkOverline = document.getElementById('dk-motd-overline');
+    const pxOverline = document.getElementById('px-motd-overline');
+    if (dkMed) dkMed.innerHTML = mode === 'light' ? MOTD_ICON_LIGHT : MOTD_ICON_DARK;
+    if (pxMed) pxMed.innerHTML = mode === 'light' ? MOTD_ICON_LIGHT_SM : MOTD_ICON_DARK_SM;
+    const greeting = mode === 'light' ? 'Good afternoon' : 'Good evening';
+    if (dkOverline) {
+      dkOverline.textContent = `${greeting}, Personal · ${THEME_LABELS[seed] || 'Material You'}`;
+    }
+    if (pxOverline) {
+      pxOverline.textContent = `${greeting} · Pixel`;
     }
     if (!userPickedWallpaper) {
       const wpSrc = (THEME_SEED_WALLPAPERS[mode] && THEME_SEED_WALLPAPERS[mode][seed]) || THEME_SEED_WALLPAPERS[mode].amethyst;
@@ -102,10 +166,22 @@
     }
   }
 
-  // 1. Material You Polarity Segmented Pill & 6-Seed Dynamic Color Picker
+  // 1. Material You Polarity Segmented Pill & 12-Seed Dynamic Color Picker (+6 Popover)
   const themeSegGroups = Array.from(document.querySelectorAll('.theme-segmented'));
   const themeSegBtns = Array.from(document.querySelectorAll('[data-theme-set]'));
   const seedDots = Array.from(document.querySelectorAll('.seed-dot'));
+  const seedSwatches = Array.from(document.querySelectorAll('.seed-swatch-btn'));
+  const seedMoreBtn = document.getElementById('seed-more-btn');
+  const seedPopover = document.getElementById('seed-popover');
+  const seedPickerWrap = document.getElementById('seed-picker-wrap');
+  const seedActivePill = document.getElementById('seed-active-pill');
+  const mobileSeedLabel = document.getElementById('mobile-seed-label');
+
+  function closeSeedPopover() {
+    if (!seedPopover || !seedMoreBtn) return;
+    seedPopover.hidden = true;
+    seedMoreBtn.setAttribute('aria-expanded', 'false');
+  }
 
   function syncThemeIndicators() {
     themeSegGroups.forEach((group) => {
@@ -130,7 +206,7 @@
   }
 
   function setSeed(seed, animate) {
-    const next = seed || 'amethyst';
+    const next = VALID_SEEDS.includes(seed) ? seed : 'amethyst';
     if (animate && root.dataset.accent !== next) triggerThemeShift();
     root.dataset.accent = next;
     try { localStorage.setItem('djv_web_seed', next); } catch {}
@@ -139,6 +215,17 @@
       b.classList.toggle('active', isMatch);
       b.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
     });
+    seedSwatches.forEach((b) => {
+      const isMatch = b.dataset.seed === next;
+      b.classList.toggle('active', isMatch);
+      b.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
+    });
+    const label = THEME_LABELS[next] || 'Amethyst';
+    if (seedActivePill) seedActivePill.textContent = label;
+    if (mobileSeedLabel) mobileSeedLabel.textContent = label;
+    if (seedMoreBtn) {
+      seedMoreBtn.classList.toggle('has-extra-active', !FLAGSHIP_SEEDS.has(next));
+    }
     syncThemeColorMeta();
   }
 
@@ -151,8 +238,8 @@
     if (qpTheme === 'light' || qpTheme === 'dark') setTheme(qpTheme, false);
     else if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme, false);
     else setTheme('dark', false);
-    if (qpAccent) setSeed(qpAccent, false);
-    else if (savedSeed) setSeed(savedSeed, false);
+    if (qpAccent && VALID_SEEDS.includes(qpAccent)) setSeed(qpAccent, false);
+    else if (savedSeed && VALID_SEEDS.includes(savedSeed)) setSeed(savedSeed, false);
     else setSeed('amethyst', false);
   } catch {
     setTheme('dark', false);
@@ -164,8 +251,41 @@
   });
 
   seedDots.forEach((dot) => {
-    dot.addEventListener('click', () => setSeed(dot.dataset.seed, true));
+    dot.addEventListener('click', () => {
+      userPickedWallpaper = false;
+      setSeed(dot.dataset.seed, true);
+      closeSeedPopover();
+    });
   });
+
+  seedSwatches.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      userPickedWallpaper = false;
+      setSeed(btn.dataset.seed, true);
+      closeSeedPopover();
+    });
+  });
+
+  if (seedMoreBtn && seedPopover) {
+    seedMoreBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const willOpen = seedPopover.hidden;
+      seedPopover.hidden = !willOpen;
+      seedMoreBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!seedPopover.hidden && seedPickerWrap && !seedPickerWrap.contains(e.target)) {
+        closeSeedPopover();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !seedPopover.hidden) {
+        closeSeedPopover();
+      }
+    });
+  }
 
   // Top App Bar Scroll Elevation + Gliding Active Pill Indicator + Scroll-Spy
   const topbar = document.getElementById('m3-topbar');
@@ -248,7 +368,7 @@
     });
   }
 
-  // 2. Clean 5-View Dual-Device Browser Showcase (v5.3.0 Brave-Exact Shields + Direct LAN/MQTT Link + Pixel MOTD)
+  // 2. Clean 5-View Dual-Device Browser Showcase (v5.4.0 Pixel At-a-Glance MOTD + 5-Icon ChromeOS Toolbar + Brave-Exact Shields)
   const VIEW_META = {
     start:      { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
     sync:       { url: 'dejavu://link · Direct LAN + TLS MQTT E2EE (alex@gmail.com)', title: 'Direct LAN + MQTT · Pixel Online' },
@@ -420,11 +540,11 @@
 
   if (btnRailSettings) {
     btnRailSettings.addEventListener('click', () => {
-      showSnackbar('Single Settings entry anchored in Left Rail · Ctrl+, (Zero duplicates)');
+      showSnackbar('Settings (Ctrl+,) · Crisp 6-Tooth Material Symbols Rounded Gear');
     });
   }
 
-  // Calm Pixel Message of the Day (Synced across Desktop & Android Start Page mockups)
+  // Redesigned Pixel M3 At-a-Glance Message of the Day Card (Synced across Desktop & Android Hero Mockups)
   const PIXEL_MOTD_QUOTES = [
     'Quiet tools make room for clearer thinking.',
     'Start calm, stay private, move at your own pace.',
@@ -433,22 +553,51 @@
     'Privacy built in quietly — nothing to tweak, nothing in your way.'
   ];
   let motdIdx = 0;
-  const dkMotdBtn = document.getElementById('dk-sp-motd');
+  let motdSwapTimer = null;
+  const dkMotdCard = document.getElementById('dk-motd-card');
+  const dkMotdRefresh = document.getElementById('dk-motd-refresh');
   const dkMotdText = document.getElementById('dk-sp-motd-text');
-  const pxMotdBtn = document.getElementById('px-sp-motd');
+  const pxMotdCard = document.getElementById('px-motd-card');
+  const pxMotdRefresh = document.getElementById('px-motd-refresh');
+  const pxMotdText = document.getElementById('px-sp-motd-text');
 
   function cyclePixelMotd() {
     motdIdx = (motdIdx + 1) % PIXEL_MOTD_QUOTES.length;
     const nextQuote = PIXEL_MOTD_QUOTES[motdIdx];
-    if (dkMotdText) dkMotdText.textContent = nextQuote;
-    if (pxMotdBtn) pxMotdBtn.textContent = nextQuote;
+    [dkMotdRefresh, pxMotdRefresh].forEach((btn) => {
+      if (!btn || prefersReduced) return;
+      btn.classList.remove('is-spinning');
+      void btn.offsetWidth;
+      btn.classList.add('is-spinning');
+      setTimeout(() => btn.classList.remove('is-spinning'), 360);
+    });
+    if (prefersReduced) {
+      if (dkMotdText) dkMotdText.textContent = nextQuote;
+      if (pxMotdText) pxMotdText.textContent = nextQuote;
+      return;
+    }
+    [dkMotdText, pxMotdText].forEach((el) => el?.classList.add('is-swapping'));
+    clearTimeout(motdSwapTimer);
+    motdSwapTimer = setTimeout(() => {
+      if (dkMotdText) dkMotdText.textContent = nextQuote;
+      if (pxMotdText) pxMotdText.textContent = nextQuote;
+      [dkMotdText, pxMotdText].forEach((el) => el?.classList.remove('is-swapping'));
+    }, 140);
   }
 
-  dkMotdBtn?.addEventListener('click', cyclePixelMotd);
-  pxMotdBtn?.addEventListener('click', cyclePixelMotd);
+  dkMotdRefresh?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    cyclePixelMotd();
+  });
+  pxMotdRefresh?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    cyclePixelMotd();
+  });
+  dkMotdCard?.addEventListener('click', cyclePixelMotd);
+  pxMotdCard?.addEventListener('click', cyclePixelMotd);
 
   document.getElementById('dk-shield-pill')?.addEventListener('click', () => {
-    showSnackbar('Brave-Exact Shields ON · 270K+ rules, ERR_BLOCKED_BY_CLIENT, ad-iframe & popunder blocking, YouTube skip & farbling');
+    showSnackbar('Brave-Exact Shields ON · 279K+ rules, ERR_BLOCKED_BY_CLIENT, ad-iframe & popunder blocking, YouTube skip & farbling');
   });
 
   // 2b. Interactive Material Design 3 Right-Click Context Menu inside Hero Browser Mockup
@@ -685,10 +834,10 @@
     });
   }
 
-  // 2e. Interactive Chrome Extensions Manager Showcase (v5.3.0)
+  // 2e. Interactive Chrome Extensions Manager Showcase (v5.4.0 — Uncluttered 5-Icon ChromeOS Toolbar by Default)
   const DEMO_EXTS = {
-    ublock:     { label: 'uB', name: 'uBlock Origin Lite',    enabled: true,  pinned: true },
-    darkreader: { label: 'DR', name: 'Dark Reader',           enabled: true,  pinned: true },
+    ublock:     { label: 'uB', name: 'uBlock Origin Lite',    enabled: true,  pinned: false },
+    darkreader: { label: 'DR', name: 'Dark Reader',           enabled: true,  pinned: false },
     reactdev:   { label: 'Rx', name: 'React Developer Tools', enabled: true,  pinned: false },
     bitwarden:  { label: 'BW', name: 'Bitwarden Vault',       enabled: false, pinned: false }
   };
@@ -1076,13 +1225,19 @@
       const pxWp = document.getElementById('px-wp');
       if (dkWp) dkWp.style.backgroundImage = `url("${src}")`;
       if (pxWp) pxWp.style.backgroundImage = `url("${src}")`;
-      if (card.dataset.seed) setSeed(card.dataset.seed, true);
-      if (card.dataset.mode === 'light' || card.dataset.mode === 'dark') setTheme(card.dataset.mode, true);
+      const seed = card.dataset.seed;
+      const mode = card.dataset.mode;
+      if (autoThemeEnabled) {
+        if (seed) setSeed(seed, true);
+        if (mode === 'light' || mode === 'dark') setTheme(mode, true);
+      }
       selectShowcase('start');
       const title = card.dataset.title || 'Material You wallpaper';
-      const polarity = card.dataset.mode === 'light' ? 'Light' : 'Dark';
-      const edition = card.dataset.butterfly === 'true' ? 'Butterfly M3' : 'Material You';
-      showSnackbar(`Applied "${title}" · ${polarity} ${edition}`);
+      const polarity = mode === 'light' ? 'Light' : 'Dark';
+      const themeName = (seed && THEME_LABELS[seed]) || 'Material You';
+      showSnackbar(autoThemeEnabled
+        ? `Applied "${title}" · Auto-matched ${polarity} ${themeName}`
+        : `Applied "${title}" · Kept current theme`);
     });
   });
 
@@ -1105,15 +1260,20 @@
       } else if (sw.dataset.syncPref) {
         const lbl = sw.dataset.syncPref === 'clipboard' ? 'Shared Clipboard & History' : 'Live Tabs & Bookmarks';
         showSnackbar(`${lbl} real-time sync ${next ? 'enabled' : 'paused'}`);
+      } else if (sw.dataset.bentoPref === 'autotheme') {
+        autoThemeEnabled = next;
+        showSnackbar(next
+          ? 'Auto-Match Theme ON · Picking any wallpaper harmonizes HCT seed & polarity'
+          : 'Auto-Match Theme OFF · Wallpapers keep your manually selected HCT seed');
       } else if (sw.dataset.bentoPref === 'shields') {
-        showSnackbar(next ? 'Brave-Exact Shields Aggressive · 270K+ Brave/EasyList/uBlock/OISD rules, ad-iframe, popunder & Fanboy cookies blocked' : 'Brave-Exact Shields set to Standard protection');
+        showSnackbar(next ? 'Brave-Exact Shields Aggressive · 279K+ Brave/EasyList/uBlock/OISD rules, ad-iframe, popunder & Fanboy cookies blocked' : 'Brave-Exact Shields set to Standard protection');
       } else if (sw.dataset.bentoPref === 'link') {
         showSnackbar(next ? 'dejavu Link active · Direct Wi-Fi LAN + TLS MQTT Retained E2EE' : 'dejavu Link sync paused');
       }
     });
   });
 
-  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.3.0)
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.4.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

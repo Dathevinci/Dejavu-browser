@@ -412,27 +412,39 @@ namespace DejavuBrowser
 
         public static string NormalizeAccent(string accent, string colorFallback)
         {
-            if (accent == "amethyst" || accent == "sapphire" || accent == "aurora" ||
-                accent == "rose" || accent == "gold" || accent == "silver")
+            if (SettingsStore.IsValidAccent(accent))
             {
-                return accent;
+                return SettingsStore.NormalizeAccent(accent);
             }
             string c = (colorFallback ?? "").Trim().ToLowerInvariant();
-            if (c.Contains("7cc4ff") || c.Contains("60a5fa") || c.Contains("3b82f6") || c.Contains("a8c7fa")) return "sapphire";
-            if (c.Contains("34d399") || c.Contains("5eead4") || c.Contains("10b981") || c.Contains("86efac")) return "aurora";
-            if (c.Contains("fb7185") || c.Contains("f472b6") || c.Contains("ec4899") || c.Contains("fda4af")) return "rose";
-            if (c.Contains("fbbf24") || c.Contains("f59e0b") || c.Contains("facc15") || c.Contains("fde68a")) return "gold";
-            if (c.Contains("cbd5e1") || c.Contains("94a3b8") || c.Contains("a1a1aa")) return "silver";
+            if (c.Contains("bbc3ff") || c.Contains("3f51b5") || c.Contains("6366f1")) return "indigo";
+            if (c.Contains("7cc4ff") || c.Contains("60a5fa") || c.Contains("3b82f6") || c.Contains("a8c7fa") || c.Contains("1b6ef3")) return "sapphire";
+            if (c.Contains("8bd89b") || c.Contains("146c2e") || c.Contains("22c55e")) return "emerald";
+            if (c.Contains("c4d97a") || c.Contains("556600") || c.Contains("a3e635")) return "lime";
+            if (c.Contains("34d399") || c.Contains("5eead4") || c.Contains("10b981") || c.Contains("86efac") || c.Contains("7bd8c6") || c.Contains("006a60")) return "aurora";
+            if (c.Contains("ffb59d") || c.Contains("b33b15") || c.Contains("fb923c")) return "coral";
+            if (c.Contains("ffb3b5") || c.Contains("ba1a2d") || c.Contains("ef4444")) return "crimson";
+            if (c.Contains("fb7185") || c.Contains("f472b6") || c.Contains("ec4899") || c.Contains("fda4af") || c.Contains("ffb0ce") || c.Contains("a83268")) return "rose";
+            if (c.Contains("e2b7ff") || c.Contains("7c43a8") || c.Contains("c084fc")) return "lavender";
+            if (c.Contains("fbbf24") || c.Contains("f59e0b") || c.Contains("facc15") || c.Contains("fde68a") || c.Contains("ffb951") || c.Contains("8a5600")) return "gold";
+            if (c.Contains("cbd5e1") || c.Contains("94a3b8") || c.Contains("a1a1aa") || c.Contains("b8c8e2") || c.Contains("455a77")) return "silver";
             return "amethyst";
         }
 
         public static string ColorForAccent(string accent)
         {
-            if (accent == "sapphire") return "#7cc4ff";
-            if (accent == "aurora") return "#5eead4";
-            if (accent == "rose") return "#fb7185";
-            if (accent == "gold") return "#fbbf24";
-            if (accent == "silver") return "#cbd5e1";
+            string a = SettingsStore.NormalizeAccent(accent);
+            if (a == "sapphire") return "#7cc4ff";
+            if (a == "indigo") return "#bbc3ff";
+            if (a == "aurora") return "#5eead4";
+            if (a == "emerald") return "#8bd89b";
+            if (a == "lime") return "#c4d97a";
+            if (a == "gold") return "#fbbf24";
+            if (a == "coral") return "#ffb59d";
+            if (a == "crimson") return "#ffb3b5";
+            if (a == "rose") return "#fb7185";
+            if (a == "lavender") return "#e2b7ff";
+            if (a == "silver") return "#cbd5e1";
             return "#b688ff";
         }
 

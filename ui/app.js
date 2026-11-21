@@ -1,8 +1,8 @@
 /**
- * dejavu v5.3.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
- * Zero-Glitch 120Hz Tab Strip, Diff-Guarded Shell DOM, Lightweight tabDelta IPC,
- * Iconic Sculpted M3 Butterfly Logo, Pixel Message of the Day, Brave-Grade Shields,
- * Real-Time dejavu Link Hub, Chrome Extensions Manager, 10-Category Settings & 8x Turbo Downloader.
+ * dejavu v5.4.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * 12 Official HCT Material You Themes, 24 Pure M3 & Butterfly Wallpapers, Auto Wallpaper-to-Theme,
+ * Redesigned Pixel At-a-Glance Message of the Day Card, Clean 5-Control ChromeOS Toolbar,
+ * Zero-Glitch 120Hz Tab Strip, Brave-Grade Shields, Real-Time dejavu Link Hub & 8x Turbo Downloader.
  */
 (function () {
   const send = (msg) => {
@@ -119,9 +119,12 @@
   const spBadgeName = document.getElementById('sp-badge-name');
   const spGoogleCta = document.getElementById('sp-google-cta');
   const ntMotdWrap = document.getElementById('nt-motd-wrap');
-  const ntMotdBtn = document.getElementById('nt-motd-btn');
+  const ntMotdCard = document.getElementById('nt-motd-card');
+  const ntMotdMedallion = document.getElementById('nt-motd-medallion');
+  const ntMotdTodSvg = document.getElementById('nt-motd-tod-svg');
   const ntMotdDate = document.getElementById('nt-motd-date');
   const ntMotdText = document.getElementById('nt-motd-text');
+  const ntMotdRefresh = document.getElementById('nt-motd-refresh');
   const startpageStatusPill = document.getElementById('startpage-status-pill');
   const spStatusLock = document.getElementById('sp-status-lock');
   const startpageStatusText = document.getElementById('startpage-status-text');
@@ -186,6 +189,8 @@
   const prefPrivacy = document.getElementById('pref-privacy');
   const prefReading = document.getElementById('pref-reading');
   const prefMotd = document.getElementById('pref-motd');
+  const prefAutoTheme = document.getElementById('pref-auto-theme');
+  const storeAccentSwatches = document.getElementById('store-accent-swatches');
 
   // Left Navigation Rail
   const railHome = document.getElementById('rail-home');
@@ -244,6 +249,7 @@
   // Category 2: Appearance & Material You
   const optAppearanceMode = document.getElementById('opt-appearance-mode');
   const optAccentSwatches = document.getElementById('opt-accent-swatches');
+  const optAutoTheme = document.getElementById('opt-auto-theme');
   const settingsWpCountPill = document.getElementById('settings-wp-count-pill');
   const optWpFilter = document.getElementById('opt-wp-filter');
   const btnOptUploadWp = document.getElementById('btn-opt-upload-wp');
@@ -519,35 +525,49 @@
   const SEED_COLORS = {
     amethyst: '#d0bcff',
     sapphire: '#a8c7fa',
-    aurora: '#82d5c4',
-    rose: '#ffb0cc',
-    gold: '#f6bd60',
+    indigo: '#bbc3ff',
+    aurora: '#7bd8c6',
+    emerald: '#8bd89b',
+    lime: '#c4d97a',
+    gold: '#ffb951',
+    coral: '#ffb59d',
+    crimson: '#ffb3b5',
+    rose: '#ffb0ce',
+    lavender: '#e2b7ff',
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.3.0 — 16 HD + 1 Live = 17 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.4.0 — 24 HD + 1 Live = 25 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
-    // 12 Sculptural / Architectural Material Design 3 HD Wallpapers
+    // 18 Sculptural / Architectural Material Design 3 HD Wallpapers (10 Dark, 8 Light)
     { id: 'art:wp-m3-amethyst.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'amethyst', name: 'Obsidian Monolith', desc: 'Deep plum-obsidian ceramic monoliths & sweeping lavender arch', img: 'https://dejavu.local/wp-m3-amethyst.jpg' },
     { id: 'art:wp-m3-pixel-blue.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'sapphire', name: 'Cobalt Ribbons', desc: 'Midnight cobalt slate & Pixel periwinkle carved sandstone waves', img: 'https://dejavu.local/wp-m3-pixel-blue.jpg' },
+    { id: 'art:wp-m3-cobalt-prism.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'indigo', name: 'Cobalt Prism', desc: 'Deep royal indigo stoneware prisms & midnight slate geometry', img: 'https://dejavu.local/wp-m3-cobalt-prism.jpg' },
     { id: 'art:wp-m3-sage.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'aurora', name: 'Eucalyptus Calm', desc: 'Dark forest plaster curved alcove & matte sage stoneware spheres', img: 'https://dejavu.local/wp-m3-sage.jpg' },
+    { id: 'art:wp-m3-jade-terrace.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'emerald', name: 'Jade Terrace', desc: 'Sculptural dark botanical jade terraces & matte emerald plaster', img: 'https://dejavu.local/wp-m3-jade-terrace.jpg' },
+    { id: 'art:wp-m3-crimson-fold.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'crimson', name: 'Crimson Fold', desc: 'Deep velvet crimson-obsidian ceramic folds & subtle ruby arch', img: 'https://dejavu.local/wp-m3-crimson-fold.jpg' },
     { id: 'art:wp-m3-blossom.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'rose', name: 'Velvet Petals', desc: 'Velvet espresso & dusty terracotta-rose Pixel Swirling Petals ceramic', img: 'https://dejavu.local/wp-m3-blossom.jpg' },
     { id: 'art:wp-m3-honey.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'gold', name: 'Ochre Solitude', desc: 'Warm obsidian-espresso & burnished matte amber Bauhaus arcs', img: 'https://dejavu.local/wp-m3-honey.jpg' },
-    { id: 'art:wp-m3-indigo-dune.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'sapphire', name: 'Indigo Dune', desc: 'Deep twilight indigo-slate matte sculpted sandstone dunes & soft periwinkle crescent disc', img: 'https://dejavu.local/wp-m3-indigo-dune.jpg' },
-    { id: 'art:wp-m3-sienna-arch.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'gold', name: 'Sienna Arch', desc: 'Rich dark espresso-sienna minimalist recessed plaster arches grazed by muted amber light', img: 'https://dejavu.local/wp-m3-sienna-arch.jpg' },
+    { id: 'art:wp-m3-indigo-dune.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'indigo', name: 'Indigo Dune', desc: 'Deep twilight indigo-slate matte sculpted sandstone dunes & crescent disc', img: 'https://dejavu.local/wp-m3-indigo-dune.jpg' },
+    { id: 'art:wp-m3-sienna-arch.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Dark', seed: 'gold', name: 'Sienna Arch', desc: 'Rich dark espresso-sienna minimalist recessed plaster arches in amber light', img: 'https://dejavu.local/wp-m3-sienna-arch.jpg' },
     { id: 'art:wp-m3-porcelain.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'amethyst', name: 'Porcelain Steps', desc: 'Sunlit alabaster stepped terraces & soft lavender-stone curved wall', img: 'https://dejavu.local/wp-m3-porcelain.jpg' },
+    { id: 'art:wp-m3-lavender-mist.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'lavender', name: 'Lavender Mist', desc: 'Airy orchid-white matte arches & pale lavender ceramic ribbons', img: 'https://dejavu.local/wp-m3-lavender-mist.jpg' },
+    { id: 'art:wp-m3-mint-atelier.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'aurora', name: 'Mint Atelier', desc: 'Bright gallery alabaster & cool seafoam-mint sculpted reliefs', img: 'https://dejavu.local/wp-m3-mint-atelier.jpg' },
+    { id: 'art:wp-m3-coral-bloom.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'coral', name: 'Coral Bloom', desc: 'Sunlit porcelain ivory & soft sunset-coral ceramic petals', img: 'https://dejavu.local/wp-m3-coral-bloom.jpg' },
     { id: 'art:wp-m3-meadow.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'aurora', name: 'Jade Pebbles', desc: 'Airy off-white porcelain & organic matte stoneware pebbles with celadon hill', img: 'https://dejavu.local/wp-m3-meadow.jpg' },
     { id: 'art:wp-m3-blush.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'rose', name: 'Terracotta Ribbon', desc: 'Warm sunlit ivory plaster & minimalist folded clay-blush ceramic wave', img: 'https://dejavu.local/wp-m3-blush.jpg' },
     { id: 'art:wp-m3-sky-terrace.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'sapphire', name: 'Sky Terrace', desc: 'Sunlit alabaster & pale sky-periwinkle stepped ceramic gallery terrace walls', img: 'https://dejavu.local/wp-m3-sky-terrace.jpg' },
-    { id: 'art:wp-m3-warm-limestone.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'gold', name: 'Warm Limestone', desc: 'Sunlit warm ivory & pale honey-travertine curved monoliths with smooth river pebble', img: 'https://dejavu.local/wp-m3-warm-limestone.jpg' },
-    // 4 Material Design 3 Butterfly Ceramic Relief Editions
-    { id: 'art:wp-m3-butterfly-obsidian.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Dark', seed: 'amethyst', name: 'Amethyst Origami', desc: 'Sculptural matte lavender-plum & charcoal-amethyst stoneware origami butterfly on obsidian ground', img: 'https://dejavu.local/wp-m3-butterfly-obsidian.jpg' },
-    { id: 'art:wp-m3-butterfly-cobalt.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Dark', seed: 'sapphire', name: 'Pixel Morpho', desc: 'Minimalist folded periwinkle & cobalt-slate bisque ceramic butterfly wings on midnight slate', img: 'https://dejavu.local/wp-m3-butterfly-cobalt.jpg' },
-    { id: 'art:wp-m3-butterfly-porcelain.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Light', seed: 'amethyst', name: 'Porcelain Wings', desc: 'Sunlit alabaster & pale lavender folded paper-ceramic butterfly casting soft gallery shadows', img: 'https://dejavu.local/wp-m3-butterfly-porcelain.jpg' },
-    { id: 'art:wp-m3-butterfly-sage.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Light', seed: 'aurora', name: 'Botanical Sage', desc: 'Matte celadon-sage stoneware origami butterfly perched along a curved pale sage ledge on off-white porcelain', img: 'https://dejavu.local/wp-m3-butterfly-sage.jpg' },
+    { id: 'art:wp-m3-warm-limestone.jpg', cat: 'art', m3: true, butterfly: false, mode: 'Light', seed: 'gold', name: 'Warm Limestone', desc: 'Sunlit warm ivory & pale honey-travertine curved monoliths with river pebble', img: 'https://dejavu.local/wp-m3-warm-limestone.jpg' },
+    // 6 Material Design 3 Butterfly Ceramic Relief Editions (3 Dark, 3 Light)
+    { id: 'art:wp-m3-butterfly-obsidian.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Dark', seed: 'amethyst', name: 'Amethyst Origami', desc: 'Sculptural matte lavender-plum stoneware origami butterfly on obsidian ground', img: 'https://dejavu.local/wp-m3-butterfly-obsidian.jpg' },
+    { id: 'art:wp-m3-butterfly-cobalt.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Dark', seed: 'sapphire', name: 'Pixel Morpho', desc: 'Minimalist folded periwinkle & cobalt-slate bisque ceramic butterfly wings', img: 'https://dejavu.local/wp-m3-butterfly-cobalt.jpg' },
+    { id: 'art:wp-m3-butterfly-emerald.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Dark', seed: 'emerald', name: 'Emerald Origami', desc: 'Deep obsidian gallery stoneware & sculptural botanical jade origami butterfly', img: 'https://dejavu.local/wp-m3-butterfly-emerald.jpg' },
+    { id: 'art:wp-m3-butterfly-porcelain.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Light', seed: 'amethyst', name: 'Porcelain Wings', desc: 'Sunlit alabaster & pale lavender folded paper-ceramic butterfly gallery relief', img: 'https://dejavu.local/wp-m3-butterfly-porcelain.jpg' },
+    { id: 'art:wp-m3-butterfly-sage.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Light', seed: 'aurora', name: 'Botanical Sage', desc: 'Matte celadon-sage stoneware origami butterfly perched on off-white porcelain', img: 'https://dejavu.local/wp-m3-butterfly-sage.jpg' },
+    { id: 'art:wp-m3-butterfly-coral.jpg', cat: 'art', m3: true, butterfly: true, mode: 'Light', seed: 'coral', name: 'Coral Origami', desc: 'Sunlit warm porcelain origami butterfly with blush-coral ceramic wings', img: 'https://dejavu.local/wp-m3-butterfly-coral.jpg' },
     // 1 Adaptive Material You Live Theme
-    { id: 'live:m3-expressive', cat: 'live', m3: true, butterfly: false, mode: 'Adaptive', name: 'Material You Live', desc: 'Adaptive tonal shapes reacting to your Dynamic Color Seed & Dark/Light mode', grad: 'linear-gradient(135deg, #4f378b 0%, #211f26 52%, #633b48 100%)' }
+    { id: 'live:m3-expressive', cat: 'live', m3: true, butterfly: false, mode: 'Adaptive', name: 'Material You Live', desc: 'Adaptive tonal shapes reacting to all 12 Dynamic Color Seeds & Dark/Light mode', grad: 'linear-gradient(135deg, #4f378b 0%, #211f26 52%, #633b48 100%)' }
   ];
 
   const VALID_WALLPAPER_IDS = new Set(WALLPAPER_CATALOG.map((w) => w.id));
@@ -649,6 +669,7 @@
       addressBarSuggestions: true,
       appearanceMode: 'auto',
       accentColor: 'amethyst',
+      autoThemeFromWallpaper: true,
       fontSize: 'medium',
       fontFamily: 'system',
       showHomeButton: true,
@@ -757,7 +778,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.3.0',
+    appVersion: bootData.appVersion || '5.4.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -907,7 +928,7 @@
   btnFavStar.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'toggleFavorite' }); });
   if (btnZoomPill) btnZoomPill.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'resetZoom' }); });
   btnReader.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'toggleReaderMode' }); });
-  btnTabOverview.addEventListener('click', () => send({ type: 'toggleTabOverview', open: !state.tabOverviewOpen }));
+  if (btnTabOverview) btnTabOverview.addEventListener('click', () => send({ type: 'toggleTabOverview', open: !state.tabOverviewOpen }));
 
   function openShieldPopover(e) {
     if (e) e.stopPropagation();
@@ -956,10 +977,12 @@
     });
   }
 
-  btnHistory.addEventListener('click', () => {
-    const r = btnHistory.getBoundingClientRect();
-    send({ type: 'openHistory', anchorRight: Math.round(r.right + 42) });
-  });
+  if (btnHistory) {
+    btnHistory.addEventListener('click', () => {
+      const r = btnHistory.getBoundingClientRect();
+      send({ type: 'openHistory', anchorRight: Math.round(r.right + 42) });
+    });
+  }
 
   btnProfile.addEventListener('click', () => {
     const r = btnProfile.getBoundingClientRect();
@@ -975,6 +998,13 @@
 
   if (startpageProfileBadge) {
     startpageProfileBadge.addEventListener('click', () => {
+      const r = btnProfile.getBoundingClientRect();
+      send({ type: 'openProfiles', anchorRight: Math.round(r.right + 6) });
+    });
+  }
+
+  if (ntMotdMedallion) {
+    ntMotdMedallion.addEventListener('click', () => {
       const r = btnProfile.getBoundingClientRect();
       send({ type: 'openProfiles', anchorRight: Math.round(r.right + 6) });
     });
@@ -1050,7 +1080,18 @@
 
   let motdClickOffset = 0;
   let motdCycleTimer = null;
+  let motdRefreshSpin = 0;
   let lastMotdRenderKey = '';
+
+  const MOTD_TOD_ICONS = {
+    // Material Symbols Rounded wb_sunny (Morning)
+    morning: '<path d="M12 4.5v2M5.6 7.6l1.4 1.4M18.4 7.6l-1.4 1.4M4 15.5h16M7.5 15.5a4.5 4.5 0 0 1 9 0M7 19h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+    // Material Symbols Rounded light_mode (Afternoon)
+    afternoon: '<circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M18 6l-1.4 1.4M7.4 16.6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    // Material Symbols Rounded nights_stay (Evening / Night)
+    evening: '<path d="M19.8 14.8A7.6 7.6 0 0 1 9.2 4.2a7.6 7.6 0 1 0 10.6 10.6z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.8 5.2v2.4M15.6 6.4H18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+    night: '<path d="M19.8 14.8A7.6 7.6 0 0 1 9.2 4.2a7.6 7.6 0 1 0 10.6 10.6z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.8 5.2v2.4M15.6 6.4H18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'
+  };
 
   function getMotdBucketName(hour) {
     if (hour >= 5 && hour < 12) return 'morning';
@@ -1074,7 +1115,7 @@
     const now = new Date();
     const doy = getDayOfYear(now);
     const bucket = getMotdBucketName(now.getHours());
-    const dateStr = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    const dateStr = now.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
     let text;
     if (!offset) {
       const list = PIXEL_MOTD_BUCKETS[bucket] || PIXEL_MOTD_BUCKETS.morning;
@@ -1084,16 +1125,31 @@
       const baseIdx = bucketBase + (doy % 10);
       text = PIXEL_MOTD_ALL[(baseIdx + offset) % PIXEL_MOTD_ALL.length];
     }
-    return { dateStr, text };
+    return { dateStr, text, bucket };
   }
 
   function syncMotdDisplay(force) {
     const enabled = isMotdEnabled();
-    const { dateStr, text } = resolvePixelMotd(motdClickOffset);
-    const key = `${enabled ? 1 : 0}|${dateStr}|${text}`;
+    const hideGreet = !!(state.browserOptions && state.browserOptions.hideGreetingBadge);
+    const isPriv = !!state.isPrivateWindow;
+    const { dateStr, text, bucket } = resolvePixelMotd(motdClickOffset);
+    const key = `${enabled ? 1 : 0}|${hideGreet ? 1 : 0}|${isPriv ? 1 : 0}|${bucket}|${dateStr}|${text}`;
     if (!force && key === lastMotdRenderKey) return;
     lastMotdRenderKey = key;
-    if (ntMotdWrap) ntMotdWrap.classList.toggle('hidden', !enabled);
+    const hideWholeCard = isPriv || (!enabled && hideGreet);
+    if (ntMotdWrap) ntMotdWrap.classList.toggle('hidden', hideWholeCard);
+    if (ntMotdCard) ntMotdCard.classList.toggle('motd-collapsed', !enabled);
+    if (spBadgeGreeting) {
+      const gr = getTimeGreeting();
+      if (spBadgeGreeting.textContent !== gr) spBadgeGreeting.textContent = gr;
+    }
+    if (ntMotdTodSvg) {
+      const nextPaths = MOTD_TOD_ICONS[bucket] || MOTD_TOD_ICONS.evening;
+      if (ntMotdTodSvg.dataset.bucket !== bucket) {
+        ntMotdTodSvg.dataset.bucket = bucket;
+        ntMotdTodSvg.innerHTML = nextPaths;
+      }
+    }
     if (ntMotdDate && ntMotdDate.textContent !== dateStr) ntMotdDate.textContent = dateStr;
     if (ntMotdText && ntMotdText.textContent !== text) ntMotdText.textContent = text;
     setSwitchState(prefMotd, enabled);
@@ -1108,20 +1164,26 @@
     send({ type: 'toggleMotd', enabled: nextEnabled });
   }
 
-  if (ntMotdBtn) {
-    ntMotdBtn.addEventListener('click', () => {
-      motdClickOffset = (motdClickOffset + 1) % PIXEL_MOTD_ALL.length;
-      if (motdCycleTimer) clearTimeout(motdCycleTimer);
-      ntMotdBtn.classList.add('is-cycling');
-      motdCycleTimer = setTimeout(() => {
-        motdCycleTimer = null;
-        syncMotdDisplay(true);
-        requestAnimationFrame(() => {
-          ntMotdBtn.classList.remove('is-cycling');
-        });
-      }, 150);
-    });
+  function cyclePixelMotd() {
+    if (!ntMotdCard) return;
+    motdClickOffset = (motdClickOffset + 1) % PIXEL_MOTD_ALL.length;
+    if (ntMotdRefresh) {
+      motdRefreshSpin += 180;
+      ntMotdRefresh.style.setProperty('--spin-deg', `${motdRefreshSpin}deg`);
+    }
+    if (motdCycleTimer) clearTimeout(motdCycleTimer);
+    ntMotdCard.classList.add('is-cycling');
+    motdCycleTimer = setTimeout(() => {
+      motdCycleTimer = null;
+      syncMotdDisplay(true);
+      requestAnimationFrame(() => {
+        ntMotdCard.classList.remove('is-cycling');
+      });
+    }, 150);
   }
+
+  if (ntMotdRefresh) ntMotdRefresh.addEventListener('click', cyclePixelMotd);
+  if (ntMotdText) ntMotdText.addEventListener('click', cyclePixelMotd);
   if (prefMotd) prefMotd.addEventListener('click', toggleMotdSetting);
   if (optSpMotd) optSpMotd.addEventListener('click', toggleMotdSetting);
   syncMotdDisplay(true);
@@ -1784,8 +1846,32 @@
   scName.addEventListener('keydown', (e) => { if (e.key === 'Enter') scUrl.focus(); });
 
   // =========================================================================
-  // Material Design 3 Wallpaper Gallery (17 Pure M3 Themes)
+  // Material Design 3 Wallpaper Gallery (24 Pure M3 HD + 1 Live = 25 Themes)
   // =========================================================================
+  function isAutoThemeEnabled() {
+    if (state.browserOptions && typeof state.browserOptions.autoThemeFromWallpaper === 'boolean') {
+      return state.browserOptions.autoThemeFromWallpaper;
+    }
+    return true;
+  }
+
+  let lastSampledCustomWpId = '';
+  if (window.DejavuNewTabCanvas && typeof window.DejavuNewTabCanvas.setCustomThemeCallback === 'function') {
+    window.DejavuNewTabCanvas.setCustomThemeCallback((wpId, sampled) => {
+      if (!wpId || !sampled || !isAutoThemeEnabled() || state.isPrivateWindow) return;
+      if (wpId === lastSampledCustomWpId) return;
+      lastSampledCustomWpId = wpId;
+      const nextSeed = SEED_COLORS[sampled.accentColor] ? sampled.accentColor : 'amethyst';
+      const nextMode = sampled.appearanceMode === 'light' ? 'light' : 'dark';
+      state.browserOptions = Object.assign({}, state.browserOptions || {}, {
+        accentColor: nextSeed,
+        appearanceMode: nextMode
+      });
+      applyBrowserOptions(state.browserOptions);
+      send({ type: 'setWallpaper', wallpaper: wpId, accentColor: nextSeed, appearanceMode: nextMode });
+    });
+  }
+
   function renderWallpaperCardsInto(gridEl, catFilter) {
     if (!gridEl) return;
     gridEl.innerHTML = '';
@@ -1861,7 +1947,21 @@
         window.DejavuNewTabCanvas.setWallpaper(item.id);
         renderWallpaperGrid();
         if (state.settingsOpen && activeSettingsPane === 'appearance') renderSettingsWallpaperGrid();
-        send({ type: 'setWallpaper', wallpaper: item.id });
+        const autoMatch = isAutoThemeEnabled() && !state.isPrivateWindow;
+        if (autoMatch && item.seed && (item.mode === 'Dark' || item.mode === 'Light')) {
+          const nextMode = item.mode.toLowerCase() === 'light' ? 'light' : 'dark';
+          state.browserOptions = Object.assign({}, state.browserOptions || {}, {
+            accentColor: item.seed,
+            appearanceMode: nextMode
+          });
+          applyBrowserOptions(state.browserOptions);
+          send({ type: 'setWallpaper', wallpaper: item.id, accentColor: item.seed, appearanceMode: nextMode });
+        } else if (item.isCustom) {
+          lastSampledCustomWpId = '';
+          send({ type: 'setWallpaper', wallpaper: item.id, skipAutoTheme: !autoMatch });
+        } else {
+          send({ type: 'setWallpaper', wallpaper: item.id, skipAutoTheme: true });
+        }
       });
 
       gridEl.appendChild(card);
@@ -1876,7 +1976,7 @@
   // =========================================================================
   const SETTINGS_PANE_META = {
     you: { title: 'You and Google', sub: 'Manage your Google Account, Main Profile, and simultaneous Chrome-style profile windows' },
-    appearance: { title: 'Appearance & Material You', sub: 'Theme mode, Dynamic Color seeds, 17 Pure M3 wallpapers, typography, zoom & chrome' },
+    appearance: { title: 'Appearance & Material You', sub: '12 HCT Dynamic Color themes, auto wallpaper matching, 24 Pure M3 wallpapers, typography & zoom' },
     privacy: { title: 'Privacy & Security', sub: 'Brave-Grade Shields, fingerprinting defense, cookie notice blocking, Clear Browsing Data & permissions' },
     search: { title: 'Search Engine', sub: 'Choose your default search provider, custom search template & address bar suggestions' },
     tabs: { title: 'Tabs & On Startup', sub: 'Startup session restore, Homepage, Memory Saver inactivity timer & keyboard shortcuts' },
@@ -1884,7 +1984,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.3.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.4.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2123,6 +2223,7 @@
       o.blockCookieNotices !== false,
       o.stripTrackingParams !== false,
       o.appearanceMode || 'auto',
+      o.autoThemeFromWallpaper !== false,
       o.wallpaperDim || 'balanced',
       !!state.isPrivateWindow
     ]);
@@ -2137,9 +2238,9 @@
       body.classList.toggle('reduce-motion', !!o.reduceWallpaperMotion);
       if (btnToolbarHome) btnToolbarHome.classList.toggle('hidden', o.showHomeButton === false);
       if (spPrivateChip) spPrivateChip.classList.toggle('hidden', !state.isPrivateWindow);
-      if (startpageProfileBadge) startpageProfileBadge.classList.toggle('hidden', !!o.hideGreetingBadge || !!state.isPrivateWindow);
       if (heroSearchWrap) heroSearchWrap.classList.toggle('hidden', !!o.hideStartPageSearch);
       syncMotdDisplay();
+      syncAccentSwatchesUi(ac, o.autoThemeFromWallpaper !== false);
       if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
         window.DejavuNewTabCanvas.setOptions({
           reduceMotion: !!o.reduceWallpaperMotion,
@@ -2158,11 +2259,23 @@
     }
   }
 
+  function syncAccentSwatchesUi(ac, autoThemeOn) {
+    const activeSeed = ac || 'amethyst';
+    [optAccentSwatches, storeAccentSwatches].forEach((grid) => {
+      if (!grid) return;
+      grid.querySelectorAll('.accent-swatch').forEach((b) => {
+        b.classList.toggle('active', b.dataset.accentChoice === activeSeed);
+      });
+    });
+    setSwitchState(optAutoTheme, autoThemeOn !== false);
+    setSwitchState(prefAutoTheme, autoThemeOn !== false);
+  }
+
   function syncSettingsUi() {
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.3.0';
+    const ver = state.appVersion || '5.4.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -2172,12 +2285,7 @@
 
     // Category 2: Appearance & Material You
     setSegmentedVal(optAppearanceMode, o.appearanceMode || 'auto');
-    if (optAccentSwatches) {
-      const ac = o.accentColor || 'amethyst';
-      optAccentSwatches.querySelectorAll('.accent-swatch').forEach((b) => {
-        b.classList.toggle('active', b.dataset.accentChoice === ac);
-      });
-    }
+    syncAccentSwatchesUi(o.accentColor || 'amethyst', o.autoThemeFromWallpaper !== false);
     setSegmentedVal(optWpDim, o.wallpaperDim || 'balanced');
     if (optFontSize) optFontSize.value = o.fontSize || 'medium';
     if (optFontFamily) optFontFamily.value = o.fontFamily || 'system';
@@ -2491,6 +2599,20 @@
       updateOpt({ accentColor: btn.dataset.accentChoice || 'amethyst' });
     });
   }
+  if (storeAccentSwatches) {
+    storeAccentSwatches.addEventListener('click', (e) => {
+      const btn = e.target.closest('.accent-swatch');
+      if (!btn) return;
+      updateOpt({ accentColor: btn.dataset.accentChoice || 'amethyst' });
+    });
+  }
+  function toggleAutoThemePref() {
+    const next = !isAutoThemeEnabled();
+    updateOpt({ autoThemeFromWallpaper: next });
+    send({ type: 'setAutoThemeFromWallpaper', enabled: next });
+  }
+  if (optAutoTheme) optAutoTheme.addEventListener('click', toggleAutoThemePref);
+  if (prefAutoTheme) prefAutoTheme.addEventListener('click', toggleAutoThemePref);
   if (optWpFilter) {
     optWpFilter.addEventListener('click', (e) => {
       const btn = e.target.closest('.opt-seg-btn');
@@ -3347,7 +3469,7 @@
     'wallpaper': '<svg viewBox="0 0 18 18" fill="none"><rect x="2.6" y="3.4" width="12.8" height="11.2" rx="2.4" stroke="currentColor" stroke-width="1.45"/><circle cx="6.5" cy="7" r="1.2" fill="currentColor"/><path d="M3.2 12.4l3.5-3.2 2.4 2.2 2.2-2.1 3.4 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     'customize': '<svg viewBox="0 0 18 18" fill="none"><path d="M3 5.2h12M3 9h12M3 12.8h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.72"/><circle cx="6.2" cy="5.2" r="1.7" fill="currentColor"/><circle cx="11.8" cy="9" r="1.7" fill="currentColor"/><circle cx="7.6" cy="12.8" r="1.7" fill="currentColor"/></svg>',
     'turbo': '<svg viewBox="0 0 18 18" fill="none"><path d="M10.2 2.4L4.4 9.8h4.5l-1.1 5.8 5.8-7.4H9.1l1.1-5.8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
-    'settings': '<svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.35" stroke="currentColor" stroke-width="1.45"/><path d="M9 2.6v1.5M9 13.9v1.5M2.6 9h1.5M13.9 9h1.5M4.5 4.5l1.1 1.1M12.4 12.4l1.1 1.1M13.5 4.5l-1.1 1.1M5.6 12.4l-1.1 1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    'settings': '<svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     'edit': '<svg viewBox="0 0 18 18" fill="none"><path d="M12.2 3.2l2.6 2.6-8.4 8.4-3.2.6.6-3.2 8.4-8.4z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg>',
     'trash': '<svg viewBox="0 0 18 18" fill="none"><path d="M4.2 5.4h9.6M7 5.4V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.4M5.4 5.4l.7 8.8a1.3 1.3 0 0 0 1.3 1.2h3.2a1.3 1.3 0 0 0 1.3-1.2l.7-8.8" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     'link': '<svg viewBox="0 0 18 18" fill="none"><path d="M7.6 10.4a3.3 3.3 0 0 0 4.6 0l2-2a3.3 3.3 0 0 0-4.6-4.6L8.4 5M10.4 7.6a3.3 3.3 0 0 0-4.6 0l-2 2a3.3 3.3 0 0 0 4.6 4.6l1.2-1.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
@@ -4896,7 +5018,7 @@
     const ovOpen = !!next.tabOverviewOpen;
     body.classList.toggle('tab-overview-open', ovOpen);
     tabOverview.classList.toggle('hidden', !ovOpen);
-    btnTabOverview.classList.toggle('is-active', ovOpen);
+    if (btnTabOverview) btnTabOverview.classList.toggle('is-active', ovOpen);
     if (ovOpen) {
       wallpaperStore.classList.add('hidden');
       shortcutModal.classList.add('hidden');

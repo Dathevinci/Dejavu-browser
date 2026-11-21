@@ -20,6 +20,7 @@ namespace DejavuBrowser
         private bool _hiding;
         private int _showGeneration;
         private bool _lastSurfaceLight;
+        private Color _lastSurfaceColor = Color.Empty;
 
         public bool IsPopupOpen
         {
@@ -229,14 +230,20 @@ namespace DejavuBrowser
 
         public void UpdateSurfaceTheme(bool isLight)
         {
+            Color bg = isLight ? Color.FromArgb(254, 247, 255) : Color.FromArgb(20, 18, 24);
+            UpdateSurfaceTheme(isLight, bg);
+        }
+
+        public void UpdateSurfaceTheme(bool isLight, Color surfaceColor)
+        {
             if (IsDisposed) return;
-            if (_everShown && _lastSurfaceLight == isLight) return;
+            if (_everShown && _lastSurfaceLight == isLight && _lastSurfaceColor == surfaceColor) return;
             _lastSurfaceLight = isLight;
-            Color bg = isLight ? Color.FromArgb(251, 248, 253) : Color.FromArgb(20, 18, 24);
-            BackColor = bg;
+            _lastSurfaceColor = surfaceColor;
+            BackColor = surfaceColor;
             if (_wv != null && !_wv.IsDisposed)
             {
-                try { _wv.DefaultBackgroundColor = bg; } catch { }
+                try { _wv.DefaultBackgroundColor = surfaceColor; } catch { }
             }
             if (IsHandleCreated)
             {

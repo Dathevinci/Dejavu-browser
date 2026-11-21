@@ -11,7 +11,7 @@
         android:scaleY="1.08"
         android:translateX="22"
         android:translateY="22">
-        <!-- Iconic Sculpted Material Design 3 Butterfly (v5.3.0) -->
+        <!-- Iconic Sculpted Material Design 3 Butterfly (v5.4.0) -->
         <!-- Sweeping Upper Wings -->
         <path
             android:fillColor="#D0BCFF"

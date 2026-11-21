@@ -1,12 +1,12 @@
 /**
- * dejavu v5.3.0 — Zero-Idle-CPU Pure Material Design 3 Wallpaper Engine
+ * dejavu v5.4.0 — Zero-Idle-CPU Pure Material Design 3 Wallpaper Engine
  * - Static HD wallpapers (`art:wp-m3-*` & `custom`): single-shot draw on load, resize,
  *   or option change — STRICTLY ZERO continuous requestAnimationFrame loop (0.0% idle CPU!).
- * - Single adaptive live theme (`live:m3-expressive`): reacts cleanly to all 6 Material You
+ * - Single adaptive live theme (`live:m3-expressive`): reacts cleanly to all 12 Material You
  *   Dynamic Color Seeds + Dark/Light polarity, throttled to ~30fps and automatically paused
  *   whenever document.hidden, on a live webpage, or reduceWallpaperMotion is active.
- * - Legacy wallpaper migration: any persisted old non-M3 wallpaper or removed live theme
- *   gracefully migrates to `art:wp-m3-amethyst.jpg` (Obsidian Monolith).
+ * - Custom wallpaper auto-sampling: samples a tiny 16×16 offscreen canvas to pick the
+ *   closest Material You HCT seed + Dark/Light polarity when auto-matching is enabled.
  */
 (function () {
   const DEFAULT_WALLPAPER = 'art:wp-m3-amethyst.jpg';
@@ -19,15 +19,23 @@
     'art:wp-m3-honey.jpg',
     'art:wp-m3-indigo-dune.jpg',
     'art:wp-m3-sienna-arch.jpg',
+    'art:wp-m3-crimson-fold.jpg',
+    'art:wp-m3-jade-terrace.jpg',
+    'art:wp-m3-cobalt-prism.jpg',
     'art:wp-m3-porcelain.jpg',
     'art:wp-m3-meadow.jpg',
     'art:wp-m3-blush.jpg',
     'art:wp-m3-sky-terrace.jpg',
     'art:wp-m3-warm-limestone.jpg',
+    'art:wp-m3-coral-bloom.jpg',
+    'art:wp-m3-lavender-mist.jpg',
+    'art:wp-m3-mint-atelier.jpg',
     'art:wp-m3-butterfly-obsidian.jpg',
     'art:wp-m3-butterfly-cobalt.jpg',
+    'art:wp-m3-butterfly-emerald.jpg',
     'art:wp-m3-butterfly-porcelain.jpg',
-    'art:wp-m3-butterfly-sage.jpg'
+    'art:wp-m3-butterfly-sage.jpg',
+    'art:wp-m3-butterfly-coral.jpg'
   ]);
 
   const LIGHT_M3_ART_IDS = new Set([
@@ -36,8 +44,12 @@
     'art:wp-m3-blush.jpg',
     'art:wp-m3-sky-terrace.jpg',
     'art:wp-m3-warm-limestone.jpg',
+    'art:wp-m3-coral-bloom.jpg',
+    'art:wp-m3-lavender-mist.jpg',
+    'art:wp-m3-mint-atelier.jpg',
     'art:wp-m3-butterfly-porcelain.jpg',
-    'art:wp-m3-butterfly-sage.jpg'
+    'art:wp-m3-butterfly-sage.jpg',
+    'art:wp-m3-butterfly-coral.jpg'
   ]);
 
   const LIVE_THEMES = {
@@ -50,28 +62,64 @@
 
   const M3_SEED_PALETTES = {
     amethyst: {
+      rgb: [152, 114, 232],
       dark:  { bg: '#141218', surf1: '#1d1b20', surf2: '#2b2930', p: '#d0bcff', pc: '#4f378b', sc: '#4a4458', tc: '#633b48', t: '#efb8c8' },
       light: { bg: '#fef7ff', surf1: '#f3edf7', surf2: '#e6e0e9', p: '#6750a4', pc: '#eaddff', sc: '#e8def8', tc: '#ffd8e4', t: '#7d5260' }
     },
     sapphire: {
+      rgb: [59, 130, 246],
       dark:  { bg: '#111318', surf1: '#191c24', surf2: '#282d3a', p: '#a8c7fa', pc: '#0842a0', sc: '#2b3a55', tc: '#4d3b59', t: '#ddb8f0' },
-      light: { bg: '#f8f9ff', surf1: '#eef1fa', surf2: '#e1e5f0', p: '#1b6ef3', pc: '#d3e3fd', sc: '#d8e5fb', tc: '#f4d8ff', t: '#6b4e74' }
+      light: { bg: '#faf9ff', surf1: '#edeff7', surf2: '#e1e3eb', p: '#1b6ef3', pc: '#d3e3fd', sc: '#dae2f9', tc: '#f4d8ff', t: '#6b4e74' }
+    },
+    indigo: {
+      rgb: [88, 101, 212],
+      dark:  { bg: '#12131b', surf1: '#1a1b23', surf2: '#292a32', p: '#bbc3ff', pc: '#303f9f', sc: '#3f425d', tc: '#0f4f4c', t: '#93d5d1' },
+      light: { bg: '#fbf8ff', surf1: '#eeecf6', surf2: '#e2e0eb', p: '#3f51b5', pc: '#dfe0ff', sc: '#e0e1f9', tc: '#b2f1ec', t: '#0f4f4c' }
     },
     aurora: {
-      dark:  { bg: '#0f1513', surf1: '#171e1c', surf2: '#26302d', p: '#7bd8c6', pc: '#005144', sc: '#26423d', tc: '#3b4a62', t: '#b4c9e8' },
-      light: { bg: '#f4fbf8', surf1: '#e9f3ef', surf2: '#dde8e3', p: '#006a60', pc: '#9cf4e1', sc: '#cde8e0', tc: '#d3e4ff', t: '#3e5f87' }
+      rgb: [20, 168, 152],
+      dark:  { bg: '#0f1513', surf1: '#171d1b', surf2: '#252b29', p: '#7bd8c6', pc: '#005048', sc: '#334b46', tc: '#284b62', t: '#a9cbe5' },
+      light: { bg: '#f4fbf8', surf1: '#e8efec', surf2: '#dce4e1', p: '#006a60', pc: '#98f5e2', sc: '#cde8e0', tc: '#cce5ff', t: '#3e5f87' }
     },
-    rose: {
-      dark:  { bg: '#181115', surf1: '#20191d', surf2: '#33272e', p: '#ffb0ce', pc: '#7c294c', sc: '#532c3d', tc: '#5f3f2c', t: '#f5be98' },
-      light: { bg: '#fff8f9', surf1: '#faedf0', surf2: '#efe0e4', p: '#a83268', pc: '#ffd8e6', sc: '#f7dae5', tc: '#ffddc6', t: '#7f5539' }
+    emerald: {
+      rgb: [36, 156, 78],
+      dark:  { bg: '#101511', surf1: '#181d19', surf2: '#262c27', p: '#8bd89b', pc: '#005321', sc: '#374b3a', tc: '#1b4d5a', t: '#9ed0e0' },
+      light: { bg: '#f5fbf5', surf1: '#e9efe9', surf2: '#dde4dd', p: '#146c2e', pc: '#a7f5b5', sc: '#d3e8d4', tc: '#baecfc', t: '#1b4d5a' }
+    },
+    lime: {
+      rgb: [148, 178, 42],
+      dark:  { bg: '#14150e', surf1: '#1c1d16', surf2: '#2a2c24', p: '#c4d97a', pc: '#404c00', sc: '#444931', tc: '#005043', t: '#8cd6c1' },
+      light: { bg: '#fafaf0', surf1: '#eeeee4', surf2: '#e2e3d8', p: '#556600', pc: '#e0f693', sc: '#e1e6c7', tc: '#a8f3dd', t: '#005043' }
     },
     gold: {
-      dark:  { bg: '#16130e', surf1: '#201c15', surf2: '#322c21', p: '#ffb951', pc: '#633f00', sc: '#4a391e', tc: '#3f4b34', t: '#bdd2a4' },
-      light: { bg: '#fffaf2', surf1: '#f7f0e4', surf2: '#ece4d5', p: '#8a5600', pc: '#ffddb3', sc: '#f4e0c2', tc: '#d8e9c0', t: '#4e6338' }
+      rgb: [224, 152, 40],
+      dark:  { bg: '#17130d', surf1: '#1f1b15', surf2: '#2e2923', p: '#ffb951', pc: '#643e00', sc: '#56442c', tc: '#2a4f23', t: '#a8d49c' },
+      light: { bg: '#fff8f2', surf1: '#f4ebe2', surf2: '#e8dfd6', p: '#8a5600', pc: '#ffddb3', sc: '#f9e0be', tc: '#c3f0b7', t: '#2a4f23' }
+    },
+    coral: {
+      rgb: [228, 104, 62],
+      dark:  { bg: '#191210', surf1: '#221a17', surf2: '#312825', p: '#ffb59d', pc: '#822806', sc: '#5d4036', tc: '#0b513a', t: '#8cd5b8' },
+      light: { bg: '#fff8f6', surf1: '#f6eae6', surf2: '#eaded9', p: '#b33b15', pc: '#ffdbd0', sc: '#fbddd3', tc: '#a8f2d4', t: '#0b513a' }
+    },
+    crimson: {
+      rgb: [204, 48, 66],
+      dark:  { bg: '#1a1112', surf1: '#23191a', surf2: '#322728', p: '#ffb3b5', pc: '#920020', sc: '#5d3f41', tc: '#04513d', t: '#8ad6bd' },
+      light: { bg: '#fff8f7', surf1: '#f6eaea', surf2: '#eadede', p: '#ba1a2d', pc: '#ffdada', sc: '#fbdddd', tc: '#a6f3d9', t: '#04513d' }
+    },
+    rose: {
+      rgb: [212, 86, 140],
+      dark:  { bg: '#181114', surf1: '#21191d', surf2: '#30282c', p: '#ffb0ce', pc: '#7b294d', sc: '#583f49', tc: '#005140', t: '#88d6c0' },
+      light: { bg: '#fff8f8', surf1: '#f4eaed', surf2: '#e8dfe2', p: '#a83268', pc: '#ffd8e6', sc: '#f9d8e4', tc: '#a4f3dc', t: '#005140' }
+    },
+    lavender: {
+      rgb: [176, 112, 224],
+      dark:  { bg: '#161219', surf1: '#1e1a21', surf2: '#2d2830', p: '#e2b7ff', pc: '#612b87', sc: '#4f425a', tc: '#005044', t: '#86d6c3' },
+      light: { bg: '#fdf7ff', surf1: '#f1ebf4', surf2: '#e5dfe8', p: '#7c43a8', pc: '#f3daff', sc: '#eedcf8', tc: '#a2f3df', t: '#005044' }
     },
     silver: {
-      dark:  { bg: '#121316', surf1: '#1a1c20', surf2: '#2a2d35', p: '#b8c8e2', pc: '#38485e', sc: '#343d4c', tc: '#4d4257', t: '#d6c1e8' },
-      light: { bg: '#f8f9fc', surf1: '#eef0f5', surf2: '#e2e5ec', p: '#455a77', pc: '#d8e4f8', sc: '#dce4f0', tc: '#efe0ff', t: '#645275' }
+      rgb: [130, 146, 172],
+      dark:  { bg: '#121316', surf1: '#1a1c1f', surf2: '#292b2f', p: '#b8c8e2', pc: '#38485e', sc: '#3e4552', tc: '#005047', t: '#84d4c6' },
+      light: { bg: '#f9f9fc', surf1: '#ecedf1', surf2: '#e0e2e6', p: '#455a77', pc: '#d8e4f8', sc: '#dce4f0', tc: '#a0f1e2', t: '#005047' }
     }
   };
 
@@ -125,6 +173,7 @@
 
   function isLightMaterialWallpaper(wp) {
     if (!wp) return false;
+    if (wp.startsWith('custom') && typeof lastCustomLight === 'boolean') return lastCustomLight;
     return LIGHT_M3_ART_IDS.has(wp);
   }
 
@@ -364,6 +413,72 @@
     }
   }
 
+  let customThemeCallback = null;
+  let lastCustomLight = null;
+
+  function sampleImageTheme(img) {
+    try {
+      if (!img || !img.naturalWidth || !img.naturalHeight) return null;
+      const sc = document.createElement('canvas');
+      sc.width = 16;
+      sc.height = 16;
+      const sctx = sc.getContext('2d', { willReadFrequently: true });
+      if (!sctx) return null;
+      sctx.drawImage(img, 0, 0, 16, 16);
+      const data = sctx.getImageData(0, 0, 16, 16).data;
+      let lumSum = 0;
+      let rSum = 0;
+      let gSum = 0;
+      let bSum = 0;
+      let weightSum = 0;
+      let chromaSum = 0;
+      const count = 256;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        lumSum += lum;
+        const mx = Math.max(r, g, b);
+        const mn = Math.min(r, g, b);
+        const chroma = mx - mn;
+        chromaSum += chroma;
+        // Weight vibrant mid-tone pixels higher than pure white/black backgrounds
+        const w = 0.15 + (chroma / 255) * 3.0;
+        rSum += r * w;
+        gSum += g * w;
+        bSum += b * w;
+        weightSum += w;
+      }
+      const avgLum = lumSum / count;
+      const avgChroma = chromaSum / count;
+      const appearanceMode = avgLum >= 142 ? 'light' : 'dark';
+      if (avgChroma < 16 || weightSum <= 0) {
+        return { accentColor: 'silver', appearanceMode };
+      }
+      const dr = rSum / weightSum;
+      const dg = gSum / weightSum;
+      const db = bSum / weightSum;
+      let bestSeed = 'amethyst';
+      let bestDist = Infinity;
+      const keys = Object.keys(M3_SEED_PALETTES);
+      for (let k = 0; k < keys.length; k++) {
+        const key = keys[k];
+        if (key === 'silver') continue;
+        const rgb = M3_SEED_PALETTES[key].rgb;
+        if (!rgb) continue;
+        const d = (dr - rgb[0]) * (dr - rgb[0]) * 1.1 + (dg - rgb[1]) * (dg - rgb[1]) * 1.3 + (db - rgb[2]) * (db - rgb[2]);
+        if (d < bestDist) {
+          bestDist = d;
+          bestSeed = key;
+        }
+      }
+      return { accentColor: bestSeed, appearanceMode };
+    } catch {
+      return null;
+    }
+  }
+
   function applyLoadedArt(wpId, img) {
     if (currentWallpaper !== wpId) return;
     if (artImage && artImage !== img && artLoaded && !reduceMotion) {
@@ -375,6 +490,17 @@
     }
     artImage = img;
     artLoaded = true;
+    if (wpId && wpId.startsWith('custom')) {
+      const sampled = sampleImageTheme(img);
+      if (sampled) {
+        lastCustomLight = (sampled.appearanceMode === 'light');
+        if (typeof customThemeCallback === 'function') {
+          try { customThemeCallback(wpId, sampled); } catch {}
+        }
+      }
+    } else {
+      lastCustomLight = null;
+    }
     refreshRenderState();
     markReady();
   }
@@ -526,6 +652,10 @@
     cancelAllRafs();
   }
 
+  function setCustomThemeCallback(cb) {
+    customThemeCallback = typeof cb === 'function' ? cb : null;
+  }
+
   window.DejavuNewTabCanvas = {
     init,
     start,
@@ -535,6 +665,8 @@
     setOptions,
     whenReady,
     normalizeWallpaperId,
+    sampleImageTheme,
+    setCustomThemeCallback,
     LIVE_THEMES
   };
 })();

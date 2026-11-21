@@ -1,13 +1,13 @@
 /* ==========================================================================
    dejavu Official Website — Google Material Design 3 (m3.material.io / Pixel)
-   Full HCT Tonal Surface Container Architecture · 6 Dynamic Color Seeds
+   Full HCT Tonal Surface Container Architecture · 12 Dynamic Color Seeds
    Dark & Light Polarity · Expressive Radii · Tactile State Layers
    Pure Opaque HCT Tonal Surfaces · Zero Glassmorphism · Pure Transform/Opacity Motion
    ========================================================================== */
 
 :root,
 html[data-theme="dark"] {
-  /* M3 Baseline Dark — Amethyst (m3.material.io HCT tonal tokens) */
+  /* 1. M3 Baseline Dark — Amethyst (m3.material.io HCT tonal tokens) */
   --md-surface: #141218;
   --md-surface-container-lowest: #0f0d13;
   --md-surface-container-low: #1d1b20;
@@ -57,7 +57,8 @@ html[data-theme="dark"] {
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
-/* Dynamic Color Seeds — Dark Mode (Complete Harmonized HCT Palettes) */
+/* Dynamic Color Seeds — Dark Mode (12 Complete Harmonized HCT Palettes) */
+/* 2. Pixel Blue (sapphire) */
 html[data-theme="dark"][data-accent="sapphire"] {
   --md-surface: #111318;
   --md-surface-container-lowest: #0c0e13;
@@ -85,6 +86,35 @@ html[data-theme="dark"][data-accent="sapphire"] {
   --md-scrim-bottom: rgba(17, 19, 24, 0.80);
 }
 
+/* 3. Royal Indigo (indigo) */
+html[data-theme="dark"][data-accent="indigo"] {
+  --md-surface: #12131b;
+  --md-surface-container-lowest: #0d0e15;
+  --md-surface-container-low: #1a1b24;
+  --md-surface-container: #1e2029;
+  --md-surface-container-high: #282a34;
+  --md-surface-container-highest: #333540;
+  --md-on-surface: #e3e1ed;
+  --md-on-surface-variant: #c5c5d4;
+  --md-outline: #8f909e;
+  --md-outline-variant: #454654;
+  --md-primary: #bbc3ff;
+  --md-on-primary: #1a2678;
+  --md-primary-container: #334092;
+  --md-on-primary-container: #dee0ff;
+  --md-secondary: #c3c5dd;
+  --md-on-secondary: #2d2f42;
+  --md-secondary-container: #434559;
+  --md-on-secondary-container: #dfe1f9;
+  --md-tertiary: #e6bad8;
+  --md-on-tertiary: #45263e;
+  --md-tertiary-container: #5d3c55;
+  --md-on-tertiary-container: #ffd7f2;
+  --md-scrim-top: rgba(18, 19, 27, 0.42);
+  --md-scrim-bottom: rgba(18, 19, 27, 0.80);
+}
+
+/* 4. Aurora Teal (aurora) */
 html[data-theme="dark"][data-accent="aurora"] {
   --md-surface: #0f1513;
   --md-surface-container-lowest: #0a0f0e;
@@ -96,7 +126,7 @@ html[data-theme="dark"][data-accent="aurora"] {
   --md-on-surface-variant: #bec9c5;
   --md-outline: #89938f;
   --md-outline-variant: #3f4946;
-  --md-primary: #82d5c7;
+  --md-primary: #7bd8c6;
   --md-on-primary: #003731;
   --md-primary-container: #005048;
   --md-on-primary-container: #9ef2e4;
@@ -112,33 +142,63 @@ html[data-theme="dark"][data-accent="aurora"] {
   --md-scrim-bottom: rgba(15, 21, 19, 0.80);
 }
 
-html[data-theme="dark"][data-accent="rose"] {
-  --md-surface: #181114;
-  --md-surface-container-lowest: #120c0f;
-  --md-surface-container-low: #20191c;
-  --md-surface-container: #251d20;
-  --md-surface-container-high: #2f282b;
-  --md-surface-container-highest: #3b3236;
-  --md-on-surface: #ede0e4;
-  --md-on-surface-variant: #d5c2c8;
-  --md-outline: #9e8c92;
-  --md-outline-variant: #514348;
-  --md-primary: #ffb0cc;
-  --md-on-primary: #5e1134;
-  --md-primary-container: #7b294b;
-  --md-on-primary-container: #ffd8e4;
-  --md-secondary: #e2bdc8;
-  --md-on-secondary: #422932;
-  --md-secondary-container: #5b3f4a;
-  --md-on-secondary-container: #fed9e4;
-  --md-tertiary: #f1bd99;
-  --md-on-tertiary: #49280f;
-  --md-tertiary-container: #633e23;
-  --md-on-tertiary-container: #ffdcc5;
-  --md-scrim-top: rgba(24, 17, 20, 0.42);
-  --md-scrim-bottom: rgba(24, 17, 20, 0.80);
+/* 5. Botanical Jade (emerald) */
+html[data-theme="dark"][data-accent="emerald"] {
+  --md-surface: #101511;
+  --md-surface-container-lowest: #0a0f0b;
+  --md-surface-container-low: #181d18;
+  --md-surface-container: #1c211d;
+  --md-surface-container-high: #262c27;
+  --md-surface-container-highest: #313732;
+  --md-on-surface: #dfe4dd;
+  --md-on-surface-variant: #c0c9bf;
+  --md-outline: #8a938a;
+  --md-outline-variant: #414941;
+  --md-primary: #8bd89b;
+  --md-on-primary: #003915;
+  --md-primary-container: #005322;
+  --md-on-primary-container: #a6f5b5;
+  --md-secondary: #b7ccb8;
+  --md-on-secondary: #223526;
+  --md-secondary-container: #384b3c;
+  --md-on-secondary-container: #d3e8d4;
+  --md-tertiary: #a1ced8;
+  --md-on-tertiary: #00363e;
+  --md-tertiary-container: #1f4d55;
+  --md-on-tertiary-container: #bdeaf5;
+  --md-scrim-top: rgba(16, 21, 17, 0.42);
+  --md-scrim-bottom: rgba(16, 21, 17, 0.80);
 }
 
+/* 6. Matcha Olive (lime) */
+html[data-theme="dark"][data-accent="lime"] {
+  --md-surface: #14150e;
+  --md-surface-container-lowest: #0e1009;
+  --md-surface-container-low: #1c1d15;
+  --md-surface-container: #202119;
+  --md-surface-container-high: #2a2c23;
+  --md-surface-container-highest: #35372d;
+  --md-on-surface: #e4e3d7;
+  --md-on-surface-variant: #c7c8b8;
+  --md-outline: #919283;
+  --md-outline-variant: #46483b;
+  --md-primary: #c4d97a;
+  --md-on-primary: #2b3400;
+  --md-primary-container: #3f4c00;
+  --md-on-primary-container: #e0f593;
+  --md-secondary: #c5c9ac;
+  --md-on-secondary: #2e321e;
+  --md-secondary-container: #454933;
+  --md-on-secondary-container: #e1e5c7;
+  --md-tertiary: #a1d0c3;
+  --md-on-tertiary: #03372e;
+  --md-tertiary-container: #204e44;
+  --md-on-tertiary-container: #bcecdf;
+  --md-scrim-top: rgba(20, 21, 14, 0.42);
+  --md-scrim-bottom: rgba(20, 21, 14, 0.80);
+}
+
+/* 7. Honey Amber (gold) */
 html[data-theme="dark"][data-accent="gold"] {
   --md-surface: #17130d;
   --md-surface-container-lowest: #110e08;
@@ -150,7 +210,7 @@ html[data-theme="dark"][data-accent="gold"] {
   --md-on-surface-variant: #d1c5b6;
   --md-outline: #9a8f82;
   --md-outline-variant: #4e463a;
-  --md-primary: #f6bd60;
+  --md-primary: #ffb951;
   --md-on-primary: #452b00;
   --md-primary-container: #633f00;
   --md-on-primary-container: #ffddb2;
@@ -166,6 +226,119 @@ html[data-theme="dark"][data-accent="gold"] {
   --md-scrim-bottom: rgba(23, 19, 13, 0.80);
 }
 
+/* 8. Sunset Coral (coral) */
+html[data-theme="dark"][data-accent="coral"] {
+  --md-surface: #191210;
+  --md-surface-container-lowest: #130d0b;
+  --md-surface-container-low: #221a17;
+  --md-surface-container: #261e1b;
+  --md-surface-container-high: #312825;
+  --md-surface-container-highest: #3c3330;
+  --md-on-surface: #f0dfd9;
+  --md-on-surface-variant: #d8c2ba;
+  --md-outline: #a08d86;
+  --md-outline-variant: #53433e;
+  --md-primary: #ffb59d;
+  --md-on-primary: #5d1800;
+  --md-primary-container: #862604;
+  --md-on-primary-container: #ffdbd0;
+  --md-secondary: #e7bdb0;
+  --md-on-secondary: #442a21;
+  --md-secondary-container: #5d4036;
+  --md-on-secondary-container: #ffdbd0;
+  --md-tertiary: #d7c58d;
+  --md-on-tertiary: #3a3005;
+  --md-tertiary-container: #52461a;
+  --md-on-tertiary-container: #f4e1a7;
+  --md-scrim-top: rgba(25, 18, 16, 0.42);
+  --md-scrim-bottom: rgba(25, 18, 16, 0.80);
+}
+
+/* 9. Crimson Clay (crimson) */
+html[data-theme="dark"][data-accent="crimson"] {
+  --md-surface: #1a1112;
+  --md-surface-container-lowest: #140c0d;
+  --md-surface-container-low: #22191a;
+  --md-surface-container: #271d1e;
+  --md-surface-container-high: #322829;
+  --md-surface-container-highest: #3d3233;
+  --md-on-surface: #f0dee0;
+  --md-on-surface-variant: #d7c1c3;
+  --md-outline: #9f8c8e;
+  --md-outline-variant: #524344;
+  --md-primary: #ffb3b5;
+  --md-on-primary: #680016;
+  --md-primary-container: #920024;
+  --md-on-primary-container: #ffdada;
+  --md-secondary: #e6bdbd;
+  --md-on-secondary: #44292b;
+  --md-secondary-container: #5d3f40;
+  --md-on-secondary-container: #ffdada;
+  --md-tertiary: #e6c18d;
+  --md-on-tertiary: #422c05;
+  --md-tertiary-container: #5b4319;
+  --md-on-tertiary-container: #ffdea9;
+  --md-scrim-top: rgba(26, 17, 18, 0.42);
+  --md-scrim-bottom: rgba(26, 17, 18, 0.80);
+}
+
+/* 10. Velvet Rose (rose) */
+html[data-theme="dark"][data-accent="rose"] {
+  --md-surface: #181114;
+  --md-surface-container-lowest: #120c0f;
+  --md-surface-container-low: #20191c;
+  --md-surface-container: #251d20;
+  --md-surface-container-high: #2f282b;
+  --md-surface-container-highest: #3b3236;
+  --md-on-surface: #ede0e4;
+  --md-on-surface-variant: #d5c2c8;
+  --md-outline: #9e8c92;
+  --md-outline-variant: #514348;
+  --md-primary: #ffb0ce;
+  --md-on-primary: #5e1134;
+  --md-primary-container: #7b294b;
+  --md-on-primary-container: #ffd8e4;
+  --md-secondary: #e2bdc8;
+  --md-on-secondary: #422932;
+  --md-secondary-container: #5b3f4a;
+  --md-on-secondary-container: #fed9e4;
+  --md-tertiary: #f1bd99;
+  --md-on-tertiary: #49280f;
+  --md-tertiary-container: #633e23;
+  --md-on-tertiary-container: #ffdcc5;
+  --md-scrim-top: rgba(24, 17, 20, 0.42);
+  --md-scrim-bottom: rgba(24, 17, 20, 0.80);
+}
+
+/* 11. Orchid Mist (lavender) */
+html[data-theme="dark"][data-accent="lavender"] {
+  --md-surface: #161219;
+  --md-surface-container-lowest: #110d14;
+  --md-surface-container-low: #1e1a22;
+  --md-surface-container: #231e26;
+  --md-surface-container-high: #2d2831;
+  --md-surface-container-highest: #38333c;
+  --md-on-surface: #eae0ec;
+  --md-on-surface-variant: #cdc3d1;
+  --md-outline: #978e9b;
+  --md-outline-variant: #4b444f;
+  --md-primary: #e2b7ff;
+  --md-on-primary: #491370;
+  --md-primary-container: #632c8a;
+  --md-on-primary-container: #f4dbff;
+  --md-secondary: #d4c0db;
+  --md-on-secondary: #392c40;
+  --md-secondary-container: #504257;
+  --md-on-secondary-container: #f0dcf8;
+  --md-tertiary: #f4b7c2;
+  --md-on-tertiary: #4c252d;
+  --md-tertiary-container: #663b43;
+  --md-on-tertiary-container: #ffd9df;
+  --md-scrim-top: rgba(22, 18, 25, 0.42);
+  --md-scrim-bottom: rgba(22, 18, 25, 0.80);
+}
+
+/* 12. Titanium Slate (silver) */
 html[data-theme="dark"][data-accent="silver"] {
   --md-surface: #121316;
   --md-surface-container-lowest: #0d0e11;
@@ -177,7 +350,7 @@ html[data-theme="dark"][data-accent="silver"] {
   --md-on-surface-variant: #c4c6cf;
   --md-outline: #8e9099;
   --md-outline-variant: #44474e;
-  --md-primary: #b9c8e1;
+  --md-primary: #b8c8e2;
   --md-on-primary: #233146;
   --md-primary-container: #39485e;
   --md-on-primary-container: #d6e3fa;
@@ -194,8 +367,9 @@ html[data-theme="dark"][data-accent="silver"] {
 }
 
 /* ==========================================================================
-   MATERIAL DESIGN 3 — LIGHT MODE (Official Baseline + 5 Harmonized Seeds)
+   MATERIAL DESIGN 3 — LIGHT MODE (12 Complete Harmonized HCT Palettes)
    ========================================================================== */
+/* 1. Amethyst Light */
 html[data-theme="light"] {
   --md-surface: #fef7ff;
   --md-surface-container-lowest: #ffffff;
@@ -234,6 +408,7 @@ html[data-theme="light"] {
   --md-elevation-2: 0 10px 32px rgba(29, 27, 32, 0.10);
 }
 
+/* 2. Pixel Blue Light (sapphire) */
 html[data-theme="light"][data-accent="sapphire"] {
   --md-surface: #faf9ff;
   --md-surface-container-lowest: #ffffff;
@@ -245,20 +420,51 @@ html[data-theme="light"][data-accent="sapphire"] {
   --md-on-surface-variant: #44474f;
   --md-outline: #74777f;
   --md-outline-variant: #c4c6d0;
-  --md-primary: #1a5bc5;
+  --md-primary: #1b6ef3;
   --md-on-primary: #ffffff;
   --md-primary-container: #d8e2ff;
   --md-on-primary-container: #001a43;
   --md-secondary: #565e71;
+  --md-on-secondary: #ffffff;
   --md-secondary-container: #dce2f9;
   --md-on-secondary-container: #141b2c;
   --md-tertiary: #705575;
+  --md-on-tertiary: #ffffff;
   --md-tertiary-container: #fad8fd;
   --md-on-tertiary-container: #29132e;
   --md-scrim-top: rgba(250, 249, 255, 0.56);
   --md-scrim-bottom: rgba(243, 243, 250, 0.84);
 }
 
+/* 3. Royal Indigo Light (indigo) */
+html[data-theme="light"][data-accent="indigo"] {
+  --md-surface: #fbf8ff;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #f4f2fc;
+  --md-surface-container: #eeecf7;
+  --md-surface-container-high: #e8e6f1;
+  --md-surface-container-highest: #e2e1ec;
+  --md-on-surface: #1a1b23;
+  --md-on-surface-variant: #454654;
+  --md-outline: #757685;
+  --md-outline-variant: #c5c5d4;
+  --md-primary: #3f51b5;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #dee0ff;
+  --md-on-primary-container: #000e5e;
+  --md-secondary: #5b5d72;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #dfe1f9;
+  --md-on-secondary-container: #181a2c;
+  --md-tertiary: #77536d;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #ffd7f2;
+  --md-on-tertiary-container: #2d1227;
+  --md-scrim-top: rgba(251, 248, 255, 0.56);
+  --md-scrim-bottom: rgba(244, 242, 252, 0.84);
+}
+
+/* 4. Aurora Teal Light (aurora) */
 html[data-theme="light"][data-accent="aurora"] {
   --md-surface: #f4fbf8;
   --md-surface-container-lowest: #ffffff;
@@ -275,40 +481,74 @@ html[data-theme="light"][data-accent="aurora"] {
   --md-primary-container: #9ef2e4;
   --md-on-primary-container: #00201c;
   --md-secondary: #4a635e;
+  --md-on-secondary: #ffffff;
   --md-secondary-container: #cce8e2;
   --md-on-secondary-container: #05201c;
   --md-tertiary: #456179;
+  --md-on-tertiary: #ffffff;
   --md-tertiary-container: #cce5ff;
   --md-on-tertiary-container: #001d32;
   --md-scrim-top: rgba(244, 251, 248, 0.56);
   --md-scrim-bottom: rgba(238, 245, 242, 0.84);
 }
 
-html[data-theme="light"][data-accent="rose"] {
-  --md-surface: #fff8f8;
+/* 5. Botanical Jade Light (emerald) */
+html[data-theme="light"][data-accent="emerald"] {
+  --md-surface: #f5fbf5;
   --md-surface-container-lowest: #ffffff;
-  --md-surface-container-low: #fdf0f3;
-  --md-surface-container: #f7eaee;
-  --md-surface-container-high: #f1e5e8;
-  --md-surface-container-highest: #ebdfe2;
-  --md-on-surface: #21191c;
-  --md-on-surface-variant: #514348;
-  --md-outline: #837378;
-  --md-outline-variant: #d5c2c8;
-  --md-primary: #98365d;
+  --md-surface-container-low: #eff5ee;
+  --md-surface-container: #e9efe9;
+  --md-surface-container-high: #e3eae3;
+  --md-surface-container-highest: #dde4dd;
+  --md-on-surface: #171d18;
+  --md-on-surface-variant: #414941;
+  --md-outline: #717971;
+  --md-outline-variant: #c0c9bf;
+  --md-primary: #146c2e;
   --md-on-primary: #ffffff;
-  --md-primary-container: #ffd8e4;
-  --md-on-primary-container: #3e001f;
-  --md-secondary: #74565f;
-  --md-secondary-container: #fad9e3;
-  --md-on-secondary-container: #2b151d;
-  --md-tertiary: #7e5638;
-  --md-tertiary-container: #ffdcc5;
-  --md-on-tertiary-container: #2f1400;
-  --md-scrim-top: rgba(255, 248, 248, 0.56);
-  --md-scrim-bottom: rgba(253, 240, 243, 0.84);
+  --md-primary-container: #a6f5b5;
+  --md-on-primary-container: #002109;
+  --md-secondary: #506352;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #d3e8d4;
+  --md-on-secondary-container: #0e1f12;
+  --md-tertiary: #39656d;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #bdeaf5;
+  --md-on-tertiary-container: #001f24;
+  --md-scrim-top: rgba(245, 251, 245, 0.56);
+  --md-scrim-bottom: rgba(239, 245, 238, 0.84);
 }
 
+/* 6. Matcha Olive Light (lime) */
+html[data-theme="light"][data-accent="lime"] {
+  --md-surface: #fafaf0;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #f4f4e9;
+  --md-surface-container: #eeeee3;
+  --md-surface-container-high: #e8e9dd;
+  --md-surface-container-highest: #e2e3d7;
+  --md-on-surface: #1a1c14;
+  --md-on-surface-variant: #46483b;
+  --md-outline: #76786a;
+  --md-outline-variant: #c7c8b8;
+  --md-primary: #556600;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #e0f593;
+  --md-on-primary-container: #171e00;
+  --md-secondary: #5c6149;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #e1e5c7;
+  --md-on-secondary-container: #191d0b;
+  --md-tertiary: #3a665c;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #bcecdf;
+  --md-on-tertiary-container: #00201a;
+  --md-scrim-top: rgba(250, 250, 240, 0.56);
+  --md-scrim-bottom: rgba(244, 244, 233, 0.84);
+}
+
+/* 7. Honey Amber Light (gold) */
 html[data-theme="light"][data-accent="gold"] {
   --md-surface: #fff8f2;
   --md-surface-container-lowest: #ffffff;
@@ -320,20 +560,135 @@ html[data-theme="light"][data-accent="gold"] {
   --md-on-surface-variant: #4e463a;
   --md-outline: #807667;
   --md-outline-variant: #d1c5b6;
-  --md-primary: #825500;
+  --md-primary: #8a5600;
   --md-on-primary: #ffffff;
   --md-primary-container: #ffddb2;
   --md-on-primary-container: #291800;
   --md-secondary: #6f5b40;
+  --md-on-secondary: #ffffff;
   --md-secondary-container: #f6e0c2;
   --md-on-secondary-container: #271904;
   --md-tertiary: #516440;
+  --md-on-tertiary: #ffffff;
   --md-tertiary-container: #d2eabc;
   --md-on-tertiary-container: #102004;
   --md-scrim-top: rgba(255, 248, 242, 0.56);
   --md-scrim-bottom: rgba(250, 242, 232, 0.84);
 }
 
+/* 8. Sunset Coral Light (coral) */
+html[data-theme="light"][data-accent="coral"] {
+  --md-surface: #fff8f6;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #fdf1ec;
+  --md-surface-container: #f7ebe6;
+  --md-surface-container-high: #f2e5e0;
+  --md-surface-container-highest: #ece0db;
+  --md-on-surface: #231916;
+  --md-on-surface-variant: #53433e;
+  --md-outline: #85736d;
+  --md-outline-variant: #d8c2ba;
+  --md-primary: #b33b15;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #ffdbd0;
+  --md-on-primary-container: #3b0b00;
+  --md-secondary: #77574d;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #ffdbd0;
+  --md-on-secondary-container: #2c150e;
+  --md-tertiary: #6a5d2f;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #f4e1a7;
+  --md-on-tertiary-container: #221b00;
+  --md-scrim-top: rgba(255, 248, 246, 0.56);
+  --md-scrim-bottom: rgba(253, 241, 236, 0.84);
+}
+
+/* 9. Crimson Clay Light (crimson) */
+html[data-theme="light"][data-accent="crimson"] {
+  --md-surface: #fff8f7;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #fdf1f1;
+  --md-surface-container: #f7ebeb;
+  --md-surface-container-high: #f2e5e5;
+  --md-surface-container-highest: #ecdfe0;
+  --md-on-surface: #22191a;
+  --md-on-surface-variant: #524344;
+  --md-outline: #857374;
+  --md-outline-variant: #d7c1c3;
+  --md-primary: #ba1a2d;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #ffdada;
+  --md-on-primary-container: #40000b;
+  --md-secondary: #765658;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #ffdada;
+  --md-on-secondary-container: #2c1516;
+  --md-tertiary: #755a2f;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #ffdea9;
+  --md-on-tertiary-container: #281800;
+  --md-scrim-top: rgba(255, 248, 247, 0.56);
+  --md-scrim-bottom: rgba(253, 241, 241, 0.84);
+}
+
+/* 10. Velvet Rose Light (rose) */
+html[data-theme="light"][data-accent="rose"] {
+  --md-surface: #fff8f8;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #fdf0f3;
+  --md-surface-container: #f7eaee;
+  --md-surface-container-high: #f1e5e8;
+  --md-surface-container-highest: #ebdfe2;
+  --md-on-surface: #21191c;
+  --md-on-surface-variant: #514348;
+  --md-outline: #837378;
+  --md-outline-variant: #d5c2c8;
+  --md-primary: #a83268;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #ffd8e4;
+  --md-on-primary-container: #3e001f;
+  --md-secondary: #74565f;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #fad9e3;
+  --md-on-secondary-container: #2b151d;
+  --md-tertiary: #7e5638;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #ffdcc5;
+  --md-on-tertiary-container: #2f1400;
+  --md-scrim-top: rgba(255, 248, 248, 0.56);
+  --md-scrim-bottom: rgba(253, 240, 243, 0.84);
+}
+
+/* 11. Orchid Mist Light (lavender) */
+html[data-theme="light"][data-accent="lavender"] {
+  --md-surface: #fdf7ff;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #f7f1fa;
+  --md-surface-container: #f1ebf4;
+  --md-surface-container-high: #ebe6ef;
+  --md-surface-container-highest: #e6e0e9;
+  --md-on-surface: #1e1a21;
+  --md-on-surface-variant: #4b444f;
+  --md-outline: #7c7480;
+  --md-outline-variant: #cdc3d1;
+  --md-primary: #7c43a8;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #f4dbff;
+  --md-on-primary-container: #2e004f;
+  --md-secondary: #685970;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #f0dcf8;
+  --md-on-secondary-container: #23172a;
+  --md-tertiary: #81515a;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #ffd9df;
+  --md-on-tertiary-container: #331018;
+  --md-scrim-top: rgba(253, 247, 255, 0.56);
+  --md-scrim-bottom: rgba(247, 241, 250, 0.84);
+}
+
+/* 12. Titanium Slate Light (silver) */
 html[data-theme="light"][data-accent="silver"] {
   --md-surface: #f9f9fc;
   --md-surface-container-lowest: #ffffff;
@@ -345,14 +700,16 @@ html[data-theme="light"][data-accent="silver"] {
   --md-on-surface-variant: #44474e;
   --md-outline: #74777f;
   --md-outline-variant: #c4c6cf;
-  --md-primary: #455c78;
+  --md-primary: #455a77;
   --md-on-primary: #ffffff;
   --md-primary-container: #d6e3fa;
   --md-on-primary-container: #0e2036;
   --md-secondary: #545e6e;
+  --md-on-secondary: #ffffff;
   --md-secondary-container: #dbe2ee;
   --md-on-secondary-container: #151c27;
   --md-tertiary: #426660;
+  --md-on-tertiary: #ffffff;
   --md-tertiary-container: #c5ebe3;
   --md-on-tertiary-container: #00201c;
   --md-scrim-top: rgba(249, 249, 252, 0.56);
@@ -384,7 +741,7 @@ body {
   transition: background-color 0.26s var(--md-ease-emphasized), color 0.26s var(--md-ease-emphasized);
 }
 
-/* Silky 260ms Material You Polarity & 6-Seed Surface/Color Shift */
+/* Silky 260ms Material You Polarity & 12-Seed Surface/Color Shift */
 html.m3-theme-shifting .m3-topbar,
 html.m3-theme-shifting .hero-stage,
 html.m3-theme-shifting .m3-segmented,
@@ -394,8 +751,10 @@ html.m3-theme-shifting .dk-toolbar,
 html.m3-theme-shifting .dk-rail,
 html.m3-theme-shifting .dk-viewport,
 html.m3-theme-shifting .dk-omnibox,
+html.m3-theme-shifting .dk-motd-card,
 html.m3-theme-shifting .pixel-frame,
 html.m3-theme-shifting .pixel-screen,
+html.m3-theme-shifting .px-motd-card,
 html.m3-theme-shifting .stat-card,
 html.m3-theme-shifting .bento-card,
 html.m3-theme-shifting .bento-icon,
@@ -405,6 +764,7 @@ html.m3-theme-shifting .dl-panel,
 html.m3-theme-shifting .dl-card,
 html.m3-theme-shifting .m3-footer,
 html.m3-theme-shifting .seed-picker,
+html.m3-theme-shifting .seed-popover,
 html.m3-theme-shifting .theme-segmented,
 html.m3-theme-shifting .nav-links,
 html.m3-theme-shifting .nav-indicator,
@@ -615,13 +975,19 @@ img {
   flex-shrink: 0;
 }
 
-/* M3 Dynamic Color Seed Picker Pill (Pure Tonal Container, Zero Harsh Outline) */
+/* M3 Dynamic Color 12-Seed Picker Pill + Opaque HCT Palette Popover (Zero Blur) */
+.seed-picker-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
 .seed-picker {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   height: 40px;
-  padding: 0 11px;
+  padding: 0 7px 0 11px;
   border-radius: 999px;
   background: var(--md-surface-container-high);
 }
@@ -636,6 +1002,7 @@ img {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   transition: transform 0.2s var(--md-ease-spring), border-color 0.2s var(--md-ease-emphasized), box-shadow 0.2s var(--md-ease-emphasized);
 }
 
@@ -647,6 +1014,195 @@ img {
   border-color: var(--md-on-surface);
   box-shadow: inset 0 0 0 2px var(--md-surface-container-high);
   transform: scale(1.08);
+}
+
+.seed-more-btn {
+  height: 26px;
+  padding: 0 9px;
+  margin-left: 2px;
+  border-radius: 999px;
+  border: none;
+  background: var(--md-surface-container-highest);
+  color: var(--md-on-surface-variant);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background-color 0.16s var(--md-ease-emphasized), color 0.16s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring);
+}
+
+.seed-more-btn:hover {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+
+.seed-more-btn.has-extra-active,
+.seed-more-btn[aria-expanded="true"] {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
+
+.seed-more-btn:active {
+  transform: scale(0.95);
+}
+
+.seed-more-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--md-primary);
+  display: none;
+  flex-shrink: 0;
+}
+
+.seed-more-btn.has-extra-active .seed-more-dot {
+  display: inline-block;
+}
+
+.seed-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 428px;
+  max-width: calc(100vw - 28px);
+  padding: 14px;
+  border-radius: 24px;
+  background: var(--md-surface-container-high);
+  border: 1px solid var(--md-outline-variant);
+  box-shadow: var(--md-elevation-2);
+  z-index: 90;
+  transform-origin: top right;
+  animation: ctxPopIn 0.2s var(--md-ease-spring) both;
+}
+
+.seed-popover[hidden] {
+  display: none;
+}
+
+.seed-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 4px 10px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+.seed-popover-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--md-on-surface);
+}
+
+.seed-popover-active-pill {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.seed-popover-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.seed-swatch-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 8px;
+  border-radius: 14px;
+  border: 1.5px solid transparent;
+  background: var(--md-surface-container);
+  color: var(--md-on-surface);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: left;
+  min-width: 0;
+  transition: background-color 0.16s var(--md-ease-emphasized), border-color 0.16s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring);
+}
+
+.seed-swatch-btn:hover {
+  background: var(--md-surface-container-highest);
+}
+
+.seed-swatch-btn:active {
+  transform: scale(0.96);
+}
+
+.seed-swatch-btn.active {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  border-color: var(--md-primary);
+}
+
+.seed-swatch-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--seed-color);
+  border: 1.5px solid rgba(128, 128, 128, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #141218;
+}
+
+.seed-swatch-circle svg {
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.16s ease, transform 0.2s var(--md-ease-spring);
+}
+
+.seed-swatch-btn.active .seed-swatch-circle svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.seed-swatch-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drawer-seeds-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 14px 6px;
+}
+
+.drawer-seeds-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--md-on-surface-variant);
+}
+
+.drawer-seeds-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  justify-items: center;
+  padding: 8px 10px;
+  border-radius: 18px;
+  background: var(--md-surface-container);
+}
+
+.drawer-seeds-grid .seed-dot {
+  width: 24px;
+  height: 24px;
 }
 
 /* Crisp M3 Dark / Light Segmented Pill with Gliding Active Indicator */
@@ -1335,7 +1891,7 @@ img {
   color: var(--md-on-surface-variant);
 }
 
-/* Row 2: Decluttered v5.3.0 Chrome M3 Toolbar + Pill Omnibox with Brave-Exact Shields + Extensions Puzzle */
+/* Row 2: Decluttered v5.4.0 ChromeOS 5-Icon Right Toolbar + Pill Omnibox with Brave-Exact Shields */
 .dk-toolbar {
   height: 50px;
   padding: 0 12px;
@@ -1990,61 +2546,119 @@ img {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  width: 100%;
+}
+
+.dk-sp-brand-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .dk-sp-butterfly {
   display: inline-flex;
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow: var(--md-elevation-1);
 }
 
 .dk-sp-brand {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 25px;
   font-weight: 600;
   letter-spacing: 0.06em;
   line-height: 1.05;
 }
 
-.dk-sp-greeting {
+/* Redesigned Google Pixel Material Design 3 At-a-Glance Message of the Day Card */
+.dk-motd-card {
+  width: min(468px, 100%);
+  padding: 10px 12px 10px 12px;
+  border-radius: 22px;
+  background: var(--md-surface-container-high);
+  box-shadow: var(--md-elevation-1);
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+  transition: background-color 0.2s var(--md-ease-emphasized), transform 0.2s var(--md-ease-spring), box-shadow 0.2s var(--md-ease-emphasized);
+}
+
+.dk-motd-card:hover {
+  background: var(--md-surface-container-highest);
+}
+
+.dk-motd-medallion {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 12px;
-  border-radius: 999px;
-  background: var(--md-surface-container);
-  color: var(--md-on-surface-variant);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.dk-sp-motd {
-  margin-top: 2px;
-  padding: 3px 12px;
-  border-radius: 999px;
-  border: none;
-  background: transparent;
-  color: var(--md-on-surface-variant);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0.005em;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  max-width: 100%;
-  text-align: center;
-  transition: background-color 0.18s var(--md-ease-emphasized), color 0.18s var(--md-ease-emphasized), opacity 0.16s var(--md-ease-emphasized);
-}
-
-.dk-sp-motd:hover {
-  background: var(--md-surface-container);
-  color: var(--md-on-surface);
-}
-
-.dk-sp-motd svg {
+  justify-content: center;
   flex-shrink: 0;
+}
+
+.dk-motd-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dk-motd-overline {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--md-on-surface-variant);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dk-motd-quote {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--md-on-surface);
+  line-height: 1.34;
+  transition: opacity 0.18s var(--md-ease-emphasized), transform 0.22s var(--md-ease-emphasized-decel);
+}
+
+.dk-motd-quote.is-swapping,
+.px-motd-quote.is-swapping {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.dk-motd-refresh {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--md-surface-container);
+  color: var(--md-on-surface-variant);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.16s var(--md-ease-emphasized), color 0.16s var(--md-ease-emphasized), transform 0.26s var(--md-ease-spring);
+}
+
+.dk-motd-refresh:hover {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+
+.dk-motd-refresh svg,
+.px-motd-refresh svg {
+  transition: transform 0.34s var(--md-ease-emphasized-decel);
+}
+
+.dk-motd-refresh.is-spinning svg,
+.px-motd-refresh.is-spinning svg {
+  transform: rotate(180deg);
 }
 
 .dk-sp-search {
@@ -2173,7 +2787,7 @@ img {
   color: var(--md-on-primary-container);
 }
 
-/* Page 2: Real Chrome Extensions Manager Showcase (v5.3.0 Material Design 3) */
+/* Page 2: Real Chrome Extensions Manager Showcase (v5.4.0 Material Design 3) */
 .dk-ext-stage {
   min-height: 472px;
   height: 100%;
@@ -3338,7 +3952,7 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   opacity: 0.86;
 }
 
-/* Page 5: PC <-> Phone Sync (v5.3.0 Direct Wi-Fi LAN + TLS MQTT Retained E2EE) */
+/* Page 5: PC <-> Phone Sync (v5.4.0 Direct Wi-Fi LAN + TLS MQTT Retained E2EE) */
 .dk-sync-stage {
   height: 100%;
   padding: 20px 24px;
@@ -3586,7 +4200,7 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
 }
 
 /* ==========================================================================
-   COMPANION GOOGLE PIXEL PHONE MOCKUP (v5.3.0 PIXEL MATERIAL DESIGN 3 + MOTD)
+   COMPANION GOOGLE PIXEL PHONE MOCKUP (v5.4.0 PIXEL MATERIAL DESIGN 3 + AT-A-GLANCE MOTD)
    ========================================================================== */
 .pixel-frame {
   border-radius: 38px;
@@ -3680,10 +4294,10 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   position: relative;
   z-index: 2;
   flex: 1;
-  padding: 28px 15px 14px;
+  padding: 26px 14px 12px;
   display: flex;
   flex-direction: column;
-  gap: 13px;
+  gap: 10px;
 }
 
 .px-top {
@@ -3722,39 +4336,99 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
 }
 
 .px-hero {
-  margin-top: 4px;
+  margin-top: 2px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
-.px-hero span {
+.px-hero-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.px-hero-brand span {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--md-on-surface);
 }
 
-.px-motd {
-  margin-top: 1px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: none;
-  background: transparent;
-  color: var(--md-on-surface-variant);
-  font-size: 9.5px;
-  font-weight: 500;
-  line-height: 1.35;
-  text-align: center;
-  max-width: 214px;
-  transition: background-color 0.18s var(--md-ease-emphasized), color 0.18s var(--md-ease-emphasized);
+/* Redesigned Pixel M3 At-a-Glance Message of the Day Card (Mobile Mockup) */
+.px-motd-card {
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 18px;
+  background: var(--md-surface-container-high);
+  box-shadow: var(--md-elevation-1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  transition: background-color 0.18s var(--md-ease-emphasized);
 }
 
-.px-motd:hover {
-  background: var(--md-surface-container);
+.px-motd-medallion {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.px-motd-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.px-motd-overline {
+  font-size: 8.5px;
+  font-weight: 600;
+  color: var(--md-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.px-motd-quote {
+  font-size: 9.8px;
+  font-weight: 600;
   color: var(--md-on-surface);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: opacity 0.18s var(--md-ease-emphasized), transform 0.22s var(--md-ease-emphasized-decel);
+}
+
+.px-motd-refresh {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: var(--md-surface-container);
+  color: var(--md-on-surface-variant);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.16s var(--md-ease-emphasized), color 0.16s var(--md-ease-emphasized);
+}
+
+.px-motd-refresh:hover {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
 }
 
 .px-search {
@@ -4367,10 +5041,43 @@ html[data-theme="light"] .mini-win.is-work .mini-win-foot code {
   gap: 4px;
 }
 
+.wp-meta-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .wp-meta strong {
   font-family: var(--font-display);
   font-size: 15.5px;
   font-weight: 700;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-seed-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--md-surface-container-highest);
+  color: var(--md-on-surface-variant);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.wp-seed-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--wp-swatch, var(--md-primary));
+  flex-shrink: 0;
 }
 
 .wp-meta small {
@@ -4582,6 +5289,7 @@ html[data-theme="light"] .dl-upgrade-note {
   transform: translate(-50%, 16px);
   opacity: 0;
   pointer-events: none;
+  max-width: min(560px, calc(100vw - 28px));
   padding: 10px 12px 10px 18px;
   border-radius: 999px;
   background: var(--md-on-surface);
@@ -4592,6 +5300,7 @@ html[data-theme="light"] .dl-upgrade-note {
   gap: 14px;
   font-size: 13.5px;
   font-weight: 600;
+  line-height: 1.35;
   transition: transform 0.24s var(--md-ease-decel), opacity 0.18s var(--md-ease-emphasized);
 }
 
@@ -4608,6 +5317,7 @@ html[data-theme="light"] .dl-upgrade-note {
   color: var(--md-on-primary);
   font-size: 12.5px;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 /* ==========================================================================
@@ -4657,7 +5367,7 @@ html[data-theme="light"] .dl-upgrade-note {
   }
   .nav-links,
   .nav-dl,
-  .seed-picker {
+  .seed-picker-wrap {
     display: none;
   }
   .mobile-only {
@@ -4750,6 +5460,14 @@ html[data-theme="light"] .dl-upgrade-note {
   .dl-panel {
     padding: 26px 18px;
     border-radius: 28px;
+  }
+  .m3-snackbar {
+    width: calc(100vw - 28px);
+    bottom: 16px;
+    padding: 11px 14px;
+    border-radius: 20px;
+    justify-content: space-between;
+    font-size: 12.5px;
   }
 }
 

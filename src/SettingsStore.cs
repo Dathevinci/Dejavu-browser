@@ -47,14 +47,15 @@ namespace DejavuBrowser
         public bool hideNavRail { get; set; }
         public bool hideFloatingMediaButton { get; set; }
 
-        // v5.3.0 — Appearance & Start Page
+        // v5.4.0 — Appearance & Start Page
         public string fontSize { get; set; }
         public string fontFamily { get; set; }
         public bool showHomeButton { get; set; }
         public bool smoothScrolling { get; set; }
         public bool showMotd { get; set; }
+        public bool autoThemeFromWallpaper { get; set; }
 
-        // v5.3.0 — Brave-Grade Shields & Privacy & Security
+        // v5.4.0 — Brave-Grade Shields & Privacy & Security
         public string shieldLevel { get; set; }
         public bool blockFingerprinting { get; set; }
         public bool blockCookieNotices { get; set; }
@@ -72,29 +73,29 @@ namespace DejavuBrowser
         public string permClipboard { get; set; }
         public string permAutoplay { get; set; }
 
-        // v5.3.0 — Search
+        // v5.4.0 — Search
         public string customSearchUrl { get; set; }
         public bool addressBarSuggestions { get; set; }
 
-        // v5.3.0 — Tabs & Performance
+        // v5.4.0 — Tabs & Performance
         public bool memorySaverEnabled { get; set; }
         public int memorySaverMinutes { get; set; }
         public bool confirmCloseMultipleTabs { get; set; }
         public bool tabHoverPreview { get; set; }
 
-        // v5.3.0 — Downloads
+        // v5.4.0 — Downloads
         public string downloadFolder { get; set; }
         public bool askDownloadLocation { get; set; }
         public int turboThreads { get; set; }
         public string defaultVideoQuality { get; set; }
         public bool autoOpenDownloads { get; set; }
 
-        // v5.3.0 — Passwords & Autofill
+        // v5.4.0 — Passwords & Autofill
         public bool savePasswords { get; set; }
         public bool autofillAddresses { get; set; }
         public bool autofillPayments { get; set; }
 
-        // v5.3.0 — VPN & System
+        // v5.4.0 — VPN & System
         public bool vpnWebRtcProtection { get; set; }
         public bool hardwareAcceleration { get; set; }
         public bool spellcheckEnabled { get; set; }
@@ -129,12 +130,13 @@ namespace DejavuBrowser
             hideNavRail = false;
             hideFloatingMediaButton = false;
 
-            // v5.3.0 defaults
+            // v5.4.0 defaults
             fontSize = "medium";
             fontFamily = "system";
             showHomeButton = true;
             smoothScrolling = true;
             showMotd = true;
+            autoThemeFromWallpaper = true;
 
             shieldLevel = "standard";
             blockFingerprinting = true;
@@ -246,6 +248,24 @@ namespace DejavuBrowser
             return "best";
         }
 
+        public static bool IsValidAccent(string val)
+        {
+            if (string.IsNullOrEmpty(val)) return false;
+            string v = val.Trim().ToLowerInvariant();
+            return v == "amethyst" || v == "sapphire" || v == "indigo" ||
+                   v == "aurora" || v == "emerald" || v == "lime" ||
+                   v == "gold" || v == "coral" || v == "crimson" ||
+                   v == "rose" || v == "lavender" || v == "silver";
+        }
+
+        public static string NormalizeAccent(string val)
+        {
+            if (string.IsNullOrEmpty(val)) return "amethyst";
+            string v = val.Trim().ToLowerInvariant();
+            if (IsValidAccent(v)) return v;
+            return "amethyst";
+        }
+
         public static string NormalizeShieldLevel(string val)
         {
             if (string.Equals(val, "aggressive", StringComparison.OrdinalIgnoreCase))
@@ -284,7 +304,7 @@ namespace DejavuBrowser
                             if (string.IsNullOrEmpty(loaded.vpnMode)) loaded.vpnMode = "smart";
                             if (loaded.pausedHosts == null) loaded.pausedHosts = new List<string>();
                             if (string.IsNullOrEmpty(loaded.appearanceMode)) loaded.appearanceMode = "auto";
-                            if (string.IsNullOrEmpty(loaded.accentColor)) loaded.accentColor = "amethyst";
+                            loaded.accentColor = NormalizeAccent(loaded.accentColor);
                             if (loaded.defaultZoomPercent < 50 || loaded.defaultZoomPercent > 200) loaded.defaultZoomPercent = 100;
                             if (string.IsNullOrEmpty(loaded.newTabMode)) loaded.newTabMode = "startpage";
                             if (string.IsNullOrEmpty(loaded.homepageUrl)) loaded.homepageUrl = "https://www.google.com";
@@ -292,7 +312,7 @@ namespace DejavuBrowser
                             if (loaded.lastSessionUrls == null) loaded.lastSessionUrls = new List<string>();
                             if (string.IsNullOrEmpty(loaded.wallpaperDim)) loaded.wallpaperDim = "balanced";
 
-                            // v5.3.0 normalizations
+                            // v5.4.0 normalizations
                             loaded.shieldLevel = NormalizeShieldLevel(loaded.shieldLevel);
                             loaded.fontSize = NormalizeFontSize(loaded.fontSize);
                             loaded.fontFamily = NormalizeFontFamily(loaded.fontFamily);

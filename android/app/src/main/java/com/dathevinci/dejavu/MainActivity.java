@@ -319,6 +319,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private String wallpaper = "wp-m3-amethyst.jpg";
     private String accentColor = "amethyst";
     private String themeMode = "dark"; // "dark" | "light" | "auto"
+    private boolean autoThemeFromWallpaper = true; // Pixel Wallpaper & Style auto theme + polarity matching
     private boolean showMotd = true; // Google Pixel Message of the Day
     private String barPosition = "bottom"; // "bottom" (Safari/Samsung) | "top" (Chrome)
     private boolean autoHideBar = true;
@@ -806,20 +807,50 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 ? new M3Palette(0xFFFAF9FF, 0xFFEEF0F9, 0xFFE4E7F2, 0xFF1B6EF3, 0xFFD3E3FD, 0xFF0842A0, 0xFFC2C6D4, 0xFF1D1B20, 0xFF44474F)
                 : new M3Palette(0xFF111318, 0xFF1E222A, 0xFF282C36, 0xFFA8C7FA, 0xFF263B5E, 0xFFD3E3FD, 0xFF44474F, 0xFFE6E0E9, 0xFFC4C6D0);
         }
+        if ("indigo".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFFBF8FF, 0xFFF0EFFA, 0xFFE6E6F4, 0xFF3F51B5, 0xFFDEE1FF, 0xFF1A237E, 0xFFC4C5D8, 0xFF1D1B20, 0xFF454759)
+                : new M3Palette(0xFF12131B, 0xFF1F212E, 0xFF292C3B, 0xFFBBC3FF, 0xFF313B78, 0xFFDEE1FF, 0xFF454759, 0xFFE5E1EC, 0xFFC6C5D6);
+        }
         if ("aurora".equals(accentColor)) {
             return isLight
                 ? new M3Palette(0xFFF4FBF8, 0xFFE9F2EF, 0xFFDFE9E6, 0xFF006A60, 0xFFA3F2E5, 0xFF004F47, 0xFFBAC9C4, 0xFF1D1B20, 0xFF3F4946)
                 : new M3Palette(0xFF0F1513, 0xFF1C2421, 0xFF252E2B, 0xFF7BD8C6, 0xFF1F4841, 0xFFA3F2E5, 0xFF3F4946, 0xFFE6E0E9, 0xFFBFC9C5);
+        }
+        if ("emerald".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFF5FBF5, 0xFFEAF3EA, 0xFFE0EBE0, 0xFF146C2E, 0xFFB8F3C2, 0xFF074219, 0xFFBCCBBC, 0xFF1D1B20, 0xFF404B42)
+                : new M3Palette(0xFF101511, 0xFF1D251E, 0xFF263028, 0xFF8BD89B, 0xFF1D4D2C, 0xFFB8F3C2, 0xFF404B42, 0xFFE2E6E1, 0xFFC0C9C1);
+        }
+        if ("lime".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFFAFAF0, 0xFFF0F0E3, 0xFFE6E7D8, 0xFF556600, 0xFFE1F597, 0xFF344000, 0xFFC5C6B5, 0xFF1D1B20, 0xFF484A3A)
+                : new M3Palette(0xFF14150E, 0xFF23251A, 0xFF2D3023, 0xFFC4D97A, 0xFF3F4D13, 0xFFE1F597, 0xFF484A3A, 0xFFE5E5DC, 0xFFC8C9BC);
+        }
+        if ("gold".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFFFF8F2, 0xFFF6EFE6, 0xFFEDE5DB, 0xFF8A5600, 0xFFFFDDB3, 0xFF5E3800, 0xFFD2C5B6, 0xFF1D1B20, 0xFF4E463A)
+                : new M3Palette(0xFF17130D, 0xFF262119, 0xFF302A21, 0xFFFFB951, 0xFF523B18, 0xFFFFDDB3, 0xFF4E463A, 0xFFE6E0E9, 0xFFD2C5B6);
+        }
+        if ("coral".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFFFF8F6, 0xFFF9EDE9, 0xFFF1E3DF, 0xFFB33B15, 0xFFFFDBCF, 0xFF6F1F04, 0xFFD8C2BC, 0xFF1D1B20, 0xFF53433F)
+                : new M3Palette(0xFF191210, 0xFF2A201D, 0xFF342825, 0xFFFFB59D, 0xFF682B18, 0xFFFFDBCF, 0xFF53433F, 0xFFECE0DC, 0xFFD8C2BC);
+        }
+        if ("crimson".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFFFF8F7, 0xFFFAECEC, 0xFFF2E3E3, 0xFFBA1A2D, 0xFFFFDADB, 0xFF730013, 0xFFD8C2C3, 0xFF1D1B20, 0xFF544244)
+                : new M3Palette(0xFF1A1112, 0xFF2B1F20, 0xFF362729, 0xFFFFB3B5, 0xFF6B222A, 0xFFFFDADB, 0xFF544244, 0xFFECE0E0, 0xFFD8C2C3);
         }
         if ("rose".equals(accentColor)) {
             return isLight
                 ? new M3Palette(0xFFFFF8F8, 0xFFF8ECEF, 0xFFF0E3E7, 0xFFA83268, 0xFFFFD8E6, 0xFF6F153F, 0xFFD5C1C7, 0xFF1D1B20, 0xFF514348)
                 : new M3Palette(0xFF181114, 0xFF271E22, 0xFF31272B, 0xFFFFB0CE, 0xFF5C2A40, 0xFFFFD8E6, 0xFF514348, 0xFFE6E0E9, 0xFFD5C2C8);
         }
-        if ("gold".equals(accentColor)) {
+        if ("lavender".equals(accentColor)) {
             return isLight
-                ? new M3Palette(0xFFFFF8F2, 0xFFF6EFE6, 0xFFEDE5DB, 0xFF8A5600, 0xFFFFDDB3, 0xFF5E3800, 0xFFD2C5B6, 0xFF1D1B20, 0xFF4E463A)
-                : new M3Palette(0xFF17130D, 0xFF262119, 0xFF302A21, 0xFFFFB951, 0xFF523B18, 0xFFFFDDB3, 0xFF4E463A, 0xFFE6E0E9, 0xFFD2C5B6);
+                ? new M3Palette(0xFFFDF7FF, 0xFFF5ECF9, 0xFFEDE3F2, 0xFF7C43A8, 0xFFF4DAFF, 0xFF4B1573, 0xFFCEC3D6, 0xFF1D1B20, 0xFF4D4454)
+                : new M3Palette(0xFF161219, 0xFF26202B, 0xFF302937, 0xFFE2B7FF, 0xFF572C79, 0xFFF4DAFF, 0xFF4D4454, 0xFFEAE0EE, 0xFFCEC3D6);
         }
         if ("silver".equals(accentColor)) {
             return isLight
@@ -2710,7 +2741,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.3.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.4.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -3206,6 +3237,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("accentColor", accentColor);
                 st.put("themeMode", themeMode);
                 st.put("effectiveTheme", isEffectiveLightTheme() ? "light" : "dark");
+                st.put("autoThemeFromWallpaper", autoThemeFromWallpaper);
                 st.put("showMotd", showMotd);
                 st.put("barPosition", barPosition);
                 st.put("autoHideBar", autoHideBar);
@@ -3356,10 +3388,68 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private static String normalizeAccent(String raw) {
         if (raw == null) return "amethyst";
         String a = raw.trim().toLowerCase(Locale.US);
-        if ("sapphire".equals(a) || "aurora".equals(a) || "rose".equals(a) || "gold".equals(a) || "silver".equals(a)) {
+        if ("sapphire".equals(a) || "indigo".equals(a) || "aurora".equals(a) || "emerald".equals(a)
+            || "lime".equals(a) || "gold".equals(a) || "coral".equals(a) || "crimson".equals(a)
+            || "rose".equals(a) || "lavender".equals(a) || "silver".equals(a)) {
             return a;
         }
         return "amethyst";
+    }
+
+    private static String[] resolveWallpaperAutoTheme(String wpId) {
+        if (wpId == null || wpId.isEmpty() || "obsidian".equals(wpId)) return null;
+        if ("wp-m3-amethyst.jpg".equals(wpId))            return new String[] { "amethyst", "dark" };
+        if ("wp-m3-pixel-blue.jpg".equals(wpId))          return new String[] { "sapphire", "dark" };
+        if ("wp-m3-cobalt-prism.jpg".equals(wpId))        return new String[] { "indigo", "dark" };
+        if ("wp-m3-sage.jpg".equals(wpId))                return new String[] { "aurora", "dark" };
+        if ("wp-m3-jade-terrace.jpg".equals(wpId))        return new String[] { "emerald", "dark" };
+        if ("wp-m3-crimson-fold.jpg".equals(wpId))        return new String[] { "crimson", "dark" };
+        if ("wp-m3-blossom.jpg".equals(wpId))             return new String[] { "rose", "dark" };
+        if ("wp-m3-honey.jpg".equals(wpId))               return new String[] { "gold", "dark" };
+        if ("wp-m3-indigo-dune.jpg".equals(wpId))         return new String[] { "indigo", "dark" };
+        if ("wp-m3-sienna-arch.jpg".equals(wpId))         return new String[] { "gold", "dark" };
+        if ("wp-m3-porcelain.jpg".equals(wpId))           return new String[] { "amethyst", "light" };
+        if ("wp-m3-lavender-mist.jpg".equals(wpId))       return new String[] { "lavender", "light" };
+        if ("wp-m3-sky-terrace.jpg".equals(wpId))         return new String[] { "sapphire", "light" };
+        if ("wp-m3-mint-atelier.jpg".equals(wpId))        return new String[] { "aurora", "light" };
+        if ("wp-m3-meadow.jpg".equals(wpId))              return new String[] { "aurora", "light" };
+        if ("wp-m3-warm-limestone.jpg".equals(wpId))      return new String[] { "gold", "light" };
+        if ("wp-m3-coral-bloom.jpg".equals(wpId))         return new String[] { "coral", "light" };
+        if ("wp-m3-blush.jpg".equals(wpId))               return new String[] { "rose", "light" };
+        if ("wp-m3-butterfly-obsidian.jpg".equals(wpId))  return new String[] { "amethyst", "dark" };
+        if ("wp-m3-butterfly-cobalt.jpg".equals(wpId))    return new String[] { "sapphire", "dark" };
+        if ("wp-m3-butterfly-emerald.jpg".equals(wpId))   return new String[] { "emerald", "dark" };
+        if ("wp-m3-butterfly-porcelain.jpg".equals(wpId)) return new String[] { "amethyst", "light" };
+        if ("wp-m3-butterfly-sage.jpg".equals(wpId))      return new String[] { "aurora", "light" };
+        if ("wp-m3-butterfly-coral.jpg".equals(wpId))     return new String[] { "coral", "light" };
+        return null;
+    }
+
+    private void applyWallpaperSelection(String wp, String explicitSeed, String explicitMode) {
+        wallpaper = normalizeM3WallpaperId(wp);
+        if (autoThemeFromWallpaper && !"obsidian".equals(wallpaper)) {
+            String[] mapped = resolveWallpaperAutoTheme(wallpaper);
+            String targetSeed = (explicitSeed != null && !explicitSeed.trim().isEmpty())
+                ? explicitSeed.trim()
+                : (mapped != null ? mapped[0] : "");
+            String targetMode = (explicitMode != null && !explicitMode.trim().isEmpty())
+                ? explicitMode.trim().toLowerCase(Locale.US)
+                : (mapped != null ? mapped[1] : "");
+            if (!targetSeed.isEmpty()) {
+                accentColor = normalizeAccent(targetSeed);
+                JSONObject p = getActiveProfileObject();
+                if (p != null) {
+                    try { p.put("accentColor", accentColor); } catch (Exception ignored) { }
+                }
+            }
+            if ("light".equals(targetMode) || "dark".equals(targetMode)) {
+                themeMode = targetMode;
+            }
+            applyNativeTheme();
+            updateChromeUi();
+        }
+        saveLocalCollections();
+        pushStateToUi();
     }
 
     private static String normalizeYoutubeQuality(String raw) {
@@ -3482,6 +3572,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         accentColor = normalizeAccent(prefs.getString("accentColor", "amethyst"));
         String tm = prefs.getString("themeMode", "dark");
         themeMode = ("light".equals(tm) || "auto".equals(tm)) ? tm : "dark";
+        autoThemeFromWallpaper = prefs.getBoolean("autoThemeFromWallpaper", true);
         showMotd = prefs.getBoolean("showMotd", true);
         barPosition = "top".equals(prefs.getString("barPosition", "bottom")) ? "top" : "bottom";
         autoHideBar = prefs.getBoolean("autoHideBar", true);
@@ -3550,6 +3641,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putString("wallpaper", wallpaper)
             .putString("accentColor", accentColor)
             .putString("themeMode", themeMode)
+            .putBoolean("autoThemeFromWallpaper", autoThemeFromWallpaper)
             .putBoolean("showMotd", showMotd)
             .putString("barPosition", barPosition)
             .putBoolean("autoHideBar", autoHideBar)
@@ -4448,8 +4540,27 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         @JavascriptInterface
         public void setWallpaper(final String wp) {
+            mainHandler.post(() -> applyWallpaperSelection(wp, null, null));
+        }
+
+        @JavascriptInterface
+        public void setWallpaperWithTheme(final String wp, final String seed, final String mode) {
+            mainHandler.post(() -> applyWallpaperSelection(wp, seed, mode));
+        }
+
+        @JavascriptInterface
+        public void toggleAutoThemeFromWallpaper() {
             mainHandler.post(() -> {
-                wallpaper = normalizeM3WallpaperId(wp);
+                autoThemeFromWallpaper = !autoThemeFromWallpaper;
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void setAutoThemeFromWallpaper(final boolean enabled) {
+            mainHandler.post(() -> {
+                autoThemeFromWallpaper = enabled;
                 saveLocalCollections();
                 pushStateToUi();
             });
@@ -5113,6 +5224,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         public void resetSettings() {
             mainHandler.post(() -> {
                 themeMode = "dark";
+                autoThemeFromWallpaper = true;
                 showMotd = true;
                 accentColor = "amethyst";
                 wallpaper = "wp-m3-amethyst.jpg";

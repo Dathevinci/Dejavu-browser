@@ -5777,3 +5777,520 @@ body.force-light .safari-privacy-card {
   border-color: var(--md-primary) !important;
   box-shadow: 0 0 0 1.5px var(--md-primary) !important;
 }
+
+/* ==========================================================================
+   V4.1 DEEPER GOOGLE PIXEL MATERIAL DESIGN 3 EXPRESSIVE + TURBO DOWNLOAD MANAGER
+   ========================================================================== */
+
+/* 1. Pure Google Pixel M3 Navigation Drawer Icons (Zero Apple rainbow squircle boxes!) */
+.settings-nav-item .snav-ico,
+.settings-nav-item .snav-ico.ico-general,
+.settings-nav-item .snav-ico.ico-appearance,
+.settings-nav-item .snav-ico.ico-startpage,
+.settings-nav-item .snav-ico.ico-wallpapers,
+.settings-nav-item .snav-ico.ico-privacy,
+.settings-nav-item .snav-ico.ico-shortcuts {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0;
+}
+
+.settings-nav-item .snav-ico svg {
+  width: 18px;
+  height: 18px;
+}
+
+.settings-nav-item {
+  min-height: 40px !important;
+  gap: 11px !important;
+  font-size: 13px !important;
+}
+
+.settings-nav-pill {
+  margin-left: auto;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--md-surface-container-highest) !important;
+  color: var(--md-on-surface-variant) !important;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-nav-item.active .settings-nav-pill {
+  background: var(--md-primary) !important;
+  color: var(--md-on-primary) !important;
+}
+
+/* 2. Authentic Google Pixel M3 Expressive Leading Checkmark on Segmented Pills */
+.opt-seg .opt-seg-btn:not(.appearance-card) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 13px !important;
+  transition: background-color 0.16s ease, color 0.16s ease !important;
+}
+
+.opt-seg .opt-seg-btn:not(.appearance-card).active::before {
+  content: '✓';
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.store-tabs {
+  background: var(--md-surface-container) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  border-radius: 999px !important;
+  padding: 3px !important;
+}
+
+.store-tab {
+  border-radius: 999px !important;
+  color: var(--md-on-surface-variant) !important;
+  font-weight: 600 !important;
+}
+
+.store-tab.active {
+  background: var(--md-secondary-container) !important;
+  color: var(--md-on-secondary-container) !important;
+  box-shadow: none !important;
+}
+
+/* 3. Expressive M3 Shape Morph on Quick Access Tiles & Wallpaper Cards */
+.safari-fav-squircle {
+  transition: border-radius 0.24s cubic-bezier(0.2, 0, 0, 1), transform 0.24s cubic-bezier(0.2, 0, 0, 1), border-color 0.18s ease, background-color 0.18s ease !important;
+}
+
+.safari-fav-item:hover .safari-fav-squircle {
+  border-radius: 26px !important;
+  border-color: var(--md-primary) !important;
+  transform: translateY(-2px) scale(1.03);
+}
+
+.wp-card {
+  border-radius: 18px !important;
+  background: var(--md-surface-container) !important;
+  border: 1.5px solid var(--md-outline-variant) !important;
+  box-shadow: none !important;
+  transition: transform 0.22s cubic-bezier(0.2, 0, 0, 1), border-color 0.18s ease !important;
+}
+
+.wp-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--md-outline) !important;
+}
+
+.wp-card.active {
+  border-color: var(--md-primary) !important;
+  box-shadow: 0 0 0 1.5px var(--md-primary) !important;
+}
+
+.wp-badge {
+  background: var(--md-surface-container-highest) !important;
+  color: var(--md-on-surface) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+}
+
+.wp-card.is-m3 .wp-badge {
+  background: var(--md-primary-container) !important;
+  color: var(--md-on-primary-container) !important;
+  border-color: transparent !important;
+}
+
+.wp-check {
+  background: var(--md-primary) !important;
+  color: var(--md-on-primary) !important;
+}
+
+.accent-swatch {
+  border-radius: 999px !important;
+  background: var(--md-surface-container-low) !important;
+  border: 1.5px solid var(--md-outline-variant) !important;
+  color: var(--md-on-surface) !important;
+}
+
+.accent-swatch.active {
+  background: var(--md-secondary-container) !important;
+  color: var(--md-on-secondary-container) !important;
+  border-color: var(--md-primary) !important;
+}
+
+/* 4. AntDM-Style Material Design 3 Turbo Download Manager Window */
+.dl-manager-overlay {
+  z-index: 44 !important;
+}
+
+.dl-manager-window {
+  width: min(1020px, calc(100% - 36px)) !important;
+  height: min(650px, calc(100% - 32px)) !important;
+  max-height: calc(100% - 32px) !important;
+  border-radius: 28px !important;
+  background: var(--md-surface-container-low) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45) !important;
+  display: grid !important;
+  grid-template-columns: 244px minmax(0, 1fr) !important;
+  overflow: hidden;
+}
+
+.dlm-brand-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dlm-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dlm-dir-hint {
+  font-size: 11px;
+  color: var(--md-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+
+.dlm-head {
+  gap: 12px;
+}
+
+.dlm-head-acts {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.dlm-url-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--md-outline-variant);
+  background: var(--md-surface);
+  flex-shrink: 0;
+}
+
+.dlm-url-pill {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--md-surface-container-highest);
+  border: 1.5px solid transparent;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--md-on-surface);
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+body.theme-light .dlm-url-pill,
+body.force-light .dlm-url-pill {
+  background: var(--md-surface-container-lowest);
+  border-color: var(--md-outline-variant);
+}
+
+.dlm-url-pill:focus-within {
+  border-color: var(--md-primary);
+  background: var(--md-surface-container-low);
+}
+
+#dlm-url-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--md-on-surface);
+  font-family: inherit;
+  font-size: 13px;
+  user-select: text;
+}
+
+#dlm-url-input::placeholder {
+  color: var(--md-on-surface-variant);
+}
+
+.dlm-go-btn,
+.dlm-scan-btn {
+  height: 38px !important;
+  padding: 0 16px !important;
+  font-size: 12.5px !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dlm-scroll {
+  padding: 16px 24px 24px !important;
+}
+
+.dlm-media-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  border-radius: 20px;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
+
+.dlm-mb-title {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.dlm-mb-sub {
+  font-size: 11.8px;
+  opacity: 0.84;
+  margin-top: 2px;
+}
+
+.dlm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dlm-card {
+  border-radius: 20px;
+  background: var(--md-surface-container);
+  border: 1px solid var(--md-outline-variant);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.dlm-card:hover {
+  border-color: var(--md-outline);
+}
+
+.dlm-card.is-active {
+  border-color: var(--md-primary);
+}
+
+.dlm-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dlm-cat-ico {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.dlm-cat-ico.cat-video { background: var(--md-primary-container); color: var(--md-on-primary-container); }
+.dlm-cat-ico.cat-audio { background: var(--md-tertiary-container); color: var(--md-on-tertiary-container); }
+.dlm-cat-ico.cat-archive { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+
+.dlm-card-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.dlm-card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dlm-card-name {
+  font-size: 13.4px;
+  font-weight: 650;
+  color: var(--md-on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dlm-turbo-chip {
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  font-size: 10.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dlm-turbo-chip.done {
+  background: var(--md-tertiary-container);
+  color: var(--md-on-tertiary-container);
+}
+
+.dlm-turbo-chip.err {
+  background: var(--md-error-container);
+  color: var(--md-error);
+}
+
+.dlm-card-sub {
+  font-size: 11.6px;
+  color: var(--md-on-surface-variant);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dlm-speed-val {
+  color: var(--md-primary);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dlm-card-acts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dlm-act-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: none;
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  font-family: inherit;
+  font-size: 11.8px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: filter 0.14s ease, transform 0.14s ease;
+}
+
+.dlm-act-btn:hover { filter: brightness(1.07); }
+.dlm-act-btn:active { transform: scale(0.95); }
+
+.dlm-act-btn.primary {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+}
+
+.dlm-act-btn.danger {
+  background: var(--md-error-container);
+  color: var(--md-error);
+}
+
+/* 8-Segment AntDM Parallel Progress Strip */
+.dlm-seg-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dlm-seg-strip {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 3px;
+  height: 7px;
+}
+
+.dlm-seg-strip.single {
+  grid-template-columns: 1fr;
+}
+
+.dlm-seg {
+  background: var(--md-surface-container-highest);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dlm-seg-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--md-primary);
+  transition: width 0.22s linear;
+}
+
+.dlm-card.is-paused .dlm-seg-fill {
+  background: var(--md-outline);
+}
+
+.dlm-card.is-done .dlm-seg-fill {
+  background: var(--md-tertiary);
+}
+
+.dlm-empty {
+  text-align: center;
+  padding: 52px 24px;
+  border-radius: 24px;
+  background: var(--md-surface-container);
+  border: 1px dashed var(--md-outline-variant);
+  color: var(--md-on-surface-variant);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.dlm-empty-ico {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dlm-empty-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--md-on-surface);
+}
+
+.dlm-empty-sub {
+  font-size: 12.5px;
+  max-width: 420px;
+  line-height: 1.5;
+}

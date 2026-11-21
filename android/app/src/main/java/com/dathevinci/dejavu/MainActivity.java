@@ -74,7 +74,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity implements SyncManager.Listener, MobileAutoUpdater.Listener {
+public class MainActivity extends AppCompatActivity implements SyncManager.Listener, MobileAutoUpdater.Listener, MobileDownloadManager.Listener {
     private static final String PREFS = "dejavu_mobile_prefs_v1";
     private static final String DESKTOP_UA =
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15";
@@ -175,6 +175,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private MobileAdBlocker adBlocker;
     private SyncManager syncManager;
     private MobileAutoUpdater autoUpdater;
+    private MobileDownloadManager downloadManager;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService suggestPool = Executors.newSingleThreadExecutor();
     private volatile int suggestSeq = 0;
@@ -184,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private boolean updatingUrlText = false;
 
     private String searchEngine = "google";
-    private String wallpaper = "wp-velvet-mirage.jpg";
+    private String wallpaper = "wp-m3-amethyst.jpg";
     private String accentColor = "amethyst";
     private String themeMode = "dark";
     private String barPosition = "bottom"; // "bottom" (Safari/Samsung) | "top" (Chrome)
@@ -321,6 +322,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         );
         syncManager = new SyncManager(this, this);
         autoUpdater = new MobileAutoUpdater(this, this);
+        downloadManager = new MobileDownloadManager(this, this);
 
         bindViews();
         setupInsets();
@@ -1292,6 +1294,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     });
                     return adBlocker.emptyResponse();
                 }
+                if (downloadManager != null && !request.isForMainFrame()) {
+                    downloadManager.recordSniffedMedia(tab.id, reqUrl, "", "");
+                }
                 return super.shouldInterceptRequest(view, request);
             }
 
@@ -1299,6 +1304,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 tab.loading = true;
                 tab.url = url;
+                if (downloadManager != null) downloadManager.clearTabMedia(tab.id);
                 if (tab.webView != null) {
                     tab.webView.innerScrollAtTop = true;
                     tab.webView.touchStartedAtTop = true;
@@ -1380,8 +1386,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         wv.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
             try {
-                DownloadManager.Request req = new DownloadManager.Request(Uri.parse(url));
                 String fileName = URLUtil.guessFileName(url, contentDisposition, mimetype);
+                if (downloadManager != null && url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
+                    String cookies = CookieManager.getInstance().getCookie(url);
+                    String queued = downloadManager.enqueueDownload(url, fileName, tab.url, userAgent, cookies, 8);
+                    Toast.makeText(MainActivity.this, "8x Turbo Download: " + queued, Toast.LENGTH_SHORT).show();
+                    openUiScreen("downloads");
+                    return;
+                }
+                DownloadManager.Request req = new DownloadManager.Request(Uri.parse(url));
                 req.setTitle(fileName);
                 req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                 req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
@@ -1446,7 +1459,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     private boolean isModalSheetScreen(String scr) {
-        return "menu".equals(scr) || "sync".equals(scr) || "settings".equals(scr) || "wallpapers".equals(scr);
+        return "menu".equals(scr) || "sync".equals(scr) || "settings".equals(scr) || "wallpapers".equals(scr) || "downloads".equals(scr);
     }
 
     private void updateChromeVisibility() {
@@ -1668,6 +1681,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("history", history);
                 st.put("sync", syncManager.getSnapshot());
                 if (autoUpdater != null) st.put("update", autoUpdater.getSnapshot());
+                if (downloadManager != null) {
+                    st.put("turboDownloads", downloadManager.getDownloadsSnapshot());
+                    st.put("pageMedia", active != null ? downloadManager.getMediaSnapshot(active.id) : new JSONArray());
+                }
 
                 String js = "window.__onDejavuState && window.__onDejavuState(" + st.toString() + ");";
                 uiWebView.evaluateJavascript(js, null);
@@ -1716,7 +1733,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
     private void loadLocalCollections() {
         searchEngine = prefs.getString("searchEngine", "google");
-        wallpaper = prefs.getString("wallpaper", "wp-velvet-mirage.jpg");
+        wallpaper = prefs.getString("wallpaper", "wp-m3-amethyst.jpg");
         accentColor = prefs.getString("accentColor", "amethyst");
         themeMode = prefs.getString("themeMode", "dark");
         barPosition = prefs.getString("barPosition", "bottom");
@@ -2027,9 +2044,54 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     @Override
+    public void onDownloadsChanged() {
+        if (!uiReady || downloadManager == null) return;
+        mainHandler.post(() -> {
+            try {
+                MobileTab active = getActiveTab();
+                JSONObject payload = new JSONObject();
+                payload.put("turboDownloads", downloadManager.getDownloadsSnapshot());
+                payload.put("pageMedia", active != null ? downloadManager.getMediaSnapshot(active.id) : new JSONArray());
+                uiWebView.evaluateJavascript("window.__onDejavuDownloads && window.__onDejavuDownloads(" + payload.toString() + ");", null);
+            } catch (Exception ignored) { }
+        });
+    }
+
+    private void scanActivePageMedia() {
+        final MobileTab t = getActiveTab();
+        if (downloadManager == null || t == null || t.isNewTab || t.webView == null) return;
+        String js = "(function(){try{var out=[];var seen={};" +
+            "function add(u,c,ti,mm){if(!u||typeof u!=='string')return;try{u=new URL(u,location.href).href;}catch(e){return;}" +
+            "if(!/^https?:\\/\\//i.test(u)||seen[u])return;seen[u]=1;out.push({url:u,category:c,title:(ti||'').slice(0,95),mime:mm||''});}" +
+            "document.querySelectorAll('video,video source').forEach(function(el){add(el.currentSrc||el.src,'video',document.title+' (Video)',el.type||'video/mp4');});" +
+            "document.querySelectorAll('audio,audio source').forEach(function(el){add(el.currentSrc||el.src,'audio',document.title+' (Audio)',el.type||'audio/mpeg');});" +
+            "var rx=/\\.(mp4|webm|mkv|mov|m3u8|mp3|m4a|wav|flac|ogg|pdf|docx?|xlsx?|pptx?|epub|zip|rar|7z|tar|gz|apk|exe|msi|iso)(\\?|#|$)/i;" +
+            "document.querySelectorAll('a[href]').forEach(function(a){var h=a.href||'';var m=h.match(rx);if(m){" +
+            "var ext=m[1].toLowerCase();var c='document';" +
+            "if(/^(mp4|webm|mkv|mov|m3u8)$/.test(ext))c='video';" +
+            "else if(/^(mp3|m4a|wav|flac|ogg)$/.test(ext))c='audio';" +
+            "else if(/^(zip|rar|7z|tar|gz|apk|exe|msi|iso)$/.test(ext))c='archive';" +
+            "add(h,c,(a.textContent||a.download||'').trim(),ext);}});" +
+            "document.querySelectorAll('img[src]').forEach(function(im){if((im.naturalWidth||0)>=320&&(im.naturalHeight||0)>=220){" +
+            "add(im.currentSrc||im.src,'image',im.alt||document.title,'image/jpeg');}});" +
+            "return JSON.stringify(out.slice(0,45));}catch(e){return '[]';}})();";
+        t.webView.evaluateJavascript(js, raw -> {
+            try {
+                if (raw == null || "null".equals(raw)) return;
+                String unquoted = new JSONArray("[" + raw + "]").optString(0, "[]");
+                JSONArray arr = new JSONArray(unquoted);
+                if (arr.length() > 0) {
+                    downloadManager.mergeDomMedia(t.id, arr);
+                }
+            } catch (Exception ignored) { }
+        });
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         saveLocalCollections();
+        if (downloadManager != null) downloadManager.shutdown();
         if (syncManager != null) syncManager.shutdown();
         if (autoUpdater != null) autoUpdater.shutdown();
         suggestPool.shutdownNow();
@@ -2113,13 +2175,83 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         @JavascriptInterface
         public void openDownloads() {
             mainHandler.post(() -> {
-                closeOverlayScreen();
-                try {
-                    startActivity(new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS));
-                } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, "Open Android Files > Downloads", Toast.LENGTH_SHORT).show();
-                }
+                scanActivePageMedia();
+                openUiScreen("downloads");
             });
+        }
+
+        @JavascriptInterface
+        public void turboAddUrl(final String rawUrl, final String suggestedName) {
+            mainHandler.post(() -> {
+                if (downloadManager == null || rawUrl == null || rawUrl.trim().isEmpty()) return;
+                MobileTab t = getActiveTab();
+                String ref = (t != null && !t.isNewTab) ? t.url : "";
+                String ua = (t != null && t.webView != null) ? t.webView.getSettings().getUserAgentString() : "";
+                String ck = CookieManager.getInstance().getCookie(rawUrl.trim());
+                String fn = downloadManager.enqueueDownload(rawUrl.trim(), suggestedName, ref, ua, ck, 8);
+                Toast.makeText(MainActivity.this, "8x Turbo Download: " + fn, Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void turboAddBatch(final String urlsJson) {
+            mainHandler.post(() -> {
+                if (downloadManager == null || urlsJson == null) return;
+                try {
+                    JSONArray arr = new JSONArray(urlsJson);
+                    MobileTab t = getActiveTab();
+                    String ref = (t != null && !t.isNewTab) ? t.url : "";
+                    String ua = (t != null && t.webView != null) ? t.webView.getSettings().getUserAgentString() : "";
+                    int n = Math.min(arr.length(), 25);
+                    for (int i = 0; i < n; i++) {
+                        String u = arr.optString(i, "").trim();
+                        if (!u.isEmpty()) {
+                            downloadManager.enqueueDownload(u, "", ref, ua, CookieManager.getInstance().getCookie(u), 8);
+                        }
+                    }
+                    if (n > 0) Toast.makeText(MainActivity.this, "Queued " + n + " files at 8x speed", Toast.LENGTH_SHORT).show();
+                } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface
+        public void turboPause(final String id) {
+            mainHandler.post(() -> { if (downloadManager != null) downloadManager.pause(id); });
+        }
+
+        @JavascriptInterface
+        public void turboResume(final String id) {
+            mainHandler.post(() -> { if (downloadManager != null) downloadManager.resume(id); });
+        }
+
+        @JavascriptInterface
+        public void turboCancel(final String id) {
+            mainHandler.post(() -> { if (downloadManager != null) downloadManager.cancel(id); });
+        }
+
+        @JavascriptInterface
+        public void turboRemove(final String id) {
+            mainHandler.post(() -> { if (downloadManager != null) downloadManager.remove(id); });
+        }
+
+        @JavascriptInterface
+        public void turboClearDone() {
+            mainHandler.post(() -> { if (downloadManager != null) downloadManager.clearCompleted(); });
+        }
+
+        @JavascriptInterface
+        public void turboOpenFile(final String id) {
+            mainHandler.post(() -> { if (downloadManager != null) downloadManager.openFile(MainActivity.this, id); });
+        }
+
+        @JavascriptInterface
+        public void turboShareFile(final String id) {
+            mainHandler.post(() -> { if (downloadManager != null) downloadManager.shareFile(MainActivity.this, id); });
+        }
+
+        @JavascriptInterface
+        public void turboScanPageMedia() {
+            mainHandler.post(MainActivity.this::scanActivePageMedia);
         }
 
         @JavascriptInterface

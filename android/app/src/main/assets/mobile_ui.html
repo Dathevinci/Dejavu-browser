@@ -110,7 +110,13 @@
       background: linear-gradient(180deg, rgba(6,5,14,0.48) 0%, rgba(6,5,14,0.22) 38%, rgba(6,5,14,0.72) 100%);
     }
     body.theme-light #wp-vignette {
-      background: linear-gradient(180deg, rgba(248,245,255,0.68) 0%, rgba(244,240,254,0.52) 42%, rgba(238,233,252,0.82) 100%);
+      background: linear-gradient(180deg, rgba(254,247,255,0.62) 0%, rgba(247,242,250,0.44) 42%, rgba(243,237,247,0.74) 100%);
+    }
+    body.theme-light.wp-native-light #wp-vignette {
+      background: linear-gradient(180deg, rgba(254,247,255,0.22) 0%, rgba(254,247,255,0.06) 45%, rgba(254,247,255,0.34) 100%);
+    }
+    body:not(.theme-light).wp-native-light #wp-vignette {
+      background: linear-gradient(180deg, rgba(16,14,22,0.58) 0%, rgba(16,14,22,0.46) 45%, rgba(16,14,22,0.72) 100%);
     }
     body.mode-private #wp-vignette {
       background: linear-gradient(180deg, rgba(16,8,34,0.86) 0%, rgba(12,6,26,0.78) 50%, rgba(8,4,18,0.94) 100%);
@@ -273,23 +279,23 @@
       transform: translateX(20px);
     }
 
-    /* Colored Squircle SF-Style Badges */
+    /* Authentic Google Pixel Material Design 3 Tonal Icon Badges (Zero Apple glossy squircles!) */
     .sq-ico {
-      width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+      width: 34px; height: 34px; border-radius: 12px; flex-shrink: 0;
       display: inline-flex; align-items: center; justify-content: center;
-      color: #ffffff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.32);
+      background: var(--accent-soft); color: var(--accent-bright);
+      box-shadow: none;
     }
-    .sq-ico svg { width: 16px; height: 16px; }
-    .ic-violet { background: linear-gradient(145deg, #9b6dff, #6d3ef6); }
-    .ic-amber  { background: linear-gradient(145deg, #fbbf24, #d97706); }
-    .ic-sky    { background: linear-gradient(145deg, #38bdf8, #0284c7); }
-    .ic-slate  { background: linear-gradient(145deg, #64748b, #475569); }
-    .ic-teal   { background: linear-gradient(145deg, #2dd4bf, #0d9488); }
-    .ic-indigo { background: linear-gradient(145deg, #818cf8, #4f46e5); }
-    .ic-rose   { background: linear-gradient(145deg, #f472b6, #db2777); }
-    .ic-plum   { background: linear-gradient(145deg, #c084fc, #9333ea); }
-    .ic-night  { background: linear-gradient(145deg, #4338ca, #1e1b4b); }
-    .ic-emerald{ background: linear-gradient(145deg, #34d399, #059669); }
+    body.theme-light .sq-ico { color: var(--accent); }
+    .sq-ico svg { width: 17px; height: 17px; }
+    .ic-violet, .ic-indigo, .ic-plum { background: var(--accent-soft); color: var(--accent-bright); }
+    .ic-teal, .ic-emerald, .ic-sky   { background: rgba(123, 216, 198, 0.18); color: var(--mint); }
+    .ic-amber, .ic-rose              { background: rgba(239, 184, 200, 0.18); color: #efb8c8; }
+    .ic-slate, .ic-night             { background: var(--input-bg); color: var(--ink); }
+    body.theme-light .ic-violet, body.theme-light .ic-indigo, body.theme-light .ic-plum { background: var(--accent-soft); color: var(--accent); }
+    body.theme-light .ic-teal, body.theme-light .ic-emerald, body.theme-light .ic-sky   { background: #d4f4ec; color: #006a60; }
+    body.theme-light .ic-amber, body.theme-light .ic-rose                               { background: #ffd8e4; color: #7d5260; }
+    body.theme-light .ic-slate, body.theme-light .ic-night                              { background: var(--input-bg); color: var(--ink); }
 
     /* Real Site Favicon Container */
     .site-ico {
@@ -644,11 +650,11 @@
        SHEET B: DEJAVU LINK (AirDrop-Style Sync Hub)
        ===================================================================== */
     .cta-btn {
-      width: 100%; height: 46px; border-radius: 15px; border: none;
-      background: linear-gradient(135deg, #8b5cf6, #a855f7);
-      color: #ffffff; font-family: inherit; font-size: 14px; font-weight: 680;
+      width: 100%; height: 46px; border-radius: 999px; border: none;
+      background: var(--accent);
+      color: var(--accent-ink); font-family: inherit; font-size: 14px; font-weight: 700;
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      box-shadow: 0 6px 20px var(--accent-glow);
+      box-shadow: none;
     }
     .compose-row { display: flex; gap: 8px; }
     .compose-row input {
@@ -723,18 +729,67 @@
 
     .bar-seg {
       display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
-      padding: 3px; border-radius: 12px; background: var(--input-bg);
+      padding: 4px; border-radius: 999px; background: var(--input-bg);
       border: 1px solid var(--border); margin: 0 12px 12px;
     }
     .bar-seg button {
-      height: 34px; border-radius: 9px; border: none;
+      height: 36px; border-radius: 999px; border: none;
       background: transparent; color: var(--muted);
-      font-family: inherit; font-size: 12.5px; font-weight: 630;
+      font-family: inherit; font-size: 12.5px; font-weight: 650;
+      display: inline-flex; align-items: center; justify-content: center; gap: 5px;
     }
     .bar-seg button.active {
-      background: var(--sheet-elev); color: var(--ink);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+      background: var(--accent-soft); color: var(--accent-bright);
+      box-shadow: none;
     }
+    body.theme-light .bar-seg button.active { color: var(--accent); }
+    .bar-seg button.active::before {
+      content: '✓'; font-size: 11.5px; font-weight: 800;
+    }
+
+    /* Mobile AntDM-Style 8x Turbo Download Manager Sheet Styles */
+    .dl-card {
+      padding: 13px 14px; border-radius: 20px;
+      background: var(--group-bg); border: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 9px;
+    }
+    .dl-card.active { border-color: var(--accent); }
+    .dl-card-top { display: flex; align-items: center; gap: 11px; }
+    .dl-cat-badge {
+      width: 38px; height: 38px; border-radius: 13px; flex-shrink: 0;
+      background: var(--accent-soft); color: var(--accent-bright);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.03em;
+    }
+    body.theme-light .dl-cat-badge { color: var(--accent); }
+    .dl-chip {
+      height: 20px; padding: 0 8px; border-radius: 999px; flex-shrink: 0;
+      background: var(--accent-soft); color: var(--accent-bright);
+      font-size: 10px; font-weight: 750; display: inline-flex; align-items: center;
+    }
+    body.theme-light .dl-chip { color: var(--accent); }
+    .dl-chip.done { background: rgba(123,216,198,0.20); color: var(--mint); }
+    .dl-chip.err  { background: rgba(225,29,72,0.16); color: var(--danger); }
+    .m-seg-strip {
+      display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; height: 6px;
+    }
+    .m-seg-strip.single { grid-template-columns: 1fr; }
+    .m-seg {
+      background: var(--input-bg); border-radius: 999px; overflow: hidden;
+    }
+    .m-seg-fill {
+      height: 100%; border-radius: 999px; background: var(--accent);
+      transition: width 0.2s linear;
+    }
+    .dl-card.paused .m-seg-fill { background: var(--subtle); }
+    .dl-acts { display: flex; flex-wrap: wrap; gap: 7px; }
+    .wp-m3-tag {
+      position: absolute; top: 8px; left: 8px;
+      padding: 2px 8px; border-radius: 999px;
+      background: var(--accent-soft); color: var(--accent-bright);
+      font-size: 9.5px; font-weight: 750; letter-spacing: 0.02em;
+    }
+    body.theme-light .wp-m3-tag { color: var(--accent); }
 
     .radio-dot {
       width: 20px; height: 20px; border-radius: 50%;
@@ -809,6 +864,9 @@
         <span id="sp-link-txt">Link PC</span>
       </button>
       <div class="sp-top-acts">
+        <button type="button" class="icon-circle" aria-label="Turbo Downloads" onclick="call('openDownloads')">
+          <svg viewBox="0 0 20 20" width="17" height="17" fill="none"><path d="M10 3.6v8.8M6.6 9.2L10 12.6l3.4-3.4M4.2 15.6h11.6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
         <button type="button" class="icon-circle" aria-label="Wallpapers" onclick="call('openScreen','wallpapers')">
           <svg viewBox="0 0 20 20" width="17" height="17" fill="none"><rect x="2.8" y="3.8" width="14.4" height="12.4" rx="2.6" stroke="currentColor" stroke-width="1.65"/><circle cx="7.2" cy="7.8" r="1.35" fill="currentColor"/><path d="M3.4 14.2l3.8-3.6 2.8 2.5 2.4-2.4 4.2 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -1051,7 +1109,11 @@
             </button>
             <button type="button" class="g-row" onclick="call('openDownloads')">
               <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 3.5v8M6 8.8l3 3 3-3M3.8 14.5h10.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-              <span class="g-row-meta"><span class="g-row-title">Downloads</span></span>
+              <span class="g-row-meta">
+                <span class="g-row-title">Turbo Downloads (8x)</span>
+                <span class="g-row-sub">8-thread accelerator &amp; Page Media grabber</span>
+              </span>
+              <span id="m-cnt-dl" class="g-row-val">0</span>
               <span class="g-chev">›</span>
             </button>
             <button type="button" class="g-row" onclick="call('openScreen','settings')">
@@ -1224,7 +1286,7 @@
           <div class="g-row">
             <span class="sq-ico ic-emerald"><svg viewBox="0 0 18 18" fill="none"><path d="M9 14V4M5.6 7.4L9 4l3.4 3.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.8 14.5h10.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
             <div class="g-row-meta">
-              <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.0.0</div>
+              <div id="opt-upd-title" class="g-row-title">dejavu Mobile v4.1.0</div>
               <div id="opt-upd-sub" class="g-row-sub">Automatic updates via GitHub Releases</div>
             </div>
             <button type="button" id="opt-upd-btn" class="pill-btn" onclick="handleUpdateBtn()">Check</button>
@@ -1237,26 +1299,65 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:11.5px;color:var(--subtle);padding:4px 0 8px;">
-          dejavu Mobile v4.0.0 · Material You Edition
+          dejavu Mobile v4.1.0 · Material You Edition
         </div>
       </div>
     </div>
   </div>
 
   <!-- ===================================================================
-       SHEET D: HD WALLPAPERS GALLERY (12 HD Butterfly + Live Prism)
+       SHEET D: MATERIAL YOU HD WALLPAPERS GALLERY
        =================================================================== -->
   <div id="scr-wallpapers" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
       <div class="sheet-head" data-swipe-dismiss="1">
         <div class="sheet-grab"></div>
         <div class="sheet-title-row">
-          <h2 class="sheet-title">HD Wallpapers</h2>
+          <h2 class="sheet-title">Material You Wallpapers</h2>
           <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
         </div>
       </div>
       <div class="sheet-body">
         <div id="m-wp-grid" class="wp-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       SHEET E: ANTDM-STYLE 8x TURBO DOWNLOAD MANAGER & PAGE MEDIA GRABBER
+       =================================================================== -->
+  <div id="scr-downloads" class="sheet-backdrop hidden" onclick="backdropClose(event)">
+    <div class="sheet-panel" onclick="event.stopPropagation()">
+      <div class="sheet-head" data-swipe-dismiss="1">
+        <div class="sheet-grab"></div>
+        <div class="sheet-title-row">
+          <h2 class="sheet-title">Turbo Downloads (8x)</h2>
+          <div style="display:flex;gap:7px;">
+            <button type="button" class="pill-btn" onclick="call('turboClearDone')">Clear</button>
+            <button type="button" class="pill-btn primary" onclick="call('closeScreen')">Done</button>
+          </div>
+        </div>
+      </div>
+      <div class="sheet-body">
+        <div class="bar-seg" style="margin:0;">
+          <button type="button" id="m-dltab-dl" class="active" onclick="setMobileDlTab('downloads')">Downloads (0)</button>
+          <button type="button" id="m-dltab-media" onclick="setMobileDlTab('media')">Page Media (0)</button>
+        </div>
+
+        <div class="compose-row">
+          <input id="m-dl-url-in" type="url" placeholder="Paste file, video, audio, ZIP or PDF link (8x)…">
+          <button type="button" class="pill-btn primary" style="height:44px;padding:0 16px;border-radius:999px;" onclick="submitMobileDlUrl()">8x Go</button>
+        </div>
+
+        <div id="m-media-acts" style="display:none;align-items:center;justify-content:space-between;gap:8px;padding:11px 13px;border-radius:16px;background:var(--accent-soft);">
+          <span style="font-size:12.5px;font-weight:660;color:var(--accent-bright);">Download Everything from Page</span>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="pill-btn" onclick="call('turboScanPageMedia')">Scan</button>
+            <button type="button" id="m-dl-grab-all" class="pill-btn primary" onclick="downloadAllMobileMedia()">Grab All</button>
+          </div>
+        </div>
+
+        <div id="m-dl-list" style="display:flex;flex-direction:column;gap:10px;"></div>
       </div>
     </div>
   </div>
@@ -1276,6 +1377,14 @@
 
   <script>
     const WALLPAPERS = [
+      { id: 'wp-m3-amethyst.jpg',       name: 'Material Amethyst',   m3: true },
+      { id: 'wp-m3-pixel-blue.jpg',     name: 'Pixel Blue Tonal',    m3: true },
+      { id: 'wp-m3-sage.jpg',           name: 'Material Sage',       m3: true },
+      { id: 'wp-m3-blossom.jpg',        name: 'Material Blossom',    m3: true },
+      { id: 'wp-m3-honey.jpg',          name: 'Material Honey',      m3: true },
+      { id: 'wp-m3-porcelain.jpg',      name: 'Porcelain Light',     m3: true },
+      { id: 'wp-m3-meadow.jpg',         name: 'Meadow Light',        m3: true },
+      { id: 'wp-m3-blush.jpg',          name: 'Blush Quartz Light',  m3: true },
       { id: 'wp-velvet-mirage.jpg',     name: 'Velvet Mirage' },
       { id: 'wp-prism-cascade.jpg',     name: 'Prism Cascade' },
       { id: 'wp-midnight-orchid.jpg',   name: 'Midnight Orchid' },
@@ -1288,7 +1397,7 @@
       { id: 'wp-sakura.jpg',            name: 'Sakura Bloom' },
       { id: 'wp-morpho.jpg',            name: 'Blue Morpho' },
       { id: 'wp-rosequartz.jpg',        name: 'Rose Quartz' },
-      { id: 'obsidian',                 name: 'Obsidian Prism' }
+      { id: 'obsidian',                 name: 'Material You Tonal' }
     ];
     const ENGINES = [
       ['google',     'Google',     'G', '#4285f4'],
@@ -1819,6 +1928,8 @@
       document.getElementById('m-cnt-bm').textContent = String((state.bookmarks || []).length);
       document.getElementById('m-cnt-rl').textContent = String((state.readingList || []).length);
       document.getElementById('m-cnt-hi').textContent = String((state.history || []).length);
+      const dlCntEl = document.getElementById('m-cnt-dl');
+      if (dlCntEl) dlCntEl.textContent = String((state.turboDownloads || []).length);
       if (menuSubView !== 'main') renderMenuSubList();
     }
 
@@ -1913,14 +2024,14 @@
 
       // Software Update Card
       const u = state.update || {};
-      const curV = u.currentVersion || '3.4.0';
+      const curV = u.currentVersion || '4.1.0';
       const uTitle = document.getElementById('opt-upd-title');
       const uSub = document.getElementById('opt-upd-sub');
       const uBtn = document.getElementById('opt-upd-btn');
       const uProgW = document.getElementById('opt-upd-prog-wrap');
       const uProgF = document.getElementById('opt-upd-prog-fill');
       const uFoot = document.getElementById('opt-ver-footer');
-      if (uFoot) uFoot.textContent = `dejavu Mobile v${curV} · Butterfly Edition`;
+      if (uFoot) uFoot.textContent = `dejavu Mobile v${curV} · Material You Edition`;
       if (uTitle && uSub && uBtn) {
         if (u.status === 'checking') {
           uTitle.textContent = 'Checking for updates...';
@@ -1978,10 +2089,11 @@
         btn.type = 'button';
         btn.className = 'wp-tile' + (state.wallpaper === w.id ? ' active' : '');
         const thumb = w.id === 'obsidian'
-          ? `<div class="wp-live-thumb" style="background:${isLight ? 'radial-gradient(circle at 30% 25%,#dcd0ff,#f4f1fc 65%,#e4dcfa)' : 'radial-gradient(circle at 30% 25%,#5b31b8,#140d2a 60%,#07060d)'};"></div>`
+          ? `<div class="wp-live-thumb" style="background:${isLight ? 'linear-gradient(135deg,#eaddff 0%,#fef7ff 55%,#ffd8e4 100%)' : 'linear-gradient(135deg,#4f378b 0%,#1c1b23 55%,#633b48 100%)'};"></div>`
           : `<img src="wallpapers/${w.id}" alt="${esc(w.name)}">`;
         btn.innerHTML = `
           ${thumb}
+          ${w.m3 ? '<span class="wp-m3-tag">Material You</span>' : ''}
           <span class="wp-check"><svg viewBox="0 0 14 14" width="11" height="11" fill="none"><path d="M3 7.2l2.6 2.6L11 4.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           <div class="wp-tile-name">${esc(w.name)}</div>
         `;
@@ -1989,6 +2101,161 @@
         wg.appendChild(btn);
       });
     }
+
+    let mobileDlTab = 'downloads'; // 'downloads' | 'media'
+    function setMobileDlTab(tab) {
+      mobileDlTab = tab === 'media' ? 'media' : 'downloads';
+      if (mobileDlTab === 'media') call('turboScanPageMedia');
+      renderDownloadsSheet();
+    }
+    function submitMobileDlUrl() {
+      const inp = document.getElementById('m-dl-url-in');
+      const v = (inp.value || '').trim();
+      if (!v) return;
+      inp.value = '';
+      mobileDlTab = 'downloads';
+      call('turboAddUrl', v, '');
+    }
+    function downloadAllMobileMedia() {
+      const urls = (state.pageMedia || []).map((m) => m.url).filter(Boolean);
+      if (!urls.length) return;
+      call('turboAddBatch', JSON.stringify(urls));
+      mobileDlTab = 'downloads';
+      renderDownloadsSheet();
+    }
+    function fmtMb(b) {
+      const n = Number(b || 0);
+      if (n <= 0) return '0 B';
+      if (n < 1024) return n + ' B';
+      if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+      if (n < 1073741824) return (n / 1048576).toFixed(2) + ' MB';
+      return (n / 1073741824).toFixed(2) + ' GB';
+    }
+    function mCatTag(c) {
+      if (c === 'video') return 'VID';
+      if (c === 'audio') return 'AUD';
+      if (c === 'document') return 'DOC';
+      if (c === 'archive') return 'APP';
+      if (c === 'image') return 'IMG';
+      return 'FILE';
+    }
+    function renderDownloadsSheet() {
+      const listEl = document.getElementById('m-dl-list');
+      if (!listEl) return;
+      const dls = Array.isArray(state.turboDownloads) ? state.turboDownloads : [];
+      const media = Array.isArray(state.pageMedia) ? state.pageMedia : [];
+      const btnDl = document.getElementById('m-dltab-dl');
+      const btnMd = document.getElementById('m-dltab-media');
+      const mediaBar = document.getElementById('m-media-acts');
+      const grabAllBtn = document.getElementById('m-dl-grab-all');
+      if (btnDl) {
+        btnDl.classList.toggle('active', mobileDlTab === 'downloads');
+        btnDl.textContent = `Downloads (${dls.length})`;
+      }
+      if (btnMd) {
+        btnMd.classList.toggle('active', mobileDlTab === 'media');
+        btnMd.textContent = `Page Media (${media.length})`;
+      }
+      if (mediaBar) mediaBar.style.display = mobileDlTab === 'media' ? 'flex' : 'none';
+      if (grabAllBtn) {
+        grabAllBtn.disabled = media.length === 0;
+        grabAllBtn.textContent = media.length ? `Grab All (${media.length})` : 'Grab All';
+      }
+
+      listEl.innerHTML = '';
+      if (mobileDlTab === 'media') {
+        if (!media.length) {
+          listEl.innerHTML = '<div class="empty">No downloadable videos, audio, PDFs, archives or HD images found on this page.<br>Open any media webpage and tap <b>Scan</b>.</div>';
+          return;
+        }
+        media.forEach((m) => {
+          const card = document.createElement('div');
+          card.className = 'dl-card';
+          card.innerHTML = `
+            <div class="dl-card-top">
+              <span class="dl-cat-badge">${mCatTag(m.category)}</span>
+              <div class="g-row-meta">
+                <div class="g-row-title">${esc(m.title || m.fileName || 'Media')}</div>
+                <div class="g-row-sub">${esc(m.url || '')}</div>
+              </div>
+              <button type="button" class="pill-btn primary m-dl-one" style="flex-shrink:0;">8x</button>
+            </div>`;
+          card.querySelector('.m-dl-one').onclick = (e) => {
+            call('turboAddUrl', m.url, m.fileName || '');
+            e.currentTarget.textContent = '✓';
+            e.currentTarget.disabled = true;
+          };
+          listEl.appendChild(card);
+        });
+        return;
+      }
+
+      if (!dls.length) {
+        listEl.innerHTML = '<div class="empty">No 8x Turbo downloads yet.<br>Paste any direct file link above, tap a download on any site, or switch to <b>Page Media</b> to grab videos &amp; files.</div>';
+        return;
+      }
+
+      dls.forEach((d) => {
+        const isRun = d.status === 'downloading' || d.status === 'probing';
+        const isPaused = d.status === 'paused';
+        const isDone = d.status === 'completed';
+        const isErr = d.status === 'failed' || d.status === 'cancelled';
+        const card = document.createElement('div');
+        card.className = 'dl-card' + (isRun ? ' active' : '') + (isPaused ? ' paused' : '');
+        const segs = Array.isArray(d.segments) && d.segments.length ? d.segments : [{ pct: isDone ? 100 : (d.percent || 0) }];
+        const segHtml = segs.map((s) => `<div class="m-seg"><div class="m-seg-fill" style="width:${Math.max(0, Math.min(100, isDone ? 100 : (s.pct || 0)))}%"></div></div>`).join('');
+        const chipLbl = isDone ? 'Done' : (isErr ? 'Retry' : (isPaused ? 'Paused' : `${d.threads || 1}x Turbo`));
+        const chipCls = isDone ? 'done' : (isErr ? 'err' : '');
+        const spd = (isRun && d.speedBps > 0) ? ` · ${fmtMb(d.speedBps)}/s` : '';
+        const sz = d.totalBytes > 0 ? (isDone ? fmtMb(d.totalBytes) : `${fmtMb(d.receivedBytes)} / ${fmtMb(d.totalBytes)} (${Math.round(d.percent || 0)}%)`) : (d.receivedBytes > 0 ? fmtMb(d.receivedBytes) : 'Connecting…');
+
+        let acts = '';
+        if (isRun) {
+          acts = `<button type="button" class="pill-btn a-pause">Pause</button><button type="button" class="pill-btn danger a-cancel">Cancel</button>`;
+        } else if (isPaused || isErr) {
+          acts = `<button type="button" class="pill-btn primary a-resume">${isErr ? 'Retry' : 'Resume'}</button><button type="button" class="pill-btn a-rm">Remove</button>`;
+        } else if (isDone) {
+          acts = `<button type="button" class="pill-btn primary a-open">Open</button><button type="button" class="pill-btn a-share">Share</button><button type="button" class="pill-btn a-rm">×</button>`;
+        }
+
+        card.innerHTML = `
+          <div class="dl-card-top">
+            <span class="dl-cat-badge">${mCatTag(d.category)}</span>
+            <div class="g-row-meta">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="g-row-title" style="flex:1;min-width:0;">${esc(d.fileName || 'Download')}</span>
+                <span class="dl-chip ${chipCls}">${esc(chipLbl)}</span>
+              </div>
+              <div class="g-row-sub">${esc(sz + spd)}</div>
+            </div>
+          </div>
+          ${!isDone ? `<div class="m-seg-strip ${segs.length <= 1 ? 'single' : ''}" style="grid-template-columns:repeat(${segs.length},1fr)">${segHtml}</div>` : ''}
+          <div class="dl-acts">${acts}</div>
+        `;
+        const bp = card.querySelector('.a-pause');
+        const br = card.querySelector('.a-resume');
+        const bc = card.querySelector('.a-cancel');
+        const bo = card.querySelector('.a-open');
+        const bs = card.querySelector('.a-share');
+        const brm = card.querySelector('.a-rm');
+        if (bp) bp.onclick = () => call('turboPause', d.id);
+        if (br) br.onclick = () => call('turboResume', d.id);
+        if (bc) bc.onclick = () => call('turboCancel', d.id);
+        if (bo) bo.onclick = () => call('turboOpenFile', d.id);
+        if (bs) bs.onclick = () => call('turboShareFile', d.id);
+        if (brm) brm.onclick = () => call('turboRemove', d.id);
+        listEl.appendChild(card);
+      });
+    }
+
+    window.__onDejavuDownloads = function (payload) {
+      if (!payload) return;
+      state.turboDownloads = payload.turboDownloads || [];
+      state.pageMedia = payload.pageMedia || [];
+      const dlCntEl = document.getElementById('m-cnt-dl');
+      if (dlCntEl) dlCntEl.textContent = String(state.turboDownloads.length);
+      if (state.screen === 'downloads') renderDownloadsSheet();
+    };
 
     let lastScreen = '';
     window.__onDejavuState = function (st) {
@@ -2006,16 +2273,19 @@
 
       // Wallpaper
       const wpBg = document.getElementById('wp-bg');
-      if (state.wallpaper && state.wallpaper !== 'obsidian') {
-        wpBg.style.backgroundImage = `url("wallpapers/${state.wallpaper}")`;
+      const curWp = state.wallpaper || 'wp-m3-amethyst.jpg';
+      const isNativeLightWp = curWp.includes('wp-m3-porcelain') || curWp.includes('wp-m3-meadow') || curWp.includes('wp-m3-blush');
+      document.body.classList.toggle('wp-native-light', isNativeLightWp);
+      if (curWp && curWp !== 'obsidian') {
+        wpBg.style.backgroundImage = `url("wallpapers/${curWp}")`;
       } else {
         wpBg.style.backgroundImage = isLight
-          ? 'radial-gradient(circle at 28% 22%, #dfd4ff 0%, #f4f1fc 52%, #e6defa 100%)'
-          : 'radial-gradient(circle at 28% 22%, #3a1f78 0%, #140d2a 48%, #07060d 100%)';
+          ? 'linear-gradient(140deg, #eaddff 0%, #fef7ff 52%, #ffd8e4 100%)'
+          : 'linear-gradient(140deg, #4f378b 0%, #141218 52%, #633b48 100%)';
       }
 
       const scr = state.screen || 'start';
-      const isModal = scr === 'menu' || scr === 'sync' || scr === 'settings' || scr === 'wallpapers';
+      const isModal = scr === 'menu' || scr === 'sync' || scr === 'settings' || scr === 'wallpapers' || scr === 'downloads';
       const showStartBehind = scr === 'start' || (isModal && !state.activeUrl);
 
       if (scr !== lastScreen) {
@@ -2033,6 +2303,8 @@
       document.getElementById('scr-sync').classList.toggle('hidden', scr !== 'sync');
       document.getElementById('scr-settings').classList.toggle('hidden', scr !== 'settings');
       document.getElementById('scr-wallpapers').classList.toggle('hidden', scr !== 'wallpapers');
+      const scrDl = document.getElementById('scr-downloads');
+      if (scrDl) scrDl.classList.toggle('hidden', scr !== 'downloads');
 
       if (showStartBehind) renderStartPage();
       if (scr === 'omnibox') renderOmnibox();
@@ -2041,6 +2313,7 @@
       if (scr === 'sync') renderSyncSheet();
       if (scr === 'settings') renderSettingsSheet();
       if (scr === 'wallpapers') renderWallpapersSheet();
+      if (scr === 'downloads') renderDownloadsSheet();
     };
   </script>
 </body>

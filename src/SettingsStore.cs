@@ -51,7 +51,7 @@ namespace DejavuBrowser
             globalAdBlockEnabled = true;
             pausedHosts = new List<string>();
             totalBlocked = 0;
-            wallpaper = "live:obsidian-prism";
+            wallpaper = "art:wp-m3-amethyst.jpg";
             customWallpaperPath = "";
             vpnCountry = "AUTO";
             vpnMode = "smart";
@@ -126,7 +126,7 @@ namespace DejavuBrowser
                         if (loaded != null)
                         {
                             if (string.IsNullOrEmpty(loaded.searchEngine)) loaded.searchEngine = "google";
-                            if (string.IsNullOrEmpty(loaded.wallpaper)) loaded.wallpaper = "live:obsidian-prism";
+                            if (string.IsNullOrEmpty(loaded.wallpaper)) loaded.wallpaper = "art:wp-m3-amethyst.jpg";
                             if (loaded.customWallpaperPath == null) loaded.customWallpaperPath = "";
                             if (string.IsNullOrEmpty(loaded.vpnCountry)) loaded.vpnCountry = "AUTO";
                             if (string.IsNullOrEmpty(loaded.vpnMode)) loaded.vpnMode = "smart";

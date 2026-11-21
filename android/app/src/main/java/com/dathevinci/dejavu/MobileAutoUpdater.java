@@ -44,7 +44,7 @@ public final class MobileAutoUpdater {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private volatile String currentVersion = "4.0.0";
+    private volatile String currentVersion = "4.1.0";
     private volatile String status = "idle"; // "idle" | "checking" | "uptodate" | "available" | "downloading" | "ready" | "error"
     private volatile String latestVersion = "";
     private volatile String downloadUrl = "";

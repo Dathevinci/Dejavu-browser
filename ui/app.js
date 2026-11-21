@@ -167,6 +167,17 @@
   const prefReading = document.getElementById('pref-reading');
 
   const WALLPAPER_CATALOG = [
+    // Brand-New Google Pixel Material Design 3 Expressive ("Material You") Collection
+    { id: 'art:wp-m3-amethyst.jpg', cat: 'art', m3: true, name: 'Material Amethyst', desc: 'Sculpted matte obsidian-lavender paper curves & geometric butterfly', img: 'https://dejavu.local/wp-m3-amethyst.jpg' },
+    { id: 'art:wp-m3-pixel-blue.jpg', cat: 'art', m3: true, name: 'Pixel Blue Tonal', desc: 'Google Pixel deep cobalt-slate layered ceramic ribbons & butterfly', img: 'https://dejavu.local/wp-m3-pixel-blue.jpg' },
+    { id: 'art:wp-m3-sage.jpg', cat: 'art', m3: true, name: 'Material Sage', desc: 'Eucalyptus-charcoal matte paper folds & botanical mint wings', img: 'https://dejavu.local/wp-m3-sage.jpg' },
+    { id: 'art:wp-m3-blossom.jpg', cat: 'art', m3: true, name: 'Material Blossom', desc: 'Velvet espresso-plum & dusty rose sculptural ceramic folds', img: 'https://dejavu.local/wp-m3-blossom.jpg' },
+    { id: 'art:wp-m3-honey.jpg', cat: 'art', m3: true, name: 'Material Honey', desc: 'Warm espresso dark matte golden-amber & apricot curved ribbons', img: 'https://dejavu.local/wp-m3-honey.jpg' },
+    { id: 'art:wp-m3-porcelain.jpg', cat: 'art', m3: true, name: 'Porcelain Light', desc: 'Airy Material You Light lavender-cream sculpted paper arcs', img: 'https://dejavu.local/wp-m3-porcelain.jpg' },
+    { id: 'art:wp-m3-meadow.jpg', cat: 'art', m3: true, name: 'Meadow Light', desc: 'Alabaster-mint Material 3 Expressive flower & clover ceramic tiles', img: 'https://dejavu.local/wp-m3-meadow.jpg' },
+    { id: 'art:wp-m3-blush.jpg', cat: 'art', m3: true, name: 'Blush Quartz Light', desc: 'Bright porcelain-blush pastel petal waves & folded butterfly', img: 'https://dejavu.local/wp-m3-blush.jpg' },
+    { id: 'live:m3-expressive', cat: 'live', m3: true, name: 'Material You Live', desc: 'Adaptive tonal shapes reacting to your Dynamic Color Seed & theme', grad: 'linear-gradient(135deg, #4f378b 0%, #211f26 52%, #633b48 100%)' },
+    // Classic dejavu 2K HD Butterfly Artworks
     { id: 'art:wp-velvet-mirage.jpg', cat: 'art', name: 'Velvet Mirage', desc: 'Moonlit amethyst mirror lake & prismatic ripples', img: 'https://dejavu.local/wp-velvet-mirage.jpg' },
     { id: 'art:wp-prism-cascade.jpg', cat: 'art', name: 'Prism Cascade', desc: 'Liquid-crystal silk ribbons & spectral glasswings', img: 'https://dejavu.local/wp-prism-cascade.jpg' },
     { id: 'art:wp-midnight-orchid.jpg', cat: 'art', name: 'Midnight Orchid', desc: 'Dewy indigo night orchids & crystal butterflies', img: 'https://dejavu.local/wp-midnight-orchid.jpg' },
@@ -194,8 +205,8 @@
     { id: 'live:emerald-glasswing', cat: 'live', name: 'Emerald Glasswing', desc: 'Iridescent jade & aurora mist', grad: 'radial-gradient(circle at 40% 35%, #19a88d 0%, #082325 56%, #03080a 100%)' },
     { id: 'live:halftone-swarm', cat: 'live', name: 'Halftone Swarm', desc: 'Dotted lavender butterfly matrix', grad: 'radial-gradient(circle at 50% 40%, #8652e6 0%, #160c2c 58%, #040308 100%)' }
   ];
-  let storeFilterCat = 'all';
-  let settingsWpFilterCat = 'all';
+  let storeFilterCat = 'm3';
+  let settingsWpFilterCat = 'm3';
   let activeSettingsPane = 'general';
   let toastTimer = null;
 
@@ -246,11 +257,16 @@
     pausedHosts: bootData.pausedHosts || [],
     settingsOpen: false,
     settingsPane: 'general',
+    dlManagerOpen: false,
+    dlManagerTab: 'all',
+    turboDownloads: [],
+    pageMedia: [],
+    downloadsDir: '',
     downloadsCount: 0,
     hasActiveDownload: false,
     readerActive: false,
     activeProfile: bootData.activeProfile || null,
-    wallpaper: bootData.wallpaper || 'live:obsidian-prism',
+    wallpaper: bootData.wallpaper || 'art:wp-m3-amethyst.jpg',
     hasCustomWallpaper: !!bootData.hasCustomWallpaper,
     globalAdBlockEnabled: bootData.globalAdBlockEnabled !== false,
     activeForSite: true,
@@ -1002,10 +1018,14 @@
   function renderWallpaperCardsInto(gridEl, catFilter) {
     if (!gridEl) return;
     gridEl.innerHTML = '';
-    const activeWp = state.wallpaper || 'live:obsidian-prism';
+    const activeWp = state.wallpaper || 'art:wp-m3-amethyst.jpg';
 
-    const items = WALLPAPER_CATALOG.filter((item) => catFilter === 'all' || item.cat === catFilter);
-    if (state.hasCustomWallpaper && (catFilter === 'all' || catFilter === 'art')) {
+    const items = WALLPAPER_CATALOG.filter((item) => {
+      if (catFilter === 'all') return true;
+      if (catFilter === 'm3') return !!item.m3;
+      return item.cat === catFilter;
+    });
+    if (state.hasCustomWallpaper && (catFilter === 'all' || catFilter === 'art' || catFilter === 'm3')) {
       items.unshift({
         id: activeWp.startsWith('custom') ? activeWp : 'custom',
         cat: 'art',
@@ -1020,7 +1040,7 @@
       const isSelected = item.isCustom ? activeWp.startsWith('custom') : (activeWp === item.id);
       const card = document.createElement('button');
       card.type = 'button';
-      card.className = 'wp-card' + (isSelected ? ' active' : '');
+      card.className = 'wp-card' + (isSelected ? ' active' : '') + (item.m3 ? ' is-m3' : '');
 
       const thumb = document.createElement('div');
       thumb.className = 'wp-thumb';
@@ -1042,7 +1062,7 @@
 
       const badge = document.createElement('span');
       badge.className = 'wp-badge';
-      badge.textContent = item.isCustom ? 'Custom' : (item.cat === 'live' ? 'Live 60fps' : '2K HD Art');
+      badge.textContent = item.isCustom ? 'Custom' : (item.m3 ? (item.cat === 'live' ? 'Material You Live' : 'Material You') : (item.cat === 'live' ? 'Live 60fps' : '2K HD Art'));
       thumb.appendChild(badge);
 
       const check = document.createElement('span');
@@ -1082,7 +1102,7 @@
     general: { title: 'General', sub: 'Search engine, startup tabs, homepage & Quick Access bar' },
     appearance: { title: 'Material You Appearance', sub: 'Theme mode, Dynamic Color seed, address bar & tab layout' },
     startpage: { title: 'Start Page & Quick Access', sub: 'Choose which Samsung-style Quick Access sections appear on new tabs' },
-    wallpapers: { title: 'Butterfly HD Wallpapers', sub: '16 razor-sharp 2K dejavu artworks, 10 live 60fps themes & custom photos' },
+    wallpapers: { title: 'Material You & HD Wallpapers', sub: '9 Google Pixel Material You themes, 16 classic artworks, 11 live themes & custom photos' },
     privacy: { title: 'Privacy, Ad Blocker & VPN', sub: '100/100 ad shield, paused sites, 86+ country Smart & Tor VPN' },
     shortcuts: { title: 'Tabs & Keyboard Shortcuts', sub: 'Tab behavior preferences & desktop browser hotkeys' }
   };
@@ -1151,13 +1171,14 @@
     }
     const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
     const onNewTab = !active || active.isNewTab;
-    const effLight = applyThemePolarity(o.appearanceMode || 'auto', active, onNewTab, !!state.tabOverviewOpen, !!state.settingsOpen);
+    const effLight = applyThemePolarity(o.appearanceMode || 'auto', active, onNewTab, !!state.tabOverviewOpen, !!state.settingsOpen || !!state.dlManagerOpen);
     drawTopLightGuide({ baseRgb: null, accents: null, isLight: effLight });
     if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
       window.DejavuNewTabCanvas.setOptions({
         reduceMotion: !!o.reduceWallpaperMotion,
         dim: o.wallpaperDim || 'balanced',
-        lightMode: (o.appearanceMode === 'light')
+        lightMode: (o.appearanceMode === 'light'),
+        accentColor: ac
       });
     }
     syncSettingsUi();
@@ -1167,7 +1188,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     if (settingsVersionSub) {
-      settingsVersionSub.textContent = `Material You · v${state.appVersion || '4.0.0'}`;
+      settingsVersionSub.textContent = `Material You · v${state.appVersion || '4.1.0'}`;
     }
     setSegmentedVal(optSearchEngine, o.searchEngine || state.searchEngine || 'google');
     setSegmentedVal(optStartup, o.startupBehavior || 'startpage');
@@ -1897,12 +1918,25 @@
       window.DejavuNewTabCanvas.start();
     }
 
-    // Safari Options Window
+    // Material Design 3 Settings Window
     const optOpen = !!next.settingsOpen;
     const wasOptOpen = body.classList.contains('settings-open');
     body.classList.toggle('settings-open', optOpen);
     if (settingsOverlay) settingsOverlay.classList.toggle('hidden', !optOpen);
     if (btnSettings) btnSettings.classList.toggle('is-active', optOpen);
+
+    // AntDM-Style Material Design 3 Turbo Download Manager
+    const dlOpen = !!next.dlManagerOpen;
+    const wasDlOpen = body.classList.contains('dl-manager-open');
+    body.classList.toggle('dl-manager-open', dlOpen);
+    if (dlManagerOverlay) dlManagerOverlay.classList.toggle('hidden', !dlOpen);
+    if (btnDownloads) btnDownloads.classList.toggle('is-active', dlOpen);
+    if (dlOpen) {
+      if (!wasDlOpen && next.dlManagerTab) activeDlTab = next.dlManagerTab;
+      renderDlManager();
+      window.DejavuNewTabCanvas.start();
+    }
+
     applyBrowserOptions(next.browserOptions || state.browserOptions);
     if (optOpen) {
       if (!wasOptOpen) {
@@ -1954,19 +1988,19 @@
     btnReload.title = (active && active.loading) ? 'Stop loading' : 'Reload (Ctrl+R)';
 
     const apMode = (next.browserOptions && next.browserOptions.appearanceMode) || 'auto';
-    const effLight = applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen);
+    const effLight = applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen || dlOpen);
     if (onNewTab) {
       body.classList.add('on-newtab');
       window.DejavuNewTabCanvas.start();
-      if (ovOpen || optOpen) hideStartPageStatus();
-      if (!ovOpen && !optOpen && lastActiveId !== next.activeTabId) {
+      if (ovOpen || optOpen || dlOpen) hideStartPageStatus();
+      if (!ovOpen && !optOpen && !dlOpen && lastActiveId !== next.activeTabId) {
         newtabSearchInput.value = '';
         setTimeout(() => newtabSearchInput.focus(), 40);
       }
     } else {
       hideStartPageStatus();
       body.classList.remove('on-newtab');
-      if (!ovOpen && !optOpen) window.DejavuNewTabCanvas.stop();
+      if (!ovOpen && !optOpen && !dlOpen) window.DejavuNewTabCanvas.stop();
       drawTopLightGuide({
         baseRgb: effLight && apMode === 'light' ? [246, 244, 253] : next.baseRgb,
         accents: next.accents,
@@ -2033,6 +2067,295 @@
     }
   }
 
+  // =========================================================================
+  // AntDM-Style Material Design 3 Turbo Download Manager Controller (8x Threads)
+  // =========================================================================
+  const dlManagerOverlay = document.getElementById('dl-manager-overlay');
+  const dlmNav = document.getElementById('dlm-nav');
+  const dlmTitle = document.getElementById('dlm-title');
+  const dlmSub = document.getElementById('dlm-sub');
+  const dlmUrlInput = document.getElementById('dlm-url-input');
+  const btnDlmAddUrl = document.getElementById('btn-dlm-add-url');
+  const btnDlmScanMedia = document.getElementById('btn-dlm-scan-media');
+  const btnDlmPauseAll = document.getElementById('btn-dlm-pause-all');
+  const btnDlmResumeAll = document.getElementById('btn-dlm-resume-all');
+  const btnDlmClearDone = document.getElementById('btn-dlm-clear-done');
+  const btnDlmClose = document.getElementById('btn-dlm-close');
+  const btnDlmOpenDir = document.getElementById('btn-dlm-open-dir');
+  const dlmSaveDir = document.getElementById('dlm-save-dir');
+  const dlmMediaBanner = document.getElementById('dlm-media-banner');
+  const dlmMbSub = document.getElementById('dlm-mb-sub');
+  const btnDlmRescan = document.getElementById('btn-dlm-rescan');
+  const btnDlmGrabAll = document.getElementById('btn-dlm-grab-all');
+  const dlmList = document.getElementById('dlm-list');
+  const dlmCntAll = document.getElementById('dlm-cnt-all');
+  const dlmCntActive = document.getElementById('dlm-cnt-active');
+  const dlmCntMedia = document.getElementById('dlm-cnt-media');
+  let activeDlTab = 'all';
+
+  const DLM_TAB_META = {
+    all: { title: 'All Downloads', sub: '8-thread byte-range acceleration · Pause, resume & organize all files' },
+    active: { title: 'Active Downloads (8x)', sub: 'Live multi-segment HTTP transfers running right now' },
+    media: { title: 'Page Media Sniffer', sub: 'Download videos, audio, documents, archives & HD images detected on the active tab' },
+    video: { title: 'Videos', sub: 'MP4, WebM, MKV & stream downloads' },
+    audio: { title: 'Audio', sub: 'MP3, M4A, WAV & FLAC music and podcasts' },
+    document: { title: 'Documents', sub: 'PDFs, eBooks, Word, Excel & presentations' },
+    archive: { title: 'Archives & Apps', sub: 'ZIP, RAR, 7Z, EXE, MSI, APK & ISO files' },
+    image: { title: 'Images', sub: 'High-resolution images & wallpapers' }
+  };
+
+  function fmtBytes(b) {
+    const n = Number(b || 0);
+    if (n <= 0) return '0 B';
+    if (n < 1024) return `${n} B`;
+    if (n < 1048576) return `${(n / 1024).toFixed(1)} KB`;
+    if (n < 1073741824) return `${(n / 1048576).toFixed(2)} MB`;
+    return `${(n / 1073741824).toFixed(2)} GB`;
+  }
+
+  function fmtEta(sec) {
+    const s = Math.max(0, Math.round(Number(sec || 0)));
+    if (s <= 0) return '';
+    if (s < 60) return `${s}s left`;
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    if (m < 60) return `${m}m ${r}s left`;
+    return `${Math.floor(m / 60)}h ${m % 60}m left`;
+  }
+
+  function catBadgeLabel(cat) {
+    switch (cat) {
+      case 'video': return 'VID';
+      case 'audio': return 'AUD';
+      case 'document': return 'DOC';
+      case 'archive': return 'APP';
+      case 'image': return 'IMG';
+      default: return 'FILE';
+    }
+  }
+
+  function renderDlManager() {
+    if (!dlmList) return;
+    const items = Array.isArray(state.turboDownloads) ? state.turboDownloads : [];
+    const media = Array.isArray(state.pageMedia) ? state.pageMedia : [];
+    const activeItems = items.filter((d) => d.status === 'downloading' || d.status === 'probing' || d.status === 'queued');
+
+    if (dlmCntAll) dlmCntAll.textContent = String(items.length);
+    if (dlmCntActive) dlmCntActive.textContent = String(activeItems.length);
+    if (dlmCntMedia) dlmCntMedia.textContent = String(media.length);
+    if (dlmSaveDir && state.downloadsDir) {
+      dlmSaveDir.textContent = state.downloadsDir;
+      dlmSaveDir.title = state.downloadsDir;
+    }
+
+    if (dlmNav) {
+      dlmNav.querySelectorAll('.settings-nav-item').forEach((b) => {
+        b.classList.toggle('active', b.dataset.dltab === activeDlTab);
+      });
+    }
+    const meta = DLM_TAB_META[activeDlTab] || DLM_TAB_META.all;
+    if (dlmTitle) dlmTitle.textContent = meta.title;
+    if (dlmSub) dlmSub.textContent = meta.sub;
+
+    const isMediaTab = (activeDlTab === 'media');
+    if (dlmMediaBanner) dlmMediaBanner.classList.toggle('hidden', !isMediaTab);
+    dlmList.innerHTML = '';
+
+    if (isMediaTab) {
+      if (dlmMbSub) {
+        dlmMbSub.textContent = media.length
+          ? `${media.length} downloadable videos, audio, files & HD images captured on the active webpage`
+          : 'Open a webpage with videos, PDFs, archives or images and click Rescan Tab';
+      }
+      if (btnDlmGrabAll) {
+        btnDlmGrabAll.disabled = media.length === 0;
+        btnDlmGrabAll.textContent = media.length ? `Download All (${media.length})` : 'Download All';
+      }
+      if (!media.length) {
+        dlmList.innerHTML = `
+          <div class="dlm-empty">
+            <div class="dlm-empty-ico"><svg viewBox="0 0 22 22" width="24" height="24" fill="none"><circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.6"/><path d="M9.2 8.2L14.5 11l-5.3 2.8V8.2z" fill="currentColor"/></svg></div>
+            <div class="dlm-empty-title">No Page Media Detected Yet</div>
+            <div class="dlm-empty-sub">Visit any website with videos, music, PDFs, ZIPs or high-res photos, then open Page Media or click <strong>Rescan Tab</strong> to download everything at 8x speed.</div>
+          </div>`;
+        return;
+      }
+      media.forEach((m) => {
+        const card = document.createElement('div');
+        card.className = 'dlm-card';
+        const cat = m.category || 'other';
+        card.innerHTML = `
+          <div class="dlm-card-top">
+            <span class="dlm-cat-ico cat-${escapeSugHtml(cat)}">${catBadgeLabel(cat)}</span>
+            <div class="dlm-card-meta">
+              <div class="dlm-card-name-row">
+                <div class="dlm-card-name"></div>
+                <span class="dlm-turbo-chip">${escapeSugHtml(cat.toUpperCase())}</span>
+              </div>
+              <div class="dlm-card-sub">
+                <span>${m.sizeBytes > 0 ? fmtBytes(m.sizeBytes) : (escapeSugHtml(m.mime || 'Direct link'))}</span>
+                <span class="dlm-m-url" style="opacity:0.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px;"></span>
+              </div>
+            </div>
+            <div class="dlm-card-acts">
+              <button type="button" class="dlm-act-btn primary m-dl">8x Download</button>
+            </div>
+          </div>`;
+        card.querySelector('.dlm-card-name').textContent = m.title || m.fileName || 'Media File';
+        card.querySelector('.dlm-m-url').textContent = m.url || '';
+        card.querySelector('.m-dl').addEventListener('click', (e) => {
+          send({ type: 'turboAddUrl', url: m.url, fileName: m.fileName || '' });
+          e.currentTarget.textContent = 'Queued ✓';
+          e.currentTarget.disabled = true;
+        });
+        dlmList.appendChild(card);
+      });
+      return;
+    }
+
+    const filtered = items.filter((d) => {
+      if (activeDlTab === 'all') return true;
+      if (activeDlTab === 'active') return d.status === 'downloading' || d.status === 'probing' || d.status === 'queued';
+      return (d.category || 'other') === activeDlTab;
+    });
+
+    if (!filtered.length) {
+      dlmList.innerHTML = `
+        <div class="dlm-empty">
+          <div class="dlm-empty-ico"><svg viewBox="0 0 22 22" width="24" height="24" fill="none"><path d="M11 3.5v10.2M7 10l4 4 4-4M4.2 17.6h13.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="dlm-empty-title">Ready for 8x Turbo Downloads</div>
+          <div class="dlm-empty-sub">Paste any direct URL above, click any download link while browsing, or switch to <strong>Page Media</strong> to grab videos, audio, documents &amp; images from the active tab.</div>
+        </div>`;
+      return;
+    }
+
+    filtered.forEach((d) => {
+      const card = document.createElement('div');
+      const isRun = d.status === 'downloading' || d.status === 'probing' || d.status === 'queued';
+      const isPaused = d.status === 'paused';
+      const isDone = d.status === 'completed';
+      const isErr = d.status === 'failed' || d.status === 'cancelled';
+      card.className = 'dlm-card' + (isRun ? ' is-active' : '') + (isPaused ? ' is-paused' : '') + (isDone ? ' is-done' : '');
+
+      const cat = d.category || 'other';
+      const threads = Number(d.threads || 1);
+      const chipText = isDone
+        ? (d.rangeSupported ? `${threads}x Done` : 'Completed')
+        : (isErr ? (d.status === 'cancelled' ? 'Cancelled' : 'Failed') : (isPaused ? 'Paused' : `${threads}x Turbo`));
+      const chipCls = isDone ? 'done' : (isErr ? 'err' : '');
+
+      const segs = Array.isArray(d.segments) && d.segments.length > 0
+        ? d.segments
+        : [{ pct: isDone ? 100 : (d.percent || 0) }];
+      const segHtml = segs.map((s) => `<div class="dlm-seg"><div class="dlm-seg-fill" style="width:${Math.max(0, Math.min(100, isDone ? 100 : (s.pct || 0)))}%"></div></div>`).join('');
+
+      const speedStr = (isRun && d.speedBps > 0) ? `${fmtBytes(d.speedBps)}/s` : '';
+      const etaStr = (isRun && d.etaSeconds > 0) ? fmtEta(d.etaSeconds) : '';
+      const sizeStr = d.totalBytes > 0
+        ? (isDone ? fmtBytes(d.totalBytes) : `${fmtBytes(d.receivedBytes)} / ${fmtBytes(d.totalBytes)} (${Number(d.percent || 0).toFixed(0)}%)`)
+        : (d.receivedBytes > 0 ? fmtBytes(d.receivedBytes) : (d.status === 'probing' ? 'Connecting…' : ''));
+
+      let actsHtml = '';
+      if (isRun) {
+        actsHtml = `<button type="button" class="dlm-act-btn act-pause">Pause</button><button type="button" class="dlm-act-btn danger act-cancel">Cancel</button>`;
+      } else if (isPaused || isErr) {
+        actsHtml = `<button type="button" class="dlm-act-btn primary act-resume">${isErr ? 'Retry' : 'Resume'}</button><button type="button" class="dlm-act-btn act-rm">Remove</button>`;
+      } else if (isDone) {
+        actsHtml = `<button type="button" class="dlm-act-btn primary act-open">Open</button><button type="button" class="dlm-act-btn act-folder">Folder</button><button type="button" class="dlm-act-btn act-rm">×</button>`;
+      }
+
+      card.innerHTML = `
+        <div class="dlm-card-top">
+          <span class="dlm-cat-ico cat-${escapeSugHtml(cat)}">${catBadgeLabel(cat)}</span>
+          <div class="dlm-card-meta">
+            <div class="dlm-card-name-row">
+              <div class="dlm-card-name"></div>
+              <span class="dlm-turbo-chip ${chipCls}">${escapeSugHtml(chipText)}</span>
+            </div>
+            <div class="dlm-card-sub">
+              <span>${escapeSugHtml(d.host || '')}</span>
+              ${sizeStr ? `<span>· ${escapeSugHtml(sizeStr)}</span>` : ''}
+              ${speedStr ? `<span class="dlm-speed-val">· ${escapeSugHtml(speedStr)}</span>` : ''}
+              ${etaStr ? `<span>· ${escapeSugHtml(etaStr)}</span>` : ''}
+              ${d.error ? `<span style="color:var(--md-error)">· ${escapeSugHtml(d.error)}</span>` : ''}
+            </div>
+          </div>
+          <div class="dlm-card-acts">${actsHtml}</div>
+        </div>
+        ${!isDone ? `<div class="dlm-seg-wrap"><div class="dlm-seg-strip ${segs.length <= 1 ? 'single' : ''}" style="grid-template-columns:repeat(${segs.length}, 1fr)">${segHtml}</div></div>` : ''}
+      `;
+      card.querySelector('.dlm-card-name').textContent = d.fileName || 'Download';
+
+      const bPause = card.querySelector('.act-pause');
+      const bResume = card.querySelector('.act-resume');
+      const bCancel = card.querySelector('.act-cancel');
+      const bOpen = card.querySelector('.act-open');
+      const bFolder = card.querySelector('.act-folder');
+      const bRm = card.querySelector('.act-rm');
+      if (bPause) bPause.addEventListener('click', () => send({ type: 'turboPause', id: d.id }));
+      if (bResume) bResume.addEventListener('click', () => send({ type: 'turboResume', id: d.id }));
+      if (bCancel) bCancel.addEventListener('click', () => send({ type: 'turboCancel', id: d.id }));
+      if (bOpen) bOpen.addEventListener('click', () => send({ type: 'turboOpenFile', path: d.savePath }));
+      if (bFolder) bFolder.addEventListener('click', () => send({ type: 'turboOpenFolder', path: d.savePath }));
+      if (bRm) bRm.addEventListener('click', () => send({ type: 'turboRemove', id: d.id }));
+      dlmList.appendChild(card);
+    });
+  }
+
+  function submitDlmUrl() {
+    if (!dlmUrlInput) return;
+    const raw = (dlmUrlInput.value || '').trim();
+    if (!raw) return;
+    dlmUrlInput.value = '';
+    const lines = raw.split(/\s+/).filter((u) => u.length > 4);
+    if (lines.length > 1) send({ type: 'turboAddBatch', urls: lines });
+    else send({ type: 'turboAddUrl', url: lines[0] });
+    if (activeDlTab === 'media') {
+      activeDlTab = 'all';
+      renderDlManager();
+    }
+  }
+
+  if (btnDlmAddUrl) btnDlmAddUrl.addEventListener('click', submitDlmUrl);
+  if (dlmUrlInput) dlmUrlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitDlmUrl(); });
+  if (btnDlmClose) btnDlmClose.addEventListener('click', () => send({ type: 'closeDlManager' }));
+  if (dlManagerOverlay) dlManagerOverlay.addEventListener('click', (e) => { if (e.target === dlManagerOverlay) send({ type: 'closeDlManager' }); });
+  if (btnDlmPauseAll) btnDlmPauseAll.addEventListener('click', () => send({ type: 'turboPauseAll' }));
+  if (btnDlmResumeAll) btnDlmResumeAll.addEventListener('click', () => send({ type: 'turboResumeAll' }));
+  if (btnDlmClearDone) btnDlmClearDone.addEventListener('click', () => send({ type: 'turboClearDone' }));
+  if (btnDlmOpenDir) btnDlmOpenDir.addEventListener('click', () => send({ type: 'turboOpenFolder' }));
+  if (btnDlmScanMedia) {
+    btnDlmScanMedia.addEventListener('click', () => {
+      activeDlTab = 'media';
+      send({ type: 'turboScanMedia' });
+      renderDlManager();
+    });
+  }
+  if (btnDlmRescan) btnDlmRescan.addEventListener('click', () => send({ type: 'turboScanMedia' }));
+  if (btnDlmGrabAll) {
+    btnDlmGrabAll.addEventListener('click', () => {
+      const urls = (state.pageMedia || []).map((m) => m.url).filter(Boolean);
+      if (!urls.length) return;
+      send({ type: 'turboAddBatch', urls });
+      activeDlTab = 'all';
+      renderDlManager();
+    });
+  }
+  if (dlmNav) {
+    dlmNav.addEventListener('click', (e) => {
+      const btn = e.target.closest('.settings-nav-item');
+      if (!btn) return;
+      activeDlTab = btn.dataset.dltab || 'all';
+      if (activeDlTab === 'media') send({ type: 'turboScanMedia' });
+      renderDlManager();
+    });
+  }
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && state.dlManagerOpen) {
+      send({ type: 'closeDlManager' });
+    }
+  });
+
   // Receive messages from native C# BrowserForm
   if (window.chrome && window.chrome.webview) {
     window.chrome.webview.addEventListener('message', (ev) => {
@@ -2041,10 +2364,18 @@
 
       if (msg.type === 'state') {
         applyState(msg);
+      } else if (msg.type === 'turboDownloadsUpdate') {
+        state.turboDownloads = msg.turboDownloads || [];
+        state.pageMedia = msg.pageMedia || [];
+        state.downloadsCount = msg.downloadsCount || 0;
+        state.hasActiveDownload = !!msg.hasActiveDownload;
+        dlDot.classList.toggle('hidden', state.downloadsCount <= 0);
+        btnDownloads.classList.toggle('downloading', state.hasActiveDownload);
+        if (state.dlManagerOpen) renderDlManager();
       } else if (msg.type === 'settingsToast') {
         showSettingsToast(msg.text || '');
       } else if (msg.type === 'palette') {
-        if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open') && !body.classList.contains('settings-open')) {
+        if (!body.classList.contains('on-newtab') && !body.classList.contains('tab-overview-open') && !body.classList.contains('settings-open') && !body.classList.contains('dl-manager-open')) {
           const apMode = (state.browserOptions && state.browserOptions.appearanceMode) || 'auto';
           const effLight = (apMode === 'light') ? true : (apMode === 'dark' ? false : !!msg.isLight);
           body.classList.toggle('theme-light', effLight);

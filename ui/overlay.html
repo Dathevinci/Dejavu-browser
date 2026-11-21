@@ -1550,12 +1550,14 @@
     </div>
   </div>
 
-  <!-- Mode 11: Authentic macOS Safari Downloads Popover -->
+  <!-- Mode 11: Material Design 3 Quick Downloads Popover + 8x Turbo Manager Launcher -->
   <div id="mode-downloads" class="overlay-shell hidden">
     <div class="panel-box">
       <div class="panel-head">
         <div class="panel-title">Downloads</div>
-        <div style="display:flex;align-items:center;gap:6px;">
+        <div style="display:flex;align-items:center;gap:5px;">
+          <button id="btn-dls-media" class="pill-btn" type="button" title="Sniff videos, audio &amp; files from current page">Grab Media</button>
+          <button id="btn-dls-manager" class="pill-btn primary" type="button" title="Open Full 8x Turbo Download Manager (Ctrl+J)">8x Manager</button>
           <button id="btn-dls-clear" class="pill-btn hidden" type="button">Clear</button>
           <button id="btn-dls-close" class="icon-btn sm" title="Close">
             <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -2240,7 +2242,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.0.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.1.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -2987,24 +2989,74 @@
     }
 
     // =========================================================================
-    // Mode 11: Authentic macOS Safari Downloads Popover
+    // Mode 11: Material Design 3 Downloads Popover + 8x Turbo Manager Bridge
     // =========================================================================
     const dlsList = document.getElementById('dls-list');
     const btnDlsClear = document.getElementById('btn-dls-clear');
+    const btnDlsManager = document.getElementById('btn-dls-manager');
+    const btnDlsMedia = document.getElementById('btn-dls-media');
     document.getElementById('btn-dls-close').addEventListener('click', () => send({ type: 'closePanel' }));
     btnDlsClear.addEventListener('click', () => send({ type: 'clearDownloads' }));
+    if (btnDlsManager) btnDlsManager.addEventListener('click', () => send({ type: 'openDlManager', tab: 'all' }));
+    if (btnDlsMedia) btnDlsMedia.addEventListener('click', () => send({ type: 'openDlManager', tab: 'media' }));
 
     function renderDownloadsPanel(d) {
-      const items = Array.isArray(d.items) ? d.items : [];
-      btnDlsClear.classList.toggle('hidden', items.length === 0);
+      const turbo = Array.isArray(d.turboItems) ? d.turboItems : [];
+      const legacy = Array.isArray(d.items) ? d.items : [];
+      const mediaCnt = Number(d.mediaCount || 0);
+      if (btnDlsMedia) btnDlsMedia.textContent = mediaCnt > 0 ? `Media (${mediaCnt})` : 'Grab Media';
+
+      const totalCount = turbo.length + legacy.length;
+      btnDlsClear.classList.toggle('hidden', totalCount === 0);
       dlsList.innerHTML = '';
 
-      if (items.length === 0) {
-        dlsList.innerHTML = '<div class="empty-msg">No downloads yet.<br>Files you download appear right here.</div>';
+      if (totalCount === 0) {
+        dlsList.innerHTML = '<div class="empty-msg">No downloads yet.<br>Click <strong>8x Manager</strong> to paste any link or <strong>Grab Media</strong> to download videos &amp; files from this page.</div>';
         return;
       }
 
-      items.forEach((it) => {
+      turbo.slice(0, 14).forEach((it) => {
+        const row = document.createElement('div');
+        row.className = 'dls-row';
+        const isDone = it.status === 'completed';
+        const isProg = it.status === 'downloading' || it.status === 'probing' || it.status === 'queued';
+        const isPaused = it.status === 'paused';
+        const pct = Math.min(100, Math.round(it.percent || 0));
+        const spd = (isProg && it.speedBps > 0) ? ` · ${formatBytes(it.speedBps)}/s` : '';
+        const subText = isDone
+          ? `${it.threads > 1 ? it.threads + 'x · ' : ''}Completed · ${formatBytes(it.totalBytes || it.receivedBytes)}`
+          : (isProg ? `${it.threads || 1}x Turbo · ${pct}%${spd}` : (isPaused ? `Paused · ${pct}%` : (it.status || 'Failed')));
+
+        row.innerHTML = `
+          <span class="dls-ico">
+            <svg viewBox="0 0 18 18" width="15" height="15" fill="none">
+              <path d="M9 3.6v7.4M6.2 8.4L9 11.2l2.8-2.8M4.2 14h9.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div class="dls-meta">
+            <div class="dls-name"></div>
+            ${(isProg || isPaused) ? `<div class="dl-bar-track"><div class="dl-bar-fill" style="width:${pct}%"></div></div>` : ''}
+            <div class="dls-sub">${escapeHtml(subText)}</div>
+          </div>
+          <div class="dls-acts">
+            ${isProg ? '<button type="button" class="dl-act-btn d-pause">Pause</button>' : ''}
+            ${isPaused ? '<button type="button" class="dl-act-btn d-resume">Resume</button>' : ''}
+            ${isDone ? '<button type="button" class="dl-act-btn d-open">Open</button><button type="button" class="dl-act-btn d-rev">Folder</button>' : ''}
+          </div>
+        `;
+        row.querySelector('.dls-name').textContent = it.fileName || 'Download';
+        const pBtn = row.querySelector('.d-pause');
+        const rBtn = row.querySelector('.d-resume');
+        const openBtn = row.querySelector('.d-open');
+        const revBtn = row.querySelector('.d-rev');
+        if (pBtn) pBtn.addEventListener('click', () => send({ type: 'turboPause', id: it.id }));
+        if (rBtn) rBtn.addEventListener('click', () => send({ type: 'turboResume', id: it.id }));
+        if (openBtn) openBtn.addEventListener('click', () => send({ type: 'openDownloadPath', path: it.savePath }));
+        if (revBtn) revBtn.addEventListener('click', () => send({ type: 'revealDownloadPath', path: it.savePath }));
+        dlsList.appendChild(row);
+      });
+
+      legacy.forEach((it) => {
         const row = document.createElement('div');
         row.className = 'dls-row';
         const isDone = it.state === 'completed';

@@ -83,6 +83,7 @@ namespace DejavuBrowser
         private readonly LocalProxyBridge _proxyBridge;
         private readonly VpnManager _vpn;
         private readonly SyncManager _sync;
+        private readonly TurboDownloadManager _turboDownloads;
         private readonly SuggestEngine _suggest = new SuggestEngine();
         private readonly string _initialUrl;
         private readonly int _debugPort;
@@ -128,6 +129,8 @@ namespace DejavuBrowser
         private string _activeTabGroupId = "default";
         private bool _tabOverviewOpen;
         private bool _settingsOpen;
+        private bool _dlManagerOpen;
+        private string _dlManagerTab = "all";
         private string _settingsPane = "general";
         private bool _favoritesBarHidden;
         private FormWindowState _lastWindowState = FormWindowState.Normal;
@@ -175,6 +178,8 @@ namespace DejavuBrowser
             _sync.IncomingDrop += OnSyncIncomingDrop;
             _sync.RemoteBookmarksReceived += OnSyncRemoteBookmarks;
             _sync.RemoteReadingReceived += OnSyncRemoteReading;
+
+            _turboDownloads = new TurboDownloadManager(SettingsStore.AppDataDir, OnTurboDownloadsChanged);
 
             Text = "dejavu";
             FormBorderStyle = FormBorderStyle.None;
@@ -272,6 +277,7 @@ namespace DejavuBrowser
                     _downloadHideTimer.Dispose();
                 }
                 _adBlocker.FlushStats();
+                if (_turboDownloads != null) _turboDownloads.Dispose();
                 if (_sync != null) _sync.Dispose();
                 if (_vpn != null) _vpn.Dispose();
                 if (_proxyBridge != null) _proxyBridge.Dispose();
@@ -857,7 +863,7 @@ namespace DejavuBrowser
                     };
                     var boot = new Dictionary<string, object>
                     {
-                        { "wallpaper", _settings.wallpaper ?? "live:obsidian-prism" },
+                        { "wallpaper", _settings.wallpaper ?? "art:wp-m3-amethyst.jpg" },
                         { "hasCustomWallpaper", !string.IsNullOrEmpty(_settings.customWallpaperPath) && File.Exists(_settings.customWallpaperPath) },
                         { "activeProfile", _profiles.ActiveProfile },
                         { "shortcuts", _settings.shortcuts },
@@ -919,7 +925,7 @@ namespace DejavuBrowser
 
             _shellView.Visible = true;
 
-            if (_tabOverviewOpen || _settingsOpen || active == null || active.IsNewTab)
+            if (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || active == null || active.IsNewTab)
             {
                 _shellView.Bounds = new Rectangle(0, 0, w, h);
                 _shellView.BringToFront();
@@ -1055,6 +1061,7 @@ namespace DejavuBrowser
             {
                 _tabOverviewOpen = false;
                 _settingsOpen = false;
+                _dlManagerOpen = false;
                 ActivateTab(tab.Id);
             }
             else PushFullStateToShell();
@@ -1084,6 +1091,7 @@ namespace DejavuBrowser
             _activeTabGroupId = tab.GroupId;
             _tabOverviewOpen = false;
             _settingsOpen = false;
+            _dlManagerOpen = false;
 
             HidePopover();
             HideSuggestPopup();
@@ -1235,6 +1243,7 @@ namespace DejavuBrowser
         private void GoHomeActiveTab()
         {
             _settingsOpen = false;
+            _dlManagerOpen = false;
             BrowserTab tab = GetActiveTab();
             if (tab == null) return;
             tab.IsNewTab = true;
@@ -1256,6 +1265,7 @@ namespace DejavuBrowser
             string url = ResolveInputToUrl(rawInput);
             if (string.IsNullOrEmpty(url)) return;
             _settingsOpen = false;
+            _dlManagerOpen = false;
             HidePopover();
             HideSuggestPopup();
 
@@ -1329,10 +1339,13 @@ namespace DejavuBrowser
                     tab.IsLoading = true;
                     tab.Url = e.Uri;
                     tab.BlockedCount = 0;
+                    if (_turboDownloads != null) _turboDownloads.ClearTabMedia(tab.Id);
                     bool paused = _adBlocker.IsPausedForHost(AdBlocker.ExtractHost(e.Uri));
                     core.ExecuteScriptAsync("window.__dejavuAdblockPaused = " + (paused ? "true" : "false") + ";");
                     PushFullStateToShell();
                 };
+
+                core.WebResourceResponseReceived += (s, e) => OnTabWebResourceResponseReceived(tab, e);
 
                 core.SourceChanged += (s, e) =>
                 {
@@ -1500,18 +1513,213 @@ namespace DejavuBrowser
             return false;
         }
 
+        private void OnTabWebResourceResponseReceived(BrowserTab tab, CoreWebView2WebResourceResponseReceivedEventArgs e)
+        {
+            try
+            {
+                if (_turboDownloads == null || tab == null || e == null || e.Request == null || e.Response == null) return;
+                if (e.Response.StatusCode < 200 || e.Response.StatusCode >= 300) return;
+                string uri = e.Request.Uri;
+                if (string.IsNullOrEmpty(uri)) return;
+                string mime = "";
+                long cl = 0;
+                try
+                {
+                    if (e.Response.Headers != null)
+                    {
+                        if (e.Response.Headers.Contains("Content-Type"))
+                            mime = e.Response.Headers.GetHeader("Content-Type") ?? "";
+                        if (e.Response.Headers.Contains("Content-Length"))
+                            long.TryParse(e.Response.Headers.GetHeader("Content-Length"), out cl);
+                    }
+                }
+                catch { }
+                _turboDownloads.RecordSniffedMedia(tab.Id, uri, mime, cl, "", tab.Title ?? "");
+            }
+            catch { }
+        }
+
+        private void OnTurboDownloadsChanged()
+        {
+            if (IsDisposed || !IsHandleCreated) return;
+            try
+            {
+                BeginInvoke((Action)(() =>
+                {
+                    if (IsDisposed) return;
+                    PushTurboDownloadsDelta();
+                    if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "downloads")
+                    {
+                        _popoverPopup.UpdateState(BuildDownloadsPayloadJson(null));
+                    }
+                }));
+            }
+            catch { }
+        }
+
+        private void PushTurboDownloadsDelta()
+        {
+            if (!_shellReady || _shellView == null || _shellView.CoreWebView2 == null || _turboDownloads == null) return;
+            BrowserTab active = GetActiveTab();
+            int activeTabId = active != null ? active.Id : -1;
+            var turboList = _turboDownloads.BuildDownloadPayloadList();
+            var mediaList = activeTabId > 0 ? _turboDownloads.BuildMediaPayloadList(activeTabId) : new List<Dictionary<string, object>>();
+            var msg = new Dictionary<string, object>
+            {
+                { "type", "turboDownloadsUpdate" },
+                { "turboDownloads", turboList },
+                { "pageMedia", mediaList },
+                { "downloadsCount", turboList.Count + _downloads.Count },
+                { "hasActiveDownload", _turboDownloads.HasActiveDownloads || _downloads.Exists(d => d.state == "progressing") }
+            };
+            try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(msg)); } catch { }
+        }
+
+        private void SetDlManagerOpen(bool open, string tab)
+        {
+            if (!string.IsNullOrEmpty(tab)) _dlManagerTab = tab;
+            _dlManagerOpen = open;
+            if (open)
+            {
+                _tabOverviewOpen = false;
+                _settingsOpen = false;
+                HidePopover();
+                HideSuggestPopup();
+                if (_activeHudMode == "find") HideHud();
+                ScanActiveTabMediaAsync();
+            }
+            LayoutViews();
+            PushFullStateToShell();
+        }
+
+        private async void ScanActiveTabMediaAsync()
+        {
+            BrowserTab tab = GetActiveTab();
+            if (_turboDownloads == null || tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed) return;
+            string js =
+                "(function(){try{" +
+                "var out=[];var seen={};" +
+                "function add(u,cat,title,mime){if(!u||typeof u!=='string')return;try{u=new URL(u,location.href).href;}catch(e){return;}" +
+                "if(!/^https?:\\/\\//i.test(u)||seen[u])return;seen[u]=1;out.push({url:u,category:cat,title:(title||'').slice(0,110),mime:mime||''});}" +
+                "document.querySelectorAll('video,video source').forEach(function(el){add(el.currentSrc||el.src,'video',document.title+' (Video)',el.type||'video/mp4');});" +
+                "document.querySelectorAll('audio,audio source').forEach(function(el){add(el.currentSrc||el.src,'audio',document.title+' (Audio)',el.type||'audio/mpeg');});" +
+                "var rx=/\\.(mp4|webm|mkv|mov|m3u8|mp3|m4a|wav|flac|ogg|pdf|docx?|xlsx?|pptx?|epub|zip|rar|7z|tar|gz|exe|msi|apk|iso|dmg)(\\?|#|$)/i;" +
+                "document.querySelectorAll('a[href]').forEach(function(a){var h=a.href||'';var m=h.match(rx);if(m){" +
+                "var ext=m[1].toLowerCase();var c='document';" +
+                "if(/^(mp4|webm|mkv|mov|m3u8)$/.test(ext))c='video';" +
+                "else if(/^(mp3|m4a|wav|flac|ogg)$/.test(ext))c='audio';" +
+                "else if(/^(zip|rar|7z|tar|gz|exe|msi|apk|iso|dmg)$/.test(ext))c='archive';" +
+                "add(h,c,(a.textContent||a.download||'').trim(),ext);}});" +
+                "document.querySelectorAll('img[src]').forEach(function(im){if((im.naturalWidth||0)>=360&&(im.naturalHeight||0)>=240){" +
+                "add(im.currentSrc||im.src,'image',im.alt||document.title,'image/jpeg');}});" +
+                "return JSON.stringify(out.slice(0,55));}catch(e){return '[]';}})();";
+            try
+            {
+                string raw = await tab.WebView.CoreWebView2.ExecuteScriptAsync(js);
+                if (string.IsNullOrEmpty(raw) || raw == "null") return;
+                string innerJson = _json.Deserialize<string>(raw);
+                if (string.IsNullOrEmpty(innerJson)) return;
+                ArrayList arr = _json.Deserialize<ArrayList>(innerJson);
+                if (arr == null || arr.Count == 0) return;
+                List<SniffedMediaItem> parsed = new List<SniffedMediaItem>();
+                foreach (object obj in arr)
+                {
+                    Dictionary<string, object> d = obj as Dictionary<string, object>;
+                    if (d == null) continue;
+                    string u = d.ContainsKey("url") ? Convert.ToString(d["url"]) : "";
+                    string c = d.ContainsKey("category") ? Convert.ToString(d["category"]) : "other";
+                    string t = d.ContainsKey("title") ? Convert.ToString(d["title"]) : "";
+                    string mm = d.ContainsKey("mime") ? Convert.ToString(d["mime"]) : "";
+                    if (string.IsNullOrEmpty(u)) continue;
+                    string fn = "";
+                    try
+                    {
+                        Uri uu = new Uri(u);
+                        fn = Path.GetFileName(Uri.UnescapeDataString(uu.AbsolutePath));
+                    }
+                    catch { }
+                    if (string.IsNullOrEmpty(fn)) fn = "media_" + (parsed.Count + 1);
+                    parsed.Add(new SniffedMediaItem
+                    {
+                        Url = u,
+                        Title = string.IsNullOrWhiteSpace(t) ? fn : t,
+                        FileName = fn,
+                        Category = c,
+                        Mime = mm,
+                        SizeBytes = 0,
+                        SourceTabTitle = tab.Title ?? ""
+                    });
+                }
+                if (parsed.Count > 0)
+                {
+                    _turboDownloads.MergeDomMediaItems(tab.Id, parsed);
+                }
+            }
+            catch { }
+        }
+
+        private async void EnqueueFromActiveTabContextAsync(string url, string suggestedName)
+        {
+            if (_turboDownloads == null || string.IsNullOrWhiteSpace(url)) return;
+            string referer = "";
+            string ua = "";
+            string cookieHeader = "";
+            BrowserTab active = GetActiveTab();
+            if (active != null && !active.IsNewTab && active.CoreReady && active.WebView != null && !active.WebView.IsDisposed)
+            {
+                referer = active.Url ?? "";
+                try { ua = active.WebView.CoreWebView2.Settings.UserAgent ?? ""; } catch { }
+                try
+                {
+                    var cookies = await active.WebView.CoreWebView2.CookieManager.GetCookiesAsync(url);
+                    if (cookies != null && cookies.Count > 0)
+                    {
+                        List<string> parts = new List<string>();
+                        for (int i = 0; i < cookies.Count; i++)
+                        {
+                            parts.Add(cookies[i].Name + "=" + cookies[i].Value);
+                        }
+                        cookieHeader = string.Join("; ", parts.ToArray());
+                    }
+                }
+                catch { }
+            }
+            TurboDownloadEntry entry = _turboDownloads.EnqueueDownload(url, suggestedName, referer, ua, cookieHeader, 8);
+            if (entry != null)
+            {
+                _lastDownloadPath = entry.SavePath;
+                if (!_dlManagerOpen)
+                {
+                    ShowDownloadToast(entry.FileName, entry.SavePath, 0, entry.TotalBytes, "progressing");
+                }
+            }
+        }
+
         private void HandleDownloadStarting(CoreWebView2DownloadStartingEventArgs e)
         {
             try
             {
+                string dlUri = (e.DownloadOperation != null) ? (e.DownloadOperation.Uri ?? "") : "";
+                string origName = Path.GetFileName(e.ResultFilePath);
+                if (string.IsNullOrEmpty(origName)) origName = "download";
+
+                // Route all HTTP/HTTPS downloads through our 8-thread AntDM-style Turbo Download Manager!
+                if (_turboDownloads != null &&
+                    (dlUri.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                     dlUri.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
+                {
+                    e.Cancel = true;
+                    e.Handled = true;
+                    EnqueueFromActiveTabContextAsync(dlUri, origName);
+                    return;
+                }
+
                 e.Handled = true;
                 string downloadsDir = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                     "Downloads");
                 Directory.CreateDirectory(downloadsDir);
 
-                string origName = Path.GetFileName(e.ResultFilePath);
-                if (string.IsNullOrEmpty(origName)) origName = "download";
                 string target = Path.Combine(downloadsDir, origName);
                 if (File.Exists(target))
                 {
@@ -2533,7 +2741,7 @@ namespace DejavuBrowser
                 if (key == Keys.T) { CreateDefaultNewTab(true); return true; }
                 if (key == Keys.W || (!shift && key == Keys.F4)) { CloseTab(_activeTabId); return true; }
                 if (!shift && key == Keys.N) { OpenProfileInNewWindow(_profiles.ActiveProfile.id); return true; }
-                if (!shift && key == Keys.J) { ShowDownloadsPopoverAt((int)(ClientSize.Width / DpiScale) - 180); return true; }
+                if (!shift && key == Keys.J) { SetDlManagerOpen(!_dlManagerOpen, "all"); return true; }
                 if (key == Keys.L) { FocusShellOmnibox(); return true; }
                 if (key == Keys.R) { ReloadActiveTab(); return true; }
                 if (key == Keys.F) { OpenFindPopup(); return true; }
@@ -2600,6 +2808,7 @@ namespace DejavuBrowser
             if (open)
             {
                 _tabOverviewOpen = false;
+                _dlManagerOpen = false;
                 HidePopover();
                 HideSuggestPopup();
                 if (_activeHudMode == "find") HideHud();
@@ -2984,6 +3193,7 @@ namespace DejavuBrowser
             }
             if (IsDisposed) return;
             _tabOverviewOpen = open;
+            if (open) _dlManagerOpen = false;
             LayoutViews();
             PushFullStateToShell();
         }
@@ -3208,12 +3418,17 @@ namespace DejavuBrowser
         private string BuildDownloadsPayloadJson(string backdrop)
         {
             BrowserTab tab = GetActiveTab();
+            int tabId = tab != null ? tab.Id : -1;
+            var turboItems = _turboDownloads != null ? _turboDownloads.BuildDownloadPayloadList() : new List<Dictionary<string, object>>();
+            var mediaItems = (_turboDownloads != null && tabId > 0) ? _turboDownloads.BuildMediaPayloadList(tabId) : new List<Dictionary<string, object>>();
             var payload = new Dictionary<string, object>
             {
                 { "mode", "downloads" },
                 { "isLight", GetEffectiveIsLight(tab, _tabOverviewOpen || tab == null || tab.IsNewTab) },
                 { "accentColor", _settings.accentColor ?? "amethyst" },
-                { "items", _downloads }
+                { "items", _downloads },
+                { "turboItems", turboItems },
+                { "mediaCount", mediaItems.Count }
             };
             if (backdrop != null) payload["backdrop"] = backdrop;
             return _json.Serialize(payload);
@@ -3427,6 +3642,88 @@ namespace DejavuBrowser
                     case "openDownloads":
                         ShowDownloadsPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1060);
                         break;
+                    case "openDlManager":
+                        SetDlManagerOpen(true, msg.ContainsKey("tab") ? Convert.ToString(msg["tab"]) : "all");
+                        break;
+                    case "closeDlManager":
+                        SetDlManagerOpen(false, null);
+                        break;
+                    case "toggleDlManager":
+                        SetDlManagerOpen(!_dlManagerOpen, msg.ContainsKey("tab") ? Convert.ToString(msg["tab"]) : _dlManagerTab);
+                        break;
+                    case "turboAddUrl":
+                        if (_turboDownloads != null && msg.ContainsKey("url"))
+                        {
+                            string uAdd = Convert.ToString(msg["url"]);
+                            string sName = msg.ContainsKey("fileName") ? Convert.ToString(msg["fileName"]) : "";
+                            EnqueueFromActiveTabContextAsync(uAdd, sName);
+                        }
+                        break;
+                    case "turboAddBatch":
+                        if (_turboDownloads != null && msg.ContainsKey("urls"))
+                        {
+                            ArrayList arr = msg["urls"] as ArrayList;
+                            if (arr != null)
+                            {
+                                for (int i = 0; i < arr.Count && i < 30; i++)
+                                {
+                                    string bu = Convert.ToString(arr[i]);
+                                    if (!string.IsNullOrWhiteSpace(bu))
+                                    {
+                                        EnqueueFromActiveTabContextAsync(bu, "");
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case "turboPause":
+                        if (_turboDownloads != null && msg.ContainsKey("id")) _turboDownloads.Pause(Convert.ToString(msg["id"]));
+                        break;
+                    case "turboResume":
+                        if (_turboDownloads != null && msg.ContainsKey("id")) _turboDownloads.Resume(Convert.ToString(msg["id"]));
+                        break;
+                    case "turboPauseAll":
+                        if (_turboDownloads != null) _turboDownloads.PauseAll();
+                        break;
+                    case "turboResumeAll":
+                        if (_turboDownloads != null) _turboDownloads.ResumeAll();
+                        break;
+                    case "turboCancel":
+                        if (_turboDownloads != null && msg.ContainsKey("id")) _turboDownloads.Cancel(Convert.ToString(msg["id"]));
+                        break;
+                    case "turboRemove":
+                        if (_turboDownloads != null && msg.ContainsKey("id")) _turboDownloads.Remove(Convert.ToString(msg["id"]));
+                        break;
+                    case "turboClearDone":
+                        if (_turboDownloads != null) _turboDownloads.ClearCompleted();
+                        _downloads.RemoveAll(d => d.state != "progressing");
+                        PushFullStateToShell();
+                        break;
+                    case "turboOpenFile":
+                        if (msg.ContainsKey("path"))
+                        {
+                            string fp = Convert.ToString(msg["path"]);
+                            if (!string.IsNullOrEmpty(fp) && File.Exists(fp))
+                                Process.Start(new ProcessStartInfo(fp) { UseShellExecute = true });
+                        }
+                        break;
+                    case "turboOpenFolder":
+                        if (msg.ContainsKey("path"))
+                        {
+                            string fp = Convert.ToString(msg["path"]);
+                            if (!string.IsNullOrEmpty(fp) && File.Exists(fp))
+                                Process.Start("explorer.exe", "/select,\"" + fp + "\"");
+                            else if (_turboDownloads != null && Directory.Exists(_turboDownloads.DownloadsDirectory))
+                                Process.Start("explorer.exe", "\"" + _turboDownloads.DownloadsDirectory + "\"");
+                        }
+                        else if (_turboDownloads != null && Directory.Exists(_turboDownloads.DownloadsDirectory))
+                        {
+                            Process.Start("explorer.exe", "\"" + _turboDownloads.DownloadsDirectory + "\"");
+                        }
+                        break;
+                    case "turboScanMedia":
+                        ScanActiveTabMediaAsync();
+                        break;
                     case "openTabMenu":
                         ShowTabMenuPopoverAt(
                             msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId,
@@ -3498,7 +3795,7 @@ namespace DejavuBrowser
                         SaveShortcutsFromMessage(msg);
                         break;
                     case "setWallpaper":
-                        _settings.wallpaper = msg.ContainsKey("wallpaper") ? Convert.ToString(msg["wallpaper"]) : "live:obsidian-prism";
+                        _settings.wallpaper = msg.ContainsKey("wallpaper") ? Convert.ToString(msg["wallpaper"]) : "art:wp-m3-amethyst.jpg";
                         _profiles.SaveActiveSettings(_settings);
                         PushFullStateToShell();
                         break;
@@ -3814,11 +4111,25 @@ namespace DejavuBrowser
                 else if (type == "clearDownloads")
                 {
                     _downloads.Clear();
+                    if (_turboDownloads != null) _turboDownloads.ClearCompleted();
                     PushFullStateToShell();
                     if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "downloads")
                     {
                         _popoverPopup.UpdateState(BuildDownloadsPayloadJson(null));
                     }
+                }
+                else if (type == "openDlManager")
+                {
+                    HidePopover();
+                    SetDlManagerOpen(true, msg.ContainsKey("tab") ? Convert.ToString(msg["tab"]) : "all");
+                }
+                else if (type == "turboPause")
+                {
+                    if (_turboDownloads != null && msg.ContainsKey("id")) _turboDownloads.Pause(Convert.ToString(msg["id"]));
+                }
+                else if (type == "turboResume")
+                {
+                    if (_turboDownloads != null && msg.ContainsKey("id")) _turboDownloads.Resume(Convert.ToString(msg["id"]));
                 }
                 else if (type == "tabMenuAction")
                 {
@@ -4058,6 +4369,11 @@ namespace DejavuBrowser
                 { "tabOverviewOpen", _tabOverviewOpen },
                 { "settingsOpen", _settingsOpen },
                 { "settingsPane", _settingsPane },
+                { "dlManagerOpen", _dlManagerOpen },
+                { "dlManagerTab", _dlManagerTab },
+                { "turboDownloads", _turboDownloads != null ? _turboDownloads.BuildDownloadPayloadList() : new List<Dictionary<string, object>>() },
+                { "pageMedia", (_turboDownloads != null && active != null && !active.IsNewTab) ? _turboDownloads.BuildMediaPayloadList(active.Id) : new List<Dictionary<string, object>>() },
+                { "downloadsDir", _turboDownloads != null ? _turboDownloads.DownloadsDirectory : "" },
                 { "browserOptions", BuildBrowserOptionsPayload() },
                 { "pausedHosts", _adBlocker.GetPausedHosts() },
                 { "activeTabGroupId", _activeTabGroupId },
@@ -4070,8 +4386,8 @@ namespace DejavuBrowser
                 { "readingList", _profiles.ReadingList },
                 { "frequentlyVisited", _profiles.GetFrequentlyVisited(6) },
                 { "startPagePrefs", startPagePrefs },
-                { "downloadsCount", _downloads.Count },
-                { "hasActiveDownload", _downloads.Exists(d => d.state == "progressing") },
+                { "downloadsCount", _downloads.Count + (_turboDownloads != null ? _turboDownloads.TotalCount : 0) },
+                { "hasActiveDownload", _downloads.Exists(d => d.state == "progressing") || (_turboDownloads != null && _turboDownloads.HasActiveDownloads) },
                 { "isCurrentFavorite", active != null && !active.IsNewTab && _profiles.IsFavorite(active.Url) },
                 { "isCurrentInReadingList", active != null && !active.IsNewTab && _profiles.IsInReadingList(active.Url) },
                 { "readerActive", active != null && active.ReaderActive },
@@ -4084,7 +4400,7 @@ namespace DejavuBrowser
                 { "totalBlocked", _adBlocker.TotalBlocked },
                 { "vpn", _vpn.GetSnapshot() },
                 { "sync", _sync != null ? _sync.GetSnapshot() : null },
-                { "wallpaper", _settings.wallpaper ?? "live:obsidian-prism" },
+                { "wallpaper", _settings.wallpaper ?? "art:wp-m3-amethyst.jpg" },
                 { "hasCustomWallpaper", !string.IsNullOrEmpty(_settings.customWallpaperPath) && File.Exists(_settings.customWallpaperPath) },
                 { "baseRgb", active != null ? active.BaseRgb : new int[] { 11, 9, 20 } },
                 { "accents", active != null ? active.AccentPalette : null }

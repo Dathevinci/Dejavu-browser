@@ -1,26 +1,37 @@
 /**
  * dejavu Official Website — Google Pixel Material Design 3 Expressive Interactive Engine
- * Zero Liquid Glass · Live Dynamic Color Seeds · Live GitHub Releases API
+ * Zero Liquid Glass · 6 Dynamic Color Seeds · Live 8x Turbo Download Demo · GitHub Releases API
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v4.0.0';
+  const FALLBACK_VERSION = 'v4.1.0';
   const root = document.documentElement;
 
-  // 1. Material You Theme & Dynamic Color Seed Switcher
+  // 1. Material You Theme & 6 Dynamic Color Seeds (Persisted)
   const themeBtn = document.getElementById('theme-toggle-btn');
   const seedDots = Array.from(document.querySelectorAll('.seed-dot'));
 
   function setTheme(mode) {
-    root.dataset.theme = mode === 'light' ? 'light' : 'dark';
+    const next = mode === 'light' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try { localStorage.setItem('djv_web_theme', next); } catch {}
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = mode === 'light' ? '#fdfbff' : '#131218';
+    if (meta) meta.content = next === 'light' ? '#fdfbff' : '#131218';
   }
 
   function setSeed(seed) {
-    root.dataset.accent = seed || 'amethyst';
-    seedDots.forEach((b) => b.classList.toggle('active', b.dataset.seed === seed));
+    const next = seed || 'amethyst';
+    root.dataset.accent = next;
+    try { localStorage.setItem('djv_web_seed', next); } catch {}
+    seedDots.forEach((b) => b.classList.toggle('active', b.dataset.seed === next));
   }
+
+  try {
+    const savedTheme = localStorage.getItem('djv_web_theme');
+    const savedSeed = localStorage.getItem('djv_web_seed');
+    if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
+    if (savedSeed) setSeed(savedSeed);
+  } catch {}
 
   if (themeBtn) {
     themeBtn.addEventListener('click', () => {
@@ -41,9 +52,10 @@
     });
   }
 
-  // 2. Interactive Dual-Device Showcase (Desktop Tabs, Side Panel, 86-Country VPN, Send to Phone)
+  // 2. Interactive Dual-Device Showcase (Tabs, 8x Turbo Download Manager, Side Panel, VPN, Send to Phone)
   const TAB_META = {
     start:  { url: 'dejavu · Quick Access', title: 'Quick Access · dejavu' },
+    turbo:  { url: 'dejavu://downloads · 8x Turbo Manager', title: '8x Turbo Downloads' },
     gemini: { url: 'gemini.google.com/app', title: 'Google Gemini' },
     media:  { url: 'youtube.com/watch?v=morpho4k', title: 'Butterfly Morpho 4K HDR' }
   };
@@ -61,10 +73,85 @@
     if (urlEl) urlEl.textContent = TAB_META[activeDemoTab].url;
     const syncEl = document.getElementById('px-synced-title');
     if (syncEl) syncEl.textContent = TAB_META[activeDemoTab].title;
+    if (activeDemoTab === 'turbo' && !turboRunning && turboSegs.every((v) => v >= 100)) {
+      startTurboDemo(true);
+    }
   }
 
   document.querySelectorAll('[data-demo-tab]').forEach((el) => {
     el.addEventListener('click', () => selectDemoTab(el.dataset.demoTab));
+  });
+
+  // Live Interactive 8-Segment Turbo Download Simulator
+  let turboSegs = [82, 74, 91, 68, 79, 86, 71, 64];
+  let turboRunning = false;
+  let turboPaused = false;
+  let turboTimer = null;
+
+  function renderTurboDemo() {
+    const strip = document.getElementById('demo-dl1-segs');
+    const sub = document.getElementById('demo-dl1-sub');
+    const chip = document.getElementById('demo-dl1-chip');
+    if (!strip || !sub || !chip) return;
+    const spans = strip.querySelectorAll('span');
+    let sum = 0;
+    turboSegs.forEach((v, idx) => {
+      const cl = Math.max(0, Math.min(100, v));
+      sum += cl;
+      if (spans[idx]) spans[idx].style.width = cl.toFixed(0) + '%';
+    });
+    const avg = sum / 8;
+    const done = avg >= 99.8;
+    const rxMb = ((avg / 100) * 248.0).toFixed(1);
+    strip.classList.toggle('done', done);
+    chip.classList.toggle('done', done);
+    if (done) {
+      chip.textContent = '8x Done';
+      sub.textContent = '8x Turbo · Completed · 248.0 MB · Verified in 5.4s';
+      turboRunning = false;
+      clearInterval(turboTimer);
+    } else if (turboPaused) {
+      chip.textContent = 'Paused';
+      sub.textContent = `Paused · ${rxMb} / 248.0 MB (${avg.toFixed(0)}%) · Resume anytime`;
+    } else {
+      const spd = (38.4 + Math.sin(Date.now() * 0.004) * 6.2).toFixed(1);
+      const remSec = Math.max(1, Math.ceil(((248.0 - Number(rxMb)) / Number(spd))));
+      chip.textContent = '8x Turbo';
+      sub.textContent = `8x Turbo · ${rxMb} / 248.0 MB · ${spd} MB/s · ${remSec}s left`;
+    }
+  }
+
+  function startTurboDemo(reset) {
+    if (reset) turboSegs = [4, 6, 3, 5, 7, 4, 5, 3];
+    turboRunning = true;
+    turboPaused = false;
+    const pBtn = document.getElementById('demo-turbo-pause');
+    if (pBtn) pBtn.textContent = 'Pause';
+    clearInterval(turboTimer);
+    renderTurboDemo();
+    turboTimer = setInterval(() => {
+      if (turboPaused) return;
+      for (let i = 0; i < 8; i++) {
+        if (turboSegs[i] < 100) {
+          turboSegs[i] = Math.min(100, turboSegs[i] + 3.5 + ((i * 1.9 + Math.random() * 4.2)));
+        }
+      }
+      renderTurboDemo();
+    }, 180);
+  }
+
+  document.getElementById('demo-turbo-run')?.addEventListener('click', () => startTurboDemo(true));
+  document.getElementById('demo-turbo-pause')?.addEventListener('click', (e) => {
+    if (!turboRunning) { startTurboDemo(false); return; }
+    turboPaused = !turboPaused;
+    e.currentTarget.textContent = turboPaused ? 'Resume' : 'Pause';
+    renderTurboDemo();
+  });
+  document.getElementById('demo-grab-media')?.addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    btn.textContent = 'Queued 18 files ✓';
+    startTurboDemo(true);
+    setTimeout(() => { btn.textContent = 'Grab All (8x)'; }, 2600);
   });
 
   // Samsung Side Panel Toggle
@@ -129,7 +216,7 @@
   document.getElementById('demo-send-phone')?.addEventListener('click', beamToPixel);
   document.getElementById('dk-beam-btn')?.addEventListener('click', beamToPixel);
 
-  // 3. Live Interactive HD Wallpaper Switcher (Updates both Desktop & Pixel Phone Mockups!)
+  // 3. Live Interactive Material Design 3 Wallpaper Switcher (Harmonizes Seed + Mode!)
   const wpCards = Array.from(document.querySelectorAll('.wp-card'));
   wpCards.forEach((card) => {
     card.addEventListener('click', () => {
@@ -140,6 +227,8 @@
       const pxWp = document.getElementById('px-wp');
       if (dkWp) dkWp.style.backgroundImage = `url("${src}")`;
       if (pxWp) pxWp.style.backgroundImage = `url("${src}")`;
+      if (card.dataset.seed) setSeed(card.dataset.seed);
+      if (card.dataset.mode === 'light' || card.dataset.mode === 'dark') setTheme(card.dataset.mode);
       selectDemoTab('start');
     });
   });
@@ -184,7 +273,7 @@
           if (el) el.href = apk.browser_download_url;
         });
         const m = document.getElementById('hero-android-meta');
-        if (m && sz) m.textContent = `dejavu-mobile.apk · ${sz} · Auto-Updates`;
+        if (m && sz) m.textContent = `dejavu-mobile.apk · ${sz} · 8x Turbo + Auto-Updates`;
         const c = document.getElementById('card-android-size');
         if (c && sz) c.textContent = `dejavu-mobile.apk · ${sz}`;
       }

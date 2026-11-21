@@ -6,6 +6,21 @@
  */
 (function () {
   const LIVE_THEMES = {
+    'live:m3-expressive': {
+      name: 'Material You Expressive',
+      subtitle: 'Dynamic Google Pixel tonal shapes & folded butterfly',
+      isM3Expressive: true,
+      bg0: '#211f26', bg1: '#17151d', bg2: '#141218',
+      bloom: 'rgba(208, 188, 255, 0.10)',
+      dotColor: 'rgba(208, 188, 255, 0.06)',
+      ringA: 'rgba(208, 188, 255, 0.18)', ringB: 'rgba(239, 184, 200, 0.14)',
+      butterflyColor: 'rgba(208, 188, 255, 0.22)',
+      butterflyInner: 'rgba(234, 221, 255, 0.28)',
+      butterflyEdge: 'rgba(208, 188, 255, 0.55)',
+      butterflyMode: 'm3',
+      ribbons: [],
+      motes: ['#d0bcff', '#ccc2dc', '#efb8c8']
+    },
     'live:obsidian-prism': {
       name: 'Obsidian Prism',
       subtitle: 'Violet & cyan caustic ribbons',
@@ -202,10 +217,154 @@
   let startTime = performance.now();
   let lastFrameTime = startTime;
 
-  let currentWallpaper = (window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.wallpaper) || 'live:obsidian-prism';
+  let currentWallpaper = (window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.wallpaper) || 'art:wp-m3-amethyst.jpg';
   let reduceMotion = !!(window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.browserOptions && window.__DEJAVU_BOOT__.browserOptions.reduceWallpaperMotion);
   let dimMode = (window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.browserOptions && window.__DEJAVU_BOOT__.browserOptions.wallpaperDim) || 'balanced';
   let lightMode = !!(window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.browserOptions && window.__DEJAVU_BOOT__.browserOptions.appearanceMode === 'light');
+  let accentSeed = (window.__DEJAVU_BOOT__ && window.__DEJAVU_BOOT__.browserOptions && window.__DEJAVU_BOOT__.browserOptions.accentColor) || 'amethyst';
+
+  const M3_SEED_PALETTES = {
+    amethyst: {
+      dark:  { bg: '#141218', surf1: '#211f26', surf2: '#2b2930', p: '#d0bcff', pc: '#4f378b', sc: '#4a4458', tc: '#633b48', t: '#efb8c8' },
+      light: { bg: '#fef7ff', surf1: '#f3edf7', surf2: '#e6e0e9', p: '#6750a4', pc: '#eaddff', sc: '#e8def8', tc: '#ffd8e4', t: '#7d5260' }
+    },
+    sapphire: {
+      dark:  { bg: '#111318', surf1: '#1d2026', surf2: '#272b33', p: '#a8c7fa', pc: '#0842a0', sc: '#3e4759', tc: '#553f5d', t: '#ddb8f0' },
+      light: { bg: '#f8f9ff', surf1: '#eef1fa', surf2: '#e1e5f0', p: '#0b57d0', pc: '#d3e3fd', sc: '#dae2f9', tc: '#f4d8ff', t: '#6b4e74' }
+    },
+    aurora: {
+      dark:  { bg: '#0f1513', surf1: '#1a211f', surf2: '#242c29', p: '#7bd8c6', pc: '#005144', sc: '#334b45', tc: '#3b4a62', t: '#b4c9e8' },
+      light: { bg: '#f4fbf8', surf1: '#e9f3ef', surf2: '#dde8e3', p: '#006b5a', pc: '#9cf4e1', sc: '#cde8e0', tc: '#d3e4ff', t: '#3e5f87' }
+    },
+    rose: {
+      dark:  { bg: '#181115', surf1: '#241b20', surf2: '#2f242a', p: '#ffb0ce', pc: '#6c2748', sc: '#533d47', tc: '#5f3f2c', t: '#f5be98' },
+      light: { bg: '#fff8f9', surf1: '#faedf0', surf2: '#efe0e4', p: '#984066', pc: '#ffd8e6', sc: '#f4dce4', tc: '#ffddc6', t: '#7f5539' }
+    },
+    gold: {
+      dark:  { bg: '#16130e', surf1: '#231f18', surf2: '#2e2920', p: '#ffb951', pc: '#614000', sc: '#4d4534', tc: '#3f4b34', t: '#bdd2a4' },
+      light: { bg: '#fffaf2', surf1: '#f7f0e4', surf2: '#ece4d5', p: '#825500', pc: '#ffddb3', sc: '#efe2cb', tc: '#d8e9c0', t: '#4e6338' }
+    },
+    silver: {
+      dark:  { bg: '#121316', surf1: '#1e2024', surf2: '#282b30', p: '#b4c8e8', pc: '#344763', sc: '#3d4551', tc: '#4d4257', t: '#d6c1e8' },
+      light: { bg: '#f8f9fc', surf1: '#eef0f5', surf2: '#e2e5ec', p: '#465d7e', pc: '#d5e3ff', sc: '#dce2ee', tc: '#efe0ff', t: '#645275' }
+    }
+  };
+
+  function isLightMaterialWallpaper(wp) {
+    if (!wp) return false;
+    return wp.indexOf('wp-m3-porcelain') >= 0 || wp.indexOf('wp-m3-meadow') >= 0 || wp.indexOf('wp-m3-blush') >= 0;
+  }
+
+  function drawScallopShape(cx, cy, r, lobes, amp, rot) {
+    ctx.beginPath();
+    const steps = 120;
+    for (let i = 0; i <= steps; i++) {
+      const a = (i / steps) * Math.PI * 2;
+      const rr = r + Math.cos(a * lobes) * amp;
+      const px = cx + Math.cos(a + rot) * rr;
+      const py = cy + Math.sin(a + rot) * rr;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  }
+
+  function drawM3ExpressiveMode(t) {
+    const seed = M3_SEED_PALETTES[accentSeed] || M3_SEED_PALETTES.amethyst;
+    const pal = lightMode ? seed.light : seed.dark;
+
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, width, height);
+
+    const ox = reduceMotion ? 0 : (pointerX - 0.5) * 26;
+    const oy = reduceMotion ? 0 : (pointerY - 0.5) * 18;
+    const m = Math.min(width, height);
+
+    // 1. Large sweeping Material You tonal ceramic ribbon arcs (matte elevation layers)
+    ctx.save();
+    ctx.fillStyle = pal.surf1;
+    ctx.beginPath();
+    ctx.moveTo(0, height * 0.58);
+    ctx.bezierCurveTo(width * 0.28, height * 0.34 + Math.sin(t * 0.28) * 14, width * 0.68, height * 0.82, width, height * 0.44);
+    ctx.lineTo(width, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = pal.surf2;
+    ctx.beginPath();
+    ctx.moveTo(0, height * 0.78);
+    ctx.bezierCurveTo(width * 0.36, height * 0.62, width * 0.72, height * 0.92 + Math.cos(t * 0.24) * 12, width, height * 0.66);
+    ctx.lineTo(width, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // 2. Material 3 Expressive 8-lobe scalloped bloom (upper-left matte paper tile)
+    ctx.save();
+    ctx.shadowColor = lightMode ? 'rgba(29,27,32,0.08)' : 'rgba(0,0,0,0.34)';
+    ctx.shadowBlur = 24;
+    ctx.shadowOffsetY = 10;
+    drawScallopShape(width * 0.14 - ox * 0.6, height * 0.24 - oy * 0.6, m * 0.21, 8, m * 0.022, t * 0.06);
+    ctx.fillStyle = pal.pc;
+    ctx.globalAlpha = lightMode ? 0.82 : 0.72;
+    ctx.fill();
+
+    // 3. Material 3 Expressive 4-leaf clover shape (lower-right tonal tile)
+    drawScallopShape(width * 0.86 + ox * 0.7, height * 0.74 + oy * 0.7, m * 0.24, 4, m * 0.044, -t * 0.05 + 0.4);
+    ctx.fillStyle = pal.sc;
+    ctx.globalAlpha = lightMode ? 0.86 : 0.78;
+    ctx.fill();
+
+    // 4. Sculpted M3 Pill capsule accent (top-right)
+    ctx.save();
+    ctx.translate(width * 0.84 - ox * 0.45, height * 0.22 - oy * 0.45);
+    ctx.rotate(-0.42 + Math.sin(t * 0.22) * 0.03);
+    ctx.fillStyle = pal.tc;
+    ctx.globalAlpha = lightMode ? 0.82 : 0.66;
+    const pw = m * 0.34, ph = m * 0.13, pr = ph * 0.5;
+    ctx.beginPath();
+    ctx.roundRect(-pw * 0.5, -ph * 0.5, pw, ph, pr);
+    ctx.fill();
+    ctx.restore();
+
+    // 5. Minimalist matte folded-paper geometric butterfly silhouette (left & right framing)
+    function drawFoldedM3Butterfly(bx, by, sz, tilt) {
+      ctx.save();
+      ctx.translate(bx, by);
+      ctx.rotate(tilt);
+      for (const dir of [-1, 1]) {
+        ctx.save();
+        ctx.scale(dir, 1);
+        // Upper sculptural leaf wing
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(sz * 0.16, -sz * 0.92, sz * 1.15, -sz * 0.78, sz * 0.92, -sz * 0.06);
+        ctx.bezierCurveTo(sz * 0.72, sz * 0.12, sz * 0.25, sz * 0.08, 0, 0);
+        ctx.closePath();
+        ctx.fillStyle = dir === -1 ? pal.p : pal.t;
+        ctx.globalAlpha = lightMode ? 0.34 : 0.26;
+        ctx.fill();
+        // Lower rounded wing
+        ctx.beginPath();
+        ctx.moveTo(0, sz * 0.04);
+        ctx.bezierCurveTo(sz * 0.56, sz * 0.06, sz * 0.76, sz * 0.62, sz * 0.36, sz * 0.82);
+        ctx.bezierCurveTo(sz * 0.10, sz * 0.88, sz * 0.02, sz * 0.42, 0, sz * 0.04);
+        ctx.closePath();
+        ctx.fillStyle = pal.pc;
+        ctx.globalAlpha = lightMode ? 0.68 : 0.55;
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    drawFoldedM3Butterfly(width * 0.15 + ox * 0.5, height * 0.72 + oy * 0.5, m * 0.13, -0.22 + Math.sin(t * 0.35) * 0.04);
+    drawFoldedM3Butterfly(width * 0.84 - ox * 0.5, height * 0.30 + oy * 0.4, m * 0.11, 0.26 + Math.cos(t * 0.31) * 0.04);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
   let frozenTime = 0;
   let artImage = null;
   let prevArtImage = null;
@@ -472,41 +631,43 @@
       }
 
       const dimMult = dimMode === 'vivid' ? 0.45 : (dimMode === 'calm' ? 1.85 : 1.0);
+      const nativeLightArt = isLightMaterialWallpaper(currentWallpaper);
       if (lightMode) {
-        // Luminous Apple Porcelain Pearl Veil: softens dark wallpapers so crisp dark typography shines!
-        const veilAlpha = dimMode === 'vivid' ? 0.44 : (dimMode === 'calm' ? 0.72 : 0.58);
+        // Keep native Material You Light wallpapers (Porcelain / Meadow / Blush) crisp & luminous!
+        const veilAlpha = nativeLightArt
+          ? (dimMode === 'vivid' ? 0.05 : (dimMode === 'calm' ? 0.26 : 0.12))
+          : (dimMode === 'vivid' ? 0.44 : (dimMode === 'calm' ? 0.72 : 0.58));
         const vig = ctx.createRadialGradient(
           width * 0.5, height * 0.44, Math.min(width, height) * 0.08,
           width * 0.5, height * 0.50, Math.max(width, height) * 0.80
         );
-        vig.addColorStop(0, `rgba(250, 248, 255, ${(veilAlpha + 0.14).toFixed(3)})`);
-        vig.addColorStop(0.55, `rgba(244, 240, 254, ${veilAlpha.toFixed(3)})`);
-        vig.addColorStop(1, `rgba(235, 229, 252, ${Math.min(0.84, veilAlpha + 0.16).toFixed(3)})`);
+        vig.addColorStop(0, `rgba(254, 247, 255, ${(veilAlpha + (nativeLightArt ? 0.04 : 0.14)).toFixed(3)})`);
+        vig.addColorStop(0.55, `rgba(247, 242, 250, ${veilAlpha.toFixed(3)})`);
+        vig.addColorStop(1, `rgba(236, 230, 240, ${Math.min(0.84, veilAlpha + (nativeLightArt ? 0.08 : 0.16)).toFixed(3)})`);
         ctx.fillStyle = vig;
         ctx.fillRect(0, 0, width, height);
 
         const topScrim = ctx.createLinearGradient(0, 0, 0, Math.min(150, height * 0.22));
-        topScrim.addColorStop(0, 'rgba(247, 245, 254, 0.72)');
-        topScrim.addColorStop(1, 'rgba(247, 245, 254, 0)');
+        topScrim.addColorStop(0, nativeLightArt ? 'rgba(254, 247, 255, 0.30)' : 'rgba(247, 245, 254, 0.72)');
+        topScrim.addColorStop(1, 'rgba(254, 247, 255, 0)');
         ctx.fillStyle = topScrim;
         ctx.fillRect(0, 0, width, Math.min(150, height * 0.22));
       } else {
-        // Refined ambient vignette: respects Safari Appearance Wallpaper Dimming (vivid / balanced / calm)
+        // Refined ambient vignette: respects Wallpaper Dimming & keeps bright light wallpapers legible in Dark Mode
+        const baseDark = nativeLightArt ? 0.52 : 0.14;
         const vig = ctx.createRadialGradient(
           width * 0.5, height * 0.45, Math.min(width, height) * 0.08,
           width * 0.5, height * 0.50, Math.max(width, height) * 0.76
         );
-        vig.addColorStop(0, `rgba(6, 5, 13, ${(0.17 * dimMult).toFixed(3)})`);
-        vig.addColorStop(0.42, `rgba(6, 5, 13, ${(0.08 * dimMult).toFixed(3)})`);
-        vig.addColorStop(0.72, `rgba(5, 4, 11, ${(0.03 * dimMult).toFixed(3)})`);
-        vig.addColorStop(1, `rgba(4, 3, 10, ${Math.min(0.62, 0.28 * dimMult).toFixed(3)})`);
+        vig.addColorStop(0, `rgba(16, 14, 22, ${Math.min(0.76, baseDark * dimMult).toFixed(3)})`);
+        vig.addColorStop(0.45, `rgba(16, 14, 22, ${Math.min(0.72, (nativeLightArt ? 0.46 : 0.08) * dimMult).toFixed(3)})`);
+        vig.addColorStop(1, `rgba(12, 10, 18, ${Math.min(0.78, (nativeLightArt ? 0.58 : 0.26) * dimMult).toFixed(3)})`);
         ctx.fillStyle = vig;
         ctx.fillRect(0, 0, width, height);
 
-        // Whisper-soft top toolbar scrim so unified Safari chrome reads cleanly over bright skies
         const topScrim = ctx.createLinearGradient(0, 0, 0, Math.min(160, height * 0.22));
-        topScrim.addColorStop(0, `rgba(5, 4, 12, ${Math.min(0.48, 0.24 * dimMult).toFixed(3)})`);
-        topScrim.addColorStop(1, 'rgba(5, 4, 12, 0)');
+        topScrim.addColorStop(0, `rgba(16, 14, 22, ${Math.min(0.56, 0.24 * dimMult).toFixed(3)})`);
+        topScrim.addColorStop(1, 'rgba(16, 14, 22, 0)');
         ctx.fillStyle = topScrim;
         ctx.fillRect(0, 0, width, Math.min(160, height * 0.22));
       }
@@ -679,8 +840,10 @@
 
     if (currentWallpaper.startsWith('art:') || currentWallpaper.startsWith('custom')) {
       drawArtworkMode(t, reduceMotion ? 0 : dt);
+    } else if (currentWallpaper === 'live:m3-expressive') {
+      drawM3ExpressiveMode(t);
     } else {
-      const theme = LIVE_THEMES[currentWallpaper] || LIVE_THEMES['live:obsidian-prism'];
+      const theme = LIVE_THEMES[currentWallpaper] || LIVE_THEMES['live:m3-expressive'];
       drawLiveThemeMode(t, reduceMotion ? 0 : dt, theme);
     }
 
@@ -696,10 +859,13 @@
     if (typeof opts.lightMode === 'boolean') {
       lightMode = opts.lightMode;
     }
+    if (typeof opts.accentColor === 'string' && opts.accentColor) {
+      accentSeed = opts.accentColor;
+    }
   }
 
   function setWallpaper(wpId) {
-    const next = wpId || 'live:obsidian-prism';
+    const next = wpId || 'art:wp-m3-amethyst.jpg';
     if (next === currentWallpaper && (artLoaded || (!next.startsWith('art:') && !next.startsWith('custom')))) return;
     currentWallpaper = next;
 

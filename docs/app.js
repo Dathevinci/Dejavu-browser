@@ -11,7 +11,7 @@
   'use strict';
 
   const REPO_API = 'https://api.github.com/repos/Dathevinci/Dejavu-browser/releases/latest';
-  const FALLBACK_VERSION = 'v3.3.0';
+  const FALLBACK_VERSION = 'v3.3.1';
   const FALLBACK_SETUP_URL = 'https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-Setup.exe';
   const FALLBACK_PORTABLE_URL = 'https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu.exe';
 

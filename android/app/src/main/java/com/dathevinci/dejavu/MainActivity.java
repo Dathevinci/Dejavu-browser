@@ -85,17 +85,70 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
     private static final class ObservableWebView extends WebView {
         private ScrollListener scrollListener;
+        volatile boolean innerScrollAtTop = true;
+        boolean touchStartedAtTop = true;
+
         ObservableWebView(Context context) {
             super(context);
         }
+
         void setScrollListener(ScrollListener listener) {
             this.scrollListener = listener;
         }
+
+        boolean canScrollUpForRefresh() {
+            if (!touchStartedAtTop) return true;
+            if (getScrollY() > 0 || canScrollVertically(-1)) return true;
+            return !innerScrollAtTop;
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent ev) {
+            if (ev != null) {
+                int act = ev.getActionMasked();
+                if (act == MotionEvent.ACTION_DOWN) {
+                    touchStartedAtTop = (getScrollY() <= 0 && !canScrollVertically(-1) && innerScrollAtTop);
+                    if (!touchStartedAtTop && getParent() != null) {
+                        getParent().requestDisallowInterceptTouchEvent(true);
+                    }
+                } else if (act == MotionEvent.ACTION_MOVE) {
+                    if (!touchStartedAtTop || getScrollY() > 0 || canScrollVertically(-1) || !innerScrollAtTop) {
+                        touchStartedAtTop = false;
+                        if (getParent() != null) {
+                            getParent().requestDisallowInterceptTouchEvent(true);
+                        }
+                    }
+                } else if (act == MotionEvent.ACTION_UP || act == MotionEvent.ACTION_CANCEL) {
+                    if (getParent() != null) {
+                        getParent().requestDisallowInterceptTouchEvent(false);
+                    }
+                }
+            }
+            return super.onTouchEvent(ev);
+        }
+
         @Override
         protected void onScrollChanged(int l, int t, int oldl, int oldt) {
             super.onScrollChanged(l, t, oldl, oldt);
+            if (t > 0) {
+                touchStartedAtTop = false;
+            }
             if (scrollListener != null) {
                 scrollListener.onScroll(t, t - oldt);
+            }
+        }
+    }
+
+    private static final class ScrollTrackBridge {
+        private final ObservableWebView webView;
+        ScrollTrackBridge(ObservableWebView wv) {
+            this.webView = wv;
+        }
+        @JavascriptInterface
+        public void setAtTop(final boolean atTop) {
+            webView.innerScrollAtTop = atTop;
+            if (!atTop) {
+                webView.touchStartedAtTop = false;
             }
         }
     }
@@ -525,6 +578,18 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
     @SuppressLint("ClickableViewAccessibility")
     private void setupChromeListeners() {
+        // CRITICAL FIX: SwipeRefreshLayout wraps FrameLayout(web_container), NOT the WebView directly.
+        // Without this callback, FrameLayout.canScrollVertically(-1) is always false, causing every
+        // scroll-up gesture on any webpage to hijack and trigger pull-to-refresh!
+        swipeRefresh.setDistanceToTriggerSync(dp(118));
+        swipeRefresh.setSlingshotDistance(dp(145));
+        swipeRefresh.setOnChildScrollUpCallback((parent, child) -> {
+            MobileTab t = getActiveTab();
+            if (t == null || t.isNewTab || t.webView == null || !"none".equals(activeUiScreen)) {
+                return true;
+            }
+            return t.webView.canScrollUpForRefresh();
+        });
         swipeRefresh.setOnRefreshListener(() -> {
             MobileTab t = getActiveTab();
             if (t != null && !t.isNewTab && t.webView != null) {
@@ -1155,6 +1220,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(wv, !tab.isPrivate);
+        wv.addJavascriptInterface(new ScrollTrackBridge(wv), "__djvScroll");
 
         wv.setScrollListener((scrollY, deltaY) -> {
             if (tab.id != activeTabId || !"none".equals(activeUiScreen) || urlInput.hasFocus()) return;
@@ -1184,6 +1250,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 tab.loading = true;
                 tab.url = url;
+                if (tab.webView != null) {
+                    tab.webView.innerScrollAtTop = true;
+                    tab.webView.touchStartedAtTop = true;
+                }
                 if (tab.id == activeTabId) {
                     setChromeCollapsed(false);
                     setLoadProgress(18, true);
@@ -1199,6 +1269,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (adBlocker.isEnabled()) {
                     view.evaluateJavascript(MobileAdBlocker.getCosmeticScript(), null);
                 }
+                injectScrollTopTracker(view);
                 applyDarkWebToTab(tab);
                 if (!tab.isPrivate) {
                     recordHistory(tab.title, tab.url);
@@ -1277,6 +1348,18 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         tab.webView = wv;
         webContainer.addView(wv);
+    }
+
+    private void injectScrollTopTracker(WebView view) {
+        if (view == null) return;
+        String js = "(function(){if(window.__djvScrollHooked)return;window.__djvScrollHooked=1;var last=true;" +
+            "function send(v){v=!!v;if(v!==last){last=v;try{window.__djvScroll&&window.__djvScroll.setAtTop(v);}catch(e){}}}" +
+            "function checkEl(el){if((window.scrollY||document.documentElement.scrollTop||document.body.scrollTop||0)>1)return false;" +
+            "var n=el;while(n&&n!==document&&n!==window){if(n.scrollTop&&n.scrollTop>1)return false;n=n.parentElement;}return true;}" +
+            "window.addEventListener('touchstart',function(e){send(checkEl(e.target));},{capture:true,passive:true});" +
+            "window.addEventListener('scroll',function(e){var t=e.target;if(t&&t!==document&&t!==window&&t.scrollTop>1){send(false);}else{send((window.scrollY||document.documentElement.scrollTop||document.body.scrollTop||0)<=1);}},{capture:true,passive:true});" +
+            "})();";
+        view.evaluateJavascript(js, null);
     }
 
     private void applyDarkWebToTab(MobileTab tab) {

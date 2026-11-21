@@ -1,537 +1,350 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark" data-accent="amethyst">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>dejavu — Safari's Soul. Butterfly Liquid Glass. Built Natively for Windows.</title>
-  <meta name="description" content="An A-to-Z macOS Safari-inspired native Windows browser crafted with real Snell's Law Liquid Glass, Safari Options (Ctrl+,), a built-in 100/100 Ad Blocker, a 46-country 3-hop encrypted VPN, and 26 Butterfly Studio HD wallpapers — powered natively by WebView2.">
-  <meta name="theme-color" content="#07050f">
+  <title>dejavu — Material You Browser for Windows &amp; Android</title>
+  <meta name="description" content="Samsung Internet's desktop &amp; mobile ergonomics sculpted in Google Pixel Material Design 3 Expressive. 86-country AI-ready VPN (including Nepal &amp; US Gemini support), 100/100 Ad Blocker, E2EE PC-to-Android Sync, and 26 HD Butterfly themes.">
+  <meta name="theme-color" content="#131218">
 
-  <!-- Icons -->
   <link rel="icon" href="assets/dejavu.ico" sizes="any">
   <link rel="icon" type="image/png" href="assets/logo-transparent.png">
   <link rel="apple-touch-icon" href="assets/logo-transparent.png">
 
-  <!-- OpenGraph / Social -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="dejavu browser">
-  <meta property="og:title" content="dejavu — Safari's Soul. Butterfly Liquid Glass. Built Natively for Windows.">
-  <meta property="og:description" content="Real Snell's Law Liquid Glass, Safari Options (Ctrl+,), 100/100 Ad Blocker (279,000+ domains), 46-country encrypted VPN, 26 Butterfly Studio HD wallpapers, and 16 isolated profiles — native Windows WebView2.">
+  <meta property="og:title" content="dejavu — Material You Browser for Windows &amp; Android">
+  <meta property="og:description" content="Samsung Internet workflow. Google Pixel Material Design 3. 86-Country AI-Ready VPN, 100/100 Ad Blocker, and real-time PC ↔ Android E2EE Sync.">
   <meta property="og:url" content="https://dathevinci.github.io/Dejavu-browser/">
-  <meta property="og:image" content="https://dathevinci.github.io/Dejavu-browser/assets/wallpapers/wp-amethyst.jpg">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="dejavu — Native Liquid Glass Browser for Windows">
-  <meta name="twitter:description" content="Safari's Soul. Butterfly Liquid Glass. 46-Country Encrypted VPN &amp; 100/100 Ad Blocker built natively for Windows 10/11.">
-  <meta name="twitter:image" content="https://dathevinci.github.io/Dejavu-browser/assets/wallpapers/wp-amethyst.jpg">
+  <meta property="og:image" content="https://dathevinci.github.io/Dejavu-browser/assets/wallpapers/wp-velvet-mirage.jpg">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Living 60fps Interactive Butterfly Optical Canvas -->
-  <canvas id="bg-optical-canvas" aria-hidden="true"></canvas>
-  <div class="bg-atmosphere" aria-hidden="true"></div>
-
-  <!-- Hidden SVG Optical Filter Pool (Real Snell's Law Refraction, Strictly Zero Gaussian Softening) -->
-  <svg id="lg-svg-pool" aria-hidden="true" style="position:fixed;width:0;height:0;pointer-events:none;z-index:-1;">
-    <defs id="lg-svg-defs"></defs>
-  </svg>
-
-  <!-- Sticky Liquid Glass Navbar -->
-  <header class="site-header" id="site-header">
-    <nav class="nav-shell glass-surface" aria-label="Primary navigation">
-      <a href="#hero" class="nav-brand">
-        <span class="nav-logo-wrap">
-          <img src="assets/logo-transparent.png" alt="dejavu butterfly logo" width="28" height="28">
+  <!-- Sticky Google Pixel Material Design 3 Floating Pill Navbar -->
+  <header class="m3-header" id="site-header">
+    <nav class="m3-nav" aria-label="Primary navigation">
+      <a href="#hero" class="brand-link">
+        <span class="brand-mark">
+          <img src="assets/logo-transparent.png" alt="dejavu" width="26" height="26">
         </span>
-        <span class="nav-wordmark">dejavu</span>
+        <span class="brand-name">dejavu</span>
       </a>
 
       <div class="nav-links" id="nav-links">
-        <a href="#features">Safari Design</a>
-        <a href="#physics">Liquid Glass</a>
-        <a href="#vpn">46-Country VPN</a>
-        <a href="#adblocker">Ad Blocker</a>
+        <a href="#showcase">Preview</a>
+        <a href="#features">Features</a>
         <a href="#wallpapers">Wallpapers</a>
         <a href="#shortcuts">Shortcuts</a>
+        <a href="#download">Download</a>
       </div>
 
-      <div class="nav-actions">
-        <a href="https://github.com/Dathevinci/Dejavu-browser" target="_blank" rel="noopener noreferrer" class="nav-github" aria-label="View dejavu on GitHub">
-          <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true">
-            <path d="M12 2C6.48 2 2 6.58 2 12.23c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.72-2.78.62-3.37-1.37-3.37-1.37-.46-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.72 0 0 .84-.27 2.75 1.05a9.35 9.35 0 0 1 5 0c1.91-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.46.1 2.72.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.6.69.49A10.22 10.22 0 0 0 22 12.23C22 6.58 17.52 2 12 2z"/>
-          </svg>
+      <div class="nav-controls">
+        <!-- Live Material You Dynamic Color Seed Picker -->
+        <div class="seed-picker" role="group" aria-label="Dynamic Color Seed">
+          <button type="button" class="seed-dot active" data-seed="amethyst" style="--c:#d0bcff" title="Amethyst"></button>
+          <button type="button" class="seed-dot" data-seed="sapphire" style="--c:#a8c7fa" title="Pixel Blue"></button>
+          <button type="button" class="seed-dot" data-seed="aurora" style="--c:#7bd8c6" title="Sage"></button>
+          <button type="button" class="seed-dot" data-seed="rose" style="--c:#ffb0ce" title="Blossom"></button>
+          <button type="button" class="seed-dot" data-seed="gold" style="--c:#ffb951" title="Honey"></button>
+        </div>
+
+        <button type="button" id="theme-toggle-btn" class="m3-icon-btn" title="Switch Material Dark / Light" aria-label="Toggle theme">
+          <svg class="ico-sun" viewBox="0 0 20 20" width="18" height="18" fill="none"><circle cx="10" cy="10" r="3.6" stroke="currentColor" stroke-width="1.7"/><path d="M10 2.4v2M10 15.6v2M2.4 10h2M15.6 10h2M4.6 4.6l1.4 1.4M14 14l1.4 1.4M15.4 4.6L14 6M6 14l-1.4 1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg class="ico-moon" viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M15.8 11.7A6.2 6.2 0 1 1 8.3 4.2a4.9 4.9 0 0 0 7.5 7.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        </button>
+
+        <a href="https://github.com/Dathevinci/Dejavu-browser" target="_blank" rel="noopener noreferrer" class="m3-tonal-btn nav-gh">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.23c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.72-2.78.62-3.37-1.37-3.37-1.37-.46-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.72 0 0 .84-.27 2.75 1.05a9.35 9.35 0 0 1 5 0c1.91-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.46.1 2.72.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.6.69.49A10.22 10.22 0 0 0 22 12.23C22 6.58 17.52 2 12 2z"/></svg>
           <span>GitHub</span>
         </a>
-        <a href="#download" class="nav-cta">
-          <span>Download</span>
-          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true">
-            <path d="M8 2.5v7.5m0 0l-3-3m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
-        <button type="button" class="nav-mobile-btn" id="nav-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
-          <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true">
-            <path d="M3.5 6h13M3.5 10h13M3.5 14h13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
+
+        <a href="#download" class="m3-filled-btn nav-dl">Download</a>
+
+        <button type="button" id="mobile-menu-btn" class="m3-icon-btn mobile-only" aria-label="Menu">
+          <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M3.5 6h13M3.5 10h13M3.5 14h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
       </div>
     </nav>
 
-    <div class="nav-mobile-drawer glass-surface" id="nav-mobile-drawer" hidden>
-      <a href="#features">Safari Design</a>
-      <a href="#physics">Liquid Glass Physics</a>
-      <a href="#vpn">46-Country VPN</a>
-      <a href="#adblocker">100/100 Ad Blocker</a>
-      <a href="#wallpapers">Butterfly Wallpapers</a>
-      <a href="#profiles">Profiles &amp; Updater</a>
+    <div id="mobile-drawer" class="m3-drawer" hidden>
+      <a href="#showcase">Interactive Preview</a>
+      <a href="#features">Features</a>
+      <a href="#wallpapers">Wallpapers</a>
       <a href="#shortcuts">Shortcuts</a>
-      <a href="#download" class="mobile-drawer-cta">Download for Windows</a>
+      <a href="#download" class="m3-filled-btn">Download Windows &amp; Android</a>
     </div>
   </header>
 
   <main>
-    <!-- ================================================================
-         HERO SECTION + INTERACTIVE LIVE DEJAVU BROWSER WINDOW MOCKUP
-         ================================================================ -->
+    <!-- =================================================================
+         HERO SECTION (Google Pixel Material 3 Expressive)
+         ================================================================= -->
     <section id="hero" class="hero container">
-      <div class="hero-copy reveal">
-        <a id="release-pill" class="release-pill glass-pill" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest" target="_blank" rel="noopener noreferrer">
-          <span class="release-beacon" aria-hidden="true"></span>
-          <span id="release-version-badge">v2.9.0</span>
-          <span class="pill-sep" aria-hidden="true">·</span>
-          <span id="release-meta-text">Native Windows 10 &amp; 11 x64</span>
-          <svg viewBox="0 0 16 16" width="12" height="12" fill="none" aria-hidden="true">
-            <path d="M6 3.5L10.5 8 6 12.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+      <div class="hero-copy">
+        <a id="release-pill" class="m3-assist-chip" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest" target="_blank" rel="noopener noreferrer">
+          <span class="live-dot" aria-hidden="true"></span>
+          <strong id="release-version-badge">v4.0.0</strong>
+          <span class="chip-sep">·</span>
+          <span>Material You Edition · Windows + Android APK</span>
         </a>
 
         <h1 class="hero-title">
-          Safari's Soul.<br>
-          <span class="text-prism">Butterfly Liquid Glass.</span><br>
-          Built Natively for Windows.
+          Samsung Internet's flow.<br>
+          <span class="hero-accent">Google Pixel Material You.</span>
         </h1>
 
         <p class="hero-subtitle">
-          Experience macOS Safari elegance sculpted with real Snell's Law optical refraction, a full Safari Options customization suite, a built-in 100/100 Ad Blocker, a 46-country 3-hop encrypted VPN, and 26 Butterfly Studio HD themes — engineered natively on Windows WebView2 with zero Electron bloat.
+          A native Windows &amp; Android browser built around Samsung Internet's Side Panel, Quick Access, and cross-device continuity — sculpted with Google Pixel Material Design 3 tonal surfaces, an 86-country AI-ready VPN (with Nepal &amp; Gemini-clean US nodes), and a 100/100 Ad Blocker.
         </p>
 
         <div class="hero-cta-row">
-          <a id="hero-dl-setup" class="btn-primary" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-Setup.exe">
-            <span class="btn-icon-box" aria-hidden="true">
-              <svg viewBox="0 0 18 18" width="17" height="17" fill="none">
-                <path d="M9 2.5v8.8m0 0l-3.4-3.4M9 11.3l3.4-3.4M3 14.5h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </span>
-            <span class="btn-label-stack">
+          <a id="hero-dl-setup" class="m3-cta-primary" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-Setup.exe">
+            <svg viewBox="0 0 20 20" width="19" height="19" fill="none"><path d="M10 3v10m0 0l-3.8-3.8M10 13l3.8-3.8M3.5 16.5h13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>
               <strong>Download for Windows</strong>
-              <small id="hero-setup-meta">dejavu-Setup.exe · ~5.3 MB · Guided Installer</small>
+              <small id="hero-setup-meta">dejavu-Setup.exe · Windows 10/11 x64</small>
             </span>
           </a>
 
-          <a id="hero-dl-portable" class="btn-secondary glass-pill" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu.exe">
-            <span class="btn-label-stack">
-              <strong>Portable Single-File</strong>
-              <small id="hero-portable-meta">dejavu.exe · Windows Portable</small>
-            </span>
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
-              <path d="M8 2.5v7.5m0 0l-3-3m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </a>
-
-          <a id="hero-dl-android" class="btn-secondary glass-pill" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-mobile.apk">
-            <span class="btn-label-stack">
+          <a id="hero-dl-android" class="m3-cta-tonal" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-mobile.apk">
+            <svg viewBox="0 0 20 20" width="19" height="19" fill="none"><rect x="5.2" y="2.2" width="9.6" height="15.6" rx="2.2" stroke="currentColor" stroke-width="1.75"/><circle cx="10" cy="14.6" r="0.9" fill="currentColor"/></svg>
+            <span>
               <strong>Android Mobile (.apk)</strong>
-              <small id="hero-android-meta">dejavu-mobile.apk · Syncs with PC</small>
+              <small id="hero-android-meta">dejavu-mobile.apk · In-App Auto-Updates</small>
             </span>
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
-              <rect x="4.5" y="1.8" width="7" height="12.4" rx="1.6" stroke="currentColor" stroke-width="1.4"/>
-              <circle cx="8" cy="11.8" r="0.7" fill="currentColor"/>
-            </svg>
+          </a>
+
+          <a id="hero-dl-portable" class="m3-cta-outline" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu.exe">
+            <span>
+              <strong>Portable (.exe)</strong>
+              <small id="hero-portable-meta">Single-file Windows app</small>
+            </span>
           </a>
         </div>
 
-        <div class="hero-trust-strip">
-          <span>Windows 10 / 11 (x64)</span>
-          <span class="trust-dot" aria-hidden="true"></span>
-          <span>No Admin Rights Required</span>
-          <span class="trust-dot" aria-hidden="true"></span>
-          <span>~4 MB Native WebView2</span>
-          <span class="trust-dot" aria-hidden="true"></span>
-          <a id="release-checksum-link" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest" target="_blank" rel="noopener noreferrer">Official GitHub Release</a>
+        <div class="hero-chips">
+          <span class="spec-pill">86-Country Smart &amp; Tor VPN</span>
+          <span class="spec-pill">100/100 Built-In Ad Shield</span>
+          <span class="spec-pill">E2EE PC ↔ Phone Sync</span>
+          <span class="spec-pill">Zero Electron Bloat</span>
         </div>
       </div>
 
-      <!-- Interactive Live Browser Mockup Stage -->
-      <div class="hero-mockup-wrap reveal">
-        <div class="mockup-controls-bar" role="toolbar" aria-label="Interactive dejavu window demo controls">
-          <span class="mockup-badge-hint">
-            <span class="hint-dot"></span>
-            Interactive Preview — Click inside the window
+      <!-- =================================================================
+           INTERACTIVE DUAL-DEVICE MATERIAL 3 SHOWCASE (DESKTOP + PIXEL)
+           ================================================================= -->
+      <div id="showcase" class="showcase-wrap">
+        <div class="showcase-toolbar">
+          <span class="showcase-hint">
+            <span class="live-dot"></span>
+            Interactive Material You Preview — Try tabs, Side Panel, VPN, or Send to Phone
           </span>
-          <div class="mockup-quick-pills">
-            <button type="button" class="mq-pill active" data-mock-action="tab:start">Start Page</button>
-            <button type="button" class="mq-pill" data-mock-action="tab:apple">Light Polarity</button>
-            <button type="button" class="mq-pill" data-mock-action="tab:youtube">Ad-Free Video</button>
-            <button type="button" class="mq-pill" data-mock-action="tab:reader">Reader Mode</button>
-            <button type="button" class="mq-pill accent" data-mock-action="toggle-vpn">VPN Switcher</button>
-            <button type="button" class="mq-pill" data-mock-action="toggle-polarity">Flip Dark / Light</button>
+          <div class="showcase-actions">
+            <button type="button" class="m3-filter-chip active" data-demo-tab="start">Quick Access</button>
+            <button type="button" class="m3-filter-chip" data-demo-tab="gemini">Gemini · US VPN</button>
+            <button type="button" class="m3-filter-chip" data-demo-tab="media">Ad-Free Video</button>
+            <button type="button" class="m3-filter-chip" id="demo-toggle-side">Side Panel</button>
+            <button type="button" class="m3-filter-chip" id="demo-toggle-vpn">86-Country VPN</button>
+            <button type="button" class="m3-filter-chip accent" id="demo-send-phone">Send Tab to Phone ↗</button>
           </div>
         </div>
 
-        <div class="mock-window-frame">
-          <div class="mock-window" id="mock-window" data-polarity="dark">
-            <!-- Row 1: Authentic MacBook Safari Unified Toolbar -->
-            <div class="mock-toolbar">
-              <div class="mock-tb-left">
-                <button type="button" class="mock-icon-btn mock-home-btn" id="mock-btn-home" title="Start Page">
-                  <img src="assets/logo-transparent.png" alt="Home" width="18" height="18">
-                </button>
-                <button type="button" class="mock-icon-btn" id="mock-btn-sidebar" title="Toggle Floating Tahoe Sidebar (Ctrl+Shift+L)">
-                  <svg viewBox="0 0 18 18" width="15" height="15" fill="none">
-                    <rect x="2.2" y="3" width="13.6" height="12" rx="2.6" stroke="currentColor" stroke-width="1.35"/>
-                    <path d="M6.4 3.2v11.6" stroke="currentColor" stroke-width="1.35"/>
-                  </svg>
-                </button>
-                <div class="mock-nav-pill">
-                  <button type="button" class="mock-nav-arrow" id="mock-btn-back" title="Back">
-                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><path d="M10 3.5L5.5 8 10 12.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  </button>
-                  <button type="button" class="mock-nav-arrow" id="mock-btn-fwd" title="Forward">
-                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><path d="M6 3.5L10.5 8 6 12.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  </button>
-                </div>
+        <div class="dual-stage">
+          <!-- Interactive Windows Desktop Browser (Samsung Internet PC x Pixel M3) -->
+          <div class="m3-desktop-frame">
+            <!-- Row 1: Top-Connected M3 Tab Strip + Caption Controls -->
+            <div class="dk-row1">
+              <div class="dk-brand-btn">
+                <img src="assets/logo-transparent.png" width="16" height="16" alt="">
               </div>
-
-              <!-- Smart Search Field -->
-              <div class="mock-omnibox" id="mock-omnibox">
-                <div class="mock-omni-left">
-                  <button type="button" class="mock-shield-pill" id="mock-btn-shield" title="Built-in 100/100 Ad Blocker Active">
-                    <svg viewBox="0 0 16 16" width="12" height="12" fill="none">
-                      <path d="M8 1.6L2.8 3.8v3.9c0 3.2 2.2 6.1 5.2 6.9 3-.8 5.2-3.7 5.2-6.9V3.8L8 1.6z" stroke="currentColor" stroke-width="1.4" fill="currentColor" fill-opacity="0.16"/>
-                    </svg>
-                    <span id="mock-shield-count">14.8k</span>
-                  </button>
-                  <button type="button" class="mock-omni-btn" id="mock-btn-reader" title="Toggle Safari Reader Mode (Ctrl+Shift+R)">
-                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none">
-                      <path d="M3 4.2h10M3 7.8h10M3 11.4h6.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-                    </svg>
-                  </button>
-                </div>
-
-                <div class="mock-omni-center">
-                  <svg class="mock-lock-ico" viewBox="0 0 14 14" width="11" height="11" fill="none" aria-hidden="true">
-                    <rect x="3" y="6.2" width="8" height="5.6" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
-                    <path d="M4.8 6.2V4.6a2.2 2.2 0 1 1 4.4 0v1.6" stroke="currentColor" stroke-width="1.3"/>
-                  </svg>
-                  <span id="mock-domain-text">Start Page</span>
-                </div>
-
-                <div class="mock-omni-right">
-                  <button type="button" class="mock-omni-btn" id="mock-btn-polarity" title="Switch Adaptive Dark / Light Glass Polarity">
-                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none">
-                      <circle cx="8" cy="8" r="5.3" stroke="currentColor" stroke-width="1.35"/>
-                      <path d="M8 2.7a5.3 5.3 0 0 1 0 10.6V2.7z" fill="currentColor"/>
-                    </svg>
-                  </button>
-                  <button type="button" class="mock-omni-btn" id="mock-btn-reload" title="Reload">
-                    <svg viewBox="0 0 16 16" width="12.5" height="12.5" fill="none">
-                      <path d="M12.8 8A4.8 4.8 0 1 1 11.4 4.6M11.6 2.6v2.3H9.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
+              <div class="dk-tabs" role="tablist">
+                <button type="button" class="dk-tab active" data-demo-tab="start">
+                  <span class="dk-tab-dot" style="background:var(--md-primary)"></span>
+                  <span>Quick Access</span>
+                </button>
+                <button type="button" class="dk-tab" data-demo-tab="gemini">
+                  <span class="dk-tab-dot" style="background:#60a5fa"></span>
+                  <span>Google Gemini</span>
+                </button>
+                <button type="button" class="dk-tab" data-demo-tab="media">
+                  <span class="dk-tab-dot" style="background:#f43f5e"></span>
+                  <span>4K Video · 0 Ads</span>
+                </button>
               </div>
-
-              <!-- Right Cluster: VPN Pill, Tab Overview, Profile, Caption Controls -->
-              <div class="mock-tb-right">
-                <button type="button" class="mock-vpn-pill connected" id="mock-btn-vpn" title="Open 46-Country Encrypted VPN">
-                  <span class="mock-vpn-dot" id="mock-vpn-dot"></span>
-                  <span id="mock-vpn-pill-code">US</span>
-                </button>
-                <button type="button" class="mock-icon-btn" id="mock-btn-overview" title="Tab Overview Grid (Ctrl+Shift+O)">
-                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
-                    <rect x="2.2" y="2.2" width="4.8" height="4.8" rx="1.2" stroke="currentColor" stroke-width="1.3"/>
-                    <rect x="9" y="2.2" width="4.8" height="4.8" rx="1.2" stroke="currentColor" stroke-width="1.3"/>
-                    <rect x="2.2" y="9" width="4.8" height="4.8" rx="1.2" stroke="currentColor" stroke-width="1.3"/>
-                    <rect x="9" y="9" width="4.8" height="4.8" rx="1.2" stroke="currentColor" stroke-width="1.3"/>
-                  </svg>
-                </button>
-                <div class="mock-profile-pill" title="Profile: Royal Amethyst">
-                  <span class="mock-profile-orb"></span>
-                </div>
-                <div class="mock-win-controls" aria-hidden="true">
-                  <span class="wc-btn wc-min">&minus;</span>
-                  <span class="wc-btn wc-max">&#9633;</span>
-                  <span class="wc-btn wc-close">&times;</span>
-                </div>
+              <span class="dk-plus">+</span>
+              <div class="dk-spacer"></div>
+              <div class="dk-win-btns" aria-hidden="true">
+                <span>−</span><span>□</span><span>×</span>
               </div>
             </div>
 
-            <!-- Row 2: Full-Width MacBook Safari Tab Strip -->
-            <div class="mock-tabbar">
-              <div class="mock-tabs-strip" id="mock-tabs-strip" role="tablist" aria-label="Browser preview tabs">
-                <div class="mock-tab-glide" id="mock-tab-glide" aria-hidden="true"></div>
-
-                <button type="button" class="mock-tab active" role="tab" aria-selected="true" data-tab="start">
-                  <span class="mt-close" aria-hidden="true">&times;</span>
-                  <img class="mt-fav" src="assets/logo-transparent.png" alt="" width="13" height="13">
-                  <span class="mt-title">Start Page — Butterfly Studio</span>
+            <!-- Row 2: Samsung Internet Nav + Google Pixel Pill Omnibox + Utility Dock -->
+            <div class="dk-row2">
+              <div class="dk-nav-grp">
+                <button type="button" class="dk-ico-btn" id="dk-btn-side" title="Samsung Side Panel">
+                  <svg viewBox="0 0 18 18" width="15" height="15" fill="none"><rect x="2.5" y="3.5" width="13" height="11" rx="2.3" stroke="currentColor" stroke-width="1.5"/><path d="M7 3.7v10.6" stroke="currentColor" stroke-width="1.45"/></svg>
                 </button>
-
-                <button type="button" class="mock-tab" role="tab" aria-selected="false" data-tab="apple">
-                  <span class="mt-close" aria-hidden="true">&times;</span>
-                  <span class="mt-dot-ico light-ico" aria-hidden="true"></span>
-                  <span class="mt-title">Design Spec · Light Polarity</span>
-                </button>
-
-                <button type="button" class="mock-tab" role="tab" aria-selected="false" data-tab="youtube">
-                  <span class="mt-close" aria-hidden="true">&times;</span>
-                  <span class="mt-dot-ico yt-ico" aria-hidden="true"></span>
-                  <span class="mt-title">4K HDR · Zero Pre-Roll Ads</span>
-                  <span class="mt-audio-badge" id="mock-audio-badge" title="Click to Mute / Unmute Audio (Ctrl+M)" role="button" tabindex="0">
-                    <svg viewBox="0 0 14 14" width="11" height="11" fill="none">
-                      <path d="M2.5 5.4h2.3l2.9-2.4v8l-2.9-2.4H2.5V5.4z" fill="currentColor"/>
-                      <path class="audio-waves" d="M9.7 4.7a3.2 3.2 0 0 1 0 4.6M11.3 3.2a5.2 5.2 0 0 1 0 7.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                    </svg>
-                  </span>
-                </button>
-
-                <button type="button" class="mock-tab" role="tab" aria-selected="false" data-tab="reader">
-                  <span class="mt-close" aria-hidden="true">&times;</span>
-                  <span class="mt-dot-ico reader-ico" aria-hidden="true"></span>
-                  <span class="mt-title">Safari Reader · Optics Essay</span>
-                </button>
+                <span class="dk-ico-btn dim">‹</span>
+                <span class="dk-ico-btn dim">›</span>
+                <span class="dk-ico-btn">↻</span>
               </div>
-              <button type="button" class="mock-new-tab-btn" id="mock-btn-newtab" title="Return to Start Page">+</button>
+
+              <div class="dk-omnibox">
+                <span class="dk-shield-pill">✓ 14.8k</span>
+                <span id="dk-url-text" class="dk-url-text">dejavu · Quick Access</span>
+                <button type="button" class="dk-mini-beam" id="dk-beam-btn" title="Send current tab to Android Phone">↗ Phone</button>
+              </div>
+
+              <div class="dk-util-grp">
+                <button type="button" class="dk-vpn-pill" id="dk-vpn-btn">
+                  <span class="live-dot"></span>
+                  <span id="dk-vpn-code">US</span>
+                </button>
+                <span class="dk-ico-btn" title="dejavu Link Sync">⇄</span>
+                <span class="dk-ico-btn" title="Settings">⚙</span>
+              </div>
             </div>
 
-            <!-- Main Interactive Viewport -->
-            <div class="mock-viewport" id="mock-viewport">
-              <!-- Floating Tahoe Sidebar Overlay -->
-              <aside class="mock-sidebar" id="mock-sidebar" aria-label="Floating Safari Sidebar">
-                <div class="msb-head">
-                  <strong>Sidebar</strong>
-                  <button type="button" class="msb-close" id="mock-sidebar-close" aria-label="Close sidebar">&times;</button>
+            <!-- Main Desktop Viewport -->
+            <div class="dk-viewport" id="dk-viewport">
+              <!-- Samsung Internet Side Panel -->
+              <aside class="dk-sidepanel" id="dk-sidepanel">
+                <div class="sp-head">
+                  <strong>Side Panel</strong>
+                  <button type="button" id="dk-side-close">×</button>
                 </div>
-                <div class="msb-section-label">Tab Groups</div>
-                <button type="button" class="msb-item active" data-mock-tab-jump="start">
-                  <span class="msb-dot" style="background:#b688ff"></span>
-                  <span>Butterfly Studio</span>
-                  <small>4</small>
-                </button>
-                <button type="button" class="msb-item" data-mock-tab-jump="apple">
-                  <span class="msb-dot" style="background:#38bdf8"></span>
-                  <span>Design Research</span>
-                  <small>7</small>
-                </button>
-                <button type="button" class="msb-item" data-mock-tab-jump="youtube">
-                  <span class="msb-dot" style="background:#fb923c"></span>
-                  <span>4K Media</span>
-                  <small>3</small>
-                </button>
-                <div class="msb-section-label">Reading List</div>
-                <button type="button" class="msb-reading-card" data-mock-tab-jump="reader">
-                  <strong>Why Snell's Law Beats Soft Filters</strong>
-                  <small>dejavu.local · 3 min read</small>
-                </button>
-                <button type="button" class="msb-reading-card" data-mock-tab-jump="apple">
-                  <strong>Adaptive Dark &amp; Light Glass Polarity</strong>
-                  <small>design.apple · Saved</small>
-                </button>
+                <div class="sp-label">Tab Groups</div>
+                <div class="sp-item active"><span class="dot" style="background:var(--md-primary)"></span>Workspace <small>3</small></div>
+                <div class="sp-item"><span class="dot" style="background:#38bdf8"></span>AI &amp; Research <small>5</small></div>
+                <div class="sp-item"><span class="dot" style="background:#f59e0b"></span>Media <small>2</small></div>
+                <div class="sp-label">Synced from Pixel Phone</div>
+                <div class="sp-item">📱 Reddit — r/Android</div>
+                <div class="sp-item">📱 YouTube Mobile</div>
               </aside>
 
-              <!-- Interactive VPN Popover inside Mockup -->
-              <div class="mock-vpn-popover" id="mock-vpn-popover" role="dialog" aria-label="Simulated VPN Switcher">
-                <div class="mvp-top">
+              <!-- Interactive 86-Country VPN Popover -->
+              <div class="dk-vpn-pop" id="dk-vpn-pop">
+                <div class="vp-top">
                   <div>
-                    <div class="mvp-title">dejavu Encrypted VPN</div>
-                    <div class="mvp-sub" id="mvp-status-line">3-Hop Encrypted · Remote DNS</div>
+                    <strong>dejavu Global VPN</strong>
+                    <div id="vp-sub" class="vp-sub">Smart · Web &amp; AI · Miami, US</div>
                   </div>
-                  <button type="button" class="mvp-switch on" id="mvp-power-switch" role="switch" aria-checked="true" aria-label="Toggle VPN">
-                    <span class="mvp-knob"></span>
-                  </button>
+                  <span class="vp-badge">86 Countries</span>
                 </div>
-
-                <div class="mvp-telemetry">
-                  <div>
-                    <small>Exit IP</small>
-                    <strong id="mvp-ip">185.220.101.44</strong>
-                  </div>
-                  <div>
-                    <small>Location</small>
-                    <strong id="mvp-loc">United States</strong>
-                  </div>
-                  <button type="button" class="mvp-rotate-btn" id="mvp-rotate-btn">New IP</button>
+                <div class="vp-modes">
+                  <button type="button" class="vp-mode active" data-vpn-mode="smart">Smart · Web &amp; AI</button>
+                  <button type="button" class="vp-mode" data-vpn-mode="tor">3-Hop Tor</button>
                 </div>
-
-                <div class="mvp-list" id="mvp-country-list">
-                  <button type="button" class="mvp-country active" data-code="US" data-name="United States" data-ip="185.220.101.44"><span>US · United States</span><em class="fast-tag">FAST</em></button>
-                  <button type="button" class="mvp-country" data-code="CH" data-name="Switzerland" data-ip="193.138.218.72"><span>CH · Switzerland</span><em class="fast-tag">FAST</em></button>
-                  <button type="button" class="mvp-country" data-code="JP" data-name="Japan" data-ip="103.251.167.21"><span>JP · Japan</span><em class="fast-tag">FAST</em></button>
-                  <button type="button" class="mvp-country" data-code="DE" data-name="Germany" data-ip="176.10.99.204"><span>DE · Germany</span><em class="fast-tag">FAST</em></button>
-                  <button type="button" class="mvp-country" data-code="GB" data-name="United Kingdom" data-ip="51.15.43.205"><span>GB · United Kingdom</span><em class="fast-tag">FAST</em></button>
-                  <button type="button" class="mvp-country" data-code="SG" data-name="Singapore" data-ip="103.102.166.19"><span>SG · Singapore</span><em class="fast-tag">FAST</em></button>
-                  <button type="button" class="mvp-country" data-code="NL" data-name="Netherlands" data-ip="89.234.157.254"><span>NL · Netherlands</span><em class="fast-tag">FAST</em></button>
-                  <button type="button" class="mvp-country" data-code="CA" data-name="Canada" data-ip="199.249.230.88"><span>CA · Canada</span><em class="fast-tag">FAST</em></button>
+                <div class="vp-list">
+                  <button type="button" class="vp-row active" data-vpn-cc="US" data-vpn-city="Miami, United States"><span>🇺🇸 United States</span><small>Gemini Ready · 38ms</small></button>
+                  <button type="button" class="vp-row" data-vpn-cc="NP" data-vpn-city="Kathmandu, Nepal"><span>🇳🇵 Nepal</span><small>South Asia · 62ms</small></button>
+                  <button type="button" class="vp-row" data-vpn-cc="JP" data-vpn-city="Tokyo, Japan"><span>🇯🇵 Japan</span><small>Asia-Pacific · 49ms</small></button>
+                  <button type="button" class="vp-row" data-vpn-cc="CH" data-vpn-city="Zurich, Switzerland"><span>🇨🇭 Switzerland</span><small>Privacy Hub · 44ms</small></button>
+                  <button type="button" class="vp-row" data-vpn-cc="IN" data-vpn-city="Mumbai, India"><span>🇮🇳 India</span><small>South Asia · 54ms</small></button>
                 </div>
               </div>
 
-              <!-- Tab Overview Grid Overlay -->
-              <div class="mock-overview" id="mock-overview" aria-label="Tab Overview Grid">
-                <div class="mov-head">
-                  <span class="mov-pill">Butterfly Studio · 4 Tabs</span>
-                  <button type="button" class="mov-done" id="mock-overview-done">Done</button>
-                </div>
-                <div class="mov-grid">
-                  <button type="button" class="mov-card" data-ov-tab="start">
-                    <div class="mov-thumb mov-thumb-start" id="mov-thumb-start">
-                      <span>dejavu Start Page</span>
-                    </div>
-                    <div class="mov-caption">Start Page — Butterfly Studio</div>
-                  </button>
-                  <button type="button" class="mov-card" data-ov-tab="apple">
-                    <div class="mov-thumb mov-thumb-light">
-                      <span>Adaptive Light Glass</span>
-                    </div>
-                    <div class="mov-caption">Design Spec · Light Polarity</div>
-                  </button>
-                  <button type="button" class="mov-card" data-ov-tab="youtube">
-                    <div class="mov-thumb mov-thumb-yt">
-                      <span>4K Stream · 0 Ads</span>
-                    </div>
-                    <div class="mov-caption">4K HDR · Zero Pre-Roll Ads</div>
-                  </button>
-                  <button type="button" class="mov-card" data-ov-tab="reader">
-                    <div class="mov-thumb mov-thumb-reader">
-                      <span>Aa · Reader View</span>
-                    </div>
-                    <div class="mov-caption">Safari Reader · Optics Essay</div>
-                  </button>
-                </div>
-              </div>
-
-              <!-- TAB 1: Start Page with Live Switchable Butterfly Wallpaper -->
-              <div class="mock-view active" id="mock-view-start">
-                <img class="mock-sp-wallpaper" id="mock-sp-wallpaper" src="assets/wallpapers/wp-amethyst.jpg" alt="Amethyst Glasswing Butterfly Wallpaper">
-                <div class="mock-sp-vignette" aria-hidden="true"></div>
-                <div class="mock-sp-content">
-                  <div class="mock-sp-brand">
-                    <img src="assets/logo-transparent.png" alt="dejavu" width="38" height="38">
-                    <span>dejavu</span>
+              <!-- Tab Content 1: Quick Access Start Page -->
+              <div class="dk-page" data-page="start">
+                <div class="dk-wp-backdrop" id="dk-wp-backdrop"></div>
+                <div class="dk-wp-scrim"></div>
+                <div class="dk-sp-inner">
+                  <img src="assets/logo-transparent.png" width="42" height="42" alt="dejavu" class="dk-sp-logo">
+                  <div class="dk-sp-brand">dejavu</div>
+                  <div class="dk-sp-search">
+                    <span>Search Google or enter website</span>
+                    <span class="dk-sp-go">→</span>
                   </div>
-                  <div class="mock-sp-search">
-                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true"><circle cx="7.2" cy="7.2" r="4.5" stroke="currentColor" stroke-width="1.45"/><path d="M10.8 10.8L13.8 13.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    <span>Search or enter website name</span>
+                  <div class="dk-qa-grid">
+                    <div class="dk-qa-tile"><span class="qa-ico" style="background:#ff0033">▶</span><small>YouTube</small></div>
+                    <div class="dk-qa-tile"><span class="qa-ico" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6)">✦</span><small>Gemini</small></div>
+                    <div class="dk-qa-tile"><span class="qa-ico" style="background:#1f2328">GH</span><small>GitHub</small></div>
+                    <div class="dk-qa-tile"><span class="qa-ico" style="background:#ff4500">r/</span><small>Reddit</small></div>
+                    <div class="dk-qa-tile"><span class="qa-ico" style="background:#334155">W</span><small>Wikipedia</small></div>
+                    <div class="dk-qa-tile"><span class="qa-ico" style="background:#111114">𝕏</span><small>X</small></div>
                   </div>
-                  <div class="mock-sp-favs">
-                    <div class="mock-fav-tile"><span class="mf-sq" style="background:linear-gradient(145deg,#ef4444,#b91c1c)">▶</span><small>YouTube</small></div>
-                    <div class="mock-fav-tile"><span class="mf-sq" style="background:linear-gradient(145deg,#334155,#0f172a)">GH</span><small>GitHub</small></div>
-                    <div class="mock-fav-tile"><span class="mf-sq" style="background:linear-gradient(145deg,#a855f7,#6d28d9)">W</span><small>Wikipedia</small></div>
-                    <div class="mock-fav-tile"><span class="mf-sq" style="background:linear-gradient(145deg,#22c55e,#15803d)">♫</span><small>Spotify</small></div>
-                    <div class="mock-fav-tile"><span class="mf-sq" style="background:linear-gradient(145deg,#0ea5e9,#1d4ed8)">F</span><small>Figma</small></div>
-                    <div class="mock-fav-tile"><span class="mf-sq" style="background:linear-gradient(145deg,#f97316,#c2410c)">R</span><small>Reddit</small></div>
-                  </div>
-                  <div class="mock-sp-privacy">
-                    <div class="msp-priv-block">
-                      <span class="msp-dot green"></span>
-                      <strong>14,820</strong>
-                      <span>trackers &amp; ads prevented</span>
-                    </div>
-                    <span class="msp-div"></span>
-                    <button type="button" class="msp-vpn-chip" id="mock-sp-vpn-chip">
-                      <span class="msp-dot violet" id="mock-sp-vpn-dot"></span>
-                      <span id="mock-sp-vpn-label">VPN: United States</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Live Wallpaper Switcher Pills inside Start Page -->
-                <div class="mock-wp-dock" aria-label="Switch mockup wallpaper">
-                  <span class="mwd-label">Butterfly Studio:</span>
-                  <button type="button" class="mwd-swatch active" data-wp="assets/wallpapers/wp-amethyst.jpg" data-wp-name="Amethyst Glasswing" title="Amethyst Glasswing">
-                    <img src="assets/wallpapers/wp-amethyst.jpg" alt="Amethyst">
-                  </button>
-                  <button type="button" class="mwd-swatch" data-wp="assets/wallpapers/wp-aurora.jpg" data-wp-name="Aurora Glasswing" title="Aurora Glasswing">
-                    <img src="assets/wallpapers/wp-aurora.jpg" alt="Aurora">
-                  </button>
-                  <button type="button" class="mwd-swatch" data-wp="assets/wallpapers/wp-celestial.jpg" data-wp-name="Celestial Sapphire" title="Celestial Sapphire">
-                    <img src="assets/wallpapers/wp-celestial.jpg" alt="Celestial">
-                  </button>
-                  <button type="button" class="mwd-swatch" data-wp="assets/wallpapers/wp-gilded.jpg" data-wp-name="Gilded Obsidian" title="Gilded Obsidian">
-                    <img src="assets/wallpapers/wp-gilded.jpg" alt="Gilded">
-                  </button>
-                  <button type="button" class="mwd-swatch" data-wp="assets/wallpapers/wp-sakura.jpg" data-wp-name="Sakura Glasswing" title="Sakura Glasswing">
-                    <img src="assets/wallpapers/wp-sakura.jpg" alt="Sakura">
-                  </button>
-                </div>
-              </div>
-
-              <!-- TAB 2: Adaptive Light Polarity Demo -->
-              <div class="mock-view mock-view-light" id="mock-view-apple">
-                <div class="mvl-inner">
-                  <span class="mvl-eyebrow">Adaptive Glass Polarity</span>
-                  <h3>Porcelain Light Glass, automatically.</h3>
-                  <p>When you visit bright websites, dejavu inspects page luminance and transitions its entire top toolbar, tabs, and overlays into crisp porcelain Liquid Glass — zero glare, zero eye strain.</p>
-                  <div class="mvl-cards">
-                    <div class="mvl-card">
-                      <strong>Luminescence Sensing</strong>
-                      <span>Detects bright canvases in real time and flips glass polarity seamlessly.</span>
-                    </div>
-                    <div class="mvl-card">
-                      <strong>Razor-Sharp Contrast</strong>
-                      <span>Text and domain locks remain effortlessly legible in sunlight or midnight dark.</span>
-                    </div>
+                  <div class="dk-sp-privacy">
+                    <span><strong>14,820</strong> ads &amp; trackers blocked</span>
+                    <span class="dk-sp-vpn-tag" id="dk-sp-vpn-tag">VPN · United States (AI-Ready)</span>
                   </div>
                 </div>
               </div>
 
-              <!-- TAB 3: Ad-Free 4K Video + Audio Mute Demo -->
-              <div class="mock-view mock-view-yt" id="mock-view-youtube">
-                <div class="myt-stage">
-                  <div class="myt-player">
-                    <div class="myt-video-glow"></div>
-                    <div class="myt-play-center">
-                      <span class="myt-badge-live">4K HDR · 60 FPS</span>
-                      <h4>Butterfly Wing Photonics in Ultra-Slow Motion</h4>
-                      <p>Zero pre-rolls · Zero mid-rolls · Zero sidebar trackers</p>
-                    </div>
-                    <div class="myt-controls">
-                      <span class="myt-bar"><span class="myt-bar-fill"></span></span>
-                      <div class="myt-meta-row">
-                        <span id="mock-yt-audio-state">Audio Playing · Click speaker on tab to mute</span>
-                        <span class="myt-shield-ok">Shield 100/100 · 18 ads blocked</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="myt-side">
-                    <div class="myt-shield-panel">
-                      <span class="myt-sp-pill">Native Ad Blocker ON</span>
-                      <strong>279,000+ Domains</strong>
-                      <p>Blocks ad networks at the native WebView2 network layer before bytes ever download.</p>
-                      <div class="myt-mini-stats">
-                        <div><strong>0ms</strong><small>Pre-roll wait</small></div>
-                        <div><strong>8,400+</strong><small>Cosmetic rules</small></div>
-                      </div>
-                    </div>
-                  </div>
+              <!-- Tab Content 2: Google Gemini over US VPN -->
+              <div class="dk-page hidden" data-page="gemini">
+                <div class="dk-gemini-mock">
+                  <div class="gm-badge">Connected via Smart US VPN · Zero 403 Errors</div>
+                  <h3>Hi, I'm Gemini.</h3>
+                  <p>Where should we start? dejavu's Smart VPN routes clean IPs with hot failover across 86 countries so AI tools load effortlessly.</p>
+                  <div class="gm-input">Ask Gemini anything…</div>
                 </div>
               </div>
 
-              <!-- TAB 4: Safari Reader Mode Demo -->
-              <div class="mock-view mock-view-reader theme-dark" id="mock-view-reader">
-                <div class="mr-toolbar">
-                  <span class="mr-label">Safari Reader View</span>
-                  <div class="mr-controls">
-                    <button type="button" class="mr-btn" id="mr-font-toggle">Serif</button>
-                    <button type="button" class="mr-swatch dark active" data-reader-theme="dark" title="Dark Theme"></button>
-                    <button type="button" class="mr-swatch sepia" data-reader-theme="sepia" title="Sepia Theme"></button>
-                    <button type="button" class="mr-swatch light" data-reader-theme="light" title="Light Theme"></button>
+              <!-- Tab Content 3: Ad-Free Video -->
+              <div class="dk-page hidden" data-page="media">
+                <div class="dk-media-mock">
+                  <div class="md-video-box">
+                    <span class="md-play">▶</span>
+                    <span class="md-blocked-tag">✓ 24 Video Ads &amp; Trackers Blocked</span>
+                  </div>
+                  <div class="md-meta">
+                    <strong>Butterfly Morpho 4K HDR Showcase</strong>
+                    <small>Native hardware-accelerated WebView2 playback · Zero pre-roll ads</small>
                   </div>
                 </div>
-                <article class="mr-article" id="mr-article">
-                  <span class="mr-kicker">OPTICAL ENGINEERING · DEJAVU JOURNAL</span>
-                  <h3>The Mathematics of Real Liquid Glass</h3>
-                  <p>Traditional desktop skins hide behind heavy frosted haze filters that wash out color and stall frame rates on scroll. dejavu takes an optical path: every pill and bezel computes exact convex-squircle surface normals and refracts light using Snell's Law (<em>n</em> = 1.52).</p>
-                  <p>Combined with Schlick Fresnel rim highlights and pre-baked optical canvases inside scrolling overlays, typography stays razor sharp while every edge gleams like sculpted crystal.</p>
-                </article>
+              </div>
+            </div>
+          </div>
+
+          <!-- Companion Google Pixel Phone Mockup (dejavu Mobile M3) -->
+          <div class="pixel-frame" aria-label="dejavu Mobile on Google Pixel">
+            <div class="pixel-camera"></div>
+            <div class="pixel-screen">
+              <div class="px-wp" id="px-wp"></div>
+              <div class="px-scrim"></div>
+
+              <!-- Live Incoming Drop Toast when user clicks "Send Tab to Phone" -->
+              <div class="px-toast" id="px-toast" hidden>
+                <div class="px-toast-eyebrow">From Windows PC · E2EE</div>
+                <strong id="px-toast-title">Google Gemini</strong>
+                <span class="px-toast-act">Open Tab</span>
+              </div>
+
+              <div class="px-content">
+                <div class="px-top">
+                  <span class="px-link-chip"><span class="live-dot"></span>Windows PC</span>
+                  <span class="px-gear">⚙</span>
+                </div>
+                <div class="px-hero">
+                  <img src="assets/logo-transparent.png" width="32" height="32" alt="">
+                  <span>dejavu</span>
+                </div>
+                <div class="px-qa">
+                  <div class="px-tile"><span style="background:#ff0033">▶</span><small>YouTube</small></div>
+                  <div class="px-tile"><span style="background:linear-gradient(135deg,#3b82f6,#8b5cf6)">✦</span><small>Gemini</small></div>
+                  <div class="px-tile"><span style="background:#1f2328">GH</span><small>GitHub</small></div>
+                  <div class="px-tile"><span style="background:#ff4500">r/</span><small>Reddit</small></div>
+                </div>
+                <div class="px-pc-card">
+                  <small>FROM WINDOWS PC</small>
+                  <strong id="px-synced-title">Quick Access · dejavu</strong>
+                </div>
+              </div>
+
+              <!-- Pixel M3 Bottom Samsung-Style Dock -->
+              <div class="px-bottom-bar">
+                <div class="px-url-pill">Search or enter website</div>
+                <div class="px-dock">
+                  <span>‹</span>
+                  <span>›</span>
+                  <span class="px-active-pill">⇄</span>
+                  <span class="px-tab-sq">3</span>
+                  <span>•••</span>
+                </div>
               </div>
             </div>
           </div>
@@ -539,609 +352,189 @@
       </div>
     </section>
 
-    <!-- ================================================================
-         SECTION 2: REAL LIQUID GLASS OPTICAL PHYSICS
-         ================================================================ -->
-    <section id="physics" class="section container">
-      <div class="section-head reveal">
-        <span class="eyebrow">Real Optical Physics · Zero Gaussian Softening</span>
-        <h2>Sculpted by Snell's Law.<br>Not hazy shortcuts.</h2>
-        <p>Every toolbar pill, floating Tahoe popover, and active tab in dejavu renders true physical refraction — keeping underlying colors vibrant and every character razor-sharp.</p>
-      </div>
-
-      <div class="physics-grid">
-        <!-- Interactive Snell's Law Refraction Stage -->
-        <div class="physics-stage glass-card reveal" id="optical-stage">
-          <div class="optical-stage-top">
-            <div>
-              <span class="stage-chip">Interactive Optical Lens</span>
-              <strong class="stage-caption">Move your cursor across the glass lens</strong>
-            </div>
-            <div class="optical-readout" id="optical-readout">
-              <span>n = 1.52</span>
-              <span>θ<sub>i</sub> = 38°</span>
-              <span>RGB Prism ON</span>
-            </div>
-          </div>
-
-          <div class="optical-canvas-box" id="optical-canvas-box">
-            <canvas id="optical-demo-canvas" aria-hidden="true"></canvas>
-            <!-- Real SVG feDisplacementMap Liquid Glass Lens -->
-            <div class="optical-lens" id="optical-lens" aria-hidden="true">
-              <div class="optical-lens-spec"></div>
-              <div class="optical-lens-tag">n = 1.52 · Snell's Law</div>
-            </div>
-          </div>
-
-          <div class="optical-formula-bar">
-            <span><code>n₁ sin θ₁ = n₂ sin θ₂</code></span>
-            <span><code>h(u) = (1 &minus; (1 &minus; u)⁴)¹ᐟ⁴</code></span>
-            <span><code>F(θ) = F₀ + (1 &minus; F₀)(1 &minus; cos θ)⁵</code></span>
-          </div>
-        </div>
-
-        <!-- 4 Physics Pillars -->
-        <div class="physics-pillars">
-          <article class="pillar-card glass-card reveal">
-            <div class="pillar-num">01</div>
-            <h3>Snell's Law Meniscus (n = 1.52)</h3>
-            <p>Exact signed-distance-field (SDF) rounded-rectangle geometry computes curved bezel normals and bends refracted light rays like real borosilicate optical glass.</p>
-          </article>
-
-          <article class="pillar-card glass-card reveal">
-            <div class="pillar-num">02</div>
-            <h3>Schlick Fresnel Specular Rims</h3>
-            <p>Directional key and amethyst bounce caustics trace a jewel-thin hairline along every glass contour while keeping the interior 100% glare-free over text.</p>
-          </article>
-
-          <article class="pillar-card glass-card reveal">
-            <div class="pillar-num">03</div>
-            <h3>Cauchy RGB Chromatic Dispersion</h3>
-            <p>Hero glass surfaces split red, green, and blue refraction channels independently along curved edges for subtle prism luminescence — with strictly zero Gaussian haze.</p>
-          </article>
-
-          <article class="pillar-card glass-card reveal">
-            <div class="pillar-num">04</div>
-            <h3>120fps Apple Damped Springs</h3>
-            <p>GPU-composited <code>linear()</code> harmonic springs power tab glides, popovers, and Tab Overview zoom — paired with pre-baked optical backdrops for 0.0ms scroll cost.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================================================================
-         SECTION 3: A-TO-Z SAFARI FEATURE BENTO GRID
-         ================================================================ -->
+    <!-- =================================================================
+         MATERIAL DESIGN 3 EXPRESSIVE BENTO FEATURE GRID
+         ================================================================= -->
     <section id="features" class="section container">
-      <div class="section-head reveal">
-        <span class="eyebrow">A-to-Z macOS Safari Experience</span>
-        <h2>Every cherished Safari detail,<br>reimagined for Windows.</h2>
-        <p>From the centered Smart Search Field and floating Tahoe Sidebar to Tab Overview and distraction-free Reader Mode — designed to feel effortlessly calm and instant.</p>
+      <div class="section-head">
+        <span class="eyebrow">Built A to Z for Speed &amp; Privacy</span>
+        <h2>Everything you expect from a flagship browser.</h2>
       </div>
 
       <div class="bento-grid">
-        <!-- Bento 1: Wide Unified Smart Search Field -->
-        <article class="bento-card bento-wide glass-card reveal">
-          <div class="bento-visual bv-omnibox">
-            <div class="bv-omni-bar">
-              <span class="bv-pill-ico shield">100</span>
-              <span class="bv-omni-url">
-                <svg viewBox="0 0 12 12" width="10" height="10" fill="none"><rect x="2.5" y="5.4" width="7" height="4.8" rx="1.2" stroke="currentColor" stroke-width="1.2"/><path d="M4 5.4V4a2 2 0 1 1 4 0v1.4" stroke="currentColor" stroke-width="1.2"/></svg>
-                github.com
-              </span>
-              <span class="bv-pill-ico star">★</span>
-            </div>
-            <div class="bv-suggest-drop">
-              <div class="bv-s-row top"><span>Top Hit</span><strong>github.com/Dathevinci/Dejavu-browser</strong></div>
-              <div class="bv-s-row"><span>Bookmarks</span><strong>Apple Human Interface Guidelines</strong></div>
-              <div class="bv-s-row"><span>Search</span><strong>snell's law optical glass shaders</strong></div>
-            </div>
-          </div>
-          <div class="bento-body">
-            <span class="bento-tag">Smart Search Field</span>
-            <h3>Centered clarity. Zero glare.</h3>
-            <p>Displays a clean centered domain and HTTPS lock at rest, tucked Privacy Shield, Reader View, Zoom pill, and Favorite Star — blooming into grouped instant autocomplete when you type.</p>
+        <article class="bento-card span-2 tone-primary">
+          <span class="bento-badge">86+ Countries · Dual Engine</span>
+          <h3>Smart AI-Ready VPN + 3-Hop Tor</h3>
+          <p>Switch effortlessly between <strong>Smart · Web &amp; AI</strong> (verified clean IPs with hot failover that load Google Gemini over US VPN and unlock <strong>Nepal, India, Japan, Europe &amp; Americas</strong>) and <strong>3-Hop Tor Onion</strong> mode for maximum anonymity.</p>
+          <div class="country-chips">
+            <span>🇺🇸 United States</span>
+            <span>🇳🇵 Nepal</span>
+            <span>🇯🇵 Japan</span>
+            <span>🇬🇧 United Kingdom</span>
+            <span>🇨🇭 Switzerland</span>
+            <span>🇮🇳 India</span>
+            <span>🇸🇬 Singapore</span>
+            <span>+79 more</span>
           </div>
         </article>
 
-        <!-- Bento 2: Tab Overview Grid -->
-        <article class="bento-card glass-card reveal">
-          <div class="bento-visual bv-overview">
-            <div class="bv-ov-search">Search Tabs</div>
-            <div class="bv-ov-grid">
-              <span class="bv-ov-cell c1"></span>
-              <span class="bv-ov-cell c2"></span>
-              <span class="bv-ov-cell c3"></span>
-              <span class="bv-ov-cell c4"></span>
-            </div>
-          </div>
-          <div class="bento-body">
-            <span class="bento-tag">Ctrl+Shift+O</span>
-            <h3>Safari Tab Overview Grid</h3>
-            <p>Spring-zoom out over the living butterfly canvas with live previews of every open tab and real-time tab filtering.</p>
-          </div>
+        <article class="bento-card tone-surface">
+          <span class="bento-badge">Samsung Internet Ergonomics</span>
+          <h3>Side Panel &amp; Quick Access</h3>
+          <p>Top-connected Material 3 tabs, instant Side Panel (<strong>Ctrl+Shift+L</strong>) for bookmarks, tab groups &amp; reading list, and customizable Quick Access tiles on every new tab.</p>
         </article>
 
-        <!-- Bento 3: Floating Tahoe Sidebar & Tab Groups -->
-        <article class="bento-card glass-card reveal">
-          <div class="bento-visual bv-sidebar">
-            <div class="bv-sb-row active"><i style="background:#b688ff"></i><span>Design Studio</span><b>6</b></div>
-            <div class="bv-sb-row"><i style="background:#38bdf8"></i><span>Engineering</span><b>9</b></div>
-            <div class="bv-sb-row"><i style="background:#34d399"></i><span>Reading List</span><b>4</b></div>
-            <div class="bv-sb-row"><i style="background:#fb923c"></i><span>Favorites</span><b>12</b></div>
-          </div>
-          <div class="bento-body">
-            <span class="bento-tag">Ctrl+Shift+L</span>
-            <h3>Floating Tahoe Sidebar</h3>
-            <p>Organize work into color-coded Tab Groups, switch open tabs, browse Favorites, and jump into your offline Reading List.</p>
-          </div>
+        <article class="bento-card tone-surface">
+          <span class="bento-badge">100/100 Ad Shield</span>
+          <h3>Built-In Ad &amp; Tracker Blocker</h3>
+          <p>Blocks 279,000+ ad, telemetry, and video-ad domains natively inside the engine on both Windows and Android — zero browser extensions needed.</p>
         </article>
 
-        <!-- Bento 4: Safari Reader Mode -->
-        <article class="bento-card glass-card reveal">
-          <div class="bento-visual bv-reader">
-            <div class="bv-reader-head">
-              <span>Aa</span>
-              <div class="bv-reader-dots">
-                <i style="background:#141222"></i>
-                <i style="background:#eadec8"></i>
-                <i style="background:#f8f7fc"></i>
-              </div>
-            </div>
-            <div class="bv-reader-lines">
-              <strong>Clean, quiet reading</strong>
-              <span></span><span></span><span class="short"></span>
-            </div>
-          </div>
-          <div class="bento-body">
-            <span class="bento-tag">Ctrl+Shift+R</span>
-            <h3>Safari Reader Mode</h3>
-            <p>Strip away clutter into calm editorial typography with Serif/Sans toggles, A&minus;/A+ sizing, and Dark, Sepia, and Light themes.</p>
-          </div>
+        <article class="bento-card span-2 tone-tertiary">
+          <span class="bento-badge">AES-256 End-to-End Encrypted</span>
+          <h3>dejavu Link — PC ↔ Android Continuity</h3>
+          <p>Pair your Windows PC and Android phone with one QR scan. Beam open tabs, links, and text notes instantaneously in both directions, view live open PC tabs on mobile, and stay current with built-in automatic updates on both Windows and Android.</p>
         </article>
 
-        <!-- Bento 5: Full-Width Tabs, Pinned Favicons & Audio Mute -->
-        <article class="bento-card glass-card reveal">
-          <div class="bento-visual bv-tabs">
-            <div class="bv-tab-row">
-              <span class="bv-pin">★</span>
-              <span class="bv-pin">♪</span>
-              <span class="bv-tab-active">
-                <em>&times;</em>
-                <strong>dejavu Studio</strong>
-                <em class="bv-mute">🔊</em>
-              </span>
-              <span class="bv-tab-idle">Docs</span>
-            </div>
-          </div>
-          <div class="bento-body">
-            <span class="bento-tag">Ctrl+M · Right-Click</span>
-            <h3>Pinned Tabs &amp; Audio Mute</h3>
-            <p>Full-width equal tabs with GPU-gliding active glass capsules, compact 38px pinned favicons, left-side close buttons, and 1-click mute.</p>
-          </div>
+        <article class="bento-card tone-surface">
+          <span class="bento-badge">Google Pixel Material You</span>
+          <h3>Dynamic Color &amp; True Light/Dark</h3>
+          <p>Six HCT tonal color seeds (<strong>Amethyst</strong>, <strong>Pixel Blue</strong>, <strong>Sage</strong>, <strong>Blossom</strong>, <strong>Honey</strong>, <strong>Slate</strong>) that adapt every toolbar, bottom sheet, switch, and card across Dark &amp; Light modes.</p>
         </article>
 
-        <!-- Bento 6: Reading List, Share Sheet & Downloads -->
-        <article class="bento-card bento-wide glass-card reveal">
-          <div class="bento-visual bv-share-dl">
-            <div class="bv-mini-sheet">
-              <div class="bv-ms-title">Share Sheet</div>
-              <div class="bv-ms-grid">
-                <span>Copy Link</span>
-                <span>Reading List</span>
-                <span>Reader View</span>
-                <span>Pin Tab</span>
-              </div>
-            </div>
-            <div class="bv-mini-dl">
-              <div class="bv-ms-title">Downloads</div>
-              <div class="bv-dl-item">
-                <strong>dejavu-Setup.exe</strong>
-                <small>Completed · 5.3 MB</small>
-                <div class="bv-dl-track"><span style="width:100%"></span></div>
-              </div>
-            </div>
-          </div>
-          <div class="bento-body">
-            <span class="bento-tag">Ctrl+Shift+D · Productivity</span>
-            <h3>Reading List, Share Sheet &amp; Live Downloads</h3>
-            <p>Save articles to your Start Page Reading List shelf, share or duplicate tabs in one click from the Safari Share Sheet, and track live transfers in a quiet Liquid Glass Downloads popover.</p>
-          </div>
+        <article class="bento-card span-2 tone-surface">
+          <span class="bento-badge">Native Engineering</span>
+          <h3>Zero Electron Bloat. Single-Instance Clean.</h3>
+          <p>Native C# + WebView2 on Windows (~12 MB) and native Android WebView with Edge-to-Edge Material 3 bottom sheets, live webpage tab thumbnails, Private tabs, Dark Web mode, and true single-instance window focus on both platforms.</p>
         </article>
       </div>
     </section>
 
-    <!-- ================================================================
-         SECTION 4: 46-COUNTRY BUILT-IN ENCRYPTED VPN SHOWCASE
-         ================================================================ -->
-    <section id="vpn" class="section container">
-      <div class="section-head reveal">
-        <span class="eyebrow">Built-in Browser-Scoped VPN · Zero Admin Rights</span>
-        <h2>86+ global countries.<br>Smart AI-Ready &amp; 3-Hop Tor VPN.</h2>
-        <p>Powered by an integrated 3-hop encrypted routing core with remote SOCKS5 DNS, WebRTC IP shielding, a fail-closed kill-switch, and 2-second New IP rotation — no Windows kernel drivers required.</p>
-      </div>
-
-      <div class="vpn-showcase glass-card reveal">
-        <div class="vpn-console">
-          <div class="vpn-console-head">
-            <div class="vpn-route-badge">
-              <span class="vpn-live-dot"></span>
-              <span id="vpn-stage-protocol">3-Hop Encrypted · Remote DNS</span>
-            </div>
-            <button type="button" class="vpn-rotate-cta" id="vpn-stage-rotate">
-              <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true">
-                <path d="M13 8a5 5 0 1 1-1.4-3.5M12 2.4v2.4H9.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span>1-Click New IP</span>
-            </button>
-          </div>
-
-          <div class="vpn-hero-readout">
-            <div class="vpn-selected-country">
-              <span class="vpn-code-badge" id="vpn-stage-code">US</span>
-              <div>
-                <h3 id="vpn-stage-name">United States</h3>
-                <p id="vpn-stage-region">North America · High-Capacity Node</p>
-              </div>
-            </div>
-
-            <!-- 3-Hop Visual Circuit -->
-            <div class="vpn-circuit" aria-label="3-hop encrypted tunnel visualization">
-              <div class="circuit-node">
-                <span class="cn-ring"></span>
-                <small>You (dejavu)</small>
-              </div>
-              <div class="circuit-line"><span>AES-256</span></div>
-              <div class="circuit-node">
-                <span class="cn-ring mid"></span>
-                <small>Guard Relay</small>
-              </div>
-              <div class="circuit-line"><span>3-Hop</span></div>
-              <div class="circuit-node">
-                <span class="cn-ring exit"></span>
-                <small id="vpn-circuit-exit">US Exit</small>
-              </div>
-            </div>
-
-            <div class="vpn-metrics-row">
-              <div class="vm-box">
-                <small>Verified Exit IP</small>
-                <strong id="vpn-stage-ip">185.220.101.44</strong>
-              </div>
-              <div class="vm-box">
-                <small>DNS Resolution</small>
-                <strong>Remote SOCKS5</strong>
-              </div>
-              <div class="vm-box">
-                <small>Kill-Switch</small>
-                <strong>Fail-Closed</strong>
-              </div>
-              <div class="vm-box">
-                <small>WebRTC Leak</small>
-                <strong>Shielded</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Region Filter Pills + Interactive 46-Country Grid -->
-        <div class="vpn-explorer">
-          <div class="vpn-filter-bar" id="vpn-region-filters" role="tablist" aria-label="Filter VPN countries by region">
-            <button type="button" class="vf-pill active" data-region="all">All 46</button>
-            <button type="button" class="vf-pill" data-region="Americas">Americas</button>
-            <button type="button" class="vf-pill" data-region="Europe">Europe</button>
-            <button type="button" class="vf-pill" data-region="Asia-Pacific">Asia-Pacific</button>
-            <button type="button" class="vf-pill" data-region="MEA">MEA</button>
-          </div>
-          <div class="vpn-country-grid" id="vpn-country-grid"></div>
-        </div>
-      </div>
-
-      <div class="vpn-pillars-grid">
-        <div class="vp-mini glass-card reveal">
-          <strong>3-Hop Encryption</strong>
-          <p>Traffic is wrapped in three independent encryption layers so no single relay sees both who you are and where you browse.</p>
-        </div>
-        <div class="vp-mini glass-card reveal">
-          <strong>Zero-Leak Remote DNS</strong>
-          <p>Hostnames resolve strictly over SOCKS5 ATYP=0x03 at the exit node — never through your local Windows ISP resolver.</p>
-        </div>
-        <div class="vp-mini glass-card reveal">
-          <strong>Fail-Closed Kill-Switch</strong>
-          <p>If the encrypted tunnel drops or switches countries, browser sockets reset immediately so raw traffic never leaks.</p>
-        </div>
-        <div class="vp-mini glass-card reveal">
-          <strong>WebRTC &amp; Auto-Connect</strong>
-          <p>Neutralizes local IP exposure via WebRTC and optionally reconnects automatically the instant you launch dejavu.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================================================================
-         SECTION 5: 100/100 NATIVE AD BLOCKER & SPEED STRIP
-         ================================================================ -->
-    <section id="adblocker" class="section container">
-      <div class="section-head reveal">
-        <span class="eyebrow">Native Speed · Built-in Privacy Shield</span>
-        <h2>100/100 ad blocking.<br>~4 MB native footprint.</h2>
-        <p>No bloated Electron runtime, no extension store hunt. dejavu compiles directly to native Windows WebView2 Chromium with an always-on network and cosmetic shield.</p>
-      </div>
-
-      <div class="stats-strip reveal">
-        <div class="stat-card glass-card">
-          <div class="stat-value text-prism" data-count-target="100" data-count-suffix="/100">100/100</div>
-          <div class="stat-label">AdBlock Tester Score</div>
-          <p>Active out of the box with zero configuration or third-party add-ons.</p>
-        </div>
-
-        <div class="stat-card glass-card">
-          <div class="stat-value text-prism" data-count-target="279000" data-count-suffix="+">279,000+</div>
-          <div class="stat-label">Network Filter Domains</div>
-          <p>Curated OISD Big, EasyList, EasyPrivacy, uBlock Origin &amp; Peter Lowe rules.</p>
-        </div>
-
-        <div class="stat-card glass-card">
-          <div class="stat-value text-prism" data-count-target="8400" data-count-suffix="+">8,400+</div>
-          <div class="stat-label">Cosmetic &amp; YouTube Rules</div>
-          <p>Cleanly neutralizes video pre-rolls, promoted feeds, and empty ad frames.</p>
-        </div>
-
-        <div class="stat-card glass-card">
-          <div class="stat-value text-prism">~4 MB</div>
-          <div class="stat-label">Single-File Footprint</div>
-          <p>Native .NET 4.8 + system WebView2 Chromium — zero Electron, instant launch.</p>
-        </div>
-      </div>
-
-      <div class="footprint-card glass-card reveal">
-        <div class="fp-header">
-          <div>
-            <h3>Native WebView2 Architecture vs. Bundled Electron Browsers</h3>
-            <p>Reuses Windows' GPU-accelerated Edge Chromium engine already updated by Microsoft — keeping installs tiny and memory crisp.</p>
-          </div>
-          <span class="fp-tag">Zero Node.js · Zero Bundled Chromium Duplication</span>
-        </div>
-        <div class="fp-bars">
-          <div class="fp-row">
-            <div class="fp-row-label">
-              <strong>dejavu (Native WebView2)</strong>
-              <span>~4 MB binary · Instant cold start</span>
-            </div>
-            <div class="fp-track"><div class="fp-fill dejavu-fill" style="width: 6%"></div></div>
-          </div>
-          <div class="fp-row muted">
-            <div class="fp-row-label">
-              <strong>Typical Electron / Bundled Chromium Shell</strong>
-              <span>~180–320 MB binary · Heavy duplicate runtime</span>
-            </div>
-            <div class="fp-track"><div class="fp-fill other-fill" style="width: 92%"></div></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================================================================
-         SECTION 6: INTERACTIVE BUTTERFLY STUDIO WALLPAPER SHOWCASE
-         ================================================================ -->
+    <!-- =================================================================
+         INTERACTIVE HD BUTTERFLY WALLPAPER GALLERY
+         ================================================================= -->
     <section id="wallpapers" class="section container">
-      <div class="section-head reveal">
-        <span class="eyebrow">Butterfly Studio · 26 Built-in Themes</span>
-        <h2>16 bespoke dejavu HD masterpieces.<br>Live-preview every one.</h2>
-        <p>Click any high-resolution 2K artwork below to experience how dejavu pairs luminous wing art with a calm, crystal-clear Start Page — plus 10 live 60fps interactive motion themes, macOS Safari Options (Ctrl+,), and custom photo uploads.</p>
+      <div class="section-head">
+        <span class="eyebrow">26 Themes · 12 Bundled on Android</span>
+        <h2>Click any HD Butterfly wallpaper to preview it live.</h2>
       </div>
 
-      <div class="wallpaper-showcase reveal">
-        <div class="wp-stage glass-card" id="wp-stage">
-          <img class="wp-stage-img current" id="wp-stage-img-a" src="assets/wallpapers/wp-velvet-mirage.jpg" alt="Velvet Mirage Wallpaper Preview">
-          <img class="wp-stage-img next" id="wp-stage-img-b" src="assets/wallpapers/wp-velvet-mirage.jpg" alt="" aria-hidden="true">
-          <div class="wp-stage-vignette" aria-hidden="true"></div>
-
-          <!-- Top Stage Bar -->
-          <div class="wp-stage-topbar">
-            <div class="wp-stage-meta glass-pill">
-              <strong id="wp-active-name">Amethyst Glasswing</strong>
-              <span id="wp-active-desc">Macro crystalline amethyst &amp; iridescent violet wings</span>
-            </div>
-            <button type="button" class="wp-toggle-ui glass-pill" id="wp-toggle-ui">Hide Start Page UI</button>
-          </div>
-
-          <!-- Simulated Frosted dejavu Start Page Card -->
-          <div class="wp-startpage-overlay" id="wp-startpage-overlay">
-            <div class="wp-sp-card">
-              <div class="wp-sp-header">
-                <img src="assets/logo-transparent.png" alt="dejavu" width="32" height="32">
-                <span>dejavu</span>
-              </div>
-              <div class="wp-sp-search-mock">
-                <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true"><circle cx="7.2" cy="7.2" r="4.5" stroke="currentColor" stroke-width="1.45"/><path d="M10.8 10.8L13.8 13.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                <span>Search or enter website name</span>
-              </div>
-              <div class="wp-sp-tiles">
-                <span class="wp-tile"><span>▶</span><small>YouTube</small></span>
-                <span class="wp-tile"><span>GH</span><small>GitHub</small></span>
-                <span class="wp-tile"><span>W</span><small>Wikipedia</small></span>
-                <span class="wp-tile"><span>♫</span><small>Spotify</small></span>
-                <span class="wp-tile"><span>F</span><small>Figma</small></span>
-              </div>
-              <div class="wp-sp-footer-pill">
-                <span class="wp-green-dot"></span>
-                <span>Privacy Report · 100/100 Shield Active · VPN Ready</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 10 Artwork Thumbnail Selector Strip -->
-        <div class="wp-thumbs-grid" id="wp-thumbs-grid" role="listbox" aria-label="Butterfly Studio Wallpaper Gallery"></div>
-
-        <div class="wp-live-note glass-pill">
-          <span>+ 10 Live 60fps Interactive Motion Themes</span>
-          <span class="pill-sep" aria-hidden="true">·</span>
-          <span>Obsidian Prism, Morpho Abyss, Aurora Borealis, Halftone Swarm &amp; more</span>
-          <span class="pill-sep" aria-hidden="true">·</span>
-          <span>Custom Photo Upload</span>
-        </div>
+      <div class="wp-gallery" id="wp-gallery">
+        <button type="button" class="wp-card active" data-wp="assets/wallpapers/wp-velvet-mirage.jpg">
+          <img src="assets/wallpapers/wp-velvet-mirage.jpg" alt="Velvet Mirage" loading="lazy">
+          <span>Velvet Mirage</span>
+        </button>
+        <button type="button" class="wp-card" data-wp="assets/wallpapers/wp-prism-cascade.jpg">
+          <img src="assets/wallpapers/wp-prism-cascade.jpg" alt="Prism Cascade" loading="lazy">
+          <span>Prism Cascade</span>
+        </button>
+        <button type="button" class="wp-card" data-wp="assets/wallpapers/wp-midnight-orchid.jpg">
+          <img src="assets/wallpapers/wp-midnight-orchid.jpg" alt="Midnight Orchid" loading="lazy">
+          <span>Midnight Orchid</span>
+        </button>
+        <button type="button" class="wp-card" data-wp="assets/wallpapers/wp-phantom-lotus.jpg">
+          <img src="assets/wallpapers/wp-phantom-lotus.jpg" alt="Phantom Lotus" loading="lazy">
+          <span>Phantom Lotus</span>
+        </button>
+        <button type="button" class="wp-card" data-wp="assets/wallpapers/wp-opal-horizon.jpg">
+          <img src="assets/wallpapers/wp-opal-horizon.jpg" alt="Opal Horizon" loading="lazy">
+          <span>Opal Horizon</span>
+        </button>
+        <button type="button" class="wp-card" data-wp="assets/wallpapers/wp-stardust-sanctuary.jpg">
+          <img src="assets/wallpapers/wp-stardust-sanctuary.jpg" alt="Stardust Sanctuary" loading="lazy">
+          <span>Stardust Sanctuary</span>
+        </button>
+        <button type="button" class="wp-card" data-wp="assets/wallpapers/wp-aurora.jpg">
+          <img src="assets/wallpapers/wp-aurora.jpg" alt="Aurora Glasswing" loading="lazy">
+          <span>Aurora Glasswing</span>
+        </button>
+        <button type="button" class="wp-card" data-wp="assets/wallpapers/wp-sakura.jpg">
+          <img src="assets/wallpapers/wp-sakura.jpg" alt="Sakura Bloom" loading="lazy">
+          <span>Sakura Bloom</span>
+        </button>
       </div>
     </section>
 
-    <!-- ================================================================
-         SECTION 7: BUTTERFLY PROFILES (16 AVATARS) & AUTO-UPDATER
-         ================================================================ -->
-    <section id="profiles" class="section container">
-      <div class="section-head reveal">
-        <span class="eyebrow">Profiles &amp; Seamless Updates</span>
-        <h2>16 collectible Butterfly profiles.<br>Zero-friction auto-updates.</h2>
-        <p>Keep Work, Personal, and Creative worlds strictly separated — each with its own cookies, logins, Tab Groups, Reading List, favorites, and wallpaper.</p>
-      </div>
-
-      <div class="profiles-layout">
-        <div class="profiles-card glass-card reveal">
-          <div class="prof-header">
-            <div class="prof-active-preview" id="prof-active-preview">
-              <div id="prof-preview-avatar"></div>
-              <div>
-                <span class="prof-tag">Isolated Profile Container</span>
-                <h3 id="prof-preview-name">DejaVu Halftone</h3>
-                <p id="prof-preview-sub">Separate Cookies · Logins · Tab Groups · Favorites · Wallpapers</p>
-              </div>
-            </div>
-            <span class="prof-count-pill">16 Avatars</span>
-          </div>
-
-          <div class="avatar-grid" id="avatar-grid" role="listbox" aria-label="16 Collectible Butterfly Profile Avatars"></div>
-        </div>
-
-        <div class="updater-card glass-card reveal">
-          <div class="updater-badge">Silent Background Auto-Updater</div>
-          <h3>Always current.<br>Never intrusive.</h3>
-          <p>dejavu quietly checks official GitHub Releases in the background, downloads verified updates seamlessly, and lets you apply them with one calm click.</p>
-
-          <div class="updater-mock-pill">
-            <div class="ump-left">
-              <span class="ump-dot"></span>
-              <div>
-                <strong id="updater-mock-ver">dejavu v2.9.0 Ready</strong>
-                <small>Verified GitHub Release · In-place update</small>
-              </div>
-            </div>
-            <span class="ump-btn">Restart &amp; Update</span>
-          </div>
-
-          <ul class="updater-checks">
-            <li>Zero background daemon bloat when closed</li>
-            <li>Preserves all profiles, Tab Groups &amp; Reading List</li>
-            <li>Open-source CI builds directly from GitHub Actions</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================================================================
-         SECTION 8: KEYBOARD SHORTCUTS REFERENCE
-         ================================================================ -->
+    <!-- =================================================================
+         KEYBOARD SHORTCUTS
+         ================================================================= -->
     <section id="shortcuts" class="section container">
-      <div class="section-head reveal">
-        <span class="eyebrow">Muscle-Memory Fluency</span>
-        <h2>Built for keyboard speed.</h2>
-        <p>Every familiar Safari and Windows browser shortcut works natively out of the box.</p>
+      <div class="section-head">
+        <span class="eyebrow">Power-User Ergonomics</span>
+        <h2>Every desktop shortcut right where your fingers expect.</h2>
       </div>
-
-      <div class="shortcuts-grid reveal">
-        <div class="sc-group glass-card">
-          <h3>Tabs &amp; Navigation</h3>
-          <dl class="sc-list">
-            <div><dt><kbd>Ctrl</kbd><kbd>T</kbd></dt><dd>New Tab</dd></div>
-            <div><dt><kbd>Ctrl</kbd><kbd>W</kbd></dt><dd>Close Active Tab</dd></div>
-            <div><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>T</kbd></dt><dd>Reopen Closed Tab</dd></div>
-            <div><dt><kbd>Ctrl</kbd><kbd>1</kbd>–<kbd>9</kbd></dt><dd>Jump to Tab 1–8 / Last Tab</dd></div>
-            <div><dt><kbd>Ctrl</kbd><kbd>M</kbd></dt><dd>Mute / Unmute Tab Audio</dd></div>
-          </dl>
-        </div>
-
-        <div class="sc-group glass-card">
-          <h3>Safari Views &amp; Search</h3>
-          <dl class="sc-list">
-            <div><dt><kbd>Ctrl</kbd><kbd>L</kbd></dt><dd>Focus Smart Search Field</dd></div>
-            <div><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>O</kbd></dt><dd>Safari Tab Overview Grid</dd></div>
-            <div><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>L</kbd></dt><dd>Floating Tahoe Sidebar</dd></div>
-            <div><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>R</kbd></dt><dd>Safari Reader Mode</dd></div>
-            <div><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>D</kbd></dt><dd>Add / Remove Reading List</dd></div>
-          </dl>
-        </div>
-
-        <div class="sc-group glass-card">
-          <h3>Library &amp; Window</h3>
-          <dl class="sc-list">
-            <div><dt><kbd>Ctrl</kbd><kbd>D</kbd></dt><dd>Toggle Favorite</dd></div>
-            <div><dt><kbd>Ctrl</kbd><kbd>H</kbd></dt><dd>Browsing History</dd></div>
-            <div><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd></dt><dd>Profiles &amp; Auto-Updates</dd></div>
-            <div><dt><kbd>Ctrl</kbd><kbd>F</kbd></dt><dd>Find on Page</dd></div>
-            <div><dt><kbd>F11</kbd></dt><dd>Toggle Fullscreen</dd></div>
-          </dl>
-        </div>
+      <div class="kbd-grid">
+        <div class="kbd-card"><span>New Tab</span><kbd>Ctrl + T</kbd></div>
+        <div class="kbd-card"><span>Close Tab</span><kbd>Ctrl + W</kbd></div>
+        <div class="kbd-card"><span>Reopen Closed Tab</span><kbd>Ctrl + Shift + T</kbd></div>
+        <div class="kbd-card"><span>Samsung Side Panel</span><kbd>Ctrl + Shift + L</kbd></div>
+        <div class="kbd-card"><span>Tab Overview Grid</span><kbd>Ctrl + Shift + O</kbd></div>
+        <div class="kbd-card"><span>Quick Access Bar</span><kbd>Ctrl + Shift + B</kbd></div>
+        <div class="kbd-card"><span>Settings (Material You)</span><kbd>Ctrl + ,</kbd></div>
+        <div class="kbd-card"><span>Reader View</span><kbd>Ctrl + Shift + R</kbd></div>
+        <div class="kbd-card"><span>Focus Omnibox</span><kbd>Ctrl + L</kbd></div>
+        <div class="kbd-card"><span>History</span><kbd>Ctrl + H</kbd></div>
+        <div class="kbd-card"><span>Downloads</span><kbd>Ctrl + J</kbd></div>
+        <div class="kbd-card"><span>Find on Page</span><kbd>Ctrl + F</kbd></div>
       </div>
     </section>
 
-    <!-- ================================================================
-         SECTION 9: FINAL DOWNLOAD CTA & BUILD FROM SOURCE
-         ================================================================ -->
+    <!-- =================================================================
+         DOWNLOAD SECTION (WINDOWS + ANDROID APK)
+         ================================================================= -->
     <section id="download" class="section container">
-      <div class="download-finale glass-card reveal">
-        <div class="df-emblem">
-          <img src="assets/logo-transparent.png" alt="dejavu emblem" width="64" height="64">
-        </div>
-        <span class="eyebrow" id="df-release-label">Latest Release · v2.9.0</span>
-        <h2>Step into quieter glass.</h2>
-        <p>Download the native Windows 10/11 (x64) installer or portable single-file executable — free, open source, and ready in seconds.</p>
-
-        <div class="df-cards">
-          <a id="dl-card-setup" class="dl-option primary" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-Setup.exe">
-            <div class="dlo-top">
-              <span class="dlo-badge">Recommended</span>
-              <span class="dlo-size" id="dl-setup-size">~5.3 MB</span>
-            </div>
-            <strong>dejavu-Setup.exe</strong>
-            <p>Butterfly Liquid Glass installer · Desktop &amp; Start Menu shortcuts · Silent Auto-Updater · No admin required.</p>
-            <span class="dlo-action">Download Installer &rarr;</span>
-          </a>
-
-          <a id="dl-card-portable" class="dl-option secondary" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu.exe">
-            <div class="dlo-top">
-              <span class="dlo-badge">Portable</span>
-              <span class="dlo-size" id="dl-portable-size">~3.7 MB</span>
-            </div>
-            <strong>dejavu.exe</strong>
-            <p>Standalone single-file native executable · Double-click and browse immediately with zero installation.</p>
-            <span class="dlo-action">Download Portable &rarr;</span>
-          </a>
+      <div class="dl-hero-card">
+        <div class="section-head" style="margin-bottom:28px;">
+          <span class="eyebrow" id="dl-ver-eyebrow">Latest Official Release · v4.0.0</span>
+          <h2>Get dejavu on Windows &amp; Android.</h2>
+          <p class="dl-sub">Signed GitHub Releases with built-in automatic updates on both PC and phone.</p>
         </div>
 
-        <div class="df-build-box">
-          <div class="dfb-head">
-            <span>Prefer compiling yourself? Zero Visual Studio required (.NET 4.8 csc.exe):</span>
-            <button type="button" class="dfb-copy" id="copy-build-cmd">Copy PowerShell</button>
-          </div>
-          <pre><code>git clone https://github.com/Dathevinci/Dejavu-browser.git
-cd Dejavu-browser
-powershell -ExecutionPolicy Bypass -File .\build.ps1</code></pre>
+        <div class="dl-cards">
+          <a id="card-dl-setup" class="dl-card featured" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-Setup.exe">
+            <span class="dl-tag">Recommended · Windows</span>
+            <h3>Windows Installer</h3>
+            <p>Guided installer with Start Menu shortcut, URL associations, and silent auto-updates.</p>
+            <div class="dl-foot">
+              <strong id="card-setup-size">dejavu-Setup.exe</strong>
+              <span class="m3-filled-btn sm">Download</span>
+            </div>
+          </a>
+
+          <a id="card-dl-android" class="dl-card" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu-mobile.apk">
+            <span class="dl-tag">Android 8.0+ · Signed APK</span>
+            <h3>dejavu Mobile (.apk)</h3>
+            <p>Google Pixel Material You UI, Samsung bottom bar, live tab thumbnails, PC QR sync &amp; in-app updater.</p>
+            <div class="dl-foot">
+              <strong id="card-android-size">dejavu-mobile.apk</strong>
+              <span class="m3-tonal-btn sm">Download APK</span>
+            </div>
+          </a>
+
+          <a id="card-dl-portable" class="dl-card" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/dejavu.exe">
+            <span class="dl-tag">Zero Install · Windows x64</span>
+            <h3>Portable Single-File</h3>
+            <p>Run straight from any folder or USB drive with no admin permissions required.</p>
+            <div class="dl-foot">
+              <strong id="card-portable-size">dejavu.exe</strong>
+              <span class="m3-tonal-btn sm">Download</span>
+            </div>
+          </a>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- Minimal Apple-Grade Footer -->
-  <footer class="site-footer container">
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <img src="assets/logo-transparent.png" alt="dejavu" width="24" height="24">
-        <span><strong>dejavu</strong> · Native Butterfly Liquid Glass Browser for Windows</span>
-      </div>
-      <div class="footer-links">
-        <a href="https://github.com/Dathevinci/Dejavu-browser" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="https://github.com/Dathevinci/Dejavu-browser/releases" target="_blank" rel="noopener noreferrer">Releases</a>
-        <a href="https://github.com/Dathevinci/Dejavu-browser/issues" target="_blank" rel="noopener noreferrer">Issues</a>
-        <a href="#hero">Back to top &uarr;</a>
-      </div>
+  <footer class="m3-footer container">
+    <div class="foot-left">
+      <img src="assets/logo-transparent.png" width="22" height="22" alt="">
+      <strong>dejavu</strong>
+      <span>Material You Browser for Windows &amp; Android</span>
+    </div>
+    <div class="foot-links">
+      <a href="https://github.com/Dathevinci/Dejavu-browser" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://github.com/Dathevinci/Dejavu-browser/releases" target="_blank" rel="noopener noreferrer">Releases</a>
+      <a href="https://github.com/Dathevinci/Dejavu-browser/issues" target="_blank" rel="noopener noreferrer">Issues</a>
     </div>
   </footer>
 

@@ -491,11 +491,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     private int resolveAccentInt(boolean isLight) {
-        if ("sapphire".equals(accentColor)) return isLight ? 0xFF0284C7 : 0xFF5EB4FF;
-        if ("aurora".equals(accentColor))   return isLight ? 0xFF0D9488 : 0xFF43E2B2;
-        if ("rose".equals(accentColor))     return isLight ? 0xFFDB2777 : 0xFFF472B6;
-        if ("gold".equals(accentColor))     return isLight ? 0xFFD97706 : 0xFFF5B942;
-        return isLight ? 0xFF7C4DFF : 0xFFC79DFF;
+        if ("sapphire".equals(accentColor)) return isLight ? 0xFF1B6EF3 : 0xFFA8C7FA;
+        if ("aurora".equals(accentColor))   return isLight ? 0xFF006A60 : 0xFF7BD8C6;
+        if ("rose".equals(accentColor))     return isLight ? 0xFFA83268 : 0xFFFFB0CE;
+        if ("gold".equals(accentColor))     return isLight ? 0xFF8A5600 : 0xFFFFB951;
+        if ("silver".equals(accentColor))   return isLight ? 0xFF455A77 : 0xFFB8C8E2;
+        return isLight ? 0xFF6750A4 : 0xFFD0BCFF;
     }
 
     private void applyNativeTheme() {
@@ -503,9 +504,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         MobileTab active = getActiveTab();
         boolean isPriv = active != null && active.isPrivate;
 
-        int bgColor = isLight ? 0xFFF5F3FC : 0xFF07060D;
-        int inkPrimary = isLight ? 0xFF141122 : 0xFFF6F4FF;
-        int inkMuted = isLight ? 0xFF635B7E : 0xFFAFA6CE;
+        int bgColor = isLight ? 0xFFFDFBFF : 0xFF131218;
+        int inkPrimary = isLight ? 0xFF1D1B20 : 0xFFE6E1EC;
+        int inkMuted = isLight ? 0xFF49454F : 0xFFC8C2D4;
         int accent = resolveAccentInt(isLight);
 
         try {

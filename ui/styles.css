@@ -119,93 +119,50 @@ html, body {
 }
 
 /* ==========================================================================
-   Core REAL Liquid Glass Optical Surface Class
-   Applied immediately so pills NEVER flash unstyled white before JS mounts.
+   Core Google Pixel Material Design 3 Surface Classes (ZERO Glass / ZERO Blur)
    ========================================================================== */
 [data-liquid-glass],
 .glass-pill,
 .glass-card,
 .liquid-glass {
   position: relative;
-  background: var(--glass-tint);
+  background: var(--md-surface-container, #211f2a);
   color: var(--ink);
-  backdrop-filter: var(--lg-filter);
-  -webkit-backdrop-filter: var(--lg-filter);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--md-outline-variant, #494554);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.20);
   isolation: isolate;
   transition:
-    transform 0.40s var(--apple-spring),
-    background 0.22s var(--apple-fluid),
-    border-color 0.22s var(--apple-fluid),
-    opacity 0.22s var(--apple-fluid);
+    transform 0.24s var(--apple-fluid),
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    opacity 0.18s ease;
 }
 
 button.glass-pill:active,
 button[data-liquid-glass]:active {
-  transition-duration: 0.10s;
-  transition-timing-function: var(--apple-press);
+  transition-duration: 0.08s;
+  transform: scale(0.97);
 }
 
-/* Unified Apple Boot Reveal (zero flash of default wallpaper or unstyled pills!) */
+/* Unified Boot Reveal */
 body.app-booting #chrome-header,
 body.app-booting #newtab-view {
   opacity: 0 !important;
-  transform: translateY(8px) scale(0.988);
+  transform: translateY(6px);
   pointer-events: none;
 }
 
 body.app-booting #newtab-canvas {
   opacity: 0 !important;
-  transform: scale(1.032);
+  transform: scale(1.02);
 }
 
 #chrome-header {
-  transition: opacity 0.40s var(--apple-fluid), transform 0.46s var(--apple-fluid);
+  transition: opacity 0.30s var(--apple-fluid), transform 0.34s var(--apple-fluid);
 }
 
 #newtab-canvas {
-  transition: opacity 0.46s var(--apple-fluid), transform 0.64s var(--apple-fluid);
-}
-
-/* Exact Fresnel Specular Caustic Rim generated from SDF surface normals */
-.liquid-glass::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background-image: var(--lg-specular);
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  pointer-events: none;
-  z-index: 3;
-  opacity: var(--spec-opacity);
-}
-
-/* Interactive Pointer-Tracked Liquid Caustic Shimmer */
-.liquid-glass::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(
-    180px circle at var(--lg-mx, -200px) var(--lg-my, -200px),
-    var(--caustic-spot),
-    transparent 68%
-  );
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0;
-  transition: opacity 0.24s ease;
-}
-
-.liquid-glass:hover::after {
-  opacity: 1;
-}
-
-.liquid-glass > * {
-  position: relative;
-  z-index: 1;
+  transition: opacity 0.36s var(--apple-fluid), transform 0.48s var(--apple-fluid);
 }
 
 .glass-pill {
@@ -213,8 +170,8 @@ body.app-booting #newtab-canvas {
 }
 
 .glass-card {
-  border-radius: 22px;
-  background: var(--glass-tint-strong);
+  border-radius: 24px;
+  background: var(--md-surface-container-high, #2b2936);
 }
 
 /* ==========================================================================
@@ -4916,4 +4873,907 @@ body.force-light .settings-toast {
   background: #ffffff;
   color: #100e1a;
   box-shadow: 0 10px 28px rgba(24, 16, 64, 0.18), 0 0 12px var(--accent-glow);
+}
+
+
+/* ==========================================================================
+   dejavu v4.0 — GOOGLE PIXEL MATERIAL DESIGN 3 EXPRESSIVE × SAMSUNG INTERNET PC
+   Pure HCT tonal surface elevation, M3 pill switches with checkmarks,
+   M3 segmented buttons, M3 Extended FABs, Samsung Internet top-tab &
+   Side Panel ergonomics. ZERO Liquid Glass, ZERO neon rims, ZERO CSS blur.
+   ========================================================================== */
+
+:root {
+  --md-surface: #131218;
+  --md-surface-container-lowest: #0d0c12;
+  --md-surface-container-low: #1b1a22;
+  --md-surface-container: #22202b;
+  --md-surface-container-high: #2c2937;
+  --md-surface-container-highest: #363344;
+  --md-on-surface: #e6e1ec;
+  --md-on-surface-variant: #c8c2d4;
+  --md-outline: #928d9e;
+  --md-outline-variant: #484454;
+
+  --md-primary: #d0bcff;
+  --md-on-primary: #381e72;
+  --md-primary-container: #4f378b;
+  --md-on-primary-container: #eaddff;
+  --md-secondary-container: #3c3454;
+  --md-on-secondary-container: #e8def8;
+  --md-tertiary: #7bd8c6;
+  --md-tertiary-container: #1b443d;
+  --md-on-tertiary-container: #a3f2e5;
+  --md-error: #ffb4ab;
+  --md-error-container: #690018;
+
+  /* Map legacy vars to crisp M3 tokens so every legacy component inherits M3 */
+  --ink: var(--md-on-surface);
+  --ink-muted: var(--md-on-surface-variant);
+  --ink-subtle: var(--md-outline);
+  --accent: var(--md-primary);
+  --accent-bright: var(--md-on-primary-container);
+  --accent-glow: rgba(208, 188, 255, 0.22);
+  --shield-on: var(--md-primary);
+  --shield-green: var(--md-tertiary);
+  --glass-tint: var(--md-surface-container);
+  --glass-tint-strong: var(--md-surface-container-high);
+  --glass-tint-active: var(--md-secondary-container);
+  --glass-border: var(--md-outline-variant);
+  --glass-hover-bg: var(--md-surface-container-highest);
+  --glass-shadow: 0 2px 10px rgba(0, 0, 0, 0.24);
+}
+
+/* Google Pixel Material You Dynamic Color Seeds — Dark Mode */
+:root[data-accent="sapphire"] {
+  --md-surface: #111318;
+  --md-surface-container-low: #191c24;
+  --md-surface-container: #1f232d;
+  --md-surface-container-high: #282d3a;
+  --md-surface-container-highest: #333949;
+  --md-primary: #a8c7fa;
+  --md-on-primary: #062e6f;
+  --md-primary-container: #0842a0;
+  --md-on-primary-container: #d3e3fd;
+  --md-secondary-container: #2b3a55;
+  --md-on-secondary-container: #d6e3ff;
+  --md-outline-variant: #424754;
+}
+:root[data-accent="aurora"] {
+  --md-surface: #101413;
+  --md-surface-container-low: #171e1c;
+  --md-surface-container: #1d2523;
+  --md-surface-container-high: #26302d;
+  --md-surface-container-highest: #303c38;
+  --md-primary: #7bd8c6;
+  --md-on-primary: #003731;
+  --md-primary-container: #005048;
+  --md-on-primary-container: #a3f2e5;
+  --md-secondary-container: #26423d;
+  --md-on-secondary-container: #cce8e2;
+  --md-outline-variant: #3e4946;
+}
+:root[data-accent="rose"] {
+  --md-surface: #161114;
+  --md-surface-container-low: #20191d;
+  --md-surface-container: #281f24;
+  --md-surface-container-high: #33272e;
+  --md-surface-container-highest: #3e3139;
+  --md-primary: #ffb0ce;
+  --md-on-primary: #5e1135;
+  --md-primary-container: #7c294c;
+  --md-on-primary-container: #ffd8e6;
+  --md-secondary-container: #532c3d;
+  --md-on-secondary-container: #ffd8e6;
+  --md-outline-variant: #514349;
+}
+:root[data-accent="gold"] {
+  --md-surface: #16130e;
+  --md-surface-container-low: #201c15;
+  --md-surface-container: #272219;
+  --md-surface-container-high: #322c21;
+  --md-surface-container-highest: #3d3629;
+  --md-primary: #ffb951;
+  --md-on-primary: #452b00;
+  --md-primary-container: #633f00;
+  --md-on-primary-container: #ffddb3;
+  --md-secondary-container: #4a391e;
+  --md-on-secondary-container: #f8dfa8;
+  --md-outline-variant: #4f4639;
+}
+:root[data-accent="silver"] {
+  --md-surface: #121316;
+  --md-surface-container-low: #1a1c20;
+  --md-surface-container: #202329;
+  --md-surface-container-high: #2a2d35;
+  --md-surface-container-highest: #353942;
+  --md-primary: #b8c8e2;
+  --md-on-primary: #223146;
+  --md-primary-container: #38485e;
+  --md-on-primary-container: #d8e4f8;
+  --md-secondary-container: #343d4c;
+  --md-on-secondary-container: #dce4f2;
+  --md-outline-variant: #44474f;
+}
+
+/* Google Pixel Material Design 3 — Light Mode */
+body.theme-light,
+body.force-light {
+  --md-surface: #fdfbff;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #f6f2fa;
+  --md-surface-container: #efeaf5;
+  --md-surface-container-high: #e8e1f0;
+  --md-surface-container-highest: #e1d9ea;
+  --md-on-surface: #1d1b20;
+  --md-on-surface-variant: #49454f;
+  --md-outline: #79747e;
+  --md-outline-variant: #cac4d0;
+
+  --md-primary: #6750a4;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #eaddff;
+  --md-on-primary-container: #21005d;
+  --md-secondary-container: #e4daf4;
+  --md-on-secondary-container: #1d192b;
+  --md-tertiary: #006a60;
+  --md-tertiary-container: #a3f2e5;
+  --md-on-tertiary-container: #00201c;
+  --md-error: #b3261e;
+  --md-error-container: #f9dedc;
+
+  --ink: var(--md-on-surface);
+  --ink-muted: var(--md-on-surface-variant);
+  --ink-subtle: var(--md-outline);
+  --accent: var(--md-primary);
+  --accent-bright: var(--md-primary);
+  --accent-glow: rgba(103, 80, 164, 0.18);
+  --shield-on: var(--md-primary);
+  --shield-green: var(--md-tertiary);
+  --glass-tint: var(--md-surface-container);
+  --glass-tint-strong: var(--md-surface-container-lowest);
+  --glass-tint-active: var(--md-secondary-container);
+  --glass-border: var(--md-outline-variant);
+  --glass-hover-bg: var(--md-surface-container-high);
+  --glass-shadow: 0 2px 10px rgba(29, 27, 32, 0.10);
+}
+
+body.theme-light[data-accent="sapphire"],
+body.force-light[data-accent="sapphire"] {
+  --md-surface: #fafbff;
+  --md-surface-container-low: #f1f5fc;
+  --md-surface-container: #e9effa;
+  --md-surface-container-high: #e0e8f6;
+  --md-surface-container-highest: #d6e0f2;
+  --md-primary: #1b6ef3;
+  --md-primary-container: #d3e3fd;
+  --md-on-primary-container: #041e49;
+  --md-secondary-container: #d8e5fb;
+  --md-on-secondary-container: #0b2447;
+}
+body.theme-light[data-accent="aurora"],
+body.force-light[data-accent="aurora"] {
+  --md-surface: #f7fbfa;
+  --md-surface-container-low: #eef6f4;
+  --md-surface-container: #e5f0ed;
+  --md-surface-container-high: #dceae6;
+  --md-surface-container-highest: #d2e3de;
+  --md-primary: #006a60;
+  --md-primary-container: #a3f2e5;
+  --md-on-primary-container: #00201c;
+  --md-secondary-container: #cde8e2;
+  --md-on-secondary-container: #05201c;
+}
+body.theme-light[data-accent="rose"],
+body.force-light[data-accent="rose"] {
+  --md-surface: #fffafb;
+  --md-surface-container-low: #fbf1f4;
+  --md-surface-container: #f5e8ed;
+  --md-surface-container-high: #efdfe6;
+  --md-surface-container-highest: #e8d5de;
+  --md-primary: #a83268;
+  --md-primary-container: #ffd8e6;
+  --md-on-primary-container: #3e001f;
+  --md-secondary-container: #f7dae5;
+  --md-on-secondary-container: #3a1123;
+}
+body.theme-light[data-accent="gold"],
+body.force-light[data-accent="gold"] {
+  --md-surface: #fffbf6;
+  --md-surface-container-low: #f9f3e9;
+  --md-surface-container: #f3eadb;
+  --md-surface-container-high: #ece1ce;
+  --md-surface-container-highest: #e4d7c1;
+  --md-primary: #8a5600;
+  --md-primary-container: #ffddb3;
+  --md-on-primary-container: #2c1700;
+  --md-secondary-container: #f4e0c2;
+  --md-on-secondary-container: #2b1d08;
+}
+body.theme-light[data-accent="silver"],
+body.force-light[data-accent="silver"] {
+  --md-surface: #fafbfd;
+  --md-surface-container-low: #f1f3f7;
+  --md-surface-container: #e8ecf2;
+  --md-surface-container-high: #dfe4ec;
+  --md-surface-container-highest: #d6dce6;
+  --md-primary: #455a77;
+  --md-primary-container: #d8e4f8;
+  --md-on-primary-container: #102036;
+  --md-secondary-container: #dce4f0;
+  --md-on-secondary-container: #172334;
+}
+
+html, body {
+  background: var(--md-surface);
+  color: var(--md-on-surface);
+}
+
+/* Hide legacy glass sheen overlay over top chrome */
+.top-backdrop-sheen {
+  display: none !important;
+}
+
+/* ==========================================================================
+   SAMSUNG INTERNET PC × PIXEL MATERIAL 3 CHROME HEADER (40px Tabs + 48px Nav)
+   ========================================================================== */
+#chrome-header {
+  background: var(--md-surface-container-low) !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+body.on-newtab #chrome-header {
+  background: var(--md-surface-container-low) !important;
+}
+
+/* Row 1: Samsung Internet Top Tab Bar (40px normal / 34px compact) */
+#tabbar.tabbar-row {
+  height: 40px !important;
+  padding: 5px 8px 0 8px !important;
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+  background: var(--md-surface-container-low) !important;
+}
+
+body.compact-tabs #tabbar.tabbar-row {
+  height: 34px !important;
+  padding-top: 3px !important;
+}
+
+.tabbar-brand-slot {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-bottom: 4px;
+  flex-shrink: 0;
+}
+
+#btn-home.brand-inner-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+}
+#btn-home.brand-inner-btn:hover {
+  background: var(--md-surface-container-high);
+}
+#btn-home.brand-inner-btn img {
+  width: 19px;
+  height: 19px;
+  object-fit: contain;
+}
+
+.group-badge-pill.m3-chip {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: none;
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#tabs-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+#tabs-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+  height: 100%;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#tabs-strip::-webkit-scrollbar { display: none; }
+
+/* Remove old Safari floating glide blob in favor of authentic top-connected M3 tabs */
+#active-tab-glide {
+  display: none !important;
+}
+
+.tab-pill,
+.tab-item {
+  height: 100% !important;
+  min-width: 112px;
+  max-width: 224px;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 0 10px 0 12px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--md-on-surface-variant) !important;
+  position: relative;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+.tab-pill::after,
+.tab-item::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 9px;
+  bottom: 9px;
+  width: 1px;
+  background: var(--md-outline-variant);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.tab-pill:hover,
+.tab-item:hover {
+  background: var(--md-surface-container-high) !important;
+  color: var(--md-on-surface) !important;
+}
+
+.tab-pill.active,
+.tab-item.active {
+  background: var(--md-surface-container) !important;
+  color: var(--md-on-surface) !important;
+  font-weight: 600;
+}
+
+.tab-pill.active::after,
+.tab-pill:hover::after,
+.tab-item.active::after,
+.tab-item:hover::after {
+  opacity: 0;
+}
+
+.tab-pill.active::before,
+.tab-item.active::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 0;
+  height: 2.5px;
+  border-radius: 0 0 4px 4px;
+  background: var(--md-primary);
+}
+
+.tab-close {
+  border-radius: 999px !important;
+  color: var(--md-on-surface-variant) !important;
+}
+.tab-close:hover {
+  background: var(--md-surface-container-highest) !important;
+  color: var(--md-on-surface) !important;
+}
+
+#btn-new-tab.m3-icon-btn {
+  width: 28px !important;
+  height: 28px !important;
+  align-self: center;
+  margin-bottom: 3px;
+  margin-left: 2px;
+  border-radius: 999px !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--md-on-surface-variant) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#btn-new-tab.m3-icon-btn:hover {
+  background: var(--md-surface-container-high) !important;
+  color: var(--md-on-surface) !important;
+}
+
+.win-pill {
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 2px 4px 4px !important;
+  height: auto !important;
+  flex-shrink: 0;
+}
+
+.win-btn {
+  width: 32px !important;
+  height: 28px !important;
+  border-radius: 999px !important;
+  color: var(--md-on-surface-variant) !important;
+  transition: background-color 0.14s ease, color 0.14s ease !important;
+}
+.win-btn:hover {
+  background: var(--md-surface-container-high) !important;
+  color: var(--md-on-surface) !important;
+}
+.win-btn.win-close:hover {
+  background: #ba1a1a !important;
+  color: #ffffff !important;
+}
+
+/* Row 2: Samsung Internet PC Navigation + Google Pixel M3 Pill Omnibox (48px) */
+#toolbar.toolbar-row {
+  height: 48px !important;
+  padding: 0 12px !important;
+  background: var(--md-surface-container) !important;
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  overflow: visible !important;
+}
+
+.toolbar-left,
+.toolbar-right,
+.util-pill {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  height: auto !important;
+}
+
+.m3-nav-btn,
+.util-pill .icon-btn,
+.omni-share-btn {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 999px !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--md-on-surface-variant) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+.m3-nav-btn:hover:not(:disabled),
+.util-pill .icon-btn:hover,
+.omni-share-btn:hover {
+  background: var(--md-surface-container-highest) !important;
+  color: var(--md-on-surface) !important;
+}
+
+#btn-reload.omnibox-reload-btn {
+  display: inline-flex !important;
+}
+
+/* Iconic Google Pixel Material 3 Pill Address Bar */
+#omnibox-pill.omnibox-pill {
+  position: relative !important;
+  flex: 1 1 260px !important;
+  min-width: 220px !important;
+  max-width: 660px !important;
+  margin: 0 auto !important;
+  height: 36px !important;
+  border-radius: 999px !important;
+  background: var(--md-surface-container-highest) !important;
+  border: 1.5px solid transparent !important;
+  box-shadow: none !important;
+  padding: 0 6px 0 8px !important;
+  transition: background-color 0.16s ease, border-color 0.16s ease !important;
+}
+
+/* Replace macOS traffic-light dots in Appearance preview cards with clean M3 tonal dots */
+.ap-dots i {
+  background: var(--md-outline) !important;
+  opacity: 0.45 !important;
+}
+
+body.theme-light #omnibox-pill.omnibox-pill,
+body.force-light #omnibox-pill.omnibox-pill {
+  background: var(--md-surface-container-lowest) !important;
+  border-color: var(--md-outline-variant) !important;
+}
+
+#omnibox-pill.omnibox-pill:hover {
+  border-color: var(--md-outline-variant) !important;
+}
+
+#omnibox-pill.omnibox-pill:focus-within,
+body.omnibox-focused #omnibox-pill.omnibox-pill {
+  background: var(--md-surface-container-low) !important;
+  border-color: var(--md-primary) !important;
+  box-shadow: 0 0 0 1px var(--md-primary) !important;
+}
+
+body.theme-light #omnibox-pill.omnibox-pill:focus-within,
+body.force-light #omnibox-pill.omnibox-pill:focus-within {
+  background: #ffffff !important;
+}
+
+.shield-chip {
+  height: 24px !important;
+  padding: 0 8px !important;
+  border-radius: 999px !important;
+  background: var(--md-secondary-container) !important;
+  color: var(--md-on-secondary-container) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}
+
+.shield-chip.active {
+  background: var(--md-primary-container) !important;
+  color: var(--md-on-primary-container) !important;
+}
+
+.omni-share-btn {
+  width: 26px !important;
+  height: 26px !important;
+}
+
+/* M3 Tonal VPN Pill */
+.vpn-trigger {
+  height: 32px !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--md-on-surface-variant) !important;
+  border: none !important;
+  gap: 5px !important;
+}
+.vpn-trigger:hover {
+  background: var(--md-surface-container-highest) !important;
+  color: var(--md-on-surface) !important;
+}
+.vpn-trigger.connected {
+  background: var(--md-tertiary-container) !important;
+  color: var(--md-on-tertiary-container) !important;
+  font-weight: 700 !important;
+}
+.vpn-trigger.connecting {
+  background: var(--md-primary-container) !important;
+  color: var(--md-on-primary-container) !important;
+}
+
+.profile-trigger {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 999px !important;
+  margin-left: 2px;
+}
+
+/* Row 3: Clean Samsung Quick Access / Favorites Bar */
+#favbar.favbar {
+  height: 34px !important;
+  background: var(--md-surface-container) !important;
+  border-top: 1px solid var(--md-outline-variant) !important;
+  padding: 0 14px !important;
+}
+
+.favbar-chip {
+  height: 24px !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  border: none !important;
+  color: var(--md-on-surface-variant) !important;
+  padding: 0 10px !important;
+}
+.favbar-chip:hover {
+  background: var(--md-surface-container-highest) !important;
+  color: var(--md-on-surface) !important;
+}
+
+/* ==========================================================================
+   SAMSUNG INTERNET QUICK ACCESS × GOOGLE PIXEL MATERIAL 3 START PAGE
+   ========================================================================== */
+#newtab-view {
+  color: var(--md-on-surface);
+}
+
+.sp-profile-badge {
+  background: var(--md-surface-container) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16) !important;
+  color: var(--md-on-surface) !important;
+}
+
+.hero-search {
+  height: 54px !important;
+  border-radius: 28px !important;
+  background: var(--md-surface-container-high) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important;
+}
+body.theme-light .hero-search,
+body.force-light .hero-search {
+  background: #ffffff !important;
+  box-shadow: 0 6px 22px rgba(29, 27, 32, 0.10) !important;
+}
+.hero-search:focus-within {
+  border-color: var(--md-primary) !important;
+  box-shadow: 0 0 0 1.5px var(--md-primary), 0 8px 24px rgba(0, 0, 0, 0.22) !important;
+}
+.hero-go-btn {
+  background: var(--md-primary) !important;
+  color: var(--md-on-primary) !important;
+  box-shadow: none !important;
+}
+
+.hero-suggest {
+  border-radius: 24px !important;
+  background: var(--md-surface-container-high) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.34) !important;
+}
+
+/* Quick Access Tonal Tiles */
+.shortcut-card,
+.shortcut-tile .sc-icon-box,
+.safari-fav-card .fav-sq,
+.safari-fav-squircle,
+.fav-tile-box {
+  border-radius: 20px !important;
+  background: var(--md-surface-container) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18) !important;
+}
+body.theme-light .shortcut-tile .sc-icon-box,
+body.force-light .shortcut-tile .sc-icon-box,
+body.theme-light .safari-fav-card .fav-sq,
+body.force-light .safari-fav-card .fav-sq,
+body.theme-light .safari-fav-squircle,
+body.force-light .safari-fav-squircle {
+  background: #ffffff !important;
+  box-shadow: 0 3px 12px rgba(29, 27, 32, 0.08) !important;
+}
+
+.safari-privacy-card {
+  border-radius: 24px !important;
+  background: var(--md-surface-container) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.20) !important;
+}
+body.theme-light .safari-privacy-card,
+body.force-light .safari-privacy-card {
+  background: var(--md-surface-container-lowest) !important;
+  box-shadow: 0 4px 18px rgba(29, 27, 32, 0.08) !important;
+}
+
+.sp-shield-medallion {
+  border-radius: 16px !important;
+  background: var(--md-primary-container) !important;
+  color: var(--md-on-primary-container) !important;
+  border: none !important;
+}
+
+/* Iconic Google Pixel Material 3 Extended FAB (Customize Button) */
+#btn-wallpaper-store.customize-trigger {
+  height: 44px !important;
+  padding: 0 18px !important;
+  border-radius: 16px !important;
+  background: var(--md-primary-container) !important;
+  color: var(--md-on-primary-container) !important;
+  border: none !important;
+  font-weight: 650 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.30) !important;
+}
+#btn-wallpaper-store.customize-trigger:hover {
+  filter: brightness(1.06);
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   AUTHENTIC GOOGLE PIXEL MATERIAL 3 SWITCHES & SEGMENTED BUTTONS
+   ========================================================================== */
+.liquid-switch {
+  width: 48px !important;
+  height: 28px !important;
+  border-radius: 999px !important;
+  background: var(--md-surface-container-highest) !important;
+  border: 2px solid var(--md-outline) !important;
+  box-shadow: none !important;
+  position: relative;
+  transition: background-color 0.18s ease, border-color 0.18s ease !important;
+}
+.liquid-switch .switch-knob {
+  width: 14px !important;
+  height: 14px !important;
+  top: 5px !important;
+  left: 5px !important;
+  border-radius: 999px !important;
+  background: var(--md-outline) !important;
+  box-shadow: none !important;
+  transition: transform 0.20s cubic-bezier(0.2, 0, 0, 1), width 0.18s ease, height 0.18s ease, top 0.18s ease, background-color 0.18s ease !important;
+}
+.liquid-switch.on {
+  background: var(--md-primary) !important;
+  border-color: var(--md-primary) !important;
+}
+.liquid-switch.on .switch-knob {
+  width: 20px !important;
+  height: 20px !important;
+  top: 2px !important;
+  left: 2px !important;
+  transform: translateX(20px) !important;
+  background: var(--md-on-primary) !important;
+}
+.liquid-switch.on .switch-knob::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--md-primary);
+  line-height: 1;
+}
+
+/* M3 Connected Segmented Button Group */
+.opt-seg {
+  border-radius: 999px !important;
+  background: var(--md-surface-container-low) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  padding: 3px !important;
+}
+.opt-seg .opt-seg-btn {
+  border-radius: 999px !important;
+  color: var(--md-on-surface-variant) !important;
+  border: none !important;
+  background: transparent !important;
+  font-weight: 600 !important;
+}
+.opt-seg .opt-seg-btn.active {
+  background: var(--md-secondary-container) !important;
+  color: var(--md-on-secondary-container) !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   GOOGLE PIXEL MATERIAL 3 SETTINGS WINDOW & CUSTOMIZE MODAL
+   ========================================================================== */
+#settings-window.settings-window,
+#wallpaper-store.wallpaper-store,
+#shortcut-modal.shortcut-modal,
+#tab-context-menu.tab-ctx-menu {
+  border-radius: 28px !important;
+  background: var(--md-surface-container-low) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.44) !important;
+}
+
+.settings-sidebar {
+  background: var(--md-surface-container-low) !important;
+  border-right: 1px solid var(--md-outline-variant) !important;
+}
+
+.settings-search-box {
+  border-radius: 999px !important;
+  background: var(--md-surface-container-high) !important;
+  border: 1px solid transparent !important;
+}
+.settings-search-box:focus-within {
+  border-color: var(--md-primary) !important;
+}
+
+.settings-nav-item {
+  border-radius: 999px !important;
+  padding: 8px 14px !important;
+  color: var(--md-on-surface-variant) !important;
+}
+.settings-nav-item:hover {
+  background: var(--md-surface-container-high) !important;
+  color: var(--md-on-surface) !important;
+}
+.settings-nav-item.active {
+  background: var(--md-secondary-container) !important;
+  color: var(--md-on-secondary-container) !important;
+  font-weight: 650 !important;
+  box-shadow: none !important;
+}
+
+.settings-main {
+  background: var(--md-surface) !important;
+}
+
+.opt-group {
+  border-radius: 22px !important;
+  background: var(--md-surface-container) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+}
+
+.opt-row {
+  border-color: var(--md-outline-variant) !important;
+}
+
+.appearance-card {
+  border-radius: 18px !important;
+  background: var(--md-surface-container-low) !important;
+  border: 1.5px solid var(--md-outline-variant) !important;
+}
+.appearance-card.active {
+  background: var(--md-secondary-container) !important;
+  border-color: var(--md-primary) !important;
+  box-shadow: 0 0 0 1px var(--md-primary) !important;
+}
+
+.settings-done-btn,
+.opt-mini-btn.primary,
+.ov-done-btn,
+.modal-btn.primary {
+  border-radius: 999px !important;
+  background: var(--md-primary) !important;
+  color: var(--md-on-primary) !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-weight: 650 !important;
+}
+
+.opt-mini-btn,
+.store-upload-btn,
+.settings-ghost-btn {
+  border-radius: 999px !important;
+  background: var(--md-secondary-container) !important;
+  color: var(--md-on-secondary-container) !important;
+  border: none !important;
+}
+
+.opt-mini-btn.danger {
+  background: var(--md-error-container) !important;
+  color: var(--md-error) !important;
+}
+
+.tab-overview {
+  background: var(--md-surface) !important;
+}
+
+.ov-card {
+  border-radius: 20px !important;
+  background: var(--md-surface-container) !important;
+  border: 1.5px solid var(--md-outline-variant) !important;
+}
+.ov-card.active {
+  border-color: var(--md-primary) !important;
+  box-shadow: 0 0 0 1.5px var(--md-primary) !important;
 }

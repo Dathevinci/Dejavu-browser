@@ -17,68 +17,91 @@
     <div class="top-backdrop-sheen"></div>
   </div>
 
-  <!-- Authentic macOS Safari Unified 2-Row Butterfly Liquid Glass Chrome (88px base / 122px with Favorites) -->
+  <!-- Samsung Internet PC × Google Pixel Material Design 3 Expressive Chrome (88px base / 122px with Quick Access Bar) -->
   <header id="chrome-header">
-    <!-- Row 1: Unified Safari Toolbar (44px) -->
-    <div id="toolbar" class="chrome-row toolbar-row">
-      <!-- Left: Butterfly Home + Safari Sidebar Toggle + Back/Forward Capsule -->
-      <div class="toolbar-left">
-        <div class="glass-pill left-capsule" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10">
-          <button id="btn-home" class="brand-inner-btn" title="dejavu Start Page">
-            <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
-          </button>
-          <span class="pill-sep" aria-hidden="true"></span>
-          <button id="btn-sidebar" class="icon-btn" title="Show Sidebar (Ctrl+Shift+L)">
-            <svg viewBox="0 0 20 20" fill="none">
-              <rect x="3.2" y="4.2" width="13.6" height="11.6" rx="2.6" stroke="currentColor" stroke-width="1.45"/>
-              <path d="M7.8 4.4v11.2" stroke="currentColor" stroke-width="1.4"/>
-              <path d="M5.1 7.3h1.2M5.1 9.6h1.2M5.1 11.9h1.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            </svg>
-          </button>
-        </div>
-
-        <div class="glass-pill nav-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10">
-          <button id="btn-back" class="icon-btn" title="Back (Alt+Left)" disabled>
-            <svg viewBox="0 0 20 20" fill="none"><path d="M12.4 4.8L7.2 10l5.2 5.2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <span class="pill-sep" aria-hidden="true"></span>
-          <button id="btn-forward" class="icon-btn" title="Forward (Alt+Right)" disabled>
-            <svg viewBox="0 0 20 20" fill="none"><path d="M7.6 4.8L12.8 10l-5.2 5.2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-        </div>
-
-        <button id="btn-group-pill" class="glass-pill group-badge-pill hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10" title="Active Tab Group (Click to switch)">
+    <!-- Row 1: Samsung Internet Top Tab Strip + Window Controls (40px) -->
+    <div id="tabbar" class="chrome-row tabbar-row">
+      <div class="tabbar-brand-slot">
+        <button id="btn-home" class="brand-inner-btn" title="dejavu Start Page">
+          <img src="https://dejavu.local/logo-transparent.png" alt="dejavu" draggable="false">
+        </button>
+        <button id="btn-group-pill" class="m3-chip group-badge-pill hidden" title="Active Tab Group (Click to switch)">
           <span id="group-badge-dot" class="group-badge-dot"></span>
           <span id="group-badge-name" class="group-badge-name"></span>
         </button>
       </div>
 
-      <!-- Center: Iconic macOS Safari Smart Search Field -->
-      <div id="omnibox-pill" class="glass-pill omnibox-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10" data-lg-dome="0.012">
-        <!-- Left inside Smart Search Field: Privacy Shield + Reader View (auto-tucked while typing) -->
+      <div id="tabs-area">
+        <div id="tabs-strip" role="tablist">
+          <div id="active-tab-glide" aria-hidden="true"></div>
+        </div>
+        <button id="btn-new-tab" class="m3-icon-btn circle-btn" title="New Tab (Ctrl+T)">
+          <svg viewBox="0 0 18 18" fill="none"><path d="M9 4.2v9.6M4.2 9h9.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <div id="drag-spacer" class="drag-spacer"></div>
+      </div>
+
+      <div class="win-pill">
+        <button id="win-min" class="win-btn win-min" title="Minimize">
+          <svg viewBox="0 0 14 14" fill="none"><path d="M3.2 7h7.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <button id="win-max" class="win-btn win-max" title="Maximize">
+          <svg class="ico-max" viewBox="0 0 14 14" fill="none"><rect x="3.3" y="3.3" width="7.4" height="7.4" rx="1.7" stroke="currentColor" stroke-width="1.35"/></svg>
+          <svg class="ico-restore" viewBox="0 0 14 14" fill="none"><rect x="2.8" y="4.5" width="6.3" height="6.3" rx="1.4" stroke="currentColor" stroke-width="1.3"/><path d="M5.1 4.5V3.6A1.3 1.3 0 0 1 6.4 2.3h3.9a1.3 1.3 0 0 1 1.3 1.3v3.9a1.3 1.3 0 0 1-1.3 1.3h-.9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </button>
+        <button id="win-close" class="win-btn win-close" title="Close">
+          <svg viewBox="0 0 14 14" fill="none"><path d="M3.6 3.6l6.8 6.8M10.4 3.6l-6.8 6.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 2: Samsung Internet PC Navigation + Google Pixel Material 3 Pill Omnibox + Utility Dock (48px) -->
+    <div id="toolbar" class="chrome-row toolbar-row">
+      <!-- Left: Samsung Side Panel Toggle + Back / Forward / Reload -->
+      <div class="toolbar-left">
+        <button id="btn-sidebar" class="icon-btn m3-nav-btn" title="Toggle Side Panel (Ctrl+Shift+L)">
+          <svg viewBox="0 0 20 20" fill="none">
+            <rect x="3.2" y="4.2" width="13.6" height="11.6" rx="2.6" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M7.8 4.4v11.2" stroke="currentColor" stroke-width="1.45"/>
+            <path d="M5.1 7.3h1.2M5.1 9.6h1.2M5.1 11.9h1.2" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button id="btn-back" class="icon-btn m3-nav-btn" title="Back (Alt+Left)" disabled>
+          <svg viewBox="0 0 20 20" fill="none"><path d="M12.4 4.8L7.2 10l5.2 5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button id="btn-forward" class="icon-btn m3-nav-btn" title="Forward (Alt+Right)" disabled>
+          <svg viewBox="0 0 20 20" fill="none"><path d="M7.6 4.8L12.8 10l-5.2 5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button id="btn-reload" class="icon-btn m3-nav-btn omnibox-reload-btn" title="Reload (Ctrl+R)">
+          <svg class="icon-reload" viewBox="0 0 18 18" fill="none"><path d="M14.1 9a5.1 5.1 0 1 1-1.35-3.45M14.1 3.9v2.85h-2.85" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="icon-stop" viewBox="0 0 18 18" fill="none"><path d="M5.2 5.2l7.6 7.6M12.8 5.2l-7.6 7.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <!-- Center: Google Pixel Material 3 Pill Omnibox -->
+      <div id="omnibox-pill" class="omnibox-pill">
         <div class="omnibox-left-actions">
-          <button id="btn-shield" class="shield-chip active" title="Privacy Report &amp; Ad Blocker">
-            <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.8L3 3.8v3.9c0 3.2 2.1 5.6 5 6.6 2.9-1 5-3.4 5-6.6V3.8L8 1.8z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path class="shield-check" d="M5.8 8.1l1.5 1.5 3-3.2" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <button id="btn-shield" class="shield-chip active" title="Privacy Report &amp; 100/100 Ad Blocker">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.8L3 3.8v3.9c0 3.2 2.1 5.6 5 6.6 2.9-1 5-3.4 5-6.6V3.8L8 1.8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path class="shield-check" d="M5.8 8.1l1.5 1.5 3-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span id="shield-count"></span>
           </button>
           <button id="btn-reader" class="omnibox-reader-btn hidden" title="Show Reader View (Ctrl+Shift+R)">
             <svg viewBox="0 0 18 18" fill="none">
-              <path d="M3.4 5h11.2M3.4 8.2h11.2M3.4 11.4h8.2M3.4 14.2h6.2" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/>
+              <path d="M3.4 5h11.2M3.4 8.2h11.2M3.4 11.4h8.2M3.4 14.2h6.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
           </button>
         </div>
 
         <span class="omnibox-edit-ico" aria-hidden="true">
-          <svg viewBox="0 0 16 16" fill="none"><circle cx="7.2" cy="7.2" r="4.3" stroke="currentColor" stroke-width="1.45"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="7.2" cy="7.2" r="4.3" stroke="currentColor" stroke-width="1.5"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg>
         </span>
 
-        <!-- Centered Safari Domain + Green Lock (when idle) -->
         <div id="omnibox-display" class="omnibox-display" aria-hidden="true">
           <span id="omnibox-icon" class="omnibox-icon">
             <svg class="ico-lock" viewBox="0 0 16 16" fill="none"><rect x="3.6" y="7.1" width="8.8" height="6.3" rx="1.8" stroke="currentColor" stroke-width="1.45"/><path d="M5.6 7.1V5.3a2.4 2.4 0 0 1 4.8 0v1.8" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>
-            <svg class="ico-search" viewBox="0 0 16 16" fill="none"><circle cx="7.2" cy="7.2" r="4.2" stroke="currentColor" stroke-width="1.4"/><path d="M10.6 10.6L13.4 13.4" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>
+            <svg class="ico-search" viewBox="0 0 16 16" fill="none"><circle cx="7.2" cy="7.2" r="4.2" stroke="currentColor" stroke-width="1.45"/><path d="M10.6 10.6L13.4 13.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           </span>
-          <span id="omnibox-domain" class="omnibox-domain is-placeholder">Search or enter website name</span>
+          <span id="omnibox-domain" class="omnibox-domain is-placeholder">Search or enter website</span>
         </div>
 
         <input
@@ -86,69 +109,62 @@
           type="text"
           spellcheck="false"
           autocomplete="off"
-          placeholder="Search or enter website name"
+          placeholder="Search or enter website"
           aria-label="Address bar"
         >
 
-        <!-- Right inside Smart Search Field: Zoom Pill + Favorite Star + Reload/Stop -->
         <div class="omnibox-actions">
           <button id="btn-zoom-pill" class="omnibox-zoom-pill hidden" title="Page Zoom (Click to reset to 100%)">100%</button>
-          <button id="btn-fav-star" class="fav-star-btn hidden" title="Pin to Favorites Bar (Ctrl+D)">
-            <svg viewBox="0 0 18 18" fill="none"><path d="M9 2.4l2.05 4.15 4.55.66-3.3 3.22.78 4.55L9 12.82 4.92 14.98l.78-4.55-3.3-3.22 4.55-.66L9 2.4z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg>
+          <button id="btn-fav-star" class="fav-star-btn hidden" title="Pin to Quick Access Bar (Ctrl+D)">
+            <svg viewBox="0 0 18 18" fill="none"><path d="M9 2.4l2.05 4.15 4.55.66-3.3 3.22.78 4.55L9 12.82 4.92 14.98l.78-4.55-3.3-3.22 4.55-.66L9 2.4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
           </button>
-          <button id="btn-reload" class="omnibox-reload-btn hidden" title="Reload (Ctrl+R)">
-            <svg class="icon-reload" viewBox="0 0 18 18" fill="none"><path d="M14.1 9a5.1 5.1 0 1 1-1.35-3.45M14.1 3.9v2.85h-2.85" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <svg class="icon-stop" viewBox="0 0 18 18" fill="none"><path d="M5.2 5.2l7.6 7.6M12.8 5.2l-7.6 7.6" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>
+          <button id="btn-share" class="icon-btn omni-share-btn" title="Share / Send Page">
+            <svg viewBox="0 0 18 18" fill="none">
+              <path d="M9 11.2V3.4M6.3 5.9L9 3.2l2.7 2.7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4.8 8.4H4a1.4 1.4 0 0 0-1.4 1.4v4.4A1.4 1.4 0 0 0 4 15.6h10a1.4 1.4 0 0 0 1.4-1.4V9.8A1.4 1.4 0 0 0 14 8.4h-.8" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/>
+            </svg>
           </button>
         </div>
 
         <div id="load-progress" class="load-progress"></div>
       </div>
 
-      <!-- Right: Authentic Safari Action Capsule (Downloads, VPN, Share, Tab Overview, History, Profile) + Window Controls -->
+      <!-- Right: Samsung Internet × Pixel Utility Action Strip -->
       <div class="toolbar-right">
-        <div class="glass-pill util-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10">
-          <button id="btn-downloads" class="icon-btn dl-trigger" title="Downloads">
-            <svg viewBox="0 0 18 18" fill="none">
-              <circle cx="9" cy="9" r="6.2" stroke="currentColor" stroke-width="1.35"/>
-              <path d="M9 5.6v5.7M6.6 9.3L9 11.7l2.4-2.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span id="dl-dot" class="dl-dot hidden"></span>
-          </button>
-
-          <button id="btn-vpn" class="vpn-trigger" title="dejavu VPN (Multi-Country Encrypted Tunnel)">
+        <div class="util-pill">
+          <button id="btn-vpn" class="vpn-trigger" title="dejavu Global VPN (86+ Countries)">
             <svg class="vpn-ico" viewBox="0 0 18 18" fill="none">
-              <circle cx="9" cy="9" r="6.1" stroke="currentColor" stroke-width="1.35"/>
-              <ellipse cx="9" cy="9" rx="2.8" ry="6.1" stroke="currentColor" stroke-width="1.2"/>
-              <path d="M3.2 7.3h11.6M3.2 10.7h11.6" stroke="currentColor" stroke-width="1.15" opacity="0.72"/>
-              <path class="vpn-bf-accent" d="M9 9c-.8-1.5-2.5-2-2.9-.9-.3.9.6 1.5 1.5 1.4-.7.6-.9 1.6-.2 1.9.7.2 1.3-.7 1.6-1.5.3.8.9 1.7 1.6 1.5.7-.3.5-1.3-.2-1.9.9.1 1.8-.5 1.5-1.4-.4-1.1-2.1-.6-2.9.9z" fill="currentColor" opacity="0.9"/>
+              <circle cx="9" cy="9" r="6.1" stroke="currentColor" stroke-width="1.4"/>
+              <ellipse cx="9" cy="9" rx="2.8" ry="6.1" stroke="currentColor" stroke-width="1.25"/>
+              <path d="M3.2 7.3h11.6M3.2 10.7h11.6" stroke="currentColor" stroke-width="1.2" opacity="0.72"/>
             </svg>
             <span id="vpn-chip-code" class="vpn-chip-code hidden"></span>
           </button>
 
-          <button id="btn-sync" class="icon-btn sync-trigger" title="dejavu Link (Sync Tabs, Links &amp; Text with Mobile)">
+          <button id="btn-sync" class="icon-btn sync-trigger" title="dejavu Link (Sync Tabs, Links &amp; Notes with Phone)">
             <svg viewBox="0 0 18 18" fill="none">
-              <rect x="2.4" y="4" width="8.6" height="6.8" rx="1.4" stroke="currentColor" stroke-width="1.35"/>
-              <path d="M5 13h3.4M6.7 10.8V13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-              <rect x="11.2" y="5.4" width="4.4" height="8.4" rx="1.2" stroke="currentColor" stroke-width="1.35"/>
-              <circle cx="13.4" cy="12" r="0.6" fill="currentColor"/>
+              <rect x="2.4" y="4" width="8.6" height="6.8" rx="1.4" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M5 13h3.4M6.7 10.8V13" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+              <rect x="11.2" y="5.4" width="4.4" height="8.4" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
+              <circle cx="13.4" cy="12" r="0.65" fill="currentColor"/>
             </svg>
             <span id="sync-dot" class="dl-dot hidden"></span>
           </button>
 
-          <button id="btn-share" class="icon-btn" title="Share">
+          <button id="btn-downloads" class="icon-btn dl-trigger" title="Downloads (Ctrl+J)">
             <svg viewBox="0 0 18 18" fill="none">
-              <path d="M9 11.2V3.4M6.3 5.9L9 3.2l2.7 2.7" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M4.8 8.4H4a1.4 1.4 0 0 0-1.4 1.4v4.4A1.4 1.4 0 0 0 4 15.6h10a1.4 1.4 0 0 0 1.4-1.4V9.8A1.4 1.4 0 0 0 14 8.4h-.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              <circle cx="9" cy="9" r="6.2" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M9 5.6v5.7M6.6 9.3L9 11.7l2.4-2.4" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
+            <span id="dl-dot" class="dl-dot hidden"></span>
           </button>
 
-          <button id="btn-tab-overview" class="icon-btn" title="Show Tab Overview (Ctrl+Shift+O)">
+          <button id="btn-tab-overview" class="icon-btn" title="Tab Overview Grid (Ctrl+Shift+O)">
             <svg viewBox="0 0 18 18" fill="none">
-              <rect x="3.2" y="3.2" width="4.8" height="4.8" rx="1.3" stroke="currentColor" stroke-width="1.35"/>
-              <rect x="10" y="3.2" width="4.8" height="4.8" rx="1.3" stroke="currentColor" stroke-width="1.35"/>
-              <rect x="3.2" y="10" width="4.8" height="4.8" rx="1.3" stroke="currentColor" stroke-width="1.35"/>
-              <rect x="10" y="10" width="4.8" height="4.8" rx="1.3" stroke="currentColor" stroke-width="1.35"/>
+              <rect x="3.2" y="3.2" width="4.8" height="4.8" rx="1.3" stroke="currentColor" stroke-width="1.4"/>
+              <rect x="10" y="3.2" width="4.8" height="4.8" rx="1.3" stroke="currentColor" stroke-width="1.4"/>
+              <rect x="3.2" y="10" width="4.8" height="4.8" rx="1.3" stroke="currentColor" stroke-width="1.4"/>
+              <rect x="10" y="10" width="4.8" height="4.8" rx="1.3" stroke="currentColor" stroke-width="1.4"/>
             </svg>
           </button>
 
@@ -156,10 +172,10 @@
             <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="5.9" stroke="currentColor" stroke-width="1.45"/><path d="M9 5.9V9.2l2.3 1.5" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
 
-          <button id="btn-settings" class="icon-btn settings-toolbar-btn" title="Safari Options &amp; Customization (Ctrl+,)">
+          <button id="btn-settings" class="icon-btn settings-toolbar-btn" title="Settings &amp; Material You (Ctrl+,)">
             <svg viewBox="0 0 18 18" fill="none">
-              <circle cx="9" cy="9" r="2.35" stroke="currentColor" stroke-width="1.4"/>
-              <path d="M9 2.6v1.5M9 13.9v1.5M2.6 9h1.5M13.9 9h1.5M4.45 4.45l1.08 1.08M12.47 12.47l1.08 1.08M13.55 4.45l-1.08 1.08M5.53 12.47l-1.08 1.08" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              <circle cx="9" cy="9" r="2.35" stroke="currentColor" stroke-width="1.45"/>
+              <path d="M9 2.6v1.5M9 13.9v1.5M2.6 9h1.5M13.9 9h1.5M4.45 4.45l1.08 1.08M12.47 12.47l1.08 1.08M13.55 4.45l-1.08 1.08M5.53 12.47l-1.08 1.08" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/>
             </svg>
           </button>
 
@@ -168,37 +184,11 @@
             <span id="profile-update-dot" class="update-dot hidden"></span>
           </button>
         </div>
-
-        <div class="glass-pill win-pill" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10">
-          <button id="win-min" class="win-btn win-min" title="Minimize">
-            <svg viewBox="0 0 14 14" fill="none"><path d="M3.2 7h7.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          </button>
-          <button id="win-max" class="win-btn win-max" title="Maximize">
-            <svg class="ico-max" viewBox="0 0 14 14" fill="none"><rect x="3.3" y="3.3" width="7.4" height="7.4" rx="1.7" stroke="currentColor" stroke-width="1.35"/></svg>
-            <svg class="ico-restore" viewBox="0 0 14 14" fill="none"><rect x="2.8" y="4.5" width="6.3" height="6.3" rx="1.4" stroke="currentColor" stroke-width="1.3"/><path d="M5.1 4.5V3.6A1.3 1.3 0 0 1 6.4 2.3h3.9a1.3 1.3 0 0 1 1.3 1.3v3.9a1.3 1.3 0 0 1-1.3 1.3h-.9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-          </button>
-          <button id="win-close" class="win-btn win-close" title="Close">
-            <svg viewBox="0 0 14 14" fill="none"><path d="M3.6 3.6l6.8 6.8M10.4 3.6l-6.8 6.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          </button>
-        </div>
       </div>
     </div>
 
-    <!-- Row 2: Authentic Safari Separate Full-Width Tab Bar (38px) -->
-    <div id="tabbar" class="chrome-row tabbar-row">
-      <div id="tabs-area">
-        <div id="tabs-strip" role="tablist">
-          <div id="active-tab-glide" aria-hidden="true"></div>
-        </div>
-        <div id="drag-spacer" class="drag-spacer"></div>
-        <button id="btn-new-tab" class="glass-pill circle-btn" data-liquid-glass data-lg-fast="1" data-lg-bezel="8" data-lg-scale="10" title="New Tab (Ctrl+T)">
-          <svg viewBox="0 0 18 18" fill="none"><path d="M9 4.2v9.6M4.2 9h9.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Row 3: Optional Slim Floating Liquid Glass Favorites Ribbon (34px when active) -->
-    <nav id="favbar" class="favbar hidden" aria-label="Favorite websites">
+    <!-- Row 3: Optional Samsung Internet Quick Access / Favorites Ribbon (34px when active) -->
+    <nav id="favbar" class="favbar hidden" aria-label="Quick Access websites">
       <div id="favbar-list" class="favbar-list"></div>
     </nav>
   </header>
@@ -244,10 +234,10 @@
             <div id="newtab-suggest" class="glass-card hero-suggest hidden" data-liquid-glass data-lg-fast="1" data-lg-bezel="14" data-lg-scale="18"></div>
           </div>
 
-          <!-- Safari Section 1: Favorites (Squircle Liquid Glass Tiles + Labels Below!) -->
+          <!-- Samsung Internet Quick Access (Material 3 Rounded Tiles) -->
           <div id="sp-sec-favorites" class="sp-section anim-rise-3">
             <div class="sp-section-head">
-              <h2 class="sp-section-title">Favorites</h2>
+              <h2 class="sp-section-title">Quick Access</h2>
             </div>
             <div id="shortcuts-grid" class="safari-fav-grid"></div>
           </div>
@@ -378,7 +368,7 @@
           <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
           <div>
             <div class="store-title">Customize Start Page</div>
-            <div class="store-sub">Safari sections &amp; 26 Butterfly Studio HD themes</div>
+            <div class="store-sub">Quick Access sections &amp; 26 Material You HD themes</div>
           </div>
         </div>
         <div class="store-controls">
@@ -387,7 +377,7 @@
             <button class="store-tab" data-cat="art">HD Art (16)</button>
             <button class="store-tab" data-cat="live">Live (10)</button>
           </div>
-          <button id="btn-store-more-options" class="store-upload-btn" title="Open Full Safari Options (Ctrl+,)">Options…</button>
+          <button id="btn-store-more-options" class="store-upload-btn" title="Open Full Settings (Ctrl+,)">Settings…</button>
           <button id="btn-custom-wp" class="store-upload-btn" title="Use your own image">+ Custom</button>
           <button id="btn-store-close" class="icon-btn sm" title="Close">
             <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -418,22 +408,22 @@
       <div id="wallpaper-grid" class="wallpaper-grid"></div>
     </div>
 
-    <!-- Authentic macOS Safari Options & Customization Window (Ctrl+,) -->
-    <section id="settings-overlay" class="settings-overlay hidden" aria-label="Safari Options">
-      <div id="settings-window" class="glass-card settings-window" data-liquid-glass data-lg-fast="1" data-lg-bezel="20" data-lg-scale="24" data-lg-dome="0.025">
-        <!-- Left macOS System Settings Sidebar Navigation -->
+    <!-- Google Pixel Material Design 3 Settings Window (Ctrl+,) -->
+    <section id="settings-overlay" class="settings-overlay hidden" aria-label="dejavu Settings">
+      <div id="settings-window" class="glass-card settings-window">
+        <!-- Left Material 3 Navigation Rail / Drawer -->
         <aside class="settings-sidebar">
           <div class="settings-brand">
             <img src="https://dejavu.local/logo-transparent.png" alt="" draggable="false">
             <div>
-              <div class="settings-brand-title">dejavu Options</div>
-              <div id="settings-version-sub" class="settings-brand-sub">Safari Edition · v3.2.0</div>
+              <div class="settings-brand-title">dejavu Settings</div>
+              <div id="settings-version-sub" class="settings-brand-sub">Material You · v4.0.0</div>
             </div>
           </div>
 
           <div class="settings-search-box">
             <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><circle cx="7.2" cy="7.2" r="4.4" stroke="currentColor" stroke-width="1.45"/><path d="M10.7 10.7L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <input id="settings-search-input" type="text" placeholder="Search options…" spellcheck="false" autocomplete="off">
+            <input id="settings-search-input" type="text" placeholder="Search settings…" spellcheck="false" autocomplete="off">
           </div>
 
           <nav id="settings-nav" class="settings-nav" role="tablist">
@@ -557,14 +547,14 @@
               </div>
             </div>
 
-            <!-- Pane 2: Appearance & Liquid Glass -->
+            <!-- Pane 2: Material You Appearance -->
             <div class="settings-pane hidden" data-pane-body="appearance">
               <div class="opt-group">
-                <div class="opt-group-label">Theme Polarity &amp; Butterfly Accent</div>
+                <div class="opt-group-label">Material You Theme &amp; Dynamic Color</div>
                 <div class="opt-row stacked">
                   <div class="opt-meta">
-                    <div class="opt-title">Appearance Mode</div>
-                    <div class="opt-desc">Instantly transforms toolbar, Start Page, Options &amp; all Liquid Glass popovers</div>
+                    <div class="opt-title">Theme Mode</div>
+                    <div class="opt-desc">Instantly adapts Material 3 tonal surfaces across tabs, toolbar, Start Page &amp; popovers</div>
                   </div>
                   <div class="appearance-cards" id="opt-appearance-mode">
                     <button type="button" class="appearance-card opt-seg-btn active" data-val="auto">
@@ -582,7 +572,7 @@
                         <div class="ap-mini-body"><span class="ap-card"></span><span class="ap-card sm"></span></div>
                       </div>
                       <span class="ap-label">Dark</span>
-                      <span class="ap-sub">Smoked Obsidian</span>
+                      <span class="ap-sub">Material Dark</span>
                     </button>
                     <button type="button" class="appearance-card opt-seg-btn" data-val="light">
                       <div class="ap-preview ap-prev-light">
@@ -591,39 +581,39 @@
                         <div class="ap-mini-body"><span class="ap-card"></span><span class="ap-card sm"></span></div>
                       </div>
                       <span class="ap-label">Light</span>
-                      <span class="ap-sub">Pearl Porcelain</span>
+                      <span class="ap-sub">Material Light</span>
                     </button>
                   </div>
                 </div>
                 <div class="opt-row stacked">
                   <div class="opt-meta">
-                    <div class="opt-title">Butterfly Accent Color</div>
-                    <div class="opt-desc">Colors switches, active tab rims, focus glows, and privacy badges</div>
+                    <div class="opt-title">Dynamic Color Seed</div>
+                    <div class="opt-desc">Generates Material You primary, tonal container &amp; indicator palettes across the browser</div>
                   </div>
                   <div class="accent-swatches" id="opt-accent-swatches">
-                    <button type="button" class="accent-swatch active" data-accent-choice="amethyst"><span class="sw-dot" style="--sw:#b07cff"></span><span>Amethyst</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="sapphire"><span class="sw-dot" style="--sw:#4da6ff"></span><span>Sapphire</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="aurora"><span class="sw-dot" style="--sw:#38d9a9"></span><span>Aurora</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="rose"><span class="sw-dot" style="--sw:#f472b6"></span><span>Rose</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="gold"><span class="sw-dot" style="--sw:#f5b942"></span><span>Gold</span></button>
-                    <button type="button" class="accent-swatch" data-accent-choice="silver"><span class="sw-dot" style="--sw:#b4c2d8"></span><span>Arctic</span></button>
+                    <button type="button" class="accent-swatch active" data-accent-choice="amethyst"><span class="sw-dot" style="--sw:#d0bcff"></span><span>Amethyst</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="sapphire"><span class="sw-dot" style="--sw:#a8c7fa"></span><span>Pixel Blue</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="aurora"><span class="sw-dot" style="--sw:#7bd8c6"></span><span>Sage</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="rose"><span class="sw-dot" style="--sw:#ffb0ce"></span><span>Blossom</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="gold"><span class="sw-dot" style="--sw:#ffb951"></span><span>Honey</span></button>
+                    <button type="button" class="accent-swatch" data-accent-choice="silver"><span class="sw-dot" style="--sw:#b4c8e8"></span><span>Slate</span></button>
                   </div>
                 </div>
               </div>
 
               <div class="opt-group">
-                <div class="opt-group-label">Safari Smart Search &amp; Tabs</div>
+                <div class="opt-group-label">Address Bar &amp; Tabs</div>
                 <div class="opt-row">
                   <div class="opt-meta">
                     <div class="opt-title">Show full website address</div>
-                    <div class="opt-desc">Display the full URL instead of the clean Safari domain in the Smart Search Field</div>
+                    <div class="opt-desc">Display the full URL instead of the clean domain in the pill address bar</div>
                   </div>
                   <button type="button" id="opt-full-url" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
                 </div>
                 <div class="opt-row">
                   <div class="opt-meta">
                     <div class="opt-title">Compact Tab Bar</div>
-                    <div class="opt-desc">Sleeker 32px tab strip for extra vertical webpage space</div>
+                    <div class="opt-desc">Sleeker 34px top tab strip for extra vertical webpage space</div>
                   </div>
                   <button type="button" id="opt-compact-tabs" class="liquid-switch sm" role="switch"><span class="switch-knob"></span></button>
                 </div>
@@ -837,16 +827,16 @@
               </div>
 
               <div class="opt-group">
-                <div class="opt-group-label">MacBook Safari-Style Keyboard Shortcuts</div>
+                <div class="opt-group-label">Keyboard Shortcuts</div>
                 <div class="shortcuts-ref-grid">
-                  <div class="kbd-row"><span>Safari Options</span><kbd>Ctrl + ,</kbd></div>
+                  <div class="kbd-row"><span>dejavu Settings</span><kbd>Ctrl + ,</kbd></div>
                   <div class="kbd-row"><span>New Tab</span><kbd>Ctrl + T</kbd></div>
                   <div class="kbd-row"><span>Close Tab</span><kbd>Ctrl + W</kbd></div>
                   <div class="kbd-row"><span>Reopen Closed Tab</span><kbd>Ctrl + Shift + T</kbd></div>
                   <div class="kbd-row"><span>Tab Overview Grid</span><kbd>Ctrl + Shift + O</kbd></div>
-                  <div class="kbd-row"><span>Show / Hide Sidebar</span><kbd>Ctrl + Shift + L</kbd></div>
-                  <div class="kbd-row"><span>Toggle Favorites Bar</span><kbd>Ctrl + Shift + B</kbd></div>
-                  <div class="kbd-row"><span>Safari Reader Mode</span><kbd>Ctrl + Shift + R</kbd></div>
+                  <div class="kbd-row"><span>Samsung Side Panel</span><kbd>Ctrl + Shift + L</kbd></div>
+                  <div class="kbd-row"><span>Quick Access Bar</span><kbd>Ctrl + Shift + B</kbd></div>
+                  <div class="kbd-row"><span>Reader View</span><kbd>Ctrl + Shift + R</kbd></div>
                   <div class="kbd-row"><span>Focus Smart Search</span><kbd>Ctrl + L</kbd></div>
                   <div class="kbd-row"><span>Mute / Unmute Tab</span><kbd>Ctrl + M</kbd></div>
                   <div class="kbd-row"><span>Bookmark / Pin Favorite</span><kbd>Ctrl + D</kbd></div>

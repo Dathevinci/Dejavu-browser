@@ -379,40 +379,17 @@
     currentPalette = { baseRgb, accents, isLight };
     const w = window.innerWidth;
     const h = getChromeHeight();
-    let [br, bg, bb] = baseRgb || (isLight ? [246, 245, 250] : [13, 12, 20]);
+    const cs = getComputedStyle(body);
+    const row1 = (cs.getPropertyValue('--md-surface-container-low') || '').trim() || (isLight ? '#f6f2fa' : '#1b1a22');
+    const row2 = (cs.getPropertyValue('--md-surface-container') || '').trim() || (isLight ? '#efeaf5' : '#22202b');
+    const div = (cs.getPropertyValue('--md-outline-variant') || '').trim() || (isLight ? '#cac4d0' : '#484454');
+    const tabH = body.classList.contains('compact-tabs') ? 34 : 40;
 
-    if (!isLight) {
-      br = Math.min(br, 24);
-      bg = Math.min(bg, 22);
-      bb = Math.min(bb, 34);
-    }
-
-    const baseGrad = topBackdropCtx.createLinearGradient(0, 0, 0, h);
-    if (isLight) {
-      baseGrad.addColorStop(0, `rgb(${Math.min(255, br + 4)}, ${Math.min(255, bg + 4)}, ${Math.min(255, bb + 6)})`);
-      baseGrad.addColorStop(1, `rgb(${br}, ${bg}, ${bb})`);
-    } else {
-      baseGrad.addColorStop(0, `rgb(${Math.max(9, br + 3)}, ${Math.max(8, bg + 2)}, ${Math.max(15, bb + 6)})`);
-      baseGrad.addColorStop(1, `rgb(${Math.max(8, br)}, ${Math.max(8, bg)}, ${Math.max(13, bb)})`);
-    }
-    topBackdropCtx.fillStyle = baseGrad;
-    topBackdropCtx.fillRect(0, 0, w, h);
-
-    const zones = (Array.isArray(accents) && accents.length > 0) ? accents : [
-      isLight ? [146, 120, 238] : [132, 94, 236],
-      isLight ? [96, 172, 238] : [76, 162, 228]
-    ];
-
-    const aura = topBackdropCtx.createRadialGradient(w * 0.25, 0, 10, w * 0.35, 0, w * 0.72);
-    const c0 = zones[0];
-    const c1 = zones[zones.length - 1];
-    aura.addColorStop(0, `rgba(${c0[0]}, ${c0[1]}, ${c0[2]}, ${isLight ? 0.07 : 0.11})`);
-    aura.addColorStop(0.55, `rgba(${c1[0]}, ${c1[1]}, ${c1[2]}, ${isLight ? 0.04 : 0.07})`);
-    aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    topBackdropCtx.fillStyle = aura;
-    topBackdropCtx.fillRect(0, 0, w, h);
-
-    topBackdropCtx.fillStyle = isLight ? 'rgba(24, 18, 52, 0.09)' : 'rgba(255, 255, 255, 0.07)';
+    topBackdropCtx.fillStyle = row1;
+    topBackdropCtx.fillRect(0, 0, w, tabH);
+    topBackdropCtx.fillStyle = row2;
+    topBackdropCtx.fillRect(0, tabH, w, Math.max(0, h - tabH));
+    topBackdropCtx.fillStyle = div;
     topBackdropCtx.fillRect(0, h - 1, w, 1);
   }
 
@@ -1102,12 +1079,12 @@
   }
 
   const SETTINGS_PANE_META = {
-    general: { title: 'General', sub: 'Search engine, startup tabs, homepage & toolbar behavior' },
-    appearance: { title: 'Appearance & Liquid Glass', sub: 'Theme polarity, Butterfly accent colors, tab layout & page zoom' },
-    startpage: { title: 'Start Page', sub: 'Choose which Safari sections appear on every new tab' },
+    general: { title: 'General', sub: 'Search engine, startup tabs, homepage & Quick Access bar' },
+    appearance: { title: 'Material You Appearance', sub: 'Theme mode, Dynamic Color seed, address bar & tab layout' },
+    startpage: { title: 'Start Page & Quick Access', sub: 'Choose which Samsung-style Quick Access sections appear on new tabs' },
     wallpapers: { title: 'Butterfly HD Wallpapers', sub: '16 razor-sharp 2K dejavu artworks, 10 live 60fps themes & custom photos' },
     privacy: { title: 'Privacy, Ad Blocker & VPN', sub: '100/100 ad shield, paused sites, 86+ country Smart & Tor VPN' },
-    shortcuts: { title: 'Tabs & Keyboard Shortcuts', sub: 'Tab behavior preferences & MacBook Safari-style hotkeys' }
+    shortcuts: { title: 'Tabs & Keyboard Shortcuts', sub: 'Tab behavior preferences & desktop browser hotkeys' }
   };
 
   function showSettingsToast(text) {
@@ -1161,7 +1138,9 @@
 
   function applyBrowserOptions(opts) {
     const o = opts || {};
-    document.documentElement.dataset.accent = o.accentColor || 'amethyst';
+    const ac = o.accentColor || 'amethyst';
+    document.documentElement.dataset.accent = ac;
+    body.dataset.accent = ac;
     body.classList.toggle('compact-tabs', !!o.compactTabBar);
     body.classList.toggle('always-show-tab-close', !!o.alwaysShowTabClose);
     if (startpageProfileBadge) {
@@ -1172,7 +1151,8 @@
     }
     const active = (state.tabs || []).find((t) => t.id === state.activeTabId);
     const onNewTab = !active || active.isNewTab;
-    applyThemePolarity(o.appearanceMode || 'auto', active, onNewTab, !!state.tabOverviewOpen, !!state.settingsOpen);
+    const effLight = applyThemePolarity(o.appearanceMode || 'auto', active, onNewTab, !!state.tabOverviewOpen, !!state.settingsOpen);
+    drawTopLightGuide({ baseRgb: null, accents: null, isLight: effLight });
     if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
       window.DejavuNewTabCanvas.setOptions({
         reduceMotion: !!o.reduceWallpaperMotion,
@@ -1187,7 +1167,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     if (settingsVersionSub) {
-      settingsVersionSub.textContent = `Safari Edition · v${state.appVersion || '3.2.0'}`;
+      settingsVersionSub.textContent = `Material You · v${state.appVersion || '4.0.0'}`;
     }
     setSegmentedVal(optSearchEngine, o.searchEngine || state.searchEngine || 'google');
     setSegmentedVal(optStartup, o.startupBehavior || 'startpage');

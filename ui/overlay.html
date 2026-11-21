@@ -8,41 +8,40 @@
   <style>
     html, body {
       width: 100%; height: 100%; overflow: hidden;
-      background: #0a0814;
+      background: var(--md-surface-container-high, #2b2937);
+      color: var(--md-on-surface, #e6e1ec);
     }
     body.theme-light {
-      background: #f5f4fa;
-      --ink: rgba(16, 14, 26, 0.94);
-      --ink-muted: rgba(30, 26, 48, 0.64);
-      --ink-subtle: rgba(38, 34, 60, 0.42);
-      --glass-tint-strong: radial-gradient(
-        ellipse 92% 88% at 50% 50%,
-        rgba(253, 252, 255, 0.96) 0%,
-        rgba(247, 245, 254, 0.91) 76%,
-        rgba(255, 255, 255, 0.56) 100%
-      );
-      --glass-border: rgba(24, 18, 52, 0.13);
-      --glass-hover-bg: rgba(24, 18, 52, 0.065);
-      --accent: #7c4dff;
-      --accent-bright: #6435e8;
-      --shield-green: #0d9488;
-      --spec-opacity: 0.34;
+      background: var(--md-surface-container-low, #f6f2fa);
+      color: var(--md-on-surface, #1d1b20);
     }
-    /* One-shot pre-baked Snell's Law Liquid Glass surface canvas:
-       computes convex-squircle refraction (n = 1.52) + Cauchy RGB dispersion +
-       smoked obsidian / light porcelain tint + Schlick Fresnel specular rim ONCE
-       on backdrop load or resize (~2ms once, 0.0ms GPU cost during scrolling). */
+    /* Crisp Material Design 3 Elevated Surface Canvas (0.1ms paint, ZERO Liquid Glass) */
     #glass-backdrop-canvas {
       position: fixed;
       inset: 0;
       width: 100%;
       height: 100%;
       z-index: 0;
-      border-radius: 14px;
+      border-radius: 16px;
       pointer-events: none;
       display: block;
       transform: translateZ(0);
       contain: strict;
+    }
+    .pill-btn.primary {
+      background: var(--md-primary) !important;
+      border-color: transparent !important;
+      color: var(--md-on-primary) !important;
+      box-shadow: none !important;
+      font-weight: 650 !important;
+    }
+    .vpn-mode-btn.active,
+    .sb-tab.active,
+    .vpn-country-row.active,
+    .prof-row.active {
+      background: var(--md-secondary-container) !important;
+      color: var(--md-on-secondary-container) !important;
+      border-color: var(--md-primary) !important;
     }
     .overlay-shell {
       position: fixed; inset: 0; z-index: 2;
@@ -1939,8 +1938,8 @@
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const isLight = document.body.classList.contains('theme-light');
-      const hasImg = !!(backdropImage && backdropImage.complete && backdropImage.naturalWidth > 0 && backdropImage.naturalHeight > 0);
-      const bakeKey = `${W}x${H}@${dpr.toFixed(2)}|${isLight ? 'L' : 'D'}|${hasImg ? backdropVersion : 0}`;
+      const acc = document.documentElement.dataset.accent || 'amethyst';
+      const bakeKey = `${W}x${H}@${dpr.toFixed(2)}|${isLight ? 'L' : 'D'}|${acc}`;
       if (bakeKey === lastGlassBakeKey) return;
       lastGlassBakeKey = bakeKey;
 
@@ -1952,89 +1951,29 @@
         glassCanvas.height = targetH;
       }
 
-      const R = Math.min(14, Math.floor(Math.min(W, H) * 0.45));
-      const bezel = Math.min(14, Math.max(8, Math.floor(Math.min(W, H) * 0.30)));
-      const geom = getOpticalGeometry(W, H, R, bezel);
+      const cs = getComputedStyle(document.body);
+      const surfBg = (cs.getPropertyValue('--md-surface-container-high') || '').trim() || (isLight ? '#efeaf5' : '#262432');
+      const outline = (cs.getPropertyValue('--md-outline-variant') || '').trim() || (isLight ? '#cac4d0' : '#484454');
+      const R = Math.min(18, Math.floor(Math.min(W, H) * 0.45));
 
       glassCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      glassCtx.imageSmoothingEnabled = true;
-      glassCtx.imageSmoothingQuality = 'high';
-
-      // Base surface fill
-      glassCtx.fillStyle = isLight ? '#f5f4fa' : '#0a0814';
+      glassCtx.fillStyle = surfBg;
       glassCtx.fillRect(0, 0, W, H);
 
       glassCtx.save();
-      traceRoundedRectPath(glassCtx, 0, 0, W, H, R);
-      glassCtx.clip();
-
-      glassCtx.fillStyle = isLight ? '#f7f5fe' : '#0c0a17';
-      glassCtx.fillRect(0, 0, W, H);
-
-      // 1. Real Snell's Law refracted backdrop (n = 1.52 + convex squircle + Cauchy dispersion)
-      if (hasImg) {
-        const refracted = bakeSnellRefractedLayer(backdropImage, W, H, geom);
-        glassCtx.drawImage(refracted, 0, 0, W, H);
-      }
-
-      // 2. Adaptive Smoked Obsidian (Dark) / Light Porcelain (Light) elliptical glass tint
-      glassCtx.save();
-      const rx = W * 0.74;
-      const ry = H * 0.72;
-      glassCtx.translate(W * 0.5, H * 0.5);
-      glassCtx.scale(rx, ry);
-      const tintGrad = glassCtx.createRadialGradient(0, 0, 0, 0, 0, 1);
-      if (isLight) {
-        tintGrad.addColorStop(0, 'rgba(253, 252, 255, 0.96)');
-        tintGrad.addColorStop(0.74, 'rgba(247, 245, 254, 0.90)');
-        tintGrad.addColorStop(1, 'rgba(255, 255, 255, 0.58)');
-      } else {
-        tintGrad.addColorStop(0, 'rgba(12, 10, 23, 0.94)');
-        tintGrad.addColorStop(0.76, 'rgba(16, 13, 30, 0.88)');
-        tintGrad.addColorStop(1, 'rgba(28, 23, 50, 0.56)');
-      }
-      glassCtx.fillStyle = tintGrad;
-      glassCtx.fillRect(-W / rx, -H / ry, (W * 2) / rx, (H * 2) / ry);
-      glassCtx.restore();
-
-      // 3. Cached Schlick Fresnel specular caustic rim from exact SDF surface normals
-      glassCtx.globalAlpha = isLight ? 0.34 : 0.40;
-      glassCtx.drawImage(geom.fresCanvas, 0, 0, W, H);
-      glassCtx.globalAlpha = 1;
-
-      // 4. Crisp inner specular lip + 1px Liquid Glass hairline border
-      const topLip = glassCtx.createLinearGradient(0, 0, 0, 22);
-      topLip.addColorStop(0, isLight ? 'rgba(255, 255, 255, 0.78)' : 'rgba(255, 255, 255, 0.14)');
-      topLip.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      glassCtx.strokeStyle = topLip;
-      glassCtx.lineWidth = 1;
-      traceRoundedRectPath(glassCtx, 1.5, 1.5, W - 3, H - 3, Math.max(1, R - 1.5));
-      glassCtx.stroke();
-
-      const botLip = glassCtx.createLinearGradient(0, H - 20, 0, H);
-      botLip.addColorStop(0, 'rgba(178, 138, 255, 0)');
-      botLip.addColorStop(1, isLight ? 'rgba(120, 96, 210, 0.10)' : 'rgba(178, 138, 255, 0.12)');
-      glassCtx.strokeStyle = botLip;
-      glassCtx.lineWidth = 1;
-      traceRoundedRectPath(glassCtx, 1.5, 1.5, W - 3, H - 3, Math.max(1, R - 1.5));
-      glassCtx.stroke();
-
-      glassCtx.strokeStyle = isLight ? 'rgba(24, 18, 52, 0.13)' : 'rgba(255, 255, 255, 0.13)';
-      glassCtx.lineWidth = 1;
       traceRoundedRectPath(glassCtx, 0.5, 0.5, W - 1, H - 1, Math.max(1, R - 0.5));
+      glassCtx.strokeStyle = outline;
+      glassCtx.lineWidth = 1;
       glassCtx.stroke();
-
       glassCtx.restore();
 
       glassBakeCount++;
       window.__glassBackdropMeta = {
-        engine: 'prebaked-snell-canvas',
-        ior: 1.52,
+        engine: 'material-you-m3-surface',
         bakedCount: glassBakeCount,
         lastBakeMs: Number((performance.now() - t0).toFixed(2)),
         width: W,
         height: H,
-        hasBackdrop: hasImg,
         isLight
       };
     }
@@ -2301,7 +2240,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '3.4.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '4.0.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -2433,6 +2372,7 @@
       const wantLight = !!d.isLight;
       if (d.accentColor) {
         document.documentElement.dataset.accent = d.accentColor;
+        document.body.dataset.accent = d.accentColor;
       }
       const wasLight = document.body.classList.contains('theme-light');
       const themeChanged = wantLight !== wasLight || !document.body.classList.contains(wantLight ? 'theme-light' : 'theme-dark');

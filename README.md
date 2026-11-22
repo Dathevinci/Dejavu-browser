@@ -4,20 +4,21 @@ A fast, private native **Google Material Design 3** browser for **Windows 10/11*
 
 **Official Website:** **[dathevinci.github.io/Dejavu-browser](https://dathevinci.github.io/Dejavu-browser/)**
 
-## Download (`v5.8.0`)
+## Download (`v5.9.0`)
 
 Grab the latest release from the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
 
-- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.8.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
-- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.8.0.0`, runs from any folder or USB with no admin rights required).
-- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.8.0` · `versionCode 580`, Android 8.0+).
+- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.9.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
+- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.9.0.0`, runs from any folder or USB with no admin rights required).
+- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.9.0` · `versionCode 590`, Android 8.0+).
 - **`SHA256SUMS.txt`** — Official SHA-256 checksums paired with GitHub **SLSA Build Provenance Attestations**.
 
-## What's New in v5.8.0
+## What's New in v5.9.0
 
-- **Native Chrome-Like Extensions (Material You Themed)**: In-place Chrome Web Store **"Add to dejavu" / "Remove from dejavu"** button synced to all 24 Material You palettes, 2-stage Material Design 3 permission confirmation dialog, anchored **"Extension added"** bubble with one-click toolbar pinning, auto-sizing live extension popups, and WebView2 manifest sanitization.
-- **Persistent Window Size, Position & Maximized State**: Remembers your exact window width, height, monitor placement, and maximized state across restarts with multi-monitor safety clamping.
-- **Chromebook / Pixel OS Material Design 3 Website & Setup**: Simplified Material You landing page with zero scroll hijacking (`IntersectionObserver`-only navigation and native scrolling) and a matching 2-column Chromebook OOBE Windows installer with live palette preview.
+- **A-to-Z Pixelbook / ChromeOS Material Design 3 Redesign**: Authentic ChromeOS tonal surface hierarchy across tabs, toolbar, left-aligned zero-jump Realbox omnibox (emphasized host + muted path, instant focus swap), borderless ghost bookmarks bar, Memory Saver sleeping-tab dotted rings, and true M3 state layers (zero `filter: brightness()` or blur hacks).
+- **Pixelbook Start Page & Edge-to-Edge Workspaces**: Single-row circular-to-squircle shortcut wells with adaptive contrast pills over all 32 wallpapers, borderless At-a-Glance greeting & status strips, and full-viewport ChromeOS workspaces for **Settings**, **Extensions**, **Turbo Downloads**, and **dejavu Link Hub** — plus matching Light Mode tonal cards across popovers and Android companion.
+- **End-to-End CSS, JS & C# Optimization**: Atomic single-frame Dark ↔ Light theme switching (zero mid-transition flash), signature-cached workspace rendering, zero-allocation tab sync loops, 200+ lines of redundant CSS removed, throttled native default-browser checks, and deduplicated WebView2 state deltas.
+- **Includes All v5.8.0 Upgrades**: Native Chrome-like Material You Chrome Web Store extensions flow, persistent window size/position/maximized state across restarts, and Chromebook-style website & setup wizard.
 
 ## Core Capabilities
 

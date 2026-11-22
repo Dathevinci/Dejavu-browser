@@ -889,6 +889,8 @@ namespace DejavuBrowser
         private readonly Stack<ClosedTabInfo> _closedTabs = new Stack<ClosedTabInfo>();
         private readonly List<DownloadEntry> _downloads = new List<DownloadEntry>();
         private bool _isDefaultBrowser;
+        private DateTime _lastDefaultCheckUtc = DateTime.MinValue;
+        private string _lastTabDeltaJson;
         private int _contextMenuTabId = -1;
         private bool _contextMenuIsShellRelay;
         private string _activeTabGroupId = "default";
@@ -1156,9 +1158,15 @@ namespace DejavuBrowser
             Activated += (s, e) =>
             {
                 _appContext.MarkWindowActive(this);
-                bool nowDefault = DefaultBrowserRegistrar.IsDefaultBrowser();
-                bool defaultChanged = (nowDefault != _isDefaultBrowser);
-                _isDefaultBrowser = nowDefault;
+                bool defaultChanged = false;
+                DateTime nowUtc = DateTime.UtcNow;
+                if (_settingsOpen || (nowUtc - _lastDefaultCheckUtc).TotalSeconds >= 5.0)
+                {
+                    _lastDefaultCheckUtc = nowUtc;
+                    bool nowDefault = DefaultBrowserRegistrar.IsDefaultBrowser();
+                    defaultChanged = (nowDefault != _isDefaultBrowser);
+                    _isDefaultBrowser = nowDefault;
+                }
                 if (_shellReady && (_settingsOpen || _activePopoverMode == "profiles"))
                 {
                     _profiles.ReloadManifest();
@@ -7625,7 +7633,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.8.0 defaults", "success");
+            PushShellToast("Settings restored to v5.9.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -11564,7 +11572,10 @@ namespace DejavuBrowser
                 { "canReopenClosedTab", _closedTabs.Count > 0 }
             };
 
-            try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(delta)); } catch { }
+            string deltaJson = _json.Serialize(delta);
+            if (string.Equals(deltaJson, _lastTabDeltaJson, StringComparison.Ordinal)) return;
+            _lastTabDeltaJson = deltaJson;
+            try { _shellView.CoreWebView2.PostWebMessageAsJson(deltaJson); } catch { }
         }
 
         private static Dictionary<string, object> BuildShellVpnSummary(VpnStatusSnapshot snap)
@@ -11597,6 +11608,7 @@ namespace DejavuBrowser
             if (!_shellReady || _shellView == null || _shellView.CoreWebView2 == null) return;
             if (_statePushTimer != null && _statePushTimer.Enabled) _statePushTimer.Stop();
             if (_tabDeltaTimer != null && _tabDeltaTimer.Enabled) _tabDeltaTimer.Stop();
+            _lastTabDeltaJson = null;
 
             List<Dictionary<string, object>> tabList = BuildTabPayloadList();
             BrowserTab active = GetActiveTab();
@@ -11632,6 +11644,7 @@ namespace DejavuBrowser
                 _sync.SetLocalTabCount(webTabCount);
             }
 
+            Dictionary<string, object> browserOpts = BuildBrowserOptionsPayload();
             var state = new Dictionary<string, object>
             {
                 { "type", "state" },
@@ -11660,8 +11673,8 @@ namespace DejavuBrowser
                 { "profiles", _profiles.Manifest.profiles },
                 { "mainProfileId", _profiles.Manifest.mainProfileId ?? "default" },
                 { "onboardingCompleted", _profiles.Manifest.onboardingCompleted },
-                { "browserOptions", BuildBrowserOptionsPayload() },
-                { "settings", BuildBrowserOptionsPayload() },
+                { "browserOptions", browserOpts },
+                { "settings", browserOpts },
                 { "shields", BuildShieldsSummary(active, host) },
                 { "pausedHosts", _adBlocker.GetPausedHosts() },
                 { "activeTabGroupId", _activeTabGroupId },

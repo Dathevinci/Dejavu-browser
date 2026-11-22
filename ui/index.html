@@ -94,26 +94,27 @@
           </button>
         </div>
 
-        <span class="omnibox-edit-ico" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.2" stroke="currentColor" stroke-width="1.8"/><path d="M15.2 15.2L20 20" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/></svg>
-        </span>
-
-        <div id="omnibox-display" class="omnibox-display" aria-hidden="true">
-          <span id="omnibox-icon" class="omnibox-icon">
+        <div class="omnibox-center">
+          <span id="omnibox-icon" class="omnibox-icon" aria-hidden="true">
             <svg class="ico-lock" viewBox="0 0 24 24" fill="none"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             <svg class="ico-search" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.2" stroke="currentColor" stroke-width="1.8"/><path d="M15.2 15.2L20 20" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/></svg>
           </span>
-          <span id="omnibox-domain" class="omnibox-domain is-placeholder">Search or enter website</span>
-        </div>
 
-        <input
-          id="omnibox-input"
-          type="text"
-          spellcheck="false"
-          autocomplete="off"
-          placeholder="Search or enter website"
-          aria-label="Address bar"
-        >
+          <div class="omnibox-text-wrap">
+            <div id="omnibox-display" class="omnibox-display" aria-hidden="true">
+              <span id="omnibox-domain" class="omnibox-domain is-placeholder">Search or enter website</span>
+            </div>
+
+            <input
+              id="omnibox-input"
+              type="text"
+              spellcheck="false"
+              autocomplete="off"
+              placeholder="Search or enter website"
+              aria-label="Address bar"
+            >
+          </div>
+        </div>
 
         <div class="omnibox-actions">
           <button id="btn-zoom-pill" class="omnibox-zoom-pill hidden" title="Page Zoom (Click to reset to 100%)">100%</button>
@@ -436,15 +437,13 @@
         <span id="startpage-status-text" class="sp-status-text"></span>
       </div>
 
-      <!-- Google Pixel M3 Extended FAB: Customize Start Page -->
+      <!-- Pixelbook / ChromeOS M3 Customize Pill -->
       <button id="btn-wallpaper-store" class="customize-trigger" title="Customize Start Page &amp; Material You Wallpapers">
-        <svg viewBox="0 0 18 18" fill="none" width="15" height="15">
-          <path d="M3 5.2h12M3 9h12M3 12.8h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.72"/>
-          <circle cx="6.2" cy="5.2" r="1.7" fill="currentColor"/>
-          <circle cx="11.8" cy="9" r="1.7" fill="currentColor"/>
-          <circle cx="7.6" cy="12.8" r="1.7" fill="currentColor"/>
+        <svg viewBox="0 0 18 18" fill="none" width="14" height="14">
+          <path d="M12.6 3.2l2.2 2.2-8.4 8.4-3 .8.8-3 8.4-8.4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M10.8 5l2.2 2.2" stroke="currentColor" stroke-width="1.4"/>
         </svg>
-        <span>Customize</span>
+        <span>Customize dejavu</span>
       </button>
     </section>
 
@@ -583,7 +582,7 @@
               <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
             </svg>
             <span class="m3-appbar-title">Settings</span>
-            <span id="settings-version-sub" class="m3-tonal-badge">v5.8.0</span>
+            <span id="settings-version-sub" class="m3-tonal-badge">v5.9.0</span>
           </div>
 
           <div class="m3-appbar-search">
@@ -1752,7 +1751,7 @@
                         </svg>
                       </div>
                       <div class="m3-about-copy">
-                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v5.8.0</span></div>
+                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v5.9.0</span></div>
                         <div class="m3-about-sub">Pure Material Design 3 Browser · 12 HCT Themes, 32 HD Wallpapers, Brave-Grade Shields &amp; 120Hz Tab Engine</div>
                         <div id="about-update-status" class="m3-about-update-line">Checking update status…</div>
                       </div>
@@ -1786,7 +1785,7 @@
                       <div class="opt-row">
                         <div class="opt-meta">
                           <div class="opt-title opt-row-title">GitHub Releases</div>
-                          <div class="opt-desc">View v5.8.0 release notes, Windows Setup installer, and Android APK</div>
+                          <div class="opt-desc">View v5.9.0 release notes, Windows Setup installer, and Android APK</div>
                         </div>
                         <button type="button" id="btn-about-github" class="m3-btn m3-btn-outlined sm">Open GitHub</button>
                       </div>
@@ -2024,7 +2023,7 @@
     <section id="reset-confirm-overlay" class="m3-modal-scrim hidden" aria-label="Reset Settings">
       <div id="reset-confirm-modal" class="m3-dialog-card compact" role="dialog" aria-modal="true">
         <h3 class="m3-dialog-title">Reset dejavu settings?</h3>
-        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v5.8.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
+        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v5.9.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
         <div class="m3-dialog-actions">
           <button type="button" id="btn-reset-cancel" class="m3-btn m3-btn-text">Cancel</button>
           <button type="button" id="btn-reset-confirm" class="m3-btn m3-btn-danger">Reset Settings</button>

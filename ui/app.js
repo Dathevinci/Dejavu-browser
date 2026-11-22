@@ -1,5 +1,5 @@
 /**
- * dejavu v5.8.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * dejavu v5.9.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
  * 12 Official HCT Material You Themes, 32 Pure M3, Butterfly & Froggie Wallpapers, Auto Wallpaper-to-Theme,
  * Redesigned Pixel At-a-Glance Message of the Day Card, Clean 5-Control ChromeOS Toolbar,
  * Zero-Glitch 120Hz Tab Strip, Brave-Grade Shields, Real-Time dejavu Link Hub & 8x Turbo Downloader.
@@ -569,7 +569,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.8.0 — 32 HD + 1 Live = 33 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.9.0 — 32 HD + 1 Live = 33 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 18 Sculptural / Architectural Material Design 3 HD Wallpapers (10 Dark, 8 Light)
@@ -852,7 +852,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.8.0',
+    appVersion: bootData.appVersion || '5.9.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -1340,18 +1340,65 @@
     }
   }
 
+  let lastOmniboxDisplayKey = '';
   function syncOmniboxDisplay(active) {
     if (!omniboxDomain) return;
     if (active && !active.isNewTab) {
       const showFull = !!(state.browserOptions && state.browserOptions.showFullWebsiteAddress);
-      const domain = showFull ? (active.url || active.displayUrl || '') : extractCleanDomain(active.url, active.displayUrl);
-      const nextText = domain || active.displayUrl || '';
-      if (omniboxDomain.textContent !== nextText) omniboxDomain.textContent = nextText;
+      const rawUrl = active.url || active.displayUrl || '';
+      const key = `url|${showFull ? 1 : 0}|${rawUrl}|${active.displayUrl || ''}`;
+      if (key === lastOmniboxDisplayKey) return;
+      lastOmniboxDisplayKey = key;
+
       omniboxDomain.classList.remove('is-placeholder');
+      let rendered = false;
+      try {
+        if (/^https?:\/\//i.test(rawUrl)) {
+          const u = new URL(rawUrl);
+          const scheme = showFull ? `${u.protocol}//` : '';
+          const host = showFull ? u.host : u.host.replace(/^www\./i, '');
+          const rest = (u.pathname === '/' && !u.search && !u.hash)
+            ? ''
+            : `${u.pathname}${u.search}${u.hash}`;
+
+          omniboxDomain.textContent = '';
+          if (scheme) {
+            const spScheme = document.createElement('span');
+            spScheme.className = 'omni-muted';
+            spScheme.textContent = scheme;
+            omniboxDomain.appendChild(spScheme);
+          }
+          const spHost = document.createElement('span');
+          spHost.className = 'omni-host';
+          spHost.textContent = host;
+          omniboxDomain.appendChild(spHost);
+          if (rest) {
+            const spPath = document.createElement('span');
+            spPath.className = 'omni-muted';
+            spPath.textContent = rest;
+            omniboxDomain.appendChild(spPath);
+          }
+          rendered = true;
+        }
+      } catch {}
+
+      if (!rendered) {
+        const nextText = (showFull ? rawUrl : extractCleanDomain(active.url, active.displayUrl)) || active.displayUrl || '';
+        omniboxDomain.textContent = nextText;
+      }
     } else {
-      const nextText = state.isPrivateWindow ? 'Search privately or enter website' : 'Search or enter website name';
-      if (omniboxDomain.textContent !== nextText) omniboxDomain.textContent = nextText;
+      const eng = String((state.browserOptions && state.browserOptions.searchEngine) || state.searchEngine || 'google').toLowerCase();
+      const engName = eng === 'google' ? 'Google' : (eng === 'duckduckgo' ? 'DuckDuckGo' : (eng === 'bing' ? 'Bing' : (eng === 'brave' ? 'Brave' : (eng === 'ecosia' ? 'Ecosia' : ''))));
+      const nextText = state.isPrivateWindow
+        ? 'Search privately or enter a URL'
+        : (engName ? `Search ${engName} or type a URL` : 'Search or type a URL');
+      const key = `ph|${nextText}`;
+      if (key === lastOmniboxDisplayKey) return;
+      lastOmniboxDisplayKey = key;
+      omniboxDomain.textContent = nextText;
       omniboxDomain.classList.add('is-placeholder');
+      if (omniboxInput && omniboxInput.placeholder !== nextText) omniboxInput.placeholder = nextText;
+      if (newtabSearchInput && newtabSearchInput.placeholder !== nextText) newtabSearchInput.placeholder = nextText;
     }
   }
 
@@ -2070,7 +2117,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.8.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.9.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2264,11 +2311,13 @@
   function triggerThemeTransition() {
     if (body.classList.contains('app-booting') || body.classList.contains('reduce-motion')) return;
     body.classList.add('theme-transitioning');
-    if (themeTransitionTimer) clearTimeout(themeTransitionTimer);
-    themeTransitionTimer = setTimeout(() => {
-      themeTransitionTimer = null;
-      body.classList.remove('theme-transitioning');
-    }, 260);
+    if (themeTransitionTimer) cancelAnimationFrame(themeTransitionTimer);
+    themeTransitionTimer = requestAnimationFrame(() => {
+      themeTransitionTimer = requestAnimationFrame(() => {
+        themeTransitionTimer = null;
+        body.classList.remove('theme-transitioning');
+      });
+    });
   }
 
   let lastPolarityKey = '';
@@ -2376,7 +2425,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.8.0';
+    const ver = state.appVersion || '5.9.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -3484,15 +3533,21 @@
     }
   });
 
+  let lastOverviewSig = '';
   function renderTabOverview() {
     const tabs = state.tabs || [];
     const q = (ovSearchInput.value || '').trim().toLowerCase();
+    const grp = (state.tabGroups || []).find((g) => g.id === state.activeTabGroupId);
+    const grpColor = grp ? grp.color : '#d0bcff';
+    const sig = `${q}|${state.activeTabId}|${state.activeTabGroupId}|${state.activeTabGroupName || ''}|${grpColor}|` +
+      tabs.map((t) => `${t.id}:${t.title || ''}:${t.favicon || ''}:${t.pinned || t.isPinned ? 1 : 0}:${t.thumbnail ? t.thumbnail.length : 0}`).join(';');
+    if (sig === lastOverviewSig) return;
+    lastOverviewSig = sig;
+
     const filtered = q
       ? tabs.filter((t) => (t.title || '').toLowerCase().includes(q) || (t.url || '').toLowerCase().includes(q))
       : tabs;
 
-    const grp = (state.tabGroups || []).find((g) => g.id === state.activeTabGroupId);
-    const grpColor = grp ? grp.color : '#d0bcff';
     ovGroupDot.style.background = grpColor;
     ovGroupName.textContent = state.activeTabGroupName || 'Start Tabs';
     ovTabCount.textContent = String(tabs.length);
@@ -4320,9 +4375,12 @@
     }
 
     const showHover = !(state.browserOptions && state.browserOptions.tabHoverPreview === false);
-    const existingTabNodes = Array.from(tabsStrip.children).filter(
-      (n) => n.classList && n.classList.contains('tab-pill')
-    );
+    const existingTabNodes = [];
+    const stripKids = tabsStrip.children;
+    for (let i = 0; i < stripKids.length; i++) {
+      const n = stripKids[i];
+      if (n.classList && n.classList.contains('tab-pill')) existingTabNodes.push(n);
+    }
     const newTabBtnInStrip = (btnNewTab && btnNewTab.parentNode === tabsStrip) ? btnNewTab : null;
     const allowEnterAnim = hasCompletedInitialTabSync && !body.classList.contains('app-booting');
     let pinnedCount = 0;
@@ -4380,6 +4438,7 @@
           iconMode: 'svg',
           pinned: false,
           muted: false,
+          suspended: false,
           active: false,
           showAudio: false,
           hasAudioCls: false,
@@ -4463,6 +4522,11 @@
       if (meta.muted !== isMuted) {
         meta.muted = isMuted;
         el.classList.toggle('muted', isMuted);
+      }
+      const isSuspended = !tab.isNewTab && !!tab.isSuspended;
+      if (meta.suspended !== isSuspended) {
+        meta.suspended = isSuspended;
+        el.classList.toggle('suspended', isSuspended);
       }
 
       const wasActive = meta.active;
@@ -4996,8 +5060,6 @@
     if (shieldCount.style.display !== nextShieldDisp) shieldCount.style.display = nextShieldDisp;
     const nextShieldTxt = onNewTab ? '' : String((active && active.blockedCount) || 0);
     if (shieldCount.textContent !== nextShieldTxt) shieldCount.textContent = nextShieldTxt;
-
-    updateRailIndicators();
   }
 
   function applyTabDelta(msg) {
@@ -5041,6 +5103,7 @@
 
     const active = state.tabs.find((t) => t.id === state.activeTabId);
     syncActiveTabChrome(active, state);
+    updateRailIndicators();
     updateStatText(state.globalAdBlockEnabled, state.totalBlocked);
     if (state.tabOverviewOpen) renderTabOverview();
 
@@ -5129,7 +5192,10 @@
     if (ovOpen) {
       wallpaperStore.classList.add('hidden');
       shortcutModal.classList.add('hidden');
-      if (!wasOverview) ovSearchInput.value = '';
+      if (!wasOverview) {
+        ovSearchInput.value = '';
+        lastOverviewSig = '';
+      }
       renderTabOverview();
       window.DejavuNewTabCanvas.start();
     }
@@ -6229,6 +6295,7 @@
     if (bRm) bRm.addEventListener('click', () => { activeExtensionDetailId = null; send({ type: 'extRemove', id: ext.id }); });
   }
 
+  let lastExtGridSig = '';
   function renderExtensionsManager() {
     if (!extensionsOverlay || !extCardsGrid) return;
     const list = Array.isArray(state.extensions) ? state.extensions : [];
@@ -6248,6 +6315,7 @@
       if (detailExt) {
         if (extViewGrid) extViewGrid.classList.add('hidden');
         if (extViewDetails) extViewDetails.classList.remove('hidden');
+        lastExtGridSig = '';
         renderExtensionDetails(detailExt);
         return;
       }
@@ -6259,6 +6327,12 @@
 
     const q = (extSearchInput ? extSearchInput.value : '').trim().toLowerCase();
     if (btnExtSearchClear) btnExtSearchClear.classList.toggle('hidden', !q);
+
+    const gridSig = `${q}|${devMode ? 1 : 0}|` + list.map((e) =>
+      `${e.id}:${e.name || ''}:${e.version || ''}:${e.enabled !== false ? 1 : 0}:${e.pinned ? 1 : 0}:${e.source || ''}:${e.iconDataUrl ? e.iconDataUrl.length : 0}`
+    ).join(';');
+    if (gridSig === lastExtGridSig) return;
+    lastExtGridSig = gridSig;
 
     const filtered = q
       ? list.filter((e) =>

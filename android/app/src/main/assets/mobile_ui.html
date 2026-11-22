@@ -672,7 +672,8 @@
     }
     .sp-motd-card:active { transform: scale(0.988); }
     body.theme-light .sp-motd-card {
-      background: var(--sheet-elev);
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(29, 27, 32, 0.08), 0 3px 10px rgba(29, 27, 32, 0.05);
     }
     .sp-motd-medallion {
       width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
@@ -761,24 +762,25 @@
     }
     .fav-tile:active { transform: scale(0.94); opacity: 0.92; }
     .fav-sq {
-      width: 52px; height: 52px; border-radius: 18px;
+      width: 52px; height: 52px; border-radius: 50%;
       background: var(--sheet-elev); border: none;
       box-shadow: var(--shadow-sm);
       display: flex; align-items: center; justify-content: center;
       overflow: hidden; position: relative;
-      transition: background-color 0.16s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring);
+      transition: border-radius 0.2s var(--md-ease-decel), background-color 0.16s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring);
     }
-    body.theme-light .fav-sq { background: rgba(255, 255, 255, 0.92); }
-    .fav-tile:active .fav-sq { background: var(--accent-soft); }
-    .fav-sq .site-ico { width: 30px; height: 30px; border-radius: 9px; font-size: 14px; }
-    .fav-sq.add-sq { background: var(--sheet-elev); color: var(--muted); box-shadow: none; opacity: 0.88; }
-    body.theme-light .fav-sq.add-sq { background: rgba(236, 230, 240, 0.9); }
+    body.theme-light .fav-sq { background: #ffffff; }
+    .fav-tile:active .fav-sq { border-radius: 17px; background: var(--accent-soft); }
+    .fav-sq .site-ico { width: 28px; height: 28px; border-radius: 8px; font-size: 14px; }
+    .fav-sq.add-sq { background: var(--accent-soft); color: var(--accent-bright); box-shadow: none; }
+    body.theme-light .fav-sq.add-sq { background: var(--accent-soft); color: var(--accent); }
     .fav-lbl {
       font-size: 11.5px; font-weight: 540; color: var(--ink);
-      max-width: 74px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+      max-width: 76px; padding: 1.5px 7px; border-radius: 999px;
+      background: rgba(20, 18, 24, 0.56);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    body.theme-light .fav-lbl { text-shadow: none; }
+    body.theme-light .fav-lbl { background: rgba(255, 255, 255, 0.84); }
     .fav-del {
       position: absolute; top: -5px; right: 6px; z-index: 3;
       width: 20px; height: 20px; border-radius: 50%;
@@ -1003,7 +1005,7 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.8.0) — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.9.0) — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
@@ -1505,7 +1507,7 @@
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
     /* =====================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.8.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.9.0)
        ===================================================================== */
     .sh-hero-card {
       background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
@@ -1888,7 +1890,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.8.0) — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.9.0) — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2184,7 +2186,7 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.8v5.2M12 7.8h.01"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.8.0 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.9.0 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -2452,7 +2454,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.8.0 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.9.0 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2476,10 +2478,10 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update updater github releases signed sha256 version 5.8.0 about">
+              <div class="g-row set-item" data-search="software update updater github releases signed sha256 version 5.9.0 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.8.0</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.9.0</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
                 <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check for updates</button>
@@ -2504,7 +2506,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.8.0
+          dejavu Mobile v5.9.0
         </div>
       </div>
     </div>
@@ -2776,7 +2778,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.8.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.9.0)
        =================================================================== -->
   <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2904,7 +2906,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.8.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.9.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -3112,7 +3114,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.8.0)
+    // Zero-mutation DOM equality-guard helpers (v5.9.0)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -4100,7 +4102,7 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.8.0)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.9.0)
     const _domSigs = {
       sysTop: '',
       safeTop: '',
@@ -5009,7 +5011,7 @@
       setTxt(document.getElementById('set-sum-downloads'), `${ytqLbl}${state.floatingDownloadButton !== false ? ' · Floating pill' : ''}`);
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.8.0';
+      const curV = u.currentVersion || '5.9.0';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -5613,7 +5615,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.8.0 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.9.0 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -6159,7 +6161,7 @@
               ],
               drops: [
                 { id: 'vid_pc_1', dropType: 'video', title: 'Material 3 Expressive Motion Deep Dive', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=422', text: 'Continue watching at 07:02', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 45000 },
-                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.8.0-release.mp4', url: 'https://example.com/dejavu-v5.8.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
+                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.9.0-release.mp4', url: 'https://example.com/dejavu-v5.9.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
                 { id: 'bt_pc_1', dropType: 'batch_tabs', title: '2 tabs from Windows 11 Desktop', url: 'https://m3.material.io', text: 'Material Design 3 · GitHub', tabs: [{ title: 'Material Design 3', url: 'https://m3.material.io' }, { title: 'GitHub', url: 'https://github.com' }], fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 210000 }
               ]
             } : {
@@ -6225,9 +6227,9 @@
               ],
               sync: previewSync,
               update: {
-                currentVersion: '5.8.0',
+                currentVersion: '5.9.0',
                 status: qp.get('upd') === '1' ? 'available' : 'uptodate',
-                latestVersion: qp.get('upd') === '1' ? '5.9.0' : '5.8.0',
+                latestVersion: qp.get('upd') === '1' ? '5.10.0' : '5.9.0',
                 sizeLabel: qp.get('upd') === '1' ? '10.2 MB' : '',
                 releaseUrl: 'https://github.com/Dathevinci/Dejavu-browser/releases/latest',
                 available: qp.get('upd') === '1',

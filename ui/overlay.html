@@ -6,56 +6,7 @@
   <title>dejavu overlay</title>
   <link rel="stylesheet" href="https://dejavu.local/styles.css">
   <style>
-    /* All 12 Official Google Material Design 3 HCT Palettes (Dark & Light — synced 1:1 with styles.css) */
-    :root[data-accent="amethyst"] { --md-surface:#141218;--md-surface-container-lowest:#0f0d13;--md-surface-container-low:#1d1b20;--md-surface-container:#211f26;--md-surface-container-high:#2b2930;--md-surface-container-highest:#36343b;--md-on-surface:#e6e0e9;--md-on-surface-variant:#cac4d0;--md-outline:#938f99;--md-outline-variant:#49454f;--md-primary:#d0bcff;--md-on-primary:#381e72;--md-primary-container:#4f378b;--md-on-primary-container:#eaddff;--md-secondary-container:#4a4458;--md-on-secondary-container:#e8def8;--md-tertiary:#80d5c4;--md-on-tertiary:#003730;--md-tertiary-container:#005046;--md-on-tertiary-container:#9df2e0; }
-    :root[data-accent="sapphire"] { --md-surface:#111318;--md-surface-container-lowest:#0c0e13;--md-surface-container-low:#191c20;--md-surface-container:#1d2024;--md-surface-container-high:#282a2f;--md-surface-container-highest:#33353a;--md-on-surface:#e2e2e9;--md-on-surface-variant:#c4c6d0;--md-outline:#8e9099;--md-outline-variant:#44474e;--md-primary:#a8c7fa;--md-on-primary:#062e6f;--md-primary-container:#0842a0;--md-on-primary-container:#d3e3fd;--md-secondary-container:#3a465c;--md-on-secondary-container:#dae2f9;--md-tertiary:#7cd8c4;--md-on-tertiary:#003730;--md-tertiary-container:#005046;--md-on-tertiary-container:#9ef2e0; }
-    :root[data-accent="indigo"]   { --md-surface:#12131b;--md-surface-container-lowest:#0d0e15;--md-surface-container-low:#1a1b23;--md-surface-container:#1e1f27;--md-surface-container-high:#292a32;--md-surface-container-highest:#34353d;--md-on-surface:#e3e1ec;--md-on-surface-variant:#c5c5d6;--md-outline:#8f909f;--md-outline-variant:#454654;--md-primary:#bbc3ff;--md-on-primary:#1a2773;--md-primary-container:#303f9f;--md-on-primary-container:#dfe0ff;--md-secondary-container:#3f425d;--md-on-secondary-container:#e0e1f9;--md-tertiary:#93d5d1;--md-on-tertiary:#003734;--md-tertiary-container:#0f4f4c;--md-on-tertiary-container:#b2f1ec; }
-    :root[data-accent="aurora"]   { --md-surface:#0f1513;--md-surface-container-lowest:#0a0f0e;--md-surface-container-low:#171d1b;--md-surface-container:#1b211f;--md-surface-container-high:#252b29;--md-surface-container-highest:#303634;--md-on-surface:#dee4e0;--md-on-surface-variant:#bfc9c4;--md-outline:#89938e;--md-outline-variant:#3f4945;--md-primary:#7bd8c6;--md-on-primary:#003731;--md-primary-container:#005048;--md-on-primary-container:#98f5e2;--md-secondary-container:#334b46;--md-on-secondary-container:#cde8e0;--md-tertiary:#a9cbe5;--md-on-tertiary:#0c344a;--md-tertiary-container:#284b62;--md-on-tertiary-container:#cce5ff; }
-    :root[data-accent="emerald"]  { --md-surface:#101511;--md-surface-container-lowest:#0b0f0c;--md-surface-container-low:#181d19;--md-surface-container:#1c211d;--md-surface-container-high:#262c27;--md-surface-container-highest:#313732;--md-on-surface:#dfe4de;--md-on-surface-variant:#c0c9c0;--md-outline:#8a938b;--md-outline-variant:#414942;--md-primary:#8bd89b;--md-on-primary:#003915;--md-primary-container:#005321;--md-on-primary-container:#a7f5b5;--md-secondary-container:#374b3a;--md-on-secondary-container:#d3e8d4;--md-tertiary:#9ed0e0;--md-on-tertiary:#003642;--md-tertiary-container:#1b4d5a;--md-on-tertiary-container:#baecfc; }
-    :root[data-accent="lime"]     { --md-surface:#14150e;--md-surface-container-lowest:#0f100a;--md-surface-container-low:#1c1d16;--md-surface-container:#20211a;--md-surface-container-high:#2a2c24;--md-surface-container-highest:#35372e;--md-on-surface:#e4e3d7;--md-on-surface-variant:#c7c8b8;--md-outline:#919283;--md-outline-variant:#46483b;--md-primary:#c4d97a;--md-on-primary:#2c3400;--md-primary-container:#404c00;--md-on-primary-container:#e0f693;--md-secondary-container:#444931;--md-on-secondary-container:#e1e6c7;--md-tertiary:#8cd6c1;--md-on-tertiary:#00382e;--md-tertiary-container:#005043;--md-on-tertiary-container:#a8f3dd; }
-    :root[data-accent="gold"]     { --md-surface:#17130d;--md-surface-container-lowest:#110e09;--md-surface-container-low:#1f1b15;--md-surface-container:#241f19;--md-surface-container-high:#2e2923;--md-surface-container-highest:#39342d;--md-on-surface:#ebe1d7;--md-on-surface-variant:#d2c4b4;--md-outline:#9b8f80;--md-outline-variant:#4f4539;--md-primary:#ffb951;--md-on-primary:#462a00;--md-primary-container:#643e00;--md-on-primary-container:#ffddb3;--md-secondary-container:#56442c;--md-on-secondary-container:#f9e0be;--md-tertiary:#a8d49c;--md-on-tertiary:#14380d;--md-tertiary-container:#2a4f23;--md-on-tertiary-container:#c3f0b7; }
-    :root[data-accent="coral"]    { --md-surface:#191210;--md-surface-container-lowest:#130d0b;--md-surface-container-low:#221a17;--md-surface-container:#261e1b;--md-surface-container-high:#312825;--md-surface-container-highest:#3c3330;--md-on-surface:#f0dfd9;--md-on-surface-variant:#d8c2ba;--md-outline:#a08d86;--md-outline-variant:#53433e;--md-primary:#ffb59d;--md-on-primary:#5c1900;--md-primary-container:#822806;--md-on-primary-container:#ffdbd0;--md-secondary-container:#5d4036;--md-on-secondary-container:#ffdbd0;--md-tertiary:#8cd5b8;--md-on-tertiary:#003827;--md-tertiary-container:#0b513a;--md-on-tertiary-container:#a8f2d4; }
-    :root[data-accent="crimson"]  { --md-surface:#1a1112;--md-surface-container-lowest:#140c0d;--md-surface-container-low:#23191a;--md-surface-container:#271d1e;--md-surface-container-high:#322728;--md-surface-container-highest:#3d3233;--md-on-surface:#f0dedf;--md-on-surface-variant:#d8c1c2;--md-outline:#a08c8d;--md-outline-variant:#534344;--md-primary:#ffb3b5;--md-on-primary:#680014;--md-primary-container:#920020;--md-on-primary-container:#ffdada;--md-secondary-container:#5d3f41;--md-on-secondary-container:#ffdada;--md-tertiary:#8ad6bd;--md-on-tertiary:#003829;--md-tertiary-container:#04513d;--md-on-tertiary-container:#a6f3d9; }
-    :root[data-accent="rose"]     { --md-surface:#181114;--md-surface-container-lowest:#120c0f;--md-surface-container-low:#21191d;--md-surface-container:#251d21;--md-surface-container-high:#30282c;--md-surface-container-highest:#3b3237;--md-on-surface:#ecdfe4;--md-on-surface-variant:#d4c2c9;--md-outline:#9d8d93;--md-outline-variant:#504349;--md-primary:#ffb0ce;--md-on-primary:#5e1136;--md-primary-container:#7b294d;--md-on-primary-container:#ffd8e6;--md-secondary-container:#583f49;--md-on-secondary-container:#fdd9e6;--md-tertiary:#88d6c0;--md-on-tertiary:#00382c;--md-tertiary-container:#005140;--md-on-tertiary-container:#a4f3dc; }
-    :root[data-accent="lavender"] { --md-surface:#161219;--md-surface-container-lowest:#100d13;--md-surface-container-low:#1e1a21;--md-surface-container:#221e26;--md-surface-container-high:#2d2830;--md-surface-container-highest:#38333b;--md-on-surface:#e9e0ec;--md-on-surface-variant:#cdc3d2;--md-outline:#978d9c;--md-outline-variant:#4b4450;--md-primary:#e2b7ff;--md-on-primary:#48116e;--md-primary-container:#612b87;--md-on-primary-container:#f3daff;--md-secondary-container:#4f425a;--md-on-secondary-container:#eedcf8;--md-tertiary:#86d6c3;--md-on-tertiary:#00382e;--md-tertiary-container:#005044;--md-on-tertiary-container:#a2f3df; }
-    :root[data-accent="silver"]   { --md-surface:#121316;--md-surface-container-lowest:#0d0e11;--md-surface-container-low:#1a1c1f;--md-surface-container:#1e2024;--md-surface-container-high:#292b2f;--md-surface-container-highest:#34363a;--md-on-surface:#e3e2e6;--md-on-surface-variant:#c4c6cf;--md-outline:#8e9099;--md-outline-variant:#44474e;--md-primary:#b8c8e2;--md-on-primary:#223146;--md-primary-container:#38485e;--md-on-primary-container:#d8e4f8;--md-secondary-container:#3e4552;--md-on-secondary-container:#dce4f2;--md-tertiary:#84d4c6;--md-on-tertiary:#003731;--md-tertiary-container:#005047;--md-on-tertiary-container:#a0f1e2; }
-
-    body.theme-light[data-accent="amethyst"] { --md-surface:#fef7ff;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#f7f2fa;--md-surface-container:#f3edf7;--md-surface-container-high:#ece6f0;--md-surface-container-highest:#e6e0e9;--md-on-surface:#1d1b20;--md-on-surface-variant:#49454f;--md-outline:#79747e;--md-outline-variant:#cac4d0;--md-primary:#6750a4;--md-on-primary:#ffffff;--md-primary-container:#eaddff;--md-on-primary-container:#21005d;--md-secondary-container:#e8def8;--md-on-secondary-container:#1d192b; }
-    body.theme-light[data-accent="sapphire"] { --md-surface:#faf9ff;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#f3f4fb;--md-surface-container:#edeff7;--md-surface-container-high:#e7e9f1;--md-surface-container-highest:#e1e3eb;--md-on-surface:#1a1b20;--md-on-surface-variant:#44474e;--md-outline:#74777f;--md-outline-variant:#c4c6d0;--md-primary:#1b6ef3;--md-on-primary:#ffffff;--md-primary-container:#d3e3fd;--md-on-primary-container:#041e49;--md-secondary-container:#dae2f9;--md-on-secondary-container:#131c2b; }
-    body.theme-light[data-accent="indigo"]   { --md-surface:#fbf8ff;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#f4f2fc;--md-surface-container:#eeecf6;--md-surface-container-high:#e8e6f0;--md-surface-container-highest:#e2e0eb;--md-on-surface:#1b1b23;--md-on-surface-variant:#454654;--md-outline:#767685;--md-outline-variant:#c5c5d6;--md-primary:#3f51b5;--md-on-primary:#ffffff;--md-primary-container:#dfe0ff;--md-on-primary-container:#000c62;--md-secondary-container:#e0e1f9;--md-on-secondary-container:#181a2c; }
-    body.theme-light[data-accent="aurora"]   { --md-surface:#f4fbf8;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#eef5f2;--md-surface-container:#e8efec;--md-surface-container-high:#e2eae7;--md-surface-container-highest:#dce4e1;--md-on-surface:#161d1b;--md-on-surface-variant:#3f4945;--md-outline:#6f7975;--md-outline-variant:#bfc9c4;--md-primary:#006a60;--md-on-primary:#ffffff;--md-primary-container:#98f5e2;--md-on-primary-container:#00201c;--md-secondary-container:#cde8e0;--md-on-secondary-container:#05201c; }
-    body.theme-light[data-accent="emerald"]  { --md-surface:#f5fbf5;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#eff5ef;--md-surface-container:#e9efe9;--md-surface-container-high:#e3eae3;--md-surface-container-highest:#dde4dd;--md-on-surface:#171d18;--md-on-surface-variant:#414942;--md-outline:#717971;--md-outline-variant:#c0c9c0;--md-primary:#146c2e;--md-on-primary:#ffffff;--md-primary-container:#a7f5b5;--md-on-primary-container:#002109;--md-secondary-container:#d3e8d4;--md-on-secondary-container:#0e2011; }
-    body.theme-light[data-accent="lime"]     { --md-surface:#fafaf0;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#f4f4ea;--md-surface-container:#eeeee4;--md-surface-container-high:#e8e8de;--md-surface-container-highest:#e2e3d8;--md-on-surface:#1b1c15;--md-on-surface-variant:#46483b;--md-outline:#77786a;--md-outline-variant:#c7c8b8;--md-primary:#556600;--md-on-primary:#ffffff;--md-primary-container:#e0f693;--md-on-primary-container:#181e00;--md-secondary-container:#e1e6c7;--md-on-secondary-container:#1a1e0a; }
-    body.theme-light[data-accent="gold"]     { --md-surface:#fff8f2;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#faf1e8;--md-surface-container:#f4ebe2;--md-surface-container-high:#eee5dc;--md-surface-container-highest:#e8dfd6;--md-on-surface:#201b14;--md-on-surface-variant:#4f4539;--md-outline:#807567;--md-outline-variant:#d2c4b4;--md-primary:#8a5600;--md-on-primary:#ffffff;--md-primary-container:#ffddb3;--md-on-primary-container:#2c1700;--md-secondary-container:#f9e0be;--md-on-secondary-container:#281904; }
-    body.theme-light[data-accent="coral"]    { --md-surface:#fff8f6;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#fcf0ec;--md-surface-container:#f6eae6;--md-surface-container-high:#f0e4e0;--md-surface-container-highest:#eaded9;--md-on-surface:#231917;--md-on-surface-variant:#53433e;--md-outline:#85736d;--md-outline-variant:#d8c2ba;--md-primary:#b33b15;--md-on-primary:#ffffff;--md-primary-container:#ffdbd0;--md-on-primary-container:#3c0d00;--md-secondary-container:#fbddd3;--md-on-secondary-container:#2d150e; }
-    body.theme-light[data-accent="crimson"]  { --md-surface:#fff8f7;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#fcf0f0;--md-surface-container:#f6eaea;--md-surface-container-high:#f0e4e4;--md-surface-container-highest:#eadede;--md-on-surface:#23191a;--md-on-surface-variant:#534344;--md-outline:#857374;--md-outline-variant:#d8c1c2;--md-primary:#ba1a2d;--md-on-primary:#ffffff;--md-primary-container:#ffdada;--md-on-primary-container:#400009;--md-secondary-container:#fbdddd;--md-on-secondary-container:#2c1516; }
-    body.theme-light[data-accent="rose"]     { --md-surface:#fff8f8;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#faf0f3;--md-surface-container:#f4eaed;--md-surface-container-high:#eee4e7;--md-surface-container-highest:#e8dfe2;--md-on-surface:#21191c;--md-on-surface-variant:#504349;--md-outline:#827379;--md-outline-variant:#d4c2c9;--md-primary:#a83268;--md-on-primary:#ffffff;--md-primary-container:#ffd8e6;--md-on-primary-container:#3e001f;--md-secondary-container:#f9d8e4;--md-on-secondary-container:#2c151e; }
-    body.theme-light[data-accent="lavender"] { --md-surface:#fdf7ff;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#f7f1fa;--md-surface-container:#f1ebf4;--md-surface-container-high:#ebe5ee;--md-surface-container-highest:#e5dfe8;--md-on-surface:#1e1a21;--md-on-surface-variant:#4b4450;--md-outline:#7c7482;--md-outline-variant:#cdc3d2;--md-primary:#7c43a8;--md-on-primary:#ffffff;--md-primary-container:#f3daff;--md-on-primary-container:#2c004d;--md-secondary-container:#eedcf8;--md-on-secondary-container:#23172c; }
-    body.theme-light[data-accent="silver"]   { --md-surface:#f9f9fc;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#f2f3f7;--md-surface-container:#ecedf1;--md-surface-container-high:#e6e8ec;--md-surface-container-highest:#e0e2e6;--md-on-surface:#1a1c1f;--md-on-surface-variant:#44474e;--md-outline:#74777f;--md-outline-variant:#c4c6cf;--md-primary:#455a77;--md-on-primary:#ffffff;--md-primary-container:#d8e4f8;--md-on-primary-container:#0f1f36;--md-secondary-container:#dce4f0;--md-on-secondary-container:#172334; }
-
-    /* Sleek Global 6px Transparent-Track Material 3 Custom Scrollbars (ZERO classic white Windows bars or arrows) */
-    @supports not selector(::-webkit-scrollbar) {
-      * {
-        scrollbar-width: thin;
-        scrollbar-color: color-mix(in srgb, var(--md-outline-variant) 75%, transparent) transparent;
-      }
-    }
-    *::-webkit-scrollbar { width: 6px; height: 6px; }
-    *::-webkit-scrollbar-track { background: transparent; margin: 3px 0; }
-    *::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-    *::-webkit-scrollbar-corner { background: transparent; }
-    *::-webkit-scrollbar-thumb {
-      background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent);
-      border-radius: 999px;
-      border: 1px solid transparent;
-      background-clip: content-box;
-    }
-    *::-webkit-scrollbar-thumb:hover {
-      background: var(--md-outline);
-      border: 1px solid transparent;
-      background-clip: content-box;
-    }
-
+    /* All 12 Dark & Light Material You HCT palettes + global scrollbars are inherited directly from styles.css */
     html, body {
       width: 100%;
       height: 100%;
@@ -76,17 +27,17 @@
       display: flex;
       width: 100%;
       height: 100%;
-      border-radius: 20px;
+      border-radius: 22px;
       background: var(--md-surface-container-high);
-      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 65%, transparent);
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 42%, transparent);
       box-shadow: var(--md-elev-3);
       contain: layout style;
-      will-change: transform, opacity;
-      animation: m3OverlayIn 170ms var(--md-ease-emphasized-decel);
+      animation: m3OverlayIn 160ms var(--md-ease-emphasized-decel);
     }
 
     body.theme-light .overlay-shell {
-      background: var(--md-surface-container-lowest);
+      background: var(--md-surface-container-low);
+      border-color: color-mix(in srgb, var(--md-outline-variant) 58%, transparent);
     }
 
     @keyframes m3OverlayIn {
@@ -123,12 +74,6 @@
       overflow-y: auto;
       overflow-x: hidden;
     }
-
-    .ctxm-box::-webkit-scrollbar { width: 6px; height: 6px; }
-    .ctxm-box::-webkit-scrollbar-track { background: transparent; }
-    .ctxm-box::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-    .ctxm-box::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent); border-radius: var(--md-shape-full); border: 1px solid transparent; background-clip: content-box; }
-    .ctxm-box::-webkit-scrollbar-thumb:hover { background: var(--md-outline); }
 
     .ctxm-header {
       display: flex;
@@ -303,10 +248,10 @@
       justify-content: center;
       gap: 5px;
       white-space: nowrap;
-      transition: filter var(--md-dur-short) ease, transform var(--md-dur-press) var(--md-ease-emphasized);
+      transition: box-shadow var(--md-dur-short) ease, transform var(--md-dur-press) var(--md-ease-emphasized);
     }
 
-    .pill-btn:hover { filter: brightness(1.06); }
+    .pill-btn:hover { box-shadow: var(--md-state-on-tonal); }
     .pill-btn:active { transform: scale(0.97); }
     .pill-btn:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 1px; }
 
@@ -314,6 +259,8 @@
       background: var(--md-primary);
       color: var(--md-on-primary);
     }
+
+    .pill-btn.primary:hover { box-shadow: var(--md-elev-1), var(--md-state-on-primary); }
 
     /* Brave × Google Pixel Material Design 3 Shields Popover (348x456) */
     .shield-box {
@@ -326,12 +273,6 @@
       overflow-y: auto;
       overflow-x: hidden;
     }
-
-    .shield-box::-webkit-scrollbar { width: 6px; height: 6px; }
-    .shield-box::-webkit-scrollbar-track { background: transparent; }
-    .shield-box::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-    .shield-box::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent); border-radius: var(--md-shape-full); border: 1px solid transparent; background-clip: content-box; }
-    .shield-box::-webkit-scrollbar-thumb:hover { background: var(--md-outline); }
 
     .sh-head {
       display: flex;
@@ -387,7 +328,7 @@
       padding: 10px 12px;
       border-radius: 16px;
       background: var(--md-surface-container);
-      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 34%, transparent);
+      border: none;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -395,7 +336,7 @@
     }
 
     body.theme-light .sh-hero-card {
-      background: var(--md-surface-container-low);
+      background: var(--md-surface-container-lowest);
     }
 
     .sh-hero-top {
@@ -465,7 +406,7 @@
     }
 
     body.theme-light .sh-stat-cell {
-      background: var(--md-surface-container-lowest);
+      background: var(--md-surface-container-low);
     }
 
     .sh-stat-k {
@@ -563,7 +504,7 @@
     .sh-toggles-card {
       border-radius: 16px;
       background: var(--md-surface-container);
-      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 34%, transparent);
+      border: none;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -571,7 +512,7 @@
     }
 
     body.theme-light .sh-toggles-card {
-      background: var(--md-surface-container-low);
+      background: var(--md-surface-container-lowest);
     }
 
     .sh-toggles-card.is-muted {
@@ -742,34 +683,10 @@
       overflow-x: hidden;
       overscroll-behavior: contain;
       contain: strict;
-      transform: translateZ(0);
-      will-change: scroll-position;
       display: flex;
       flex-direction: column;
       gap: 5px;
       padding-right: 4px;
-    }
-
-    .panel-scroll::-webkit-scrollbar,
-    .sb-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-    .panel-scroll::-webkit-scrollbar-track,
-    .sb-scroll::-webkit-scrollbar-track { background: transparent; margin: 2px 0; }
-    .panel-scroll::-webkit-scrollbar-button,
-    .sb-scroll::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-    .panel-scroll::-webkit-scrollbar-corner,
-    .sb-scroll::-webkit-scrollbar-corner { background: transparent; }
-    .panel-scroll::-webkit-scrollbar-thumb,
-    .sb-scroll::-webkit-scrollbar-thumb {
-      background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent);
-      border-radius: var(--md-shape-full);
-      border: 1px solid transparent;
-      background-clip: content-box;
-    }
-    .panel-scroll::-webkit-scrollbar-thumb:hover,
-    .sb-scroll::-webkit-scrollbar-thumb:hover {
-      background: var(--md-outline);
-      border: 1px solid transparent;
-      background-clip: content-box;
     }
 
     .prof-row, .hist-row, .sb-row, .dls-row, .vpn-country-row, .ctxm-item, .menu-item, .ext-pop-row {
@@ -996,12 +913,6 @@
       overflow-y: auto;
       overflow-x: hidden;
     }
-
-    .menu-box::-webkit-scrollbar { width: 6px; height: 6px; }
-    .menu-box::-webkit-scrollbar-track { background: transparent; }
-    .menu-box::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-    .menu-box::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent); border-radius: var(--md-shape-full); border: 1px solid transparent; background-clip: content-box; }
-    .menu-box::-webkit-scrollbar-thumb:hover { background: var(--md-outline); }
 
     .menu-item {
       height: 34px;
@@ -1243,7 +1154,7 @@
     .hist-row:hover .hist-row-acts { display: flex; }
 
     /* =========================================================================
-       Mode 7: Upgraded Material Design 3 VPN Control Center (v5.8.0 · 392×584)
+       Mode 7: Upgraded Material Design 3 VPN Control Center (v5.9.0 · 392×584)
        Verified Tunnel Status Strip · 1-Tap Verify + New IP · Active Engine Pill
        ========================================================================= */
     .vpn-panel-box {
@@ -2000,10 +1911,10 @@
       font-size: 10.6px;
       font-weight: 600;
       cursor: pointer;
-      transition: filter var(--md-dur-short) ease;
+      transition: box-shadow var(--md-dur-short) ease;
     }
 
-    .sb-mini-pill:hover { filter: brightness(1.06); }
+    .sb-mini-pill:hover { box-shadow: var(--md-state-on-tonal); }
     .sb-mini-pill.saved { background: var(--md-tertiary-container); color: var(--md-on-tertiary-container); }
 
     .sb-row {
@@ -2268,10 +2179,10 @@
       cursor: pointer;
       flex-shrink: 0;
       white-space: nowrap;
-      transition: filter var(--md-dur-short) ease, transform var(--md-dur-press) ease;
+      transition: background-color var(--md-dur-short) ease, transform var(--md-dur-press) ease;
     }
 
-    .sync-ping-pill:hover { filter: brightness(1.1); }
+    .sync-ping-pill:hover { background: color-mix(in srgb, var(--md-on-surface) 20%, transparent); }
     .sync-ping-pill:active { transform: scale(0.95); }
 
     .sync-status-meta {
@@ -2338,7 +2249,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      transition: filter var(--md-dur-short) ease, transform var(--md-dur-press) ease;
+      transition: box-shadow var(--md-dur-short) ease, transform var(--md-dur-press) ease;
     }
 
     .sync-act-pill.primary {
@@ -2346,7 +2257,8 @@
       color: var(--md-on-primary);
     }
 
-    .sync-act-pill:hover:not(:disabled) { filter: brightness(1.06); }
+    .sync-act-pill:hover:not(:disabled) { box-shadow: var(--md-state-on-tonal); }
+    .sync-act-pill.primary:hover:not(:disabled) { box-shadow: var(--md-elev-1), var(--md-state-on-primary); }
     .sync-act-pill:active:not(:disabled) { transform: scale(0.97); }
     .sync-act-pill:disabled { opacity: 0.42; cursor: default; }
 
@@ -3213,7 +3125,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v5.8.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v5.9.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -3288,7 +3200,7 @@
     </div>
   </div>
 
-  <!-- Mode 7: Upgraded Material Design 3 VPN Control Center (v5.8.0 · 392×584) -->
+  <!-- Mode 7: Upgraded Material Design 3 VPN Control Center (v5.9.0 · 392×584) -->
   <div id="mode-vpn" class="overlay-shell hidden">
     <div class="panel-box vpn-panel-box">
       <div class="panel-head">
@@ -3759,7 +3671,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v5.8.0</span>
+        <span id="mn-version-lbl">dejavu v5.9.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -4381,7 +4293,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.8.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.9.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -5838,7 +5750,7 @@
     function renderMenuPanel(d) {
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.8.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.9.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');

@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Lightweight, read-only GitHub Releases update checker for dejavu Mobile v5.8.0.
+ * Lightweight, read-only GitHub Releases update checker for dejavu Mobile v5.9.0.
  * Checks the official GitHub Releases API over HTTPS and opens the verified release page
  * in the browser via standard ACTION_VIEW (zero self-installing or dropper behavior).
  */
@@ -50,7 +50,7 @@ public final class MobileAutoUpdater {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private volatile String currentVersion = "5.8.0";
+    private volatile String currentVersion = "5.9.0";
     private volatile String status = "idle"; // "idle" | "checking" | "uptodate" | "available" | "error"
     private volatile String latestVersion = "";
     private volatile String releaseUrl = DEFAULT_RELEASES_URL;
@@ -72,7 +72,7 @@ public final class MobileAutoUpdater {
                 return cleanVersion(pi.versionName);
             }
         } catch (Exception ignored) { }
-        return "5.8.0";
+        return "5.9.0";
     }
 
     public String getCurrentVersion() { return currentVersion; }

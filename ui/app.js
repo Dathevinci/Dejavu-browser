@@ -1,5 +1,5 @@
 /**
- * dejavu v5.7.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * dejavu v5.8.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
  * 12 Official HCT Material You Themes, 32 Pure M3, Butterfly & Froggie Wallpapers, Auto Wallpaper-to-Theme,
  * Redesigned Pixel At-a-Glance Message of the Day Card, Clean 5-Control ChromeOS Toolbar,
  * Zero-Glitch 120Hz Tab Strip, Brave-Grade Shields, Real-Time dejavu Link Hub & 8x Turbo Downloader.
@@ -569,7 +569,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.7.0 — 32 HD + 1 Live = 33 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.8.0 — 32 HD + 1 Live = 33 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 18 Sculptural / Architectural Material Design 3 HD Wallpapers (10 Dark, 8 Light)
@@ -852,7 +852,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.7.0',
+    appVersion: bootData.appVersion || '5.8.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -2070,7 +2070,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.7.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.8.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2376,7 +2376,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.7.0';
+    const ver = state.appVersion || '5.8.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -3450,7 +3450,11 @@
     }
 
     if (e.key === 'Escape') {
-      if (chromeImportOverlay && !chromeImportOverlay.classList.contains('hidden')) {
+      if (extInstallPromptOverlay && !extInstallPromptOverlay.classList.contains('hidden')) {
+        cancelShellExtInstallPrompt();
+      } else if (extInstalledBubble && !extInstalledBubble.classList.contains('hidden')) {
+        closeShellExtInstalledBubble();
+      } else if (chromeImportOverlay && !chromeImportOverlay.classList.contains('hidden')) {
         closeChromeImportModal();
       } else if (resetConfirmOverlay && !resetConfirmOverlay.classList.contains('hidden')) {
         closeResetConfirmModal();
@@ -5648,8 +5652,291 @@
   let lastPinnedExtSig = '';
 
   const EXT_PIN_ICO_SVG = '<svg viewBox="0 0 18 18" width="13" height="13" fill="none"><path d="M10.8 3.2l4 4-1.5 1.5-1-.45-2.8 2.8.45 2-1.3 1.3-2.5-2.5-3 3-.8-.8 3-3-2.5-2.5 1.3-1.3 2 .45 2.8-2.8-.45-1 1.5-1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+  const EXT_PIN_FILLED_SVG = '<svg viewBox="0 0 18 18" width="13" height="13" fill="none"><path d="M10.8 3.2l4 4-1.5 1.5-1-.45-2.8 2.8.45 2-1.3 1.3-2.5-2.5-3 3-.8-.8 3-3-2.5-2.5 1.3-1.3 2 .45 2.8-2.8-.45-1 1.5-1.5z" fill="currentColor" stroke="currentColor" stroke-width="0.9" stroke-linejoin="round"/></svg>';
   const EXT_PUZZLE_LG_SVG = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none"><path d="M13.8 3.6a2.1 2.1 0 0 1 2.1 2.1v1.1h2.3a1.7 1.7 0 0 1 1.7 1.7v2.5h-1.1a2.1 2.1 0 0 0 0 4.2h1.1v2.5a1.7 1.7 0 0 1-1.7 1.7h-2.5v-1.1a2.1 2.1 0 0 0-4.2 0v1.1H8.4a1.7 1.7 0 0 1-1.7-1.7v-2.5h1.1a2.1 2.1 0 0 0 0-4.2H6.7V8.5a1.7 1.7 0 0 1 1.7-1.7h3.3V5.7a2.1 2.1 0 0 1 2.1-2.1z" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/></svg>';
   const EXT_SWITCH_CHECK_SVG = '<svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  // Chrome-Style Material Design 3 Extension Permission Confirmation Dialog & Anchored Added Bubble
+  const extInstallPromptOverlay = document.getElementById('ext-install-prompt-overlay');
+  const shellEipIcon = document.getElementById('shell-eip-icon');
+  const shellEipTitle = document.getElementById('shell-eip-title');
+  const shellEipVer = document.getElementById('shell-eip-ver');
+  const shellEipDesc = document.getElementById('shell-eip-desc');
+  const shellEipPerms = document.getElementById('shell-eip-perms');
+  const shellEipError = document.getElementById('shell-eip-error');
+  const btnShellEipCancel = document.getElementById('btn-shell-eip-cancel');
+  const btnShellEipConfirm = document.getElementById('btn-shell-eip-confirm');
+
+  const extInstalledBubble = document.getElementById('ext-installed-bubble');
+  const shellEibIcon = document.getElementById('shell-eib-icon');
+  const shellEibTitle = document.getElementById('shell-eib-title');
+  const btnShellEibClose = document.getElementById('btn-shell-eib-close');
+  const btnShellEibPin = document.getElementById('btn-shell-eib-pin');
+  const shellEibPinIco = document.getElementById('shell-eib-pin-ico');
+  const shellEibPinLbl = document.getElementById('shell-eib-pin-lbl');
+  const btnShellEibManage = document.getElementById('btn-shell-eib-manage');
+
+  let shellEipState = { stageId: '', committing: false };
+  let shellEibState = { id: '', pinned: false, hasPopup: false };
+  let shellEibTimer = null;
+
+  function formatExtPermissionsList(permissions, hostPermissions) {
+    const perms = Array.isArray(permissions) ? permissions : [];
+    const hosts = Array.isArray(hostPermissions) ? hostPermissions : [];
+    const out = [];
+    const seen = new Set();
+    const push = (txt) => {
+      const s = String(txt || '').trim();
+      if (s && !seen.has(s)) {
+        seen.add(s);
+        out.push(s);
+      }
+    };
+    const permMap = {
+      tabs: 'Read your browsing history and open tabs',
+      activeTab: 'Read and modify the active tab when clicked',
+      storage: 'Store extension settings and data locally',
+      unlimitedStorage: 'Store unlimited extension data locally',
+      cookies: 'Read and modify cookies for visited sites',
+      webRequest: 'Inspect network requests on visited websites',
+      webRequestBlocking: 'Block or modify network requests on visited websites',
+      declarativeNetRequest: 'Block content on any page you visit',
+      declarativeNetRequestWithHostAccess: 'Block or modify network requests on permitted sites',
+      declarativeNetRequestFeedback: 'Read matched content-blocking rules',
+      scripting: 'Run scripts and styles on websites you visit',
+      history: 'Read and change your browsing history',
+      bookmarks: 'Read and change your bookmarks',
+      downloads: 'Manage your downloads',
+      clipboardRead: 'Read data you copy and paste',
+      clipboardWrite: 'Modify data you copy and paste',
+      notifications: 'Display notifications',
+      contextMenus: 'Add options to the right-click context menu',
+      alarms: 'Schedule background tasks',
+      identity: 'Verify your account identity',
+      proxy: 'Manage browser proxy settings',
+      webNavigation: 'Observe website navigation events',
+      sidePanel: 'Display content in the browser side panel',
+      offscreen: 'Run background helper pages',
+      management: 'Manage your installed extensions',
+      geolocation: 'Detect your physical location',
+      topSites: 'Read a list of your most frequently visited websites'
+    };
+    const allHosts = hosts.slice();
+    let hasAllSites = false;
+    const namedHosts = [];
+    const inspectHost = (h) => {
+      const raw = String(h || '').trim();
+      if (!raw) return;
+      const low = raw.toLowerCase();
+      if (low === 'all websites' || raw === '<all_urls>' || raw === '*://*/*' || raw === 'http://*/*' || raw === 'https://*/*' || raw === '*://*/*/*') {
+        hasAllSites = true;
+        return;
+      }
+      const m = raw.match(/^(?:https?|\*):\/\/([^\/]+)/i);
+      const host = m ? m[1].replace(/^\*\./, '') : raw;
+      if (host === '*' || host === '*.*') hasAllSites = true;
+      else if (host && !namedHosts.includes(host)) namedHosts.push(host);
+    };
+    perms.forEach((p) => {
+      const key = String(p || '').trim();
+      if (!key) return;
+      if (key.includes(' ')) push(key);
+      else if (key.includes('://') || key === '<all_urls>') allHosts.push(key);
+      else if (permMap[key]) push(permMap[key]);
+      else push(`Use "${key}" browser capability`);
+    });
+    allHosts.forEach(inspectHost);
+    const alreadyHasHostSummary = out.some((line) => /^read and change (?:all )?your data on /i.test(line));
+    if (!alreadyHasHostSummary) {
+      if (hasAllSites) out.unshift('Read and change all your data on all websites');
+      else if (namedHosts.length > 0 && namedHosts.length <= 3) out.unshift(`Read and change your data on ${namedHosts.join(', ')}`);
+      else if (namedHosts.length > 3) out.unshift(`Read and change your data on ${namedHosts.length} websites (including ${namedHosts[0]})`);
+    }
+    if (!out.length) out.push('Access basic browser extension features');
+    return out.slice(0, 8);
+  }
+
+  function renderShellExtIcon(el, iconDataUrl, name) {
+    if (!el) return;
+    el.innerHTML = '';
+    if (iconDataUrl) {
+      const img = document.createElement('img');
+      img.src = iconDataUrl;
+      img.alt = '';
+      img.draggable = false;
+      el.appendChild(img);
+    } else {
+      el.textContent = ((String(name || 'E').trim()[0]) || 'E').toUpperCase();
+    }
+  }
+
+  function openShellExtInstallPrompt(msg) {
+    if (!extInstallPromptOverlay) return;
+    const name = String(msg.name || 'Extension').trim() || 'Extension';
+    const version = String(msg.version || '').trim();
+    const desc = String(msg.description || '').trim();
+    shellEipState = { stageId: String(msg.stageId || ''), committing: false };
+
+    renderShellExtIcon(shellEipIcon, msg.iconDataUrl || '', name);
+    if (shellEipTitle) shellEipTitle.textContent = `Add "${name}"?`;
+    if (shellEipVer) {
+      shellEipVer.textContent = version ? `v${version}` : '';
+      shellEipVer.classList.toggle('hidden', !version);
+    }
+    if (shellEipDesc) {
+      shellEipDesc.textContent = desc;
+      shellEipDesc.classList.toggle('hidden', !desc);
+    }
+    if (shellEipError) {
+      shellEipError.textContent = '';
+      shellEipError.classList.add('hidden');
+    }
+    if (shellEipPerms) {
+      shellEipPerms.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      formatExtPermissionsList(msg.permissions, msg.hostPermissions).forEach((line) => {
+        const li = document.createElement('li');
+        li.textContent = line;
+        frag.appendChild(li);
+      });
+      shellEipPerms.appendChild(frag);
+    }
+    if (btnShellEipCancel) btnShellEipCancel.disabled = false;
+    if (btnShellEipConfirm) {
+      btnShellEipConfirm.disabled = false;
+      btnShellEipConfirm.textContent = 'Add extension';
+    }
+    extInstallPromptOverlay.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      try { if (btnShellEipConfirm) btnShellEipConfirm.focus({ preventScroll: true }); } catch {}
+    });
+  }
+
+  function closeShellExtInstallPrompt() {
+    shellEipState = { stageId: '', committing: false };
+    if (extInstallPromptOverlay) extInstallPromptOverlay.classList.add('hidden');
+  }
+
+  function cancelShellExtInstallPrompt() {
+    if (shellEipState.committing) return;
+    const sid = shellEipState.stageId;
+    closeShellExtInstallPrompt();
+    if (sid) send({ type: 'extCancelInstall', stageId: sid });
+  }
+
+  function handleShellExtInstallPromptResult(msg) {
+    if (!extInstallPromptOverlay || extInstallPromptOverlay.classList.contains('hidden')) return;
+    if (msg.ok) {
+      closeShellExtInstallPrompt();
+      return;
+    }
+    shellEipState.committing = false;
+    if (btnShellEipCancel) btnShellEipCancel.disabled = false;
+    if (btnShellEipConfirm) {
+      btnShellEipConfirm.disabled = false;
+      btnShellEipConfirm.textContent = 'Add extension';
+    }
+    if (shellEipError) {
+      shellEipError.textContent = msg.error || 'Could not install extension. Please try again.';
+      shellEipError.classList.remove('hidden');
+    }
+  }
+
+  if (btnShellEipCancel) btnShellEipCancel.addEventListener('click', cancelShellExtInstallPrompt);
+  if (extInstallPromptOverlay) {
+    extInstallPromptOverlay.addEventListener('mousedown', (e) => {
+      if (e.target === extInstallPromptOverlay) cancelShellExtInstallPrompt();
+    });
+  }
+  if (btnShellEipConfirm) {
+    btnShellEipConfirm.addEventListener('click', () => {
+      if (shellEipState.committing || !shellEipState.stageId) return;
+      shellEipState.committing = true;
+      if (shellEipError) shellEipError.classList.add('hidden');
+      if (btnShellEipCancel) btnShellEipCancel.disabled = true;
+      btnShellEipConfirm.disabled = true;
+      btnShellEipConfirm.innerHTML = '<span class="ext-btn-spinner" aria-hidden="true"></span><span>Adding...</span>';
+      send({ type: 'extConfirmInstall', stageId: shellEipState.stageId });
+    });
+  }
+
+  function clearShellEibTimer() {
+    if (shellEibTimer) {
+      clearTimeout(shellEibTimer);
+      shellEibTimer = null;
+    }
+  }
+
+  function scheduleShellEibDismiss() {
+    clearShellEibTimer();
+    shellEibTimer = setTimeout(() => closeShellExtInstalledBubble(), 9000);
+  }
+
+  function syncShellEibPinUi(pinned) {
+    if (!btnShellEibPin) return;
+    btnShellEibPin.classList.toggle('is-pinned', !!pinned);
+    btnShellEibPin.setAttribute('aria-pressed', pinned ? 'true' : 'false');
+    if (shellEibPinIco) shellEibPinIco.innerHTML = pinned ? EXT_PIN_FILLED_SVG : EXT_PIN_ICO_SVG;
+    if (shellEibPinLbl) shellEibPinLbl.textContent = pinned ? 'Pinned to toolbar' : 'Pin to toolbar';
+  }
+
+  function openShellExtInstalledBubble(msg) {
+    closeShellExtInstallPrompt();
+    if (!extInstalledBubble) return;
+    const name = String(msg.name || 'Extension').trim() || 'Extension';
+    shellEibState = {
+      id: String(msg.id || msg.storeId || ''),
+      pinned: !!msg.pinned,
+      hasPopup: !!msg.hasPopup
+    };
+    renderShellExtIcon(shellEibIcon, msg.iconDataUrl || '', name);
+    if (shellEibTitle) shellEibTitle.textContent = `"${name}" has been added to dejavu`;
+    syncShellEibPinUi(shellEibState.pinned);
+
+    if (btnExtensions) {
+      const r = btnExtensions.getBoundingClientRect();
+      const rightOffset = Math.max(12, Math.round(window.innerWidth - r.right - 8));
+      extInstalledBubble.style.right = `${rightOffset}px`;
+      extInstalledBubble.style.top = `${Math.round(r.bottom + 8)}px`;
+    }
+    extInstalledBubble.classList.remove('hidden');
+    scheduleShellEibDismiss();
+  }
+
+  function closeShellExtInstalledBubble() {
+    clearShellEibTimer();
+    if (extInstalledBubble) extInstalledBubble.classList.add('hidden');
+  }
+
+  if (btnShellEibClose) btnShellEibClose.addEventListener('click', closeShellExtInstalledBubble);
+  if (btnShellEibPin) {
+    btnShellEibPin.addEventListener('click', () => {
+      if (!shellEibState.id) return;
+      shellEibState.pinned = !shellEibState.pinned;
+      syncShellEibPinUi(shellEibState.pinned);
+      scheduleShellEibDismiss();
+      send({ type: 'extTogglePin', id: shellEibState.id });
+    });
+  }
+  if (btnShellEibManage) {
+    btnShellEibManage.addEventListener('click', () => {
+      closeShellExtInstalledBubble();
+      send({ type: 'openExtensions' });
+    });
+  }
+  if (extInstalledBubble) {
+    extInstalledBubble.addEventListener('mouseenter', clearShellEibTimer);
+    extInstalledBubble.addEventListener('mouseleave', () => {
+      if (!extInstalledBubble.classList.contains('hidden')) scheduleShellEibDismiss();
+    });
+  }
+  document.addEventListener('mousedown', (e) => {
+    if (extInstalledBubble && !extInstalledBubble.classList.contains('hidden')) {
+      if (!extInstalledBubble.contains(e.target) && (!btnExtensions || !btnExtensions.contains(e.target))) {
+        closeShellExtInstalledBubble();
+      }
+    }
+  });
 
   function formatExtSource(src) {
     const s = String(src || '').toLowerCase();
@@ -5702,12 +5989,13 @@
         btn.appendChild(letter);
       }
       btn.addEventListener('click', () => {
-        if (ext.popupUrl) send({ type: 'extOpenPopup', id: ext.id });
-        else send({ type: 'openExtensions' });
+        const r = btn.getBoundingClientRect();
+        send({ type: 'extOpenPopup', id: ext.id, anchorRight: Math.round(r.right + 8) });
       });
       btn.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        const r = btn.getBoundingClientRect();
         const items = [];
         if (ext.popupUrl) items.push({ id: 'openPopup', label: 'Open extension popup', icon: 'open-window' });
         if (ext.optionsUrl) items.push({ id: 'openOptions', label: 'Extension options', icon: 'settings' });
@@ -5721,7 +6009,7 @@
           header: { title: ext.name || 'Extension', subtitle: ext.version ? `v${ext.version}` : 'Pinned extension', kind: 'page' },
           items,
           onAction: (act) => {
-            if (act === 'openPopup') send({ type: 'extOpenPopup', id: ext.id });
+            if (act === 'openPopup') send({ type: 'extOpenPopup', id: ext.id, anchorRight: Math.round(r.right + 8) });
             else if (act === 'openOptions') send({ type: 'extOpenOptions', id: ext.id });
             else if (act === 'unpin') send({ type: 'extTogglePin', id: ext.id });
             else if (act === 'manage') {
@@ -7228,6 +7516,12 @@
         if (state.dlManagerOpen) renderDlManager();
       } else if (msg.type === 'chromeExtensionsScanned') {
         renderChromeImportList(msg.chromeExtensions || [], msg.error || '');
+      } else if (msg.type === 'extInstallPrompt') {
+        openShellExtInstallPrompt(msg);
+      } else if (msg.type === 'extInstallPromptResult') {
+        handleShellExtInstallPromptResult(msg);
+      } else if (msg.type === 'extInstalledBubble') {
+        openShellExtInstalledBubble(msg);
       } else if (msg.type === 'extInstallStatus') {
         state.extensionsBusy = !!msg.busy;
         if (msg.message) {

@@ -101,6 +101,14 @@ namespace DejavuBrowser
         public bool spellcheckEnabled { get; set; }
         public bool devToolsEnabled { get; set; }
 
+        // v5.8.0 — Persistent Window Size, Position & Maximized State
+        public int windowWidth { get; set; }
+        public int windowHeight { get; set; }
+        public int windowX { get; set; }
+        public int windowY { get; set; }
+        public bool windowHasPosition { get; set; }
+        public bool windowMaximized { get; set; }
+
         public DejavuSettings()
         {
             searchEngine = "google";
@@ -177,6 +185,14 @@ namespace DejavuBrowser
             hardwareAcceleration = true;
             spellcheckEnabled = true;
             devToolsEnabled = true;
+
+            // v5.8.0 — Persistent Window Bounds defaults
+            windowWidth = 1380;
+            windowHeight = 880;
+            windowX = int.MinValue;
+            windowY = int.MinValue;
+            windowHasPosition = false;
+            windowMaximized = false;
 
             shortcuts = new List<ShortcutItem>
             {
@@ -273,6 +289,29 @@ namespace DejavuBrowser
             return "standard";
         }
 
+        public static void NormalizeWindowBounds(DejavuSettings s)
+        {
+            if (s == null) return;
+            if (s.windowWidth < 640 || s.windowWidth > 16384 ||
+                s.windowHeight < 480 || s.windowHeight > 16384)
+            {
+                s.windowWidth = 1380;
+                s.windowHeight = 880;
+                s.windowHasPosition = false;
+                s.windowX = int.MinValue;
+                s.windowY = int.MinValue;
+            }
+            if (!s.windowHasPosition ||
+                s.windowX == int.MinValue || s.windowY == int.MinValue ||
+                s.windowX < -32000 || s.windowX > 32000 ||
+                s.windowY < -32000 || s.windowY > 32000)
+            {
+                s.windowHasPosition = false;
+                s.windowX = int.MinValue;
+                s.windowY = int.MinValue;
+            }
+        }
+
         public static DejavuSettings Load()
         {
             return LoadFromPath(SettingsPath);
@@ -327,6 +366,9 @@ namespace DejavuBrowser
                             if (loaded.downloadFolder == null) loaded.downloadFolder = "";
                             loaded.turboThreads = NormalizeTurboThreads(loaded.turboThreads);
                             loaded.defaultVideoQuality = NormalizeVideoQuality(loaded.defaultVideoQuality);
+
+                            // v5.8.0 — Normalize persistent window bounds
+                            NormalizeWindowBounds(loaded);
 
                             if (loaded.shortcuts == null || loaded.shortcuts.Count == 0)
                             {

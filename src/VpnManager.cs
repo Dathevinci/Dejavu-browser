@@ -1480,7 +1480,7 @@ namespace DejavuBrowser
             {
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
                 req.Proxy = null;
-                req.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) dejavu-vpn/5.7.0";
+                req.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) dejavu-vpn/5.8.0";
                 req.Timeout = timeoutMs;
                 req.ReadWriteTimeout = timeoutMs;
                 req.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
@@ -2216,7 +2216,7 @@ namespace DejavuBrowser
             {
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(bundleUrl);
                 req.Proxy = null;
-                req.UserAgent = "dejavu-browser/5.7.0";
+                req.UserAgent = "dejavu-browser/5.8.0";
                 req.Timeout = 30000;
                 req.ReadWriteTimeout = 30000;
 
@@ -2288,7 +2288,7 @@ namespace DejavuBrowser
                 using (WebClient wc = new WebClient())
                 {
                     wc.Proxy = null;
-                    wc.Headers.Add("User-Agent", "dejavu-browser/5.7.0");
+                    wc.Headers.Add("User-Agent", "dejavu-browser/5.8.0");
                     string indexHtml = await wc.DownloadStringTaskAsync("https://dist.torproject.org/torbrowser/").ConfigureAwait(false);
                     MatchCollection matches = Regex.Matches(indexHtml, @"href=""(\d+\.\d+(?:\.\d+)?)/""");
                     List<string> dirs = new List<string>();

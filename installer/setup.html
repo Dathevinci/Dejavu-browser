@@ -1,247 +1,1613 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light" data-accent="sapphire">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>dejavu Setup</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-font-smoothing: antialiased; }
+    /* ========================================================================
+       dejavu v5.8.0 — Authentic Google Chromebook / Pixel OS Material Design 3
+       Pure Opaque HCT Tonal Surfaces · Strictly Zero CSS Blur / Backdrop Filter
+       ======================================================================== */
+    :root {
+      --font-sans: 'Google Sans Flex', 'Google Sans', 'Plus Jakarta Sans', 'Segoe UI Variable Display', 'Segoe UI Variable', system-ui, -apple-system, sans-serif;
+      --ease-m3: cubic-bezier(0.2, 0, 0, 1);
+      --ease-spring: cubic-bezier(0.34, 1.38, 0.64, 1);
+      --dur-theme: 220ms;
+
+      /* Light Baseline — Amethyst */
+      --md-surface: #fef7ff;
+      --md-surface-container-lowest: #ffffff;
+      --md-surface-container-low: #f7f2fa;
+      --md-surface-container: #f3edf7;
+      --md-surface-container-high: #ece6f0;
+      --md-surface-container-highest: #e6e0e9;
+      --md-on-surface: #1d1b20;
+      --md-on-surface-variant: #49454f;
+      --md-outline: #79747e;
+      --md-outline-variant: #cac4d0;
+      --md-primary: #6750a4;
+      --md-on-primary: #ffffff;
+      --md-primary-container: #eaddff;
+      --md-on-primary-container: #21005d;
+      --md-secondary-container: #e8def8;
+      --md-on-secondary-container: #1d192b;
+      --md-tertiary: #006a5e;
+      --md-tertiary-container: #9df2e0;
+      --md-on-tertiary-container: #00201c;
+      --md-error: #b3261e;
+      --md-on-error: #ffffff;
+      --md-error-container: #f9dedc;
+      --md-on-error-container: #410e0b;
+      --md-card-bg: var(--md-surface-container-lowest);
+      --md-elev-card: 0 1px 2px rgba(29, 27, 32, 0.07), 0 2px 10px rgba(29, 27, 32, 0.04);
+      --md-state-hover: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
+    }
+
+    /* Light HCT Seeds */
+    :root[data-theme="light"][data-accent="sapphire"] {
+      --md-surface: #faf9ff;
+      --md-surface-container-low: #f3f4fb;
+      --md-surface-container: #edeff7;
+      --md-surface-container-high: #e7e9f1;
+      --md-surface-container-highest: #e1e3eb;
+      --md-on-surface: #1a1b20;
+      --md-on-surface-variant: #44474e;
+      --md-outline: #74777f;
+      --md-outline-variant: #c4c6d0;
+      --md-primary: #1b6ef3;
+      --md-on-primary: #ffffff;
+      --md-primary-container: #d3e3fd;
+      --md-on-primary-container: #041e49;
+      --md-secondary-container: #dae2f9;
+      --md-on-secondary-container: #131c2b;
+    }
+
+    :root[data-theme="light"][data-accent="emerald"] {
+      --md-surface: #f5fbf5;
+      --md-surface-container-low: #eff5ef;
+      --md-surface-container: #e9efe9;
+      --md-surface-container-high: #e3eae3;
+      --md-surface-container-highest: #dde4dd;
+      --md-on-surface: #171d18;
+      --md-on-surface-variant: #414942;
+      --md-outline: #717971;
+      --md-outline-variant: #c0c9c0;
+      --md-primary: #146c2e;
+      --md-on-primary: #ffffff;
+      --md-primary-container: #a7f5b5;
+      --md-on-primary-container: #002109;
+      --md-secondary-container: #d3e8d4;
+      --md-on-secondary-container: #0e2011;
+    }
+
+    :root[data-theme="light"][data-accent="aurora"] {
+      --md-surface: #f4fbf8;
+      --md-surface-container-low: #eef5f2;
+      --md-surface-container: #e8efec;
+      --md-surface-container-high: #e2eae7;
+      --md-surface-container-highest: #dce4e1;
+      --md-on-surface: #161d1b;
+      --md-on-surface-variant: #3f4945;
+      --md-outline: #6f7975;
+      --md-outline-variant: #bfc9c4;
+      --md-primary: #006a60;
+      --md-on-primary: #ffffff;
+      --md-primary-container: #98f5e2;
+      --md-on-primary-container: #00201c;
+      --md-secondary-container: #cde8e0;
+      --md-on-secondary-container: #05201c;
+    }
+
+    :root[data-theme="light"][data-accent="coral"] {
+      --md-surface: #fff8f6;
+      --md-surface-container-low: #fcf0ec;
+      --md-surface-container: #f6eae6;
+      --md-surface-container-high: #f0e4e0;
+      --md-surface-container-highest: #eaded9;
+      --md-on-surface: #231917;
+      --md-on-surface-variant: #53433e;
+      --md-outline: #85736d;
+      --md-outline-variant: #d8c2ba;
+      --md-primary: #b33b15;
+      --md-on-primary: #ffffff;
+      --md-primary-container: #ffdbd0;
+      --md-on-primary-container: #3c0d00;
+      --md-secondary-container: #fbddd3;
+      --md-on-secondary-container: #2d150e;
+    }
+
+    :root[data-theme="light"][data-accent="rose"] {
+      --md-surface: #fff8f8;
+      --md-surface-container-low: #faf0f3;
+      --md-surface-container: #f4eaed;
+      --md-surface-container-high: #eee4e7;
+      --md-surface-container-highest: #e8dfe2;
+      --md-on-surface: #21191c;
+      --md-on-surface-variant: #504349;
+      --md-outline: #827379;
+      --md-outline-variant: #d4c2c9;
+      --md-primary: #a83268;
+      --md-on-primary: #ffffff;
+      --md-primary-container: #ffd8e6;
+      --md-on-primary-container: #3e001f;
+      --md-secondary-container: #f9d8e4;
+      --md-on-secondary-container: #2c151e;
+    }
+
+    :root[data-theme="light"][data-accent="gold"] {
+      --md-surface: #fff8f2;
+      --md-surface-container-low: #faf1e8;
+      --md-surface-container: #f4ebe2;
+      --md-surface-container-high: #eee5dc;
+      --md-surface-container-highest: #e8dfd6;
+      --md-on-surface: #201b14;
+      --md-on-surface-variant: #4f4539;
+      --md-outline: #807567;
+      --md-outline-variant: #d2c4b4;
+      --md-primary: #8a5600;
+      --md-on-primary: #ffffff;
+      --md-primary-container: #ffddb3;
+      --md-on-primary-container: #2c1700;
+      --md-secondary-container: #f9e0be;
+      --md-on-secondary-container: #281904;
+    }
+
+    :root[data-theme="light"][data-accent="lavender"] {
+      --md-surface: #fdf7ff;
+      --md-surface-container-low: #f7f1fa;
+      --md-surface-container: #f1ebf4;
+      --md-surface-container-high: #ebe5ee;
+      --md-surface-container-highest: #e5dfe8;
+      --md-on-surface: #1e1a21;
+      --md-on-surface-variant: #4b4450;
+      --md-outline: #7c7482;
+      --md-outline-variant: #cdc3d2;
+      --md-primary: #7c43a8;
+      --md-on-primary: #ffffff;
+      --md-primary-container: #f3daff;
+      --md-on-primary-container: #2c004d;
+      --md-secondary-container: #eedcf8;
+      --md-on-secondary-container: #23172c;
+    }
+
+    /* Dark Baseline — Amethyst */
+    :root[data-theme="dark"] {
+      --md-surface: #141218;
+      --md-surface-container-lowest: #0f0d13;
+      --md-surface-container-low: #1d1b20;
+      --md-surface-container: #211f26;
+      --md-surface-container-high: #2b2930;
+      --md-surface-container-highest: #36343b;
+      --md-on-surface: #e6e0e9;
+      --md-on-surface-variant: #cac4d0;
+      --md-outline: #938f99;
+      --md-outline-variant: #49454f;
+      --md-primary: #d0bcff;
+      --md-on-primary: #381e72;
+      --md-primary-container: #4f378b;
+      --md-on-primary-container: #eaddff;
+      --md-secondary-container: #4a4458;
+      --md-on-secondary-container: #e8def8;
+      --md-tertiary: #80d5c4;
+      --md-tertiary-container: #005046;
+      --md-on-tertiary-container: #9df2e0;
+      --md-error: #ffb4ab;
+      --md-on-error: #690005;
+      --md-error-container: #93000a;
+      --md-on-error-container: #ffdad6;
+      --md-card-bg: var(--md-surface-container);
+      --md-elev-card: 0 2px 10px rgba(0, 0, 0, 0.28);
+      --md-state-hover: color-mix(in srgb, var(--md-on-surface) 9%, transparent);
+    }
+
+    :root[data-theme="dark"][data-accent="sapphire"] {
+      --md-surface: #111318;
+      --md-surface-container-low: #191c20;
+      --md-surface-container: #1d2024;
+      --md-surface-container-high: #282a2f;
+      --md-surface-container-highest: #33353a;
+      --md-on-surface: #e2e2e9;
+      --md-on-surface-variant: #c4c6d0;
+      --md-outline: #8e9099;
+      --md-outline-variant: #44474e;
+      --md-primary: #a8c7fa;
+      --md-on-primary: #062e6f;
+      --md-primary-container: #0842a0;
+      --md-on-primary-container: #d3e3fd;
+      --md-secondary-container: #3a465c;
+      --md-on-secondary-container: #dae2f9;
+    }
+
+    :root[data-theme="dark"][data-accent="emerald"] {
+      --md-surface: #101511;
+      --md-surface-container-low: #181d19;
+      --md-surface-container: #1c211d;
+      --md-surface-container-high: #262c27;
+      --md-surface-container-highest: #313732;
+      --md-on-surface: #dfe4de;
+      --md-on-surface-variant: #c0c9c0;
+      --md-outline: #8a938b;
+      --md-outline-variant: #414942;
+      --md-primary: #8bd89b;
+      --md-on-primary: #003915;
+      --md-primary-container: #005321;
+      --md-on-primary-container: #a7f5b5;
+      --md-secondary-container: #374b3a;
+      --md-on-secondary-container: #d3e8d4;
+    }
+
+    :root[data-theme="dark"][data-accent="aurora"] {
+      --md-surface: #0f1513;
+      --md-surface-container-low: #171d1b;
+      --md-surface-container: #1b211f;
+      --md-surface-container-high: #252b29;
+      --md-surface-container-highest: #303634;
+      --md-on-surface: #dee4e0;
+      --md-on-surface-variant: #bfc9c4;
+      --md-outline: #89938e;
+      --md-outline-variant: #3f4945;
+      --md-primary: #7bd8c6;
+      --md-on-primary: #003731;
+      --md-primary-container: #005048;
+      --md-on-primary-container: #98f5e2;
+      --md-secondary-container: #334b46;
+      --md-on-secondary-container: #cde8e0;
+    }
+
+    :root[data-theme="dark"][data-accent="coral"] {
+      --md-surface: #191210;
+      --md-surface-container-low: #221a17;
+      --md-surface-container: #261e1b;
+      --md-surface-container-high: #312825;
+      --md-surface-container-highest: #3c3330;
+      --md-on-surface: #f0dfd9;
+      --md-on-surface-variant: #d8c2ba;
+      --md-outline: #a08d86;
+      --md-outline-variant: #53433e;
+      --md-primary: #ffb59d;
+      --md-on-primary: #5c1900;
+      --md-primary-container: #822806;
+      --md-on-primary-container: #ffdbd0;
+      --md-secondary-container: #5d4036;
+      --md-on-secondary-container: #ffdbd0;
+    }
+
+    :root[data-theme="dark"][data-accent="rose"] {
+      --md-surface: #181114;
+      --md-surface-container-low: #21191d;
+      --md-surface-container: #251d21;
+      --md-surface-container-high: #30282c;
+      --md-surface-container-highest: #3b3237;
+      --md-on-surface: #ecdfe4;
+      --md-on-surface-variant: #d4c2c9;
+      --md-outline: #9d8d93;
+      --md-outline-variant: #504349;
+      --md-primary: #ffb0ce;
+      --md-on-primary: #5e1136;
+      --md-primary-container: #7b294d;
+      --md-on-primary-container: #ffd8e6;
+      --md-secondary-container: #583f49;
+      --md-on-secondary-container: #fdd9e6;
+    }
+
+    :root[data-theme="dark"][data-accent="gold"] {
+      --md-surface: #17130d;
+      --md-surface-container-low: #1f1b15;
+      --md-surface-container: #241f19;
+      --md-surface-container-high: #2e2923;
+      --md-surface-container-highest: #39342d;
+      --md-on-surface: #ebe1d7;
+      --md-on-surface-variant: #d2c4b4;
+      --md-outline: #9b8f80;
+      --md-outline-variant: #4f4539;
+      --md-primary: #ffb951;
+      --md-on-primary: #462a00;
+      --md-primary-container: #643e00;
+      --md-on-primary-container: #ffddb3;
+      --md-secondary-container: #56442c;
+      --md-on-secondary-container: #f9e0be;
+    }
+
+    :root[data-theme="dark"][data-accent="lavender"] {
+      --md-surface: #161219;
+      --md-surface-container-low: #1e1a21;
+      --md-surface-container: #221e26;
+      --md-surface-container-high: #2d2830;
+      --md-surface-container-highest: #38333b;
+      --md-on-surface: #e9e0ec;
+      --md-on-surface-variant: #cdc3d2;
+      --md-outline: #978d9c;
+      --md-outline-variant: #4b4450;
+      --md-primary: #e2b7ff;
+      --md-on-primary: #48116e;
+      --md-primary-container: #612b87;
+      --md-on-primary-container: #f3daff;
+      --md-secondary-container: #4f425a;
+      --md-on-secondary-container: #eedcf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
     html, body {
-      width: 100%; height: 100%; overflow: hidden;
-      background: #06050b;
-      color: rgba(248, 245, 255, 0.96);
-      font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
-    }
-    .bg-art {
-      position: fixed; inset: 0;
-      background: url('https://setup.local/wp-amethyst.jpg') center/cover no-repeat;
-      transform: scale(1.06);
-      z-index: 0;
-    }
-    .bg-vignette {
-      position: fixed; inset: 0; z-index: 1;
-      background: radial-gradient(ellipse 75% 75% at 50% 48%, rgba(8, 6, 16, 0.56) 0%, rgba(5, 4, 11, 0.78) 100%);
-    }
-    .drag-bar {
-      position: fixed; top: 0; left: 0; right: 0; height: 42px; z-index: 20;
-      display: flex; align-items: center; justify-content: flex-end; padding: 0 10px;
-    }
-    .close-btn {
-      width: 30px; height: 30px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(16,13,28,0.45); color: rgba(240,234,255,0.85);
-      display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
-      transition: background 0.18s ease, transform 0.18s ease;
-    }
-    .close-btn:hover { background: rgba(255, 86, 118, 0.82); color: #fff; }
-    .close-btn:active { transform: scale(0.92); }
-
-    .wrap {
-      position: relative; z-index: 10;
-      width: 100%; height: 100%;
-      display: flex; align-items: center; justify-content: center;
-      padding: 28px;
-    }
-
-    .liquid-glass {
-      position: relative;
-      background: radial-gradient(ellipse 88% 84% at 50% 50%, rgba(16, 13, 28, 0.76) 0%, rgba(18, 14, 34, 0.62) 72%, rgba(32, 24, 58, 0.24) 100%);
-      backdrop-filter: var(--lg-filter);
-      -webkit-backdrop-filter: var(--lg-filter);
-      border: 1px solid rgba(255, 255, 255, 0.26);
-      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.45);
-      isolation: isolate;
-    }
-    .liquid-glass::before {
-      content: ''; position: absolute; inset: -1px; border-radius: inherit;
-      background-image: var(--lg-specular); background-size: 100% 100%;
-      pointer-events: none; z-index: 3; opacity: 0.94;
-    }
-    .liquid-glass > * { position: relative; z-index: 1; }
-
-    .card {
-      width: 100%; max-width: 448px;
-      border-radius: 26px;
-      padding: 28px 28px 24px;
-      display: flex; flex-direction: column; align-items: center; gap: 18px;
-      text-align: center;
-    }
-
-    .logo-wrap {
-      width: 82px; height: 82px;
-      display: flex; align-items: center; justify-content: center;
-      animation: floatBf 4.8s ease-in-out infinite;
-    }
-    @keyframes floatBf {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-    }
-    .logo-wrap img {
-      width: 78px; height: 78px; object-fit: contain;
-      filter: drop-shadow(0 0 22px rgba(176, 120, 255, 0.65));
-    }
-
-    .title { font-size: 28px; font-weight: 300; letter-spacing: 0.14em; text-transform: lowercase; }
-    .subtitle { font-size: 12.8px; color: rgba(226, 216, 255, 0.72); margin-top: -10px; line-height: 1.45; }
-
-    .options {
       width: 100%;
-      display: flex; flex-direction: column; gap: 9px;
-      padding: 12px 14px;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.13);
-      text-align: left;
-    }
-    .opt-row {
-      display: flex; align-items: center; gap: 10px;
-      font-size: 12.8px; color: rgba(242, 236, 255, 0.9); cursor: pointer;
-    }
-    .opt-row input[type="checkbox"] {
-      width: 16px; height: 16px; accent-color: #a855f7; cursor: pointer;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--md-surface-container-low);
+      color: var(--md-on-surface);
+      font-family: var(--font-sans);
+      transition: background-color var(--dur-theme) var(--ease-m3), color var(--dur-theme) var(--ease-m3);
     }
 
-    .progress-wrap { width: 100%; display: none; flex-direction: column; gap: 8px; }
-    .progress-wrap.show { display: flex; }
-    .bar-track {
-      width: 100%; height: 6px; border-radius: 999px;
-      background: rgba(255, 255, 255, 0.12); overflow: hidden;
+    .oobe-shell {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
+      transition: border-color var(--dur-theme) var(--ease-m3);
     }
-    .bar-fill {
-      height: 100%; width: 0%; border-radius: 999px;
-      background: linear-gradient(90deg, #8b5cf6, #c084fc, #67e8f9);
-      transition: width 0.25s ease;
-    }
-    .status-text { font-size: 12px; color: rgba(226, 216, 255, 0.78); }
 
-    .cta-btn {
-      width: 100%; height: 44px;
+    /* Top Drag Chrome Bar */
+    .drag-bar {
+      height: 52px;
+      padding: 0 18px 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      cursor: default;
+    }
+
+    .top-brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--md-on-surface-variant);
+      letter-spacing: 0.01em;
+      pointer-events: none;
+    }
+
+    .top-brand-dot {
+      width: 7px;
+      height: 7px;
       border-radius: 999px;
-      border: 1px solid rgba(228, 206, 255, 0.58);
-      background: linear-gradient(135deg, rgba(139, 92, 246, 0.92), rgba(168, 85, 247, 0.92));
-      color: #ffffff;
-      font-family: inherit; font-size: 14px; font-weight: 600; letter-spacing: 0.02em;
+      background-color: var(--md-primary);
+      transition: background-color var(--dur-theme) var(--ease-m3);
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Light / Dark Segmented Pill */
+    .polarity-seg {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px;
+      border-radius: 999px;
+      background-color: var(--md-surface-container-high);
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 60%, transparent);
+      transition: background-color var(--dur-theme) var(--ease-m3), border-color var(--dur-theme) var(--ease-m3);
+    }
+
+    .pol-btn {
+      height: 26px;
+      padding: 0 11px;
+      border-radius: 999px;
+      border: none;
+      background-color: transparent;
+      color: var(--md-on-surface-variant);
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       cursor: pointer;
-      box-shadow: 0 10px 28px rgba(139, 92, 246, 0.44), inset 0 1px 0 rgba(255, 255, 255, 0.48);
-      transition: transform 0.22s cubic-bezier(0.22, 1.2, 0.36, 1), filter 0.18s ease;
-    }
-    .cta-btn:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
-    .cta-btn:active:not(:disabled) { transform: scale(0.97); }
-    .cta-btn:disabled { opacity: 0.65; cursor: default; }
-
-    .cta-btn.danger {
-      background: linear-gradient(135deg, rgba(225, 65, 108, 0.9), rgba(190, 40, 86, 0.9));
-      border-color: rgba(255, 190, 206, 0.5);
-      box-shadow: 0 10px 26px rgba(225, 65, 108, 0.36);
+      transition: background-color var(--dur-theme) var(--ease-m3), color var(--dur-theme) var(--ease-m3);
     }
 
-    .foot-note { font-size: 11px; color: rgba(210, 198, 248, 0.48); }
+    .pol-btn svg,
+    .pol-btn span {
+      pointer-events: none;
+    }
+
+    .pol-btn:hover:not(.active) {
+      color: var(--md-on-surface);
+      background-color: var(--md-state-hover);
+    }
+
+    .pol-btn.active {
+      background-color: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+      font-weight: 600;
+    }
+
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: none;
+      background-color: transparent;
+      color: var(--md-on-surface-variant);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 160ms var(--ease-m3), color 160ms var(--ease-m3), transform 120ms var(--ease-m3);
+    }
+
+    .close-btn:hover {
+      background-color: var(--md-state-hover);
+      color: var(--md-on-surface);
+    }
+
+    .close-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* Main 2-Column Chromebook OOBE Stage */
+    .oobe-main {
+      flex: 1;
+      min-height: 0;
+      padding: 8px 32px 12px;
+      display: grid;
+      grid-template-columns: 254px minmax(0, 1fr);
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    /* Left Brand & Steps Column */
+    .oobe-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 10px 0 8px;
+    }
+
+    .brand-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 18px;
+    }
+
+    .emblem-squircle {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background-color: var(--md-primary-container);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color var(--dur-theme) var(--ease-m3), transform 260ms var(--ease-spring);
+    }
+
+    .emblem-squircle svg {
+      width: 40px;
+      height: 40px;
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .oobe-title {
+      font-size: 30px;
+      font-weight: 500;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      color: var(--md-on-surface);
+      transition: color var(--dur-theme) var(--ease-m3);
+    }
+
+    .oobe-sub {
+      font-size: 14px;
+      line-height: 1.48;
+      color: var(--md-on-surface-variant);
+      max-width: 248px;
+      transition: color var(--dur-theme) var(--ease-m3);
+    }
+
+    /* Minimal Chromebook Step Progress Indicator */
+    .step-rail {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--md-outline);
+      transition: color var(--dur-theme) var(--ease-m3);
+    }
+
+    .step-item.active {
+      color: var(--md-on-surface);
+      font-weight: 600;
+    }
+
+    .step-item.done {
+      color: var(--md-on-surface-variant);
+    }
+
+    .step-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background-color: var(--md-outline-variant);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: width 220ms var(--ease-m3), background-color var(--dur-theme) var(--ease-m3);
+    }
+
+    .step-item.active .step-dot {
+      width: 24px;
+      background-color: var(--md-primary);
+    }
+
+    .step-item.done .step-dot {
+      width: 16px;
+      height: 16px;
+      background-color: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+    }
+
+    .step-dot svg {
+      display: none;
+      width: 10px;
+      height: 10px;
+    }
+
+    .step-item.done .step-dot svg {
+      display: block;
+    }
+
+    /* Right M3 Tonal Surface Card */
+    .oobe-card {
+      background-color: var(--md-card-bg);
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 62%, transparent);
+      border-radius: 26px;
+      padding: 24px 26px;
+      box-shadow: var(--md-elev-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      transition: background-color var(--dur-theme) var(--ease-m3), border-color var(--dur-theme) var(--ease-m3);
+    }
+
+    .step-pane {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+      animation: paneIn 220ms var(--ease-m3) both;
+    }
+
+    .step-pane.active {
+      display: flex;
+    }
+
+    @keyframes paneIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Step 1: Personalize */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--md-on-surface);
+      letter-spacing: 0.005em;
+      transition: color var(--dur-theme) var(--ease-m3);
+    }
+
+    .seed-badge {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background-color: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+      transition: background-color var(--dur-theme) var(--ease-m3), color var(--dur-theme) var(--ease-m3);
+    }
+
+    .swatch-grid {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding-top: 2px;
+    }
+
+    .swatch-btn {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      border: 2px solid transparent;
+      padding: 2px;
+      background-color: transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 180ms var(--ease-spring), border-color 180ms var(--ease-m3);
+    }
+
+    .swatch-btn:hover {
+      transform: scale(1.08);
+    }
+
+    .swatch-btn:active {
+      transform: scale(0.95);
+    }
+
+    .swatch-btn.selected {
+      border-color: var(--md-primary);
+    }
+
+    .swatch-orb {
+      width: 100%;
+      height: 100%;
+      border-radius: 999px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    }
+
+    .swatch-orb::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--sw-a) 0% 50%, var(--sw-b) 50% 100%);
+    }
+
+    .swatch-check {
+      position: relative;
+      z-index: 1;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background-color: var(--md-surface-container-lowest);
+      color: var(--md-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 180ms var(--ease-m3), transform 220ms var(--ease-spring), background-color var(--dur-theme) var(--ease-m3), color var(--dur-theme) var(--ease-m3);
+    }
+
+    :root[data-theme="dark"] .swatch-check {
+      background-color: var(--md-on-primary);
+      color: var(--md-primary);
+    }
+
+    .swatch-btn.selected .swatch-check {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .card-divider {
+      height: 1px;
+      background-color: color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
+      transition: background-color var(--dur-theme) var(--ease-m3);
+    }
+
+    /* Compact M3 Toggle Rows */
+    .switch-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      margin: 0 -10px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background-color 150ms var(--ease-m3);
+    }
+
+    .switch-row:hover {
+      background-color: var(--md-state-hover);
+    }
+
+    .switch-label {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--md-on-surface);
+      transition: color var(--dur-theme) var(--ease-m3);
+    }
+
+    .m3-switch {
+      position: relative;
+      width: 46px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .m3-switch input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .m3-switch-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background-color: var(--md-surface-container-highest);
+      border: 1.5px solid var(--md-outline);
+      transition: background-color 200ms var(--ease-m3), border-color 200ms var(--ease-m3);
+    }
+
+    .m3-switch-thumb {
+      position: absolute;
+      top: 50%;
+      left: 5px;
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background-color: var(--md-outline);
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--md-primary);
+      transition: transform 220ms var(--ease-spring), width 200ms var(--ease-m3), height 200ms var(--ease-m3), background-color 200ms var(--ease-m3);
+    }
+
+    .m3-switch-thumb svg {
+      width: 11px;
+      height: 11px;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 150ms var(--ease-m3), transform 180ms var(--ease-m3);
+    }
+
+    .m3-switch input:checked + .m3-switch-track {
+      background-color: var(--md-primary);
+      border-color: var(--md-primary);
+    }
+
+    .m3-switch input:checked ~ .m3-switch-thumb {
+      width: 18px;
+      height: 18px;
+      background-color: var(--md-on-primary);
+      transform: translate(18px, -50%);
+    }
+
+    .m3-switch input:checked ~ .m3-switch-thumb svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Step 2: Installing */
+    .install-stage {
+      align-items: center;
+      text-align: center;
+      padding: 18px 8px;
+      gap: 22px;
+    }
+
+    .progress-emblem {
+      width: 68px;
+      height: 68px;
+      border-radius: 22px;
+      background-color: var(--md-primary-container);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      animation: calmPulse 2.4s ease-in-out infinite;
+      transition: background-color var(--dur-theme) var(--ease-m3);
+    }
+
+    @keyframes calmPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .progress-emblem svg {
+      width: 40px;
+      height: 40px;
+    }
+
+    .progress-block {
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .progress-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--md-on-surface);
+    }
+
+    .progress-pct {
+      font-variant-numeric: tabular-nums;
+      color: var(--md-primary);
+      font-weight: 600;
+    }
+
+    .m3-linear-track {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background-color: var(--md-surface-container-highest);
+      overflow: hidden;
+      transition: background-color var(--dur-theme) var(--ease-m3);
+    }
+
+    .m3-linear-fill {
+      height: 100%;
+      width: 8%;
+      border-radius: 999px;
+      background-color: var(--md-primary);
+      transition: width 260ms var(--ease-m3), background-color var(--dur-theme) var(--ease-m3);
+    }
+
+    .quiet-note {
+      font-size: 12px;
+      color: var(--md-on-surface-variant);
+    }
+
+    /* Step 3: Ready */
+    .ready-stage {
+      align-items: center;
+      text-align: center;
+      padding: 16px 8px;
+      gap: 14px;
+    }
+
+    .ready-badge {
+      width: 72px;
+      height: 72px;
+      border-radius: 24px;
+      background-color: var(--md-primary-container);
+      color: var(--md-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      animation: badgePop 340ms var(--ease-spring) both;
+      transition: background-color var(--dur-theme) var(--ease-m3), color var(--dur-theme) var(--ease-m3);
+    }
+
+    @keyframes badgePop {
+      from { opacity: 0; transform: scale(0.75); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .ready-title {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      color: var(--md-on-surface);
+    }
+
+    .ready-sub {
+      font-size: 13.5px;
+      line-height: 1.45;
+      color: var(--md-on-surface-variant);
+      max-width: 320px;
+    }
+
+    .ready-chips {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .m3-chip {
+      height: 28px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background-color: var(--md-surface-container-high);
+      color: var(--md-on-surface-variant);
+      font-size: 12px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color var(--dur-theme) var(--ease-m3), color var(--dur-theme) var(--ease-m3);
+    }
+
+    .m3-chip.tonal {
+      background-color: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+    }
+
+    /* Uninstall pane */
+    .uninstall-stage {
+      gap: 14px;
+      padding: 8px 2px;
+    }
+
+    .uninstall-card {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background-color: var(--md-surface-container-high);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .uninstall-heading {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--md-on-surface);
+    }
+
+    .uninstall-desc {
+      font-size: 13px;
+      line-height: 1.48;
+      color: var(--md-on-surface-variant);
+    }
+
+    .error-banner {
+      display: none;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background-color: var(--md-error-container);
+      color: var(--md-on-error-container);
+      font-size: 12.5px;
+      font-weight: 500;
+    }
+
+    .error-banner.show {
+      display: block;
+    }
+
+    /* Bottom Action Footer */
+    .oobe-footer {
+      height: 68px;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .version-meta {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--md-on-surface-variant);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ver-pill {
+      padding: 3px 9px;
+      border-radius: 999px;
+      background-color: var(--md-surface-container-high);
+      color: var(--md-on-surface);
+      font-size: 11.5px;
+      font-weight: 600;
+      transition: background-color var(--dur-theme) var(--ease-m3), color var(--dur-theme) var(--ease-m3);
+    }
+
+    .footer-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .m3-btn {
+      height: 40px;
+      padding: 0 24px;
+      border-radius: 999px;
+      border: none;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 180ms var(--ease-m3), color 180ms var(--ease-m3), transform 140ms var(--ease-spring), opacity 160ms var(--ease-m3);
+    }
+
+    .m3-btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .m3-btn:disabled {
+      opacity: 0.56;
+      cursor: default;
+    }
+
+    .m3-btn-filled {
+      background-color: var(--md-primary);
+      color: var(--md-on-primary);
+    }
+
+    .m3-btn-filled:hover:not(:disabled) {
+      background-color: color-mix(in srgb, var(--md-primary) 90%, var(--md-on-primary));
+      box-shadow: 0 2px 8px color-mix(in srgb, var(--md-primary) 28%, transparent);
+    }
+
+    .m3-btn-text {
+      background-color: transparent;
+      color: var(--md-primary);
+      padding: 0 16px;
+    }
+
+    .m3-btn-text:hover:not(:disabled) {
+      background-color: var(--md-state-hover);
+    }
+
+    .m3-btn-danger {
+      background-color: var(--md-error);
+      color: var(--md-on-error);
+    }
+
+    .m3-btn-danger:hover:not(:disabled) {
+      background-color: color-mix(in srgb, var(--md-error) 90%, var(--md-on-error));
+    }
+
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
-  <div class="bg-art"></div>
-  <div class="bg-vignette"></div>
+  <div class="oobe-shell">
+    <!-- Clean Borderless Drag Bar -->
+    <header class="drag-bar" id="drag-bar">
+      <div class="top-brand-pill">
+        <span class="top-brand-dot"></span>
+        <span>dejavu Setup</span>
+      </div>
+      <div class="top-controls">
+        <div class="polarity-seg" role="group" aria-label="Appearance mode">
+          <button type="button" class="pol-btn active" id="btn-mode-light" data-mode="light" aria-pressed="true">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="3.1" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M8 1.6v1.6M8 12.8v1.6M1.6 8h1.6M12.8 8h1.6M3.5 3.5l1.1 1.1M11.4 11.4l1.1 1.1M12.5 3.5l-1.1 1.1M4.6 11.4l-1.1 1.1" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+            </svg>
+            <span>Light</span>
+          </button>
+          <button type="button" class="pol-btn" id="btn-mode-dark" data-mode="dark" aria-pressed="false">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true">
+              <path d="M12.7 10.1A5.2 5.2 0 0 1 5.9 3.3a5.4 5.4 0 1 0 6.8 6.8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+            </svg>
+            <span>Dark</span>
+          </button>
+        </div>
+        <button type="button" class="close-btn" id="btn-close" title="Close" aria-label="Close">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
+            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
 
-  <div class="drag-bar" id="drag-bar">
-    <button class="close-btn" id="btn-close" title="Close">
-      <svg viewBox="0 0 14 14" width="12" height="12" fill="none"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-    </button>
+    <!-- 2-Column Chromebook / Pixel OS OOBE Content -->
+    <main class="oobe-main">
+      <!-- Left Column: Emblem, Display Title, Calm Subtitle, Step Progress -->
+      <section class="oobe-left">
+        <div class="brand-hero">
+          <div class="emblem-squircle" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none">
+              <path d="M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z" fill="var(--md-primary)"/>
+              <path d="M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z" fill="var(--md-primary)"/>
+              <path d="M31.2 34.4C26.2 24.4 19.6 17.4 13.2 17.0C16.2 24.8 22.8 31.8 31.2 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+              <path d="M32.8 34.4C37.8 24.4 44.4 17.4 50.8 17.0C47.8 24.8 41.2 31.8 32.8 34.4Z" fill="var(--md-on-primary-container)" fill-opacity="0.34"/>
+              <path d="M31.2 36.6C23.0 36.4 15.2 39.2 15.0 44.8C14.8 49.0 19.4 51.6 24.6 49.6C28.6 48.0 30.8 43.2 31.2 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+              <path d="M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
+              <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
+            </svg>
+          </div>
+          <div class="hero-copy">
+            <h1 class="oobe-title" id="oobe-title">Welcome to dejavu</h1>
+            <p class="oobe-sub" id="oobe-sub">Fast, private, Material You.</p>
+          </div>
+        </div>
+
+        <nav class="step-rail" id="step-rail" aria-label="Setup steps">
+          <div class="step-item active" id="rail-step-1">
+            <span class="step-dot"><svg viewBox="0 0 12 12" fill="none"><path d="M2.6 6.2l2.3 2.3 4.5-4.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span>1. Personalize</span>
+          </div>
+          <div class="step-item" id="rail-step-2">
+            <span class="step-dot"><svg viewBox="0 0 12 12" fill="none"><path d="M2.6 6.2l2.3 2.3 4.5-4.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span>2. Install</span>
+          </div>
+          <div class="step-item" id="rail-step-3">
+            <span class="step-dot"><svg viewBox="0 0 12 12" fill="none"><path d="M2.6 6.2l2.3 2.3 4.5-4.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span>3. Ready</span>
+          </div>
+        </nav>
+      </section>
+
+      <!-- Right Column: Clean M3 Tonal Surface Card -->
+      <section class="oobe-card">
+        <!-- Step 1: Personalize & Install Options -->
+        <div class="step-pane active" id="pane-personalize">
+          <div>
+            <div class="section-head" style="margin-bottom: 14px;">
+              <span class="section-label">Choose your color</span>
+              <span class="seed-badge" id="seed-badge">Pixel Blue · Light</span>
+            </div>
+            <div class="swatch-grid" id="swatch-grid" role="radiogroup" aria-label="Material You color seed"></div>
+          </div>
+
+          <div class="card-divider"></div>
+
+          <div class="switch-list">
+            <label class="switch-row">
+              <span class="switch-label">Desktop shortcut</span>
+              <span class="m3-switch">
+                <input type="checkbox" id="opt-desktop" checked>
+                <span class="m3-switch-track"></span>
+                <span class="m3-switch-thumb"><svg viewBox="0 0 14 14" fill="none"><path d="M3 7.3l2.7 2.7 5.3-5.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </span>
+            </label>
+            <label class="switch-row">
+              <span class="switch-label">Start Menu shortcut</span>
+              <span class="m3-switch">
+                <input type="checkbox" id="opt-startmenu" checked>
+                <span class="m3-switch-track"></span>
+                <span class="m3-switch-thumb"><svg viewBox="0 0 14 14" fill="none"><path d="M3 7.3l2.7 2.7 5.3-5.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </span>
+            </label>
+            <label class="switch-row">
+              <span class="switch-label">Launch when ready</span>
+              <span class="m3-switch">
+                <input type="checkbox" id="opt-launch" checked>
+                <span class="m3-switch-track"></span>
+                <span class="m3-switch-thumb"><svg viewBox="0 0 14 14" fill="none"><path d="M3 7.3l2.7 2.7 5.3-5.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Step 2: Installing Progress -->
+        <div class="step-pane install-stage" id="pane-installing">
+          <div class="progress-emblem" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none">
+              <path d="M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z" fill="var(--md-primary)"/>
+              <path d="M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z" fill="var(--md-primary)"/>
+              <path d="M31.2 36.6C23.0 36.4 15.2 39.2 15.0 44.8C14.8 49.0 19.4 51.6 24.6 49.6C28.6 48.0 30.8 43.2 31.2 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.72"/>
+              <path d="M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.72"/>
+              <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
+            </svg>
+          </div>
+          <div class="progress-block">
+            <div class="progress-meta">
+              <span id="status-text">Installing dejavu...</span>
+              <span class="progress-pct" id="progress-pct">12%</span>
+            </div>
+            <div class="m3-linear-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="12" id="progress-bar-role">
+              <div class="m3-linear-fill" id="bar-fill"></div>
+            </div>
+          </div>
+          <p class="quiet-note" id="install-quiet-note">Per-user installation · No admin privileges required</p>
+        </div>
+
+        <!-- Step 3: Ready -->
+        <div class="step-pane ready-stage" id="pane-ready">
+          <div class="ready-badge" aria-hidden="true">
+            <svg viewBox="0 0 36 36" width="34" height="34" fill="none">
+              <path d="M8.5 18.6l6.2 6.2L27.5 12" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2 class="ready-title" id="ready-title">You're all set</h2>
+          <p class="ready-sub" id="ready-sub">dejavu is installed and styled with your Material You palette.</p>
+          <div class="ready-chips" id="ready-chips">
+            <span class="m3-chip tonal" id="ready-theme-chip">Amethyst · Light</span>
+            <span class="m3-chip" id="ready-ver-chip">v5.8.0</span>
+          </div>
+        </div>
+
+        <!-- Uninstall Confirmation Pane -->
+        <div class="step-pane uninstall-stage" id="pane-uninstall">
+          <div class="uninstall-card">
+            <div class="uninstall-heading">Remove dejavu from this PC?</div>
+            <div class="uninstall-desc">This removes the browser binary and shortcuts from your user account. Your bookmarks and profile data stay safe in AppData.</div>
+          </div>
+        </div>
+
+        <div class="error-banner" id="error-banner" role="alert"></div>
+      </section>
+    </main>
+
+    <!-- Bottom Action Bar -->
+    <footer class="oobe-footer">
+      <div class="version-meta">
+        <span class="ver-pill" id="ver-pill">v5.8.0</span>
+        <span id="foot-note">Installs cleanly for your user account</span>
+      </div>
+      <div class="footer-actions">
+        <button type="button" class="m3-btn m3-btn-text hidden" id="btn-secondary">Close</button>
+        <button type="button" class="m3-btn m3-btn-filled" id="btn-action">Install dejavu</button>
+      </div>
+    </footer>
   </div>
 
-  <div class="wrap">
-    <div class="card liquid-glass" id="setup-card" data-liquid-glass data-lg-bezel="24" data-lg-scale="28" data-lg-dispersion="1.22" data-lg-dome="0.045">
-      <div class="logo-wrap">
-        <img src="https://setup.local/logo-transparent.png" alt="dejavu" draggable="false">
-      </div>
-      <div class="title">dejavu</div>
-      <div class="subtitle" id="sub-text">Liquid Glass browser with built-in ad blocking &amp; native Chromium speed.</div>
-
-      <div class="options" id="options-box">
-        <label class="opt-row"><input type="checkbox" id="opt-desktop" checked> Create Desktop shortcut</label>
-        <label class="opt-row"><input type="checkbox" id="opt-startmenu" checked> Add to Start Menu</label>
-        <label class="opt-row"><input type="checkbox" id="opt-launch" checked> Launch dejavu after setup</label>
-      </div>
-
-      <div class="progress-wrap" id="progress-wrap">
-        <div class="bar-track"><div class="bar-fill" id="bar-fill"></div></div>
-        <div class="status-text" id="status-text">Preparing installation...</div>
-      </div>
-
-      <button class="cta-btn" id="btn-action">Install dejavu</button>
-      <div class="foot-note" id="foot-note">Installs cleanly for your user account · No admin rights needed</div>
-    </div>
-  </div>
-
-  <script src="https://setup.local/liquid-glass.js"></script>
   <script>
-    const send = (m) => { try { window.chrome.webview.postMessage(m); } catch {} };
-    window.LiquidGlass.init();
+    (function () {
+      'use strict';
 
-    const dragBar = document.getElementById('drag-bar');
-    const btnClose = document.getElementById('btn-close');
-    const btnAction = document.getElementById('btn-action');
-    const optionsBox = document.getElementById('options-box');
-    const progressWrap = document.getElementById('progress-wrap');
-    const barFill = document.getElementById('bar-fill');
-    const statusText = document.getElementById('status-text');
-    const subText = document.getElementById('sub-text');
-    const footNote = document.getElementById('foot-note');
+      const send = (m) => {
+        try {
+          if (window.chrome && window.chrome.webview) {
+            window.chrome.webview.postMessage(m);
+          }
+        } catch (e) {}
+      };
 
-    let isUninstall = false;
-    let isDone = false;
+      const SEEDS = [
+        { id: 'sapphire', name: 'Pixel Blue', lightA: '#1b6ef3', lightB: '#d3e3fd', darkA: '#a8c7fa', darkB: '#0842a0', bgLight: '#f3f4fb', bgDark: '#191c20' },
+        { id: 'amethyst', name: 'Amethyst',   lightA: '#6750a4', lightB: '#eaddff', darkA: '#d0bcff', darkB: '#4f378b', bgLight: '#f7f2fa', bgDark: '#1d1b20' },
+        { id: 'emerald',  name: 'Jade',       lightA: '#146c2e', lightB: '#a7f5b5', darkA: '#8bd89b', darkB: '#005321', bgLight: '#eff5ef', bgDark: '#181d19' },
+        { id: 'aurora',   name: 'Teal',       lightA: '#006a60', lightB: '#98f5e2', darkA: '#7bd8c6', darkB: '#005048', bgLight: '#eef5f2', bgDark: '#171d1b' },
+        { id: 'coral',    name: 'Coral',      lightA: '#b33b15', lightB: '#ffdbd0', darkA: '#ffb59d', darkB: '#822806', bgLight: '#fcf0ec', bgDark: '#221a17' },
+        { id: 'rose',     name: 'Rose',       lightA: '#a83268', lightB: '#ffd8e6', darkA: '#ffb0ce', darkB: '#7b294d', bgLight: '#faf0f3', bgDark: '#21191d' },
+        { id: 'gold',     name: 'Amber',      lightA: '#8a5600', lightB: '#ffddb3', darkA: '#ffb951', darkB: '#643e00', bgLight: '#faf1e8', bgDark: '#1f1b15' },
+        { id: 'lavender', name: 'Lavender',   lightA: '#7c43a8', lightB: '#f3daff', darkA: '#e2b7ff', darkB: '#612b87', bgLight: '#f7f1fa', bgDark: '#1e1a21' }
+      ];
 
-    dragBar.addEventListener('mousedown', (e) => {
-      if (e.target === dragBar) send({ type: 'drag' });
-    });
-    btnClose.addEventListener('click', () => send({ type: 'close' }));
+      let currentTheme = 'light';
+      let currentSeed = 'sapphire';
+      let isUninstall = false;
+      let currentStep = 1;
+      let appVersion = '5.8.0';
+      let appliedInitialTheme = true;
 
-    btnAction.addEventListener('click', () => {
-      if (isDone) {
-        send({ type: 'finish', launch: !isUninstall && document.getElementById('opt-launch').checked });
-        return;
+      const root = document.documentElement;
+      const dragBar = document.getElementById('drag-bar');
+      const btnClose = document.getElementById('btn-close');
+      const btnModeLight = document.getElementById('btn-mode-light');
+      const btnModeDark = document.getElementById('btn-mode-dark');
+      const swatchGrid = document.getElementById('swatch-grid');
+      const seedBadge = document.getElementById('seed-badge');
+      const oobeTitle = document.getElementById('oobe-title');
+      const oobeSub = document.getElementById('oobe-sub');
+      const stepRail = document.getElementById('step-rail');
+      const railSteps = [
+        document.getElementById('rail-step-1'),
+        document.getElementById('rail-step-2'),
+        document.getElementById('rail-step-3')
+      ];
+      const panePersonalize = document.getElementById('pane-personalize');
+      const paneInstalling = document.getElementById('pane-installing');
+      const paneReady = document.getElementById('pane-ready');
+      const paneUninstall = document.getElementById('pane-uninstall');
+      const barFill = document.getElementById('bar-fill');
+      const progressBarRole = document.getElementById('progress-bar-role');
+      const progressPct = document.getElementById('progress-pct');
+      const statusText = document.getElementById('status-text');
+      const readyTitle = document.getElementById('ready-title');
+      const readySub = document.getElementById('ready-sub');
+      const readyThemeChip = document.getElementById('ready-theme-chip');
+      const readyVerChip = document.getElementById('ready-ver-chip');
+      const readyChips = document.getElementById('ready-chips');
+      const errorBanner = document.getElementById('error-banner');
+      const verPill = document.getElementById('ver-pill');
+      const footNote = document.getElementById('foot-note');
+      const btnAction = document.getElementById('btn-action');
+      const btnSecondary = document.getElementById('btn-secondary');
+      const optDesktop = document.getElementById('opt-desktop');
+      const optStartMenu = document.getElementById('opt-startmenu');
+      const optLaunch = document.getElementById('opt-launch');
+
+      function getSeedMeta(id) {
+        return SEEDS.find((s) => s.id === id) || SEEDS[0];
       }
-      btnAction.disabled = true;
-      optionsBox.style.display = 'none';
-      progressWrap.classList.add('show');
-      if (isUninstall) {
-        send({ type: 'startUninstall' });
-      } else {
-        send({
-          type: 'startInstall',
-          desktop: document.getElementById('opt-desktop').checked,
-          startMenu: document.getElementById('opt-startmenu').checked,
-          launch: document.getElementById('opt-launch').checked
+
+      function renderSwatches() {
+        swatchGrid.innerHTML = '';
+        SEEDS.forEach((s) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'swatch-btn' + (s.id === currentSeed ? ' selected' : '');
+          btn.dataset.seed = s.id;
+          btn.title = s.name;
+          btn.setAttribute('role', 'radio');
+          btn.setAttribute('aria-label', s.name);
+          btn.setAttribute('aria-checked', s.id === currentSeed ? 'true' : 'false');
+
+          const orb = document.createElement('span');
+          orb.className = 'swatch-orb';
+          orb.style.setProperty('--sw-a', currentTheme === 'dark' ? s.darkA : s.lightA);
+          orb.style.setProperty('--sw-b', currentTheme === 'dark' ? s.darkB : s.lightB);
+
+          const chk = document.createElement('span');
+          chk.className = 'swatch-check';
+          chk.innerHTML = '<svg viewBox="0 0 12 12" width="11" height="11" fill="none"><path d="M2.4 6.2l2.4 2.4 4.8-4.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+          orb.appendChild(chk);
+          btn.appendChild(orb);
+          btn.addEventListener('click', () => {
+            currentSeed = s.id;
+            applyTheme();
+          });
+          swatchGrid.appendChild(btn);
         });
       }
-    });
 
-    window.chrome.webview.addEventListener('message', (ev) => {
-      const d = ev.data;
-      if (!d) return;
-      if (d.type === 'init') {
-        isUninstall = !!d.uninstall;
-        if (isUninstall) {
-          subText.textContent = 'Remove dejavu browser and its shortcuts from this computer?';
-          optionsBox.style.display = 'none';
-          btnAction.textContent = 'Uninstall dejavu';
-          btnAction.classList.add('danger');
-          footNote.textContent = 'Your bookmarks & profile data can be removed anytime from AppData';
-        }
-      } else if (d.type === 'progress') {
-        barFill.style.width = `${d.percent}%`;
-        statusText.textContent = d.status || '';
-      } else if (d.type === 'done') {
-        isDone = true;
-        barFill.style.width = '100%';
-        statusText.textContent = d.status || 'All done!';
-        btnAction.disabled = false;
-        btnAction.classList.remove('danger');
-        btnAction.textContent = isUninstall ? 'Close' : (document.getElementById('opt-launch').checked ? 'Launch dejavu' : 'Finish');
-      } else if (d.type === 'error') {
-        statusText.textContent = d.status || 'Something went wrong.';
-        btnAction.disabled = false;
-        btnAction.textContent = 'Retry';
+      function applyTheme() {
+        const meta = getSeedMeta(currentSeed);
+        root.setAttribute('data-theme', currentTheme);
+        root.setAttribute('data-accent', currentSeed);
+
+        const isDark = currentTheme === 'dark';
+        btnModeLight.classList.toggle('active', !isDark);
+        btnModeLight.setAttribute('aria-pressed', !isDark ? 'true' : 'false');
+        btnModeDark.classList.toggle('active', isDark);
+        btnModeDark.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+
+        const label = meta.name + ' · ' + (isDark ? 'Dark' : 'Light');
+        seedBadge.textContent = label;
+        readyThemeChip.textContent = label;
+
+        const buttons = swatchGrid.querySelectorAll('.swatch-btn');
+        buttons.forEach((b) => {
+          const sid = b.dataset.seed;
+          const sm = getSeedMeta(sid);
+          const sel = sid === currentSeed;
+          b.classList.toggle('selected', sel);
+          b.setAttribute('aria-checked', sel ? 'true' : 'false');
+          const orb = b.querySelector('.swatch-orb');
+          if (orb) {
+            orb.style.setProperty('--sw-a', isDark ? sm.darkA : sm.lightA);
+            orb.style.setProperty('--sw-b', isDark ? sm.darkB : sm.lightB);
+          }
+        });
+
+        send({
+          type: 'syncSurface',
+          theme: currentTheme,
+          seed: currentSeed,
+          bgHex: isDark ? meta.bgDark : meta.bgLight
+        });
       }
-    });
+
+      function setStep(step) {
+        currentStep = step;
+        errorBanner.classList.remove('show');
+        panePersonalize.classList.remove('active');
+        paneInstalling.classList.remove('active');
+        paneReady.classList.remove('active');
+        paneUninstall.classList.remove('active');
+
+        railSteps.forEach((el, idx) => {
+          const n = idx + 1;
+          el.classList.toggle('active', n === step);
+          el.classList.toggle('done', n < step);
+        });
+
+        if (isUninstall) {
+          stepRail.classList.add('hidden');
+          if (step === 1) {
+            paneUninstall.classList.add('active');
+            oobeTitle.textContent = 'Uninstall dejavu';
+            oobeSub.textContent = 'Remove browser files and shortcuts cleanly.';
+            btnAction.disabled = false;
+            btnAction.className = 'm3-btn m3-btn-danger';
+            btnAction.textContent = 'Uninstall dejavu';
+            btnSecondary.classList.remove('hidden');
+            btnSecondary.textContent = 'Cancel';
+          } else if (step === 2) {
+            paneInstalling.classList.add('active');
+            oobeTitle.textContent = 'Removing dejavu';
+            oobeSub.textContent = 'Cleaning up program files and shortcuts.';
+            btnAction.disabled = true;
+            btnAction.className = 'm3-btn m3-btn-filled';
+            btnAction.textContent = 'Removing...';
+            btnSecondary.classList.add('hidden');
+          } else {
+            paneReady.classList.add('active');
+            oobeTitle.textContent = 'Uninstalled';
+            oobeSub.textContent = 'dejavu has been removed from this PC.';
+            readyTitle.textContent = 'All done';
+            readySub.textContent = 'dejavu and its shortcuts have been removed cleanly.';
+            readyChips.classList.add('hidden');
+            btnAction.disabled = false;
+            btnAction.className = 'm3-btn m3-btn-filled';
+            btnAction.textContent = 'Close';
+            btnSecondary.classList.add('hidden');
+          }
+          return;
+        }
+
+        stepRail.classList.remove('hidden');
+        if (step === 1) {
+          panePersonalize.classList.add('active');
+          oobeTitle.textContent = 'Welcome to dejavu';
+          oobeSub.textContent = 'Fast, private, Material You.';
+          btnAction.disabled = false;
+          btnAction.className = 'm3-btn m3-btn-filled';
+          btnAction.textContent = 'Install dejavu';
+          btnSecondary.classList.add('hidden');
+        } else if (step === 2) {
+          paneInstalling.classList.add('active');
+          oobeTitle.textContent = 'Installing dejavu';
+          oobeSub.textContent = 'Setting up your browser and Material You theme.';
+          btnAction.disabled = true;
+          btnAction.className = 'm3-btn m3-btn-filled';
+          btnAction.textContent = 'Installing...';
+          btnSecondary.classList.add('hidden');
+        } else {
+          const meta = getSeedMeta(currentSeed);
+          const modeTxt = currentTheme === 'dark' ? 'Dark' : 'Light';
+          paneReady.classList.add('active');
+          oobeTitle.textContent = "You're all set";
+          oobeSub.textContent = 'Fast, private, Material You.';
+          readyTitle.textContent = "You're all set";
+          readySub.textContent = appliedInitialTheme
+            ? ('Ready to browse with your ' + meta.name + ' ' + modeTxt + ' theme.')
+            : 'dejavu is updated and ready. Your existing profile and theme are preserved.';
+          readyChips.classList.remove('hidden');
+          btnAction.disabled = false;
+          btnAction.className = 'm3-btn m3-btn-filled';
+          if (optLaunch.checked) {
+            btnAction.textContent = 'Get started';
+            btnSecondary.classList.remove('hidden');
+            btnSecondary.textContent = 'Close';
+          } else {
+            btnAction.textContent = 'Finish';
+            btnSecondary.classList.remove('hidden');
+            btnSecondary.textContent = 'Launch now';
+          }
+        }
+      }
+
+      dragBar.addEventListener('mousedown', (e) => {
+        if (e.target.closest('button')) return;
+        send({ type: 'drag' });
+      });
+
+      btnClose.addEventListener('click', () => send({ type: 'close' }));
+      btnSecondary.addEventListener('click', () => {
+        if (!isUninstall && currentStep === 3 && !optLaunch.checked) {
+          send({ type: 'finish', launch: true, launchAfter: true });
+          return;
+        }
+        send({ type: 'close' });
+      });
+
+      btnModeLight.addEventListener('click', () => {
+        if (currentTheme !== 'light') {
+          currentTheme = 'light';
+          applyTheme();
+        }
+      });
+
+      btnModeDark.addEventListener('click', () => {
+        if (currentTheme !== 'dark') {
+          currentTheme = 'dark';
+          applyTheme();
+        }
+      });
+
+      btnAction.addEventListener('click', () => {
+        if (currentStep === 3) {
+          const shouldLaunch = !isUninstall && optLaunch.checked;
+          send({
+            type: 'finish',
+            launch: shouldLaunch,
+            launchAfter: shouldLaunch
+          });
+          return;
+        }
+        if (currentStep === 2) return;
+
+        setStep(2);
+        barFill.style.width = '10%';
+        progressPct.textContent = '10%';
+        progressBarRole.setAttribute('aria-valuenow', '10');
+
+        if (isUninstall) {
+          statusText.textContent = 'Removing dejavu...';
+          send({ type: 'startUninstall' });
+        } else {
+          statusText.textContent = 'Installing dejavu...';
+          send({
+            type: 'startInstall',
+            theme: currentTheme,
+            seed: currentSeed,
+            desktop: optDesktop.checked,
+            desktopShortcut: optDesktop.checked,
+            startMenu: optStartMenu.checked,
+            startMenuShortcut: optStartMenu.checked,
+            launch: optLaunch.checked,
+            launchAfter: optLaunch.checked
+          });
+        }
+      });
+
+      if (window.chrome && window.chrome.webview) {
+        window.chrome.webview.addEventListener('message', (ev) => {
+          const d = ev.data;
+          if (!d) return;
+          if (d.type === 'init') {
+            isUninstall = !!d.uninstall;
+            if (d.version) {
+              appVersion = String(d.version);
+              verPill.textContent = 'v' + appVersion;
+              readyVerChip.textContent = 'v' + appVersion;
+            }
+            if (isUninstall) {
+              footNote.textContent = 'Bookmarks & profile data are kept in AppData';
+            }
+            setStep(1);
+            applyTheme();
+          } else if (d.type === 'progress') {
+            const pct = Math.max(0, Math.min(100, Math.round(Number(d.percent) || 0)));
+            barFill.style.width = pct + '%';
+            progressPct.textContent = pct + '%';
+            progressBarRole.setAttribute('aria-valuenow', String(pct));
+            if (d.status) statusText.textContent = String(d.status);
+          } else if (d.type === 'done') {
+            barFill.style.width = '100%';
+            progressPct.textContent = '100%';
+            progressBarRole.setAttribute('aria-valuenow', '100');
+            if (typeof d.appliedInitialTheme === 'boolean') {
+              appliedInitialTheme = d.appliedInitialTheme;
+            }
+            setStep(3);
+          } else if (d.type === 'error') {
+            errorBanner.textContent = d.status || 'Installation could not complete. Please retry.';
+            errorBanner.classList.add('show');
+            setStep(1);
+            btnAction.textContent = isUninstall ? 'Retry Uninstall' : 'Retry Install';
+          }
+        });
+      }
+
+      renderSwatches();
+      setStep(1);
+      applyTheme();
+    })();
   </script>
 </body>
 </html>

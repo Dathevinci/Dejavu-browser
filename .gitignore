@@ -5,3 +5,11 @@ dist/
 .vs/
 bin/
 obj/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+.DS_Store
+Thumbs.db
+*.tmp
+*.part

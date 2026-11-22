@@ -70,6 +70,7 @@ namespace DejavuBrowser
         public double ZoomFactor;
         public DateTime LastActiveUtc;
         public string UpgradedFromHttpUrl;
+        public string DefaultUserAgent;
 
         public BrowserTab(int id, string groupId)
         {
@@ -861,6 +862,10 @@ namespace DejavuBrowser
         private System.Windows.Forms.Timer _adPulseTimer;
         private System.Windows.Forms.Timer _mediaPushTimer;
         private System.Windows.Forms.Timer _memorySaverTimer;
+        private System.Windows.Forms.Timer _boundsSaveTimer;
+        private bool _restoreMaximizedOnShow;
+        private bool _wasMaximizedBeforeMinimize;
+        private bool _initialPlacementApplied;
         private bool _adPulseDirty;
         private int _pendingAdPulseTabId = -1;
         private int _pendingAdPulseTabBlocked;
@@ -917,6 +922,12 @@ namespace DejavuBrowser
         private string _cdpBlockedUrlsJson;
         private string _floatingMediaScript;
         private string _cwsBannerScript;
+        private string _pendingExtStageId = "";
+        private string _pendingExtStoreId = "";
+        private BrowserTab _pendingExtSourceTab;
+        private bool _pendingExtPromptInShell;
+        private bool _committingExtInstall;
+        private int _lastExtPopupAnchorRightCss;
         private readonly Dictionary<int, DateTime> _pendingMediaPushDueUtc = new Dictionary<int, DateTime>();
         private CancellationTokenSource _videoProbeCts;
         private string _videoProbeUrl = "";
@@ -1011,24 +1022,37 @@ namespace DejavuBrowser
             FormBorderStyle = FormBorderStyle.None;
             MinimumSize = new Size(640, 480);
 
+            SettingsStore.NormalizeWindowBounds(_settings);
             if (anchorWindow != null && !anchorWindow.IsDisposed)
             {
                 StartPosition = FormStartPosition.Manual;
-                Size baseSize = (anchorWindow.WindowState == FormWindowState.Normal && anchorWindow.Width >= 760 && anchorWindow.Height >= 520)
-                    ? anchorWindow.Size
-                    : new Size(1380, 880);
-                Size = baseSize;
+                Size baseSize;
+                Rectangle anchorSaved = anchorWindow._savedNormalBounds;
+                if (anchorWindow.WindowState == FormWindowState.Normal && anchorWindow.Width >= 640 && anchorWindow.Height >= 480)
+                {
+                    baseSize = anchorWindow.Size;
+                }
+                else if (anchorSaved.Width >= 640 && anchorSaved.Height >= 480)
+                {
+                    baseSize = anchorSaved.Size;
+                }
+                else
+                {
+                    baseSize = new Size(_settings.windowWidth, _settings.windowHeight);
+                }
                 Rectangle wa = Screen.FromControl(anchorWindow).WorkingArea;
+                int bw = Math.Min(Math.Max(640, baseSize.Width), wa.Width);
+                int bh = Math.Min(Math.Max(480, baseSize.Height), wa.Height);
                 int nx = anchorWindow.Left + 36;
                 int ny = anchorWindow.Top + 36;
-                if (nx + baseSize.Width > wa.Right) nx = wa.Left + 48;
-                if (ny + baseSize.Height > wa.Bottom) ny = wa.Top + 48;
-                Location = new Point(nx, ny);
+                if (nx + bw > wa.Right) nx = wa.Left + Math.Max(0, Math.Min(48, wa.Width - bw));
+                if (ny + bh > wa.Bottom) ny = wa.Top + Math.Max(0, Math.Min(48, wa.Height - bh));
+                Bounds = new Rectangle(nx, ny, bw, bh);
+                _savedNormalBounds = Bounds;
             }
             else
             {
-                StartPosition = FormStartPosition.CenterScreen;
-                Size = new Size(1380, 880);
+                ApplySavedInitialWindowBounds();
             }
 
             BackColor = GetThemeSurfaceColor();
@@ -1104,6 +1128,31 @@ namespace DejavuBrowser
             _memorySaverTimer.Tick += (s, e) => RunMemorySaverSweep();
             _memorySaverTimer.Start();
 
+            _boundsSaveTimer = new System.Windows.Forms.Timer();
+            _boundsSaveTimer.Interval = 450;
+            _boundsSaveTimer.Tick += (s, e) =>
+            {
+                _boundsSaveTimer.Stop();
+                if (!IsDisposed && _initialPlacementApplied)
+                {
+                    PersistWindowBoundsToSettings(true);
+                }
+            };
+
+            Shown += (s, e) =>
+            {
+                if (_restoreMaximizedOnShow)
+                {
+                    _restoreMaximizedOnShow = false;
+                    _wasMaximized = true;
+                    _wasMaximizedBeforeMinimize = true;
+                    WindowState = FormWindowState.Maximized;
+                    _lastWindowState = FormWindowState.Maximized;
+                    LayoutViews();
+                }
+                _initialPlacementApplied = true;
+            };
+
             Activated += (s, e) =>
             {
                 _appContext.MarkWindowActive(this);
@@ -1137,9 +1186,10 @@ namespace DejavuBrowser
 
                 if (!isZoomedNow && WindowState == FormWindowState.Normal && !_isHtmlFullscreen &&
                     !_inSysCommandRestore && !restoredFromMin && DateTime.UtcNow >= _restoreGuardUntilUtc &&
-                    _savedNormalBounds.IsEmpty && Width >= 400 && Height >= 300)
+                    Width >= 640 && Height >= 480)
                 {
                     CaptureCurrentNormalBounds();
+                    SchedulePersistWindowBounds();
                 }
 
                 LayoutViews();
@@ -1158,6 +1208,9 @@ namespace DejavuBrowser
                 if (WindowState != _lastWindowState || restoredFromMin)
                 {
                     _lastWindowState = WindowState;
+                    if (WindowState == FormWindowState.Maximized) _wasMaximizedBeforeMinimize = true;
+                    else if (WindowState == FormWindowState.Normal) _wasMaximizedBeforeMinimize = false;
+                    SchedulePersistWindowBounds();
                     if (_shellReady) PushFullStateToShell();
                 }
             };
@@ -1168,16 +1221,13 @@ namespace DejavuBrowser
                 RepositionActiveHud();
                 if (WindowState == FormWindowState.Normal && IsHandleCreated && !NativeWin32.IsZoomed(Handle) &&
                     !NativeWin32.IsIconic(Handle) && !_isHtmlFullscreen && !_inSysCommandRestore &&
-                    DateTime.UtcNow >= _restoreGuardUntilUtc && Width >= 400 && Height >= 300)
+                    DateTime.UtcNow >= _restoreGuardUntilUtc && Width >= 640 && Height >= 480)
                 {
                     Rectangle cur = GetCurrentWindowRect();
-                    if (_savedNormalBounds.IsEmpty)
+                    if (cur.Width >= 640 && cur.Height >= 480 && cur.X > -30000 && cur.Y > -30000)
                     {
                         _savedNormalBounds = cur;
-                    }
-                    else if (cur.Width == _savedNormalBounds.Width && cur.Height == _savedNormalBounds.Height)
-                    {
-                        _savedNormalBounds = new Rectangle(cur.X, cur.Y, _savedNormalBounds.Width, _savedNormalBounds.Height);
+                        SchedulePersistWindowBounds();
                     }
                 }
             };
@@ -1223,6 +1273,7 @@ namespace DejavuBrowser
             {
                 try
                 {
+                    PersistWindowBoundsToSettings(false);
                     List<string> sessionUrls = new List<string>();
                     for (int i = 0; i < _tabs.Count; i++)
                     {
@@ -1248,6 +1299,7 @@ namespace DejavuBrowser
             if (_vpnTelemetryTimer != null) { _vpnTelemetryTimer.Stop(); _vpnTelemetryTimer.Dispose(); }
             if (_downloadHideTimer != null) { _downloadHideTimer.Stop(); _downloadHideTimer.Dispose(); }
             if (_memorySaverTimer != null) { _memorySaverTimer.Stop(); _memorySaverTimer.Dispose(); }
+            if (_boundsSaveTimer != null) { _boundsSaveTimer.Stop(); _boundsSaveTimer.Dispose(); }
 
             if (_popoverPopup != null) { try { _popoverPopup.Close(); } catch { } }
             if (_hudPopup != null) { try { _hudPopup.Close(); } catch { } }
@@ -1546,10 +1598,154 @@ namespace DejavuBrowser
             float sc = DpiScale;
             MinimumSize = new Size(Math.Max(640, (int)Math.Round(640 * sc)), Math.Max(480, (int)Math.Round(480 * sc)));
             ClampWindowToVisibleScreens();
+            if (WindowState == FormWindowState.Normal && !_restoreMaximizedOnShow && Bounds.Width >= 640 && Bounds.Height >= 480)
+            {
+                _savedNormalBounds = Bounds;
+            }
             bool lightMode = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
             NativeWin32.ApplyWindows11Chrome(Handle, true, true);
             NativeWin32.SetImmersiveDarkMode(Handle, !lightMode);
             _appContext.EnsurePipeServerStarted();
+        }
+
+        private void ApplySavedInitialWindowBounds()
+        {
+            StartPosition = FormStartPosition.Manual;
+            try
+            {
+                int w = (_settings != null && _settings.windowWidth >= 640) ? _settings.windowWidth : 1380;
+                int h = (_settings != null && _settings.windowHeight >= 480) ? _settings.windowHeight : 880;
+                Screen[] all = Screen.AllScreens;
+                Screen targetScreen = Screen.PrimaryScreen;
+
+                if (_settings != null && _settings.windowHasPosition &&
+                    _settings.windowX > -30000 && _settings.windowY > -30000)
+                {
+                    Rectangle cand = new Rectangle(_settings.windowX, _settings.windowY, w, h);
+                    Screen bestScreen = null;
+                    int bestArea = 0;
+                    if (all != null)
+                    {
+                        for (int i = 0; i < all.Length; i++)
+                        {
+                            Rectangle inter = Rectangle.Intersect(cand, all[i].WorkingArea);
+                            int area = inter.Width * inter.Height;
+                            if (inter.Width >= 180 && inter.Height >= 120 && area > bestArea)
+                            {
+                                bestArea = area;
+                                bestScreen = all[i];
+                            }
+                        }
+                    }
+
+                    if (bestScreen != null)
+                    {
+                        Rectangle wa = bestScreen.WorkingArea;
+                        int cw = Math.Min(Math.Max(640, w), wa.Width);
+                        int ch = Math.Min(Math.Max(480, h), wa.Height);
+                        int cx = _settings.windowX;
+                        int cy = _settings.windowY;
+                        if (cy < wa.Top - 8) cy = wa.Top;
+                        if (cy > wa.Bottom - 80) cy = Math.Max(wa.Top, wa.Bottom - ch);
+                        if (cx + cw < wa.Left + 120) cx = wa.Left;
+                        if (cx > wa.Right - 120) cx = Math.Max(wa.Left, wa.Right - cw);
+                        Bounds = new Rectangle(cx, cy, cw, ch);
+                        _savedNormalBounds = Bounds;
+                        if (!_isPrivateWindow && _settings.windowMaximized)
+                        {
+                            _restoreMaximizedOnShow = true;
+                        }
+                        return;
+                    }
+                }
+
+                Rectangle defWa = (targetScreen != null) ? targetScreen.WorkingArea : new Rectangle(0, 0, 1920, 1040);
+                int dw = Math.Min(Math.Max(640, w), defWa.Width);
+                int dh = Math.Min(Math.Max(480, h), defWa.Height);
+                int dx = defWa.Left + Math.Max(0, (defWa.Width - dw) / 2);
+                int dy = defWa.Top + Math.Max(0, (defWa.Height - dh) / 2);
+                Bounds = new Rectangle(dx, dy, dw, dh);
+                _savedNormalBounds = Bounds;
+                if (!_isPrivateWindow && _settings != null && _settings.windowMaximized)
+                {
+                    _restoreMaximizedOnShow = true;
+                }
+            }
+            catch
+            {
+                StartPosition = FormStartPosition.CenterScreen;
+                Size = new Size(1380, 880);
+            }
+        }
+
+        private void SchedulePersistWindowBounds()
+        {
+            if (_isPrivateWindow || !_initialPlacementApplied || IsDisposed || _boundsSaveTimer == null) return;
+            try
+            {
+                _boundsSaveTimer.Stop();
+                _boundsSaveTimer.Start();
+            }
+            catch { }
+        }
+
+        private void PersistWindowBoundsToSettings(bool saveNow)
+        {
+            if (_isPrivateWindow || _settings == null || _profiles == null) return;
+            try
+            {
+                bool isIconic = IsHandleCreated && (NativeWin32.IsIconic(Handle) || WindowState == FormWindowState.Minimized);
+                bool isZoomed = !isIconic && ((IsHandleCreated && NativeWin32.IsZoomed(Handle)) || WindowState == FormWindowState.Maximized);
+                bool saveMaximized = isIconic ? _wasMaximizedBeforeMinimize : isZoomed;
+
+                Rectangle normalRect = Rectangle.Empty;
+                if (!isIconic && !isZoomed && !_isHtmlFullscreen && IsHandleCreated)
+                {
+                    Rectangle cur = GetCurrentWindowRect();
+                    if (cur.Width >= 640 && cur.Height >= 480 && cur.X > -30000 && cur.Y > -30000)
+                    {
+                        normalRect = cur;
+                        _savedNormalBounds = cur;
+                    }
+                }
+                if (normalRect.IsEmpty &&
+                    _savedNormalBounds.Width >= 640 && _savedNormalBounds.Height >= 480 &&
+                    _savedNormalBounds.X > -30000 && _savedNormalBounds.Y > -30000)
+                {
+                    normalRect = _savedNormalBounds;
+                }
+                if (normalRect.IsEmpty &&
+                    RestoreBounds.Width >= 640 && RestoreBounds.Height >= 480 &&
+                    RestoreBounds.X > -30000 && RestoreBounds.Y > -30000)
+                {
+                    normalRect = RestoreBounds;
+                }
+
+                bool changed = (_settings.windowMaximized != saveMaximized);
+                _settings.windowMaximized = saveMaximized;
+                if (!normalRect.IsEmpty)
+                {
+                    if (_settings.windowWidth != normalRect.Width ||
+                        _settings.windowHeight != normalRect.Height ||
+                        _settings.windowX != normalRect.X ||
+                        _settings.windowY != normalRect.Y ||
+                        !_settings.windowHasPosition)
+                    {
+                        changed = true;
+                    }
+                    _settings.windowWidth = normalRect.Width;
+                    _settings.windowHeight = normalRect.Height;
+                    _settings.windowX = normalRect.X;
+                    _settings.windowY = normalRect.Y;
+                    _settings.windowHasPosition = true;
+                }
+                SettingsStore.NormalizeWindowBounds(_settings);
+                if (saveNow && changed)
+                {
+                    _profiles.SaveActiveSettings(_settings);
+                }
+            }
+            catch { }
         }
 
         private void ClampWindowToVisibleScreens()
@@ -1781,6 +1977,76 @@ namespace DejavuBrowser
                    "if(window.__dejavuSetMediaTheme)window.__dejavuSetMediaTheme({accent:'" + ac + "',mode:'" + mode + "'});";
         }
 
+        private static bool IsChromeWebStoreUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return false;
+            try
+            {
+                Uri u = new Uri(url);
+                string h = (u.Host ?? "").ToLowerInvariant();
+                return h == "chromewebstore.google.com" || h == "chrome.google.com";
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static string StripEdgeTokenFromUserAgent(string ua)
+        {
+            if (string.IsNullOrWhiteSpace(ua)) return ua ?? "";
+            int idx = ua.IndexOf(" Edg/", StringComparison.OrdinalIgnoreCase);
+            if (idx < 0) return ua;
+            int end = ua.IndexOf(' ', idx + 1);
+            if (end < 0) return ua.Substring(0, idx).Trim();
+            return (ua.Substring(0, idx) + ua.Substring(end)).Trim();
+        }
+
+        private void SyncTabUserAgentForUrl(BrowserTab tab, CoreWebView2 core, string targetUrl)
+        {
+            if (tab == null || core == null || string.IsNullOrEmpty(tab.DefaultUserAgent)) return;
+            try
+            {
+                string desired = IsChromeWebStoreUrl(targetUrl)
+                    ? StripEdgeTokenFromUserAgent(tab.DefaultUserAgent)
+                    : tab.DefaultUserAgent;
+                if (!string.IsNullOrEmpty(desired) && !string.Equals(core.Settings.UserAgent, desired, StringComparison.Ordinal))
+                {
+                    core.Settings.UserAgent = desired;
+                }
+            }
+            catch { }
+        }
+
+        private string BuildCwsThemeAndExtsScript(BrowserTab tab)
+        {
+            string ac = SettingsStore.NormalizeAccent(_settings != null ? _settings.accentColor : "amethyst");
+            bool isLight = GetEffectiveIsLight(tab, false);
+            string mode = isLight ? "light" : "dark";
+            List<string> ids = (_extensions != null) ? _extensions.GetInstalledStoreIds() : new List<string>();
+            string idsJson = _json.Serialize(ids);
+            return "window.__dejavuInitialCwsTheme={accent:'" + ac + "',mode:'" + mode + "'};" +
+                   "window.__dejavuInitialInstalledExts=" + idsJson + ";" +
+                   "if(window.__dejavuSetCwsTheme)window.__dejavuSetCwsTheme({accent:'" + ac + "',mode:'" + mode + "'});" +
+                   "if(window.__dejavuSetInstalledExts)window.__dejavuSetInstalledExts(" + idsJson + ");";
+        }
+
+        private void SyncInstalledExtensionsToCwsTabs()
+        {
+            if (IsDisposed || _extensions == null) return;
+            List<string> ids = _extensions.GetInstalledStoreIds();
+            string idsJson = _json.Serialize(ids);
+            string js = "window.__dejavuInitialInstalledExts=" + idsJson + ";" +
+                        "if(window.__dejavuSetInstalledExts)window.__dejavuSetInstalledExts(" + idsJson + ");";
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab bt = _tabs[i];
+                if (bt == null || !bt.CoreReady || bt.WebView == null || bt.WebView.IsDisposed || bt.WebView.CoreWebView2 == null) continue;
+                if (!IsChromeWebStoreUrl(bt.Url)) continue;
+                try { bt.WebView.CoreWebView2.ExecuteScriptAsync(js); } catch { }
+            }
+        }
+
         private void ApplyThemeToAllTabs()
         {
             bool isLightTheme = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
@@ -1823,6 +2089,10 @@ namespace DejavuBrowser
                     if (bt.CoreReady && bt.WebView.CoreWebView2 != null)
                     {
                         bt.WebView.CoreWebView2.ExecuteScriptAsync(BuildMediaThemeScript(bt));
+                        if (IsChromeWebStoreUrl(bt.Url))
+                        {
+                            bt.WebView.CoreWebView2.ExecuteScriptAsync(BuildCwsThemeAndExtsScript(bt));
+                        }
                     }
                 }
                 catch { }
@@ -1946,7 +2216,7 @@ namespace DejavuBrowser
         {
             if (!IsHandleCreated || NativeWin32.IsIconic(Handle) || NativeWin32.IsZoomed(Handle) || _isHtmlFullscreen) return;
             Rectangle cur = GetCurrentWindowRect();
-            if (cur.Width >= 400 && cur.Height >= 300)
+            if (cur.Width >= 640 && cur.Height >= 480 && cur.X > -30000 && cur.Y > -30000)
             {
                 _savedNormalBounds = cur;
             }
@@ -2059,11 +2329,21 @@ namespace DejavuBrowser
                 {
                     CaptureCurrentNormalBounds();
                 }
-                if (cmd == NativeWin32.SC_MINIMIZE) _wasMinimized = true;
-                if (cmd == NativeWin32.SC_MAXIMIZE) _wasMaximized = true;
+                if (cmd == NativeWin32.SC_MINIMIZE)
+                {
+                    _wasMaximizedBeforeMinimize = NativeWin32.IsZoomed(Handle) || WindowState == FormWindowState.Maximized;
+                    _wasMinimized = true;
+                }
+                if (cmd == NativeWin32.SC_MAXIMIZE)
+                {
+                    _wasMaximized = true;
+                    _wasMaximizedBeforeMinimize = true;
+                    SchedulePersistWindowBounds();
+                }
 
                 if (cmd == NativeWin32.SC_RESTORE)
                 {
+                    if (!_wasMinimized) _wasMaximizedBeforeMinimize = false;
                     Rectangle restoreTarget = _savedNormalBounds;
                     _inSysCommandRestore = true;
                     _restoreGuardUntilUtc = DateTime.UtcNow.AddMilliseconds(250);
@@ -2076,6 +2356,7 @@ namespace DejavuBrowser
                     {
                         _inSysCommandRestore = false;
                     }
+                    SchedulePersistWindowBounds();
                     LayoutViews();
                     RepositionActiveHud();
                     Invalidate(true);
@@ -2175,6 +2456,7 @@ namespace DejavuBrowser
             {
                 base.WndProc(ref m);
                 CaptureCurrentNormalBounds();
+                SchedulePersistWindowBounds();
                 LayoutViews();
                 RepositionActiveHud();
                 return;
@@ -2348,6 +2630,7 @@ namespace DejavuBrowser
             {
                 _popoverPopup.UpdateState(BuildExtensionsPopoverPayloadJson());
             }
+            SyncInstalledExtensionsToCwsTabs();
         }
 
         private async void InitializeOverlaysAsync()
@@ -2359,11 +2642,16 @@ namespace DejavuBrowser
                 _popoverPopup.PreviewShortcut += OnOverlayPreviewShortcut;
                 _popoverPopup.PopupHidden += () =>
                 {
+                    string prevMode = _activePopoverMode;
                     if (!string.IsNullOrEmpty(_activePopoverMode))
                     {
                         _lastHiddenPopoverMode = _activePopoverMode;
                         _lastPopoverHiddenUtc = DateTime.UtcNow;
                         _activePopoverMode = "";
+                    }
+                    if (prevMode == "extInstallPrompt" && !_committingExtInstall && !string.IsNullOrEmpty(_pendingExtStageId))
+                    {
+                        CancelPendingExtInstall(_pendingExtStageId, false);
                     }
                     SyncVpnTelemetryTimer();
                 };
@@ -3493,6 +3781,7 @@ namespace DejavuBrowser
                 core.Settings.AreDefaultContextMenusEnabled = true;
                 core.Settings.IsZoomControlEnabled = true;
                 core.Settings.IsSwipeNavigationEnabled = true;
+                try { tab.DefaultUserAgent = core.Settings.UserAgent ?? ""; } catch { tab.DefaultUserAgent = ""; }
                 ApplySettingsToTab(tab);
 
                 core.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
@@ -3534,17 +3823,20 @@ namespace DejavuBrowser
                 }
                 if (!string.IsNullOrEmpty(_cwsBannerScript))
                 {
+                    await core.AddScriptToExecuteOnDocumentCreatedAsync(BuildCwsThemeAndExtsScript(tab));
                     await core.AddScriptToExecuteOnDocumentCreatedAsync(_cwsBannerScript);
                 }
                 core.WebMessageReceived += (s, e) => OnTabContentWebMessage(tab, e);
 
                 // Hole #2 Fix: Enable Chromium C++ Network.setBlockedURLs BEFORE the very first navigation!
                 string initialNavUrl = !string.IsNullOrEmpty(tab.PendingNavigateUrl) ? tab.PendingNavigateUrl : tab.Url;
+                SyncTabUserAgentForUrl(tab, core, initialNavUrl);
                 await ApplyCdpBlockedUrlsForTabAsync(tab, initialNavUrl, true);
 
                 core.NavigationStarting += (s, e) =>
                 {
                     tab.PendingTopNavUrl = e.Uri;
+                    SyncTabUserAgentForUrl(tab, core, e.Uri);
                     if (_settings != null && _settings.doNotTrack)
                     {
                         try { e.RequestHeaders.SetHeader("DNT", "1"); } catch { }
@@ -3657,6 +3949,10 @@ namespace DejavuBrowser
                     InjectSiteCosmetics(core, core.Source);
                     InjectUserStylePrefs(core);
                     try { core.ExecuteScriptAsync(BuildMediaThemeScript(tab)); } catch { }
+                    if (IsChromeWebStoreUrl(core.Source))
+                    {
+                        try { core.ExecuteScriptAsync(BuildCwsThemeAndExtsScript(tab)); } catch { }
+                    }
                 };
 
                 core.NavigationCompleted += (s, e) =>
@@ -3682,6 +3978,10 @@ namespace DejavuBrowser
                     InjectSiteCosmetics(core, core.Source);
                     InjectUserStylePrefs(core);
                     try { core.ExecuteScriptAsync(BuildMediaThemeScript(tab)); } catch { }
+                    if (IsChromeWebStoreUrl(core.Source))
+                    {
+                        try { core.ExecuteScriptAsync(BuildCwsThemeAndExtsScript(tab)); } catch { }
+                    }
                     if (e.IsSuccess && !_isPrivateWindow)
                     {
                         string histUrl = tab.Url;
@@ -4597,16 +4897,33 @@ namespace DejavuBrowser
                     return;
                 }
 
-                if (isExt && msg.ContainsKey("type") &&
-                    string.Equals(Convert.ToString(msg["type"]), "installStoreExtension", StringComparison.OrdinalIgnoreCase))
+                if (isExt && msg.ContainsKey("type"))
                 {
+                    string extMsgType = Convert.ToString(msg["type"]) ?? "";
                     string extId = msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : "";
                     string extTitle = msg.ContainsKey("title") ? Convert.ToString(msg["title"]) : "";
-                    if (!string.IsNullOrWhiteSpace(extId))
+                    if (string.Equals(extMsgType, "requestStoreExtensionInstall", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(extMsgType, "installStoreExtension", StringComparison.OrdinalIgnoreCase))
                     {
-                        HandleInstallExtensionFromStoreAsync(extId, extTitle, tab);
+                        if (!string.IsNullOrWhiteSpace(extId))
+                        {
+                            HandlePrepareStoreExtensionAsync(extId, extTitle, tab, false);
+                        }
+                        return;
                     }
-                    return;
+                    if (string.Equals(extMsgType, "requestStoreExtensionRemove", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!string.IsNullOrWhiteSpace(extId))
+                        {
+                            HandleRemoveStoreExtensionFromWebStoreAsync(extId, tab);
+                        }
+                        return;
+                    }
+                    if (string.Equals(extMsgType, "openExtensionsManager", StringComparison.OrdinalIgnoreCase))
+                    {
+                        SetExtensionsOpen(true);
+                        return;
+                    }
                 }
 
                 if (!msg.ContainsKey("__dejavuMediaAction")) return;
@@ -7294,6 +7611,7 @@ namespace DejavuBrowser
             ApplyThemeToAllTabs();
             _favoritesBarHidden = false;
             _httpsFallbackHosts.Clear();
+            PersistWindowBoundsToSettings(false);
             _profiles.SaveActiveSettings(_settings);
 
             for (int i = 0; i < _tabs.Count; i++)
@@ -7307,7 +7625,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.7.0 defaults", "success");
+            PushShellToast("Settings restored to v5.8.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -8083,6 +8401,7 @@ namespace DejavuBrowser
                 {
                     _extActionPopup = new OverlayPopup(this, true);
                     _extActionPopup.PreviewShortcut += OnOverlayPreviewShortcut;
+                    _extActionPopup.ExtensionContentMeasured += OnExtensionPopupMeasured;
                     await _extActionPopup.InitializeForExtensionPopupAsync(_activeProfileEnv, (targetUrl) =>
                     {
                         if (IsDisposed || string.IsNullOrWhiteSpace(targetUrl)) return;
@@ -8098,9 +8417,10 @@ namespace DejavuBrowser
                     });
                 }
 
+                _lastExtPopupAnchorRightCss = anchorRightCss;
                 float sc = DpiScale;
                 int popW = (int)Math.Round(400 * sc);
-                int y = (int)Math.Round(((_settings != null && _settings.compactTabBar) ? 84 : 90) * sc);
+                int y = GetToolbarPopoverTopPx(sc);
                 int maxH = Math.Max((int)Math.Round(220 * sc), ClientSize.Height - y - (int)Math.Round(16 * sc));
                 int popH = Math.Min(maxH, (int)Math.Round(520 * sc));
                 int anchorRightPx = anchorRightCss > 0
@@ -8120,6 +8440,39 @@ namespace DejavuBrowser
             {
                 PushShellToast("Could not open extension popup: " + ex.Message, "error");
             }
+        }
+
+        private void OnExtensionPopupMeasured(int measuredCssW, int measuredCssH)
+        {
+            if (IsDisposed || _extActionPopup == null || _extActionPopup.IsDisposed || !_extActionPopup.IsPopupOpen) return;
+            try
+            {
+                float sc = DpiScale;
+                int clampedCssW = Math.Max(280, Math.Min(760, measuredCssW + 4));
+                int clampedCssH = Math.Max(160, Math.Min(600, measuredCssH + 4));
+                int y = GetToolbarPopoverTopPx(sc);
+                int maxW = Math.Max((int)Math.Round(280 * sc), ClientSize.Width - (int)Math.Round(24 * sc));
+                int maxH = Math.Max((int)Math.Round(180 * sc), ClientSize.Height - y - (int)Math.Round(16 * sc));
+                int popW = Math.Min(maxW, (int)Math.Round(clampedCssW * sc));
+                int popH = Math.Min(maxH, (int)Math.Round(clampedCssH * sc));
+                int anchorRightPx = _lastExtPopupAnchorRightCss > 0
+                    ? (int)Math.Round(_lastExtPopupAnchorRightCss * sc)
+                    : (ClientSize.Width - (int)Math.Round(124 * sc));
+                int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
+                Point screenPt = PointToScreen(new Point(x, y));
+                if (_extActionPopup.IsHandleCreated)
+                {
+                    NativeWin32.SetWindowPos(
+                        _extActionPopup.Handle,
+                        IntPtr.Zero,
+                        screenPt.X,
+                        screenPt.Y,
+                        popW,
+                        popH,
+                        NativeWin32.SWP_NOZORDER | NativeWin32.SWP_NOOWNERZORDER | NativeWin32.SWP_NOACTIVATE);
+                }
+            }
+            catch { }
         }
 
         private void OpenExtensionOptions(string id)
@@ -8152,30 +8505,309 @@ namespace DejavuBrowser
             try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(msg)); } catch { }
         }
 
-        private async void HandleInstallExtensionFromStoreAsync(string storeInput, string hintTitle, BrowserTab sourceTab)
+        private async Task SendCwsFeedbackAsync(BrowserTab tab, string storeId, string status, string message)
+        {
+            if (tab == null || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed || tab.WebView.CoreWebView2 == null) return;
+            try
+            {
+                string js = string.Format(
+                    "if(window.__dejavuExtInstallFeedback)window.__dejavuExtInstallFeedback({0},{1},{2});",
+                    _json.Serialize(storeId ?? ""),
+                    _json.Serialize(status ?? ""),
+                    _json.Serialize(message ?? ""));
+                await tab.WebView.CoreWebView2.ExecuteScriptAsync(js);
+            }
+            catch { }
+        }
+
+        private async void HandlePrepareStoreExtensionAsync(string storeInput, string hintTitle, BrowserTab sourceTab, bool showInShell)
         {
             if (_extensions == null) return;
-            string storeId = ExtensionManager.ExtractExtensionId(storeInput);
-            PushExtInstallStatus(true, "Downloading Chrome Web Store package...", false, storeId ?? "");
-            PushShellToast("Installing extension from Chrome Web Store...", "info");
 
-            ExtensionActionResult res = await _extensions.InstallFromStoreAsync(storeInput, hintTitle);
-            string installedId = (res.Extension != null) ? res.Extension.id : (storeId ?? "");
-            PushExtInstallStatus(false, res.Success ? res.Message : res.Error, res.Success, installedId);
-            PushShellToast(res.Success ? res.Message : res.Error, res.Success ? "success" : "error");
-
-            if (sourceTab != null && sourceTab.CoreReady && sourceTab.WebView != null && !sourceTab.WebView.IsDisposed && sourceTab.WebView.CoreWebView2 != null)
+            if (!string.IsNullOrEmpty(_pendingExtStageId) && !_committingExtInstall)
             {
-                try
+                CancelPendingExtInstall(_pendingExtStageId, false);
+            }
+
+            string storeId = ExtensionManager.ExtractExtensionId(storeInput);
+            PushExtInstallStatus(true, "Checking Chrome Web Store package...", false, storeId ?? "");
+            await SendCwsFeedbackAsync(sourceTab, storeId, "checking", "Checking permissions...");
+
+            StagedExtensionPreview preview = await _extensions.PrepareStoreExtensionAsync(storeInput, hintTitle);
+            if (IsDisposed) return;
+
+            if (preview == null || !preview.Success)
+            {
+                string err = (preview != null && !string.IsNullOrWhiteSpace(preview.Error))
+                    ? preview.Error
+                    : "Could not fetch extension from Chrome Web Store.";
+                PushExtInstallStatus(false, err, false, storeId ?? "");
+                PushShellToast(err, "error");
+                await SendCwsFeedbackAsync(sourceTab, storeId, "error", err);
+                return;
+            }
+
+            _pendingExtStageId = preview.StageId ?? "";
+            _pendingExtStoreId = preview.StoreId ?? (storeId ?? "");
+            _pendingExtSourceTab = sourceTab;
+            _pendingExtPromptInShell = showInShell && _extensionsOpen;
+            _committingExtInstall = false;
+
+            PushExtInstallStatus(false, "", true, _pendingExtStoreId);
+            ShowExtensionInstallPrompt(preview, _pendingExtPromptInShell);
+        }
+
+        private void ShowExtensionInstallPrompt(StagedExtensionPreview preview, bool inShell)
+        {
+            if (preview == null || IsDisposed) return;
+
+            if (inShell && _shellReady && _shellView != null && !_shellView.IsDisposed && _shellView.CoreWebView2 != null)
+            {
+                var shellMsg = new Dictionary<string, object>
                 {
-                    string js = string.Format(
-                        "if(window.__dejavuExtInstallFeedback)window.__dejavuExtInstallFeedback({0},{1},{2});",
-                        _json.Serialize(storeId ?? ""),
-                        res.Success ? "true" : "false",
-                        _json.Serialize(res.Success ? res.Message : (res.Error ?? "Install failed")));
-                    await sourceTab.WebView.CoreWebView2.ExecuteScriptAsync(js);
+                    { "type", "extInstallPrompt" },
+                    { "stageId", preview.StageId ?? "" },
+                    { "storeId", preview.StoreId ?? "" },
+                    { "name", preview.Name ?? "" },
+                    { "version", preview.Version ?? "" },
+                    { "description", preview.Description ?? "" },
+                    { "iconDataUrl", preview.IconDataUrl ?? "" },
+                    { "permissions", preview.Permissions ?? new List<string>() },
+                    { "hostPermissions", preview.HostPermissions ?? new List<string>() }
+                };
+                try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(shellMsg)); } catch { }
+                return;
+            }
+
+            if (_popoverPopup == null || _popoverPopup.IsDisposed) return;
+
+            HideSuggestPopup();
+            _activePopoverMode = "extInstallPrompt";
+            BrowserTab active = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab);
+            bool isLight = GetEffectiveIsLight(active, captureShell);
+            string accent = (_settings != null && !string.IsNullOrEmpty(_settings.accentColor)) ? _settings.accentColor : "amethyst";
+
+            int permCount = (preview.Permissions != null ? preview.Permissions.Count : 0);
+            if (permCount < 1) permCount = 1;
+            int baseCssH = Math.Min(460, Math.Max(272, 208 + Math.Min(permCount, 7) * 28));
+            float sc = DpiScale;
+            int popW = Math.Min(ClientSize.Width - (int)Math.Round(28 * sc), (int)Math.Round(442 * sc));
+            int popH = Math.Min(ClientSize.Height - (int)Math.Round(96 * sc), (int)Math.Round(baseCssH * sc));
+            int x = Math.Max((int)(14 * sc), (ClientSize.Width - popW) / 2);
+            int y = Math.Max(GetToolbarPopoverTopPx(sc) + (int)Math.Round(10 * sc), (ClientSize.Height - popH) / 3);
+
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "extInstallPrompt" },
+                { "theme", isLight ? "light" : "dark" },
+                { "isLight", isLight },
+                { "accent", accent },
+                { "accentColor", accent },
+                { "stageId", preview.StageId ?? "" },
+                { "storeId", preview.StoreId ?? "" },
+                { "name", preview.Name ?? "" },
+                { "version", preview.Version ?? "" },
+                { "description", preview.Description ?? "" },
+                { "iconDataUrl", preview.IconDataUrl ?? "" },
+                { "permissions", preview.Permissions ?? new List<string>() },
+                { "hostPermissions", preview.HostPermissions ?? new List<string>() }
+            };
+
+            _popoverPopup.UpdateSurfaceTheme(isLight, GetThemeSurfaceColor());
+            Point screenPt = PointToScreen(new Point(x, y));
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), _json.Serialize(payload), true);
+        }
+
+        private void ShowExtensionInstalledBubble(ExtensionInfo info, bool inShell)
+        {
+            if (info == null || IsDisposed) return;
+
+            if (inShell && _extensionsOpen && _shellReady && _shellView != null && !_shellView.IsDisposed && _shellView.CoreWebView2 != null)
+            {
+                var shellMsg = new Dictionary<string, object>
+                {
+                    { "type", "extInstalledBubble" },
+                    { "id", info.id ?? "" },
+                    { "storeId", info.chromeStoreId ?? "" },
+                    { "name", info.name ?? "Extension" },
+                    { "iconDataUrl", info.iconDataUrl ?? "" },
+                    { "pinned", info.pinned },
+                    { "hasPopup", !string.IsNullOrEmpty(info.popupUrl) }
+                };
+                try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(shellMsg)); } catch { }
+                return;
+            }
+
+            if (_popoverPopup == null || _popoverPopup.IsDisposed) return;
+
+            HideSuggestPopup();
+            _activePopoverMode = "extInstalledBubble";
+            BrowserTab active = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab);
+            bool isLight = GetEffectiveIsLight(active, captureShell);
+            string accent = (_settings != null && !string.IsNullOrEmpty(_settings.accentColor)) ? _settings.accentColor : "amethyst";
+
+            float sc = DpiScale;
+            int popW = Math.Min(ClientSize.Width - (int)Math.Round(24 * sc), (int)Math.Round(358 * sc));
+            int popH = (int)Math.Round(152 * sc);
+            int y = GetToolbarPopoverTopPx(sc);
+            int x = Math.Max((int)(12 * sc), ClientSize.Width - popW - (int)Math.Round(56 * sc));
+
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "extInstalledBubble" },
+                { "theme", isLight ? "light" : "dark" },
+                { "isLight", isLight },
+                { "accent", accent },
+                { "accentColor", accent },
+                { "id", info.id ?? "" },
+                { "storeId", info.chromeStoreId ?? "" },
+                { "name", info.name ?? "Extension" },
+                { "iconDataUrl", info.iconDataUrl ?? "" },
+                { "pinned", info.pinned },
+                { "hasPopup", !string.IsNullOrEmpty(info.popupUrl) }
+            };
+
+            _popoverPopup.UpdateSurfaceTheme(isLight, GetThemeSurfaceColor());
+            Point screenPt = PointToScreen(new Point(x, y));
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), _json.Serialize(payload), true);
+        }
+
+        private async Task HandleConfirmStoreExtensionAsync(string stageId, bool fromOverlay)
+        {
+            if (_extensions == null || string.IsNullOrWhiteSpace(stageId)) return;
+            _committingExtInstall = true;
+
+            BrowserTab srcTab = _pendingExtSourceTab;
+            string storeId = _pendingExtStoreId;
+            bool wasInShell = _pendingExtPromptInShell && !fromOverlay;
+
+            await SendCwsFeedbackAsync(srcTab, storeId, "adding", "Adding to dejavu...");
+            PushExtInstallStatus(true, "Installing extension...", false, storeId ?? "");
+
+            ExtensionActionResult res = await _extensions.CommitStagedExtensionAsync(stageId);
+            _committingExtInstall = false;
+            if (IsDisposed) return;
+
+            if (!res.Success)
+            {
+                _pendingExtStageId = "";
+                string err = !string.IsNullOrWhiteSpace(res.Error) ? res.Error : "Could not install extension.";
+                PushExtInstallStatus(false, err, false, storeId ?? "");
+                await SendCwsFeedbackAsync(srcTab, storeId, "error", err);
+
+                if (wasInShell && _shellReady && _shellView != null && !_shellView.IsDisposed && _shellView.CoreWebView2 != null)
+                {
+                    var errPayload = new Dictionary<string, object>
+                    {
+                        { "type", "extInstallPromptResult" },
+                        { "ok", false },
+                        { "error", err }
+                    };
+                    try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(errPayload)); } catch { }
                 }
-                catch { }
+                else if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "extInstallPrompt")
+                {
+                    var errPayload = new Dictionary<string, object>
+                    {
+                        { "mode", "extInstallPrompt" },
+                        { "type", "extInstallPromptResult" },
+                        { "ok", false },
+                        { "error", err }
+                    };
+                    _popoverPopup.UpdateState(_json.Serialize(errPayload));
+                }
+                else
+                {
+                    PushShellToast(err, "error");
+                }
+                return;
+            }
+
+            _pendingExtStageId = "";
+            _pendingExtStoreId = "";
+            _pendingExtSourceTab = null;
+            _pendingExtPromptInShell = false;
+
+            string installedId = (res.Extension != null) ? res.Extension.id : (storeId ?? "");
+            PushExtInstallStatus(false, res.Message, true, installedId);
+            await SendCwsFeedbackAsync(srcTab, storeId, "installed", res.Message);
+            SyncInstalledExtensionsToCwsTabs();
+
+            if (wasInShell && _shellReady && _shellView != null && !_shellView.IsDisposed && _shellView.CoreWebView2 != null)
+            {
+                var okPayload = new Dictionary<string, object>
+                {
+                    { "type", "extInstallPromptResult" },
+                    { "ok", true }
+                };
+                try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(okPayload)); } catch { }
+            }
+            else if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "extInstallPrompt")
+            {
+                HidePopover(true);
+            }
+
+            if (res.Extension != null)
+            {
+                ShowExtensionInstalledBubble(res.Extension, wasInShell);
+            }
+            else
+            {
+                PushShellToast(res.Message, "success");
+            }
+        }
+
+        private void CancelPendingExtInstall(string stageId, bool closePopup)
+        {
+            if (_committingExtInstall) return;
+            string sid = !string.IsNullOrWhiteSpace(stageId) ? stageId : _pendingExtStageId;
+            BrowserTab srcTab = _pendingExtSourceTab;
+            string storeId = _pendingExtStoreId;
+
+            _pendingExtStageId = "";
+            _pendingExtStoreId = "";
+            _pendingExtSourceTab = null;
+            _pendingExtPromptInShell = false;
+
+            if (_extensions != null && !string.IsNullOrWhiteSpace(sid))
+            {
+                string cancelledStoreId = _extensions.CancelStagedExtension(sid);
+                if (string.IsNullOrEmpty(storeId)) storeId = cancelledStoreId;
+            }
+
+            if (closePopup && _popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "extInstallPrompt")
+            {
+                HidePopover(true);
+            }
+
+            if (srcTab != null)
+            {
+                var _ = SendCwsFeedbackAsync(srcTab, storeId, "cancelled", "");
+            }
+        }
+
+        private async void HandleRemoveStoreExtensionFromWebStoreAsync(string storeId, BrowserTab sourceTab)
+        {
+            if (_extensions == null || string.IsNullOrWhiteSpace(storeId)) return;
+            if (_extActionPopup != null && !_extActionPopup.IsDisposed)
+            {
+                if (_extActionPopup.IsPopupOpen) _extActionPopup.HidePopup(true);
+                _extActionPopup.NavigateExtensionUrl("about:blank");
+            }
+            ExtensionActionResult res = await _extensions.RemoveAsync(storeId);
+            if (IsDisposed) return;
+            if (res.Success)
+            {
+                await SendCwsFeedbackAsync(sourceTab, storeId, "removed", res.Message);
+                SyncInstalledExtensionsToCwsTabs();
+                PushShellToast(res.Message, "info");
+            }
+            else
+            {
+                await SendCwsFeedbackAsync(sourceTab, storeId, "error", res.Error);
+                PushShellToast(res.Error, "error");
             }
         }
 
@@ -8253,7 +8885,20 @@ namespace DejavuBrowser
                     if (_extensions != null)
                     {
                         string input = msg.ContainsKey("input") ? Convert.ToString(msg["input"]) : (msg.ContainsKey("id") ? Convert.ToString(msg["id"]) : "");
-                        HandleInstallExtensionFromStoreAsync(input, "", null);
+                        HandlePrepareStoreExtensionAsync(input, "", null, _extensionsOpen && !fromOverlay);
+                    }
+                    return true;
+                case "extConfirmInstall":
+                    if (_extensions != null)
+                    {
+                        string stageId = msg.ContainsKey("stageId") ? Convert.ToString(msg["stageId"]) : _pendingExtStageId;
+                        await HandleConfirmStoreExtensionAsync(stageId, fromOverlay);
+                    }
+                    return true;
+                case "extCancelInstall":
+                    {
+                        string stageId = msg.ContainsKey("stageId") ? Convert.ToString(msg["stageId"]) : _pendingExtStageId;
+                        CancelPendingExtInstall(stageId, fromOverlay);
                     }
                     return true;
                 case "extScanChrome":

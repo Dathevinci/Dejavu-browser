@@ -30,6 +30,7 @@ namespace DejavuBrowser
         public event Action<string> MessageReceived;
         public event Action PopupHidden;
         public event Func<Keys, bool> PreviewShortcut;
+        public event Action<int, int> ExtensionContentMeasured;
 
         public OverlayPopup(Form owner, bool dismissOnDeactivate)
             : this(owner, dismissOnDeactivate, false)
@@ -219,6 +220,46 @@ namespace DejavuBrowser
             {
                 try { HidePopup(true); } catch { }
             };
+            core.NavigationCompleted += async (s, e) =>
+            {
+                if (!e.IsSuccess || IsDisposed || _wv == null || _wv.IsDisposed || _wv.CoreWebView2 == null) return;
+                try
+                {
+                    string src = _wv.CoreWebView2.Source ?? "";
+                    if (!src.StartsWith("chrome-extension://", StringComparison.OrdinalIgnoreCase)) return;
+                    int lastW = 0;
+                    int lastH = 0;
+                    int[] delays = new int[] { 70, 240 };
+                    for (int pass = 0; pass < delays.Length; pass++)
+                    {
+                        await Task.Delay(delays[pass]);
+                        if (IsDisposed || !_isOpen || _wv == null || _wv.IsDisposed || _wv.CoreWebView2 == null) return;
+                        string res = await _wv.CoreWebView2.ExecuteScriptAsync(
+                            "(function(){try{" +
+                            "var de=document.documentElement,b=document.body;" +
+                            "var w=Math.max(de?de.scrollWidth:0,b?b.scrollWidth:0,b?Math.ceil(b.getBoundingClientRect().width):0);" +
+                            "var h=Math.max(de?de.scrollHeight:0,b?b.scrollHeight:0,b?Math.ceil(b.getBoundingClientRect().height):0);" +
+                            "return w+','+h;}catch(e){return '';}})();");
+                        if (!string.IsNullOrEmpty(res))
+                        {
+                            string clean = res.Trim().Trim('"');
+                            string[] parts = clean.Split(',');
+                            int mw, mh;
+                            if (parts.Length == 2 && int.TryParse(parts[0], out mw) && int.TryParse(parts[1], out mh) && mw >= 160 && mh >= 100)
+                            {
+                                if (mw != lastW || mh != lastH)
+                                {
+                                    lastW = mw;
+                                    lastH = mh;
+                                    Action<int, int> cb = ExtensionContentMeasured;
+                                    if (cb != null) cb(mw, mh);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+            };
             _ready = true;
         }
 
@@ -247,7 +288,12 @@ namespace DejavuBrowser
             }
             if (IsHandleCreated)
             {
-                try { NativeWin32.ApplyWindows11Chrome(Handle, !isLight, true); } catch { }
+                try
+                {
+                    NativeWin32.ApplyWindows11Chrome(Handle, true, true);
+                    NativeWin32.SetImmersiveDarkMode(Handle, !isLight);
+                }
+                catch { }
             }
         }
 

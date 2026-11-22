@@ -47,10 +47,7 @@ $baseArgs = @(
   "/resource:$wvLoader,WebView2Loader.dll",
   "/resource:$appExe,dejavu.exe",
   "/resource:$root\installer\setup.html,setup.html",
-  "/resource:$root\ui\liquid-glass.js,liquid-glass.js",
-  "/resource:$root\assets\logo-transparent.png,logo-transparent.png",
   "/resource:$root\assets\dejavu.ico,dejavu.ico",
-  "/resource:$root\assets\wallpapers\wp-m3-butterfly-obsidian.jpg,wp-amethyst.jpg",
   "$root\installer\SetupAssemblyInfo.cs",
   "$root\src\DefaultBrowserRegistrar.cs",
   "$root\installer\SetupApp.cs"
@@ -63,7 +60,7 @@ $cscArgs = if ($supportsDeterministic) {
   $baseArgs
 }
 
-Write-Host "Building butterfly-themed dejavu-Setup.exe installer..."
+Write-Host "Building Material Design 3 dejavu-Setup.exe installer..."
 & $csc @cscArgs
 if ($LASTEXITCODE -ne 0 -and $csc -ne $fwCsc) {
   Write-Warning "Roslyn csc.exe exited with $LASTEXITCODE; falling back to .NET Framework 4.8 csc.exe..."

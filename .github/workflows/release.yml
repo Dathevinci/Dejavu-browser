@@ -256,27 +256,25 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — Reliable Self-Healing VPN, Theme-Adaptive Butterfly Video Downloader & Fluid 120Hz Polish
+          ### dejavu __TAG__ — Chromebook / Pixel Material You Website & Setup, Native Chrome Extensions & Persistent Window Sizing
 
-          - **Re-Engineered Reliable Self-Healing VPN (Zero Broken Sites)**:
-            - **Strict Multi-Site HTTPS/TLS Browsing Verification** — Every Smart relay must pass concurrent real HTTPS/TLS checks (`cloudflare.com/cdn-cgi/trace`, `google.com/generate_204`, and GeoIP) before reporting Connected — never accepting half-dead or port-443-blocked proxies.
-            - **3-Strike Circuit Breaker, Hedged Failover & Background Auto-Heal** — Unhealthy relays trip a 45s circuit breaker (`<1ms` skip), hedged parallel failover eliminates stalled sockets and `502 Bad Gateway` errors, background auto-heal refreshes degraded pools automatically, and **seamless 3-Hop Encrypted Tor fallback** engages transparently whenever clean Smart relays are unavailable.
-            - **1-Click Live Tunnel Verifier & Upgraded M3 VPN Popover** — Test live HTTPS connectivity directly through the active tunnel and view verified status, active engine (`Smart Clean-IP` vs `3-Hop Encrypted Tor`), exit IP, and latency inline.
-          - **Theme-Adaptive Material Design 3 Butterfly Video Downloader (Windows & Android)**:
-            - **Full 24-Palette Dynamic Material You Sync** — Live-syncs across all **12 Material You HCT color themes × Dark & Light polarity** across every open tab whenever you switch themes or auto-matching wallpapers (zero hardcoded dark amethyst).
-            - **Expressive M3 Card, `Video | Audio` Switcher & Sleek Scrollbars** — Compact **`36×36px`** circular Butterfly FAB expands into a `24px`-radius M3 card with a **`Video | Audio` segmented switcher**, **`30×30px` circular M3 download arrow buttons**, `Send to Phone / PC` timestamp handoff, and sleek themed thin scrollbars (zero classic white scrollbars!).
-          - **Whole-Browser Fluid 120Hz Polish (Windows & Android)**:
-            - **Windows Fluid Material Design 3 Polish** — Unified M3 Expressive motion curves, tactile micro-interactions, smooth Start Page wallpaper & theme crossfades, and whisper-sleek theme-tinted scrollbars across every surface.
-            - **Android Fluid 120Hz Polish (`__TAG__` · `versionCode 570`)** — Interactive **finger-tracking swipe-to-dismiss bottom sheets** (`translate3d` drag + velocity flick-to-close + spring snap-back), `overscroll-behavior-y: contain` scroll containment, and buttery tab-switch transitions.
-          - **Preserved Open-Source Security Hardening, 32 HD Wallpapers & Core Ecosystem**:
-            - **Security & Anti-False-Positive Hardening** — Full Win32 PE VersionInfo (`FileVersion 5.7.0.0`, `dejavu Browser`), explicit `asInvoker` UAC manifest, `/highentropyva+` & `/deterministic`, zero `WScript.Shell`/batch scripts, ready-to-activate **Microsoft Trusted Signing** (`azure/trusted-signing-action`) + PFX Authenticode fallback hooks; Play-Protect-clean Android (`allowBackup="false"`, system-CA `networkSecurityConfig`, zero `REQUEST_INSTALL_PACKAGES`/`PackageInstaller` dropper permissions, permanent V1+V2+V3 signing); published **`SHA256SUMS.txt`** & GitHub **SLSA Build Provenance Attestations**.
-            - **32 Curated M3 HD Wallpapers (`10` Butterflies + `4` Cute Froggies)**, **12 Material You HCT Themes**, **`dejavu Link v2.3` Continuity Hub**, **100%-Verified Brave-Exact Shields** (`279K+` Windows / `108K+` Android rules), Windows Hello & Android Passkeys, Real Chrome MV3 Extensions, and `<1%` idle CPU.
-            > **Android Upgrade Note (`__TAG__`, `versionCode 570`):** Upgrading from `v4.2.0` or earlier? Uninstall dejavu once, then install `__TAG__` — future releases keep the same permanent V1+V2+V3 signing key for smooth upgrades from GitHub Releases.
+          - **Native Chrome-Like Extensions Experience (Material You Themed)**:
+            - **In-Place Chrome Web Store Integration** — Replaces the Chrome Web Store CTA directly in place with a themed Material You **"Add to dejavu" / "Remove from dejavu"** button, hides "Switch to Chrome" prompts, and syncs live installed state and all 24 Material You palettes.
+            - **2-Stage Permission Dialog & Anchored Added Bubble** — Shows a clean Material Design 3 permission confirmation dialog before installation and an anchored "Added to dejavu" confirmation bubble with one-click toolbar pinning.
+            - **Auto-Sizing Extension Popups & WebView2 Manifest Hardening** — Live extension popups dynamically measure and fit their content, and MV3/side-panel manifests sanitize cleanly for WebView2.
+          - **Persistent Window Size, Position & Maximized State**:
+            - Remembers your exact window width, height, monitor position, and maximized state across restarts with safe multi-monitor clamping and debounced persistence.
+          - **Chromebook / Pixel OS Material Design 3 Website & Setup Wizard**:
+            - **Simplified Website (`docs/`)** — Calm Material You layout with minimal copy, 24 live palettes, 32 interactive wallpapers, and 100% native scrolling (zero scroll listeners or scroll hijacking).
+            - **Chromebook-Style Guided Setup (`dejavu-Setup.exe`)** — Clean 2-column Material You OOBE installer with live theme/seed preview and per-user install.
+          - **Core Platform & Security Hardening (`__TAG__` · Android `versionCode 580`)**:
+            - Full Win32 PE VersionInfo (`FileVersion 5.8.0.0`, `dejavu Browser`), explicit `asInvoker` manifest, `/highentropyva+` & `/deterministic`, zero `WScript.Shell`/batch scripts, Microsoft Trusted Signing + PFX CI hooks, Play-Protect-clean V1+V2+V3 signed Android APK, **`SHA256SUMS.txt`**, and GitHub **SLSA Build Provenance Attestations**.
+            - Preserves Self-Healing VPN + 3-Hop Tor, Theme-Adaptive 24-Palette Butterfly Video Downloader FAB, 32 Curated M3 HD Wallpapers, `dejavu Link v2.3`, Brave-Exact Shields (`279K+` Windows / `108K+` Android rules), and Windows Hello / Android Passkeys.
 
           #### Downloads & Verification
-          - **dejavu-Setup.exe** — Windows 10/11 Guided Installer (`FileVersion 5.7.0.0`, security-hardened `asInvoker` + zero `WScript.Shell`/batch scripts, Re-Engineered Self-Healing VPN + 3-Hop Tor, Theme-Adaptive 24-Palette Butterfly Video Downloader, Fluid 120Hz M3 Polish & sleek themed scrollbars, 32 Curated M3 Wallpapers, `dejavu Link v2.3`, Brave-Exact Shields `279K+` rules & Chrome MV3 Extensions)
-          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.7.0.0`, `/highentropyva+`, deterministic build, full Win32 PE VersionInfo)
-          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 570` — Play-Protect-clean zero dropper permissions, `allowBackup="false"`, system-CA `networkSecurityConfig`, Theme-Adaptive 24-Palette Butterfly Video FAB, interactive finger-tracking swipe-to-dismiss sheets & 120Hz polish, 32 M3 Wallpapers with 10 Butterflies & 4 Cute Froggies, `dejavu Link v2.3`, `108K+` Brave-Exact Shields, V1+V2+V3 permanently signed, Android 8.0+)
+          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.8.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
+          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.8.0.0`, `/highentropyva+`, deterministic build)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 580`, V1+V2+V3 signed, Android 8.0+)
           - **SHA256SUMS.txt** — Official SHA-256 verification checksums for all release binaries (paired with GitHub SLSA Build Provenance Attestations)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
@@ -294,5 +292,5 @@ jobs:
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
             release-files/SHA256SUMS.txt \
-            --title "dejavu $TAG — Self-Healing VPN, Theme-Adaptive Butterfly Video FAB & Fluid 120Hz Polish" \
+            --title "dejavu $TAG — Material You Setup & Website, Native Chrome Extensions & Persistent Window Size" \
             --notes-file /tmp/release_notes.md

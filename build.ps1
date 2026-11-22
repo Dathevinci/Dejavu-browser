@@ -59,7 +59,6 @@ $baseArgs = @(
   "/resource:$root\ui\index.html,index.html",
   "/resource:$root\ui\overlay.html,overlay.html",
   "/resource:$root\ui\styles.css,styles.css",
-  "/resource:$root\ui\liquid-glass.js,liquid-glass.js",
   "/resource:$root\ui\newtab.js,newtab.js",
   "/resource:$root\ui\avatars.js,avatars.js",
   "/resource:$root\ui\app.js,app.js",

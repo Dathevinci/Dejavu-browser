@@ -587,6 +587,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     @Override
     protected void onResume() {
         super.onResume();
+        if (autoUpdater != null) autoUpdater.onActivityResumed(this);
         if (uiReady) pushStateToUi();
     }
 
@@ -1515,18 +1516,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             restoreDeferredUpdateBannerIfNeeded();
         });
 
-        // Floating GitHub Releases Update Banner
+        // Floating Native In-App Auto-Update Banner
         btnUpdateLater.setOnClickListener(v -> {
             if (autoUpdater != null) autoUpdater.dismissBannerForCurrentRelease();
             if (updateBanner != null) updateBanner.setVisibility(View.GONE);
         });
         btnUpdateNow.setOnClickListener(v -> {
             if (autoUpdater == null) return;
-            if ("error".equals(autoUpdater.getStatus())) {
-                autoUpdater.checkForUpdates(true);
+            if ("error".equals(autoUpdater.getStatus()) && autoUpdater.isSignatureMismatch() && autoUpdater.hasDownloadedApk()) {
+                autoUpdater.openApkInFilesOrShare(MainActivity.this);
             } else {
-                autoUpdater.openReleasePage(MainActivity.this);
-                if (updateBanner != null) updateBanner.setVisibility(View.GONE);
+                autoUpdater.startDownloadOrInstall(MainActivity.this);
             }
         });
     }
@@ -3025,7 +3025,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.9.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.9.1)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -4178,7 +4178,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (!deferredUpdateBanner || updateBanner == null) return;
         deferredUpdateBanner = false;
         refreshUpdateBanner();
-        if (autoUpdater != null && "available".equals(autoUpdater.getStatus())) {
+        if (autoUpdater != null && autoUpdater.isUpdateAvailable()) {
             updateBannerTopMargins();
             updateBanner.setVisibility(View.VISIBLE);
         }
@@ -4323,26 +4323,77 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // MobileAutoUpdater.Listener (Read-Only GitHub Releases Update Checker)
+    // MobileAutoUpdater.Listener (Native In-App Auto-Updater)
     // =========================================================================
     private void refreshUpdateBanner() {
         if (autoUpdater == null || updateBanner == null) return;
+        boolean incomingShowing = incomingBanner != null && incomingBanner.getVisibility() == View.VISIBLE;
         String st = autoUpdater.getStatus();
         String ver = autoUpdater.getLatestVersion();
         String sz = autoUpdater.formatSize();
+        int pct = autoUpdater.getDownloadPercent();
         updateBannerTopMargins();
-        if (updateProgress != null) updateProgress.setVisibility(View.GONE);
-        if ("available".equals(st)) {
+        if ("downloading".equals(st)) {
+            if (incomingShowing) { deferredUpdateBanner = true; } else { updateBanner.setVisibility(View.VISIBLE); }
+            updateTitle.setText("Downloading dejavu v" + ver + "...");
+            updateBody.setText(pct > 0 ? ("Downloading verified APK · " + pct + "%") : "Connecting to GitHub Releases...");
+            if (updateProgress != null) {
+                updateProgress.setVisibility(View.VISIBLE);
+                updateProgress.setProgress(Math.max(4, pct));
+            }
+            btnUpdateNow.setText(pct + "%");
+            btnUpdateNow.setEnabled(false);
+        } else if ("verifying".equals(st)) {
+            if (incomingShowing) { deferredUpdateBanner = true; } else { updateBanner.setVisibility(View.VISIBLE); }
+            updateTitle.setText("Verifying dejavu v" + ver + "...");
+            updateBody.setText("Checking SHA-256 checksum & V1-V3 signature");
+            if (updateProgress != null) {
+                updateProgress.setVisibility(View.VISIBLE);
+                updateProgress.setProgress(100);
+            }
+            btnUpdateNow.setText("Verifying...");
+            btnUpdateNow.setEnabled(false);
+        } else if ("installing".equals(st)) {
+            if (incomingShowing) { deferredUpdateBanner = true; } else { updateBanner.setVisibility(View.VISIBLE); }
+            updateTitle.setText("Installing dejavu v" + ver + "...");
+            updateBody.setText("Updating natively in-place — confirm if prompted by Android");
+            if (updateProgress != null) {
+                updateProgress.setVisibility(View.VISIBLE);
+                updateProgress.setProgress(100);
+            }
+            btnUpdateNow.setText("Installing...");
+            btnUpdateNow.setEnabled(false);
+        } else if ("ready".equals(st)) {
+            if (incomingShowing) { deferredUpdateBanner = true; } else { updateBanner.setVisibility(View.VISIBLE); }
+            updateTitle.setText("dejavu v" + ver + " Ready to Install");
+            updateBody.setText(autoUpdater.isSignatureMismatch()
+                ? MobileAutoUpdater.INCOMPATIBLE_SIGNING_MSG
+                : ((autoUpdater.isSha256Verified() ? "Verified SHA-256 & signature" : "Verified signed APK")
+                    + (sz.isEmpty() ? "" : (" · " + sz)) + " · Tap Install Now"));
+            if (updateProgress != null) updateProgress.setVisibility(View.GONE);
+            btnUpdateNow.setText("Install Now");
+            btnUpdateNow.setEnabled(true);
+        } else if ("available".equals(st)) {
             updateTitle.setText("Update Available · v" + ver);
-            updateBody.setText((sz.isEmpty() ? "Signed release ready on GitHub" : ("Signed release ready · " + sz)) + " · Tap to open GitHub Releases");
-            btnUpdateNow.setText("Download Update");
+            updateBody.setText((sz.isEmpty() ? "New update ready" : ("New update ready · " + sz)) + " · Tap to download & install natively");
+            if (updateProgress != null) updateProgress.setVisibility(View.GONE);
+            btnUpdateNow.setText("Update Now");
             btnUpdateNow.setEnabled(true);
         } else if ("error".equals(st)) {
-            updateTitle.setText("Update Check Unavailable");
-            updateBody.setText("Could not reach GitHub Releases right now");
-            btnUpdateNow.setText("Retry");
+            if (updateProgress != null) updateProgress.setVisibility(View.GONE);
+            if (autoUpdater.isSignatureMismatch() && autoUpdater.hasDownloadedApk()) {
+                updateTitle.setText("Signing Key Upgrade Required");
+                updateBody.setText(MobileAutoUpdater.INCOMPATIBLE_SIGNING_MSG);
+                btnUpdateNow.setText("Open APK");
+            } else {
+                updateTitle.setText("Update Failed");
+                String err = autoUpdater.getErrorText();
+                updateBody.setText((err != null && !err.isEmpty()) ? err : "Could not complete update right now");
+                btnUpdateNow.setText("Retry");
+            }
             btnUpdateNow.setEnabled(true);
         } else if ("uptodate".equals(st) || "idle".equals(st)) {
+            if (updateProgress != null) updateProgress.setVisibility(View.GONE);
             updateBanner.setVisibility(View.GONE);
         }
     }
@@ -5892,6 +5943,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 saveLocalCollections();
                 pushStateToUi();
                 Toast.makeText(MainActivity.this, "Userscript removed", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void openUpdateApkInFiles() {
+            mainHandler.post(() -> {
+                if (autoUpdater != null) autoUpdater.openApkInFilesOrShare(MainActivity.this);
             });
         }
 

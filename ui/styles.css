@@ -1,5 +1,5 @@
 /* ==========================================================================
-   dejavu v5.9.0 — Authentic Chromebook × Pixel Material Design 3 Expressive
+   dejavu v5.9.1 — Authentic Chromebook × Pixel Material Design 3 Expressive
    12 Official HCT Tonal Palettes · Official M3 Motion · State Layers
    Zero Compositing Overhead · Strictly Zero CSS Filter Softening
    ========================================================================== */
@@ -5848,7 +5848,7 @@ body.force-light .ext-details-hero {
 }
 
 /* ==========================================================================
-   Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub (v5.9.0)
+   Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub (v5.9.1)
    Gliding Segmented Views · Device Presence & Ping · Notes & Clip History
    ========================================================================== */
 .link-hub-overlay { z-index: 175; }
@@ -7190,7 +7190,7 @@ body.force-light .link-note-card {
 }
 
 /* ==========================================================================
-   Chrome-Style Material Design 3 Extension Install Dialog & Added Bubble (v5.9.0)
+   Chrome-Style Material Design 3 Extension Install Dialog & Added Bubble (v5.9.1)
    Pure Opaque HCT Tonal Surfaces · 200ms Spring Reveal · Zero Blur
    ========================================================================== */
 @keyframes extModalReveal {

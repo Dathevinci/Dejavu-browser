@@ -256,27 +256,22 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — A-to-Z Pixelbook / ChromeOS Material Design 3 Redesign & Performance Polish
+          ### dejavu __TAG__ — Native In-App Android Automatic Updater & Pixelbook Material Design 3 Polish
 
-          - **Pixelbook / ChromeOS Tonal Chrome, Tabs & Zero-Jump Realbox**:
-            - **Authentic ChromeOS Tonal Hierarchy** — Dedicated surface tiers across the tab strip, toolbar, omnibox, and navigation rail across Dark, Light, and Private themes, with pure M3 state layers replacing every `filter: brightness()` hover hack.
-            - **Zero-Jump Left-Aligned Realbox Omnibox** — Emphasized host + muted path formatting, dynamic search-engine placeholder, anchored security/reader controls, and an instant 0px-shift focus swap with zero text ghosting.
-            - **Refined Connected Tabs & Memory Saver Ring** — Smooth connected active-tab shoulders, borderless ChromeOS ghost bookmarks chips, and dotted sleeping-tab rings for suspended tabs.
-          - **Pixelbook Start Page, Edge-to-Edge Workspaces & Popovers**:
-            - **Open Pixelbook Start Page** — Single-row circular-to-squircle shortcut wells with adaptive contrast pills over all 32 wallpapers, borderless tonal At-a-Glance greeting & status strip, and 52px Realbox search bar.
-            - **Full-Viewport ChromeOS Workspaces** — Settings, Extensions, Turbo Downloads, and dejavu Link Hub upgraded to edge-to-edge native `#viewport` workspaces with unified 62px top app bars and borderless tonal cards.
-            - **Crisp Light/Dark Popovers & Android Companion** — Streamlined `overlay.html` with pure white M3 Light tonal cards and aligned Android Start Page circular-to-squircle shortcuts & Light MOTD card.
-          - **End-to-End CSS, JS & C# Performance Optimizations**:
-            - **Atomic Single-Frame Theme Switching** — Eliminates mid-transition Dark ↔ Light color flashes.
-            - **Faster Shell & Native Host** — Signature-cached workspace renders, zero-allocation tab sync loop, 200+ lines of duplicate CSS removed, throttled native default-browser checks, and deduplicated WebView2 tab/options state payloads.
-          - **Core Platform & Security Hardening (`__TAG__` · Android `versionCode 590`)**:
-            - Full Win32 PE VersionInfo (`FileVersion 5.9.0.0`, `dejavu Browser`), explicit `asInvoker` manifest, `/highentropyva+` & `/deterministic`, zero `WScript.Shell`/batch scripts, Microsoft Trusted Signing + PFX CI hooks, Play-Protect-clean V1+V2+V3 signed Android APK, **`SHA256SUMS.txt`**, and GitHub **SLSA Build Provenance Attestations**.
+          - **Native In-App Android Automatic Updater (Zero GitHub Redirect)**:
+            - **Direct In-App Download & Cryptographic Verification** — Streams `dejavu-mobile.apk` directly inside `dejavu Mobile` with live progress in both the floating banner and Settings, verifying exact **SHA-256** against `SHA256SUMS.txt`, APK archive integrity, and V1/V2/V3 signing certificate parity before installing.
+            - **Official Android `PackageInstaller.Session` In-Place Upgrades** — Installs seamlessly inside Android (`USER_ACTION_NOT_REQUIRED` on Android 12+, `setRequestUpdateOwnership` on Android 14+, foreground Activity confirmation launch for Android 14–16 compatibility, and automatic `FileProvider` fallback).
+            - **Seamless Wi-Fi Pre-Download & Permission Resume** — Silently pre-downloads and verifies updates on unmetered Wi-Fi for instant 1-tap installation, and automatically resumes installation when returning after granting Android's one-time *"Install unknown apps"* permission.
+          - **Pixelbook / ChromeOS Material Design 3 Redesign & Performance Polish**:
+            - Authentic ChromeOS tonal chrome hierarchy, zero-jump left-aligned Realbox omnibox, refined connected active tabs with Memory Saver sleeping-tab rings, open single-row Pixelbook Start Page, edge-to-edge ChromeOS workspaces (Settings, Extensions, Turbo Downloads, dejavu Link Hub), atomic single-frame theme switching, and C#/JS/CSS performance optimizations.
+          - **Core Platform & Security Hardening (`__TAG__` · Android `versionCode 591`)**:
+            - Full Win32 PE VersionInfo (`FileVersion 5.9.1.0`, `dejavu Browser`), explicit `asInvoker` manifest, `/highentropyva+` & `/deterministic`, zero `WScript.Shell`/batch scripts, Microsoft Trusted Signing + PFX CI hooks, Play-Protect-clean V1+V2+V3 signed Android APK, **`SHA256SUMS.txt`**, and GitHub **SLSA Build Provenance Attestations**.
             - Preserves Native Chrome-like Material You Extensions, Persistent Window Bounds, Self-Healing VPN + 3-Hop Tor, Theme-Adaptive 24-Palette Butterfly Video Downloader FAB, 32 Curated M3 HD Wallpapers, `dejavu Link v2.3`, Brave-Exact Shields (`279K+` Windows / `108K+` Android rules), and Windows Hello / Android Passkeys.
 
           #### Downloads & Verification
-          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.9.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
-          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.9.0.0`, `/highentropyva+`, deterministic build)
-          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 590`, V1+V2+V3 signed, Android 8.0+)
+          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.9.1.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
+          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.9.1.0`, `/highentropyva+`, deterministic build)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 591`, V1+V2+V3 signed, Android 8.0+)
           - **SHA256SUMS.txt** — Official SHA-256 verification checksums for all release binaries (paired with GitHub SLSA Build Provenance Attestations)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
@@ -294,5 +289,5 @@ jobs:
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
             release-files/SHA256SUMS.txt \
-            --title "dejavu $TAG — Pixelbook Material Design 3 Redesign & Performance Polish" \
+            --title "dejavu $TAG — Native Android In-App Auto-Updater & Pixelbook M3 Polish" \
             --notes-file /tmp/release_notes.md

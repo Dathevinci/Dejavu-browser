@@ -1,30 +1,59 @@
 package com.dathevinci.dejavu;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageInstaller;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.pm.Signature;
+import android.content.pm.SigningInfo;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.MediaStore;
+import android.provider.Settings;
+
+import androidx.core.content.FileProvider;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Lightweight, read-only GitHub Releases update checker for dejavu Mobile v5.9.0.
- * Checks the official GitHub Releases API over HTTPS and opens the verified release page
- * in the browser via standard ACTION_VIEW (zero self-installing or dropper behavior).
+ * Native in-app automatic updater for dejavu Mobile v5.9.1.
+ * Checks official GitHub Releases over HTTPS, downloads the signed APK in-app,
+ * verifies SHA-256 against SHA256SUMS.txt + package archive integrity + signing certificate,
+ * and installs in-place via Android's official PackageInstaller.Session API (with automatic
+ * FileProvider fallback and seamless permission-grant resume).
  */
 public final class MobileAutoUpdater {
     private static final String LATEST_API =
@@ -34,9 +63,17 @@ public final class MobileAutoUpdater {
     private static final String ALLOWED_RELEASE_PREFIX =
         "https://github.com/Dathevinci/Dejavu-browser/";
     private static final String PREFS = "dejavu_mobile_updater_v1";
+    private static final String ACTION_INSTALL_RESULT =
+        "com.dathevinci.dejavu.ACTION_PACKAGE_INSTALL_RESULT";
+    private static final long MIN_VALID_APK_BYTES = 500_000L;
+    private static final long MIN_FREE_CACHE_FOR_PREDOWNLOAD = 80_000_000L;
 
+    public static final String INCOMPATIBLE_SIGNING_MSG =
+        "Installed app uses an older signing key. Uninstall dejavu once, then open the saved APK — all future updates install automatically in-place.";
     public static final String UPGRADE_NOTE =
-        "Official signed updates are verified on GitHub Releases (SHA-256 + V1/V2/V3 signing).";
+        "Native in-app updates verified via SHA-256 + V1/V2/V3 signing directly from GitHub Releases.";
+
+    private static volatile WeakReference<MobileAutoUpdater> activeInstance = new WeakReference<>(null);
 
     public interface Listener {
         void onUpdateStateChanged();
@@ -44,25 +81,103 @@ public final class MobileAutoUpdater {
         void onUpdateMessage(String message);
     }
 
+    /**
+     * Explicit manifest-registered receiver for Android PackageInstaller.Session status callbacks.
+     * Uses the live foreground Activity when available to avoid Android 14-16 background launch blocks.
+     */
+    public static final class InstallResultReceiver extends BroadcastReceiver {
+        @SuppressWarnings("deprecation")
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null) return;
+            int installStatus = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE);
+            String statusMessage = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE);
+
+            if (installStatus == PackageInstaller.STATUS_PENDING_USER_ACTION) {
+                Intent confirmIntent;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    confirmIntent = intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent.class);
+                } else {
+                    confirmIntent = intent.getParcelableExtra(Intent.EXTRA_INTENT);
+                }
+                if (confirmIntent != null) {
+                    MobileAutoUpdater inst = activeInstance.get();
+                    Activity host = (inst != null) ? inst.getLiveHostActivity() : null;
+                    try {
+                        if (host != null) {
+                            host.startActivity(confirmIntent);
+                        } else {
+                            confirmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(confirmIntent);
+                        }
+                    } catch (Exception ex) {
+                        if (inst != null) {
+                            inst.fallbackToActionViewFromReceiver(host != null ? host : context);
+                        }
+                    }
+                }
+                return;
+            }
+
+            MobileAutoUpdater inst = activeInstance.get();
+            if (inst != null) {
+                inst.handleInstallResult(context, installStatus, statusMessage);
+            }
+        }
+    }
+
+    private static final class ApkValidation {
+        boolean valid;
+        boolean signatureMismatch;
+        String reason = "";
+    }
+
     private final Context appCtx;
     private final Listener listener;
     private final SharedPreferences prefs;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private volatile WeakReference<Activity> hostActivityRef = new WeakReference<>(null);
 
-    private volatile String currentVersion = "5.9.0";
-    private volatile String status = "idle"; // "idle" | "checking" | "uptodate" | "available" | "error"
+    private volatile String currentVersion = "5.9.1";
+    // "idle" | "checking" | "uptodate" | "available" | "downloading" | "verifying" | "installing" | "ready" | "error"
+    private volatile String status = "idle";
     private volatile String latestVersion = "";
     private volatile String releaseUrl = DEFAULT_RELEASES_URL;
+    private volatile String downloadUrl = "";
+    private volatile String checksumsUrl = "";
+    private volatile String apkAssetName = "dejavu-mobile.apk";
     private volatile String releaseNotes = "";
     private volatile long assetBytes = 0L;
+    private volatile int downloadPercent = 0;
     private volatile String errorText = "";
+    private volatile File downloadedApk = null;
+    private volatile String exportedPublicFileName = "";
+    private volatile boolean awaitingInstallPermission = false;
+    private volatile boolean autoInstallAfterDownload = false;
+    private volatile boolean signatureMismatch = false;
+    private volatile boolean signingVerified = false;
+    private volatile boolean sha256Verified = false;
+    private volatile long installCommitMs = 0L;
 
     public MobileAutoUpdater(Context context, Listener listener) {
         this.appCtx = context.getApplicationContext();
         this.listener = listener;
         this.prefs = appCtx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         this.currentVersion = readInstalledVersion();
+        if (context instanceof Activity) {
+            this.hostActivityRef = new WeakReference<>((Activity) context);
+        }
+        activeInstance = new WeakReference<>(this);
+        cleanupOldApkFiles();
+    }
+
+    private Activity getLiveHostActivity() {
+        Activity a = hostActivityRef.get();
+        if (a != null && !a.isFinishing() && !a.isDestroyed()) {
+            return a;
+        }
+        return null;
     }
 
     private String readInstalledVersion() {
@@ -72,7 +187,46 @@ public final class MobileAutoUpdater {
                 return cleanVersion(pi.versionName);
             }
         } catch (Exception ignored) { }
-        return "5.9.0";
+        return "5.9.1";
+    }
+
+    @SuppressWarnings("deprecation")
+    private long readInstalledVersionCode() {
+        try {
+            PackageInfo pi = appCtx.getPackageManager().getPackageInfo(appCtx.getPackageName(), 0);
+            if (pi != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    return pi.getLongVersionCode();
+                }
+                return pi.versionCode;
+            }
+        } catch (Exception ignored) { }
+        return 0L;
+    }
+
+    private void cleanupOldApkFiles() {
+        try {
+            File dir = new File(appCtx.getCacheDir(), "updates");
+            if (dir.exists() && dir.isDirectory()) {
+                File[] files = dir.listFiles();
+                if (files != null) {
+                    String savedVer = prefs.getString("cachedApkVersion", "");
+                    for (File f : files) {
+                        if (!f.isFile()) continue;
+                        String name = f.getName();
+                        if (name.endsWith(".apk.part")) {
+                            //noinspection ResultOfMethodCallIgnored
+                            f.delete();
+                        } else if (name.endsWith(".apk")) {
+                            if (savedVer.isEmpty() || compareVersions(savedVer, currentVersion) <= 0) {
+                                //noinspection ResultOfMethodCallIgnored
+                                f.delete();
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) { }
     }
 
     public String getCurrentVersion() { return currentVersion; }
@@ -80,7 +234,19 @@ public final class MobileAutoUpdater {
     public String getLatestVersion() { return latestVersion; }
     public String getReleaseUrl() { return releaseUrl; }
     public String getReleaseNotes() { return releaseNotes; }
-    public boolean isUpdateAvailable() { return "available".equals(status); }
+    public int getDownloadPercent() { return downloadPercent; }
+    public String getErrorText() { return errorText; }
+    public boolean isSignatureMismatch() { return signatureMismatch; }
+    public boolean isSha256Verified() { return sha256Verified; }
+    public boolean hasDownloadedApk() { return downloadedApk != null && downloadedApk.isFile(); }
+
+    public boolean isUpdateAvailable() {
+        return "available".equals(status)
+            || "downloading".equals(status)
+            || "verifying".equals(status)
+            || "installing".equals(status)
+            || "ready".equals(status);
+    }
 
     public String formatSize() {
         if (assetBytes <= 0L) return "";
@@ -98,17 +264,24 @@ public final class MobileAutoUpdater {
             o.put("releaseUrl", releaseUrl);
             o.put("available", isUpdateAvailable());
             o.put("error", errorText);
-            o.put("percent", 0);
-            o.put("signatureMismatch", false);
-            o.put("signingVerified", true);
-            o.put("hasDownloadedApk", false);
-            o.put("upgradeNote", UPGRADE_NOTE);
+            o.put("percent", downloadPercent);
+            o.put("signatureMismatch", signatureMismatch);
+            o.put("signingVerified", signingVerified);
+            o.put("sha256Verified", sha256Verified);
+            o.put("hasDownloadedApk", hasDownloadedApk());
+            o.put("exportedApkName", exportedPublicFileName);
+            o.put("upgradeNote", signatureMismatch ? INCOMPATIBLE_SIGNING_MSG : UPGRADE_NOTE);
         } catch (Exception ignored) { }
         return o;
     }
 
     public void checkForUpdates(final boolean userInitiated) {
-        if ("checking".equals(status)) return;
+        if ("checking".equals(status)
+            || "downloading".equals(status)
+            || "verifying".equals(status)
+            || "installing".equals(status)) {
+            return;
+        }
         status = "checking";
         errorText = "";
         notifyChanged();
@@ -143,6 +316,9 @@ public final class MobileAutoUpdater {
                 String tag = cleanVersion(rel.optString("tag_name", ""));
                 String htmlUrl = sanitizeReleaseUrl(rel.optString("html_url", ""));
                 String notes = rel.optString("name", tag.isEmpty() ? "" : ("v" + tag));
+                String apkUrl = "";
+                String foundApkName = "dejavu-mobile.apk";
+                String shaUrl = "";
                 long mobileAssetSize = 0L;
 
                 JSONArray assets = rel.optJSONArray("assets");
@@ -150,15 +326,19 @@ public final class MobileAutoUpdater {
                     for (int i = 0; i < assets.length(); i++) {
                         JSONObject a = assets.optJSONObject(i);
                         if (a == null) continue;
-                        String name = a.optString("name", "").toLowerCase(Locale.US);
-                        if (name.startsWith("dejavu-mobile") || name.contains("android")) {
+                        String name = a.optString("name", "");
+                        String low = name.toLowerCase(Locale.US);
+                        if (apkUrl.isEmpty() && low.endsWith(".apk")) {
+                            apkUrl = sanitizeAssetUrl(a.optString("browser_download_url", ""));
+                            foundApkName = name;
                             mobileAssetSize = a.optLong("size", 0L);
-                            break;
+                        } else if (shaUrl.isEmpty() && low.contains("sha256")) {
+                            shaUrl = sanitizeAssetUrl(a.optString("browser_download_url", ""));
                         }
                     }
                 }
 
-                if (tag.isEmpty()) {
+                if (tag.isEmpty() || apkUrl.isEmpty()) {
                     releaseUrl = htmlUrl;
                     status = "uptodate";
                     notifyChanged();
@@ -170,23 +350,54 @@ public final class MobileAutoUpdater {
 
                 latestVersion = tag;
                 releaseUrl = htmlUrl;
+                downloadUrl = apkUrl;
+                apkAssetName = foundApkName;
+                checksumsUrl = shaUrl;
                 assetBytes = mobileAssetSize;
                 releaseNotes = notes;
 
                 if (compareVersions(tag, currentVersion) > 0) {
-                    status = "available";
-                    errorText = "";
-                    notifyChanged();
+                    File cached = new File(new File(appCtx.getCacheDir(), "updates"), "dejavu-" + tag + ".apk");
+                    ApkValidation cachedVal = cached.isFile() ? validateApkFile(cached, mobileAssetSize) : null;
+                    if (cachedVal != null && cachedVal.valid) {
+                        downloadedApk = cached;
+                        signatureMismatch = cachedVal.signatureMismatch;
+                        signingVerified = !cachedVal.signatureMismatch;
+                        sha256Verified = prefs.getBoolean("cachedApkShaVerified_" + tag, false);
+                        downloadPercent = 100;
+                        status = "ready";
+                        errorText = signatureMismatch ? INCOMPATIBLE_SIGNING_MSG : "";
+                        notifyChanged();
+                        maybePromptBanner(tag, userInitiated);
+                    } else {
+                        if (cached.exists()) {
+                            //noinspection ResultOfMethodCallIgnored
+                            cached.delete();
+                        }
+                        downloadedApk = null;
+                        signatureMismatch = false;
+                        signingVerified = false;
+                        sha256Verified = false;
+                        downloadPercent = 0;
+                        status = "available";
+                        errorText = "";
+                        notifyChanged();
 
-                    String dismissed = prefs.getString("dismissedVersion", "");
-                    if (userInitiated || !tag.equals(dismissed)) {
-                        final String szLabel = formatSize();
-                        final String noteTitle = releaseNotes;
-                        mainHandler.post(() -> {
-                            if (listener != null) {
-                                listener.onUpdateBannerPrompt(tag, szLabel, noteTitle);
+                        String dismissed = prefs.getString("dismissedVersion", "");
+                        boolean shouldPreDownload = !userInitiated
+                            && !tag.equals(dismissed)
+                            && isUnmeteredWifiReadyForPreDownload();
+
+                        if (shouldPreDownload) {
+                            // Silently pre-download & verify over unmetered Wi-Fi so tapping "Install Now" is instant
+                            autoInstallAfterDownload = false;
+                            downloadAndVerifyBlocking(null, tag, apkUrl, shaUrl, foundApkName, mobileAssetSize, false);
+                            if ("ready".equals(status)) {
+                                maybePromptBanner(tag, false);
                             }
-                        });
+                        } else {
+                            maybePromptBanner(tag, userInitiated);
+                        }
                     }
                 } else {
                     status = "uptodate";
@@ -209,14 +420,315 @@ public final class MobileAutoUpdater {
         });
     }
 
+    private void maybePromptBanner(final String tag, final boolean userInitiated) {
+        String dismissed = prefs.getString("dismissedVersion", "");
+        if (userInitiated || !tag.equals(dismissed)) {
+            final String szLabel = formatSize();
+            final String noteTitle = releaseNotes;
+            mainHandler.post(() -> {
+                if (listener != null) {
+                    listener.onUpdateBannerPrompt(tag, szLabel, noteTitle);
+                }
+            });
+        }
+    }
+
+    private boolean isUnmeteredWifiReadyForPreDownload() {
+        try {
+            File cacheDir = appCtx.getCacheDir();
+            if (cacheDir == null || cacheDir.getUsableSpace() < MIN_FREE_CACHE_FOR_PREDOWNLOAD) {
+                return false;
+            }
+            ConnectivityManager cm = (ConnectivityManager) appCtx.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm == null) return false;
+            Network net = cm.getActiveNetwork();
+            if (net == null) return false;
+            NetworkCapabilities caps = cm.getNetworkCapabilities(net);
+            if (caps == null) return false;
+            return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+                && caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
     public void dismissBannerForCurrentRelease() {
         if (latestVersion != null && !latestVersion.isEmpty()) {
             prefs.edit().putString("dismissedVersion", latestVersion).apply();
         }
     }
 
+    /**
+     * Native in-app download + cryptographic verification + PackageInstaller installation.
+     * Never opens GitHub in a browser tab.
+     */
     public void startDownloadOrInstall(final Context activityCtx) {
-        openReleasePage(activityCtx);
+        if (activityCtx instanceof Activity) {
+            hostActivityRef = new WeakReference<>((Activity) activityCtx);
+        }
+        Context launchCtx = (activityCtx != null) ? activityCtx : appCtx;
+
+        if (("ready".equals(status) || ("error".equals(status) && hasDownloadedApk()))
+            && downloadedApk != null && downloadedApk.isFile()) {
+            launchPackageInstaller(launchCtx, downloadedApk);
+            return;
+        }
+        if ("downloading".equals(status) || "verifying".equals(status)) {
+            // If a silent background Wi-Fi pre-download is already running, auto-install as soon as it finishes
+            autoInstallAfterDownload = true;
+            notifyChanged();
+            return;
+        }
+        if ("installing".equals(status)) {
+            return;
+        }
+        if (downloadUrl == null || downloadUrl.isEmpty()) {
+            checkForUpdates(true);
+            return;
+        }
+
+        autoInstallAfterDownload = true;
+        final String targetUrl = downloadUrl;
+        final String targetVer = latestVersion;
+        final String targetShaUrl = checksumsUrl;
+        final String targetAssetName = apkAssetName;
+        final long expectedAssetBytes = assetBytes;
+
+        executor.execute(() -> downloadAndVerifyBlocking(
+            launchCtx,
+            targetVer,
+            targetUrl,
+            targetShaUrl,
+            targetAssetName,
+            expectedAssetBytes,
+            true
+        ));
+    }
+
+    private void downloadAndVerifyBlocking(
+        final Context activityCtx,
+        final String targetVer,
+        final String targetUrl,
+        final String targetShaUrl,
+        final String targetAssetName,
+        final long expectedAssetBytes,
+        final boolean userInitiated
+    ) {
+        status = "downloading";
+        downloadPercent = 0;
+        errorText = "";
+        signatureMismatch = false;
+        signingVerified = false;
+        sha256Verified = false;
+        notifyChanged();
+
+        HttpURLConnection conn = null;
+        File partFile = null;
+        File finalFile = null;
+        try {
+            File dir = new File(appCtx.getCacheDir(), "updates");
+            if (!dir.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                dir.mkdirs();
+            }
+
+            partFile = new File(dir, "dejavu-" + targetVer + ".apk.part");
+            finalFile = new File(dir, "dejavu-" + targetVer + ".apk");
+            if (partFile.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                partFile.delete();
+            }
+
+            conn = openFollowingRedirects(targetUrl, 8);
+            int code = conn.getResponseCode();
+            if (code != 200) {
+                throw new Exception("HTTP " + code);
+            }
+
+            long contentLen = conn.getContentLengthLong();
+            long expectedBytes = contentLen > 0 ? contentLen : expectedAssetBytes;
+            long totalRead = 0L;
+            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+
+            try (InputStream in = new BufferedInputStream(conn.getInputStream(), 32768);
+                 FileOutputStream out = new FileOutputStream(partFile)) {
+                byte[] buf = new byte[32768];
+                int lastPct = -1;
+                int n;
+                while ((n = in.read(buf)) != -1) {
+                    out.write(buf, 0, n);
+                    sha256.update(buf, 0, n);
+                    totalRead += n;
+                    if (expectedBytes > 0L) {
+                        int pct = (int) Math.min(99, (totalRead * 100L) / expectedBytes);
+                        if (pct != lastPct) {
+                            lastPct = pct;
+                            downloadPercent = pct;
+                            notifyChanged();
+                        }
+                    }
+                }
+                out.flush();
+            }
+
+            if (totalRead < MIN_VALID_APK_BYTES || (expectedBytes > 0L && totalRead != expectedBytes)) {
+                throw new Exception("Download interrupted (" + totalRead + " bytes)");
+            }
+
+            if (finalFile.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                finalFile.delete();
+            }
+            if (!partFile.renameTo(finalFile)) {
+                throw new Exception("Could not save update APK");
+            }
+
+            status = "verifying";
+            downloadPercent = 100;
+            notifyChanged();
+
+            // 1. Verify cryptographic SHA-256 against official SHA256SUMS.txt when available
+            String actualShaHex = bytesToLowerHex(sha256.digest());
+            boolean hashMatched = false;
+            if (targetShaUrl != null && !targetShaUrl.isEmpty()) {
+                String expectedShaHex = fetchExpectedSha256(targetShaUrl, targetAssetName);
+                if (!expectedShaHex.isEmpty()) {
+                    if (!expectedShaHex.equalsIgnoreCase(actualShaHex)) {
+                        //noinspection ResultOfMethodCallIgnored
+                        finalFile.delete();
+                        throw new Exception("SHA-256 checksum mismatch");
+                    }
+                    hashMatched = true;
+                }
+            }
+
+            // 2. Verify ZIP header + Android PackageArchiveInfo + signing certificate BEFORE launching installer
+            ApkValidation val = validateApkFile(finalFile, expectedBytes);
+            if (!val.valid) {
+                //noinspection ResultOfMethodCallIgnored
+                finalFile.delete();
+                throw new Exception(val.reason.isEmpty() ? "Downloaded APK is invalid" : val.reason);
+            }
+
+            // Export copy to public Downloads only if signing mismatch requires manual uninstall/reinstall
+            if (val.signatureMismatch) {
+                exportedPublicFileName = exportApkToPublicDownloads(finalFile, targetVer);
+            }
+
+            prefs.edit()
+                .putString("cachedApkVersion", targetVer)
+                .putBoolean("cachedApkShaVerified_" + targetVer, hashMatched)
+                .apply();
+            downloadedApk = finalFile;
+            signatureMismatch = val.signatureMismatch;
+            signingVerified = !val.signatureMismatch;
+            sha256Verified = hashMatched;
+            downloadPercent = 100;
+            status = "ready";
+            errorText = signatureMismatch ? INCOMPATIBLE_SIGNING_MSG : "";
+            notifyChanged();
+
+            if (autoInstallAfterDownload || userInitiated) {
+                autoInstallAfterDownload = false;
+                final File verifiedApk = finalFile;
+                final Context launchCtx = (getLiveHostActivity() != null)
+                    ? getLiveHostActivity()
+                    : ((activityCtx != null) ? activityCtx : appCtx);
+                mainHandler.post(() -> launchPackageInstaller(launchCtx, verifiedApk));
+            }
+        } catch (Exception e) {
+            if (partFile != null && partFile.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                partFile.delete();
+            }
+            boolean shouldReportError = userInitiated || autoInstallAfterDownload;
+            autoInstallAfterDownload = false;
+            status = shouldReportError ? "error" : "available";
+            String msg = e.getMessage();
+            errorText = shouldReportError
+                ? ((msg != null && !msg.trim().isEmpty()) ? msg : "Download failed")
+                : "";
+            notifyChanged();
+            if (shouldReportError) {
+                notifyMessage("Update failed: " + errorText);
+            }
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+    }
+
+    public void onActivityResumed(Context activityCtx) {
+        if (activityCtx instanceof Activity) {
+            hostActivityRef = new WeakReference<>((Activity) activityCtx);
+        }
+        Context ctx = (activityCtx != null) ? activityCtx : appCtx;
+
+        if (awaitingInstallPermission && downloadedApk != null && downloadedApk.isFile()) {
+            if (ctx.getPackageManager().canRequestPackageInstalls()) {
+                awaitingInstallPermission = false;
+                launchPackageInstaller(ctx, downloadedApk);
+                return;
+            }
+        }
+        // Recover cleanly if user dismissed system PackageInstaller dialog via Back on OEMs that omit STATUS_FAILURE_ABORTED
+        if ("installing".equals(status) && installCommitMs > 0L && (System.currentTimeMillis() - installCommitMs) > 2500L) {
+            if (downloadedApk != null && downloadedApk.isFile()) {
+                status = "ready";
+                notifyChanged();
+            }
+        }
+    }
+
+    /**
+     * Fallback helper in Settings ("Open APK in Files") for OEMs that block background PackageInstaller
+     * or when uninstalling an older incompatible signing-key build.
+     */
+    public void openApkInFilesOrShare(final Context activityCtx) {
+        if (downloadedApk == null || !downloadedApk.isFile()) {
+            notifyMessage("No downloaded update APK yet — tap Update first");
+            return;
+        }
+        final Context ctx = (activityCtx != null) ? activityCtx : appCtx;
+        final File apk = downloadedApk;
+        final String ver = (latestVersion != null && !latestVersion.isEmpty()) ? latestVersion : currentVersion;
+        executor.execute(() -> {
+            String pubName = exportApkToPublicDownloads(apk, ver);
+            if (!pubName.isEmpty()) {
+                exportedPublicFileName = pubName;
+            }
+            mainHandler.post(() -> {
+                try {
+                    Uri apkUri = FileProvider.getUriForFile(
+                        ctx,
+                        ctx.getPackageName() + ".fileprovider",
+                        apk
+                    );
+                    Intent viewIntent = new Intent(Intent.ACTION_VIEW);
+                    viewIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+                    viewIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    grantUriToAllHandlers(ctx, viewIntent, apkUri);
+
+                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                    shareIntent.setType("application/vnd.android.package-archive");
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, apkUri);
+                    shareIntent.putExtra(Intent.EXTRA_SUBJECT, "dejavu Mobile v" + ver + " APK");
+                    shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    grantUriToAllHandlers(ctx, shareIntent, apkUri);
+
+                    Intent chooser = Intent.createChooser(shareIntent, "Open or Share dejavu v" + ver + " APK");
+                    chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[] { viewIntent });
+                    chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    ctx.startActivity(chooser);
+
+                    if (!exportedPublicFileName.isEmpty()) {
+                        notifyMessage("Saved to Downloads/dejavu/" + exportedPublicFileName);
+                    }
+                } catch (Exception ex) {
+                    launchActionViewInstaller(ctx, apk);
+                }
+            });
+        });
     }
 
     public void openReleasePage(final Context activityCtx) {
@@ -230,8 +742,441 @@ public final class MobileAutoUpdater {
             }
             ctx.startActivity(viewIntent);
         } catch (Exception e) {
-            notifyMessage("Visit GitHub Releases to download the latest signed dejavu release");
+            notifyMessage("Visit GitHub Releases to download dejavu");
         }
+    }
+
+    private void launchPackageInstaller(Context activityCtx, File apkFile) {
+        Context ctx = (activityCtx != null) ? activityCtx : appCtx;
+        try {
+            ApkValidation val = validateApkFile(apkFile, 0L);
+            if (!val.valid) {
+                if (apkFile != null && apkFile.exists()) {
+                    //noinspection ResultOfMethodCallIgnored
+                    apkFile.delete();
+                }
+                downloadedApk = null;
+                status = "error";
+                errorText = val.reason.isEmpty() ? "Update package incomplete" : val.reason;
+                notifyChanged();
+                notifyMessage("Update package was incomplete — tap Retry to re-download");
+                return;
+            }
+            signatureMismatch = val.signatureMismatch;
+            signingVerified = !val.signatureMismatch;
+
+            if (!ctx.getPackageManager().canRequestPackageInstalls()) {
+                awaitingInstallPermission = true;
+                notifyMessage("Allow 'Install unknown apps' for dejavu, then press Back to install automatically");
+                Intent perm = new Intent(
+                    Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    Uri.parse("package:" + ctx.getPackageName())
+                );
+                if (!(ctx instanceof Activity)) {
+                    perm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                }
+                ctx.startActivity(perm);
+                return;
+            }
+
+            if (val.signatureMismatch) {
+                errorText = INCOMPATIBLE_SIGNING_MSG;
+                notifyChanged();
+                notifyMessage(INCOMPATIBLE_SIGNING_MSG);
+            }
+
+            // Primary path: Android official PackageInstaller.Session API with explicit BroadcastReceiver status reporting
+            installViaPackageInstallerSession(ctx, apkFile);
+        } catch (Exception e) {
+            launchActionViewInstaller(ctx, apkFile);
+        }
+    }
+
+    private void installViaPackageInstallerSession(final Context activityCtx, final File apkFile) {
+        status = "installing";
+        installCommitMs = System.currentTimeMillis();
+        notifyChanged();
+
+        executor.execute(() -> {
+            PackageInstaller.Session session = null;
+            int sessionId = -1;
+            PackageInstaller installer = appCtx.getPackageManager().getPackageInstaller();
+            try {
+                PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
+                    PackageInstaller.SessionParams.MODE_FULL_INSTALL
+                );
+                params.setAppPackageName(appCtx.getPackageName());
+                params.setSize(apkFile.length());
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    params.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED);
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    params.setPackageSource(PackageInstaller.PACKAGE_SOURCE_OTHER);
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    params.setRequestUpdateOwnership(true);
+                }
+
+                sessionId = installer.createSession(params);
+                session = installer.openSession(sessionId);
+
+                try (InputStream in = new BufferedInputStream(new FileInputStream(apkFile), 65536);
+                     OutputStream out = session.openWrite("dejavu_update.apk", 0, apkFile.length())) {
+                    byte[] buf = new byte[65536];
+                    int n;
+                    while ((n = in.read(buf)) > 0) {
+                        out.write(buf, 0, n);
+                    }
+                    session.fsync(out);
+                }
+
+                // Explicit BroadcastReceiver Intent guarantees Android 14-16 FLAG_MUTABLE compliance
+                Intent callbackIntent = new Intent(appCtx, InstallResultReceiver.class);
+                callbackIntent.setAction(ACTION_INSTALL_RESULT);
+                int piFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    piFlags |= PendingIntent.FLAG_MUTABLE;
+                }
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                    appCtx,
+                    sessionId,
+                    callbackIntent,
+                    piFlags
+                );
+
+                installCommitMs = System.currentTimeMillis();
+                session.commit(pendingIntent.getIntentSender());
+                session.close();
+                session = null;
+            } catch (Exception sessionEx) {
+                if (session != null) {
+                    try { session.abandon(); } catch (Exception ignored) { }
+                    try { session.close(); } catch (Exception ignored) { }
+                } else if (sessionId >= 0) {
+                    try { installer.abandonSession(sessionId); } catch (Exception ignored) { }
+                }
+                // Graceful fallback to standard ACTION_VIEW FileProvider installer
+                mainHandler.post(() -> {
+                    status = "ready";
+                    notifyChanged();
+                    launchActionViewInstaller(activityCtx, apkFile);
+                });
+            }
+        });
+    }
+
+    private void handleInstallResult(Context ctx, int installStatus, String rawMsg) {
+        String lowMsg = rawMsg != null ? rawMsg.toLowerCase(Locale.US) : "";
+        if (installStatus == PackageInstaller.STATUS_SUCCESS) {
+            status = "uptodate";
+            errorText = "";
+            signatureMismatch = false;
+            signingVerified = true;
+            notifyChanged();
+            notifyMessage("dejavu updated successfully!");
+            return;
+        }
+
+        if (installStatus == PackageInstaller.STATUS_FAILURE_INCOMPATIBLE
+            || installStatus == PackageInstaller.STATUS_FAILURE_CONFLICT
+            || lowMsg.contains("incompatible")
+            || lowMsg.contains("signature")
+            || lowMsg.contains("conflict")) {
+            signatureMismatch = true;
+            signingVerified = false;
+            status = "error";
+            errorText = INCOMPATIBLE_SIGNING_MSG;
+            if (downloadedApk != null && downloadedApk.isFile() && exportedPublicFileName.isEmpty()) {
+                final File apk = downloadedApk;
+                final String ver = latestVersion;
+                executor.execute(() -> exportedPublicFileName = exportApkToPublicDownloads(apk, ver));
+            }
+            notifyChanged();
+            notifyMessage(INCOMPATIBLE_SIGNING_MSG);
+            return;
+        }
+
+        if (installStatus == PackageInstaller.STATUS_FAILURE_ABORTED) {
+            status = hasDownloadedApk() ? "ready" : "available";
+            if (!signatureMismatch) errorText = "";
+            notifyChanged();
+            return;
+        }
+
+        if (installStatus == PackageInstaller.STATUS_FAILURE_STORAGE) {
+            status = "error";
+            errorText = "Not enough storage space on device to install update.";
+            notifyChanged();
+            notifyMessage(errorText);
+            return;
+        }
+
+        if (installStatus == PackageInstaller.STATUS_FAILURE_INVALID) {
+            status = "error";
+            errorText = "Update APK package invalid — tap Retry to re-download.";
+            notifyChanged();
+            notifyMessage(errorText);
+            return;
+        }
+
+        if (installStatus == PackageInstaller.STATUS_FAILURE_BLOCKED) {
+            status = "error";
+            errorText = "Install blocked by device security — tap 'Open APK in Files' below to install manually.";
+            notifyChanged();
+            notifyMessage(errorText);
+            return;
+        }
+
+        status = "error";
+        errorText = (rawMsg != null && !rawMsg.trim().isEmpty())
+            ? ("Install could not complete (" + rawMsg.trim() + ") — try 'Open APK in Files' below.")
+            : "Install could not complete — try 'Open APK in Files' below.";
+        notifyChanged();
+        notifyMessage(errorText);
+    }
+
+    private void fallbackToActionViewFromReceiver(Context ctx) {
+        final File apk = downloadedApk;
+        if (apk == null || !apk.isFile()) return;
+        mainHandler.post(() -> {
+            status = "ready";
+            notifyChanged();
+            launchActionViewInstaller(ctx, apk);
+        });
+    }
+
+    private void launchActionViewInstaller(Context activityCtx, File apkFile) {
+        Context ctx = (activityCtx != null) ? activityCtx : appCtx;
+        try {
+            Uri apkUri = FileProvider.getUriForFile(
+                ctx,
+                ctx.getPackageName() + ".fileprovider",
+                apkFile
+            );
+            Intent install = new Intent(Intent.ACTION_VIEW);
+            install.setDataAndType(apkUri, "application/vnd.android.package-archive");
+            install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            if (!(ctx instanceof Activity)) {
+                install.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            }
+            grantUriToAllHandlers(ctx, install, apkUri);
+
+            try {
+                ctx.startActivity(install);
+            } catch (Exception primaryEx) {
+                @SuppressWarnings("deprecation")
+                Intent fallback = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+                fallback.setData(apkUri);
+                fallback.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                if (!(ctx instanceof Activity)) {
+                    fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                }
+                ctx.startActivity(fallback);
+            }
+        } catch (Exception e) {
+            notifyMessage("Tap 'Open APK in Files' in Settings to install");
+        }
+    }
+
+    private static void grantUriToAllHandlers(Context ctx, Intent intent, Uri uri) {
+        try {
+            List<ResolveInfo> handlers = ctx.getPackageManager()
+                .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+            if (handlers != null) {
+                for (ResolveInfo ri : handlers) {
+                    if (ri != null && ri.activityInfo != null && ri.activityInfo.packageName != null) {
+                        ctx.grantUriPermission(
+                            ri.activityInfo.packageName,
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        );
+                    }
+                }
+            }
+        } catch (Exception ignored) { }
+    }
+
+    private String exportApkToPublicDownloads(File apkFile, String version) {
+        if (apkFile == null || !apkFile.isFile()) return "";
+        String pubName = "dejavu-mobile-v" + cleanVersion(version) + ".apk";
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return "";
+        try {
+            ContentResolver cr = appCtx.getContentResolver();
+            ContentValues cv = new ContentValues();
+            cv.put(MediaStore.Downloads.DISPLAY_NAME, pubName);
+            cv.put(MediaStore.Downloads.MIME_TYPE, "application/vnd.android.package-archive");
+            cv.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/dejavu");
+            Uri uri = cr.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
+            if (uri == null) return "";
+            try (InputStream in = new BufferedInputStream(new FileInputStream(apkFile), 32768);
+                 OutputStream out = cr.openOutputStream(uri)) {
+                if (out == null) return "";
+                byte[] buf = new byte[32768];
+                int n;
+                while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                out.flush();
+            }
+            return pubName;
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    private String fetchExpectedSha256(String shaUrl, String targetFileName) {
+        HttpURLConnection conn = null;
+        try {
+            conn = openFollowingRedirects(shaUrl, 6);
+            if (conn.getResponseCode() != 200) return "";
+            String targetLower = (targetFileName != null ? targetFileName : "dejavu-mobile.apk").toLowerCase(Locale.US);
+            try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8)
+            )) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String trimmed = line.trim();
+                    if (trimmed.isEmpty()) continue;
+                    String[] parts = trimmed.split("\\s+");
+                    if (parts.length >= 2) {
+                        String hash = parts[0].trim();
+                        String fname = parts[parts.length - 1].replace("*", "").trim().toLowerCase(Locale.US);
+                        if (hash.length() == 64 && (fname.equals(targetLower) || fname.endsWith(".apk"))) {
+                            return hash;
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+        return "";
+    }
+
+    @SuppressWarnings("deprecation")
+    private ApkValidation validateApkFile(File apkFile, long expectedBytes) {
+        ApkValidation res = new ApkValidation();
+        if (apkFile == null || !apkFile.isFile()) {
+            res.reason = "APK file missing";
+            return res;
+        }
+        long len = apkFile.length();
+        if (len < MIN_VALID_APK_BYTES) {
+            res.reason = "APK file too small or truncated";
+            return res;
+        }
+        if (expectedBytes > 0L && len != expectedBytes) {
+            res.reason = "APK size mismatch (incomplete download)";
+            return res;
+        }
+        // Verify ZIP local file header magic bytes: PK\x03\x04
+        try (FileInputStream fis = new FileInputStream(apkFile)) {
+            byte[] magic = new byte[4];
+            if (fis.read(magic) != 4 || magic[0] != 0x50 || magic[1] != 0x4B || magic[2] != 0x03 || magic[3] != 0x04) {
+                res.reason = "Invalid APK archive header";
+                return res;
+            }
+        } catch (Exception e) {
+            res.reason = "Cannot read APK archive";
+            return res;
+        }
+        // Verify Android manifest / package archive integrity & signing certificate via PackageManager
+        try {
+            PackageManager pm = appCtx.getPackageManager();
+            int flags = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                ? PackageManager.GET_SIGNING_CERTIFICATES
+                : PackageManager.GET_SIGNATURES;
+            PackageInfo archiveInfo = pm.getPackageArchiveInfo(apkFile.getAbsolutePath(), flags);
+            if (archiveInfo == null) {
+                res.reason = "Corrupt APK package";
+                return res;
+            }
+            if (!appCtx.getPackageName().equals(archiveInfo.packageName)) {
+                res.reason = "Unexpected package ID in APK";
+                return res;
+            }
+            long archiveCode = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                ? archiveInfo.getLongVersionCode()
+                : archiveInfo.versionCode;
+            long installedCode = readInstalledVersionCode();
+            if (archiveCode > 0 && installedCode > 0 && archiveCode < installedCode) {
+                res.reason = "APK version is older than installed app";
+                return res;
+            }
+            PackageInfo installedInfo = pm.getPackageInfo(appCtx.getPackageName(), flags);
+            String installedCert = extractCertSha256(installedInfo);
+            String archiveCert = extractCertSha256(archiveInfo);
+            if (!installedCert.isEmpty() && !archiveCert.isEmpty() && !installedCert.equalsIgnoreCase(archiveCert)) {
+                res.signatureMismatch = true;
+            }
+            res.valid = true;
+            return res;
+        } catch (Exception e) {
+            res.reason = "Failed to verify APK signature";
+            return res;
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static String extractCertSha256(PackageInfo pi) {
+        if (pi == null) return "";
+        try {
+            Signature sig = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                SigningInfo si = pi.signingInfo;
+                if (si != null) {
+                    Signature[] arr = si.hasMultipleSigners()
+                        ? si.getApkContentsSigners()
+                        : si.getSigningCertificateHistory();
+                    if (arr != null && arr.length > 0) sig = arr[0];
+                }
+            }
+            if (sig == null && pi.signatures != null && pi.signatures.length > 0) {
+                sig = pi.signatures[0];
+            }
+            if (sig == null) return "";
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            return bytesToLowerHex(md.digest(sig.toByteArray()));
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    private static String bytesToLowerHex(byte[] bytes) {
+        if (bytes == null) return "";
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            sb.append(String.format(Locale.US, "%02x", b));
+        }
+        return sb.toString();
+    }
+
+    private HttpURLConnection openFollowingRedirects(String rawUrl, int maxHops) throws Exception {
+        String current = rawUrl;
+        for (int hop = 0; hop < maxHops; hop++) {
+            URL parsed = new URL(current);
+            if (!"https".equalsIgnoreCase(parsed.getProtocol())) {
+                throw new Exception("Refused insecure update redirect");
+            }
+            HttpURLConnection c = (HttpURLConnection) parsed.openConnection();
+            c.setInstanceFollowRedirects(false);
+            c.setConnectTimeout(12000);
+            c.setReadTimeout(30000);
+            c.setRequestProperty("User-Agent", "dejavu-mobile/" + currentVersion);
+            c.setRequestProperty("Accept", "application/octet-stream, */*");
+            int code = c.getResponseCode();
+            if (code == HttpURLConnection.HTTP_MOVED_PERM
+                || code == HttpURLConnection.HTTP_MOVED_TEMP
+                || code == HttpURLConnection.HTTP_SEE_OTHER
+                || code == 307 || code == 308) {
+                String loc = c.getHeaderField("Location");
+                c.disconnect();
+                if (loc == null || loc.isEmpty()) throw new Exception("Empty redirect");
+                current = new URL(parsed, loc).toString();
+                continue;
+            }
+            return c;
+        }
+        throw new Exception("Too many redirects");
     }
 
     private static String sanitizeReleaseUrl(String raw) {
@@ -242,6 +1187,19 @@ public final class MobileAutoUpdater {
             }
         }
         return DEFAULT_RELEASES_URL;
+    }
+
+    private static String sanitizeAssetUrl(String raw) {
+        if (raw != null) {
+            String trimmed = raw.trim();
+            if (trimmed.startsWith(ALLOWED_RELEASE_PREFIX)
+                || trimmed.startsWith("https://objects.githubusercontent.com/")
+                || trimmed.startsWith("https://release-assets.githubusercontent.com/")
+                || trimmed.startsWith("https://github-releases.githubusercontent.com/")) {
+                return trimmed;
+            }
+        }
+        return "";
     }
 
     private void notifyChanged() {

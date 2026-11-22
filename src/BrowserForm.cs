@@ -7633,7 +7633,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.9.0 defaults", "success");
+            PushShellToast("Settings restored to v5.9.1 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()

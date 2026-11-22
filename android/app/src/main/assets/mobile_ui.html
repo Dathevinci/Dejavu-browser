@@ -1005,7 +1005,7 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.9.0) — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.9.1) — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
@@ -1275,10 +1275,15 @@
     }
     .radio-dot.on { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
 
+    .upd-fallback-row {
+      padding: 12px 18px; border-top: 1px solid var(--divider);
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
     .upd-signing-note {
       padding: 11px 18px 13px; border-top: 1px solid var(--divider);
       font-size: 12px; line-height: 1.45; color: var(--muted);
     }
+    .upd-signing-note.warn { color: var(--danger); background: var(--danger-soft); font-weight: 540; }
 
     .set-section { display: flex; flex-direction: column; gap: 12px; }
     .set-section.hidden-cat, .set-section.search-hide, .set-item.search-hide { display: none !important; }
@@ -1507,7 +1512,7 @@
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
     /* =====================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.9.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.9.1)
        ===================================================================== */
     .sh-hero-card {
       background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
@@ -1890,7 +1895,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.9.0) — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.9.1) — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2186,7 +2191,7 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.8v5.2M12 7.8h.01"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.9.0 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.9.1 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -2454,7 +2459,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.9.0 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.9.1 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2478,16 +2483,30 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update updater github releases signed sha256 version 5.9.0 about">
+              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.9.1 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.9.0</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.9.1</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
                 <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check for updates</button>
               </div>
 
-              <div id="opt-upd-note" class="upd-signing-note" style="display:none;">Official signed updates are verified on GitHub Releases (SHA-256 + V1/V2/V3 signing).</div>
+              <div id="opt-upd-prog-wrap" style="display:none;padding:0 18px 14px;">
+                <div style="height:5px;border-radius:999px;background:var(--input-bg);overflow:hidden;">
+                  <div id="opt-upd-prog-fill" style="height:100%;width:0%;background:var(--accent);transition:width 0.18s ease;"></div>
+                </div>
+              </div>
+
+              <div id="opt-upd-files-row" class="upd-fallback-row" style="display:none;">
+                <div class="g-row-meta">
+                  <div class="g-row-title" style="font-size:13.5px;">Manual install fallback</div>
+                  <div id="opt-upd-files-sub" class="g-row-sub">Open downloaded APK in Files</div>
+                </div>
+                <button type="button" class="pill-btn sm" onclick="call('openUpdateApkInFiles')">Open APK</button>
+              </div>
+
+              <div id="opt-upd-note" class="upd-signing-note" style="display:none;">Native in-app updates verified via SHA-256 + V1/V2/V3 signing directly from GitHub Releases.</div>
 
               <button type="button" class="g-row set-item" data-search="reset settings defaults restore factory preferences" onclick="openResetSettingsModal()">
                 <div class="g-row-meta">
@@ -2506,7 +2525,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.9.0
+          dejavu Mobile v5.9.1
         </div>
       </div>
     </div>
@@ -2778,7 +2797,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.9.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.9.1)
        =================================================================== -->
   <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2906,7 +2925,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.9.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.9.1 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -3114,7 +3133,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.9.0)
+    // Zero-mutation DOM equality-guard helpers (v5.9.1)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -4035,7 +4054,9 @@
     }
     function handleUpdateBtn() {
       const u = state.update || {};
-      if (u.status === 'available' || u.available) {
+      const st = u.status || '';
+      if (st === 'checking' || st === 'downloading' || st === 'verifying' || st === 'installing') return;
+      if (st === 'available' || st === 'ready' || u.available || (st === 'error' && u.hasDownloadedApk)) {
         call('downloadOrInstallUpdate');
       } else {
         call('checkForUpdates');
@@ -4102,7 +4123,7 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.9.0)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.9.1)
     const _domSigs = {
       sysTop: '',
       safeTop: '',
@@ -5011,7 +5032,7 @@
       setTxt(document.getElementById('set-sum-downloads'), `${ytqLbl}${state.floatingDownloadButton !== false ? ' · Floating pill' : ''}`);
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.9.0';
+      const curV = u.currentVersion || '5.9.1';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -5129,12 +5150,30 @@
       const uBtn = document.getElementById('opt-upd-btn');
       const uFoot = document.getElementById('opt-ver-footer');
       const uNote = document.getElementById('opt-upd-note');
+      const uProgWrap = document.getElementById('opt-upd-prog-wrap');
+      const uProgFill = document.getElementById('opt-upd-prog-fill');
+      const uFilesRow = document.getElementById('opt-upd-files-row');
+      const uFilesSub = document.getElementById('opt-upd-files-sub');
 
       setTxt(uFoot, `dejavu Mobile v${curV}`);
       if (uNote) {
-        const noteText = u.upgradeNote || 'Official signed updates are verified on GitHub Releases (SHA-256 + V1/V2/V3 signing).';
+        const noteText = u.upgradeNote || 'Native in-app updates verified via SHA-256 + V1/V2/V3 signing directly from GitHub Releases.';
         setDisp(uNote, 'block');
         setTxt(uNote, noteText);
+        setCls(uNote, 'warn', !!u.signatureMismatch);
+      }
+
+      const showProg = u.status === 'downloading' || u.status === 'verifying' || u.status === 'installing';
+      if (uProgWrap) setDisp(uProgWrap, showProg ? 'block' : 'none');
+      if (uProgFill) {
+        const pct = (u.status === 'verifying' || u.status === 'installing') ? 100 : Math.max(4, Number(u.percent || 0));
+        uProgFill.style.width = `${Math.min(100, pct)}%`;
+      }
+
+      const showFilesFallback = !!u.hasDownloadedApk && (!!u.signatureMismatch || u.status === 'error');
+      if (uFilesRow) setDisp(uFilesRow, showFilesFallback ? 'flex' : 'none');
+      if (uFilesSub && showFilesFallback) {
+        setTxt(uFilesSub, u.exportedApkName ? `Saved to Downloads/dejavu/${u.exportedApkName}` : 'Open verified APK directly in Files');
       }
 
       if (u.status === 'checking') {
@@ -5142,20 +5181,45 @@
         setTxt(uSub, `Installed: v${curV}`);
         setTxt(uBtn, 'Checking…');
         setCls(uBtn, 'primary', false);
+      } else if (u.status === 'downloading') {
+        const nextVer = u.latestVersion || curV;
+        const pct = Number(u.percent || 0);
+        setTxt(uTitle, `Downloading v${nextVer}…`);
+        setTxt(uSub, pct > 0 ? `Downloading verified APK · ${pct}%` : 'Connecting to GitHub Releases…');
+        setTxt(uBtn, `${pct}%`);
+        setCls(uBtn, 'primary', false);
+      } else if (u.status === 'verifying') {
+        const nextVer = u.latestVersion || curV;
+        setTxt(uTitle, `Verifying v${nextVer}…`);
+        setTxt(uSub, 'Checking SHA-256 checksum & signature');
+        setTxt(uBtn, 'Verifying…');
+        setCls(uBtn, 'primary', false);
+      } else if (u.status === 'installing') {
+        const nextVer = u.latestVersion || curV;
+        setTxt(uTitle, `Installing v${nextVer}…`);
+        setTxt(uSub, 'Confirm update if prompted by Android');
+        setTxt(uBtn, 'Installing…');
+        setCls(uBtn, 'primary', false);
+      } else if (u.status === 'ready') {
+        const nextVer = u.latestVersion || curV;
+        setTxt(uTitle, `v${nextVer} Ready to Install`);
+        setTxt(uSub, u.sha256Verified ? 'SHA-256 & signature verified · Ready' : 'Signed APK verified · Tap to install');
+        setTxt(uBtn, 'Install Now');
+        setCls(uBtn, 'primary', true);
       } else if (u.status === 'available' || u.available) {
         const nextVer = u.latestVersion || curV;
         setTxt(uTitle, `Update · v${nextVer}`);
-        setTxt(uSub, u.sizeLabel ? `GitHub · ${u.sizeLabel}` : 'GitHub Releases');
-        setTxt(uBtn, 'Download Update');
+        setTxt(uSub, u.sizeLabel ? `Native update · ${u.sizeLabel}` : 'Native in-app update ready');
+        setTxt(uBtn, 'Update Now');
         setCls(uBtn, 'primary', true);
       } else if (u.status === 'error') {
         setTxt(uTitle, `dejavu v${curV}`);
-        setTxt(uSub, u.error || 'Could not reach GitHub Releases');
-        setTxt(uBtn, 'Retry');
-        setCls(uBtn, 'primary', false);
+        setTxt(uSub, u.error || 'Could not complete update');
+        setTxt(uBtn, u.hasDownloadedApk ? 'Install' : 'Retry');
+        setCls(uBtn, 'primary', !!u.hasDownloadedApk);
       } else {
         setTxt(uTitle, `dejavu v${curV}`);
-        setTxt(uSub, u.status === 'uptodate' ? 'Up to date' : 'Official GitHub Releases');
+        setTxt(uSub, u.status === 'uptodate' ? 'Up to date' : 'Automatic in-app updates');
         setTxt(uBtn, 'Check for updates');
         setCls(uBtn, 'primary', false);
       }
@@ -5615,7 +5679,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.9.0 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.9.1 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -6161,7 +6225,7 @@
               ],
               drops: [
                 { id: 'vid_pc_1', dropType: 'video', title: 'Material 3 Expressive Motion Deep Dive', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=422', text: 'Continue watching at 07:02', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 45000 },
-                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.9.0-release.mp4', url: 'https://example.com/dejavu-v5.9.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
+                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.9.1-release.mp4', url: 'https://example.com/dejavu-v5.9.1-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
                 { id: 'bt_pc_1', dropType: 'batch_tabs', title: '2 tabs from Windows 11 Desktop', url: 'https://m3.material.io', text: 'Material Design 3 · GitHub', tabs: [{ title: 'Material Design 3', url: 'https://m3.material.io' }, { title: 'GitHub', url: 'https://github.com' }], fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 210000 }
               ]
             } : {
@@ -6227,9 +6291,9 @@
               ],
               sync: previewSync,
               update: {
-                currentVersion: '5.9.0',
+                currentVersion: '5.9.1',
                 status: qp.get('upd') === '1' ? 'available' : 'uptodate',
-                latestVersion: qp.get('upd') === '1' ? '5.10.0' : '5.9.0',
+                latestVersion: qp.get('upd') === '1' ? '5.10.0' : '5.9.1',
                 sizeLabel: qp.get('upd') === '1' ? '10.2 MB' : '',
                 releaseUrl: 'https://github.com/Dathevinci/Dejavu-browser/releases/latest',
                 available: qp.get('upd') === '1',

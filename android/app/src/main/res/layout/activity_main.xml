@@ -564,7 +564,7 @@
                 android:gravity="center"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:text="Download Update"
+                android:text="Update Now"
                 android:textColor="@color/amethyst_bright"
                 android:textSize="12.5sp"
                 android:textStyle="bold" />

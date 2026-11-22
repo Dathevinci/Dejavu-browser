@@ -33,11 +33,28 @@
     body.theme-light[data-accent="lavender"] { --md-surface:#fdf7ff;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#f7f1fa;--md-surface-container:#f1ebf4;--md-surface-container-high:#ebe5ee;--md-surface-container-highest:#e5dfe8;--md-on-surface:#1e1a21;--md-on-surface-variant:#4b4450;--md-outline:#7c7482;--md-outline-variant:#cdc3d2;--md-primary:#7c43a8;--md-on-primary:#ffffff;--md-primary-container:#f3daff;--md-on-primary-container:#2c004d;--md-secondary-container:#eedcf8;--md-on-secondary-container:#23172c; }
     body.theme-light[data-accent="silver"]   { --md-surface:#f9f9fc;--md-surface-container-lowest:#ffffff;--md-surface-container-low:#f2f3f7;--md-surface-container:#ecedf1;--md-surface-container-high:#e6e8ec;--md-surface-container-highest:#e0e2e6;--md-on-surface:#1a1c1f;--md-on-surface-variant:#44474e;--md-outline:#74777f;--md-outline-variant:#c4c6cf;--md-primary:#455a77;--md-on-primary:#ffffff;--md-primary-container:#d8e4f8;--md-on-primary-container:#0f1f36;--md-secondary-container:#dce4f0;--md-on-secondary-container:#172334; }
 
-    /* Sleek Global 5px Transparent-Track Material 3 Custom Scrollbars (ZERO ugly native Windows bars) */
-    *::-webkit-scrollbar { width: 5px; height: 5px; }
+    /* Sleek Global 6px Transparent-Track Material 3 Custom Scrollbars (ZERO classic white Windows bars or arrows) */
+    @supports not selector(::-webkit-scrollbar) {
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--md-outline-variant) 75%, transparent) transparent;
+      }
+    }
+    *::-webkit-scrollbar { width: 6px; height: 6px; }
     *::-webkit-scrollbar-track { background: transparent; margin: 3px 0; }
-    *::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--md-outline-variant) 85%, transparent); border-radius: 999px; }
-    *::-webkit-scrollbar-thumb:hover { background: var(--md-outline); }
+    *::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+    *::-webkit-scrollbar-corner { background: transparent; }
+    *::-webkit-scrollbar-thumb {
+      background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent);
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background-clip: content-box;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+      background: var(--md-outline);
+      border: 1px solid transparent;
+      background-clip: content-box;
+    }
 
     html, body {
       width: 100%;
@@ -107,9 +124,11 @@
       overflow-x: hidden;
     }
 
-    .ctxm-box::-webkit-scrollbar { width: 5px; }
+    .ctxm-box::-webkit-scrollbar { width: 6px; height: 6px; }
     .ctxm-box::-webkit-scrollbar-track { background: transparent; }
-    .ctxm-box::-webkit-scrollbar-thumb { background: var(--md-outline-variant); border-radius: var(--md-shape-full); }
+    .ctxm-box::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+    .ctxm-box::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent); border-radius: var(--md-shape-full); border: 1px solid transparent; background-clip: content-box; }
+    .ctxm-box::-webkit-scrollbar-thumb:hover { background: var(--md-outline); }
 
     .ctxm-header {
       display: flex;
@@ -308,8 +327,11 @@
       overflow-x: hidden;
     }
 
-    .shield-box::-webkit-scrollbar { width: 4px; }
-    .shield-box::-webkit-scrollbar-thumb { background: var(--md-outline-variant); border-radius: var(--md-shape-full); }
+    .shield-box::-webkit-scrollbar { width: 6px; height: 6px; }
+    .shield-box::-webkit-scrollbar-track { background: transparent; }
+    .shield-box::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+    .shield-box::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent); border-radius: var(--md-shape-full); border: 1px solid transparent; background-clip: content-box; }
+    .shield-box::-webkit-scrollbar-thumb:hover { background: var(--md-outline); }
 
     .sh-head {
       display: flex;
@@ -729,14 +751,18 @@
     }
 
     .panel-scroll::-webkit-scrollbar,
-    .sb-scroll::-webkit-scrollbar { width: 6px; }
+    .sb-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
     .panel-scroll::-webkit-scrollbar-track,
     .sb-scroll::-webkit-scrollbar-track { background: transparent; margin: 2px 0; }
+    .panel-scroll::-webkit-scrollbar-button,
+    .sb-scroll::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+    .panel-scroll::-webkit-scrollbar-corner,
+    .sb-scroll::-webkit-scrollbar-corner { background: transparent; }
     .panel-scroll::-webkit-scrollbar-thumb,
     .sb-scroll::-webkit-scrollbar-thumb {
-      background: var(--md-outline-variant);
+      background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent);
       border-radius: var(--md-shape-full);
-      border: 1.5px solid transparent;
+      border: 1px solid transparent;
       background-clip: content-box;
     }
     .panel-scroll::-webkit-scrollbar-thumb:hover,
@@ -895,11 +921,12 @@
       background: var(--md-surface-container);
       border: 1px solid transparent;
       cursor: pointer;
-      transition: background-color var(--md-dur-short) ease, border-color var(--md-dur-short) ease;
+      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
     }
 
     body.theme-light .prof-row { background: var(--md-surface-container-lowest); }
     .prof-row:hover { background: var(--md-surface-container-highest); border-color: var(--md-outline-variant); }
+    .prof-row:active { transform: scale(0.985); }
 
     .prof-av-wrap { position: relative; display: inline-flex; flex-shrink: 0; }
     .prof-open-dot {
@@ -970,9 +997,11 @@
       overflow-x: hidden;
     }
 
-    .menu-box::-webkit-scrollbar { width: 5px; }
+    .menu-box::-webkit-scrollbar { width: 6px; height: 6px; }
     .menu-box::-webkit-scrollbar-track { background: transparent; }
-    .menu-box::-webkit-scrollbar-thumb { background: var(--md-outline-variant); border-radius: var(--md-shape-full); }
+    .menu-box::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+    .menu-box::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent); border-radius: var(--md-shape-full); border: 1px solid transparent; background-clip: content-box; }
+    .menu-box::-webkit-scrollbar-thumb:hover { background: var(--md-outline); }
 
     .menu-item {
       height: 34px;
@@ -1199,9 +1228,11 @@
       padding: 7px 9px;
       border-radius: var(--md-shape-md);
       cursor: pointer;
+      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
     }
 
     .hist-row:hover { background: var(--md-state-hover); }
+    .hist-row:active { background: var(--md-state-pressed); transform: scale(0.988); }
     .hist-ico { width: 16px; height: 16px; border-radius: 4px; object-fit: contain; flex-shrink: 0; }
     .hist-meta { flex: 1; min-width: 0; }
     .hist-title { font-size: 12.4px; font-weight: 500; color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1212,12 +1243,12 @@
     .hist-row:hover .hist-row-acts { display: flex; }
 
     /* =========================================================================
-       Mode 7: Overhauled Google Pixel × ChromeOS Material Design 3 VPN Control Center
-       24px Tonal Cards · 60px Circular Power/Shield-Lock Button · Gliding Mode Pill
+       Mode 7: Upgraded Material Design 3 VPN Control Center (v5.7.0 · 392×584)
+       Verified Tunnel Status Strip · 1-Tap Verify + New IP · Active Engine Pill
        ========================================================================= */
     .vpn-panel-box {
-      padding: 14px 15px 12px;
-      gap: 9px;
+      padding: 12px 14px 10px;
+      gap: 7px;
     }
 
     .vpn-title-ico {
@@ -1228,18 +1259,18 @@
     }
 
     .vpn-hero {
-      padding: 14px 15px;
-      border-radius: 24px;
+      padding: 11px 13px;
+      border-radius: 22px;
       border: 1px solid color-mix(in srgb, var(--md-outline-variant) 34%, transparent);
       background: var(--md-surface-container);
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
       transition: background-color 240ms var(--md-ease-emphasized), border-color 240ms var(--md-ease-emphasized);
     }
 
-    body.theme-light .vpn-hero {
+    body.theme-light .vpn-hero:not(.connected):not(.connecting):not(.error) {
       background: var(--md-surface-container-low);
       border-color: color-mix(in srgb, var(--md-outline-variant) 48%, transparent);
     }
@@ -1265,14 +1296,14 @@
     .vpn-hero-top {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
 
-    /* Prominent Tactile 60x60px Circular M3 Power / Shield-Lock Toggle Button */
+    /* Prominent Tactile 54x54px Circular M3 Power / Shield-Lock Toggle Button */
     .vpn-power-btn {
       position: relative;
-      width: 60px;
-      height: 60px;
+      width: 54px;
+      height: 54px;
       border-radius: var(--md-shape-full);
       border: none;
       outline: none;
@@ -1296,7 +1327,7 @@
     .vpn-power-btn:active { transform: scale(0.93); }
     .vpn-power-btn:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 2px; }
 
-    .vpn-power-btn svg { width: 26px; height: 26px; display: block; }
+    .vpn-power-btn svg { width: 24px; height: 24px; display: block; }
     .vpn-power-btn .ico-vpn-shield { display: none; }
 
     .vpn-hero.connected .vpn-power-btn {
@@ -1318,19 +1349,93 @@
       color: var(--md-on-error);
     }
 
-    .vpn-hero-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-    .vpn-hero-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.22; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vpn-hero-sub { font-size: 11.5px; color: var(--md-on-surface-variant); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vpn-hero-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .vpn-hero-title { font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.22; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vpn-hero-sub { font-size: 11.2px; color: var(--md-on-surface-variant); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .vpn-hero.connected .vpn-hero-sub,
     .vpn-hero.connecting .vpn-hero-sub,
-    .vpn-hero.error .vpn-hero-sub { color: inherit; opacity: 0.86; }
+    .vpn-hero.error .vpn-hero-sub { color: inherit; opacity: 0.88; }
+
+    /* Verified Tunnel Status Strip (HTTPS & DNS Protected + Active Engine Pill) */
+    .vpn-verified-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      height: 26px;
+      padding: 0 7px 0 9px;
+      border-radius: var(--md-shape-full);
+      background: color-mix(in srgb, var(--md-surface) 38%, transparent);
+      border: 1px solid color-mix(in srgb, var(--md-tertiary) 32%, transparent);
+      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized);
+    }
+
+    .vpn-verified-strip.is-warn {
+      background: color-mix(in srgb, var(--md-error-container) 78%, transparent);
+      color: var(--md-on-error-container);
+      border-color: color-mix(in srgb, var(--md-error) 45%, transparent);
+    }
+
+    .vpn-verified-strip.is-testing {
+      border-color: color-mix(in srgb, var(--md-primary) 48%, transparent);
+    }
+
+    .vpn-ver-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      flex: 1;
+      font-size: 10.6px;
+      font-weight: 600;
+    }
+
+    .vpn-ver-ico {
+      width: 13px;
+      height: 13px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .vpn-verified-strip.is-testing .vpn-ver-ico svg {
+      animation: m3Spin 0.8s linear infinite;
+    }
+
+    .vpn-ver-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .vpn-engine-pill {
+      height: 18px;
+      padding: 0 7px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-tertiary);
+      color: var(--md-on-tertiary);
+      font-size: 9.6px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .vpn-engine-pill.is-tor {
+      background: var(--md-primary);
+      color: var(--md-on-primary);
+    }
 
     .vpn-ip-strip {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      padding: 7px 9px 7px 12px;
+      gap: 7px;
+      padding: 6px 7px 6px 10px;
       border-radius: 14px;
       background: color-mix(in srgb, var(--md-surface) 44%, transparent);
     }
@@ -1340,7 +1445,7 @@
     .vpn-ip-line {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       min-width: 0;
     }
 
@@ -1348,7 +1453,7 @@
       font-family: 'Cascadia Mono', 'Consolas', monospace;
       font-variant-numeric: tabular-nums;
       font-weight: 700;
-      font-size: 11.8px;
+      font-size: 11.2px;
       line-height: 1.2;
       white-space: nowrap;
       overflow: hidden;
@@ -1356,12 +1461,12 @@
     }
 
     .vpn-latency-pill {
-      height: 18px;
-      padding: 0 7px;
+      height: 17px;
+      padding: 0 6px;
       border-radius: var(--md-shape-full);
       background: var(--md-tertiary);
       color: var(--md-on-tertiary);
-      font-size: 10px;
+      font-size: 9.8px;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       display: inline-flex;
@@ -1370,33 +1475,62 @@
     }
 
     .vpn-ip-loc {
-      font-size: 10.6px;
+      font-size: 10.3px;
       opacity: 0.86;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .vpn-rotate-btn {
-      height: 28px;
-      padding: 0 11px;
-      border-radius: var(--md-shape-full);
-      border: none;
-      background: var(--md-tertiary);
-      color: var(--md-on-tertiary);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 600;
+    .vpn-ip-actions {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      cursor: pointer;
       flex-shrink: 0;
-      transition: filter var(--md-dur-short) ease, transform var(--md-dur-press) var(--md-ease-emphasized);
     }
 
-    .vpn-rotate-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
-    .vpn-rotate-btn:hover { filter: brightness(1.08); }
+    .vpn-verify-btn,
+    .vpn-rotate-btn {
+      height: 26px;
+      padding: 0 9px;
+      border-radius: var(--md-shape-full);
+      border: none;
+      font-family: inherit;
+      font-size: 10.6px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      white-space: nowrap;
+      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), opacity var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
+    }
+
+    .vpn-verify-btn {
+      background: color-mix(in srgb, var(--md-surface) 76%, transparent);
+      color: var(--md-on-surface);
+      border: 1px solid color-mix(in srgb, var(--md-tertiary) 42%, transparent);
+    }
+
+    .vpn-verify-btn:hover { background: var(--md-surface-container-highest); }
+    .vpn-verify-btn:active { transform: scale(0.94); }
+    .vpn-verify-btn.verifying { opacity: 0.84; }
+    .vpn-verify-btn.verifying svg { animation: m3Spin 0.72s linear infinite; }
+    .vpn-verify-btn.verified-ok {
+      background: var(--md-primary);
+      color: var(--md-on-primary);
+      border-color: transparent;
+    }
+
+    .vpn-rotate-btn {
+      background: var(--md-tertiary);
+      color: var(--md-on-tertiary);
+    }
+
+    .vpn-verify-btn svg,
+    .vpn-rotate-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .vpn-rotate-btn:hover { opacity: 0.92; }
     .vpn-rotate-btn:active { transform: scale(0.94); }
     .vpn-rotate-btn.rotating svg { animation: m3Spin 0.72s linear infinite; }
 
@@ -1405,10 +1539,10 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding: 5px 11px;
+      padding: 4px 10px;
       border-radius: 12px;
       background: color-mix(in srgb, var(--md-surface) 32%, transparent);
-      font-size: 11px;
+      font-size: 10.8px;
       font-variant-numeric: tabular-nums;
     }
 
@@ -1430,13 +1564,18 @@
       transition: width 260ms var(--md-ease-emphasized-decel);
     }
 
+    .vpn-hero.connected .vpn-prog-fill {
+      background: var(--md-tertiary);
+    }
+
     .vpn-badge-live {
-      font-size: 10.5px;
+      font-size: 10.4px;
       font-weight: 700;
       padding: 3px 9px;
       border-radius: var(--md-shape-full);
       background: var(--md-surface-container-highest);
       color: var(--md-on-surface-variant);
+      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized);
     }
 
     .vpn-badge-live.connected {
@@ -1449,12 +1588,24 @@
       color: var(--md-on-primary-container);
     }
 
-    /* Sleek Gliding M3 Segmented Pill (Smart Routing | Full Tunnel) */
+    .vpn-badge-live.error {
+      background: var(--md-error-container);
+      color: var(--md-on-error-container);
+    }
+
+    /* Sleek Gliding M3 Segmented Pill (Smart | 3-Hop Tor) + Active Mode Description */
+    .vpn-mode-block {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
     .vpn-mode-seg {
       position: relative;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      height: 36px;
+      height: 34px;
       padding: 3px;
       border-radius: var(--md-shape-full);
       background: var(--md-surface-container);
@@ -1471,7 +1622,7 @@
       top: 3px;
       left: 3px;
       width: calc(50% - 3px);
-      height: 28px;
+      height: 26px;
       border-radius: var(--md-shape-full);
       background: var(--md-primary-container);
       box-shadow: var(--md-elev-1);
@@ -1487,13 +1638,13 @@
     .vpn-mode-btn {
       position: relative;
       z-index: 1;
-      height: 28px;
+      height: 26px;
       border-radius: var(--md-shape-full);
       border: none;
       background: transparent;
       color: var(--md-on-surface-variant);
       font-family: inherit;
-      font-size: 11.6px;
+      font-size: 11.4px;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
@@ -1501,25 +1652,38 @@
       align-items: center;
       justify-content: center;
       gap: 5px;
-      transition: color var(--md-dur-short) var(--md-ease-emphasized);
+      transition: color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
     }
 
     .vpn-mode-btn:hover { color: var(--md-on-surface); }
+    .vpn-mode-btn:active { transform: scale(0.97); }
     .vpn-mode-btn.active { color: var(--md-on-primary-container); }
+
+    .vpn-mode-desc {
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--md-on-surface-variant);
+      text-align: center;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 6px;
+    }
 
     /* M3 Search Pill with Leading Search Icon */
     .vpn-search-wrap {
       display: flex;
       align-items: center;
       gap: 8px;
-      height: 38px;
-      padding: 0 14px;
+      height: 34px;
+      padding: 0 13px;
       border-radius: var(--md-shape-full);
       background: var(--md-surface-container);
       border: 1.5px solid transparent;
       color: var(--md-on-surface-variant);
       flex-shrink: 0;
-      transition: border-color var(--md-dur-short) ease, background-color var(--md-dur-short) ease;
+      transition: border-color var(--md-dur-short) var(--md-ease-emphasized), background-color var(--md-dur-short) var(--md-ease-emphasized);
     }
 
     body.theme-light .vpn-search-wrap {
@@ -1537,7 +1701,7 @@
       background: #ffffff;
     }
 
-    .vpn-search-wrap svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .vpn-search-wrap svg { width: 15px; height: 15px; flex-shrink: 0; }
 
     .vpn-search-wrap input {
       flex: 1;
@@ -1548,7 +1712,7 @@
       background: transparent;
       color: var(--md-on-surface);
       font-family: inherit;
-      font-size: 12.6px;
+      font-size: 12.2px;
       user-select: text;
     }
 
@@ -1558,7 +1722,7 @@
     .vpn-region-tabs {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       flex-shrink: 0;
       overflow-x: auto;
       scrollbar-width: none;
@@ -1568,22 +1732,23 @@
     .vpn-region-tabs::-webkit-scrollbar { display: none; }
 
     .vpn-reg-pill {
-      height: 28px;
-      padding: 0 12px;
+      height: 26px;
+      padding: 0 11px;
       border-radius: var(--md-shape-full);
       border: 1px solid color-mix(in srgb, var(--md-outline-variant) 70%, transparent);
       background: transparent;
       color: var(--md-on-surface-variant);
       font-family: inherit;
-      font-size: 11.2px;
+      font-size: 11px;
       font-weight: 600;
       white-space: nowrap;
       cursor: pointer;
       flex-shrink: 0;
-      transition: background-color var(--md-dur-short) ease, color var(--md-dur-short) ease, border-color var(--md-dur-short) ease;
+      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
     }
 
     .vpn-reg-pill:hover { background: var(--md-state-hover); color: var(--md-on-surface); }
+    .vpn-reg-pill:active { transform: scale(0.95); }
 
     .vpn-reg-pill.active {
       background: var(--md-secondary-container);
@@ -1595,10 +1760,10 @@
     .vpn-country-row {
       display: flex;
       align-items: center;
-      gap: 11px;
-      padding: 7px 11px;
-      min-height: 48px;
-      border-radius: 16px;
+      gap: 10px;
+      padding: 6px 10px;
+      min-height: 44px;
+      border-radius: 15px;
       border: none;
       background: transparent;
       cursor: pointer;
@@ -2001,10 +2166,12 @@
       padding: 9px 10px;
       border-radius: var(--md-shape-md);
       background: var(--md-surface-container);
-      border: 1px solid var(--md-outline-variant);
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
+      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
     }
 
-    .dls-row:hover { border-color: var(--md-outline); }
+    .dls-row:hover { background: var(--md-surface-container-high); border-color: color-mix(in srgb, var(--md-primary) 38%, transparent); }
+    .dls-row:active { transform: scale(0.988); }
 
     .dls-ico {
       width: 32px;
@@ -2376,11 +2543,16 @@
       border-radius: var(--md-shape-md);
       background: transparent;
       flex-shrink: 0;
-      transition: background-color var(--md-dur-short) var(--md-ease-emphasized);
+      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
     }
 
     .ext-pop-row:hover {
       background: var(--md-state-hover);
+    }
+
+    .ext-pop-row:active {
+      background: var(--md-state-pressed);
+      transform: scale(0.988);
     }
 
     .ext-pop-row.is-disabled {
@@ -2702,7 +2874,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v5.6.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v5.7.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -2777,7 +2949,7 @@
     </div>
   </div>
 
-  <!-- Mode 7: Overhauled Google Pixel × ChromeOS Material Design 3 VPN Control Center (392×584) -->
+  <!-- Mode 7: Upgraded Material Design 3 VPN Control Center (v5.7.0 · 392×584) -->
   <div id="mode-vpn" class="overlay-shell hidden">
     <div class="panel-box vpn-panel-box">
       <div class="panel-head">
@@ -2814,6 +2986,16 @@
           </div>
         </div>
 
+        <div id="vpn-verified-strip" class="vpn-verified-strip hidden">
+          <span class="vpn-ver-left">
+            <span class="vpn-ver-ico" aria-hidden="true">
+              <svg viewBox="0 0 16 16" fill="none" width="13" height="13"><circle cx="8" cy="8" r="6.2" stroke="currentColor" stroke-width="1.5"/><path d="M5.2 8.2l2 2 3.6-3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span id="vpn-verified-text" class="vpn-ver-text">Verified · HTTPS &amp; DNS Protected</span>
+          </span>
+          <span id="vpn-engine-pill" class="vpn-engine-pill">Smart Clean-IP</span>
+        </div>
+
         <div id="vpn-ip-strip" class="vpn-ip-strip hidden">
           <div class="vpn-ip-meta">
             <div class="vpn-ip-line">
@@ -2822,10 +3004,16 @@
             </div>
             <span id="vpn-ip-loc" class="vpn-ip-loc"></span>
           </div>
-          <button id="btn-vpn-rotate" class="vpn-rotate-btn" type="button" title="Get a fresh encrypted exit IP in this country">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.1-5.2L19.5 9M19.5 4.5V9H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span id="vpn-rotate-label">New IP</span>
-          </button>
+          <div class="vpn-ip-actions">
+            <button id="btn-vpn-verify" class="vpn-verify-btn" type="button" title="Run live HTTPS &amp; DNS connectivity check through active VPN tunnel">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3L5 5.8v5.4c0 4.5 3 8.5 7 9.8 4-1.3 7-5.3 7-9.8V5.8L12 3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12.1l2 2 4.2-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span id="vpn-verify-label">Verify</span>
+            </button>
+            <button id="btn-vpn-rotate" class="vpn-rotate-btn" type="button" title="Get a fresh encrypted exit IP in this country">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.1-5.2L19.5 9M19.5 4.5V9H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span id="vpn-rotate-label">New IP</span>
+            </button>
+          </div>
         </div>
 
         <div id="vpn-telemetry-row" class="vpn-telemetry-row hidden">
@@ -2843,10 +3031,13 @@
         </div>
       </div>
 
-      <div id="vpn-mode-seg" class="vpn-mode-seg" role="tablist" title="Smart Routing keeps AI &amp; streaming fast across 86 countries; Full Tunnel routes via 3-hop onion network">
-        <span class="vpn-mode-thumb" aria-hidden="true"></span>
-        <button type="button" class="vpn-mode-btn active" data-mode="smart">Smart Routing</button>
-        <button type="button" class="vpn-mode-btn" data-mode="tor">Full Tunnel</button>
+      <div class="vpn-mode-block">
+        <div id="vpn-mode-seg" class="vpn-mode-seg" role="tablist">
+          <span class="vpn-mode-thumb" aria-hidden="true"></span>
+          <button type="button" class="vpn-mode-btn active" data-mode="smart" title="Auto-verified clean IP + auto-heal">Smart</button>
+          <button type="button" class="vpn-mode-btn" data-mode="tor" title="Encrypted 3-hop Tor onion route">3-Hop Tor</button>
+        </div>
+        <div id="vpn-mode-desc" class="vpn-mode-desc">Auto-verified clean IP + auto-heal</div>
       </div>
 
       <div class="vpn-search-wrap">
@@ -3229,7 +3420,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v5.6.0</span>
+        <span id="mn-version-lbl">dejavu v5.7.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -3790,7 +3981,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.6.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.7.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -3968,7 +4159,7 @@
         document.getElementById('upd-title').textContent = `dejavu v${d.version} is ready`;
         document.getElementById('upd-sub').textContent = `Updating from v${d.currentVersion} automatically`;
       } else if (d.mode === 'vpn') {
-        renderVpnPanel(d.vpn || {});
+        renderVpnPanel(d.vpn || {}, d.verifyResult || null);
       } else if (d.mode === 'suggest') {
         renderOmniboxSuggestions(d.items || [], typeof d.selectedIndex === 'number' ? d.selectedIndex : -1);
       } else if (d.mode === 'sidebar') {
@@ -4004,10 +4195,15 @@
     const vpnHeroCountry = document.getElementById('vpn-hero-country');
     const vpnHeroStatus = document.getElementById('vpn-hero-status');
     const btnVpnToggle = document.getElementById('btn-vpn-toggle');
+    const vpnVerifiedStrip = document.getElementById('vpn-verified-strip');
+    const vpnVerifiedText = document.getElementById('vpn-verified-text');
+    const vpnEnginePill = document.getElementById('vpn-engine-pill');
     const vpnIpStrip = document.getElementById('vpn-ip-strip');
     const vpnIpVal = document.getElementById('vpn-ip-val');
     const vpnLatencyBadge = document.getElementById('vpn-latency-badge');
     const vpnIpLoc = document.getElementById('vpn-ip-loc');
+    const btnVpnVerify = document.getElementById('btn-vpn-verify');
+    const vpnVerifyLabel = document.getElementById('vpn-verify-label');
     const btnVpnRotate = document.getElementById('btn-vpn-rotate');
     const vpnRotateLabel = document.getElementById('vpn-rotate-label');
     const vpnTelemetryRow = document.getElementById('vpn-telemetry-row');
@@ -4016,11 +4212,17 @@
     const vpnProgWrap = document.getElementById('vpn-prog-wrap');
     const vpnProgFill = document.getElementById('vpn-prog-fill');
     const vpnModeSeg = document.getElementById('vpn-mode-seg');
+    const vpnModeDesc = document.getElementById('vpn-mode-desc');
     const vpnSearchInput = document.getElementById('vpn-search-input');
     const vpnRegionTabs = document.getElementById('vpn-region-tabs');
     const vpnCountryList = document.getElementById('vpn-country-list');
     const btnVpnAutoConnect = document.getElementById('btn-vpn-autoconnect');
     const vpnProtocolNote = document.getElementById('vpn-protocol-note');
+
+    const VPN_MODE_DESCRIPTIONS = {
+      smart: 'Auto-verified clean IP + auto-heal',
+      tor: 'Encrypted 3-hop Tor onion route'
+    };
 
     let lastVpnSnap = null;
     let lastVpnListSig = '';
@@ -4028,9 +4230,33 @@
     let lastObservedExitIp = '';
     let wasBusyWhileRotating = false;
     let rotateFeedbackTimer = null;
+    let isVerifyingTunnel = false;
+    let verifySafetyTimer = null;
+    let verifyOkFlashTimer = null;
+    let lastInlineVerify = null;
+
+    function syncVpnModeDesc(mode) {
+      const key = String(mode || 'smart').toLowerCase() === 'tor' ? 'tor' : 'smart';
+      if (vpnModeDesc) setTextIfChanged(vpnModeDesc, VPN_MODE_DESCRIPTIONS[key]);
+    }
+
+    function resetVerifyButtonUi(keepFlash) {
+      isVerifyingTunnel = false;
+      if (verifySafetyTimer) { clearTimeout(verifySafetyTimer); verifySafetyTimer = null; }
+      if (btnVpnVerify) btnVpnVerify.classList.remove('verifying');
+      if (!keepFlash) {
+        if (verifyOkFlashTimer) { clearTimeout(verifyOkFlashTimer); verifyOkFlashTimer = null; }
+        if (btnVpnVerify) btnVpnVerify.classList.remove('verified-ok');
+        if (vpnVerifyLabel) setTextIfChanged(vpnVerifyLabel, 'Verify');
+      }
+    }
 
     document.getElementById('btn-vpn-close').addEventListener('click', () => send({ type: 'closePanel' }));
-    btnVpnToggle.addEventListener('click', () => send({ type: 'toggleVpn' }));
+    btnVpnToggle.addEventListener('click', () => {
+      lastInlineVerify = null;
+      resetVerifyButtonUi(false);
+      send({ type: 'toggleVpn' });
+    });
 
     if (vpnModeSeg) {
       vpnModeSeg.addEventListener('click', (e) => {
@@ -4039,6 +4265,9 @@
         const m = btn.dataset.mode;
         vpnModeSeg.classList.toggle('is-tor', m === 'tor');
         vpnModeSeg.querySelectorAll('.vpn-mode-btn').forEach((b) => b.classList.toggle('active', b === btn));
+        syncVpnModeDesc(m);
+        lastInlineVerify = null;
+        resetVerifyButtonUi(false);
         send({ type: 'setVpnMode', mode: m });
       });
     }
@@ -4053,10 +4282,36 @@
       if (lastVpnSnap) renderVpnCountries(lastVpnSnap);
     });
 
+    if (btnVpnVerify) {
+      btnVpnVerify.addEventListener('click', () => {
+        if (isVerifyingTunnel) return;
+        isVerifyingTunnel = true;
+        lastInlineVerify = null;
+        if (verifyOkFlashTimer) { clearTimeout(verifyOkFlashTimer); verifyOkFlashTimer = null; }
+        btnVpnVerify.classList.remove('verified-ok');
+        btnVpnVerify.classList.add('verifying');
+        if (vpnVerifyLabel) setTextIfChanged(vpnVerifyLabel, 'Testing…');
+        if (vpnVerifiedStrip) {
+          vpnVerifiedStrip.classList.remove('is-warn');
+          vpnVerifiedStrip.classList.add('is-testing');
+        }
+        if (vpnVerifiedText) setTextIfChanged(vpnVerifiedText, 'Testing live HTTPS & DNS tunnel…');
+        send({ type: 'verifyVpnTunnel' });
+        if (verifySafetyTimer) clearTimeout(verifySafetyTimer);
+        verifySafetyTimer = setTimeout(() => {
+          resetVerifyButtonUi(false);
+          if (vpnVerifiedStrip) vpnVerifiedStrip.classList.remove('is-testing');
+          if (lastVpnSnap) renderVpnPanel(lastVpnSnap, null);
+        }, 15000);
+      });
+    }
+
     btnVpnRotate.addEventListener('click', () => {
       if (btnVpnRotate.classList.contains('rotating')) return;
       btnVpnRotate.classList.add('rotating');
       wasBusyWhileRotating = false;
+      lastInlineVerify = null;
+      resetVerifyButtonUi(false);
       vpnRotateLabel.textContent = 'Rotating…';
       send({ type: 'rotateVpnIp' });
       if (rotateFeedbackTimer) clearTimeout(rotateFeedbackTimer);
@@ -4081,25 +4336,55 @@
     vpnCountryList.addEventListener('click', (e) => {
       const row = e.target.closest('.vpn-country-row');
       if (!row || !row.dataset.code) return;
+      lastInlineVerify = null;
+      resetVerifyButtonUi(false);
       send({ type: 'selectVpnCountry', code: row.dataset.code });
     });
 
     function setTextIfChanged(el, txt) {
-      if (el.textContent !== txt) el.textContent = txt;
+      if (el && el.textContent !== txt) el.textContent = txt;
     }
 
-    function renderVpnPanel(v) {
+    function renderVpnPanel(v, verifyResult) {
       lastVpnSnap = v;
       const st = v.state || 'disconnected';
       const isConn = st === 'connected';
-      const isBusy = st === 'connecting' || st === 'downloading';
+      const isBusy = st === 'connecting' || st === 'downloading' || st === 'healing';
+      const rawStatus = String(v.statusText || '');
+      const statusLower = rawStatus.toLowerCase();
+      const isHealingMsg = st === 'healing' || statusLower.includes('heal') || statusLower.includes('fallback') || statusLower.includes('switch');
+
+      if (verifyResult && typeof verifyResult === 'object') {
+        lastInlineVerify = verifyResult;
+        if (verifyResult.ok) {
+          resetVerifyButtonUi(true);
+          if (btnVpnVerify) btnVpnVerify.classList.add('verified-ok');
+          if (vpnVerifyLabel) setTextIfChanged(vpnVerifyLabel, 'Verified');
+          if (verifyOkFlashTimer) clearTimeout(verifyOkFlashTimer);
+          verifyOkFlashTimer = setTimeout(() => {
+            verifyOkFlashTimer = null;
+            if (btnVpnVerify) btnVpnVerify.classList.remove('verified-ok');
+            if (!isVerifyingTunnel && vpnVerifyLabel) setTextIfChanged(vpnVerifyLabel, 'Verify');
+          }, 2600);
+        } else {
+          resetVerifyButtonUi(false);
+        }
+      } else if (!isConn) {
+        if (isVerifyingTunnel) resetVerifyButtonUi(false);
+        lastInlineVerify = null;
+      }
 
       const heroCls = 'vpn-hero' + (isConn ? ' connected' : (isBusy ? ' connecting' : (st === 'error' ? ' error' : '')));
       if (vpnHeroCard.className !== heroCls) vpnHeroCard.className = heroCls;
 
-      const badgeCls = 'vpn-badge-live' + (isConn ? ' connected' : (isBusy ? ' connecting' : ''));
+      const badgeCls = 'vpn-badge-live' + (isConn ? ' connected' : (isBusy ? ' connecting' : (st === 'error' ? ' error' : '')));
       if (vpnStateBadge.className !== badgeCls) vpnStateBadge.className = badgeCls;
-      setTextIfChanged(vpnStateBadge, isConn ? 'Protected' : (st === 'downloading' ? 'Setup' : (isBusy ? 'Connecting' : (st === 'error' ? 'Retry' : 'Off'))));
+      const badgeLabel = isConn
+        ? (isHealingMsg ? 'Healing' : 'Protected')
+        : (st === 'downloading'
+          ? 'Setup'
+          : (isBusy ? (isHealingMsg ? 'Healing' : 'Connecting') : (st === 'error' ? 'Retry' : 'Off')));
+      setTextIfChanged(vpnStateBadge, badgeLabel);
 
       const wantOn = isConn || isBusy;
       if (btnVpnToggle.classList.contains('on') !== wantOn) btnVpnToggle.classList.toggle('on', wantOn);
@@ -4107,9 +4392,14 @@
       const dispLoc = v.exitCountry || v.countryName || 'Fastest Location';
       const heroTitle = isConn
         ? `Protected · ${dispLoc}`
-        : (isBusy ? `Connecting · ${dispLoc}` : 'VPN Disconnected');
+        : (isBusy
+          ? `${isHealingMsg ? 'Auto-Healing' : 'Connecting'} · ${dispLoc}`
+          : (st === 'error' ? 'Connection Interrupted' : 'VPN Disconnected'));
       setTextIfChanged(vpnHeroCountry, heroTitle);
-      setTextIfChanged(vpnHeroStatus, v.statusText || (isConn ? `Encrypted tunnel active · ${dispLoc}` : 'Direct connection · Tap to protect'));
+      setTextIfChanged(
+        vpnHeroStatus,
+        rawStatus || (isConn ? `Encrypted tunnel active · ${dispLoc}` : (st === 'error' ? 'Tap power button to retry' : 'Direct connection · Tap to protect'))
+      );
 
       if (isBusy && btnVpnRotate.classList.contains('rotating')) {
         wasBusyWhileRotating = true;
@@ -4125,15 +4415,50 @@
         wasBusyWhileRotating = false;
         vpnRotateLabel.textContent = 'New IP';
       }
-      if (v.exitIp) lastObservedExitIp = v.exitIp;
+      if (v.exitIp && v.exitIp !== lastObservedExitIp) {
+        if (lastObservedExitIp && !verifyResult) lastInlineVerify = null;
+        lastObservedExitIp = v.exitIp;
+      }
 
       if (isConn) {
+        const effEngine = String((lastInlineVerify && lastInlineVerify.engine) || v.activeEngine || v.mode || 'smart').toLowerCase();
+        const isTorActive = effEngine === 'tor';
+        if (vpnVerifiedStrip) {
+          vpnVerifiedStrip.classList.remove('hidden');
+          vpnVerifiedStrip.classList.toggle('is-testing', isVerifyingTunnel);
+          const verifyFailed = !isVerifyingTunnel && ((lastInlineVerify && lastInlineVerify.ok === false) || v.verified === false);
+          vpnVerifiedStrip.classList.toggle('is-warn', verifyFailed);
+        }
+        if (vpnEnginePill) {
+          setTextIfChanged(vpnEnginePill, isTorActive ? '3-Hop Encrypted Tor' : 'Smart Clean-IP');
+          vpnEnginePill.classList.toggle('is-tor', isTorActive);
+        }
+        if (vpnVerifiedText) {
+          if (isVerifyingTunnel) {
+            setTextIfChanged(vpnVerifiedText, 'Testing live HTTPS & DNS tunnel…');
+          } else if (lastInlineVerify) {
+            const vLat = Number(lastInlineVerify.latencyMs || v.latencyMs || 0);
+            if (lastInlineVerify.ok) {
+              setTextIfChanged(vpnVerifiedText, vLat > 0 ? `Verified · ${vLat} ms` : (lastInlineVerify.message || 'Verified · HTTPS & DNS Protected'));
+            } else {
+              setTextIfChanged(vpnVerifiedText, lastInlineVerify.message || 'Check failed · Auto-healing…');
+            }
+          } else if (v.lastVerifyMessage) {
+            setTextIfChanged(vpnVerifiedText, v.lastVerifyMessage);
+          } else if (v.verified === false) {
+            setTextIfChanged(vpnVerifiedText, 'Tunnel active · Tap Verify');
+          } else {
+            setTextIfChanged(vpnVerifiedText, 'Verified · HTTPS & DNS Protected');
+          }
+        }
+
         if (vpnIpStrip.classList.contains('hidden')) vpnIpStrip.classList.remove('hidden');
-        setTextIfChanged(vpnIpVal, v.exitIp || 'Verifying IP…');
+        const effIp = (lastInlineVerify && lastInlineVerify.exitIp) || v.exitIp || 'Verifying IP…';
+        setTextIfChanged(vpnIpVal, effIp);
         if (vpnLatencyBadge) {
-          const latMs = Number(v.latencyMs || 0);
+          const latMs = Number((lastInlineVerify && lastInlineVerify.latencyMs) || v.latencyMs || 0);
           if (latMs > 0) {
-            setTextIfChanged(vpnLatencyBadge, `${latMs}ms`);
+            setTextIfChanged(vpnLatencyBadge, `${latMs} ms`);
             vpnLatencyBadge.classList.remove('hidden');
           } else {
             vpnLatencyBadge.classList.add('hidden');
@@ -4146,13 +4471,15 @@
         setTextIfChanged(vpnTimer, formatDuration(v.connectedSeconds));
         setTextIfChanged(vpnTraffic, `↓ ${formatBytes(v.bytesReceived)} · ↑ ${formatBytes(v.bytesSent)}`);
       } else {
+        if (vpnVerifiedStrip && !vpnVerifiedStrip.classList.contains('hidden')) vpnVerifiedStrip.classList.add('hidden');
         if (!vpnIpStrip.classList.contains('hidden')) vpnIpStrip.classList.add('hidden');
         if (!vpnTelemetryRow.classList.contains('hidden')) vpnTelemetryRow.classList.add('hidden');
       }
 
-      if (isBusy) {
+      const showProg = isBusy || (isConn && isHealingMsg && Number(v.progress || 0) > 0 && Number(v.progress || 0) < 100);
+      if (showProg) {
         if (vpnProgWrap.classList.contains('hidden')) vpnProgWrap.classList.remove('hidden');
-        const nextW = `${Math.max(8, Math.min(100, v.progress || 10))}%`;
+        const nextW = `${Math.max(8, Math.min(100, v.progress || 14))}%`;
         if (vpnProgFill.style.width !== nextW) vpnProgFill.style.width = nextW;
       } else {
         if (!vpnProgWrap.classList.contains('hidden')) vpnProgWrap.classList.add('hidden');
@@ -4164,6 +4491,7 @@
         vpnModeSeg.querySelectorAll('.vpn-mode-btn').forEach((b) => {
           b.classList.toggle('active', b.dataset.mode === curMode);
         });
+        syncVpnModeDesc(curMode);
       }
       if (typeof v.autoConnect === 'boolean' && btnVpnAutoConnect.classList.contains('on') !== v.autoConnect) {
         btnVpnAutoConnect.classList.toggle('on', v.autoConnect);
@@ -5105,7 +5433,7 @@
     function renderMenuPanel(d) {
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.6.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.7.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');
@@ -5299,7 +5627,7 @@
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && (currentOverlayMode === 'shield' || currentOverlayMode === 'extensions' || currentOverlayMode === 'sync' || currentOverlayMode === 'sidebar' || currentOverlayMode === 'menu')) {
+      if (e.key === 'Escape' && (currentOverlayMode === 'shield' || currentOverlayMode === 'vpn' || currentOverlayMode === 'extensions' || currentOverlayMode === 'sync' || currentOverlayMode === 'sidebar' || currentOverlayMode === 'menu')) {
         e.preventDefault();
         send({ type: 'closePanel' });
         return;

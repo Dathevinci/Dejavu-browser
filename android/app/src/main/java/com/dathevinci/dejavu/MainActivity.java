@@ -1179,6 +1179,28 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             swipeRefresh.setProgressBackgroundColorSchemeColor(p.surfaceContainerHigh);
             swipeRefresh.setColorSchemeColors(p.primary, isLight ? 0xFF006A60 : 0xFF7BD8C6);
         }
+        broadcastMediaThemeToAllTabs();
+    }
+
+    private String buildMediaThemePushScript() {
+        String acc = normalizeAccent(accentColor);
+        String mode = isEffectiveLightTheme() ? "light" : "dark";
+        return "window.__dejavuPendingMediaTheme={accent:'" + acc + "',mode:'" + mode + "'};"
+            + "if(window.__dejavuSetMediaTheme)window.__dejavuSetMediaTheme({accent:'" + acc + "',mode:'" + mode + "'});";
+    }
+
+    private void pushMediaThemeToTab(WebView view) {
+        if (view == null) return;
+        view.evaluateJavascript(buildMediaThemePushScript(), null);
+    }
+
+    private void broadcastMediaThemeToAllTabs() {
+        String js = buildMediaThemePushScript();
+        for (MobileTab t : tabs) {
+            if (t != null && !t.isNewTab && t.webView != null) {
+                t.webView.evaluateJavascript(js, null);
+            }
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -1422,14 +1444,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             else openUiScreen("menu");
         });
 
-        // Tactile Material Design 3 spring press feedback on Bottom App Bar controls
-        attachSpringPress(navBack, navBack, 0.92f, 1.0f);
-        attachSpringPress(navForward, navForward, 0.92f, 1.0f);
-        attachSpringPress(navSyncWrap, navSyncPill, 0.94f, 1.06f);
-        attachSpringPress(navTabsWrap, navTabsBadge, 0.90f, 1.0f);
-        attachSpringPress(navMenu, navMenu, 0.92f, 1.0f);
-        attachSpringPress(btnBeamPc, btnBeamPc, 0.90f, 1.0f);
-        attachSpringPress(btnReload, btnReload, 0.90f, 1.0f);
+        // Tactile Material Design 3 120Hz spring press feedback on Bottom App Bar & toolbar controls
+        attachSpringPress(navBack, navBack, 0.94f, 1.0f);
+        attachSpringPress(navForward, navForward, 0.94f, 1.0f);
+        attachSpringPress(navSyncWrap, navSyncPill, 0.94f, 1.04f);
+        attachSpringPress(navTabsWrap, navTabsBadge, 0.94f, 1.0f);
+        attachSpringPress(navMenu, navMenu, 0.94f, 1.0f);
+        attachSpringPress(btnBeamPc, btnBeamPc, 0.94f, 1.0f);
+        attachSpringPress(btnReload, btnReload, 0.94f, 1.0f);
+        attachSpringPress(btnShieldWrap, btnShieldWrap, 0.94f, 1.0f);
+        attachSpringPress(btnUrlClear, btnUrlClear, 0.94f, 1.0f);
+        attachSpringPress(collapsedPill, collapsedPill, 0.95f, 1.0f);
 
         // Find-in-page bar
         findInput.addTextChangedListener(new TextWatcher() {
@@ -1838,24 +1863,47 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     private void activateTab(int tabId) {
+        int previousTabId = activeTabId;
+        boolean switchedTab = (previousTabId != -1 && previousTabId != tabId);
         setChromeCollapsed(false);
         activeTabId = tabId;
         MobileTab active = getActiveTab();
         for (MobileTab t : tabs) {
             if (t.webView != null) {
+                t.webView.animate().cancel();
+                t.webView.setAlpha(1f);
                 t.webView.setVisibility((t == active && !t.isNewTab) ? View.VISIBLE : View.GONE);
             }
         }
         if (active == null || active.isNewTab) {
             activeUiScreen = "start";
-            uiWebView.setVisibility(View.VISIBLE);
+            if (uiWebView != null) {
+                uiWebView.animate().cancel();
+                if (switchedTab && uiWebView.getVisibility() != View.VISIBLE) {
+                    uiWebView.setAlpha(0.86f);
+                    uiWebView.setVisibility(View.VISIBLE);
+                    uiWebView.animate().alpha(1f).setDuration(140)
+                        .setInterpolator(M3_EMPHASIZED_DECEL).start();
+                } else {
+                    uiWebView.setAlpha(1f);
+                    uiWebView.setVisibility(View.VISIBLE);
+                }
+            }
             swipeRefresh.setEnabled(false);
         } else {
             activeUiScreen = "none";
             uiWebView.setVisibility(View.GONE);
             swipeRefresh.setEnabled(pullToRefresh);
             ensureTabWebView(active);
+            active.webView.animate().cancel();
             active.webView.setVisibility(View.VISIBLE);
+            if (switchedTab) {
+                active.webView.setAlpha(0.86f);
+                active.webView.animate().alpha(1f).setDuration(140)
+                    .setInterpolator(M3_EMPHASIZED_DECEL).start();
+            } else {
+                active.webView.setAlpha(1f);
+            }
         }
         applyNativeTheme();
         updateChromeVisibility();
@@ -2304,6 +2352,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 }
                 if (floatingDownloadButton) {
                     view.evaluateJavascript(MobileDownloadManager.getFloatingDownloadButtonScript(), null);
+                    pushMediaThemeToTab(view);
                 }
                 if (downloadManager != null) {
                     JSONArray mediaSnap = downloadManager.getMediaSnapshot(tab.id);
@@ -2976,7 +3025,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.6.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.7.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -5420,6 +5469,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     if (t.webView == null || t.isNewTab) continue;
                     if (floatingDownloadButton) {
                         t.webView.evaluateJavascript(MobileDownloadManager.getFloatingDownloadButtonScript(), null);
+                        pushMediaThemeToTab(t.webView);
                     } else {
                         t.webView.evaluateJavascript("(function(){var h=document.getElementById('__djv_m_antdm__');if(h)h.remove();window.__djvMobileAntDm=false;})();", null);
                     }

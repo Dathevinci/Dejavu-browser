@@ -132,10 +132,14 @@
     /* Full-bleed Wallpaper Canvas (Start Page only) */
     #wp-layer { position: fixed; inset: 0; z-index: 0; display: none; }
     #wp-layer.show { display: block; }
-    #wp-bg {
+    #wp-bg-prev, #wp-bg {
       position: absolute; inset: 0;
       background-size: cover; background-position: center;
       background-color: var(--bg);
+    }
+    #wp-bg-prev { pointer-events: none; }
+    #wp-bg {
+      will-change: opacity;
       transition: opacity 0.28s var(--md-ease-decel);
     }
     #wp-vignette {
@@ -159,6 +163,7 @@
     .screen {
       position: fixed; inset: 0; z-index: 2;
       overflow-y: auto; overflow-x: hidden;
+      overscroll-behavior-y: contain;
       display: flex; flex-direction: column;
       -webkit-overflow-scrolling: touch;
     }
@@ -167,14 +172,29 @@
     /* Material Design 3 Modal Bottom Sheet (28px Top Radius, Calm Tonal Surface) */
     .sheet-backdrop {
       position: fixed; inset: 0; z-index: 20;
-      background: var(--scrim);
+      background: transparent;
       display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .sheet-backdrop::before {
+      content: ''; position: fixed; inset: 0;
+      background: var(--scrim);
+      opacity: var(--scrim-alpha, 1);
+      pointer-events: none;
       animation: fadeScrim 0.2s var(--md-ease-decel) both;
       will-change: opacity;
+    }
+    .sheet-backdrop.is-dragging::before {
+      animation: none;
+      transition: none;
+    }
+    .sheet-backdrop.is-settling::before {
+      animation: none;
+      transition: opacity 0.24s var(--md-ease-emphasized);
     }
     .sheet-backdrop.ctx-layer { z-index: 32; }
     .sheet-backdrop.hidden { display: none !important; }
     .sheet-panel {
+      position: relative; z-index: 1;
       width: 100%;
       max-height: calc(100dvh - var(--sys-top, 28px) - var(--ime-bottom, 0px) - 12px);
       margin-bottom: var(--ime-bottom, 0px);
@@ -231,6 +251,11 @@
       width: 32px; height: 4px; border-radius: 999px;
       background: var(--subtle); margin: 2px auto 0;
       opacity: 0.45;
+      transition: transform 0.18s var(--md-ease-emphasized), opacity 0.16s ease;
+    }
+    .sheet-head.is-dragging .sheet-grab {
+      transform: scaleX(1.28);
+      opacity: 0.78;
     }
     .sheet-title-row {
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -245,6 +270,7 @@
     }
     .sheet-body {
       flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+      overscroll-behavior-y: contain;
       padding: 4px 16px calc(var(--sys-bottom) + 28px);
       display: flex; flex-direction: column; gap: 16px;
       -webkit-overflow-scrolling: touch;
@@ -355,14 +381,14 @@
       padding: 15px 18px;
       display: flex; align-items: center; gap: 15px;
       position: relative; cursor: pointer;
-      transition: background-color 0.15s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring);
+      transition: background-color 0.15s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring), opacity 0.15s ease;
     }
     .g-row + .g-row::before {
       content: ''; position: absolute; left: 18px; right: 18px; top: 0;
       height: 1px; background: var(--divider);
     }
     .g-row.search-first::before { display: none; }
-    .g-row:active { background: var(--group-press); }
+    .g-row:active { background: var(--group-press); transform: scale(0.988); }
     .g-row-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
     .g-row-title {
       font-size: 15px; font-weight: 520; line-height: 1.3;
@@ -642,7 +668,9 @@
       align-items: center;
       gap: 12px;
       contain: layout style;
+      transition: transform 0.18s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized), opacity 0.16s ease;
     }
+    .sp-motd-card:active { transform: scale(0.988); }
     body.theme-light .sp-motd-card {
       background: var(--sheet-elev);
     }
@@ -728,17 +756,17 @@
       display: flex; flex-direction: column; align-items: center; gap: 7px;
       background: transparent; border: none; color: var(--ink);
       padding: 0; font-family: inherit; cursor: pointer;
-      transition: transform 0.18s var(--md-ease-spring);
+      transition: transform 0.18s var(--md-ease-spring), opacity 0.15s ease;
       -webkit-user-select: none; user-select: none;
     }
-    .fav-tile:active { transform: scale(0.94); }
+    .fav-tile:active { transform: scale(0.94); opacity: 0.92; }
     .fav-sq {
       width: 52px; height: 52px; border-radius: 18px;
       background: var(--sheet-elev); border: none;
       box-shadow: var(--shadow-sm);
       display: flex; align-items: center; justify-content: center;
       overflow: hidden; position: relative;
-      transition: background-color 0.16s var(--md-ease-emphasized);
+      transition: background-color 0.16s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring);
     }
     body.theme-light .fav-sq { background: rgba(255, 255, 255, 0.92); }
     .fav-tile:active .fav-sq { background: var(--accent-soft); }
@@ -766,7 +794,9 @@
       padding: 12px 14px; box-shadow: var(--shadow-sm);
       display: flex; align-items: center; gap: 12px;
       contain: layout style;
+      transition: transform 0.18s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized);
     }
+    .sp-pc-card:active { transform: scale(0.985); }
     body.theme-light .sp-pc-card { background: rgba(255, 255, 255, 0.94); }
     .sp-pc-main {
       flex: 1; min-width: 0; background: none; border: none; color: var(--ink);
@@ -843,6 +873,7 @@
     }
     .tabs-scroll {
       flex: 1; min-height: 0; overflow-y: auto;
+      overscroll-behavior-y: contain;
       padding: 8px 16px 24px;
       display: flex; flex-direction: column; gap: 20px;
       -webkit-overflow-scrolling: touch;
@@ -856,11 +887,11 @@
       background: var(--group-bg); border: 2px solid transparent;
       display: flex; flex-direction: column;
       contain: layout style;
-      transition: transform 0.18s var(--md-ease-spring), border-color 0.16s var(--md-ease-emphasized);
+      transition: transform 0.18s var(--md-ease-spring), border-color 0.16s var(--md-ease-emphasized), opacity 0.15s ease;
       cursor: pointer; -webkit-user-select: none; user-select: none;
     }
     .tab-card.is-entering { animation: tabCardEnter 0.24s var(--md-ease-decel) both; }
-    .tab-card:active { transform: scale(0.97); }
+    .tab-card:active { transform: scale(0.965); opacity: 0.94; }
     .tab-card.active { border-color: var(--accent); }
     .tab-card-hdr {
       height: 38px; padding: 0 8px 0 11px;
@@ -876,8 +907,9 @@
       background: transparent; color: var(--muted);
       display: inline-flex; align-items: center; justify-content: center;
       font-size: 16px; line-height: 1; cursor: pointer;
+      transition: transform 0.16s var(--md-ease-spring), background-color 0.15s ease;
     }
-    .tab-card-x:active { background: var(--input-bg); color: var(--ink); }
+    .tab-card-x:active { background: var(--input-bg); color: var(--ink); transform: scale(0.9); }
     .tab-card-preview {
       height: 162px; position: relative; overflow: hidden; background: var(--bg);
     }
@@ -971,7 +1003,7 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.6.0) — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.7.0) — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
@@ -1148,9 +1180,9 @@
     .yg-compact {
       background: var(--group-bg); border-radius: 22px; padding: 14px 16px;
       display: flex; align-items: center; gap: 13px; cursor: pointer;
-      transition: background-color 0.15s var(--md-ease-emphasized);
+      transition: background-color 0.15s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring), opacity 0.15s ease;
     }
-    .yg-compact:active { background: var(--group-press); }
+    .yg-compact:active { background: var(--group-press); transform: scale(0.985); }
     .yg-avatar {
       width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
       display: inline-flex; align-items: center; justify-content: center;
@@ -1321,9 +1353,9 @@
       position: relative; border-radius: 20px; overflow: hidden;
       border: 2px solid transparent; background: var(--group-bg);
       padding: 0; text-align: left; color: var(--ink); font-family: inherit; cursor: pointer;
-      transition: transform 0.18s var(--md-ease-spring), border-color 0.16s var(--md-ease-emphasized);
+      transition: transform 0.18s var(--md-ease-spring), border-color 0.16s var(--md-ease-emphasized), opacity 0.15s ease;
     }
-    .wp-tile:active { transform: scale(0.96); }
+    .wp-tile:active { transform: scale(0.96); opacity: 0.94; }
     .wp-tile.active { border-color: var(--accent); }
     .wp-tile img, .wp-live-thumb { width: 100%; height: 132px; object-fit: cover; display: block; }
     .wp-tile-meta { padding: 10px 12px; }
@@ -1411,13 +1443,13 @@
       width: 100%; background: transparent; border: none; color: var(--ink);
       font-family: inherit; text-align: left; padding: 14px 18px;
       display: flex; align-items: center; gap: 15px; position: relative; cursor: pointer;
-      transition: background-color 0.15s var(--md-ease-emphasized);
+      transition: background-color 0.15s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring);
     }
     .ctx-action-row + .ctx-action-row::before {
       content: ''; position: absolute; left: 56px; right: 18px; top: 0;
       height: 1px; background: var(--divider);
     }
-    .ctx-action-row:active { background: var(--group-press); }
+    .ctx-action-row:active { background: var(--group-press); transform: scale(0.988); }
     .ctx-action-row.danger .g-row-title { color: var(--danger); }
 
     .ext-sub-line {
@@ -1455,6 +1487,7 @@
       width: 100%; max-width: 348px;
       max-height: calc(100dvh - var(--sys-top, 28px) - var(--ime-bottom, 0px) - 40px);
       overflow-y: auto;
+      overscroll-behavior-y: contain;
       border-radius: 28px;
       background: var(--sheet-bg); border: none;
       padding: 22px; display: flex; flex-direction: column; gap: 12px;
@@ -1472,7 +1505,7 @@
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
     /* =====================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.6.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.7.0)
        ===================================================================== */
     .sh-hero-card {
       background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
@@ -1533,8 +1566,9 @@
   </style>
 </head>
 <body>
-  <!-- Full-Bleed Edge-to-Edge Wallpaper Layer -->
+  <!-- Full-Bleed Edge-to-Edge Wallpaper Layer (Dual-Layer GPU Opacity Crossfade) -->
   <div id="wp-layer" class="show">
+    <div id="wp-bg-prev"></div>
     <div id="wp-bg"></div>
     <div id="wp-vignette"></div>
   </div>
@@ -1854,7 +1888,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.6.0) — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.7.0) — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2150,7 +2184,7 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.8v5.2M12 7.8h.01"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.6.0 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.7.0 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -2418,7 +2452,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.6.0 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.7.0 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2442,10 +2476,10 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update updater github releases signed sha256 version 5.6.0 about">
+              <div class="g-row set-item" data-search="software update updater github releases signed sha256 version 5.7.0 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.6.0</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.7.0</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
                 <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check for updates</button>
@@ -2470,7 +2504,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.6.0
+          dejavu Mobile v5.7.0
         </div>
       </div>
     </div>
@@ -2742,7 +2776,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.6.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.7.0)
        =================================================================== -->
   <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2870,7 +2904,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.6.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.7.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -3078,7 +3112,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.6.0)
+    // Zero-mutation DOM equality-guard helpers (v5.7.0)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -3240,33 +3274,175 @@
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
 
-    // Touch swipe-down-to-dismiss on bottom sheet grab handle header
+    // Interactive 120Hz finger-tracking swipe-to-dismiss on bottom sheet grab handle header
     document.querySelectorAll('[data-swipe-dismiss]').forEach((hdr) => {
-      let startY = 0;
       const panel = hdr.closest('.sheet-panel');
+      const backdrop = hdr.closest('.sheet-backdrop');
+      if (!panel) return;
       const isCtx = hdr.getAttribute('data-swipe-dismiss') === 'ctx';
-      hdr.addEventListener('touchstart', (e) => {
-        startY = e.touches[0].clientY;
+      let dragging = false;
+      let activeTouchId = null;
+      let activePointerId = null;
+      let startY = 0;
+      let currentDy = 0;
+      let settleTimer = null;
+      let dragGen = 0;
+      const samples = [];
+
+      const pushSample = (y, t) => {
+        samples.push({ y, t });
+        while (samples.length > 1 && (t - samples[0].t) > 100) samples.shift();
+      };
+
+      const computeVelocity = (now) => {
+        while (samples.length > 1 && (now - samples[0].t) > 100) samples.shift();
+        if (samples.length < 2) return 0;
+        const first = samples[0];
+        const last = samples[samples.length - 1];
+        if ((now - last.t) > 85) return 0;
+        const dt = last.t - first.t;
+        return dt >= 4 ? (last.y - first.y) / dt : 0;
+      };
+
+      const clearInlineStyles = () => {
+        panel.style.transition = '';
+        panel.style.transform = '';
+        panel.style.opacity = '';
+        panel.style.animation = '';
+        if (backdrop) {
+          backdrop.classList.remove('is-dragging', 'is-settling');
+          backdrop.style.removeProperty('--scrim-alpha');
+        }
+      };
+
+      const startDrag = (clientY) => {
+        dragGen++;
+        if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
+        dragging = true;
+        startY = clientY;
+        currentDy = 0;
+        samples.length = 0;
+        pushSample(clientY, performance.now());
+        hdr.classList.add('is-dragging');
+        panel.style.animation = 'none';
         panel.style.transition = 'none';
-      }, { passive: true });
-      hdr.addEventListener('touchmove', (e) => {
-        const dy = Math.max(0, e.touches[0].clientY - startY);
-        panel.style.transform = `translateY(${dy}px)`;
-      }, { passive: true });
-      hdr.addEventListener('touchend', (e) => {
-        const dy = Math.max(0, e.changedTouches[0].clientY - startY);
-        panel.style.transition = 'transform 0.24s cubic-bezier(0.05, 0.7, 0.1, 1.0)';
-        if (dy > 85) {
-          panel.style.transform = 'translateY(100%)';
-          setTimeout(() => {
-            panel.style.transform = '';
+        if (backdrop) {
+          backdrop.classList.remove('is-settling');
+          backdrop.classList.add('is-dragging');
+          backdrop.style.setProperty('--scrim-alpha', '1');
+        }
+      };
+
+      const moveDrag = (clientY) => {
+        if (!dragging) return;
+        pushSample(clientY, performance.now());
+        const rawDy = clientY - startY;
+        // Subtle rubber-band resistance if pulled upward; 1:1 finger tracking downward
+        const dy = rawDy >= 0
+          ? rawDy
+          : -Math.min(18, Math.pow(Math.abs(rawDy), 0.72) * 0.45);
+        currentDy = dy;
+        panel.style.transform = `translate3d(0, ${dy.toFixed(1)}px, 0)`;
+        if (backdrop) {
+          const panelH = Math.max(260, panel.offsetHeight || 420);
+          const progress = Math.max(0, Math.min(1, dy / (panelH * 0.85)));
+          backdrop.style.setProperty('--scrim-alpha', String(Math.max(0.06, 1 - progress * 0.94).toFixed(3)));
+        }
+      };
+
+      const endDrag = (cancelled) => {
+        if (!dragging) return;
+        dragging = false;
+        activeTouchId = null;
+        activePointerId = null;
+        hdr.classList.remove('is-dragging');
+        const gen = dragGen;
+        const velocity = computeVelocity(performance.now());
+        const shouldDismiss = !cancelled && ((velocity > 0.45 && currentDy > 18) || currentDy > 96);
+        if (backdrop) {
+          backdrop.classList.remove('is-dragging');
+          backdrop.classList.add('is-settling');
+        }
+        if (shouldDismiss) {
+          panel.style.transition = 'transform 220ms cubic-bezier(0.3, 0, 0.8, 0.15)';
+          panel.style.transform = 'translate3d(0, 100%, 0)';
+          if (backdrop) backdrop.style.setProperty('--scrim-alpha', '0');
+          settleTimer = setTimeout(() => {
+            settleTimer = null;
+            if (gen !== dragGen) return;
+            clearInlineStyles();
             if (isCtx) closeContextMenu();
             else call('closeScreen');
-          }, 160);
+          }, 210);
         } else {
-          panel.style.transform = '';
+          panel.style.transition = 'transform 260ms cubic-bezier(0.2, 0, 0, 1)';
+          panel.style.transform = 'translate3d(0, 0, 0)';
+          if (backdrop) backdrop.style.setProperty('--scrim-alpha', '1');
+          settleTimer = setTimeout(() => {
+            settleTimer = null;
+            if (gen !== dragGen) return;
+            clearInlineStyles();
+          }, 270);
         }
+      };
+
+      hdr.addEventListener('touchstart', (e) => {
+        if (!e.touches || e.touches.length !== 1) return;
+        if (e.target && e.target.closest && e.target.closest('button, input, a, select')) return;
+        activeTouchId = e.touches[0].identifier;
+        startDrag(e.touches[0].clientY);
       }, { passive: true });
+
+      hdr.addEventListener('touchmove', (e) => {
+        if (!dragging || activeTouchId === null || !e.touches) return;
+        let t = null;
+        for (let i = 0; i < e.touches.length; i++) {
+          if (e.touches[i].identifier === activeTouchId) { t = e.touches[i]; break; }
+        }
+        if (t) moveDrag(t.clientY);
+      }, { passive: true });
+
+      hdr.addEventListener('touchend', (e) => {
+        if (!dragging || activeTouchId === null) return;
+        if (e.changedTouches) {
+          for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === activeTouchId) {
+              moveDrag(e.changedTouches[i].clientY);
+              endDrag(false);
+              return;
+            }
+          }
+        }
+        endDrag(false);
+      }, { passive: true });
+
+      hdr.addEventListener('touchcancel', () => {
+        if (dragging && activeTouchId !== null) endDrag(true);
+      }, { passive: true });
+
+      // Non-touch pointer drag support (desktop mouse / stylus testing & Chromebooks)
+      hdr.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'touch' || e.button !== 0) return;
+        if (e.target && e.target.closest && e.target.closest('button, input, a, select')) return;
+        activePointerId = e.pointerId;
+        try { hdr.setPointerCapture(e.pointerId); } catch (_) {}
+        startDrag(e.clientY);
+      });
+
+      hdr.addEventListener('pointermove', (e) => {
+        if (!dragging || activePointerId !== e.pointerId) return;
+        moveDrag(e.clientY);
+      });
+
+      hdr.addEventListener('pointerup', (e) => {
+        if (!dragging || activePointerId !== e.pointerId) return;
+        moveDrag(e.clientY);
+        endDrag(false);
+      });
+
+      hdr.addEventListener('pointercancel', (e) => {
+        if (dragging && activePointerId === e.pointerId) endDrag(true);
+      });
     });
 
     // Event-driven long-press helper
@@ -3924,7 +4100,7 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.6.0)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.7.0)
     const _domSigs = {
       sysTop: '',
       safeTop: '',
@@ -4704,7 +4880,7 @@
       setCls(document.getElementById('sw-sync-reading'), 'on', sp.readingList !== false);
       setCls(document.getElementById('sw-sync-clipboard'), 'on', sp.clipboard !== false);
       setCls(document.getElementById('sw-sync-history'), 'on', sp.history !== false);
-      setTxt(document.getElementById('m-code-box'), sync.pairingCode || 'DJV-5600-M3UI');
+      setTxt(document.getElementById('m-code-box'), sync.pairingCode || 'DJV-5700-M3UI');
     }
 
     function toggleCurrentSiteShield() {
@@ -4833,7 +5009,7 @@
       setTxt(document.getElementById('set-sum-downloads'), `${ytqLbl}${state.floatingDownloadButton !== false ? ' · Floating pill' : ''}`);
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.6.0';
+      const curV = u.currentVersion || '5.7.0';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -5437,7 +5613,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.6.0 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.7.0 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -5612,18 +5788,31 @@
       }
 
       const wpBg = document.getElementById('wp-bg');
+      const wpPrev = document.getElementById('wp-bg-prev');
       const curWp = normalizeWallpaperId(state.wallpaper);
       const wpMeta = VALID_WP_MAP[curWp];
       setCls(document.body, 'wp-native-light', !!(wpMeta && wpMeta.mode === 'light'));
       const wpKey = `${curWp}|${isLight ? 1 : 0}`;
       if (wpBg && wpKey !== _domSigs.wpBg) {
+        const hadPrev = !!_domSigs.wpBg;
+        const prevImg = wpBg.style.backgroundImage;
         _domSigs.wpBg = wpKey;
-        if (curWp && curWp !== 'obsidian') {
-          wpBg.style.backgroundImage = `url("wallpapers/${curWp}")`;
-        } else {
-          wpBg.style.backgroundImage = isLight
+        const nextImg = (curWp && curWp !== 'obsidian')
+          ? `url("wallpapers/${curWp}")`
+          : (isLight
             ? 'linear-gradient(140deg, #eaddff 0%, #fef7ff 52%, #ffd8e4 100%)'
-            : 'linear-gradient(140deg, #4f378b 0%, #141218 52%, #633b48 100%)';
+            : 'linear-gradient(140deg, #4f378b 0%, #141218 52%, #633b48 100%)');
+        if (hadPrev && wpPrev && prevImg && prevImg !== nextImg) {
+          wpPrev.style.backgroundImage = prevImg;
+          wpBg.style.transition = 'none';
+          wpBg.style.opacity = '0';
+          wpBg.style.backgroundImage = nextImg;
+          requestAnimationFrame(() => {
+            wpBg.style.transition = '';
+            wpBg.style.opacity = '1';
+          });
+        } else {
+          wpBg.style.backgroundImage = nextImg;
         }
       }
 
@@ -5948,7 +6137,7 @@
             const previewSync = signedIn ? {
               enabled: true, syncMode: 'google', googleEmail: 'alex@gmail.com', hasPassphrase: false,
               paired: true, connected: true, peerName: 'Windows 11 Desktop', peerPlatform: 'windows',
-              peerOnline: true, peerLastSeenMs: nowMs - 8000, pairingCode: 'DJV-5600-M3UI',
+              peerOnline: true, peerLastSeenMs: nowMs - 8000, pairingCode: 'DJV-5700-M3UI',
               relayStatus: initRelay, relayBroker: 'broker.hivemq.com', lastSyncMs: nowMs - 4000,
               devices: [
                 { id: 'self-android', name: 'Pixel 9 Pro', platform: 'android', isSelf: true, isOnline: true, lastSeenMs: nowMs, tabCount: 2, transport: 'local' },
@@ -5970,13 +6159,13 @@
               ],
               drops: [
                 { id: 'vid_pc_1', dropType: 'video', title: 'Material 3 Expressive Motion Deep Dive', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=422', text: 'Continue watching at 07:02', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 45000 },
-                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.6.0-release.mp4', url: 'https://example.com/dejavu-v5.6.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
+                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.7.0-release.mp4', url: 'https://example.com/dejavu-v5.7.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
                 { id: 'bt_pc_1', dropType: 'batch_tabs', title: '2 tabs from Windows 11 Desktop', url: 'https://m3.material.io', text: 'Material Design 3 · GitHub', tabs: [{ title: 'Material Design 3', url: 'https://m3.material.io' }, { title: 'GitHub', url: 'https://github.com' }], fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 210000 }
               ]
             } : {
               enabled: true, syncMode: 'manual', googleEmail: '', hasPassphrase: false,
               paired: false, connected: false, peerName: '', peerPlatform: 'windows',
-              peerOnline: false, peerLastSeenMs: 0, pairingCode: 'DJV-5600-M3UI',
+              peerOnline: false, peerLastSeenMs: 0, pairingCode: 'DJV-5700-M3UI',
               relayStatus: initRelay, relayBroker: 'broker.hivemq.com', lastSyncMs: 0,
               devices: [], latestClipboard: null, clipboardHistory: [], pinnedNotes: [],
               prefs: { tabs: true, bookmarks: true, readingList: true, clipboard: true, history: true },
@@ -6036,9 +6225,9 @@
               ],
               sync: previewSync,
               update: {
-                currentVersion: '5.6.0',
+                currentVersion: '5.7.0',
                 status: qp.get('upd') === '1' ? 'available' : 'uptodate',
-                latestVersion: qp.get('upd') === '1' ? '5.7.0' : '5.6.0',
+                latestVersion: qp.get('upd') === '1' ? '5.8.0' : '5.7.0',
                 sizeLabel: qp.get('upd') === '1' ? '10.2 MB' : '',
                 releaseUrl: 'https://github.com/Dathevinci/Dejavu-browser/releases/latest',
                 available: qp.get('upd') === '1',

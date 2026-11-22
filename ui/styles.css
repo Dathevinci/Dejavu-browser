@@ -1,5 +1,5 @@
 /* ==========================================================================
-   dejavu v5.6.0 — Authentic Chromebook × Pixel Material Design 3 Expressive
+   dejavu v5.7.0 — Authentic Chromebook × Pixel Material Design 3 Expressive
    12 Official HCT Tonal Palettes · Official M3 Motion · State Layers
    Zero Compositing Overhead · Strictly Zero CSS Filter Softening
    ========================================================================== */
@@ -11,12 +11,12 @@
   --chrome-h: 88px;
   --nav-rail-w: 56px;
 
-  /* Official Material Design 3 Motion Tokens (GPU transform & opacity only) */
+  /* Official Material Design 3 Expressive Motion Tokens (GPU transform & opacity only) */
   --md-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
   --md-ease-emphasized-decel: cubic-bezier(0.05, 0.7, 0.1, 1);
   --md-ease-emphasized-accel: cubic-bezier(0.3, 0, 0.8, 0.15);
   --md-ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --md-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --md-ease-spring: cubic-bezier(0.34, 1.38, 0.64, 1);
   --md-dur-press: 90ms;
   --md-dur-short: 150ms;
   --md-dur-medium: 220ms;
@@ -653,6 +653,43 @@ body:not(.nav-rail-hidden) .rail-owned-btn {
   padding: 0;
   user-select: none;
   -webkit-font-smoothing: antialiased;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--md-outline-variant) 75%, transparent) transparent;
+  }
+}
+
+/* Smooth Material You HCT & Dark/Light Polarity Crossfade (active for 260ms only on theme change) */
+body.theme-transitioning #chrome-header,
+body.theme-transitioning #toolbar,
+body.theme-transitioning #m3-nav-rail,
+body.theme-transitioning .omnibox-pill,
+body.theme-transitioning .nt-motd-card,
+body.theme-transitioning .hero-search,
+body.theme-transitioning #sp-sec-favorites.sp-favorites-tray,
+body.theme-transitioning .m3-glance-strip,
+body.theme-transitioning .m3-settings-workspace,
+body.theme-transitioning .m3-settings-appbar,
+body.theme-transitioning .m3-settings-drawer,
+body.theme-transitioning .m3-settings-canvas,
+body.theme-transitioning .m3-pref-card,
+body.theme-transitioning .dl-manager-window,
+body.theme-transitioning .dlm-main,
+body.theme-transitioning .dlm-card,
+body.theme-transitioning .m3-ext-workspace,
+body.theme-transitioning .ext-card,
+body.theme-transitioning .m3-link-workspace,
+body.theme-transitioning .link-card,
+body.theme-transitioning .wallpaper-store {
+  transition: background-color 220ms var(--md-ease-emphasized), border-color 220ms var(--md-ease-emphasized), color 220ms var(--md-ease-emphasized);
+}
+
+body.theme-transitioning #newtab-canvas {
+  opacity: 0.92;
+  transition: opacity 140ms var(--md-ease-emphasized-decel);
 }
 
 html, body {
@@ -1516,7 +1553,10 @@ body.on-newtab .shield-chip { width: 24px; padding: 0; gap: 0; }
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
 }
+.omnibox-reader-btn:hover { background: var(--md-state-hover); color: var(--md-on-surface); }
+.omnibox-reader-btn:active { background: var(--md-state-pressed); transform: scale(0.92); }
 
 .omnibox-reader-btn svg { width: 14px; height: 14px; }
 .omnibox-reader-btn:hover { background: var(--md-state-hover); color: var(--md-on-surface); }
@@ -1633,7 +1673,10 @@ body.on-newtab .omnibox-display { padding: 0 54px; }
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
 }
+.omnibox-zoom-pill:hover { background: var(--md-primary-container); color: var(--md-on-primary-container); }
+.omnibox-zoom-pill:active { transform: scale(0.94); }
 
 .fav-star-btn {
   width: 26px;
@@ -1646,10 +1689,12 @@ body.on-newtab .omnibox-display { padding: 0 54px; }
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-spring);
 }
 
 .fav-star-btn svg { width: 15px; height: 15px; }
 .fav-star-btn:hover { background: var(--md-state-hover); color: var(--md-on-surface); }
+.fav-star-btn:active { background: var(--md-state-pressed); transform: scale(0.9); }
 .fav-star-btn.starred { color: var(--md-primary); }
 .fav-star-btn.starred svg path { fill: currentColor; }
 
@@ -2687,7 +2732,7 @@ body.force-light #sp-sec-favorites.sp-favorites-tray {
   background: var(--md-surface-container-high);
   border: 1px solid color-mix(in srgb, var(--md-outline-variant) 26%, transparent);
   box-shadow: var(--md-elev-1);
-  transition: border-radius var(--md-dur-medium) var(--md-ease-emphasized-decel), background-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-medium) var(--md-ease-emphasized-decel), box-shadow var(--md-dur-short) ease;
+  transition: border-radius var(--md-dur-medium) var(--md-ease-emphasized-decel), background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-medium) var(--md-ease-spring);
 }
 
 body.theme-light .m3-fav-squircle,
@@ -2698,11 +2743,11 @@ body.force-light .m3-fav-squircle {
 .m3-fav-item:hover .m3-fav-squircle {
   border-radius: 22px;
   background: var(--md-secondary-container);
-  border-color: color-mix(in srgb, var(--md-primary) 30%, transparent);
+  border-color: color-mix(in srgb, var(--md-primary) 34%, transparent);
   box-shadow: var(--md-elev-2);
-  transform: translateY(-3px);
+  transform: translate3d(0, -3px, 0);
 }
-.m3-fav-item:active .m3-fav-squircle { transform: scale(0.94); transition-duration: var(--md-dur-press); }
+.m3-fav-item:active .m3-fav-squircle { transform: scale(0.93); transition-duration: var(--md-dur-press); }
 .m3-fav-squircle img { width: 26px; height: 26px; border-radius: 6px; object-fit: contain; pointer-events: none; }
 .m3-fav-letter { font-size: 20px; font-weight: 600; color: var(--md-primary); }
 .m3-fav-label { font-size: 11.8px; font-weight: 500; letter-spacing: 0.008em; max-width: 78px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--md-on-surface); }
@@ -2755,7 +2800,7 @@ body.force-light .m3-fav-squircle {
   padding: 0 12px;
   border-radius: var(--md-shape-lg);
   background: var(--md-surface-container);
-  border: none;
+  border: 1px solid transparent;
   color: var(--md-on-surface);
   font-family: inherit;
   text-align: left;
@@ -2764,7 +2809,7 @@ body.force-light .m3-fav-squircle {
   gap: 10px;
   cursor: pointer;
   box-shadow: var(--md-elev-1);
-  transition: background-color var(--md-dur-short) ease, transform var(--md-dur-medium) var(--md-ease-emphasized-decel);
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-medium) var(--md-ease-emphasized-decel);
 }
 
 body.theme-light .freq-card,
@@ -2772,8 +2817,8 @@ body.force-light .freq-card,
 body.theme-light .reading-card,
 body.force-light .reading-card { background: var(--md-surface-container-lowest); }
 
-.freq-card:hover, .reading-card:hover { background: var(--md-surface-container-high); transform: translateY(-2px); }
-.freq-card:active, .reading-card:active { transform: scale(0.97); }
+.freq-card:hover, .reading-card:hover { background: var(--md-surface-container-high); border-color: color-mix(in srgb, var(--md-primary) 30%, transparent); transform: translate3d(0, -2px, 0); }
+.freq-card:active, .reading-card:active { transform: scale(0.97); transition-duration: var(--md-dur-press); }
 .freq-ico { width: 30px; height: 30px; border-radius: 9px; background: var(--md-surface-container-highest); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
 .freq-ico img { width: 18px; height: 18px; object-fit: contain; }
 .freq-ico svg.djv-m3-logo { width: 20px; height: 20px; }
@@ -2798,10 +2843,13 @@ body.force-light .reading-card { background: var(--md-surface-container-lowest);
   justify-content: center;
   cursor: pointer;
   opacity: 0;
+  transform: scale(0.86);
+  transition: opacity var(--md-dur-short) var(--md-ease-emphasized), background-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-short) var(--md-ease-spring);
 }
 
-.reading-card:hover .reading-card-rm { opacity: 1; }
+.reading-card:hover .reading-card-rm { opacity: 1; transform: scale(1); }
 .reading-card-rm:hover { background: var(--md-error-container); color: var(--md-on-error-container); }
+.reading-card-rm:active { transform: scale(0.9); }
 
 /* Google Pixel "At a Glance" Material Design 3 Expressive Tonal Status Strip */
 .sp-glance-section {
@@ -3552,8 +3600,8 @@ body.force-light .m3-slider {
 }
 
 @keyframes m3WinIn {
-  from { opacity: 0; transform: scale(0.96) translateY(12px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.965); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
 /* Top M3 Settings App Bar */
@@ -3628,9 +3676,11 @@ body.force-light .m3-appbar-search { background: var(--md-surface-container-high
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
 }
 
-.m3-search-clear:hover { color: var(--md-on-surface); }
+.m3-search-clear:hover { color: var(--md-on-surface); background: var(--md-state-hover); }
+.m3-search-clear:active { transform: scale(0.9); }
 .m3-appbar-actions { display: flex; align-items: center; gap: 8px; }
 
 /* Settings Body: M3 Navigation Drawer + Pixel Settings Canvas */
@@ -3866,8 +3916,8 @@ body.force-light .m3-appbar-search { background: var(--md-surface-container-high
 .m3-empty-sub { font-size: 12.8px; max-width: 390px; line-height: 1.48; }
 
 @keyframes m3PaneIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 .settings-pane { display: flex; flex-direction: column; gap: 22px; }
@@ -3930,6 +3980,11 @@ body.force-light .m3-pref-card {
   gap: 16px;
   min-height: 64px;
   padding: 14px 20px;
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
+}
+
+.opt-row:has(button, select, input):hover {
+  background: color-mix(in srgb, var(--md-on-surface) 3.5%, transparent);
 }
 
 /* Inset 1px Material 3 Hairline Divider between preference rows */
@@ -3953,8 +4008,9 @@ body.force-light .m3-pref-card {
   padding: 18px 20px;
 }
 
-.opt-row.clickable-row { cursor: pointer; transition: background-color var(--md-dur-short) ease; }
+.opt-row.clickable-row { cursor: pointer; transition: background-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized); }
 .opt-row.clickable-row:hover { background: var(--md-state-hover); }
+.opt-row.clickable-row:active { background: var(--md-state-pressed); transform: scale(0.994); }
 
 .m3-row-ico {
   width: 40px;
@@ -4334,7 +4390,7 @@ body.force-light .kbd-row { background: var(--md-surface-container-low); }
   justify-content: center;
   padding: 16px;
   background: var(--md-scrim);
-  animation: m3FadeIn 160ms ease;
+  animation: m3FadeIn 180ms var(--md-ease-emphasized);
 }
 
 .m3-profile-setup-card {
@@ -4757,12 +4813,15 @@ body.force-light .m3-ctx-menu {
   border-color: color-mix(in srgb, var(--md-outline-variant) 78%, transparent);
 }
 
-.m3-ctx-menu::-webkit-scrollbar { width: 5px; }
-.m3-ctx-menu::-webkit-scrollbar-thumb { background: var(--md-outline-variant); border-radius: var(--md-shape-full); }
+.m3-ctx-menu::-webkit-scrollbar { width: 6px; height: 6px; }
+.m3-ctx-menu::-webkit-scrollbar-track { background: transparent; }
+.m3-ctx-menu::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+.m3-ctx-menu::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent); border-radius: var(--md-shape-full); border: 1px solid transparent; background-clip: content-box; }
+.m3-ctx-menu::-webkit-scrollbar-thumb:hover { background: var(--md-outline); }
 
 @keyframes m3CtxPopIn {
-  from { opacity: 0; transform: scale(0.92) translateY(-4px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: translate3d(0, -4px, 0) scale(0.92); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
 .m3-ctx-header {
@@ -4909,8 +4968,8 @@ body.force-light .m3-ctx-menu {
 }
 
 @keyframes m3DialogIn {
-  from { opacity: 0; transform: translate(-50%, calc(-50% + 12px)) scale(0.96); }
-  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  from { opacity: 0; transform: translate3d(-50%, calc(-50% + 12px), 0) scale(0.96); }
+  to { opacity: 1; transform: translate3d(-50%, -50%, 0) scale(1); }
 }
 
 .store-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: nowrap; flex-shrink: 0; }
@@ -4939,19 +4998,20 @@ body.force-light .m3-ctx-menu {
 .sp-pref-chip { display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 500; color: var(--md-on-surface); cursor: pointer; white-space: nowrap; }
 
 .wallpaper-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(195px, 1fr)); align-content: start; gap: 12px; overflow-y: auto; overscroll-behavior: contain; padding: 2px 4px 6px 2px; }
-.wp-card { position: relative; display: flex; flex-direction: column; min-height: 162px; padding: 0; border-radius: 18px; border: 1.5px solid color-mix(in srgb, var(--md-outline-variant) 65%, transparent); background: var(--md-surface-container-high); overflow: hidden; cursor: pointer; text-align: left; color: var(--md-on-surface); font-family: inherit; transition: transform var(--md-dur-medium) var(--md-ease-emphasized-decel), border-color var(--md-dur-short) ease; }
+.wp-card { position: relative; display: flex; flex-direction: column; min-height: 162px; padding: 0; border-radius: 18px; border: 1.5px solid color-mix(in srgb, var(--md-outline-variant) 65%, transparent); background: var(--md-surface-container-high); overflow: hidden; cursor: pointer; text-align: left; color: var(--md-on-surface); font-family: inherit; transition: transform var(--md-dur-medium) var(--md-ease-emphasized-decel), border-color var(--md-dur-short) var(--md-ease-emphasized), background-color var(--md-dur-short) var(--md-ease-emphasized); }
 body.theme-light .wp-card, body.force-light .wp-card { background: var(--md-surface-container-lowest); }
-.wp-card:hover { transform: translateY(-2px); border-color: var(--md-outline); }
-.wp-card:active { transform: scale(0.98); transition-duration: var(--md-dur-press); }
+.wp-card:hover { transform: translate3d(0, -3px, 0); border-color: var(--md-outline); }
+.wp-card:active { transform: scale(0.975); transition-duration: var(--md-dur-press); }
 .wp-card.active { border-color: var(--md-primary); box-shadow: 0 0 0 1px var(--md-primary); }
 .wp-thumb { width: 100%; height: 104px; flex-shrink: 0; position: relative; overflow: hidden; background-size: cover; background-position: center; }
-.wp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 280ms var(--md-ease-emphasized-decel); }
+.wp-card:hover .wp-thumb img { transform: scale(1.04); }
 .wp-badge { position: absolute; top: 8px; left: 8px; padding: 2px 8px; border-radius: var(--md-shape-full); font-size: 10px; font-weight: 700; background: var(--md-surface-container-highest); color: var(--md-on-surface); }
 .wp-card.is-m3 .wp-badge { background: var(--md-primary-container); color: var(--md-on-primary-container); }
 .wp-card.is-butterfly .wp-badge { background: var(--md-tertiary-container); color: var(--md-on-tertiary-container); }
 .wp-card.is-froggie .wp-badge { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
 .wp-check { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: var(--md-shape-full); background: var(--md-primary); color: var(--md-on-primary); font-size: 12px; font-weight: 800; display: none; align-items: center; justify-content: center; }
-.wp-card.active .wp-check { display: flex; }
+.wp-card.active .wp-check { display: flex; animation: m3CheckPop 220ms var(--md-ease-spring); }
 .wp-meta { padding: 9px 12px 10px; }
 .wp-name { font-size: 12.6px; font-weight: 600; color: var(--md-on-surface); }
 .wp-desc { font-size: 10.8px; color: var(--md-on-surface-variant); margin-top: 2px; line-height: 1.32; }
@@ -5067,7 +5127,9 @@ body.theme-light .dlm-video-card, body.force-light .dlm-video-card { background:
 
 .dlm-list { display: flex; flex-direction: column; gap: 10px; }
 .dlm-card,
-.dlm-item { border-radius: 20px; background: var(--md-surface-container); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; contain: layout style; }
+.dlm-item { border-radius: 20px; background: var(--md-surface-container); border: 1px solid color-mix(in srgb, var(--md-outline-variant) 28%, transparent); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; contain: layout style; transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-medium) var(--md-ease-emphasized-decel); }
+.dlm-card:hover,
+.dlm-item:hover { background: var(--md-surface-container-high); border-color: color-mix(in srgb, var(--md-primary) 34%, transparent); transform: translate3d(0, -1px, 0); }
 .dlm-card.is-active { box-shadow: inset 0 0 0 1.5px var(--md-primary); }
 .dlm-card-top { display: flex; align-items: center; gap: 12px; }
 .dlm-cat-ico { width: 40px; height: 40px; border-radius: 14px; background: var(--md-secondary-container); color: var(--md-on-secondary-container); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11.5px; font-weight: 800; }
@@ -5132,83 +5194,147 @@ body.theme-light .dlm-video-card, body.force-light .dlm-video-card { background:
 .dl-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .dl-status { font-size: 11.4px; color: var(--md-on-surface-variant); }
 .dl-actions { display: flex; gap: 6px; }
-.dl-act-btn { height: 26px; padding: 0 11px; border-radius: var(--md-shape-full); border: none; background: var(--md-secondary-container); color: var(--md-on-secondary-container); font-family: inherit; font-size: 11.2px; font-weight: 600; cursor: pointer; }
-.dl-act-btn:hover { filter: brightness(1.06); }
+.dl-act-btn { height: 26px; padding: 0 11px; border-radius: var(--md-shape-full); border: none; background: var(--md-secondary-container); color: var(--md-on-secondary-container); font-family: inherit; font-size: 11.2px; font-weight: 600; cursor: pointer; transition: background-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized); }
+.dl-act-btn:hover { background: var(--md-primary-container); color: var(--md-on-primary-container); }
+.dl-act-btn:active { transform: scale(0.95); }
 
-/* Clean Material 3 Global Scrollbars (5px transparent track, zero white Windows bars) */
+/* Clean Material 3 Global Scrollbars (6px transparent track, zero classic white Windows bars) */
 *::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 *::-webkit-scrollbar-track {
   background: transparent;
 }
 
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 *::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--md-outline-variant) 85%, transparent);
+  background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent);
   border-radius: var(--md-shape-full);
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
 
 *::-webkit-scrollbar-thumb:hover {
   background: var(--md-outline);
+  border: 1px solid transparent;
+  background-clip: content-box;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .settings-scroll,
+  .m3-settings-drawer,
+  .wallpaper-grid,
+  .settings-wp-grid,
+  .overview-grid,
+  .ps-view,
+  .ps-avatar-grid,
+  .ext-scroll,
+  .link-hub-scroll,
+  .link-items-list,
+  .chrome-import-list,
+  .dlm-scroll,
+  .m3-ctx-menu {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--md-outline-variant) 75%, transparent) transparent;
+  }
 }
 
 .settings-scroll::-webkit-scrollbar,
 .m3-settings-drawer::-webkit-scrollbar,
 .wallpaper-grid::-webkit-scrollbar,
+.settings-wp-grid::-webkit-scrollbar,
 .overview-grid::-webkit-scrollbar,
 .ps-view::-webkit-scrollbar,
 .ps-avatar-grid::-webkit-scrollbar,
 .ext-scroll::-webkit-scrollbar,
 .link-hub-scroll::-webkit-scrollbar,
 .link-items-list::-webkit-scrollbar,
-.chrome-import-list::-webkit-scrollbar {
-  width: 5px;
+.chrome-import-list::-webkit-scrollbar,
+.dlm-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
 .settings-scroll::-webkit-scrollbar-track,
 .m3-settings-drawer::-webkit-scrollbar-track,
 .wallpaper-grid::-webkit-scrollbar-track,
+.settings-wp-grid::-webkit-scrollbar-track,
 .overview-grid::-webkit-scrollbar-track,
 .ps-view::-webkit-scrollbar-track,
 .ps-avatar-grid::-webkit-scrollbar-track,
 .ext-scroll::-webkit-scrollbar-track,
 .link-hub-scroll::-webkit-scrollbar-track,
 .link-items-list::-webkit-scrollbar-track,
-.chrome-import-list::-webkit-scrollbar-track {
+.chrome-import-list::-webkit-scrollbar-track,
+.dlm-scroll::-webkit-scrollbar-track {
   background: transparent;
+}
+
+.settings-scroll::-webkit-scrollbar-button,
+.m3-settings-drawer::-webkit-scrollbar-button,
+.wallpaper-grid::-webkit-scrollbar-button,
+.settings-wp-grid::-webkit-scrollbar-button,
+.overview-grid::-webkit-scrollbar-button,
+.ps-view::-webkit-scrollbar-button,
+.ps-avatar-grid::-webkit-scrollbar-button,
+.ext-scroll::-webkit-scrollbar-button,
+.link-hub-scroll::-webkit-scrollbar-button,
+.link-items-list::-webkit-scrollbar-button,
+.chrome-import-list::-webkit-scrollbar-button,
+.dlm-scroll::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .settings-scroll::-webkit-scrollbar-thumb,
 .m3-settings-drawer::-webkit-scrollbar-thumb,
 .wallpaper-grid::-webkit-scrollbar-thumb,
+.settings-wp-grid::-webkit-scrollbar-thumb,
 .overview-grid::-webkit-scrollbar-thumb,
 .ps-view::-webkit-scrollbar-thumb,
 .ps-avatar-grid::-webkit-scrollbar-thumb,
 .ext-scroll::-webkit-scrollbar-thumb,
 .link-hub-scroll::-webkit-scrollbar-thumb,
 .link-items-list::-webkit-scrollbar-thumb,
-.chrome-import-list::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--md-outline-variant) 85%, transparent);
+.chrome-import-list::-webkit-scrollbar-thumb,
+.dlm-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--md-outline-variant) 75%, transparent);
   border-radius: var(--md-shape-full);
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
 
 .settings-scroll::-webkit-scrollbar-thumb:hover,
 .m3-settings-drawer::-webkit-scrollbar-thumb:hover,
 .wallpaper-grid::-webkit-scrollbar-thumb:hover,
+.settings-wp-grid::-webkit-scrollbar-thumb:hover,
 .overview-grid::-webkit-scrollbar-thumb:hover,
 .ps-view::-webkit-scrollbar-thumb:hover,
 .ps-avatar-grid::-webkit-scrollbar-thumb:hover,
 .ext-scroll::-webkit-scrollbar-thumb:hover,
 .link-hub-scroll::-webkit-scrollbar-thumb:hover,
 .link-items-list::-webkit-scrollbar-thumb:hover,
-.chrome-import-list::-webkit-scrollbar-thumb:hover {
+.chrome-import-list::-webkit-scrollbar-thumb:hover,
+.dlm-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--md-outline);
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
 
 /* ==========================================================================
-   Full-Viewport Chrome-Grade Material Design 3 Extensions Manager (v5.6.0)
+   Full-Viewport Chrome-Grade Material Design 3 Extensions Manager (v5.7.0)
    28px Expressive Workspace · 2-Col M3 Cards · Details View · Chrome Import
    ========================================================================== */
 .ext-manager-overlay { z-index: 176; }
@@ -5413,7 +5539,7 @@ body.force-light .ext-store-pill-form:focus-within {
   gap: 12px;
   box-shadow: var(--md-elev-1);
   contain: layout style;
-  transition: transform var(--md-dur-medium) var(--md-ease-emphasized-decel), border-color var(--md-dur-short) ease, background-color var(--md-dur-short) ease, opacity var(--md-dur-short) ease;
+  transition: transform var(--md-dur-medium) var(--md-ease-emphasized-decel), border-color var(--md-dur-short) var(--md-ease-emphasized), background-color var(--md-dur-short) var(--md-ease-emphasized), opacity var(--md-dur-short) var(--md-ease-emphasized);
 }
 
 body.theme-light .ext-card,
@@ -5425,6 +5551,7 @@ body.force-light .ext-card {
 .ext-card:hover {
   border-color: color-mix(in srgb, var(--md-primary) 42%, transparent);
   box-shadow: var(--md-elev-2);
+  transform: translate3d(0, -2px, 0);
 }
 
 .ext-card.is-disabled {
@@ -5553,7 +5680,10 @@ body.force-light .ext-card {
   font-weight: 600;
   cursor: pointer;
   flex-shrink: 0;
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
 }
+.ext-copy-id-btn:hover { background: var(--md-primary-container); color: var(--md-on-primary-container); }
+.ext-copy-id-btn:active { transform: scale(0.94); }
 
 .ext-card-foot {
   display: flex;
@@ -5755,7 +5885,7 @@ body.force-light .ext-details-hero {
 }
 
 /* ==========================================================================
-   Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub (v5.6.0)
+   Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub (v5.7.0)
    Gliding Segmented Views · Device Presence & Ping · Notes & Clip History
    ========================================================================== */
 .link-hub-overlay { z-index: 175; }
@@ -6012,6 +6142,12 @@ body.force-light .link-card {
   align-items: center;
   gap: 13px;
   min-width: 0;
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-medium) var(--md-ease-emphasized-decel);
+}
+
+.link-device-card:hover {
+  border-color: color-mix(in srgb, var(--md-primary) 42%, transparent);
+  transform: translate3d(0, -1px, 0);
 }
 
 body.theme-light .link-device-card,
@@ -6716,7 +6852,7 @@ body.force-light .link-empty-box {
   width: 100%;
   font-family: inherit;
   color: var(--md-on-surface);
-  transition: background-color var(--md-dur-short) ease, border-color var(--md-dur-short) ease, transform var(--md-dur-press) ease;
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
 }
 
 body.theme-light .link-tab-row,
@@ -6758,6 +6894,13 @@ body.force-light .link-tab-row {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-medium) var(--md-ease-emphasized-decel);
+}
+
+.link-drop-item:hover {
+  background: var(--md-surface-container-high);
+  border-color: color-mix(in srgb, var(--md-primary) 36%, transparent);
+  transform: translate3d(0, -1px, 0);
 }
 
 body.theme-light .link-drop-item,
@@ -7000,6 +7143,13 @@ body.force-light .link-note-composer:focus-within {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-medium) var(--md-ease-emphasized-decel);
+}
+
+.link-note-card:hover {
+  background: var(--md-surface-container-high);
+  border-color: color-mix(in srgb, var(--md-primary) 34%, transparent);
+  transform: translate3d(0, -1px, 0);
 }
 
 body.theme-light .link-note-card,

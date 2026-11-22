@@ -419,7 +419,7 @@ namespace DejavuSetup
                     if (key != null)
                     {
                         key.SetValue("DisplayName", "dejavu");
-                        key.SetValue("DisplayVersion", "5.6.0");
+                        key.SetValue("DisplayVersion", "5.7.0");
                         key.SetValue("Publisher", "dejavu Browser");
                         key.SetValue("DisplayIcon", iconPath);
                         key.SetValue("InstallLocation", InstallDir);

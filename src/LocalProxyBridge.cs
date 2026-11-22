@@ -46,19 +46,47 @@ namespace DejavuBrowser
     }
 
     /// <summary>
-    /// Ultra-fast loopback HTTP/CONNECT proxy bridge for WebView2.
+    /// Ultra-fast loopback HTTP/CONNECT proxy bridge for WebView2 (v5.7.0).
     /// When VPN is OFF: relays TCP sockets directly with zero restart.
     /// When VPN is ON: tunnels traffic through either:
-    ///   - Smart Clean-IP Global Relay Pool (SOCKS5 / HTTPS CONNECT / SOCKS4 with automatic zero-drop failover), OR
-    ///   - 3-Hop Tor Onion SOCKS5 tunnel (127.0.0.1:socksPort, remote DNS ATYP 0x03)
+    ///   - Smart Clean-IP Global Relay Pool (SOCKS5 / HTTPS CONNECT / SOCKS4) with per-endpoint
+    ///     circuit breakers, 2.2s hedged parallel failover, SOCKS5 IPv4 fallback, full-pool
+    ///     plain HTTP failover, 90s stalled-socket watchdog, and automatic PoolDegraded self-heal, OR
+    ///   - 3-Hop Tor Onion SOCKS5 tunnel (127.0.0.1:socksPort, strict remote DNS ATYP 0x03)
     /// with a fail-closed kill-switch when connecting.
     /// </summary>
     internal sealed class LocalProxyBridge : IDisposable
     {
+        private const int CircuitBreakerThreshold = 3;
+        private const int CircuitBreakerCooldownSeconds = 45;
+        private const int HedgeDelayMs = 2200;
+        private const int RelayIdleTimeoutMs = 90000;
+
         private sealed class DnsCacheEntry
         {
             public byte[] Ipv4;
             public DateTime ExpiresUtc;
+        }
+
+        private sealed class EndpointHealth
+        {
+            public readonly object Gate = new object();
+            public int ConsecutiveFailures;
+            public DateTime CooldownUntilUtc;
+            public long TotalSuccesses;
+        }
+
+        private sealed class PlainHttpConnection
+        {
+            public TcpClient Client;
+            public bool ForwardAsHttpProxy;
+        }
+
+        private sealed class Socks5AttemptResult
+        {
+            public TcpClient Client;
+            public bool GreetedOk;
+            public bool ConnectRejected;
         }
 
         private static readonly ConcurrentDictionary<string, DnsCacheEntry> DnsV4Cache =
@@ -68,13 +96,19 @@ namespace DejavuBrowser
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly object _sync = new object();
         private readonly HashSet<TcpClient> _activeVpnClients = new HashSet<TcpClient>();
+        private readonly ConcurrentDictionary<string, EndpointHealth> _endpointHealth =
+            new ConcurrentDictionary<string, EndpointHealth>(StringComparer.OrdinalIgnoreCase);
 
         private volatile bool _vpnEnabled;
         private List<UpstreamEndpoint> _upstreamPool = new List<UpstreamEndpoint>();
         private int _primaryIndex;
+        private int _poolAllFailedStreak;
+        private DateTime _lastPoolDegradedUtc = DateTime.MinValue;
         private long _vpnBytesSent;
         private long _vpnBytesReceived;
         private bool _disposed;
+
+        public event Action PoolDegraded;
 
         public int ListenPort { get; private set; }
 
@@ -114,7 +148,9 @@ namespace DejavuBrowser
                 _vpnEnabled = false;
                 _upstreamPool = new List<UpstreamEndpoint>();
                 _primaryIndex = 0;
+                _poolAllFailedStreak = 0;
             }
+            _endpointHealth.Clear();
             ResetTunneledConnections();
         }
 
@@ -125,7 +161,9 @@ namespace DejavuBrowser
                 _vpnEnabled = true;
                 _upstreamPool = new List<UpstreamEndpoint>();
                 _primaryIndex = 0;
+                _poolAllFailedStreak = 0;
             }
+            _endpointHealth.Clear();
             ResetTunneledConnections();
         }
 
@@ -150,8 +188,10 @@ namespace DejavuBrowser
             {
                 _upstreamPool = (endpoints != null) ? new List<UpstreamEndpoint>(endpoints) : new List<UpstreamEndpoint>();
                 _primaryIndex = 0;
+                _poolAllFailedStreak = 0;
                 _vpnEnabled = true;
             }
+            _endpointHealth.Clear();
             ResetTunneledConnections();
         }
 
@@ -160,25 +200,171 @@ namespace DejavuBrowser
             lock (_sync)
             {
                 if (_upstreamPool == null || _upstreamPool.Count == 0) return null;
-                int idx = _primaryIndex % _upstreamPool.Count;
-                return _upstreamPool[idx];
+                int count = _upstreamPool.Count;
+                int start = _primaryIndex % count;
+                DateTime now = DateTime.UtcNow;
+                for (int i = 0; i < count; i++)
+                {
+                    UpstreamEndpoint ep = _upstreamPool[(start + i) % count];
+                    if (!IsEndpointInCooldown(ep, now)) return ep;
+                }
+                return _upstreamPool[start];
             }
         }
 
-        private List<UpstreamEndpoint> SnapshotOrderedPool()
+        private EndpointHealth GetOrCreateHealth(UpstreamEndpoint ep)
         {
+            return _endpointHealth.GetOrAdd(ep.Key, _ => new EndpointHealth());
+        }
+
+        private bool IsEndpointInCooldown(UpstreamEndpoint ep, DateTime nowUtc)
+        {
+            if (ep == null) return true;
+            EndpointHealth h;
+            if (!_endpointHealth.TryGetValue(ep.Key, out h)) return false;
+            lock (h.Gate)
+            {
+                return h.CooldownUntilUtc > nowUtc;
+            }
+        }
+
+        private DateTime GetEndpointCooldownUntil(UpstreamEndpoint ep)
+        {
+            if (ep == null) return DateTime.MaxValue;
+            EndpointHealth h;
+            if (!_endpointHealth.TryGetValue(ep.Key, out h)) return DateTime.MinValue;
+            lock (h.Gate)
+            {
+                return h.CooldownUntilUtc;
+            }
+        }
+
+        private void RecordEndpointSuccess(UpstreamEndpoint ep)
+        {
+            if (ep == null) return;
+            EndpointHealth h = GetOrCreateHealth(ep);
+            lock (h.Gate)
+            {
+                h.ConsecutiveFailures = 0;
+                h.CooldownUntilUtc = DateTime.MinValue;
+                h.TotalSuccesses++;
+            }
+            lock (_sync)
+            {
+                _poolAllFailedStreak = 0;
+            }
+        }
+
+        private void RecordEndpointFailure(UpstreamEndpoint ep)
+        {
+            if (ep == null) return;
+            bool tripped = false;
+            EndpointHealth h = GetOrCreateHealth(ep);
+            lock (h.Gate)
+            {
+                h.ConsecutiveFailures++;
+                if (h.ConsecutiveFailures >= CircuitBreakerThreshold)
+                {
+                    bool isLocalTor = (ep.Kind == UpstreamKind.Socks5 && ep.Host == "127.0.0.1");
+                    int cdSec = isLocalTor ? 15 : CircuitBreakerCooldownSeconds;
+                    h.CooldownUntilUtc = DateTime.UtcNow.AddSeconds(cdSec);
+                    tripped = true;
+                }
+            }
+            if (tripped)
+            {
+                CheckAndFirePoolDegraded(false);
+            }
+        }
+
+        private void NotifyPoolAllFailed()
+        {
+            bool shouldTrigger = false;
+            lock (_sync)
+            {
+                if (_vpnEnabled && _upstreamPool != null && _upstreamPool.Count > 0)
+                {
+                    _poolAllFailedStreak++;
+                    if (_poolAllFailedStreak >= 2)
+                    {
+                        shouldTrigger = true;
+                    }
+                }
+            }
+            CheckAndFirePoolDegraded(shouldTrigger);
+        }
+
+        private void CheckAndFirePoolDegraded(bool forceIfEnabled)
+        {
+            bool fire = false;
+            lock (_sync)
+            {
+                if (!_vpnEnabled || _disposed || _upstreamPool == null || _upstreamPool.Count == 0) return;
+
+                bool allTripped = true;
+                DateTime now = DateTime.UtcNow;
+                for (int i = 0; i < _upstreamPool.Count; i++)
+                {
+                    if (!IsEndpointInCooldown(_upstreamPool[i], now))
+                    {
+                        allTripped = false;
+                        break;
+                    }
+                }
+
+                if ((allTripped || forceIfEnabled) && (now - _lastPoolDegradedUtc).TotalSeconds >= 10.0)
+                {
+                    _lastPoolDegradedUtc = now;
+                    fire = true;
+                }
+            }
+
+            if (fire)
+            {
+                Action handler = PoolDegraded;
+                if (handler != null)
+                {
+                    Task.Run(() =>
+                    {
+                        try { handler(); } catch { }
+                    });
+                }
+            }
+        }
+
+        private List<UpstreamEndpoint> SnapshotOrderedPool(out bool allInCooldown)
+        {
+            allInCooldown = false;
+            List<UpstreamEndpoint> raw;
             lock (_sync)
             {
                 if (_upstreamPool == null || _upstreamPool.Count == 0) return null;
                 int count = _upstreamPool.Count;
                 int start = _primaryIndex % count;
-                List<UpstreamEndpoint> ordered = new List<UpstreamEndpoint>(count);
+                raw = new List<UpstreamEndpoint>(count);
                 for (int i = 0; i < count; i++)
                 {
-                    ordered.Add(_upstreamPool[(start + i) % count]);
+                    raw.Add(_upstreamPool[(start + i) % count]);
                 }
-                return ordered;
             }
+
+            DateTime now = DateTime.UtcNow;
+            List<UpstreamEndpoint> healthy = new List<UpstreamEndpoint>(raw.Count);
+            List<UpstreamEndpoint> cooled = new List<UpstreamEndpoint>(raw.Count);
+            for (int i = 0; i < raw.Count; i++)
+            {
+                if (IsEndpointInCooldown(raw[i], now)) cooled.Add(raw[i]);
+                else healthy.Add(raw[i]);
+            }
+
+            if (healthy.Count > 0)
+            {
+                return healthy;
+            }
+
+            allInCooldown = true;
+            cooled.Sort((a, b) => GetEndpointCooldownUntil(a).CompareTo(GetEndpointCooldownUntil(b)));
+            return cooled;
         }
 
         private void PromoteEndpointIfInPool(UpstreamEndpoint winner)
@@ -232,25 +418,229 @@ namespace DejavuBrowser
             }
         }
 
+        private static void CleanupLosingTask(Task<TcpClient> loserTask, CancellationTokenSource linkedCts)
+        {
+            loserTask.ContinueWith(t =>
+            {
+                try
+                {
+                    if (t.Status == TaskStatus.RanToCompletion && t.Result != null)
+                    {
+                        try { t.Result.Close(); } catch { }
+                    }
+                    else if (t.IsFaulted)
+                    {
+                        Exception ignored = t.Exception;
+                    }
+                }
+                catch { }
+                finally
+                {
+                    if (linkedCts != null)
+                    {
+                        try { linkedCts.Dispose(); } catch { }
+                    }
+                }
+            }, TaskScheduler.Default);
+        }
+
         private async Task<TcpClient> ConnectUsingPoolAsync(string targetHost, int targetPort, CancellationToken token)
         {
-            List<UpstreamEndpoint> pool = SnapshotOrderedPool();
+            bool allInCooldown;
+            List<UpstreamEndpoint> pool = SnapshotOrderedPool(out allInCooldown);
             if (pool == null || pool.Count == 0) return null;
 
-            int maxTries = Math.Min(pool.Count, 3);
+            UpstreamEndpoint ep0 = pool[0];
+            bool isLocalTor = (ep0.Kind == UpstreamKind.Socks5 && ep0.Host == "127.0.0.1");
+
+            if (isLocalTor)
+            {
+                TcpClient torTcp = await ConnectViaEndpointAsync(ep0, targetHost, targetPort, 24000, token).ConfigureAwait(false);
+                if (torTcp != null)
+                {
+                    RecordEndpointSuccess(ep0);
+                    return torTcp;
+                }
+                RecordEndpointFailure(ep0);
+                if (!token.IsCancellationRequested)
+                {
+                    torTcp = await ConnectViaEndpointAsync(ep0, targetHost, targetPort, 18000, token).ConfigureAwait(false);
+                    if (torTcp != null)
+                    {
+                        RecordEndpointSuccess(ep0);
+                        return torTcp;
+                    }
+                    RecordEndpointFailure(ep0);
+                }
+                NotifyPoolAllFailed();
+                return null;
+            }
+
+            // Hedged parallel failover for non-Tor Smart relay pools:
+            // Try primary healthy node first; if not connected within 2200ms and a healthy backup exists,
+            // race backup in parallel and cleanly close the slower socket.
+            int nextSeqIndex = 0;
+            if (!allInCooldown && pool.Count >= 2)
+            {
+                UpstreamEndpoint ep1 = pool[1];
+                CancellationTokenSource hedgeCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+                bool ownsCtsDispose = true;
+                try
+                {
+                    Task<TcpClient> t0 = ConnectViaEndpointAsync(ep0, targetHost, targetPort, 6500, hedgeCts.Token);
+                    Task delayTask;
+                    using (CancellationTokenSource delayCts = CancellationTokenSource.CreateLinkedTokenSource(hedgeCts.Token))
+                    {
+                        delayTask = Task.Delay(HedgeDelayMs, delayCts.Token);
+                        Task early = await Task.WhenAny(t0, delayTask).ConfigureAwait(false);
+                        try { delayCts.Cancel(); } catch { }
+
+                        if (early == t0)
+                        {
+                            TcpClient c0 = null;
+                            try { c0 = await t0.ConfigureAwait(false); } catch { }
+                            if (c0 != null)
+                            {
+                                RecordEndpointSuccess(ep0);
+                                return c0;
+                            }
+                            RecordEndpointFailure(ep0);
+                            nextSeqIndex = 1;
+                        }
+                        else if (!token.IsCancellationRequested)
+                        {
+                            // Primary slower than 2200ms -> launch parallel hedged connection to backup!
+                            Task<TcpClient> t1 = ConnectViaEndpointAsync(ep1, targetHost, targetPort, 6000, hedgeCts.Token);
+                            Task<TcpClient> firstDone = await Task.WhenAny(t0, t1).ConfigureAwait(false);
+                            Task<TcpClient> otherTask = (firstDone == t0) ? t1 : t0;
+                            UpstreamEndpoint firstEp = (firstDone == t0) ? ep0 : ep1;
+                            UpstreamEndpoint otherEp = (firstDone == t0) ? ep1 : ep0;
+
+                            TcpClient firstClient = null;
+                            try { firstClient = await firstDone.ConfigureAwait(false); } catch { }
+                            if (firstClient != null)
+                            {
+                                RecordEndpointSuccess(firstEp);
+                                if (firstEp == ep1) PromoteEndpointIfInPool(ep1);
+                                try { hedgeCts.Cancel(); } catch { }
+                                ownsCtsDispose = false;
+                                CleanupLosingTask(otherTask, hedgeCts);
+                                return firstClient;
+                            }
+
+                            RecordEndpointFailure(firstEp);
+                            TcpClient secondClient = null;
+                            try { secondClient = await otherTask.ConfigureAwait(false); } catch { }
+                            if (secondClient != null)
+                            {
+                                RecordEndpointSuccess(otherEp);
+                                if (otherEp == ep1) PromoteEndpointIfInPool(ep1);
+                                return secondClient;
+                            }
+
+                            RecordEndpointFailure(otherEp);
+                            nextSeqIndex = 2;
+                        }
+                        else
+                        {
+                            ownsCtsDispose = false;
+                            try { hedgeCts.Cancel(); } catch { }
+                            CleanupLosingTask(t0, hedgeCts);
+                            return null;
+                        }
+                    }
+                }
+                finally
+                {
+                    if (ownsCtsDispose)
+                    {
+                        try { hedgeCts.Dispose(); } catch { }
+                    }
+                }
+            }
+
+            int maxTries = Math.Min(pool.Count, allInCooldown ? 2 : 4);
+            for (int i = nextSeqIndex; i < maxTries; i++)
+            {
+                if (token.IsCancellationRequested) return null;
+                UpstreamEndpoint ep = pool[i];
+                int timeoutMs = allInCooldown ? 4500 : (i == 0 ? 6500 : 5500);
+                TcpClient tcp = await ConnectViaEndpointAsync(ep, targetHost, targetPort, timeoutMs, token).ConfigureAwait(false);
+                if (tcp != null)
+                {
+                    RecordEndpointSuccess(ep);
+                    if (i > 0) PromoteEndpointIfInPool(ep);
+                    return tcp;
+                }
+                RecordEndpointFailure(ep);
+            }
+
+            if (pool.Count == 1 && !allInCooldown && !token.IsCancellationRequested)
+            {
+                try { await Task.Delay(150, token).ConfigureAwait(false); } catch { return null; }
+                TcpClient retryTcp = await ConnectViaEndpointAsync(pool[0], targetHost, targetPort, 5500, token).ConfigureAwait(false);
+                if (retryTcp != null)
+                {
+                    RecordEndpointSuccess(pool[0]);
+                    return retryTcp;
+                }
+                RecordEndpointFailure(pool[0]);
+            }
+
+            NotifyPoolAllFailed();
+            return null;
+        }
+
+        private async Task<PlainHttpConnection> ConnectForPlainHttpAsync(string targetHost, int targetPort, CancellationToken token)
+        {
+            bool allInCooldown;
+            List<UpstreamEndpoint> pool = SnapshotOrderedPool(out allInCooldown);
+            if (pool == null || pool.Count == 0) return null;
+
+            int maxTries = Math.Min(pool.Count, allInCooldown ? 2 : 4);
             for (int i = 0; i < maxTries; i++)
             {
                 if (token.IsCancellationRequested) return null;
                 UpstreamEndpoint ep = pool[i];
                 bool isLocalTor = (ep.Kind == UpstreamKind.Socks5 && ep.Host == "127.0.0.1");
-                int timeoutMs = isLocalTor ? 24000 : (i == 0 ? 7500 : 6000);
-                TcpClient tcp = await ConnectViaEndpointAsync(ep, targetHost, targetPort, timeoutMs, token).ConfigureAwait(false);
-                if (tcp != null)
+
+                if (ep.Kind == UpstreamKind.HttpConnect)
                 {
-                    if (i > 0) PromoteEndpointIfInPool(ep);
-                    return tcp;
+                    int timeoutMs = allInCooldown ? 4500 : 6500;
+                    TcpClient tcp = await ConnectDirectAsync(ep.Host, ep.Port, timeoutMs, token).ConfigureAwait(false);
+                    if (tcp != null)
+                    {
+                        RecordEndpointSuccess(ep);
+                        if (i > 0) PromoteEndpointIfInPool(ep);
+                        return new PlainHttpConnection { Client = tcp, ForwardAsHttpProxy = true };
+                    }
+                    RecordEndpointFailure(ep);
+                }
+                else
+                {
+                    int timeoutMs = isLocalTor ? 24000 : (allInCooldown ? 4500 : 6500);
+                    TcpClient tcp = await ConnectViaEndpointAsync(ep, targetHost, targetPort, timeoutMs, token).ConfigureAwait(false);
+                    if (tcp != null)
+                    {
+                        RecordEndpointSuccess(ep);
+                        if (i > 0) PromoteEndpointIfInPool(ep);
+                        return new PlainHttpConnection { Client = tcp, ForwardAsHttpProxy = false };
+                    }
+                    RecordEndpointFailure(ep);
+                    if (isLocalTor && !token.IsCancellationRequested)
+                    {
+                        tcp = await ConnectViaEndpointAsync(ep, targetHost, targetPort, 18000, token).ConfigureAwait(false);
+                        if (tcp != null)
+                        {
+                            RecordEndpointSuccess(ep);
+                            return new PlainHttpConnection { Client = tcp, ForwardAsHttpProxy = false };
+                        }
+                        RecordEndpointFailure(ep);
+                    }
                 }
             }
+
+            NotifyPoolAllFailed();
             return null;
         }
 
@@ -362,19 +752,19 @@ namespace DejavuBrowser
                             return;
                         }
 
-                        // For plain HTTP over an HttpConnect upstream, forward directly to proxy with absolute URI!
-                        UpstreamEndpoint primary = useVpn ? GetPrimaryEndpoint() : null;
-                        bool forwardAsHttpProxy = (useVpn && primary != null && primary.Kind == UpstreamKind.HttpConnect);
-
-                        if (forwardAsHttpProxy)
+                        bool forwardAsHttpProxy = false;
+                        if (useVpn)
                         {
-                            upstream = await ConnectDirectAsync(primary.Host, primary.Port, 7500, token).ConfigureAwait(false);
+                            PlainHttpConnection conn = await ConnectForPlainHttpAsync(host, port, token).ConfigureAwait(false);
+                            if (conn != null)
+                            {
+                                upstream = conn.Client;
+                                forwardAsHttpProxy = conn.ForwardAsHttpProxy;
+                            }
                         }
                         else
                         {
-                            upstream = useVpn
-                                ? await ConnectUsingPoolAsync(host, port, token).ConfigureAwait(false)
-                                : await ConnectDirectAsync(host, port, 15000, token).ConfigureAwait(false);
+                            upstream = await ConnectDirectAsync(host, port, 15000, token).ConfigureAwait(false);
                         }
 
                         if (upstream == null)
@@ -468,16 +858,21 @@ namespace DejavuBrowser
             tcp.NoDelay = true;
             try
             {
-                Task connectTask = tcp.ConnectAsync(host, port);
-                Task delayTask = Task.Delay(timeoutMs, token);
-                Task done = await Task.WhenAny(connectTask, delayTask).ConfigureAwait(false);
-                if (done != connectTask)
+                using (CancellationTokenSource delayCts = CancellationTokenSource.CreateLinkedTokenSource(token))
                 {
-                    try { tcp.Close(); } catch { }
-                    return null;
+                    Task connectTask = tcp.ConnectAsync(host, port);
+                    Task delayTask = Task.Delay(timeoutMs, delayCts.Token);
+                    Task done = await Task.WhenAny(connectTask, delayTask).ConfigureAwait(false);
+                    try { delayCts.Cancel(); } catch { }
+                    if (done != connectTask)
+                    {
+                        ObserveFault(connectTask);
+                        try { tcp.Close(); } catch { }
+                        return null;
+                    }
+                    await connectTask.ConfigureAwait(false);
+                    return tcp;
                 }
-                await connectTask.ConfigureAwait(false);
-                return tcp;
             }
             catch
             {
@@ -510,8 +905,36 @@ namespace DejavuBrowser
         public static async Task<TcpClient> ConnectViaSocks5HostAsync(
             string proxyHost, int proxyPort, string host, int port, int timeoutMs, CancellationToken token)
         {
+            // Attempt 1: ATYP=0x03 (Remote DNS domain name - strictly required for Tor 127.0.0.1!)
+            Socks5AttemptResult first = await ConnectViaSocks5AttemptAsync(
+                proxyHost, proxyPort, host, port, false, timeoutMs, token).ConfigureAwait(false);
+            if (first.Client != null) return first.Client;
+
+            // SOCKS5 IPv4 Fallback: for non-Tor remote SOCKS5 proxies that reject ATYP=0x03,
+            // automatically retry once with ATYP=0x01 (resolved IPv4). NEVER fall back for Tor 127.0.0.1!
+            bool isLocalTor = string.Equals(proxyHost, "127.0.0.1", StringComparison.OrdinalIgnoreCase);
+            if (!isLocalTor && first.GreetedOk && first.ConnectRejected && !token.IsCancellationRequested)
+            {
+                Socks5AttemptResult fallback = await ConnectViaSocks5AttemptAsync(
+                    proxyHost, proxyPort, host, port, true, Math.Min(timeoutMs, 5500), token).ConfigureAwait(false);
+                if (fallback.Client != null) return fallback.Client;
+            }
+            return null;
+        }
+
+        private static async Task<Socks5AttemptResult> ConnectViaSocks5AttemptAsync(
+            string proxyHost, int proxyPort, string host, int port, bool useIpv4, int timeoutMs, CancellationToken token)
+        {
+            Socks5AttemptResult res = new Socks5AttemptResult();
+            byte[] ipv4 = null;
+            if (useIpv4)
+            {
+                ipv4 = await ResolveIpv4CachedAsync(host, timeoutMs, token).ConfigureAwait(false);
+                if (ipv4 == null || ipv4.Length != 4) return res;
+            }
+
             TcpClient tcp = await ConnectDirectAsync(proxyHost, proxyPort, timeoutMs, token).ConfigureAwait(false);
-            if (tcp == null) return null;
+            if (tcp == null) return res;
             try
             {
                 NetworkStream s = tcp.GetStream();
@@ -524,42 +947,63 @@ namespace DejavuBrowser
                 if (!await ReadExactAsync(s, greetResp, 0, 2, timeoutMs, token).ConfigureAwait(false))
                 {
                     try { tcp.Close(); } catch { }
-                    return null;
+                    return res;
                 }
                 if (greetResp[0] != 0x05 || greetResp[1] != 0x00)
                 {
                     try { tcp.Close(); } catch { }
-                    return null;
+                    return res;
                 }
+                res.GreetedOk = true;
 
-                // 2. SOCKS5 CONNECT with ATYP=0x03 (Domain Name -> Remote DNS inside VPN exit!)
-                byte[] hostBytes = Encoding.ASCII.GetBytes(host);
-                if (hostBytes.Length > 255)
+                // 2. SOCKS5 CONNECT (ATYP=0x03 domain or ATYP=0x01 IPv4 fallback)
+                byte[] req;
+                if (useIpv4)
                 {
-                    try { tcp.Close(); } catch { }
-                    return null;
+                    req = new byte[10];
+                    req[0] = 0x05;
+                    req[1] = 0x01;
+                    req[2] = 0x00;
+                    req[3] = 0x01;
+                    req[4] = ipv4[0];
+                    req[5] = ipv4[1];
+                    req[6] = ipv4[2];
+                    req[7] = ipv4[3];
+                    req[8] = (byte)((port >> 8) & 0xFF);
+                    req[9] = (byte)(port & 0xFF);
                 }
-                byte[] req = new byte[7 + hostBytes.Length];
-                req[0] = 0x05;
-                req[1] = 0x01;
-                req[2] = 0x00;
-                req[3] = 0x03;
-                req[4] = (byte)hostBytes.Length;
-                Buffer.BlockCopy(hostBytes, 0, req, 5, hostBytes.Length);
-                req[5 + hostBytes.Length] = (byte)((port >> 8) & 0xFF);
-                req[6 + hostBytes.Length] = (byte)(port & 0xFF);
+                else
+                {
+                    byte[] hostBytes = Encoding.ASCII.GetBytes(host);
+                    if (hostBytes.Length > 255)
+                    {
+                        try { tcp.Close(); } catch { }
+                        return res;
+                    }
+                    req = new byte[7 + hostBytes.Length];
+                    req[0] = 0x05;
+                    req[1] = 0x01;
+                    req[2] = 0x00;
+                    req[3] = 0x03;
+                    req[4] = (byte)hostBytes.Length;
+                    Buffer.BlockCopy(hostBytes, 0, req, 5, hostBytes.Length);
+                    req[5 + hostBytes.Length] = (byte)((port >> 8) & 0xFF);
+                    req[6 + hostBytes.Length] = (byte)(port & 0xFF);
+                }
                 await s.WriteAsync(req, 0, req.Length, token).ConfigureAwait(false);
 
                 byte[] repHead = new byte[4];
                 if (!await ReadExactAsync(s, repHead, 0, 4, timeoutMs, token).ConfigureAwait(false))
                 {
+                    res.ConnectRejected = true;
                     try { tcp.Close(); } catch { }
-                    return null;
+                    return res;
                 }
                 if (repHead[0] != 0x05 || repHead[1] != 0x00)
                 {
+                    res.ConnectRejected = true;
                     try { tcp.Close(); } catch { }
-                    return null;
+                    return res;
                 }
 
                 int skipBytes = 0;
@@ -571,7 +1015,7 @@ namespace DejavuBrowser
                     if (!await ReadExactAsync(s, lenB, 0, 1, timeoutMs, token).ConfigureAwait(false))
                     {
                         try { tcp.Close(); } catch { }
-                        return null;
+                        return res;
                     }
                     skipBytes = lenB[0] + 2;
                 }
@@ -582,16 +1026,18 @@ namespace DejavuBrowser
                     if (!await ReadExactAsync(s, dump, 0, skipBytes, timeoutMs, token).ConfigureAwait(false))
                     {
                         try { tcp.Close(); } catch { }
-                        return null;
+                        return res;
                     }
                 }
 
-                return tcp;
+                res.Client = tcp;
+                return res;
             }
             catch
             {
+                if (res.GreetedOk) res.ConnectRejected = true;
                 try { tcp.Close(); } catch { }
-                return null;
+                return res;
             }
         }
 
@@ -666,26 +1112,32 @@ namespace DejavuBrowser
 
             try
             {
-                Task<IPAddress[]> dnsTask = Dns.GetHostAddressesAsync(host);
-                Task delayTask = Task.Delay(Math.Min(timeoutMs, 3500), token);
-                if (await Task.WhenAny(dnsTask, delayTask).ConfigureAwait(false) != dnsTask)
+                using (CancellationTokenSource delayCts = CancellationTokenSource.CreateLinkedTokenSource(token))
                 {
-                    return null;
-                }
-                IPAddress[] addrs = await dnsTask.ConfigureAwait(false);
-                if (addrs != null)
-                {
-                    for (int i = 0; i < addrs.Length; i++)
+                    Task<IPAddress[]> dnsTask = Dns.GetHostAddressesAsync(host);
+                    Task delayTask = Task.Delay(Math.Min(timeoutMs, 3500), delayCts.Token);
+                    Task done = await Task.WhenAny(dnsTask, delayTask).ConfigureAwait(false);
+                    try { delayCts.Cancel(); } catch { }
+                    if (done != dnsTask)
                     {
-                        if (addrs[i].AddressFamily == AddressFamily.InterNetwork)
+                        ObserveFault(dnsTask);
+                        return null;
+                    }
+                    IPAddress[] addrs = await dnsTask.ConfigureAwait(false);
+                    if (addrs != null)
+                    {
+                        for (int i = 0; i < addrs.Length; i++)
                         {
-                            byte[] ipv4 = addrs[i].GetAddressBytes();
-                            DnsV4Cache[host] = new DnsCacheEntry
+                            if (addrs[i].AddressFamily == AddressFamily.InterNetwork)
                             {
-                                Ipv4 = ipv4,
-                                ExpiresUtc = DateTime.UtcNow.AddMinutes(5)
-                            };
-                            return ipv4;
+                                byte[] ipv4 = addrs[i].GetAddressBytes();
+                                DnsV4Cache[host] = new DnsCacheEntry
+                                {
+                                    Ipv4 = ipv4,
+                                    ExpiresUtc = DateTime.UtcNow.AddMinutes(5)
+                                };
+                                return ipv4;
+                            }
                         }
                     }
                 }
@@ -740,7 +1192,7 @@ namespace DejavuBrowser
 
         /// <summary>
         /// Performs a real HTTPS GET directly through ANY upstream endpoint (SOCKS5 / HTTP CONNECT / SOCKS4)
-        /// using SslStream and returns HTTP status code, decoded body, and measured round-trip latency!
+        /// using SslStream (with full OS TLS certificate validation!) and returns HTTP status code, decoded body, and latency.
         /// </summary>
         public static async Task<HttpsProbeResult> HttpsProbeViaEndpointAsync(
             UpstreamEndpoint ep, string host, string path, int timeoutMs, CancellationToken token)
@@ -756,12 +1208,19 @@ namespace DejavuBrowser
                     SslProtocols protos = SslProtocols.Tls12;
                     try { protos = SslProtocols.Tls12 | (SslProtocols)12288; } catch { }
 
-                    Task authTask = ssl.AuthenticateAsClientAsync(host, null, protos, false);
-                    if (await Task.WhenAny(authTask, Task.Delay(timeoutMs, token)).ConfigureAwait(false) != authTask)
+                    using (CancellationTokenSource authDelayCts = CancellationTokenSource.CreateLinkedTokenSource(token))
                     {
-                        return null;
+                        Task authTask = ssl.AuthenticateAsClientAsync(host, null, protos, false);
+                        Task delayTask = Task.Delay(timeoutMs, authDelayCts.Token);
+                        Task authDone = await Task.WhenAny(authTask, delayTask).ConfigureAwait(false);
+                        try { authDelayCts.Cancel(); } catch { }
+                        if (authDone != authTask)
+                        {
+                            ObserveFault(authTask);
+                            return null;
+                        }
+                        await authTask.ConfigureAwait(false);
                     }
-                    await authTask.ConfigureAwait(false);
 
                     string req = "GET " + path + " HTTP/1.1\r\n" +
                                  "Host: " + host + "\r\n" +
@@ -876,12 +1335,28 @@ namespace DejavuBrowser
 
         private async Task RelayBidirectionalAsync(TcpClient a, NetworkStream aStream, TcpClient b, NetworkStream bStream, bool countVpnTraffic, CancellationToken token)
         {
-            Task t1 = PumpHalfAsync(aStream, bStream, b, countVpnTraffic, true, token);
-            Task t2 = PumpHalfAsync(bStream, aStream, a, countVpnTraffic, false, token);
-            await Task.WhenAll(t1, t2).ConfigureAwait(false);
+            long[] lastActivityTicks = new long[] { DateTime.UtcNow.Ticks };
+            long idleTicks = TimeSpan.FromMilliseconds(RelayIdleTimeoutMs).Ticks;
+
+            using (Timer idleWatchdog = new Timer(_ =>
+            {
+                long last = Interlocked.Read(ref lastActivityTicks[0]);
+                if ((DateTime.UtcNow.Ticks - last) >= idleTicks)
+                {
+                    try { a.Close(); } catch { }
+                    try { b.Close(); } catch { }
+                }
+            }, null, 15000, 15000))
+            {
+                Task t1 = PumpHalfAsync(aStream, bStream, b, countVpnTraffic, true, lastActivityTicks, token);
+                Task t2 = PumpHalfAsync(bStream, aStream, a, countVpnTraffic, false, lastActivityTicks, token);
+                await Task.WhenAll(t1, t2).ConfigureAwait(false);
+            }
         }
 
-        private async Task PumpHalfAsync(NetworkStream src, NetworkStream dst, TcpClient dstClient, bool countVpnTraffic, bool isUpload, CancellationToken token)
+        private async Task PumpHalfAsync(
+            NetworkStream src, NetworkStream dst, TcpClient dstClient,
+            bool countVpnTraffic, bool isUpload, long[] lastActivityTicks, CancellationToken token)
         {
             byte[] buf = new byte[65536];
             try
@@ -890,6 +1365,7 @@ namespace DejavuBrowser
                 {
                     int n = await src.ReadAsync(buf, 0, buf.Length, token).ConfigureAwait(false);
                     if (n <= 0) break;
+                    Interlocked.Exchange(ref lastActivityTicks[0], DateTime.UtcNow.Ticks);
                     await dst.WriteAsync(buf, 0, n, token).ConfigureAwait(false);
                     if (countVpnTraffic)
                     {
@@ -905,13 +1381,27 @@ namespace DejavuBrowser
             }
         }
 
+        private static void ObserveFault(Task t)
+        {
+            if (t == null) return;
+            t.ContinueWith(ft => { Exception ignored = ft.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
+        }
+
         private static async Task<int> ReadWithTimeoutAsync(Stream s, byte[] buf, int offset, int count, int timeoutMs, CancellationToken token)
         {
-            Task<int> readTask = s.ReadAsync(buf, offset, count, token);
-            Task delayTask = Task.Delay(timeoutMs, token);
-            Task done = await Task.WhenAny(readTask, delayTask).ConfigureAwait(false);
-            if (done != readTask) return -1;
-            return await readTask.ConfigureAwait(false);
+            using (CancellationTokenSource delayCts = CancellationTokenSource.CreateLinkedTokenSource(token))
+            {
+                Task<int> readTask = s.ReadAsync(buf, offset, count, token);
+                Task delayTask = Task.Delay(timeoutMs, delayCts.Token);
+                Task done = await Task.WhenAny(readTask, delayTask).ConfigureAwait(false);
+                try { delayCts.Cancel(); } catch { }
+                if (done != readTask)
+                {
+                    ObserveFault(readTask);
+                    return -1;
+                }
+                return await readTask.ConfigureAwait(false);
+            }
         }
 
         private static async Task<bool> ReadExactAsync(Stream s, byte[] buf, int offset, int count, int timeoutMs, CancellationToken token)

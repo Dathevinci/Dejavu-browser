@@ -291,6 +291,7 @@ namespace DejavuBrowser
                 : "--disable-gpu ";
             string extraArgs =
                 gpuArgs +
+                "--disable-quic " +
                 "--enable-features=ParallelDownloading,BackForwardCache,WebAuthenticationWindowsHello,WebAuthenticationConditionalUI,FedCm " +
                 "--proxy-server=http://127.0.0.1:" + ProxyBridge.ListenPort + " " +
                 "--proxy-bypass-list=localhost;127.0.0.1;[::1];dejavu.local";
@@ -1771,6 +1772,15 @@ namespace DejavuBrowser
             }
         }
 
+        private string BuildMediaThemeScript(BrowserTab tab)
+        {
+            string ac = SettingsStore.NormalizeAccent(_settings != null ? _settings.accentColor : "amethyst");
+            bool isLight = GetEffectiveIsLight(tab, false);
+            string mode = isLight ? "light" : "dark";
+            return "window.__dejavuInitialMediaTheme={accent:'" + ac + "',mode:'" + mode + "'};" +
+                   "if(window.__dejavuSetMediaTheme)window.__dejavuSetMediaTheme({accent:'" + ac + "',mode:'" + mode + "'});";
+        }
+
         private void ApplyThemeToAllTabs()
         {
             bool isLightTheme = (_settings != null && _settings.appearanceMode == "light" && !_isPrivateWindow);
@@ -1809,6 +1819,10 @@ namespace DejavuBrowser
                     if (bt.WebView.DefaultBackgroundColor != surface)
                     {
                         bt.WebView.DefaultBackgroundColor = surface;
+                    }
+                    if (bt.CoreReady && bt.WebView.CoreWebView2 != null)
+                    {
+                        bt.WebView.CoreWebView2.ExecuteScriptAsync(BuildMediaThemeScript(bt));
                     }
                 }
                 catch { }
@@ -3515,6 +3529,7 @@ namespace DejavuBrowser
                 tab.ShieldScriptId = await core.AddScriptToExecuteOnDocumentCreatedAsync(_docStartScript);
                 if (!string.IsNullOrEmpty(_floatingMediaScript))
                 {
+                    await core.AddScriptToExecuteOnDocumentCreatedAsync(BuildMediaThemeScript(tab));
                     await core.AddScriptToExecuteOnDocumentCreatedAsync(_floatingMediaScript);
                 }
                 if (!string.IsNullOrEmpty(_cwsBannerScript))
@@ -3618,7 +3633,8 @@ namespace DejavuBrowser
                         ",blockFp:" + (_adBlocker.BlockFingerprinting ? "true" : "false") +
                         ",blockCookies:" + (_adBlocker.BlockCookieNotices ? "true" : "false") + "});" +
                         "window.__dejavuFloatingBtnEnabled = " + (floatBtnOn ? "true" : "false") + ";" +
-                        "if(window.__dejavuSetFloatingBtnEnabled)window.__dejavuSetFloatingBtnEnabled(" + (floatBtnOn ? "true" : "false") + ");");
+                        "if(window.__dejavuSetFloatingBtnEnabled)window.__dejavuSetFloatingBtnEnabled(" + (floatBtnOn ? "true" : "false") + ");" +
+                        BuildMediaThemeScript(tab));
                     SchedulePushTabDeltaToShell();
                 };
 
@@ -3640,6 +3656,7 @@ namespace DejavuBrowser
                 {
                     InjectSiteCosmetics(core, core.Source);
                     InjectUserStylePrefs(core);
+                    try { core.ExecuteScriptAsync(BuildMediaThemeScript(tab)); } catch { }
                 };
 
                 core.NavigationCompleted += (s, e) =>
@@ -3664,6 +3681,7 @@ namespace DejavuBrowser
                     if (!string.IsNullOrEmpty(core.DocumentTitle)) tab.Title = core.DocumentTitle;
                     InjectSiteCosmetics(core, core.Source);
                     InjectUserStylePrefs(core);
+                    try { core.ExecuteScriptAsync(BuildMediaThemeScript(tab)); } catch { }
                     if (e.IsSuccess && !_isPrivateWindow)
                     {
                         string histUrl = tab.Url;
@@ -6121,6 +6139,11 @@ namespace DejavuBrowser
 
         private string BuildVpnPayloadJson(string backdrop)
         {
+            return BuildVpnPayloadJson(backdrop, null);
+        }
+
+        private string BuildVpnPayloadJson(string backdrop, VpnVerifyResult verifyResult)
+        {
             BrowserTab tab = GetActiveTab();
             VpnStatusSnapshot snap = _vpn.GetSnapshot();
             var payload = new Dictionary<string, object>
@@ -6131,6 +6154,17 @@ namespace DejavuBrowser
                 { "vpn", snap }
             };
             if (backdrop != null) payload["backdrop"] = backdrop;
+            if (verifyResult != null)
+            {
+                payload["verifyResult"] = new Dictionary<string, object>
+                {
+                    { "ok", verifyResult.ok },
+                    { "exitIp", verifyResult.exitIp ?? "" },
+                    { "latencyMs", verifyResult.latencyMs },
+                    { "engine", verifyResult.engine ?? "smart" },
+                    { "message", verifyResult.message ?? "" }
+                };
+            }
             return _json.Serialize(payload);
         }
 
@@ -6138,8 +6172,39 @@ namespace DejavuBrowser
         {
             if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "vpn")
             {
-                _popoverPopup.UpdateState(BuildVpnPayloadJson(backdrop));
+                _popoverPopup.UpdateState(BuildVpnPayloadJson(backdrop, null));
             }
+        }
+
+        private async Task HandleVerifyVpnTunnelAsync()
+        {
+            if (_vpn == null || IsDisposed) return;
+            VpnVerifyResult res = await _vpn.VerifyActiveTunnelAsync();
+            if (IsDisposed) return;
+            Action apply = () =>
+            {
+                if (IsDisposed) return;
+                PushFullStateToShell();
+                if (_shellReady && _shellView != null && !_shellView.IsDisposed && _shellView.CoreWebView2 != null)
+                {
+                    var shellMsg = new Dictionary<string, object>
+                    {
+                        { "type", "vpnVerifyResult" },
+                        { "ok", res.ok },
+                        { "exitIp", res.exitIp ?? "" },
+                        { "latencyMs", res.latencyMs },
+                        { "engine", res.engine ?? "smart" },
+                        { "message", res.message ?? "" }
+                    };
+                    try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(shellMsg)); } catch { }
+                }
+                if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "vpn")
+                {
+                    _popoverPopup.UpdateState(BuildVpnPayloadJson(null, res));
+                }
+            };
+            if (InvokeRequired) BeginInvoke(apply);
+            else apply();
         }
 
         private void HideSuggestPopup()
@@ -7242,7 +7307,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.6.0 defaults", "success");
+            PushShellToast("Settings restored to v5.7.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -9438,6 +9503,11 @@ namespace DejavuBrowser
                     case "openVpn":
                         ShowVpnPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1100);
                         break;
+                    case "verifyVpnTunnel":
+                        {
+                            Task ignoredVerify = HandleVerifyVpnTunnelAsync();
+                        }
+                        break;
                     case "openSync":
                         ShowSyncPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1100);
                         break;
@@ -10385,6 +10455,10 @@ namespace DejavuBrowser
                     PushFullStateToShell();
                     SendVpnPanelState(null);
                 }
+                else if (type == "verifyVpnTunnel")
+                {
+                    await HandleVerifyVpnTunnelAsync();
+                }
                 else if (type == "pickSuggestion")
                 {
                     string val = Convert.ToString(msg["value"]);
@@ -10867,6 +10941,8 @@ namespace DejavuBrowser
                 { "latencyMs", snap.latencyMs },
                 { "autoConnect", snap.autoConnect },
                 { "protocol", snap.protocol ?? "" },
+                { "verified", snap.verified },
+                { "lastVerifyMessage", snap.lastVerifyMessage ?? "" },
                 { "countriesCount", snap.countries != null ? snap.countries.Count : 86 }
             };
         }

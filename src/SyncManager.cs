@@ -2956,7 +2956,7 @@ namespace DejavuBrowser
 
                         byte[] allBytes = ms.ToArray();
                         string reqHead = headerEnd > 0 ? Encoding.ASCII.GetString(allBytes, 0, headerEnd) : "";
-                        string respJson = "{\"ok\":true,\"app\":\"dejavu\",\"version\":\"5.6.0\"}";
+                        string respJson = "{\"ok\":true,\"app\":\"dejavu\",\"version\":\"5.7.0\"}";
                         if (reqHead.StartsWith("POST /sync", StringComparison.OrdinalIgnoreCase) && headerEnd > 0 && contentLen > 0)
                         {
                             int actual = Math.Min(contentLen, allBytes.Length - headerEnd);

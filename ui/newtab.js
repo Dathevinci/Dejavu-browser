@@ -1,5 +1,5 @@
 /**
- * dejavu v5.6.0 — Zero-Idle-CPU Pure Material Design 3 Wallpaper Engine
+ * dejavu v5.7.0 — Zero-Idle-CPU Pure Material Design 3 Wallpaper Engine
  * - Static HD wallpapers (`art:wp-m3-*` & `custom`): single-shot draw on load, resize,
  *   or option change — STRICTLY ZERO continuous requestAnimationFrame loop (0.0% idle CPU!).
  * - Single adaptive live theme (`live:m3-expressive`): reacts cleanly to all 12 Material You
@@ -135,7 +135,7 @@
   };
 
   const LIVE_FRAME_INTERVAL_MS = 1000 / 30; // Gentle ~30fps cap for Material You Live only
-  const ART_FADE_MS = 240;
+  const ART_FADE_MS = 260;
 
   let canvas = null;
   let ctx = null;
@@ -282,7 +282,7 @@
     if (artLoaded && artImage && artImage.naturalWidth > 0) {
       if (prevArtImage && artFadeStart > 0 && !reduceMotion) {
         const raw = Math.min(1, (performance.now() - artFadeStart) / ART_FADE_MS);
-        const eased = 1 - Math.pow(1 - raw, 3);
+        const eased = 1 - Math.pow(1 - raw, 3.4);
         drawCoverImage(prevArtImage, 1);
         drawCoverImage(artImage, eased);
         drawArtworkScrim();

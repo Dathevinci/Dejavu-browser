@@ -1,12 +1,13 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.6.0)
+ * dejavu Official Website — Google Material Design 3 Interactive Engine (v5.7.0)
+ * Re-Engineered Self-Healing VPN (Multi-Site HTTPS + 3-Hop Tor Fallback) · Theme-Adaptive 24-Palette M3 Butterfly Video FAB
+ * Whole-Browser Fluid 120Hz Polish (Windows Themed Scrollbars & Android Swipe-to-Dismiss Sheets)
  * Open-Source Security Hardening (SLSA Provenance + SHA256SUMS) · 32 Pure M3, Butterfly (10) & Cute Froggie (4) Wallpapers
- * Collapsible 34x34px M3 Butterfly Video Downloader FAB · Expanded dejavu Link v2.3 Continuity Hub · 120Hz Android Polish
- * 12 Material You HCT Themes · 100%-Verified Brave-Exact Shields Engine (279K+ Win / 108K+ Android Rules) · Chrome MV3 Extensions
+ * 12 Material You HCT Themes · Expanded dejavu Link v2.3 · 100%-Verified Brave-Exact Shields (279K+ Win / 108K+ Android) · Chrome MV3 Extensions
  */
 (function () {
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v5.6.0';
+  const FALLBACK_VERSION = 'v5.7.0';
   const root = document.documentElement;
   const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let themeShiftTimer = null;
@@ -155,6 +156,10 @@
     }
     if (pxOverline) {
       pxOverline.textContent = `${greeting} · Pixel`;
+    }
+    const vfabThemeChip = document.getElementById('demo-vfab-theme-chip');
+    if (vfabThemeChip) {
+      vfabThemeChip.textContent = `${THEME_LABELS[seed] || 'Amethyst'} · ${mode === 'light' ? 'Light' : 'Dark'}`;
     }
     if (!userPickedWallpaper) {
       const wpSrc = (THEME_SEED_WALLPAPERS[mode] && THEME_SEED_WALLPAPERS[mode][seed]) || THEME_SEED_WALLPAPERS[mode].amethyst;
@@ -367,7 +372,7 @@
     });
   }
 
-  // 2. Clean 5-View Dual-Device Browser Showcase (v5.6.0 Collapsible Butterfly Video FAB + Link v2.3 + Pixel At-a-Glance)
+  // 2. Clean 5-View Dual-Device Browser Showcase (v5.7.0 Theme-Adaptive Butterfly Video FAB + Self-Healing VPN + Link v2.3)
   const VIEW_META = {
     start:      { url: 'dejavu · Start Page', title: 'Start Page · dejavu' },
     sync:       { url: 'dejavu://link · Link v2.3 (Direct LAN + TLS MQTT E2EE)', title: 'dejavu Link v2.3 · Pixel Online' },
@@ -833,7 +838,7 @@
     });
   }
 
-  // 2e. Interactive Chrome Extensions Manager Showcase (v5.6.0 — Uncluttered 5-Icon ChromeOS Toolbar by Default)
+  // 2e. Interactive Chrome Extensions Manager Showcase (v5.7.0 — Uncluttered 5-Icon ChromeOS Toolbar by Default)
   const DEMO_EXTS = {
     ublock:     { label: 'uB', name: 'uBlock Origin Lite',    enabled: true,  pinned: false },
     darkreader: { label: 'DR', name: 'Dark Reader',           enabled: true,  pinned: false },
@@ -908,7 +913,7 @@
 
   syncDemoExtensionsUi();
 
-  // 3. Interactive Floating Video & MP3 Quality Menu + Live 8-Segment Accelerator Demo
+  // 3. Interactive Theme-Adaptive Butterfly Video Downloader (24 Palettes · Video|Audio Switcher · Circular M3 Buttons) + Live 8-Segment Accelerator Demo
   const QUALITY_PRESETS = {
     '4k': {
       label: '4K 2160p · MP4',
@@ -919,6 +924,16 @@
       isAudio: false,
       doneNote: '4K 2160p MP4 assembled across 8 threads · Ready to play',
       speedBase: 41.2
+    },
+    '1440p': {
+      label: '1440p QHD · MP4',
+      shortTag: '2K',
+      badge: '8×',
+      fileName: 'Material_You_Showcase_1440p_QHD.mp4',
+      sizeMb: 162.5,
+      isAudio: false,
+      doneNote: '1440p QHD MP4 assembled across 8 threads · Ready to play',
+      speedBase: 39.0
     },
     '1080p': {
       label: '1080p HD · MP4',
@@ -949,10 +964,31 @@
       isAudio: true,
       doneNote: '320 kbps MP3 audio extracted across 8 threads · Ready to play',
       speedBase: 14.2
+    },
+    m4a: {
+      label: 'M4A AAC (256k)',
+      shortTag: 'M4A',
+      badge: '256k',
+      fileName: 'Material_You_Showcase_256kbps.m4a',
+      sizeMb: 7.8,
+      isAudio: true,
+      doneNote: '256 kbps M4A AAC audio extracted cleanly · Ready to play',
+      speedBase: 13.4
+    },
+    opus: {
+      label: 'Opus WebM (160k)',
+      shortTag: 'OPUS',
+      badge: '160k',
+      fileName: 'Material_You_Showcase_160kbps.opus',
+      sizeMb: 5.1,
+      isAudio: true,
+      doneNote: '160 kbps Opus audio extracted cleanly · Ready to play',
+      speedBase: 12.6
     }
   };
 
   let activeQualityKey = '4k';
+  let activeVfabTab = 'video';
   let turboSegs = [76, 84, 68, 92, 74, 88, 79, 65];
   let turboRunning = false;
   let turboPaused = false;
@@ -964,7 +1000,33 @@
   const floatDlExt = document.getElementById('demo-float-ext');
   const qualityMenu = document.getElementById('demo-quality-menu');
   const qualityItems = Array.from(document.querySelectorAll('[data-dl-quality]'));
+  const vfabTabBtns = Array.from(document.querySelectorAll('[data-vfab-tab]'));
   const sendVideoPhoneBtn = document.getElementById('demo-send-video-phone');
+  const vfabDownloadsBtn = document.getElementById('demo-vfab-downloads');
+  const vfabCopyBtn = document.getElementById('demo-vfab-copy');
+  const vfabHideBtn = document.getElementById('demo-vfab-hide');
+
+  function setVfabMediaTab(tab) {
+    activeVfabTab = tab === 'audio' ? 'audio' : 'video';
+    vfabTabBtns.forEach((btn) => {
+      const match = btn.dataset.vfabTab === activeVfabTab;
+      btn.classList.toggle('active', match);
+      btn.setAttribute('aria-selected', match ? 'true' : 'false');
+    });
+    qualityItems.forEach((item) => {
+      const grp = item.dataset.vfabGroup || 'video';
+      item.hidden = grp !== activeVfabTab;
+    });
+  }
+
+  function openQualityMenu() {
+    if (!qualityMenu || !floatDlBtn || !floatDlWrap) return;
+    clearTimeout(floatResetTimer);
+    floatDlWrap.classList.remove('is-queued');
+    floatDlWrap.classList.add('is-expanded');
+    qualityMenu.hidden = false;
+    floatDlBtn.setAttribute('aria-expanded', 'true');
+  }
 
   function closeQualityMenu(collapsePill) {
     if (!qualityMenu || !floatDlBtn) return;
@@ -1018,7 +1080,7 @@
     chip.classList.toggle('done', finished);
 
     if (finished) {
-      chip.textContent = preset.isAudio ? 'MP3 Done' : '8× Done';
+      chip.textContent = preset.isAudio ? `${preset.shortTag} Done` : '8× Done';
       sub.textContent = `Completed · ${totalMb} MB · ${preset.doneNote}`;
       turboRunning = false;
       clearInterval(turboTimer);
@@ -1028,7 +1090,7 @@
     } else {
       const speed = (preset.speedBase + Math.sin(Date.now() * 0.004) * (preset.isAudio ? 1.8 : 4.2)).toFixed(1);
       const remSec = Math.max(1, Math.ceil((preset.sizeMb - Number(rxMb)) / Number(speed)));
-      chip.textContent = preset.isAudio ? 'MP3 Active' : '8× Active';
+      chip.textContent = preset.isAudio ? `${preset.shortTag} Active` : '8× Active';
       sub.textContent = `${preset.label} · ${rxMb} / ${totalMb} MB · ${speed} MB/s · ${remSec}s remaining`;
     }
   }
@@ -1065,26 +1127,31 @@
     renderTurboDemo();
   });
 
-  // Collapsible 34x34px Butterfly Video FAB expands smoothly on click into 4K/1080p/MP3 & Send-to-Phone menu
+  // Theme-Adaptive 36x36px Butterfly Video FAB expands smoothly into Video|Audio M3 card
   if (floatDlWrap && floatDlBtn && qualityMenu) {
+    setVfabMediaTab('video');
+
     floatDlBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const willExpand = !floatDlWrap.classList.contains('is-expanded');
-      clearTimeout(floatResetTimer);
-      floatDlWrap.classList.remove('is-queued');
-      floatDlWrap.classList.toggle('is-expanded', willExpand);
-      qualityMenu.hidden = !willExpand;
-      floatDlBtn.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+      const willExpand = !floatDlWrap.classList.contains('is-expanded') || qualityMenu.hidden;
+      if (willExpand) openQualityMenu();
+      else closeQualityMenu(true);
     });
 
     if (floatDlExt) {
       floatDlExt.addEventListener('click', (e) => {
         e.stopPropagation();
-        const willOpen = qualityMenu.hidden;
-        qualityMenu.hidden = !willOpen;
-        floatDlBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        if (qualityMenu.hidden) openQualityMenu();
+        else closeQualityMenu(true);
       });
     }
+
+    vfabTabBtns.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setVfabMediaTab(btn.dataset.vfabTab);
+      });
+    });
 
     qualityItems.forEach((item) => {
       item.addEventListener('click', (e) => {
@@ -1092,18 +1159,21 @@
         const key = item.dataset.dlQuality || '4k';
         const preset = QUALITY_PRESETS[key] || QUALITY_PRESETS['4k'];
         applyQualityMeta(key);
-        closeQualityMenu(false);
+
+        item.classList.add('is-done');
+        setTimeout(() => item.classList.remove('is-done'), 1800);
 
         const lbl = document.getElementById('demo-float-dl-lbl');
         floatDlWrap.classList.add('is-expanded', 'is-queued');
         if (lbl) lbl.textContent = `Queued ${preset.shortTag}`;
         startTurboDemo(true);
+        showSnackbar(`Queued ${preset.label} · 8× Turbo Video Downloader`);
 
         clearTimeout(floatResetTimer);
         floatResetTimer = setTimeout(() => {
-          floatDlWrap.classList.remove('is-queued', 'is-expanded');
+          floatDlWrap.classList.remove('is-queued');
           if (lbl) lbl.textContent = 'Download';
-        }, 2200);
+        }, 1800);
       });
     });
 
@@ -1125,8 +1195,39 @@
       });
     }
 
+    if (vfabDownloadsBtn) {
+      vfabDownloadsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeQualityMenu(true);
+        startTurboDemo(true);
+        showSnackbar('Opened 8× Turbo Downloads Manager (Ctrl+J)');
+      });
+    }
+
+    if (vfabCopyBtn) {
+      vfabCopyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const url = 'https://youtube.com/watch?v=material-you-4k&t=422';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).catch(() => {});
+        }
+        showSnackbar('Copied media link to clipboard');
+      });
+    }
+
+    if (vfabHideBtn) {
+      vfabHideBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeQualityMenu(true);
+        showSnackbar('Collapsed back to 36×36px Butterfly FAB');
+      });
+    }
+
     document.addEventListener('click', (e) => {
       if ((floatDlWrap.classList.contains('is-expanded') || !qualityMenu.hidden) && !floatDlWrap.contains(e.target)) {
+        if (e.target && e.target.closest && e.target.closest('.seed-picker-wrap, .theme-segmented, #mobile-drawer')) {
+          return;
+        }
         closeQualityMenu(true);
       }
     });
@@ -1138,11 +1239,14 @@
     });
   }
 
-  // 4. Interactive 86-Country VPN Selector
-  let vpnMode = 'Smart · Web & AI';
+  // 4. Interactive Re-Engineered Self-Healing VPN Selector & 1-Click Live Tunnel Verifier
+  let vpnMode = 'Smart · Auto-Heal';
   let vpnCity = 'Miami, United States';
+  let vpnLatencyMs = 38;
+  let vpnVerifyTimer = null;
 
-  function updateVpnLabels(cc) {
+  function updateVpnLabels(cc, ms) {
+    if (typeof ms === 'number' && ms > 0) vpnLatencyMs = ms;
     const sub = document.getElementById('vp-sub');
     if (sub) sub.textContent = `${vpnMode} · ${vpnCity}`;
     const codeEl = document.getElementById('dk-vpn-code');
@@ -1152,13 +1256,19 @@
     const spTag = document.getElementById('dk-sp-vpn-tag');
     if (spTag) spTag.textContent = `VPN · ${country} (${shortMode})`;
     const gmPill = document.getElementById('gm-vpn-pill');
-    if (gmPill) gmPill.textContent = `${shortMode} ${country} VPN · Encrypted`;
+    if (gmPill) gmPill.textContent = `Verified · ${shortMode} ${country} VPN · HTTPS & DNS Protected`;
+    const verifyStatus = document.getElementById('vp-verify-status');
+    if (verifyStatus) {
+      verifyStatus.textContent = vpnMode.startsWith('3-Hop')
+        ? `3-Hop Tor · ${vpnLatencyMs + 95} ms`
+        : `Verified · ${vpnLatencyMs} ms`;
+    }
   }
 
   document.querySelectorAll('[data-vpn-mode]').forEach((btn) => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('[data-vpn-mode]').forEach((x) => x.classList.toggle('active', x === btn));
-      vpnMode = btn.dataset.vpnMode === 'tor' ? '3-Hop Tor' : 'Smart · Web & AI';
+      vpnMode = btn.dataset.vpnMode === 'tor' ? '3-Hop Tor' : 'Smart · Auto-Heal';
       updateVpnLabels();
     });
   });
@@ -1167,9 +1277,32 @@
     row.addEventListener('click', () => {
       document.querySelectorAll('[data-vpn-cc]').forEach((x) => x.classList.toggle('active', x === row));
       vpnCity = row.dataset.vpnCity || 'Miami, United States';
-      updateVpnLabels(row.dataset.vpnCc || 'US');
+      const msVal = Number(row.dataset.vpnMs) || 38;
+      updateVpnLabels(row.dataset.vpnCc || 'US', msVal);
     });
   });
+
+  const vpnVerifyBtn = document.getElementById('demo-vpn-verify');
+  if (vpnVerifyBtn) {
+    vpnVerifyBtn.addEventListener('click', () => {
+      const verifyStatus = document.getElementById('vp-verify-status');
+      clearTimeout(vpnVerifyTimer);
+      vpnVerifyBtn.disabled = true;
+      vpnVerifyBtn.textContent = 'Testing…';
+      if (verifyStatus) verifyStatus.textContent = 'Probing HTTPS…';
+      vpnVerifyTimer = setTimeout(() => {
+        const liveMs = (vpnMode.startsWith('3-Hop') ? vpnLatencyMs + 95 : vpnLatencyMs) + Math.floor(Math.random() * 7) - 3;
+        if (verifyStatus) {
+          verifyStatus.textContent = vpnMode.startsWith('3-Hop')
+            ? `3-Hop Verified · ${liveMs} ms`
+            : `Verified · ${liveMs} ms`;
+        }
+        vpnVerifyBtn.disabled = false;
+        vpnVerifyBtn.textContent = 'Verify';
+        showSnackbar(`Live HTTPS Verified (${vpnCity}) · cloudflare.com & google.com OK · ${liveMs} ms`);
+      }, 380);
+    });
+  }
 
   // 5. PC <-> Phone Live Beam, Link v2.3 Continuity Handoffs & Shared Clipboard Toast
   let toastTimer = null;
@@ -1343,7 +1476,7 @@
     });
   }
 
-  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.6.0)
+  // 8. GitHub Releases API Dynamic Hydration (Fallback: v5.7.0)
   function fmtMB(bytes) {
     if (!bytes || bytes <= 0) return '';
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -1430,12 +1563,16 @@
     })
     .catch(() => {});
 
-  // 9. Optional URL preview parameters (?view=extensions, ?ctx=open) evaluated after all bindings
+  // 9. Optional URL preview parameters (?view=video&vfab=open, ?ctx=open) evaluated after all bindings
   try {
     const qp = new URLSearchParams(location.search || '');
     const qpView = qp.get('view');
     if (qpView && VIEW_META[qpView]) {
       selectShowcase(qpView, { silent: true });
+    }
+    if (qp.get('vfab') === 'open') {
+      if (qp.get('vfabTab') === 'audio') setVfabMediaTab('audio');
+      requestAnimationFrame(() => openQualityMenu());
     }
     if (qp.get('ctx') === 'open') {
       requestAnimationFrame(() => openShowcaseContextMenu('link', 'github.com/Dathevinci/Dejavu-browser'));

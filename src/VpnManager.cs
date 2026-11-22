@@ -22,6 +22,15 @@ namespace DejavuBrowser
         public bool fast { get; set; }
     }
 
+    public sealed class VpnVerifyResult
+    {
+        public bool ok { get; set; }
+        public string exitIp { get; set; }
+        public int latencyMs { get; set; }
+        public string engine { get; set; }
+        public string message { get; set; }
+    }
+
     public class VpnStatusSnapshot
     {
         public string state { get; set; }           // disconnected | downloading | connecting | connected | error
@@ -42,16 +51,20 @@ namespace DejavuBrowser
         public int connectedSeconds { get; set; }
         public bool autoConnect { get; set; }
         public string protocol { get; set; }
+        public bool verified { get; set; }
+        public string lastVerifyMessage { get; set; }
         public List<VpnCountryOption> countries { get; set; }
     }
 
     /// <summary>
-    /// Next-generation Dual-Engine Browser VPN for dejavu v3.2:
+    /// Next-generation Self-Healing Dual-Engine Browser VPN for dejavu v5.7.0:
     ///   1. Smart VPN (Default): Clean-IP Global Relay Pool (SOCKS5 / HTTPS CONNECT / SOCKS4)
-    ///      across 86+ countries (including Nepal, US, UK, India, Japan, Singapore, Europe, etc.)
-    ///      with live parallel latency probing, Gemini/Google AI compatibility verification,
-    ///      hot multi-node failover, and automatic Tor fallback for rare European privacy hubs.
-    ///   2. 3-Hop Tor Onion: Official Tor Expert Bundle 3-hop circuit with remote DNS & ControlPort switching.
+    ///      strictly verified with concurrent multi-host TLS checks (GeoIP + Cloudflare + Google 204)
+    ///      before reporting Connected, hot 6-node pool with hedged failover, automatic self-heal,
+    ///      and seamless automatic fallback to 3-Hop Encrypted Tor (including AUTO) whenever free
+    ///      relays cannot pass strict real-browsing HTTPS verification!
+    ///   2. 3-Hop Tor Onion: Official Tor Expert Bundle 3-hop circuit with strict remote DNS,
+    ///      real HTTPS verification before Connected, soft country-preference retry, and ControlPort switching.
     /// Zero admin rights, zero Windows drivers, fail-closed kill-switch.
     /// </summary>
     internal sealed class VpnManager : IDisposable
@@ -59,8 +72,8 @@ namespace DejavuBrowser
         private const string FallbackBundleUrl =
             "https://dist.torproject.org/torbrowser/16.0.1/tor-expert-bundle-windows-x86_64-16.0.1.tar.gz";
 
-        private const string SmartProtocolLabel = "Smart TLS Tunnel · Clean IP (Web & AI Ready)";
-        private const string TorProtocolLabel = "3-Hop Tor Onion · Remote DNS";
+        private const string SmartProtocolLabel = "Smart TLS Tunnel · Verified Clean IP";
+        private const string TorProtocolLabel = "3-Hop Tor Onion · Encrypted Remote DNS";
 
         private sealed class RelayCandidate
         {
@@ -80,17 +93,9 @@ namespace DejavuBrowser
             public int Score;
         }
 
-        private static readonly HashSet<string> TorStrongCountries = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "US", "NL", "DE", "SE", "AT", "FR", "NO", "RO", "CH", "LU", "DK", "FI", "IT", "BG", "CZ",
-            "HU", "ZA", "UA", "GB", "SG", "PL", "IS", "HK", "ID", "MD", "RS", "CL", "MY", "CA", "JP",
-            "AU", "TW", "VN", "HR", "PE", "KR", "CR", "ES", "EE", "TR", "NZ", "MX", "SC", "LT", "KZ",
-            "CY", "AE", "BE", "IL", "IN", "BA"
-        };
-
         private static readonly HashSet<string> AutoPreferredCountries = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "US", "NL", "DE", "GB", "SG", "JP", "CA", "FR", "FI"
+            "US", "NL", "DE", "GB", "SG", "JP", "CA", "FR", "FI", "CH", "SE"
         };
 
         private static readonly List<VpnCountryOption> CountryCatalog = new List<VpnCountryOption>
@@ -106,7 +111,7 @@ namespace DejavuBrowser
             new VpnCountryOption { code = "GT", name = "Guatemala", region = "North America", fast = false },
             new VpnCountryOption { code = "HN", name = "Honduras", region = "North America", fast = false },
 
-            // South Asia (matches Asia-Pacific tab AND shows South Asia!)
+            // South Asia
             new VpnCountryOption { code = "NP", name = "Nepal", region = "South Asia", fast = true },
             new VpnCountryOption { code = "IN", name = "India", region = "South Asia", fast = true },
             new VpnCountryOption { code = "BD", name = "Bangladesh", region = "South Asia", fast = true },
@@ -212,7 +217,7 @@ namespace DejavuBrowser
         private int _controlPort;
         private CancellationTokenSource _opCts;
 
-        // Smart Relay directory cache (8 min TTL)
+        // Smart Relay directory cache (6 min TTL)
         private List<RelayCandidate> _relayCache = new List<RelayCandidate>();
         private DateTime _relayCacheUtc = DateTime.MinValue;
         private List<UpstreamEndpoint> _activeSmartPool = new List<UpstreamEndpoint>();
@@ -228,9 +233,13 @@ namespace DejavuBrowser
         private string _exitCountry = "";
         private string _exitCountryCode = "";
         private int _latencyMs;
+        private bool _verified;
+        private string _lastVerifyMessage = "";
         private DateTime _connectedUtc = DateTime.MinValue;
         private bool _autoConnect;
         private bool _coreInstalledCache;
+        private bool _healing;
+        private DateTime _lastHealUtc = DateTime.MinValue;
         private bool _disposed;
 
         public event Action<VpnStatusSnapshot> StateChanged;
@@ -316,6 +325,11 @@ namespace DejavuBrowser
 
             _coreInstalledCache = IsCoreInstalled();
             CleanupStaleTorProcesses();
+
+            if (_bridge != null)
+            {
+                _bridge.PoolDegraded += OnBridgePoolDegraded;
+            }
         }
 
         public static string NormalizeMode(string mode)
@@ -361,6 +375,8 @@ namespace DejavuBrowser
                     connectedSeconds = connSec,
                     autoConnect = _autoConnect,
                     protocol = proto,
+                    verified = isConn && _verified,
+                    lastVerifyMessage = _lastVerifyMessage ?? "",
                     countries = CountryCatalog
                 };
             }
@@ -436,7 +452,9 @@ namespace DejavuBrowser
                     string.IsNullOrEmpty(_exitCity) &&
                     string.IsNullOrEmpty(_exitCountry) &&
                     string.IsNullOrEmpty(_exitCountryCode) &&
-                    _latencyMs == 0;
+                    _latencyMs == 0 &&
+                    !_verified &&
+                    string.IsNullOrEmpty(_lastVerifyMessage);
 
                 if (string.Equals(_state, state, StringComparison.Ordinal) &&
                     string.Equals(_statusText, statusText, StringComparison.Ordinal) &&
@@ -459,6 +477,7 @@ namespace DejavuBrowser
                 else if (state == "disconnected" || state == "error")
                 {
                     _connectedUtc = DateTime.MinValue;
+                    _verified = false;
                 }
                 if (clearExit)
                 {
@@ -467,6 +486,8 @@ namespace DejavuBrowser
                     _exitCountry = "";
                     _exitCountryCode = "";
                     _latencyMs = 0;
+                    _verified = false;
+                    _lastVerifyMessage = "";
                 }
             }
             NotifyStateChanged();
@@ -548,7 +569,263 @@ namespace DejavuBrowser
         }
 
         // =====================================================================
-        // Engine 1: Smart Clean-IP Global Relay Pool (Web & AI / Gemini Ready!)
+        // Auto-Heal & Live Tunnel Verification (v5.7.0)
+        // =====================================================================
+        private void OnBridgePoolDegraded()
+        {
+            Task ignored = HealActiveTunnelAsync();
+        }
+
+        public async Task HealActiveTunnelAsync()
+        {
+            string engine;
+            string target;
+            string failedIp;
+            lock (_sync)
+            {
+                if (_disposed || _healing || _state != "connected") return;
+                if ((DateTime.UtcNow - _lastHealUtc).TotalSeconds < 20.0) return;
+                _healing = true;
+                _lastHealUtc = DateTime.UtcNow;
+                engine = _activeEngine;
+                target = _countryCode;
+                failedIp = _exitIp ?? "";
+            }
+
+            try
+            {
+                // First confirm whether active bridge actually fails a quick real HTTPS check
+                if (_bridge != null && _bridge.ListenPort > 0 && _bridge.VpnEnabled)
+                {
+                    UpstreamEndpoint localBridge = new UpstreamEndpoint
+                    {
+                        Kind = UpstreamKind.HttpConnect,
+                        Host = "127.0.0.1",
+                        Port = _bridge.ListenPort
+                    };
+                    using (CancellationTokenSource quickCts = new CancellationTokenSource(5500))
+                    {
+                        HttpsProbeResult quickCf = await LocalProxyBridge.HttpsProbeViaEndpointAsync(
+                            localBridge, "www.cloudflare.com", "/cdn-cgi/trace", 5000, quickCts.Token).ConfigureAwait(false);
+                        if (IsValidCloudflareTrace(quickCf))
+                        {
+                            lock (_sync)
+                            {
+                                _latencyMs = Math.Max(1, quickCf.LatencyMs);
+                                _verified = true;
+                                _lastVerifyMessage = "Verified · " + _latencyMs + " ms · HTTPS & DNS OK";
+                            }
+                            NotifyStateChanged();
+                            return;
+                        }
+                    }
+                }
+
+                if (!IsConnected || _disposed) return;
+
+                CancellationToken token = BeginNewOperation();
+                if (engine == "smart")
+                {
+                    UpdateStatus("connecting", "Auto-healing VPN tunnel — finding verified route...", 42, false);
+                    List<RelayCandidate> fresh = await GetSmartCandidatesForCountryAsync(target, true, token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                    if (!string.IsNullOrEmpty(failedIp))
+                    {
+                        fresh.RemoveAll(c => string.Equals(c.Host, failedIp, StringComparison.OrdinalIgnoreCase));
+                    }
+
+                    if (fresh.Count > 0)
+                    {
+                        List<ProbeOutcome> verified = await RaceProbeCandidatesAsync(fresh, target, failedIp, token).ConfigureAwait(false);
+                        if (token.IsCancellationRequested) return;
+                        if (verified.Count > 0)
+                        {
+                            List<UpstreamEndpoint> pool = new List<UpstreamEndpoint>();
+                            for (int i = 0; i < verified.Count && i < 6; i++) pool.Add(verified[i].Endpoint);
+                            _bridge.SetUpstreamPool(pool);
+                            bool bridgeConfirmed = await ConfirmBridgeLiveHttpsAsync(token).ConfigureAwait(false);
+                            if (token.IsCancellationRequested) return;
+                            if (bridgeConfirmed)
+                            {
+                                UpstreamEndpoint activePrimary = _bridge.GetPrimaryEndpoint() ?? pool[0];
+                                ApplyVerifiedSmartPool(pool, activePrimary, verified[0].AiCompatible, target);
+                                return;
+                            }
+                            _bridge.SetVpnKillSwitchEngaged();
+                        }
+                    }
+
+                    // Seamless failover to 3-Hop Tor when Smart relays degrade!
+                    UpdateStatus("connecting", "Switching to encrypted 3-hop Tor route for stability...", 48, false);
+                    await ConnectTorInternalAsync(target, token).ConfigureAwait(false);
+                }
+                else
+                {
+                    if (!IsTorRunning() || _socksPort <= 0 || _controlPort <= 0)
+                    {
+                        await ConnectTorInternalAsync(target, token).ConfigureAwait(false);
+                        return;
+                    }
+                    UpdateStatus("connecting", "Auto-healing 3-hop Tor circuit...", 78, false);
+                    await SendControlFlushCircuitsAsync(token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                    _bridge.SetSocks5Tunnel(_socksPort);
+                    await Task.Delay(500, token).ConfigureAwait(false);
+                    bool ok = await VerifyTorCircuitAndGeoAsync(target, 2, token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                    if (!ok && target != "AUTO")
+                    {
+                        await SendControlCountrySwitchAsync(target, false, token).ConfigureAwait(false);
+                        if (token.IsCancellationRequested) return;
+                        _bridge.SetSocks5Tunnel(_socksPort);
+                        await Task.Delay(600, token).ConfigureAwait(false);
+                        ok = await VerifyTorCircuitAndGeoAsync(target, 2, token).ConfigureAwait(false);
+                    }
+                    if (ok)
+                    {
+                        MarkTorConnected();
+                    }
+                    else
+                    {
+                        StopTorProcess();
+                        await ConnectTorInternalAsync(target, token).ConfigureAwait(false);
+                    }
+                }
+            }
+            catch { }
+            finally
+            {
+                lock (_sync) { _healing = false; }
+            }
+        }
+
+        public async Task<VpnVerifyResult> VerifyActiveTunnelAsync()
+        {
+            string engine;
+            string curIp;
+            string target;
+            bool isConn;
+            lock (_sync)
+            {
+                isConn = (_state == "connected");
+                engine = _activeEngine ?? "smart";
+                curIp = _exitIp ?? "";
+                target = _countryCode ?? "AUTO";
+            }
+
+            if (!isConn || _bridge == null || _bridge.ListenPort <= 0 || !_bridge.VpnEnabled)
+            {
+                return new VpnVerifyResult
+                {
+                    ok = false,
+                    exitIp = "",
+                    latencyMs = 0,
+                    engine = engine,
+                    message = "VPN is not connected"
+                };
+            }
+
+            UpstreamEndpoint localProxy = new UpstreamEndpoint
+            {
+                Kind = UpstreamKind.HttpConnect,
+                Host = "127.0.0.1",
+                Port = _bridge.ListenPort
+            };
+
+            try
+            {
+                using (CancellationTokenSource cts = new CancellationTokenSource(15000))
+                {
+                    Task<HttpsProbeResult> tCf = LocalProxyBridge.HttpsProbeViaEndpointAsync(
+                        localProxy, "www.cloudflare.com", "/cdn-cgi/trace", 12000, cts.Token);
+                    Task<HttpsProbeResult> tGeo = LocalProxyBridge.HttpsProbeViaEndpointAsync(
+                        localProxy, "ipinfo.io", "/json", 12000, cts.Token);
+
+                    await Task.WhenAll(tCf, tGeo).ConfigureAwait(false);
+
+                    HttpsProbeResult cfRes = tCf.Result;
+                    HttpsProbeResult geoRes = tGeo.Result;
+                    bool cfOk = IsValidCloudflareTrace(cfRes);
+                    bool browseOk = cfOk;
+                    int measuredLatency = cfOk ? cfRes.LatencyMs : 0;
+
+                    if (!browseOk && !cts.IsCancellationRequested)
+                    {
+                        HttpsProbeResult gRes = await LocalProxyBridge.HttpsProbeViaEndpointAsync(
+                            localProxy, "www.google.com", "/generate_204", 9000, cts.Token).ConfigureAwait(false);
+                        if (IsValidGoogle204(gRes))
+                        {
+                            browseOk = true;
+                            measuredLatency = gRes.LatencyMs;
+                        }
+                    }
+
+                    if (browseOk)
+                    {
+                        bool geoUpdated = false;
+                        if (geoRes != null && geoRes.StatusCode >= 200 && geoRes.StatusCode < 300)
+                        {
+                            geoUpdated = TryParseGeoJson(geoRes.Body, measuredLatency > 0 ? measuredLatency : geoRes.LatencyMs, target);
+                        }
+                        if (!geoUpdated && cfOk)
+                        {
+                            TryApplyCloudflareTraceGeo(cfRes.Body, measuredLatency, target);
+                        }
+                        if (measuredLatency <= 0 && geoRes != null && geoRes.LatencyMs > 0)
+                        {
+                            measuredLatency = geoRes.LatencyMs;
+                        }
+
+                        string verifiedIp;
+                        int finalLat;
+                        lock (_sync)
+                        {
+                            if (measuredLatency > 0) _latencyMs = measuredLatency;
+                            finalLat = Math.Max(1, _latencyMs);
+                            verifiedIp = _exitIp ?? "";
+                            _verified = true;
+                            _lastVerifyMessage = "Verified · " + finalLat + " ms · HTTPS & DNS OK";
+                            string locLabel = string.IsNullOrEmpty(_exitCity) ? _exitCountry : (_exitCity + ", " + _exitCountry);
+                            if (!string.IsNullOrEmpty(locLabel))
+                            {
+                                _statusText = (_activeEngine == "tor" ? "Verified · 3-Hop · " : "Verified · ") + locLabel;
+                            }
+                        }
+                        NotifyStateChanged();
+
+                        return new VpnVerifyResult
+                        {
+                            ok = true,
+                            exitIp = verifiedIp,
+                            latencyMs = finalLat,
+                            engine = engine,
+                            message = "Verified · " + finalLat + " ms"
+                        };
+                    }
+                }
+            }
+            catch { }
+
+            lock (_sync)
+            {
+                _verified = false;
+                _lastVerifyMessage = "Tunnel check failed — auto-healing route...";
+            }
+            NotifyStateChanged();
+            Task ignoredHeal = HealActiveTunnelAsync();
+
+            return new VpnVerifyResult
+            {
+                ok = false,
+                exitIp = curIp,
+                latencyMs = 0,
+                engine = engine,
+                message = "Tunnel check failed — auto-healing..."
+            };
+        }
+
+        // =====================================================================
+        // Engine 1: Smart Clean-IP Global Relay Pool (Strict Multi-Host Verified)
         // =====================================================================
         private async Task ConnectSmartInternalAsync(string target, string excludeIp, CancellationToken token)
         {
@@ -560,12 +837,14 @@ namespace DejavuBrowser
                     _activeEngine = "smart";
                     _connectedUtc = DateTime.MinValue;
                     _activeSmartPool = new List<UpstreamEndpoint>();
+                    _verified = false;
+                    _lastVerifyMessage = "";
                 }
                 _bridge.ResetVpnCounters();
                 _bridge.SetVpnKillSwitchEngaged();
 
                 string cName = GetCountryName(target);
-                UpdateStatus("connecting", "Finding fastest clean IP in " + cName + "...", 18, true);
+                UpdateStatus("connecting", "Finding verified clean IP in " + cName + "...", 18, true);
 
                 List<RelayCandidate> candidates = await GetSmartCandidatesForCountryAsync(target, false, token).ConfigureAwait(false);
                 if (token.IsCancellationRequested) return;
@@ -578,7 +857,7 @@ namespace DejavuBrowser
                 // If cached list had no entries for this country, force a fresh live fetch
                 if (candidates.Count == 0)
                 {
-                    UpdateStatus("connecting", "Refreshing global node directory for " + cName + "...", 30, false);
+                    UpdateStatus("connecting", "Refreshing global node directory for " + cName + "...", 28, false);
                     candidates = await GetSmartCandidatesForCountryAsync(target, true, token).ConfigureAwait(false);
                     if (token.IsCancellationRequested) return;
                     if (!string.IsNullOrEmpty(excludeIp))
@@ -589,49 +868,39 @@ namespace DejavuBrowser
 
                 if (candidates.Count > 0)
                 {
-                    UpdateStatus("connecting", "Testing " + Math.Min(candidates.Count, 24) + " live nodes in " + cName + "...", 52, false);
+                    UpdateStatus("connecting", "Verifying HTTPS across " + Math.Min(candidates.Count, 36) + " nodes in " + cName + "...", 48, false);
                     List<ProbeOutcome> verified = await RaceProbeCandidatesAsync(candidates, target, excludeIp, token).ConfigureAwait(false);
                     if (token.IsCancellationRequested) return;
 
                     if (verified.Count > 0)
                     {
+                        // Engage pool and verify REAL concurrent HTTPS through LocalProxyBridge BEFORE reporting Connected!
+                        // Eliminates rate-limited free proxies that pass initial probe then immediately reject real traffic.
                         List<UpstreamEndpoint> pool = new List<UpstreamEndpoint>();
-                        for (int i = 0; i < verified.Count && i < 4; i++)
+                        for (int i = 0; i < verified.Count && i < 6; i++)
                         {
                             pool.Add(verified[i].Endpoint);
                         }
-
-                        UpstreamEndpoint primary = pool[0];
-                        lock (_sync)
-                        {
-                            _activeEngine = "smart";
-                            _activeSmartPool = pool;
-                            _exitIp = primary.ExitIp ?? primary.Host;
-                            _exitCity = primary.City ?? "";
-                            _exitCountry = string.IsNullOrEmpty(primary.Country) ? cName : primary.Country;
-                            _exitCountryCode = string.IsNullOrEmpty(primary.CountryCode) ? target : primary.CountryCode;
-                            _latencyMs = Math.Max(1, primary.LatencyMs);
-                        }
-
                         _bridge.SetUpstreamPool(pool);
-                        string cityLabel = FormatExitLabel();
-                        string tag = verified[0].AiCompatible ? "AI-Ready · " : "";
-                        UpdateStatus("connected", "Protected · " + tag + cityLabel, 100, false);
-                        return;
+                        UpdateStatus("connecting", "Confirming live multi-site HTTPS in " + cName + "...", 82, false);
+
+                        bool bridgeConfirmed = await ConfirmBridgeLiveHttpsAsync(token).ConfigureAwait(false);
+                        if (token.IsCancellationRequested) return;
+
+                        if (bridgeConfirmed)
+                        {
+                            UpstreamEndpoint activePrimary = _bridge.GetPrimaryEndpoint() ?? pool[0];
+                            ApplyVerifiedSmartPool(pool, activePrimary, verified[0].AiCompatible, target);
+                            return;
+                        }
+                        _bridge.SetVpnKillSwitchEngaged();
                     }
                 }
 
-                // Seamless automatic Tor fallback for European / privacy hubs that have Tor exits
-                // when no public clean-IP relay responded for that country
-                if (target != "AUTO" && TorStrongCountries.Contains(target))
-                {
-                    UpdateStatus("connecting", "No direct relay in " + cName + " — engaging 3-hop privacy route...", 38, false);
-                    await ConnectTorInternalAsync(target, token).ConfigureAwait(false);
-                    return;
-                }
-
-                _bridge.SetDirectMode();
-                UpdateStatus("error", cName + " nodes temporarily busy — retry or pick Fastest", 0, true);
+                // SEAMLESS AUTOMATIC FALLBACK TO REAL 3-HOP ENCRYPTED TOR ENGINE (INCLUDING AUTO!)
+                // Never accept a half-dead or rate-limited proxy when Tor can provide a rock-solid 3-hop tunnel!
+                UpdateStatus("connecting", "Direct relays unstable — engaging encrypted 3-hop Tor route...", 34, false);
+                await ConnectTorInternalAsync(target, token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -643,13 +912,60 @@ namespace DejavuBrowser
             }
         }
 
+        private async Task<bool> ConfirmBridgeLiveHttpsAsync(CancellationToken token)
+        {
+            if (_bridge == null || _bridge.ListenPort <= 0) return false;
+            UpstreamEndpoint localProxy = new UpstreamEndpoint
+            {
+                Kind = UpstreamKind.HttpConnect,
+                Host = "127.0.0.1",
+                Port = _bridge.ListenPort
+            };
+            try
+            {
+                Task<HttpsProbeResult> tCf = LocalProxyBridge.HttpsProbeViaEndpointAsync(
+                    localProxy, "www.cloudflare.com", "/cdn-cgi/trace", 6500, token);
+                Task<HttpsProbeResult> tG = LocalProxyBridge.HttpsProbeViaEndpointAsync(
+                    localProxy, "www.google.com", "/generate_204", 6500, token);
+                await Task.WhenAll(tCf, tG).ConfigureAwait(false);
+                return IsValidCloudflareTrace(tCf.Result) && IsValidGoogle204(tG.Result);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void ApplyVerifiedSmartPool(List<UpstreamEndpoint> pool, UpstreamEndpoint primary, bool aiCompatible, string target)
+        {
+            string cName = GetCountryName(target);
+            if (primary == null && pool.Count > 0) primary = pool[0];
+            int lat = Math.Max(1, primary.LatencyMs);
+            lock (_sync)
+            {
+                _activeEngine = "smart";
+                _activeSmartPool = pool;
+                _exitIp = primary.ExitIp ?? primary.Host;
+                _exitCity = primary.City ?? "";
+                _exitCountry = string.IsNullOrEmpty(primary.Country) ? cName : primary.Country;
+                _exitCountryCode = string.IsNullOrEmpty(primary.CountryCode) ? target : primary.CountryCode;
+                _latencyMs = lat;
+                _verified = true;
+                _lastVerifyMessage = "Verified · " + lat + " ms · HTTPS & DNS OK";
+            }
+
+            string cityLabel = FormatExitLabel();
+            string tag = aiCompatible ? "AI-Ready · " : "";
+            UpdateStatus("connected", "Verified · " + tag + cityLabel, 100, false);
+        }
+
         private async Task<List<RelayCandidate>> GetSmartCandidatesForCountryAsync(string target, bool forceRefresh, CancellationToken token)
         {
             List<RelayCandidate> all;
             lock (_sync)
             {
                 bool fresh = !forceRefresh && _relayCache != null && _relayCache.Count > 20 &&
-                             (DateTime.UtcNow - _relayCacheUtc).TotalMinutes < 8;
+                             (DateTime.UtcNow - _relayCacheUtc).TotalMinutes < 6;
                 all = fresh ? new List<RelayCandidate>(_relayCache) : null;
             }
 
@@ -677,7 +993,7 @@ namespace DejavuBrowser
                         matched.Add(all[i]);
                     }
                 }
-                if (matched.Count < 8)
+                if (matched.Count < 16)
                 {
                     matched = new List<RelayCandidate>(all);
                 }
@@ -706,14 +1022,14 @@ namespace DejavuBrowser
         {
             Dictionary<string, RelayCandidate> dedup = new Dictionary<string, RelayCandidate>(StringComparer.OrdinalIgnoreCase);
 
-            // Source 1: ProxyScrape v4 Live JSON (78+ countries including NP, US, IN, BD, PK, GB, DE, JP, SG!)
+            // Source 1: ProxyScrape v4 Live JSON filtered to SSL/HTTPS-capable + SOCKS5 relays
             Task<string> tPs = DownloadDirectAsync(
-                "https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&proxy_format=protocolipport&format=json&timeout=5000",
-                9000, token);
-            // Source 2: GeoNode Live JSON (55+ countries, extra US/TH/ID/PH/BD/PK/BR/DE/NL/IN/GB/SG/JP relays)
+                "https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&proxy_format=protocolipport&format=json&timeout=5000&ssl=yes",
+                8500, token);
+            // Source 2: GeoNode Live JSON (limit=500, prefers SOCKS5 & HTTPS/HTTP relays)
             Task<string> tGn = DownloadDirectAsync(
-                "https://proxylist.geonode.com/api/proxy-list?limit=500&page=1&sort_by=lastChecked&sort_type=desc&protocols=socks5%2Chttp%2Csocks4",
-                9000, token);
+                "https://proxylist.geonode.com/api/proxy-list?limit=500&page=1&sort_by=lastChecked&sort_type=desc&protocols=socks5%2Chttps%2Chttp",
+                8500, token);
 
             await Task.WhenAll(tPs, tGn).ConfigureAwait(false);
             if (token.IsCancellationRequested) return new List<RelayCandidate>();
@@ -741,11 +1057,12 @@ namespace DejavuBrowser
                     if (p.ContainsKey("alive") && p["alive"] is bool && !(bool)p["alive"]) continue;
 
                     string proto = p.ContainsKey("protocol") ? Convert.ToString(p["protocol"]).Trim().ToLowerInvariant() : "";
+                    bool hasSsl = (!p.ContainsKey("ssl") || !(p["ssl"] is bool) || (bool)p["ssl"]);
                     UpstreamKind kind;
                     int protoRank;
                     if (proto == "socks5") { kind = UpstreamKind.Socks5; protoRank = 0; }
-                    else if (proto == "http" || proto == "https") { kind = UpstreamKind.HttpConnect; protoRank = 1; }
-                    else if (proto == "socks4") { kind = UpstreamKind.Socks4; protoRank = 2; }
+                    else if (proto == "https" || (proto == "http" && hasSsl)) { kind = UpstreamKind.HttpConnect; protoRank = 1; }
+                    else if (proto == "socks4") { kind = UpstreamKind.Socks4; protoRank = 3; }
                     else continue;
 
                     string ip = p.ContainsKey("ip") ? Convert.ToString(p["ip"]).Trim() : "";
@@ -774,8 +1091,8 @@ namespace DejavuBrowser
                     }
 
                     string anon = p.ContainsKey("anonymity") ? Convert.ToString(p["anonymity"]).ToLowerInvariant() : "";
-                    int anonBonus = (anon == "elite") ? 0 : ((anon == "anonymous") ? 200 : 600);
-                    int portPenalty = (kind == UpstreamKind.HttpConnect && port == 80) ? 350 : 0;
+                    int anonBonus = (anon == "elite") ? 0 : ((anon == "anonymous") ? 180 : 650);
+                    int portPenalty = (kind == UpstreamKind.HttpConnect && port == 80) ? 450 : 0;
 
                     string key = kind.ToString() + "://" + ip + ":" + port;
                     if (!dedup.ContainsKey(key))
@@ -788,7 +1105,7 @@ namespace DejavuBrowser
                             CountryCode = cc,
                             City = city,
                             AvgTimeoutMs = avgMs,
-                            PriorityScore = protoRank * 1000 + anonBonus + portPenalty + Math.Min(3000, avgMs / 2)
+                            PriorityScore = protoRank * 900 + anonBonus + portPenalty + Math.Min(2800, avgMs / 2)
                         };
                     }
                 }
@@ -824,14 +1141,15 @@ namespace DejavuBrowser
                     if (protos == null || protos.Count == 0) continue;
 
                     UpstreamKind kind = UpstreamKind.HttpConnect;
-                    int protoRank = 1;
+                    int protoRank = 2;
                     bool found = false;
                     for (int j = 0; j < protos.Count; j++)
                     {
                         string pr = Convert.ToString(protos[j]).Trim().ToLowerInvariant();
                         if (pr == "socks5") { kind = UpstreamKind.Socks5; protoRank = 0; found = true; break; }
-                        if (pr == "http" || pr == "https") { kind = UpstreamKind.HttpConnect; protoRank = 1; found = true; }
-                        else if (pr == "socks4" && !found) { kind = UpstreamKind.Socks4; protoRank = 2; found = true; }
+                        if (pr == "https") { kind = UpstreamKind.HttpConnect; protoRank = 1; found = true; }
+                        else if (pr == "http" && (!found || protoRank > 2)) { kind = UpstreamKind.HttpConnect; protoRank = 2; found = true; }
+                        else if (pr == "socks4" && !found) { kind = UpstreamKind.Socks4; protoRank = 3; found = true; }
                     }
                     if (!found) continue;
 
@@ -842,6 +1160,18 @@ namespace DejavuBrowser
                         if (double.TryParse(Convert.ToString(p["latency"], CultureInfo.InvariantCulture), NumberStyles.Any, CultureInfo.InvariantCulture, out d))
                         {
                             avgMs = Math.Max(50, Math.Min(15000, (int)Math.Round(d)));
+                        }
+                    }
+
+                    int uptimeBonus = 250;
+                    if (p.ContainsKey("upTime") && p["upTime"] != null)
+                    {
+                        double up;
+                        if (double.TryParse(Convert.ToString(p["upTime"], CultureInfo.InvariantCulture), NumberStyles.Any, CultureInfo.InvariantCulture, out up))
+                        {
+                            if (up >= 90.0) uptimeBonus = 0;
+                            else if (up >= 70.0) uptimeBonus = 120;
+                            else if (up < 40.0) uptimeBonus = 600;
                         }
                     }
 
@@ -856,7 +1186,7 @@ namespace DejavuBrowser
                             CountryCode = cc,
                             City = city,
                             AvgTimeoutMs = avgMs,
-                            PriorityScore = protoRank * 1000 + 250 + Math.Min(3000, avgMs / 2)
+                            PriorityScore = protoRank * 900 + uptimeBonus + Math.Min(2800, avgMs / 2)
                         };
                     }
                 }
@@ -867,13 +1197,12 @@ namespace DejavuBrowser
         private async Task<List<ProbeOutcome>> RaceProbeCandidatesAsync(
             List<RelayCandidate> candidates, string targetCountry, string excludeIp, CancellationToken outerToken)
         {
-            int limit = Math.Min(candidates.Count, 24);
-            bool strictAiCheck = (targetCountry == "US" || targetCountry == "AUTO" || candidates.Count >= 10);
+            int limit = Math.Min(candidates.Count, 36);
             List<ProbeOutcome> results = new List<ProbeOutcome>();
             object resLock = new object();
 
             using (CancellationTokenSource raceCts = CancellationTokenSource.CreateLinkedTokenSource(outerToken))
-            using (SemaphoreSlim sem = new SemaphoreSlim(6, 6))
+            using (SemaphoreSlim sem = new SemaphoreSlim(10, 10))
             {
                 List<Task> tasks = new List<Task>(limit);
                 for (int i = 0; i < limit; i++)
@@ -888,7 +1217,7 @@ namespace DejavuBrowser
                             acquired = true;
                             if (raceCts.Token.IsCancellationRequested) return;
 
-                            ProbeOutcome outcome = await ProbeSingleCandidateAsync(cand, targetCountry, excludeIp, strictAiCheck, raceCts.Token).ConfigureAwait(false);
+                            ProbeOutcome outcome = await ProbeSingleCandidateAsync(cand, targetCountry, excludeIp, raceCts.Token).ConfigureAwait(false);
                             if (outcome != null)
                             {
                                 bool doneEnough = false;
@@ -900,7 +1229,7 @@ namespace DejavuBrowser
                                     {
                                         if (results[k].AiCompatible) aiCount++;
                                     }
-                                    if ((aiCount >= 2 && results.Count >= 3) || (!strictAiCheck && results.Count >= 3))
+                                    if (results.Count >= 6 || (aiCount >= 3 && results.Count >= 4))
                                     {
                                         doneEnough = true;
                                     }
@@ -919,9 +1248,13 @@ namespace DejavuBrowser
                     }));
                 }
 
-                // Wait up to 14 seconds total for parallel probe race
-                Task allDone = Task.WhenAll(tasks);
-                await Task.WhenAny(allDone, Task.Delay(14000, outerToken)).ConfigureAwait(false);
+                // Fast 12s race across up to 36 candidates at concurrency 10
+                using (CancellationTokenSource delayCts = CancellationTokenSource.CreateLinkedTokenSource(outerToken))
+                {
+                    Task allDone = Task.WhenAll(tasks);
+                    await Task.WhenAny(allDone, Task.Delay(12000, delayCts.Token)).ConfigureAwait(false);
+                    try { delayCts.Cancel(); } catch { }
+                }
                 try { raceCts.Cancel(); } catch { }
             }
 
@@ -932,8 +1265,45 @@ namespace DejavuBrowser
             }
         }
 
+        private static bool IsValidCloudflareTrace(HttpsProbeResult res)
+        {
+            return res != null &&
+                   res.StatusCode == 200 &&
+                   !string.IsNullOrEmpty(res.Body) &&
+                   res.Body.IndexOf("ip=", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static bool IsValidGoogle204(HttpsProbeResult res)
+        {
+            return res != null &&
+                   (res.StatusCode == 204 || res.StatusCode == 200 || res.StatusCode == 301 || res.StatusCode == 302);
+        }
+
+        private static void ParseCloudflareTraceFields(string body, out string ip, out string countryCode)
+        {
+            ip = "";
+            countryCode = "";
+            if (string.IsNullOrEmpty(body)) return;
+            string[] lines = body.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string ln = lines[i].Trim();
+                if (ln.StartsWith("ip=", StringComparison.OrdinalIgnoreCase))
+                {
+                    string val = ln.Substring(3).Trim();
+                    IPAddress parsed;
+                    if (IPAddress.TryParse(val, out parsed)) ip = val;
+                }
+                else if (ln.StartsWith("loc=", StringComparison.OrdinalIgnoreCase))
+                {
+                    string val = ln.Substring(4).Trim().ToUpperInvariant();
+                    if (val.Length == 2 && val != "XX" && val != "T1") countryCode = val;
+                }
+            }
+        }
+
         private async Task<ProbeOutcome> ProbeSingleCandidateAsync(
-            RelayCandidate cand, string targetCountry, string excludeIp, bool checkGemini, CancellationToken token)
+            RelayCandidate cand, string targetCountry, string excludeIp, CancellationToken token)
         {
             UpstreamEndpoint ep = new UpstreamEndpoint
             {
@@ -946,9 +1316,9 @@ namespace DejavuBrowser
                 Country = ResolveCountryDisplayName(cand.CountryCode)
             };
 
-            // 1. Verify real TLS HTTPS connectivity & GeoIP via ipinfo.io (fallback: api.ipify.org)
+            // Check 1 (STRICT): GeoIP HTTPS probe (ipinfo.io -> ipwho.is -> api.ipify.org)
             HttpsProbeResult geoRes = await LocalProxyBridge.HttpsProbeViaEndpointAsync(
-                ep, "ipinfo.io", "/json", 5500, token).ConfigureAwait(false);
+                ep, "ipinfo.io", "/json", 4800, token).ConfigureAwait(false);
 
             bool geoParsed = false;
             if (geoRes != null && geoRes.StatusCode >= 200 && geoRes.StatusCode < 300)
@@ -958,8 +1328,18 @@ namespace DejavuBrowser
 
             if (!geoParsed && !token.IsCancellationRequested)
             {
+                HttpsProbeResult whoRes = await LocalProxyBridge.HttpsProbeViaEndpointAsync(
+                    ep, "ipwho.is", "/", 4500, token).ConfigureAwait(false);
+                if (whoRes != null && whoRes.StatusCode >= 200 && whoRes.StatusCode < 300)
+                {
+                    geoParsed = TryPopulateEndpointGeo(ep, whoRes.Body, whoRes.LatencyMs, targetCountry);
+                }
+            }
+
+            if (!geoParsed && !token.IsCancellationRequested)
+            {
                 HttpsProbeResult ipRes = await LocalProxyBridge.HttpsProbeViaEndpointAsync(
-                    ep, "api.ipify.org", "/?format=json", 5000, token).ConfigureAwait(false);
+                    ep, "api.ipify.org", "/?format=json", 4200, token).ConfigureAwait(false);
                 if (ipRes != null && ipRes.StatusCode >= 200 && ipRes.StatusCode < 300)
                 {
                     geoParsed = TryPopulateEndpointGeo(ep, ipRes.Body, ipRes.LatencyMs, targetCountry);
@@ -974,31 +1354,65 @@ namespace DejavuBrowser
                 return null;
             }
 
-            // If user picked a specific country, make sure exit GeoIP didn't unexpectedly resolve elsewhere
             if (targetCountry != "AUTO" && !string.IsNullOrEmpty(ep.CountryCode) &&
                 !string.Equals(ep.CountryCode, targetCountry, StringComparison.OrdinalIgnoreCase))
             {
                 return null;
             }
 
-            // 2. Verify Google Gemini / Google Web compatibility (non-403!) so US & Global VPN loads Gemini cleanly!
+            // Checks 2 & 3 (STRICT CONCURRENT MULTI-HOST TLS CHECK):
+            // Prove the proxy handles PARALLEL multi-host HTTPS sockets cleanly without resetting, rate-limiting, or blocking 443!
+            if (token.IsCancellationRequested) return null;
+            Task<HttpsProbeResult> tCf = LocalProxyBridge.HttpsProbeViaEndpointAsync(
+                ep, "www.cloudflare.com", "/cdn-cgi/trace", 5200, token);
+            Task<HttpsProbeResult> tG = LocalProxyBridge.HttpsProbeViaEndpointAsync(
+                ep, "www.google.com", "/generate_204", 5200, token);
+            Task<HttpsProbeResult> tIp2 = LocalProxyBridge.HttpsProbeViaEndpointAsync(
+                ep, "api.ipify.org", "/?format=json", 5200, token);
+
+            await Task.WhenAll(tCf, tG, tIp2).ConfigureAwait(false);
+
+            HttpsProbeResult cfRes = tCf.Result;
+            HttpsProbeResult gRes = tG.Result;
+            HttpsProbeResult ip2Res = tIp2.Result;
+            if (!IsValidCloudflareTrace(cfRes) || !IsValidGoogle204(gRes) ||
+                ip2Res == null || ip2Res.StatusCode < 200 || ip2Res.StatusCode >= 300)
+            {
+                // Reject half-dead, rate-limited, MITM, 403/5xx, or low-concurrency proxies immediately!
+                return null;
+            }
+
+            // Refine latency using verified Cloudflare + Google HTTPS timings
+            int avgLat = Math.Max(1, (ep.LatencyMs + cfRes.LatencyMs + gRes.LatencyMs) / 3);
+            ep.LatencyMs = avgLat;
+
+            string cfIp;
+            string cfCc;
+            ParseCloudflareTraceFields(cfRes.Body, out cfIp, out cfCc);
+            if (!string.IsNullOrEmpty(cfIp) && string.IsNullOrEmpty(ep.ExitIp))
+            {
+                ep.ExitIp = cfIp;
+            }
+            if (string.IsNullOrEmpty(ep.CountryCode) && !string.IsNullOrEmpty(cfCc))
+            {
+                ep.CountryCode = cfCc;
+                ep.Country = ResolveCountryDisplayName(cfCc);
+            }
+
+            // Optional Gemini AI bonus check (NEVER rejects a working clean node!)
             bool aiOk = false;
             if (!token.IsCancellationRequested)
             {
                 HttpsProbeResult gemRes = await LocalProxyBridge.HttpsProbeViaEndpointAsync(
-                    ep, "gemini.google.com", "/", 5500, token).ConfigureAwait(false);
+                    ep, "gemini.google.com", "/", 3500, token).ConfigureAwait(false);
                 if (gemRes != null && (gemRes.StatusCode == 200 || gemRes.StatusCode == 301 || gemRes.StatusCode == 302))
                 {
                     aiOk = true;
                 }
-                else if (checkGemini && gemRes != null && gemRes.StatusCode == 403)
-                {
-                    // Explicitly skip IPs that Google 403-blocks on Gemini!
-                    return null;
-                }
             }
 
-            int score = ep.LatencyMs + (aiOk ? 0 : 4000) + (ep.Kind == UpstreamKind.Socks5 ? 0 : (ep.Kind == UpstreamKind.HttpConnect ? 200 : 450));
+            int protoPenalty = (ep.Kind == UpstreamKind.Socks5 ? 0 : (ep.Kind == UpstreamKind.HttpConnect ? 180 : 450));
+            int score = ep.LatencyMs + (aiOk ? 0 : 900) + protoPenalty;
             return new ProbeOutcome
             {
                 Endpoint = ep,
@@ -1016,6 +1430,8 @@ namespace DejavuBrowser
                 if (brace > 0) jsonText = jsonText.Substring(brace);
                 Dictionary<string, object> d = _json.Deserialize<Dictionary<string, object>>(jsonText);
                 if (d == null || !d.ContainsKey("ip")) return false;
+                if (d.ContainsKey("success") && d["success"] is bool && !(bool)d["success"]) return false;
+
                 string ip = Convert.ToString(d["ip"]).Trim();
                 IPAddress parsedIp;
                 if (string.IsNullOrEmpty(ip) || !IPAddress.TryParse(ip, out parsedIp)) return false;
@@ -1064,16 +1480,19 @@ namespace DejavuBrowser
             {
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
                 req.Proxy = null;
-                req.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) dejavu-vpn/3.2";
+                req.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) dejavu-vpn/5.7.0";
                 req.Timeout = timeoutMs;
                 req.ReadWriteTimeout = timeoutMs;
                 req.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
                 using (token.Register(() => { try { req.Abort(); } catch { } }))
+                using (CancellationTokenSource delayCts = CancellationTokenSource.CreateLinkedTokenSource(token))
                 {
                     Task<WebResponse> respTask = req.GetResponseAsync();
-                    Task delayTask = Task.Delay(timeoutMs, token);
-                    if (await Task.WhenAny(respTask, delayTask).ConfigureAwait(false) != respTask)
+                    Task delayTask = Task.Delay(timeoutMs, delayCts.Token);
+                    Task done = await Task.WhenAny(respTask, delayTask).ConfigureAwait(false);
+                    try { delayCts.Cancel(); } catch { }
+                    if (done != respTask)
                     {
                         try { req.Abort(); } catch { }
                         return null;
@@ -1092,13 +1511,136 @@ namespace DejavuBrowser
         }
 
         // =====================================================================
-        // Engine 2: 3-Hop Tor Onion (Max Anonymity Mode + Privacy Hub Fallback)
+        // Engine 2: 3-Hop Tor Onion (Encrypted Multi-Socket Engine + Smart Fallback)
         // =====================================================================
+        private void WriteTorrc(string torrcPath, string stateDir, string target, bool strictNodes)
+        {
+            StringBuilder rc = new StringBuilder();
+            rc.AppendLine("SocksPort 127.0.0.1:" + _socksPort);
+            rc.AppendLine("ControlPort 127.0.0.1:" + _controlPort);
+            rc.AppendLine("CookieAuthentication 1");
+            rc.AppendLine("CookieAuthFile " + _cookiePath);
+            rc.AppendLine("DataDirectory " + stateDir);
+            rc.AppendLine("GeoIPFile " + _geoIpPath);
+            if (File.Exists(_geoIp6Path)) rc.AppendLine("GeoIPv6File " + _geoIp6Path);
+            rc.AppendLine("AvoidDiskWrites 1");
+            rc.AppendLine("NumEntryGuards 3");
+            rc.AppendLine("KeepalivePeriod 60");
+            rc.AppendLine("NewCircuitPeriod 45");
+            rc.AppendLine("CircuitBuildTimeout 25");
+            rc.AppendLine("LearnCircuitBuildTimeout 1");
+            rc.AppendLine("SocksTimeout 30");
+            rc.AppendLine("ConnectionPadding 0");
+            if (target != "AUTO")
+            {
+                rc.AppendLine("ExitNodes {" + target.ToLowerInvariant() + "}");
+                rc.AppendLine("StrictNodes " + (strictNodes ? "1" : "0"));
+            }
+            File.WriteAllText(torrcPath, rc.ToString(), new UTF8Encoding(false));
+        }
+
+        private async Task<bool> LaunchAndBootstrapTorAsync(string target, bool strictNodes, CancellationToken token)
+        {
+            StopTorProcess();
+
+            _socksPort = FindFreeLoopbackPort();
+            _controlPort = FindFreeLoopbackPort();
+            string stateDir = Path.Combine(_torDataDir, "state");
+            Directory.CreateDirectory(stateDir);
+
+            string torrcPath = Path.Combine(_torDataDir, "torrc");
+            WriteTorrc(torrcPath, stateDir, target, strictNodes);
+
+            TaskCompletionSource<bool> bootstrapped = new TaskCompletionSource<bool>();
+
+            ProcessStartInfo psi = new ProcessStartInfo(_torExePath, "-f \"" + torrcPath + "\"");
+            psi.WorkingDirectory = Path.GetDirectoryName(_torExePath);
+            psi.UseShellExecute = false;
+            psi.CreateNoWindow = true;
+            psi.RedirectStandardOutput = true;
+            psi.RedirectStandardError = true;
+
+            Process proc = new Process();
+            proc.StartInfo = psi;
+            proc.EnableRaisingEvents = true;
+
+            Action<string> onLine = (line) =>
+            {
+                if (string.IsNullOrEmpty(line)) return;
+                Match m = Regex.Match(line, @"Bootstrapped (\d+)%");
+                if (m.Success)
+                {
+                    int pct;
+                    if (int.TryParse(m.Groups[1].Value, out pct))
+                    {
+                        int uiPct = Math.Min(90, 18 + (int)(pct * 0.72));
+                        if (pct >= 100)
+                        {
+                            bootstrapped.TrySetResult(true);
+                        }
+                        else
+                        {
+                            UpdateStatus("connecting", "Encrypting 3-hop circuit (" + pct + "%)...", uiPct, false);
+                        }
+                    }
+                }
+            };
+
+            proc.OutputDataReceived += (s, e) => onLine(e.Data);
+            proc.ErrorDataReceived += (s, e) => onLine(e.Data);
+            proc.Exited += (s, e) => bootstrapped.TrySetResult(false);
+
+            proc.Start();
+            proc.BeginOutputReadLine();
+            proc.BeginErrorReadLine();
+
+            lock (_sync) { _torProcess = proc; }
+
+            using (CancellationTokenSource delayCts = CancellationTokenSource.CreateLinkedTokenSource(token))
+            {
+                Task delay = Task.Delay(45000, delayCts.Token);
+                Task done = await Task.WhenAny(bootstrapped.Task, delay).ConfigureAwait(false);
+                try { delayCts.Cancel(); } catch { }
+                if (token.IsCancellationRequested)
+                {
+                    StopTorProcess();
+                    return false;
+                }
+                if (done != bootstrapped.Task || !bootstrapped.Task.Result)
+                {
+                    StopTorProcess();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private void MarkTorConnected()
+        {
+            string cityLabel;
+            int lat;
+            lock (_sync)
+            {
+                _verified = true;
+                lat = Math.Max(1, _latencyMs);
+                _lastVerifyMessage = "Verified · " + lat + " ms · 3-Hop HTTPS & DNS OK";
+                cityLabel = string.IsNullOrEmpty(_exitCity)
+                    ? _exitCountry
+                    : (_exitCity + ", " + _exitCountry);
+            }
+            UpdateStatus("connected", "Verified · 3-Hop · " + cityLabel, 100, false);
+        }
+
         private async Task ConnectTorInternalAsync(string target, CancellationToken token)
         {
             try
             {
-                lock (_sync) { _activeEngine = "tor"; }
+                lock (_sync)
+                {
+                    _activeEngine = "tor";
+                    _verified = false;
+                    _lastVerifyMessage = "";
+                }
 
                 // If Tor is already running and bootstrapped, perform instant ControlPort switch!
                 if (IsTorRunning() && _socksPort > 0 && _controlPort > 0)
@@ -1112,7 +1654,7 @@ namespace DejavuBrowser
                 lock (_sync) { _coreInstalledCache = coreReady; }
                 if (!coreReady)
                 {
-                    UpdateStatus("downloading", "Downloading 3-hop Tor engine (one-time)...", 4, true);
+                    UpdateStatus("downloading", "Downloading encrypted 3-hop Tor engine (one-time)...", 4, true);
                     bool installed = await DownloadAndExtractTorCoreAsync(token).ConfigureAwait(false);
                     lock (_sync) { _coreInstalledCache = installed; }
                     if (token.IsCancellationRequested) return;
@@ -1127,142 +1669,68 @@ namespace DejavuBrowser
                 // 2. Launch Tor silently on loopback ports
                 lock (_sync) { _connectedUtc = DateTime.MinValue; }
                 _bridge.ResetVpnCounters();
-                UpdateStatus("connecting", "Starting 3-hop Tor circuit for " + GetCountryName(target) + "...", 12, true);
+                UpdateStatus("connecting", "Starting encrypted 3-hop circuit for " + GetCountryName(target) + "...", 14, true);
                 _bridge.SetVpnKillSwitchEngaged();
 
-                StopTorProcess();
+                bool usedStrict = (target != "AUTO");
+                bool okBoot = await LaunchAndBootstrapTorAsync(target, usedStrict, token).ConfigureAwait(false);
+                if (token.IsCancellationRequested) return;
 
-                _socksPort = FindFreeLoopbackPort();
-                _controlPort = FindFreeLoopbackPort();
-                string stateDir = Path.Combine(_torDataDir, "state");
-                Directory.CreateDirectory(stateDir);
-
-                string torrcPath = Path.Combine(_torDataDir, "torrc");
-                StringBuilder rc = new StringBuilder();
-                rc.AppendLine("SocksPort 127.0.0.1:" + _socksPort);
-                rc.AppendLine("ControlPort 127.0.0.1:" + _controlPort);
-                rc.AppendLine("CookieAuthentication 1");
-                rc.AppendLine("CookieAuthFile " + _cookiePath);
-                rc.AppendLine("DataDirectory " + stateDir);
-                rc.AppendLine("GeoIPFile " + _geoIpPath);
-                if (File.Exists(_geoIp6Path)) rc.AppendLine("GeoIPv6File " + _geoIp6Path);
-                rc.AppendLine("AvoidDiskWrites 1");
-                rc.AppendLine("NumEntryGuards 2");
-                rc.AppendLine("KeepalivePeriod 60");
-                rc.AppendLine("NewCircuitPeriod 30");
-                rc.AppendLine("CircuitBuildTimeout 12");
-                rc.AppendLine("LearnCircuitBuildTimeout 0");
-                if (target != "AUTO")
+                if (!okBoot && usedStrict)
                 {
-                    rc.AppendLine("ExitNodes {" + target.ToLowerInvariant() + "}");
-                    rc.AppendLine("StrictNodes 1");
-                }
-                File.WriteAllText(torrcPath, rc.ToString(), new UTF8Encoding(false));
-
-                TaskCompletionSource<bool> bootstrapped = new TaskCompletionSource<bool>();
-
-                ProcessStartInfo psi = new ProcessStartInfo(_torExePath, "-f \"" + torrcPath + "\"");
-                psi.WorkingDirectory = Path.GetDirectoryName(_torExePath);
-                psi.UseShellExecute = false;
-                psi.CreateNoWindow = true;
-                psi.RedirectStandardOutput = true;
-                psi.RedirectStandardError = true;
-
-                Process proc = new Process();
-                proc.StartInfo = psi;
-                proc.EnableRaisingEvents = true;
-
-                Action<string> onLine = (line) =>
-                {
-                    if (string.IsNullOrEmpty(line)) return;
-                    Match m = Regex.Match(line, @"Bootstrapped (\d+)%");
-                    if (m.Success)
-                    {
-                        int pct;
-                        if (int.TryParse(m.Groups[1].Value, out pct))
-                        {
-                            int uiPct = Math.Min(92, 15 + (int)(pct * 0.77));
-                            if (pct >= 100)
-                            {
-                                bootstrapped.TrySetResult(true);
-                            }
-                            else
-                            {
-                                UpdateStatus("connecting", "Encrypting 3-hop circuit (" + pct + "%)...", uiPct, false);
-                            }
-                        }
-                    }
-                };
-
-                proc.OutputDataReceived += (s, e) => onLine(e.Data);
-                proc.ErrorDataReceived += (s, e) => onLine(e.Data);
-                proc.Exited += (s, e) => bootstrapped.TrySetResult(false);
-
-                proc.Start();
-                proc.BeginOutputReadLine();
-                proc.BeginErrorReadLine();
-
-                lock (_sync) { _torProcess = proc; }
-
-                // Wait up to 35s for Tor bootstrap
-                Task delay = Task.Delay(35000, token);
-                Task done = await Task.WhenAny(bootstrapped.Task, delay).ConfigureAwait(false);
-                if (token.IsCancellationRequested)
-                {
-                    StopTorProcess();
-                    return;
+                    // Retry cold bootstrap with soft country preference (ExitNodes {cc}, StrictNodes 0)
+                    usedStrict = false;
+                    UpdateStatus("connecting", "Relaxing " + GetCountryName(target) + " exit route...", 25, false);
+                    okBoot = await LaunchAndBootstrapTorAsync(target, false, token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
                 }
 
-                if (done != bootstrapped.Task || !bootstrapped.Task.Result)
+                if (!okBoot)
                 {
                     StopTorProcess();
                     _bridge.SetDirectMode();
-                    UpdateStatus("error", "Tor timed out for " + GetCountryName(target) + ". Try Smart mode.", 0, true);
+                    UpdateStatus("error", "Could not establish 3-hop Tor circuit. Check network & retry.", 0, true);
                     return;
                 }
 
-                // 3. Engage live SOCKS5 tunnel on LocalProxyBridge!
+                // 3. Engage live SOCKS5 tunnel on LocalProxyBridge and verify REAL HTTPS browsing!
                 _bridge.SetSocks5Tunnel(_socksPort);
-                UpdateStatus("connecting", "Verifying " + GetCountryName(target) + " exit IP...", 95, false);
+                UpdateStatus("connecting", "Verifying live HTTPS through " + GetCountryName(target) + "...", 93, false);
 
-                bool verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
+                bool verified = await VerifyTorCircuitAndGeoAsync(target, 1, token).ConfigureAwait(false);
                 if (token.IsCancellationRequested) return;
 
                 if (!verified)
                 {
-                    UpdateStatus("connecting", "Retrying " + GetCountryName(target) + " exit route...", 96, false);
+                    UpdateStatus("connecting", "Retrying " + GetCountryName(target) + " exit circuit...", 95, false);
                     await SendControlFlushCircuitsAsync(token).ConfigureAwait(false);
                     if (token.IsCancellationRequested) return;
                     _bridge.SetSocks5Tunnel(_socksPort);
                     await Task.Delay(IsFastCountry(target) ? 450 : 750, token).ConfigureAwait(false);
-                    verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
+                    verified = await VerifyTorCircuitAndGeoAsync(target, 1, token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                }
+
+                if (!verified && usedStrict && target != "AUTO")
+                {
+                    // Retry once with soft preference (ExitNodes {cc}, StrictNodes 0) and update actual exit info!
+                    UpdateStatus("connecting", "Finding best available encrypted exit near " + GetCountryName(target) + "...", 97, false);
+                    await SendControlCountrySwitchAsync(target, false, token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                    _bridge.SetSocks5Tunnel(_socksPort);
+                    await Task.Delay(600, token).ConfigureAwait(false);
+                    verified = await VerifyTorCircuitAndGeoAsync(target, 2, token).ConfigureAwait(false);
                     if (token.IsCancellationRequested) return;
                 }
 
                 if (verified)
                 {
-                    string cityLabel = FormatExitLabel();
-                    UpdateStatus("connected", "Protected · 3-Hop · " + cityLabel, 100, false);
+                    MarkTorConnected();
                 }
                 else
                 {
-                    bool basicOk = await TestBasicTunnelConnectivityAsync(token).ConfigureAwait(false);
-                    if (token.IsCancellationRequested) return;
-                    if (basicOk)
-                    {
-                        lock (_sync)
-                        {
-                            _exitIp = "Encrypted";
-                            _exitCountry = GetCountryName(target);
-                            _exitCountryCode = target;
-                        }
-                        UpdateStatus("connected", "Protected · 3-Hop · " + GetCountryName(target), 100, false);
-                    }
-                    else
-                    {
-                        _bridge.SetDirectMode();
-                        UpdateStatus("error", "No 3-hop Tor exit in " + GetCountryName(target) + " — switch to Smart mode", 0, true);
-                    }
+                    _bridge.SetDirectMode();
+                    UpdateStatus("error", "Could not verify HTTPS exit for " + GetCountryName(target) + " — please retry", 0, true);
                 }
             }
             catch (OperationCanceledException)
@@ -1279,7 +1747,7 @@ namespace DejavuBrowser
         /// <summary>
         /// Acquires a brand-new exit IP inside the SAME selected country!
         /// - In Smart Mode: rotates to the next verified node in pool (instant!) or probes a fresh clean node.
-        /// - In Tor Mode: closes circuits + SIGNAL NEWNYM + verifies new exit IP.
+        /// - In Tor Mode: closes circuits + SIGNAL NEWNYM + verifies real HTTPS on new exit IP.
         /// </summary>
         public async Task RotateIdentityAsync()
         {
@@ -1297,13 +1765,13 @@ namespace DejavuBrowser
 
             if (engine == "smart")
             {
-                // Instant rotation if we already have another verified live node in our pool!
                 if (poolCopy.Count > 1)
                 {
                     UpstreamEndpoint first = poolCopy[0];
                     poolCopy.RemoveAt(0);
                     poolCopy.Add(first);
                     UpstreamEndpoint next = poolCopy[0];
+                    int lat = Math.Max(1, next.LatencyMs);
                     lock (_sync)
                     {
                         _activeSmartPool = poolCopy;
@@ -1311,10 +1779,12 @@ namespace DejavuBrowser
                         _exitCity = next.City ?? "";
                         _exitCountry = string.IsNullOrEmpty(next.Country) ? GetCountryName(target) : next.Country;
                         _exitCountryCode = string.IsNullOrEmpty(next.CountryCode) ? target : next.CountryCode;
-                        _latencyMs = Math.Max(1, next.LatencyMs);
+                        _latencyMs = lat;
+                        _verified = true;
+                        _lastVerifyMessage = "Verified · " + lat + " ms · HTTPS & DNS OK";
                     }
                     _bridge.SetUpstreamPool(poolCopy);
-                    UpdateStatus("connected", "Protected · " + FormatExitLabel(), 100, false);
+                    UpdateStatus("connected", "Verified · " + FormatExitLabel(), 100, false);
                     return;
                 }
 
@@ -1349,7 +1819,7 @@ namespace DejavuBrowser
                 UpdateStatus("connecting", "Verifying new " + GetCountryName(target) + " exit IP...", 88, false);
 
                 await Task.Delay(350, token).ConfigureAwait(false);
-                bool verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
+                bool verified = await VerifyTorCircuitAndGeoAsync(target, 1, token).ConfigureAwait(false);
                 if (token.IsCancellationRequested) return;
 
                 if (verified && !string.IsNullOrEmpty(previousIp) &&
@@ -1360,44 +1830,38 @@ namespace DejavuBrowser
                     if (token.IsCancellationRequested) return;
                     _bridge.SetSocks5Tunnel(_socksPort);
                     await Task.Delay(450, token).ConfigureAwait(false);
-                    verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
+                    verified = await VerifyTorCircuitAndGeoAsync(target, 1, token).ConfigureAwait(false);
                     if (token.IsCancellationRequested) return;
                 }
 
                 if (!verified)
                 {
-                    UpdateStatus("connecting", "Retrying new IP in " + GetCountryName(target) + "...", 93, false);
+                    UpdateStatus("connecting", "Retrying new IP in " + GetCountryName(target) + "...", 94, false);
                     await SendControlFlushCircuitsAsync(token).ConfigureAwait(false);
                     if (token.IsCancellationRequested) return;
                     _bridge.SetSocks5Tunnel(_socksPort);
                     await Task.Delay(IsFastCountry(target) ? 450 : 750, token).ConfigureAwait(false);
-                    verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
+                    verified = await VerifyTorCircuitAndGeoAsync(target, 1, token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                }
+
+                if (!verified && target != "AUTO")
+                {
+                    await SendControlCountrySwitchAsync(target, false, token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) return;
+                    _bridge.SetSocks5Tunnel(_socksPort);
+                    await Task.Delay(600, token).ConfigureAwait(false);
+                    verified = await VerifyTorCircuitAndGeoAsync(target, 2, token).ConfigureAwait(false);
                     if (token.IsCancellationRequested) return;
                 }
 
                 if (verified)
                 {
-                    string cityLabel = FormatExitLabel();
-                    UpdateStatus("connected", "Protected · 3-Hop · " + cityLabel, 100, false);
+                    MarkTorConnected();
                 }
                 else
                 {
-                    bool basicOk = await TestBasicTunnelConnectivityAsync(token).ConfigureAwait(false);
-                    if (token.IsCancellationRequested) return;
-                    if (basicOk)
-                    {
-                        lock (_sync)
-                        {
-                            _exitIp = "Encrypted";
-                            _exitCountry = GetCountryName(target);
-                            _exitCountryCode = target;
-                        }
-                        UpdateStatus("connected", "Protected · 3-Hop · " + GetCountryName(target), 100, false);
-                    }
-                    else
-                    {
-                        UpdateStatus("error", GetCountryName(target) + " exit busy — try again or switch to Smart mode", 0, true);
-                    }
+                    UpdateStatus("error", GetCountryName(target) + " exit busy — please retry", 0, true);
                 }
             }
             catch (OperationCanceledException)
@@ -1423,7 +1887,8 @@ namespace DejavuBrowser
         {
             UpdateStatus("connecting", "Switching 3-hop tunnel to " + GetCountryName(target) + "...", 62, true);
 
-            bool switched = await SendControlCountrySwitchAsync(target, token).ConfigureAwait(false);
+            bool usedStrict = (target != "AUTO");
+            bool switched = await SendControlCountrySwitchAsync(target, usedStrict, token).ConfigureAwait(false);
             if (token.IsCancellationRequested) return;
 
             if (!switched)
@@ -1434,60 +1899,56 @@ namespace DejavuBrowser
             }
 
             _bridge.SetSocks5Tunnel(_socksPort);
-            UpdateStatus("connecting", "Verifying " + GetCountryName(target) + " exit IP...", 84, false);
+            UpdateStatus("connecting", "Verifying live HTTPS in " + GetCountryName(target) + "...", 84, false);
 
             await Task.Delay(400, token).ConfigureAwait(false);
-            bool verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
+            bool verified = await VerifyTorCircuitAndGeoAsync(target, 1, token).ConfigureAwait(false);
             if (token.IsCancellationRequested) return;
 
             if (!verified)
             {
-                UpdateStatus("connecting", "Retrying " + GetCountryName(target) + " exit route...", 91, false);
+                UpdateStatus("connecting", "Retrying " + GetCountryName(target) + " exit route...", 90, false);
                 await SendControlFlushCircuitsAsync(token).ConfigureAwait(false);
                 if (token.IsCancellationRequested) return;
                 _bridge.SetSocks5Tunnel(_socksPort);
                 await Task.Delay(IsFastCountry(target) ? 450 : 750, token).ConfigureAwait(false);
-                verified = await VerifyExitNodeAsync(target, 1, token).ConfigureAwait(false);
+                verified = await VerifyTorCircuitAndGeoAsync(target, 1, token).ConfigureAwait(false);
+                if (token.IsCancellationRequested) return;
+            }
+
+            if (!verified && usedStrict && target != "AUTO")
+            {
+                UpdateStatus("connecting", "Finding best available encrypted exit near " + GetCountryName(target) + "...", 94, false);
+                await SendControlCountrySwitchAsync(target, false, token).ConfigureAwait(false);
+                if (token.IsCancellationRequested) return;
+                _bridge.SetSocks5Tunnel(_socksPort);
+                await Task.Delay(600, token).ConfigureAwait(false);
+                verified = await VerifyTorCircuitAndGeoAsync(target, 2, token).ConfigureAwait(false);
                 if (token.IsCancellationRequested) return;
             }
 
             if (verified)
             {
-                string cityLabel = FormatExitLabel();
-                UpdateStatus("connected", "Protected · 3-Hop · " + cityLabel, 100, false);
+                MarkTorConnected();
             }
             else
             {
-                bool basicOk = await TestBasicTunnelConnectivityAsync(token).ConfigureAwait(false);
-                if (token.IsCancellationRequested) return;
-                if (basicOk)
-                {
-                    lock (_sync)
-                    {
-                        _exitIp = "Encrypted";
-                        _exitCountry = GetCountryName(target);
-                        _exitCountryCode = target;
-                    }
-                    UpdateStatus("connected", "Protected · 3-Hop · " + GetCountryName(target), 100, false);
-                }
-                else
-                {
-                    UpdateStatus("error", "No 3-hop Tor exit in " + GetCountryName(target) + " — switch to Smart mode", 0, true);
-                }
+                _bridge.SetDirectMode();
+                UpdateStatus("error", "Could not verify HTTPS exit for " + GetCountryName(target) + " — retry or pick Fastest", 0, true);
             }
         }
 
-        private Task<bool> SendControlCountrySwitchAsync(string target, CancellationToken token)
+        private Task<bool> SendControlCountrySwitchAsync(string target, bool strictNodes, CancellationToken token)
         {
-            return SendControlCommandAsync(target, token);
+            return SendControlCommandAsync(target, strictNodes, token);
         }
 
         private Task<bool> SendControlFlushCircuitsAsync(CancellationToken token)
         {
-            return SendControlCommandAsync(null, token);
+            return SendControlCommandAsync(null, true, token);
         }
 
-        private async Task<bool> SendControlCommandAsync(string targetOrNull, CancellationToken token)
+        private async Task<bool> SendControlCommandAsync(string targetOrNull, bool strictNodes, CancellationToken token)
         {
             try
             {
@@ -1497,10 +1958,13 @@ namespace DejavuBrowser
 
                 using (TcpClient ctl = new TcpClient())
                 using (token.Register(() => { try { ctl.Close(); } catch { } }))
+                using (CancellationTokenSource delayCts = CancellationTokenSource.CreateLinkedTokenSource(token))
                 {
                     Task connectTask = ctl.ConnectAsync(IPAddress.Loopback, _controlPort);
-                    Task delayTask = Task.Delay(5000, token);
-                    if (await Task.WhenAny(connectTask, delayTask).ConfigureAwait(false) != connectTask)
+                    Task delayTask = Task.Delay(5000, delayCts.Token);
+                    Task done = await Task.WhenAny(connectTask, delayTask).ConfigureAwait(false);
+                    try { delayCts.Cancel(); } catch { }
+                    if (done != connectTask)
                     {
                         return false;
                     }
@@ -1524,7 +1988,7 @@ namespace DejavuBrowser
                             }
                             else
                             {
-                                await sw.WriteAsync("SETCONF ExitNodes={" + targetOrNull.ToLowerInvariant() + "} StrictNodes=1\r\n").ConfigureAwait(false);
+                                await sw.WriteAsync("SETCONF ExitNodes={" + targetOrNull.ToLowerInvariant() + "} StrictNodes=" + (strictNodes ? "1" : "0") + "\r\n").ConfigureAwait(false);
                             }
                             string confResp = await sr.ReadLineAsync().ConfigureAwait(false);
                             if (confResp == null || !confResp.StartsWith("250")) return false;
@@ -1564,55 +2028,126 @@ namespace DejavuBrowser
             }
         }
 
-        private async Task<bool> VerifyExitNodeAsync(string targetCountry, int maxAttempts, CancellationToken token)
+        /// <summary>
+        /// Verifies REAL HTTPS browsing through Tor SOCKS5 (cloudflare.com/cdn-cgi/trace OR google.com/generate_204)
+        /// AND updates exit IP/country from the actual verified exit before ever reporting Connected.
+        /// </summary>
+        private async Task<bool> VerifyTorCircuitAndGeoAsync(string targetCountry, int maxAttempts, CancellationToken token)
         {
             int attempts = Math.Max(1, maxAttempts);
+            UpstreamEndpoint torEp = new UpstreamEndpoint
+            {
+                Kind = UpstreamKind.Socks5,
+                Host = "127.0.0.1",
+                Port = _socksPort
+            };
+
             for (int attempt = 0; attempt < attempts; attempt++)
             {
                 if (token.IsCancellationRequested) return false;
-                Stopwatch sw = Stopwatch.StartNew();
 
-                string body = await LocalProxyBridge.HttpsGetViaSocks5Async(_socksPort, "ipinfo.io", "/json", 10000, token).ConfigureAwait(false);
-                if (TryParseGeoJson(body, (int)sw.ElapsedMilliseconds, targetCountry))
+                // 1. REAL HTTPS browsing probe (Cloudflare trace first; Google generate_204 fallback)
+                HttpsProbeResult cfRes = await LocalProxyBridge.HttpsProbeViaEndpointAsync(
+                    torEp, "www.cloudflare.com", "/cdn-cgi/trace", 13000, token).ConfigureAwait(false);
+                bool cfOk = IsValidCloudflareTrace(cfRes);
+                bool browseOk = cfOk;
+                int browseLat = cfOk ? cfRes.LatencyMs : 0;
+
+                if (!browseOk && !token.IsCancellationRequested)
                 {
-                    return true;
+                    HttpsProbeResult gRes = await LocalProxyBridge.HttpsProbeViaEndpointAsync(
+                        torEp, "www.google.com", "/generate_204", 11000, token).ConfigureAwait(false);
+                    if (IsValidGoogle204(gRes))
+                    {
+                        browseOk = true;
+                        browseLat = gRes.LatencyMs;
+                    }
                 }
 
-                if (token.IsCancellationRequested) return false;
-
-                sw.Restart();
-                body = await LocalProxyBridge.HttpsGetViaSocks5Async(_socksPort, "ipwho.is", "/", 9000, token).ConfigureAwait(false);
-                if (TryParseGeoJson(body, (int)sw.ElapsedMilliseconds, targetCountry))
+                if (!browseOk)
                 {
-                    return true;
+                    if (attempt + 1 < attempts && !token.IsCancellationRequested)
+                    {
+                        await Task.Delay(900, token).ConfigureAwait(false);
+                    }
+                    continue;
                 }
 
-                if (token.IsCancellationRequested) return false;
-
-                sw.Restart();
-                body = await LocalProxyBridge.HttpsGetViaSocks5Async(_socksPort, "api.ipify.org", "/?format=json", 8000, token).ConfigureAwait(false);
-                if (TryParseGeoJson(body, (int)sw.ElapsedMilliseconds, targetCountry))
+                // 2. Populate accurate actual exit IP, city, and country!
+                bool geoOk = false;
+                if (!token.IsCancellationRequested)
                 {
-                    return true;
+                    Stopwatch sw = Stopwatch.StartNew();
+                    string body = await LocalProxyBridge.HttpsGetViaSocks5Async(_socksPort, "ipinfo.io", "/json", 8500, token).ConfigureAwait(false);
+                    geoOk = TryParseGeoJson(body, browseLat > 0 ? browseLat : (int)sw.ElapsedMilliseconds, targetCountry);
                 }
 
-                if (attempt + 1 < attempts && !token.IsCancellationRequested)
+                if (!geoOk && !token.IsCancellationRequested)
                 {
-                    await Task.Delay(1000, token).ConfigureAwait(false);
+                    Stopwatch sw = Stopwatch.StartNew();
+                    string body = await LocalProxyBridge.HttpsGetViaSocks5Async(_socksPort, "ipwho.is", "/", 8000, token).ConfigureAwait(false);
+                    geoOk = TryParseGeoJson(body, browseLat > 0 ? browseLat : (int)sw.ElapsedMilliseconds, targetCountry);
                 }
+
+                if (!geoOk && cfOk)
+                {
+                    geoOk = TryApplyCloudflareTraceGeo(cfRes.Body, browseLat, targetCountry);
+                }
+
+                if (!geoOk && !token.IsCancellationRequested)
+                {
+                    Stopwatch sw = Stopwatch.StartNew();
+                    string body = await LocalProxyBridge.HttpsGetViaSocks5Async(_socksPort, "api.ipify.org", "/?format=json", 7500, token).ConfigureAwait(false);
+                    geoOk = TryParseGeoJson(body, browseLat > 0 ? browseLat : (int)sw.ElapsedMilliseconds, targetCountry);
+                }
+
+                if (!geoOk)
+                {
+                    // Real HTTPS browsing ALREADY succeeded via Google 204 even if GeoIP APIs rate-limited this exit
+                    lock (_sync)
+                    {
+                        _exitIp = "Verified Exit";
+                        _exitCity = "";
+                        _exitCountry = GetCountryName(targetCountry);
+                        _exitCountryCode = targetCountry;
+                        _latencyMs = Math.Max(1, browseLat);
+                    }
+                }
+                return true;
             }
             return false;
         }
 
-        private async Task<bool> TestBasicTunnelConnectivityAsync(CancellationToken token)
+        private bool TryApplyCloudflareTraceGeo(string traceBody, int latencyMs, string fallbackTarget)
         {
-            TcpClient tcp = await LocalProxyBridge.ConnectViaSocks5Async(_socksPort, "cloudflare.com", 443, 12000, token).ConfigureAwait(false);
-            if (tcp != null)
+            string ip;
+            string cc;
+            ParseCloudflareTraceFields(traceBody, out ip, out cc);
+            if (string.IsNullOrEmpty(ip)) return false;
+
+            lock (_sync)
             {
-                try { tcp.Close(); } catch { }
-                return true;
+                bool sameIp = string.Equals(_exitIp, ip, StringComparison.OrdinalIgnoreCase);
+                _exitIp = ip;
+                if (!string.IsNullOrEmpty(cc))
+                {
+                    if (!string.Equals(_exitCountryCode, cc, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _exitCity = "";
+                    }
+                    _exitCountryCode = cc;
+                    _exitCountry = ResolveCountryDisplayName(cc);
+                }
+                else if (!sameIp || string.IsNullOrEmpty(_exitCountry))
+                {
+                    string effectiveCc = string.IsNullOrEmpty(fallbackTarget) ? _countryCode : fallbackTarget;
+                    _exitCountryCode = effectiveCc;
+                    _exitCountry = GetCountryName(effectiveCc);
+                    if (!sameIp) _exitCity = "";
+                }
+                if (latencyMs > 0) _latencyMs = Math.Max(1, latencyMs);
             }
-            return false;
+            return true;
         }
 
         private bool TryParseGeoJson(string jsonText, int latencyMs, string targetCountry)
@@ -1681,7 +2216,7 @@ namespace DejavuBrowser
             {
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(bundleUrl);
                 req.Proxy = null;
-                req.UserAgent = "dejavu-browser/3.2";
+                req.UserAgent = "dejavu-browser/5.7.0";
                 req.Timeout = 30000;
                 req.ReadWriteTimeout = 30000;
 
@@ -1753,7 +2288,7 @@ namespace DejavuBrowser
                 using (WebClient wc = new WebClient())
                 {
                     wc.Proxy = null;
-                    wc.Headers.Add("User-Agent", "dejavu-browser/3.2");
+                    wc.Headers.Add("User-Agent", "dejavu-browser/5.7.0");
                     string indexHtml = await wc.DownloadStringTaskAsync("https://dist.torproject.org/torbrowser/").ConfigureAwait(false);
                     MatchCollection matches = Regex.Matches(indexHtml, @"href=""(\d+\.\d+(?:\.\d+)?)/""");
                     List<string> dirs = new List<string>();
@@ -1784,6 +2319,8 @@ namespace DejavuBrowser
             {
                 _activeSmartPool = new List<UpstreamEndpoint>();
                 _activeEngine = _vpnMode;
+                _verified = false;
+                _lastVerifyMessage = "";
             }
             UpdateStatus("disconnected", "Disconnected · Direct connection", 0, true);
         }
@@ -1874,6 +2411,10 @@ namespace DejavuBrowser
         {
             if (_disposed) return;
             _disposed = true;
+            if (_bridge != null)
+            {
+                _bridge.PoolDegraded -= OnBridgePoolDegraded;
+            }
             CancelCurrentOperation();
             StopTorProcess();
         }

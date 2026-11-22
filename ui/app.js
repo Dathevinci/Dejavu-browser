@@ -1,5 +1,5 @@
 /**
- * dejavu v5.6.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * dejavu v5.7.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
  * 12 Official HCT Material You Themes, 32 Pure M3, Butterfly & Froggie Wallpapers, Auto Wallpaper-to-Theme,
  * Redesigned Pixel At-a-Glance Message of the Day Card, Clean 5-Control ChromeOS Toolbar,
  * Zero-Glitch 120Hz Tab Strip, Brave-Grade Shields, Real-Time dejavu Link Hub & 8x Turbo Downloader.
@@ -569,7 +569,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.6.0 — 32 HD + 1 Live = 33 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.7.0 — 32 HD + 1 Live = 33 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 18 Sculptural / Architectural Material Design 3 HD Wallpapers (10 Dark, 8 Light)
@@ -852,7 +852,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.6.0',
+    appVersion: bootData.appVersion || '5.7.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -2070,7 +2070,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.6.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.7.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2260,11 +2260,23 @@
     optDefaultZoomSlider.style.setProperty('--slider-pct', `${ratio.toFixed(2)}%`);
   }
 
+  let themeTransitionTimer = null;
+  function triggerThemeTransition() {
+    if (body.classList.contains('app-booting') || body.classList.contains('reduce-motion')) return;
+    body.classList.add('theme-transitioning');
+    if (themeTransitionTimer) clearTimeout(themeTransitionTimer);
+    themeTransitionTimer = setTimeout(() => {
+      themeTransitionTimer = null;
+      body.classList.remove('theme-transitioning');
+    }, 260);
+  }
+
   let lastPolarityKey = '';
   function applyThemePolarity(apMode, active, onNewTab, ovOpen, optOpen) {
     if (state.isPrivateWindow) {
       const pKey = 'private';
       if (pKey !== lastPolarityKey) {
+        if (lastPolarityKey) triggerThemeTransition();
         lastPolarityKey = pKey;
         body.classList.remove('force-light', 'theme-light');
         body.classList.add('force-dark', 'theme-dark');
@@ -2280,6 +2292,7 @@
 
     const pKey = `${forceLight ? 1 : 0}|${forceDark ? 1 : 0}|${effLight ? 1 : 0}`;
     if (pKey !== lastPolarityKey) {
+      if (lastPolarityKey) triggerThemeTransition();
       lastPolarityKey = pKey;
       body.classList.toggle('force-light', forceLight);
       body.classList.toggle('force-dark', forceDark);
@@ -2315,7 +2328,9 @@
     ]);
     const optsChanged = (optSig !== lastBrowserOptionsSig);
     if (optsChanged) {
+      const prevAccent = document.documentElement.dataset.accent;
       lastBrowserOptionsSig = optSig;
+      if (prevAccent && prevAccent !== ac) triggerThemeTransition();
       if (document.documentElement.dataset.accent !== ac) document.documentElement.dataset.accent = ac;
       if (body.dataset.accent !== ac) body.dataset.accent = ac;
       body.classList.toggle('compact-tabs', !!o.compactTabBar);
@@ -2361,7 +2376,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.6.0';
+    const ver = state.appVersion || '5.7.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -2496,8 +2511,10 @@
     if (optVpnSummary && state.vpn) {
       const st = state.vpn.state || 'disconnected';
       const totalLoc = state.vpn.countriesCount || (Array.isArray(state.vpn.countries) && state.vpn.countries.length ? state.vpn.countries.length : 86);
+      const engLbl = state.vpn.activeEngine === 'tor' ? '3-Hop Encrypted Tor' : 'Smart Clean-IP';
+      const latTxt = Number(state.vpn.latencyMs || 0) > 0 ? ` · ${state.vpn.latencyMs} ms` : '';
       optVpnSummary.textContent = st === 'connected'
-        ? `Connected via ${state.vpn.exitCountry || state.vpn.countryName || 'VPN'} (${state.vpn.exitIp || 'Encrypted'})`
+        ? `Verified · ${engLbl} · ${state.vpn.exitCountry || state.vpn.countryName || 'VPN'} (${state.vpn.exitIp || 'Encrypted'}${latTxt})`
         : `Disconnected · ${totalLoc} global countries (Nepal, US, UK, India, Japan…)`;
     }
 
@@ -7250,6 +7267,17 @@
         pendingOmniboxValue = msg.value || msg.fill || null;
       } else if (msg.type === 'newtabSuggestions') {
         renderNewtabSuggestions(msg.items || []);
+      } else if (msg.type === 'vpnVerifyResult') {
+        if (state.vpn) {
+          if (msg.exitIp) state.vpn.exitIp = msg.exitIp;
+          if (typeof msg.latencyMs === 'number' && msg.latencyMs > 0) state.vpn.latencyMs = msg.latencyMs;
+          if (msg.engine) state.vpn.activeEngine = msg.engine;
+          state.vpn.verified = !!msg.ok;
+          if (msg.message) state.vpn.lastVerifyMessage = msg.message;
+        }
+        const latLabel = msg.latencyMs > 0 ? ` · ${msg.latencyMs} ms` : '';
+        showToast(msg.message || (msg.ok ? `VPN Verified${latLabel}` : 'VPN tunnel check failed — auto-healing'), msg.ok ? 'success' : 'error');
+        if (state.settingsOpen) syncSettingsUi();
       } else if (msg.type === 'shellContextMenuAction') {
         const handler = pendingShellOverlayHandler;
         pendingShellOverlayHandler = null;

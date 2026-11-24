@@ -1,5 +1,5 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Controller (v5.10.0)
+ * dejavu Official Website — Google Material Design 3 Interactive Controller (v5.11.0)
  * Strictly ZERO window scroll listeners & ZERO scroll hijacking.
  * Uses IntersectionObserver for topbar elevation and active nav highlighting.
  */
@@ -7,70 +7,84 @@
   'use strict';
 
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v5.10.0';
+  const FALLBACK_VERSION = 'v5.11.0';
   const root = document.documentElement;
 
   const VALID_SEEDS = [
-    'sapphire', 'amethyst', 'indigo', 'aurora', 'emerald', 'lime',
-    'gold', 'coral', 'crimson', 'rose', 'lavender', 'silver'
+    'sapphire', 'amethyst', 'indigo', 'ocean', 'aurora', 'emerald', 'forest', 'lime',
+    'gold', 'terracotta', 'coral', 'crimson', 'rose', 'plum', 'lavender', 'silver'
   ];
 
   const SEED_LABELS = {
-    sapphire: 'Pixel Blue',
-    amethyst: 'Amethyst',
-    indigo:   'Royal Indigo',
-    aurora:   'Aurora Teal',
-    emerald:  'Botanical Jade',
-    lime:     'Matcha Olive',
-    gold:     'Honey Amber',
-    coral:    'Sunset Coral',
-    crimson:  'Crimson Clay',
-    rose:     'Velvet Rose',
-    lavender: 'Orchid Mist',
-    silver:   'Titanium Slate'
+    sapphire:   'Pixel Blue',
+    amethyst:   'Amethyst',
+    indigo:     'Royal Indigo',
+    ocean:      'Glacier Cyan',
+    aurora:     'Aurora Teal',
+    emerald:    'Botanical Jade',
+    forest:     'Pine Moss',
+    lime:       'Matcha Olive',
+    gold:       'Honey Amber',
+    terracotta: 'Sienna Clay',
+    coral:      'Sunset Coral',
+    crimson:    'Crimson Clay',
+    rose:       'Velvet Rose',
+    plum:       'Deep Berry',
+    lavender:   'Orchid Mist',
+    silver:     'Titanium Slate'
   };
 
   const META_COLORS = {
     light: {
-      sapphire: '#faf9ff', amethyst: '#fef7ff', indigo: '#fbf8ff', aurora: '#f4fbf8',
-      emerald: '#f5fbf5', lime: '#fafaf0', gold: '#fff8f2', coral: '#fff8f6',
-      crimson: '#fff8f7', rose: '#fff8f8', lavender: '#fdf7ff', silver: '#f9f9fc'
+      sapphire: '#faf9ff', amethyst: '#fef7ff', indigo: '#fbf8ff', ocean: '#f4fafe',
+      aurora: '#f4fbf8', emerald: '#f5fbf5', forest: '#f6fbf4', lime: '#fafaf0',
+      gold: '#fff8f2', terracotta: '#fff8f5', coral: '#fff8f6', crimson: '#fff8f7',
+      rose: '#fff8f8', plum: '#fff7fc', lavender: '#fdf7ff', silver: '#f9f9fc'
     },
     dark: {
-      sapphire: '#111318', amethyst: '#141218', indigo: '#12131b', aurora: '#0f1513',
-      emerald: '#101511', lime: '#14150e', gold: '#17130d', coral: '#191210',
-      crimson: '#1a1112', rose: '#181114', lavender: '#161219', silver: '#121316'
+      sapphire: '#111318', amethyst: '#141218', indigo: '#12131b', ocean: '#0e1417',
+      aurora: '#0f1513', emerald: '#101511', forest: '#101510', lime: '#14150e',
+      gold: '#17130d', terracotta: '#18120f', coral: '#191210', crimson: '#1a1112',
+      rose: '#181114', plum: '#171117', lavender: '#161219', silver: '#121316'
     }
   };
 
   const DEFAULT_WALLPAPERS = {
     light: {
-      sapphire: 'assets/wallpapers/wp-m3-sky-terrace.jpg',
-      amethyst: 'assets/wallpapers/wp-m3-butterfly-porcelain.jpg',
-      indigo:   'assets/wallpapers/wp-m3-sky-terrace.jpg',
-      aurora:   'assets/wallpapers/wp-m3-mint-atelier.jpg',
-      emerald:  'assets/wallpapers/wp-m3-butterfly-sage.jpg',
-      lime:     'assets/wallpapers/wp-m3-meadow.jpg',
-      gold:     'assets/wallpapers/wp-m3-warm-limestone.jpg',
-      coral:    'assets/wallpapers/wp-m3-coral-bloom.jpg',
-      crimson:  'assets/wallpapers/wp-m3-butterfly-coral.jpg',
-      rose:     'assets/wallpapers/wp-m3-blush.jpg',
-      lavender: 'assets/wallpapers/wp-m3-lavender-mist.jpg',
-      silver:   'assets/wallpapers/wp-m3-porcelain.jpg'
+      sapphire:   'assets/wallpapers/wp-m3-sky-terrace.jpg',
+      amethyst:   'assets/wallpapers/wp-m3-butterfly-porcelain.jpg',
+      indigo:     'assets/wallpapers/wp-m3-sky-terrace.jpg',
+      ocean:      'assets/wallpapers/wp-m3-sky-terrace.jpg',
+      aurora:     'assets/wallpapers/wp-m3-mint-atelier.jpg',
+      emerald:    'assets/wallpapers/wp-m3-butterfly-sage.jpg',
+      forest:     'assets/wallpapers/wp-m3-meadow.jpg',
+      lime:       'assets/wallpapers/wp-m3-meadow.jpg',
+      gold:       'assets/wallpapers/wp-m3-warm-limestone.jpg',
+      terracotta: 'assets/wallpapers/wp-m3-blush.jpg',
+      coral:      'assets/wallpapers/wp-m3-coral-bloom.jpg',
+      crimson:    'assets/wallpapers/wp-m3-butterfly-coral.jpg',
+      rose:       'assets/wallpapers/wp-m3-blush.jpg',
+      plum:       'assets/wallpapers/wp-m3-lavender-mist.jpg',
+      lavender:   'assets/wallpapers/wp-m3-lavender-mist.jpg',
+      silver:     'assets/wallpapers/wp-m3-porcelain.jpg'
     },
     dark: {
-      sapphire: 'assets/wallpapers/wp-m3-pixel-blue.jpg',
-      amethyst: 'assets/wallpapers/wp-m3-amethyst.jpg',
-      indigo:   'assets/wallpapers/wp-m3-cobalt-prism.jpg',
-      aurora:   'assets/wallpapers/wp-m3-sage.jpg',
-      emerald:  'assets/wallpapers/wp-m3-jade-terrace.jpg',
-      lime:     'assets/wallpapers/wp-m3-butterfly-emerald.jpg',
-      gold:     'assets/wallpapers/wp-m3-honey.jpg',
-      coral:    'assets/wallpapers/wp-m3-sienna-arch.jpg',
-      crimson:  'assets/wallpapers/wp-m3-crimson-fold.jpg',
-      rose:     'assets/wallpapers/wp-m3-blossom.jpg',
-      lavender: 'assets/wallpapers/wp-m3-butterfly-obsidian.jpg',
-      silver:   'assets/wallpapers/wp-m3-indigo-dune.jpg'
+      sapphire:   'assets/wallpapers/wp-m3-pixel-blue.jpg',
+      amethyst:   'assets/wallpapers/wp-m3-amethyst.jpg',
+      indigo:     'assets/wallpapers/wp-m3-cobalt-prism.jpg',
+      ocean:      'assets/wallpapers/wp-m3-pixel-blue.jpg',
+      aurora:     'assets/wallpapers/wp-m3-sage.jpg',
+      emerald:    'assets/wallpapers/wp-m3-jade-terrace.jpg',
+      forest:     'assets/wallpapers/wp-m3-jade-terrace.jpg',
+      lime:       'assets/wallpapers/wp-m3-butterfly-emerald.jpg',
+      gold:       'assets/wallpapers/wp-m3-honey.jpg',
+      terracotta: 'assets/wallpapers/wp-m3-sienna-arch.jpg',
+      coral:      'assets/wallpapers/wp-m3-sienna-arch.jpg',
+      crimson:    'assets/wallpapers/wp-m3-crimson-fold.jpg',
+      rose:       'assets/wallpapers/wp-m3-blossom.jpg',
+      plum:       'assets/wallpapers/wp-m3-amethyst.jpg',
+      lavender:   'assets/wallpapers/wp-m3-butterfly-obsidian.jpg',
+      silver:     'assets/wallpapers/wp-m3-indigo-dune.jpg'
     }
   };
 
@@ -115,7 +129,6 @@
   const pxSyncedTitle = document.getElementById('px-synced-title');
   const pxToast = document.getElementById('px-toast');
   const pxToastText = document.getElementById('px-toast-text');
-  const dkVpnCc = document.getElementById('dk-vpn-cc');
   const dkBeamBtn = document.getElementById('dk-beam-btn');
 
   const snackbar = document.getElementById('m3-snackbar');
@@ -292,12 +305,12 @@
     sections.forEach((sec) => secObserver.observe(sec));
   }
 
-  // Hero Stage Tabs (Start / Private VPN / Video & Link)
+  // Hero Stage Tabs (Start / Split View / Video & Link)
   const stageTabBtns = Array.from(document.querySelectorAll('[data-stage-tab]'));
   const stageViews = Array.from(document.querySelectorAll('[data-stage-view]'));
   const STAGE_META = {
     start: { tab: 'Start Page', url: 'dejavu · Start Page' },
-    vpn:   { tab: 'Private VPN', url: 'dejavu · Self-Healing VPN' },
+    split: { tab: 'Split View', url: 'dejavu · Side-by-Side Dual Pane' },
     video: { tab: 'YouTube · 4K', url: 'youtube.com/watch?v=material-you' }
   };
 
@@ -329,44 +342,43 @@
     });
   }
 
-  // Interactive VPN Demo
-  const vpnModeBtns = Array.from(document.querySelectorAll('[data-vpn-mode]'));
-  const vpnLocBtns = Array.from(document.querySelectorAll('[data-vpn-cc]'));
-  const vpnStatusLine = document.getElementById('vpn-status-line');
-  const vpnVerifyNote = document.getElementById('vpn-verify-note');
-  const vpnVerifyBtn = document.getElementById('demo-vpn-verify');
-  let vpnMode = 'Smart Auto-Heal';
-  let vpnCity = 'United States';
-  let vpnMs = '38';
+  // Interactive Split View Demo
+  const splitRatioBtns = Array.from(document.querySelectorAll('[data-split-ratio]'));
+  const splitPairBtns = Array.from(document.querySelectorAll('[data-split-pair]'));
+  const splitStatusLine = document.getElementById('split-status-line');
+  const splitPairNote = document.getElementById('split-pair-note');
+  const splitSwapBtn = document.getElementById('demo-split-swap');
+  let splitRatio = '50 / 50';
+  let splitPair = 'Docs + GitHub';
 
-  function updateVpnLine() {
-    if (vpnStatusLine) vpnStatusLine.textContent = `${vpnMode} · ${vpnCity} · ${vpnMs} ms`;
+  function updateSplitDemo() {
+    if (splitStatusLine) splitStatusLine.textContent = `${splitRatio} Dual-Pane · Draggable M3 Divider · Ctrl+Shift+V`;
+    if (splitPairNote) splitPairNote.textContent = `Paired: ${splitPair} · Click either pane to focus`;
   }
 
-  vpnModeBtns.forEach((btn) => {
+  splitRatioBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      vpnModeBtns.forEach((b) => b.classList.toggle('active', b === btn));
-      vpnMode = btn.dataset.vpnMode === 'tor' ? '3-Hop Tor' : 'Smart Auto-Heal';
-      updateVpnLine();
+      splitRatioBtns.forEach((b) => b.classList.toggle('active', b === btn));
+      splitRatio = btn.dataset.splitRatio || '50 / 50';
+      updateSplitDemo();
     });
   });
 
-  vpnLocBtns.forEach((btn) => {
+  splitPairBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      vpnLocBtns.forEach((b) => b.classList.toggle('active', b === btn));
-      vpnCity = btn.dataset.vpnCity || 'United States';
-      vpnMs = btn.dataset.vpnMs || '38';
-      if (dkVpnCc) dkVpnCc.textContent = btn.dataset.vpnCc || 'US';
-      updateVpnLine();
+      splitPairBtns.forEach((b) => b.classList.toggle('active', b === btn));
+      splitPair = btn.dataset.splitPair || 'Docs + GitHub';
+      updateSplitDemo();
     });
   });
 
-  if (vpnVerifyBtn && vpnVerifyNote) {
-    vpnVerifyBtn.addEventListener('click', () => {
-      vpnVerifyNote.textContent = 'Checking TLS & exit route...';
-      setTimeout(() => {
-        vpnVerifyNote.textContent = `HTTPS verified via ${vpnCity} (${vpnMs} ms)`;
-      }, 360);
+  if (splitSwapBtn) {
+    splitSwapBtn.addEventListener('click', () => {
+      const parts = splitPair.split(' + ');
+      if (parts.length === 2) {
+        splitPair = `${parts[1]} + ${parts[0]}`;
+        updateSplitDemo();
+      }
     });
   }
 

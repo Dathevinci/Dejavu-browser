@@ -6,7 +6,7 @@
   <title>dejavu overlay</title>
   <link rel="stylesheet" href="https://dejavu.local/styles.css">
   <style>
-    /* All 12 Dark & Light Material You HCT palettes + global scrollbars are inherited directly from styles.css */
+    /* All 16 Dark & Light Material You HCT palettes (32 Themes) + global scrollbars are inherited directly from styles.css */
     html, body {
       width: 100%;
       height: 100%;
@@ -646,7 +646,7 @@
     .upd-sub { font-size: 11.4px; color: var(--md-on-surface-variant); margin-top: 2px; line-height: 1.25; }
     .upd-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
 
-    /* Shared Panel Layout (Profiles, History, VPN, Downloads, Sync) */
+    /* Shared Panel Layout (Profiles, History, Tab Search, Downloads, Sync) */
     .panel-box {
       width: 100%;
       height: 100%;
@@ -689,7 +689,7 @@
       padding-right: 4px;
     }
 
-    .prof-row, .hist-row, .sb-row, .dls-row, .vpn-country-row, .ctxm-item, .menu-item, .ext-pop-row {
+    .prof-row, .hist-row, .sb-row, .dls-row, .ts-row, .ctxm-item, .menu-item, .ext-pop-row {
       flex-shrink: 0;
       contain: layout style;
     }
@@ -789,6 +789,32 @@
       height: 32px;
       padding: 0 12px;
       font-size: 11.4px;
+    }
+
+    .prof-hero-actions .pill-btn.google-btn {
+      padding-left: 7px;
+      gap: 7px;
+    }
+
+    .ov-g-chip {
+      width: 20px;
+      height: 20px;
+      border-radius: var(--md-shape-full);
+      background: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .bf-avatar {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--md-shape-full);
+      border: none;
+      overflow: hidden;
+      flex-shrink: 0;
     }
 
     .prof-hero-actions .pill-btn.outlined {
@@ -1097,7 +1123,7 @@
       text-overflow: ellipsis;
     }
 
-    /* Search Pill Input (History & VPN) */
+    /* Search Pill Input (History & Tab Search) */
     .hist-search {
       width: 100%;
       height: 36px;
@@ -1154,440 +1180,18 @@
     .hist-row:hover .hist-row-acts { display: flex; }
 
     /* =========================================================================
-       Mode 7: Upgraded Material Design 3 VPN Control Center (v5.10.0 · 392×584)
-       Verified Tunnel Status Strip · 1-Tap Verify + New IP · Active Engine Pill
+       Mode 7: Googlebook Material Design 3 Quick Tab Search (Ctrl+Shift+A)
        ========================================================================= */
-    .vpn-panel-box {
-      padding: 12px 14px 10px;
-      gap: 7px;
+    .ts-panel-box {
+      padding: 12px 14px 12px;
+      gap: 9px;
     }
 
-    .vpn-title-ico {
-      width: 20px;
-      height: 20px;
-      color: var(--md-primary);
-      flex-shrink: 0;
-    }
-
-    .vpn-hero {
-      padding: 11px 13px;
-      border-radius: 22px;
-      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 34%, transparent);
-      background: var(--md-surface-container);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex-shrink: 0;
-      transition: background-color 240ms var(--md-ease-emphasized), border-color 240ms var(--md-ease-emphasized);
-    }
-
-    body.theme-light .vpn-hero:not(.connected):not(.connecting):not(.error) {
-      background: var(--md-surface-container-low);
-      border-color: color-mix(in srgb, var(--md-outline-variant) 48%, transparent);
-    }
-
-    .vpn-hero.connected {
-      background: var(--md-tertiary-container);
-      color: var(--md-on-tertiary-container);
-      border-color: transparent;
-    }
-
-    .vpn-hero.connecting {
-      background: var(--md-primary-container);
-      color: var(--md-on-primary-container);
-      border-color: transparent;
-    }
-
-    .vpn-hero.error {
-      background: var(--md-error-container);
-      color: var(--md-on-error-container);
-      border-color: transparent;
-    }
-
-    .vpn-hero-top {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    /* Prominent Tactile 54x54px Circular M3 Power / Shield-Lock Toggle Button */
-    .vpn-power-btn {
-      position: relative;
-      width: 54px;
-      height: 54px;
-      border-radius: var(--md-shape-full);
-      border: none;
-      outline: none;
-      background: var(--md-surface-container-highest);
-      color: var(--md-on-surface);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-      box-shadow: var(--md-elev-1);
-      transition: background-color 220ms var(--md-ease-emphasized), color 220ms var(--md-ease-emphasized), transform 160ms var(--md-ease-spring), box-shadow 220ms var(--md-ease-emphasized);
-    }
-
-    body.theme-light .vpn-power-btn {
-      background: var(--md-surface-container-lowest);
-      box-shadow: var(--md-elev-2);
-    }
-
-    .vpn-power-btn:hover { transform: scale(1.04); box-shadow: var(--md-elev-2); }
-    .vpn-power-btn:active { transform: scale(0.93); }
-    .vpn-power-btn:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 2px; }
-
-    .vpn-power-btn svg { width: 24px; height: 24px; display: block; }
-    .vpn-power-btn .ico-vpn-shield { display: none; }
-
-    .vpn-hero.connected .vpn-power-btn {
-      background: var(--md-tertiary);
-      color: var(--md-on-tertiary);
-      box-shadow: var(--md-elev-2);
-    }
-
-    .vpn-hero.connected .vpn-power-btn .ico-vpn-power { display: none; }
-    .vpn-hero.connected .vpn-power-btn .ico-vpn-shield { display: block; animation: m3CheckPop 220ms var(--md-ease-spring); }
-
-    .vpn-hero.connecting .vpn-power-btn {
-      background: var(--md-primary);
-      color: var(--md-on-primary);
-    }
-
-    .vpn-hero.error .vpn-power-btn {
-      background: var(--md-error);
-      color: var(--md-on-error);
-    }
-
-    .vpn-hero-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-    .vpn-hero-title { font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.22; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vpn-hero-sub { font-size: 11.2px; color: var(--md-on-surface-variant); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vpn-hero.connected .vpn-hero-sub,
-    .vpn-hero.connecting .vpn-hero-sub,
-    .vpn-hero.error .vpn-hero-sub { color: inherit; opacity: 0.88; }
-
-    /* Verified Tunnel Status Strip (HTTPS & DNS Protected + Active Engine Pill) */
-    .vpn-verified-strip {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      height: 26px;
-      padding: 0 7px 0 9px;
-      border-radius: var(--md-shape-full);
-      background: color-mix(in srgb, var(--md-surface) 38%, transparent);
-      border: 1px solid color-mix(in srgb, var(--md-tertiary) 32%, transparent);
-      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized);
-    }
-
-    .vpn-verified-strip.is-warn {
-      background: color-mix(in srgb, var(--md-error-container) 78%, transparent);
-      color: var(--md-on-error-container);
-      border-color: color-mix(in srgb, var(--md-error) 45%, transparent);
-    }
-
-    .vpn-verified-strip.is-testing {
-      border-color: color-mix(in srgb, var(--md-primary) 48%, transparent);
-    }
-
-    .vpn-ver-left {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      min-width: 0;
-      flex: 1;
-      font-size: 10.6px;
-      font-weight: 600;
-    }
-
-    .vpn-ver-ico {
-      width: 13px;
-      height: 13px;
-      flex-shrink: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .vpn-verified-strip.is-testing .vpn-ver-ico svg {
-      animation: m3Spin 0.8s linear infinite;
-    }
-
-    .vpn-ver-text {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .vpn-engine-pill {
-      height: 18px;
-      padding: 0 7px;
-      border-radius: var(--md-shape-full);
-      background: var(--md-tertiary);
-      color: var(--md-on-tertiary);
-      font-size: 9.6px;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-      white-space: nowrap;
-      display: inline-flex;
-      align-items: center;
-      flex-shrink: 0;
-    }
-
-    .vpn-engine-pill.is-tor {
-      background: var(--md-primary);
-      color: var(--md-on-primary);
-    }
-
-    .vpn-ip-strip {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 7px;
-      padding: 6px 7px 6px 10px;
-      border-radius: 14px;
-      background: color-mix(in srgb, var(--md-surface) 44%, transparent);
-    }
-
-    .vpn-ip-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-
-    .vpn-ip-line {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      min-width: 0;
-    }
-
-    .vpn-ip-val {
-      font-family: 'Cascadia Mono', 'Consolas', monospace;
-      font-variant-numeric: tabular-nums;
-      font-weight: 700;
-      font-size: 11.2px;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .vpn-latency-pill {
-      height: 17px;
-      padding: 0 6px;
-      border-radius: var(--md-shape-full);
-      background: var(--md-tertiary);
-      color: var(--md-on-tertiary);
-      font-size: 9.8px;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-      display: inline-flex;
-      align-items: center;
-      flex-shrink: 0;
-    }
-
-    .vpn-ip-loc {
-      font-size: 10.3px;
-      opacity: 0.86;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .vpn-ip-actions {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      flex-shrink: 0;
-    }
-
-    .vpn-verify-btn,
-    .vpn-rotate-btn {
-      height: 26px;
-      padding: 0 9px;
-      border-radius: var(--md-shape-full);
-      border: none;
-      font-family: inherit;
-      font-size: 10.6px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-      flex-shrink: 0;
-      white-space: nowrap;
-      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), opacity var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
-    }
-
-    .vpn-verify-btn {
-      background: color-mix(in srgb, var(--md-surface) 76%, transparent);
-      color: var(--md-on-surface);
-      border: 1px solid color-mix(in srgb, var(--md-tertiary) 42%, transparent);
-    }
-
-    .vpn-verify-btn:hover { background: var(--md-surface-container-highest); }
-    .vpn-verify-btn:active { transform: scale(0.94); }
-    .vpn-verify-btn.verifying { opacity: 0.84; }
-    .vpn-verify-btn.verifying svg { animation: m3Spin 0.72s linear infinite; }
-    .vpn-verify-btn.verified-ok {
-      background: var(--md-primary);
-      color: var(--md-on-primary);
-      border-color: transparent;
-    }
-
-    .vpn-rotate-btn {
-      background: var(--md-tertiary);
-      color: var(--md-on-tertiary);
-    }
-
-    .vpn-verify-btn svg,
-    .vpn-rotate-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
-    .vpn-rotate-btn:hover { opacity: 0.92; }
-    .vpn-rotate-btn:active { transform: scale(0.94); }
-    .vpn-rotate-btn.rotating svg { animation: m3Spin 0.72s linear infinite; }
-
-    .vpn-telemetry-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 4px 10px;
-      border-radius: 12px;
-      background: color-mix(in srgb, var(--md-surface) 32%, transparent);
-      font-size: 10.8px;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .vpn-telem-item { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-    .vpn-telem-item strong { font-weight: 700; }
-
-    .vpn-prog-track {
-      height: 4px;
-      border-radius: var(--md-shape-full);
-      background: color-mix(in srgb, var(--md-on-surface) 16%, transparent);
-      overflow: hidden;
-    }
-
-    .vpn-prog-fill {
-      height: 100%;
-      width: 0%;
-      border-radius: var(--md-shape-full);
-      background: var(--md-primary);
-      transition: width 260ms var(--md-ease-emphasized-decel);
-    }
-
-    .vpn-hero.connected .vpn-prog-fill {
-      background: var(--md-tertiary);
-    }
-
-    .vpn-badge-live {
-      font-size: 10.4px;
-      font-weight: 700;
-      padding: 3px 9px;
-      border-radius: var(--md-shape-full);
-      background: var(--md-surface-container-highest);
-      color: var(--md-on-surface-variant);
-      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized);
-    }
-
-    .vpn-badge-live.connected {
-      background: var(--md-tertiary-container);
-      color: var(--md-on-tertiary-container);
-    }
-
-    .vpn-badge-live.connecting {
-      background: var(--md-primary-container);
-      color: var(--md-on-primary-container);
-    }
-
-    .vpn-badge-live.error {
-      background: var(--md-error-container);
-      color: var(--md-on-error-container);
-    }
-
-    /* Sleek Gliding M3 Segmented Pill (Smart | 3-Hop Tor) + Active Mode Description */
-    .vpn-mode-block {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      flex-shrink: 0;
-    }
-
-    .vpn-mode-seg {
-      position: relative;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      height: 34px;
-      padding: 3px;
-      border-radius: var(--md-shape-full);
-      background: var(--md-surface-container);
-      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 42%, transparent);
-      flex-shrink: 0;
-    }
-
-    body.theme-light .vpn-mode-seg {
-      background: var(--md-surface-container-low);
-    }
-
-    .vpn-mode-thumb {
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: calc(50% - 3px);
-      height: 26px;
-      border-radius: var(--md-shape-full);
-      background: var(--md-primary-container);
-      box-shadow: var(--md-elev-1);
-      pointer-events: none;
-      transform: translate3d(0, 0, 0);
-      transition: transform 220ms var(--md-ease-emphasized);
-    }
-
-    .vpn-mode-seg.is-tor .vpn-mode-thumb {
-      transform: translate3d(100%, 0, 0);
-    }
-
-    .vpn-mode-btn {
-      position: relative;
-      z-index: 1;
-      height: 26px;
-      border-radius: var(--md-shape-full);
-      border: none;
-      background: transparent;
-      color: var(--md-on-surface-variant);
-      font-family: inherit;
-      font-size: 11.4px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      transition: color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
-    }
-
-    .vpn-mode-btn:hover { color: var(--md-on-surface); }
-    .vpn-mode-btn:active { transform: scale(0.97); }
-    .vpn-mode-btn.active { color: var(--md-on-primary-container); }
-
-    .vpn-mode-desc {
-      font-size: 10.5px;
-      font-weight: 500;
-      color: var(--md-on-surface-variant);
-      text-align: center;
-      line-height: 1.25;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      padding: 0 6px;
-    }
-
-    /* M3 Search Pill with Leading Search Icon */
-    .vpn-search-wrap {
+    .ts-search-wrap {
       display: flex;
       align-items: center;
       gap: 8px;
-      height: 34px;
+      height: 36px;
       padding: 0 13px;
       border-radius: var(--md-shape-full);
       background: var(--md-surface-container);
@@ -1597,24 +1201,19 @@
       transition: border-color var(--md-dur-short) var(--md-ease-emphasized), background-color var(--md-dur-short) var(--md-ease-emphasized);
     }
 
-    body.theme-light .vpn-search-wrap {
+    body.theme-light .ts-search-wrap {
       background: var(--md-surface-container-low);
       border-color: color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
     }
 
-    .vpn-search-wrap:focus-within {
+    .ts-search-wrap:focus-within {
       border-color: var(--md-primary);
-      background: var(--md-surface-container-low);
+      background: var(--md-surface-container-lowest);
       color: var(--md-primary);
     }
 
-    body.theme-light .vpn-search-wrap:focus-within {
-      background: #ffffff;
-    }
-
-    .vpn-search-wrap svg { width: 15px; height: 15px; flex-shrink: 0; }
-
-    .vpn-search-wrap input {
+    .ts-search-wrap svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .ts-search-wrap input {
       flex: 1;
       min-width: 0;
       height: 100%;
@@ -1623,146 +1222,80 @@
       background: transparent;
       color: var(--md-on-surface);
       font-family: inherit;
-      font-size: 12.2px;
+      font-size: 12.6px;
       user-select: text;
     }
+    .ts-search-wrap input::placeholder { color: var(--md-on-surface-variant); }
 
-    .vpn-search-wrap input::placeholder { color: var(--md-on-surface-variant); }
-
-    /* Calm M3 Filter Chips */
-    .vpn-region-tabs {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      flex-shrink: 0;
-      overflow-x: auto;
-      scrollbar-width: none;
-      padding: 1px 0;
-    }
-
-    .vpn-region-tabs::-webkit-scrollbar { display: none; }
-
-    .vpn-reg-pill {
-      height: 26px;
-      padding: 0 11px;
-      border-radius: var(--md-shape-full);
-      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 70%, transparent);
-      background: transparent;
-      color: var(--md-on-surface-variant);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      white-space: nowrap;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
-    }
-
-    .vpn-reg-pill:hover { background: var(--md-state-hover); color: var(--md-on-surface); }
-    .vpn-reg-pill:active { transform: scale(0.95); }
-
-    .vpn-reg-pill.active {
-      background: var(--md-secondary-container);
-      color: var(--md-on-secondary-container);
-      border-color: transparent;
-    }
-
-    /* Spacious M3 Country Rows with Circular Badges & Latency Dot */
-    .vpn-country-row {
+    .ts-row {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 6px 10px;
-      min-height: 44px;
-      border-radius: 15px;
-      border: none;
+      padding: 7px 10px;
+      border-radius: 14px;
       background: transparent;
       cursor: pointer;
-      transition: background-color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
+      transition: background-color var(--md-dur-short) var(--md-ease-emphasized);
     }
 
-    .vpn-country-row:hover { background-color: var(--md-state-hover); }
-    .vpn-country-row:active { transform: scale(0.99); }
+    .ts-row:hover,
+    .ts-row.selected {
+      background: var(--md-surface-container);
+    }
 
-    .vpn-country-row.selected {
+    .ts-row.is-active {
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+    }
+
+    .ts-fav {
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface-variant);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .ts-fav img { width: 16px; height: 16px; object-fit: contain; display: block; }
+    .ts-meta { flex: 1; min-width: 0; }
+    .ts-title { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ts-sub { font-size: 10.8px; color: var(--md-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .ts-row.is-active .ts-sub { color: inherit; opacity: 0.82; }
+    .ts-acts { display: none; align-items: center; gap: 4px; flex-shrink: 0; }
+    .ts-row:hover .ts-acts,
+    .ts-row.selected .ts-acts { display: inline-flex; }
+    .ts-mini-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: var(--md-shape-full);
+      border: none;
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface-variant);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color var(--md-dur-short) ease, color var(--md-dur-short) ease;
+    }
+    .ts-mini-btn:hover { background: var(--md-primary-container); color: var(--md-on-primary-container); }
+    .ts-mini-btn.close:hover { background: var(--md-error-container); color: var(--md-on-error-container); }
+    .ts-mini-btn svg { width: 13px; height: 13px; }
+    .ts-badge {
+      font-size: 9.8px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: var(--md-shape-full);
       background: var(--md-primary-container);
       color: var(--md-on-primary-container);
-    }
-
-    .vpn-country-row.active-conn {
-      background: var(--md-tertiary-container);
-      color: var(--md-on-tertiary-container);
-    }
-
-    .vpn-cc-pill {
-      width: 34px;
-      height: 34px;
-      border-radius: var(--md-shape-full);
-      font-size: 10.6px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--md-surface-container-highest);
-      color: var(--md-on-surface);
       flex-shrink: 0;
     }
-
-    body.theme-light .vpn-cc-pill {
-      background: var(--md-surface-container-high);
-    }
-
-    .vpn-country-row.selected .vpn-cc-pill {
-      background: var(--md-primary);
-      color: var(--md-on-primary);
-    }
-
-    .vpn-country-row.active-conn .vpn-cc-pill {
-      background: var(--md-tertiary);
-      color: var(--md-on-tertiary);
-    }
-
-    .vpn-c-meta { flex: 1; min-width: 0; }
-    .vpn-c-name { font-size: 12.8px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vpn-c-reg { font-size: 10.6px; color: var(--md-on-surface-variant); margin-top: 1px; }
-    .vpn-country-row.selected .vpn-c-reg,
-    .vpn-country-row.active-conn .vpn-c-reg { color: inherit; opacity: 0.82; }
-
-    .vpn-c-right { display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; }
-
-    .vpn-fast-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: var(--md-shape-full);
-      background: #4ade80;
-      flex-shrink: 0;
-    }
-
-    body.theme-light .vpn-fast-dot { background: #15803d; }
-
-    .vpn-c-check {
-      width: 18px;
-      height: 18px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: inherit;
-      flex-shrink: 0;
-    }
-
-    .vpn-footer {
-      flex-shrink: 0;
-      padding-top: 8px;
-      border-top: 1px solid color-mix(in srgb, var(--md-outline-variant) 50%, transparent);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .vpn-auto-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 2px; }
-    .vpn-auto-label { font-size: 12px; font-weight: 500; color: var(--md-on-surface); }
-    .vpn-foot-note { font-size: 10.4px; color: var(--md-on-surface-variant); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* =========================================================================
        Mode 8: M3 Floating Omnibox Suggestions Menu
@@ -3125,7 +2658,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v5.10.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v5.11.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -3196,122 +2729,6 @@
       <div class="upd-actions">
         <button id="btn-upd-later" class="pill-btn">Later</button>
         <button id="btn-upd-restart" class="pill-btn primary">Restart &amp; Update</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mode 7: Upgraded Material Design 3 VPN Control Center (v5.10.0 · 392×584) -->
-  <div id="mode-vpn" class="overlay-shell hidden">
-    <div class="panel-box vpn-panel-box">
-      <div class="panel-head">
-        <div class="panel-title">
-          <svg class="vpn-title-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 2.5L4.5 5.4v5.7c0 4.9 3.2 9.2 7.5 10.4 4.3-1.2 7.5-5.5 7.5-10.4V5.4L12 2.5z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="12" cy="11.4" r="4.1" stroke="currentColor" stroke-width="1.5"/>
-            <ellipse cx="12" cy="11.4" rx="1.8" ry="4.1" stroke="currentColor" stroke-width="1.35"/>
-            <path d="M8.1 11.4h7.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
-          </svg>
-          <span>dejavu VPN</span>
-          <span id="vpn-state-badge" class="vpn-badge-live">Off</span>
-        </div>
-        <button id="btn-vpn-close" class="icon-btn sm" title="Close">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-
-      <div id="vpn-hero-card" class="vpn-hero">
-        <div class="vpn-hero-top">
-          <button type="button" id="btn-vpn-toggle" class="vpn-power-btn" role="switch" aria-checked="false" title="Toggle Encrypted VPN">
-            <svg class="ico-vpn-power" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 3.5v8.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
-              <path d="M17.3 6.7a7.8 7.8 0 1 1-10.6 0" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
-            </svg>
-            <svg class="ico-vpn-shield" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 2.5L4.5 5.5v5.6c0 4.9 3.2 9.2 7.5 10.4 4.3-1.2 7.5-5.5 7.5-10.4V5.5L12 2.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-              <path d="M8.8 12.2l2.2 2.2 4.4-4.6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <div class="vpn-hero-info">
-            <div id="vpn-hero-country" class="vpn-hero-title">VPN Disconnected</div>
-            <div id="vpn-hero-status" class="vpn-hero-sub">Direct connection · Tap to protect</div>
-          </div>
-        </div>
-
-        <div id="vpn-verified-strip" class="vpn-verified-strip hidden">
-          <span class="vpn-ver-left">
-            <span class="vpn-ver-ico" aria-hidden="true">
-              <svg viewBox="0 0 16 16" fill="none" width="13" height="13"><circle cx="8" cy="8" r="6.2" stroke="currentColor" stroke-width="1.5"/><path d="M5.2 8.2l2 2 3.6-3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <span id="vpn-verified-text" class="vpn-ver-text">Verified · HTTPS &amp; DNS Protected</span>
-          </span>
-          <span id="vpn-engine-pill" class="vpn-engine-pill">Smart Clean-IP</span>
-        </div>
-
-        <div id="vpn-ip-strip" class="vpn-ip-strip hidden">
-          <div class="vpn-ip-meta">
-            <div class="vpn-ip-line">
-              <span id="vpn-ip-val" class="vpn-ip-val"></span>
-              <span id="vpn-latency-badge" class="vpn-latency-pill hidden"></span>
-            </div>
-            <span id="vpn-ip-loc" class="vpn-ip-loc"></span>
-          </div>
-          <div class="vpn-ip-actions">
-            <button id="btn-vpn-verify" class="vpn-verify-btn" type="button" title="Run live HTTPS &amp; DNS connectivity check through active VPN tunnel">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3L5 5.8v5.4c0 4.5 3 8.5 7 9.8 4-1.3 7-5.3 7-9.8V5.8L12 3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12.1l2 2 4.2-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span id="vpn-verify-label">Verify</span>
-            </button>
-            <button id="btn-vpn-rotate" class="vpn-rotate-btn" type="button" title="Get a fresh encrypted exit IP in this country">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.1-5.2L19.5 9M19.5 4.5V9H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span id="vpn-rotate-label">New IP</span>
-            </button>
-          </div>
-        </div>
-
-        <div id="vpn-telemetry-row" class="vpn-telemetry-row hidden">
-          <span class="vpn-telem-item" title="Active encrypted session duration">
-            <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><circle cx="7" cy="7" r="5.2" stroke="currentColor" stroke-width="1.3"/><path d="M7 4.2V7.2l2 1.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-            <strong id="vpn-timer">00:00</strong>
-          </span>
-          <span class="vpn-telem-item" title="Encrypted traffic through VPN tunnel">
-            <span id="vpn-traffic">↓ 0 B · ↑ 0 B</span>
-          </span>
-        </div>
-
-        <div id="vpn-prog-wrap" class="vpn-prog-track hidden">
-          <div id="vpn-prog-fill" class="vpn-prog-fill"></div>
-        </div>
-      </div>
-
-      <div class="vpn-mode-block">
-        <div id="vpn-mode-seg" class="vpn-mode-seg" role="tablist">
-          <span class="vpn-mode-thumb" aria-hidden="true"></span>
-          <button type="button" class="vpn-mode-btn active" data-mode="smart" title="Auto-verified clean IP + auto-heal">Smart</button>
-          <button type="button" class="vpn-mode-btn" data-mode="tor" title="Encrypted 3-hop Tor onion route">3-Hop Tor</button>
-        </div>
-        <div id="vpn-mode-desc" class="vpn-mode-desc">Auto-verified clean IP + auto-heal</div>
-      </div>
-
-      <div class="vpn-search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.2" stroke="currentColor" stroke-width="1.8"/><path d="M15.2 15.2L20 20" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/></svg>
-        <input id="vpn-search-input" type="text" placeholder="Search 86 countries…" spellcheck="false" autocomplete="off" aria-label="Search VPN countries">
-      </div>
-      <div id="vpn-region-tabs" class="vpn-region-tabs">
-        <button type="button" class="vpn-reg-pill active" data-reg="all">All (86)</button>
-        <button type="button" class="vpn-reg-pill" data-reg="fast">Fastest</button>
-        <button type="button" class="vpn-reg-pill" data-reg="streaming">Streaming</button>
-        <button type="button" class="vpn-reg-pill" data-reg="americas">Americas</button>
-        <button type="button" class="vpn-reg-pill" data-reg="europe">Europe</button>
-        <button type="button" class="vpn-reg-pill" data-reg="asia">Asia</button>
-        <button type="button" class="vpn-reg-pill" data-reg="mea">MEA</button>
-      </div>
-      <div id="vpn-country-list" class="panel-scroll"></div>
-
-      <div class="vpn-footer">
-        <div class="vpn-auto-row">
-          <span class="vpn-auto-label">Auto-connect on startup</span>
-          <button id="btn-vpn-autoconnect" class="liquid-switch m3-switch sm" role="switch" title="Automatically connect VPN when dejavu starts"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-        </div>
-        <div id="vpn-protocol-note" class="vpn-foot-note">Smart TLS Tunnel · Clean IP · WebRTC shield</div>
       </div>
     </div>
   </div>
@@ -3430,6 +2847,14 @@
         <button id="sh-reader" class="share-item" type="button">
           <svg viewBox="0 0 16 16" fill="none"><path d="M3 4.5h10M3 7.5h10M3 10.5h7.2M3 13.2h5.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           <span id="sh-reader-lbl">Show Reader View</span>
+        </button>
+        <button id="sh-shot-save" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="2.2" y="3.8" width="11.6" height="8.8" rx="2" stroke="currentColor" stroke-width="1.35"/><circle cx="8" cy="8.2" r="2.1" stroke="currentColor" stroke-width="1.35"/><path d="M5.6 3.8l.7-1.2h3.4l.7 1.2" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          <span>Save Page Screenshot</span>
+        </button>
+        <button id="sh-shot-copy" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="2.4" y="3.6" width="8.6" height="7" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M5.6 10.6v1.6a1.4 1.4 0 0 0 1.4 1.4h5.6a1.4 1.4 0 0 0 1.4-1.4V7a1.4 1.4 0 0 0-1.4-1.4H11" stroke="currentColor" stroke-width="1.3"/></svg>
+          <span>Copy Screenshot</span>
         </button>
         <div class="share-sep"></div>
         <button id="sh-pin" class="share-item" type="button">
@@ -3597,7 +3022,28 @@
     </div>
   </div>
 
-  <!-- Mode 15: ChromeOS Material Design 3 Main Menu Popover (326×548 · ZERO scrollbar · ZERO truncation) -->
+  <!-- Mode 7: Googlebook Material Design 3 Quick Tab Search (Ctrl+Shift+A) -->
+  <div id="mode-tabsearch" class="overlay-shell hidden">
+    <div class="panel-box ts-panel-box">
+      <div class="panel-head">
+        <div class="panel-title">
+          <svg viewBox="0 0 18 18" width="16" height="16" fill="none" style="color:var(--md-primary);flex-shrink:0;"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.65"/><path d="M12 12l3.6 3.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          <span>Search Tabs</span>
+          <span id="ts-count-badge" class="engine-badge">0</span>
+        </div>
+        <button id="btn-ts-close" class="icon-btn sm" type="button" title="Close (Esc)">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="ts-search-wrap">
+        <svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M12 12l3.6 3.6" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>
+        <input id="ts-search-input" type="text" placeholder="Search open &amp; recently closed tabs…" spellcheck="false" autocomplete="off">
+      </div>
+      <div id="ts-results-list" class="panel-scroll"></div>
+    </div>
+  </div>
+
+  <!-- Mode 15: ChromeOS Material Design 3 Main Menu Popover -->
   <div id="mode-menu" class="overlay-shell hidden">
     <div class="menu-box">
       <button id="mn-newtab" class="menu-item" type="button">
@@ -3629,6 +3075,16 @@
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8"/></svg>
         <span class="menu-item-label">Tab Overview</span>
         <span class="menu-kbd">Ctrl+Shift+O</span>
+      </button>
+      <button id="mn-split-view" class="menu-item" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M12 4.5v15" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span id="mn-split-lbl" class="menu-item-label">Split View</span>
+        <span class="menu-kbd">Ctrl+Shift+V</span>
+      </button>
+      <button id="mn-screenshot" class="menu-item" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="3" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12.5" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 6l1.2-2h4.6l1.2 2" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        <span class="menu-item-label">Screenshot Page</span>
+        <span class="menu-kbd">Ctrl+Shift+S</span>
       </button>
       <button id="mn-history" class="menu-item" type="button">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.8 12a8.2 8.2 0 1 0 2.4-5.8L3.8 8.6M3.8 4.4v4.2H8M12 7.8V12l3 1.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -3671,7 +3127,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v5.10.0</span>
+        <span id="mn-version-lbl">dejavu v5.11.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -3804,20 +3260,7 @@
       imgEl.replaceWith(wrap);
     }
 
-    // Upgrade default avatar to Dynamic Material Design 3 Butterfly SVG (zero halftone PNG!)
-    if (window.DejavuAvatars && typeof window.DejavuAvatars.renderHtml === 'function') {
-      const origRender = window.DejavuAvatars.renderHtml;
-      if (Array.isArray(window.DejavuAvatars.list) && window.DejavuAvatars.list[0] && window.DejavuAvatars.list[0].id === 'dejavu-halftone') {
-        window.DejavuAvatars.list[0].name = 'Material You';
-      }
-      window.DejavuAvatars.renderHtml = function (id, size) {
-        const sz = size || 32;
-        if (!id || id === 'dejavu-halftone') {
-          return `<span class="bf-avatar bf-avatar-m3" style="width:${sz}px;height:${sz}px;">${DEJAVU_M3_LOGO_SVG}</span>`;
-        }
-        return origRender.call(window.DejavuAvatars, id, sz);
-      };
-    }
+    // All 16 Material Design 3 profile avatars (including dynamic Material You) live natively in ui/avatars.js
 
     // Pure Material Design 3 CSS surface telemetry (0.0ms canvas/backdrop overhead)
     window.__overlaySurfaceMeta = { engine: 'material-design-3-css', backdropCanvas: false };
@@ -3829,8 +3272,8 @@
       download: document.getElementById('mode-download'),
       profiles: document.getElementById('mode-profiles'),
       history: document.getElementById('mode-history'),
+      tabsearch: document.getElementById('mode-tabsearch'),
       update: document.getElementById('mode-update'),
-      vpn: document.getElementById('mode-vpn'),
       suggest: document.getElementById('mode-suggest'),
       sidebar: document.getElementById('mode-sidebar'),
       share: document.getElementById('mode-share'),
@@ -4178,7 +3621,7 @@
           ? (active.googleEmail || 'Signed in with Google')
           : (d.isPrivateWindow ? 'Private Browsing Window' : 'Isolated local profile · Click to customize');
 
-        const googleIconSvg = '<svg viewBox="0 0 18 18" width="13" height="13" aria-hidden="true"><path fill="currentColor" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/><path fill="currentColor" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z" opacity="0.9"/><path fill="currentColor" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z" opacity="0.8"/><path fill="currentColor" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" opacity="0.95"/></svg>';
+        const googleIconSvg = '<span class="ov-g-chip" aria-hidden="true"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3.01h3.89c2.27-2.09 3.57-5.18 3.57-8.82z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.89-3.01c-1.08.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.72-4.95H1.28v3.11A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.28 14.28A7.22 7.22 0 0 1 4.9 12c0-.79.14-1.56.38-2.28V6.61H1.28A12 12 0 0 0 0 12c0 1.94.46 3.77 1.28 5.39l4-3.11z"/><path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.58 1.79l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.28 6.61l4 3.11C6.23 6.88 8.88 4.77 12 4.77z"/></svg></span>';
         const editPenSvg = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M11.4 2.6l2 2L5.6 12.4 3 13l.6-2.6 7.8-7.8z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/></svg>';
 
         activeProfCard.innerHTML = `
@@ -4188,7 +3631,7 @@
               <div class="active-prof-name-row">
                 <span class="active-prof-name"></span>
                 ${isMain ? '<span class="prof-chip">Main Profile</span>' : ''}
-                ${signedIn ? '<span class="prof-chip signed">Signed in</span>' : ''}
+                ${signedIn ? '<span class="prof-chip signed">Google</span>' : ''}
               </div>
               <div class="active-prof-sub"></div>
             </div>
@@ -4196,9 +3639,11 @@
           </div>
           <div class="prof-hero-actions">
             ${signedIn
-              ? `<button id="btn-manage-google" class="pill-btn primary" type="button">Manage Google Account</button>`
-              : `<button id="btn-prof-google-in" class="pill-btn primary" type="button">${googleIconSvg}<span>Sign in with Google</span></button>
-                 <button id="btn-prof-google-up" class="pill-btn" type="button">Create Google Account</button>`
+              ? `<button id="btn-manage-google" class="pill-btn primary google-btn" type="button">${googleIconSvg}<span>Manage Google</span></button>
+                 <button id="btn-prof-google-sync" class="pill-btn" type="button">Refresh</button>
+                 <button id="btn-prof-google-out" class="pill-btn danger" type="button">Sign out</button>`
+              : `<button id="btn-prof-google-in" class="pill-btn primary google-btn" type="button">${googleIconSvg}<span>Sign in with Google</span></button>
+                 <button id="btn-prof-google-up" class="pill-btn" type="button">Create Account</button>`
             }
           </div>
         `;
@@ -4220,6 +3665,10 @@
         if (bUp) bUp.addEventListener('click', () => send({ type: 'googleSignUp', profileId: active.id }));
         const bMgmt = activeProfCard.querySelector('#btn-manage-google');
         if (bMgmt) bMgmt.addEventListener('click', () => send({ type: 'openHistoryUrl', url: 'https://myaccount.google.com', newTab: true }));
+        const bSync = activeProfCard.querySelector('#btn-prof-google-sync');
+        if (bSync) bSync.addEventListener('click', () => send({ type: 'googleSyncProfile', profileId: active.id }));
+        const bOut = activeProfCard.querySelector('#btn-prof-google-out');
+        if (bOut) bOut.addEventListener('click', () => send({ type: 'googleSignOut', profileId: active.id }));
       }
 
       otherProfList.innerHTML = '';
@@ -4293,7 +3742,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.10.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.11.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -4468,11 +3917,11 @@
         histSearchInput.value = '';
         renderHistoryItems();
         requestAnimationFrame(() => histSearchInput.focus());
+      } else if (d.mode === 'tabsearch') {
+        renderTabSearchPanel(d);
       } else if (d.mode === 'update') {
         document.getElementById('upd-title').textContent = `dejavu v${d.version} is ready`;
         document.getElementById('upd-sub').textContent = `Updating from v${d.currentVersion} automatically`;
-      } else if (d.mode === 'vpn') {
-        renderVpnPanel(d.vpn || {}, d.verifyResult || null);
       } else if (d.mode === 'suggest') {
         renderOmniboxSuggestions(d.items || [], typeof d.selectedIndex === 'number' ? d.selectedIndex : -1);
       } else if (d.mode === 'sidebar') {
@@ -4500,393 +3949,147 @@
       }
     });
 
-    // =========================================================================
-    // Mode 7: Material Design 3 VPN Control Center
-    // =========================================================================
     function escapeHtml(s) {
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-
-    const vpnHeroCard = document.getElementById('vpn-hero-card');
-    const vpnStateBadge = document.getElementById('vpn-state-badge');
-    const vpnHeroCountry = document.getElementById('vpn-hero-country');
-    const vpnHeroStatus = document.getElementById('vpn-hero-status');
-    const btnVpnToggle = document.getElementById('btn-vpn-toggle');
-    const vpnVerifiedStrip = document.getElementById('vpn-verified-strip');
-    const vpnVerifiedText = document.getElementById('vpn-verified-text');
-    const vpnEnginePill = document.getElementById('vpn-engine-pill');
-    const vpnIpStrip = document.getElementById('vpn-ip-strip');
-    const vpnIpVal = document.getElementById('vpn-ip-val');
-    const vpnLatencyBadge = document.getElementById('vpn-latency-badge');
-    const vpnIpLoc = document.getElementById('vpn-ip-loc');
-    const btnVpnVerify = document.getElementById('btn-vpn-verify');
-    const vpnVerifyLabel = document.getElementById('vpn-verify-label');
-    const btnVpnRotate = document.getElementById('btn-vpn-rotate');
-    const vpnRotateLabel = document.getElementById('vpn-rotate-label');
-    const vpnTelemetryRow = document.getElementById('vpn-telemetry-row');
-    const vpnTimer = document.getElementById('vpn-timer');
-    const vpnTraffic = document.getElementById('vpn-traffic');
-    const vpnProgWrap = document.getElementById('vpn-prog-wrap');
-    const vpnProgFill = document.getElementById('vpn-prog-fill');
-    const vpnModeSeg = document.getElementById('vpn-mode-seg');
-    const vpnModeDesc = document.getElementById('vpn-mode-desc');
-    const vpnSearchInput = document.getElementById('vpn-search-input');
-    const vpnRegionTabs = document.getElementById('vpn-region-tabs');
-    const vpnCountryList = document.getElementById('vpn-country-list');
-    const btnVpnAutoConnect = document.getElementById('btn-vpn-autoconnect');
-    const vpnProtocolNote = document.getElementById('vpn-protocol-note');
-
-    const VPN_MODE_DESCRIPTIONS = {
-      smart: 'Auto-verified clean IP + auto-heal',
-      tor: 'Encrypted 3-hop Tor onion route'
-    };
-
-    let lastVpnSnap = null;
-    let lastVpnListSig = '';
-    let vpnRegionFilter = 'all';
-    let lastObservedExitIp = '';
-    let wasBusyWhileRotating = false;
-    let rotateFeedbackTimer = null;
-    let isVerifyingTunnel = false;
-    let verifySafetyTimer = null;
-    let verifyOkFlashTimer = null;
-    let lastInlineVerify = null;
-
-    function syncVpnModeDesc(mode) {
-      const key = String(mode || 'smart').toLowerCase() === 'tor' ? 'tor' : 'smart';
-      if (vpnModeDesc) setTextIfChanged(vpnModeDesc, VPN_MODE_DESCRIPTIONS[key]);
-    }
-
-    function resetVerifyButtonUi(keepFlash) {
-      isVerifyingTunnel = false;
-      if (verifySafetyTimer) { clearTimeout(verifySafetyTimer); verifySafetyTimer = null; }
-      if (btnVpnVerify) btnVpnVerify.classList.remove('verifying');
-      if (!keepFlash) {
-        if (verifyOkFlashTimer) { clearTimeout(verifyOkFlashTimer); verifyOkFlashTimer = null; }
-        if (btnVpnVerify) btnVpnVerify.classList.remove('verified-ok');
-        if (vpnVerifyLabel) setTextIfChanged(vpnVerifyLabel, 'Verify');
-      }
-    }
-
-    document.getElementById('btn-vpn-close').addEventListener('click', () => send({ type: 'closePanel' }));
-    btnVpnToggle.addEventListener('click', () => {
-      lastInlineVerify = null;
-      resetVerifyButtonUi(false);
-      send({ type: 'toggleVpn' });
-    });
-
-    if (vpnModeSeg) {
-      vpnModeSeg.addEventListener('click', (e) => {
-        const btn = e.target.closest('.vpn-mode-btn');
-        if (!btn || !btn.dataset.mode) return;
-        const m = btn.dataset.mode;
-        vpnModeSeg.classList.toggle('is-tor', m === 'tor');
-        vpnModeSeg.querySelectorAll('.vpn-mode-btn').forEach((b) => b.classList.toggle('active', b === btn));
-        syncVpnModeDesc(m);
-        lastInlineVerify = null;
-        resetVerifyButtonUi(false);
-        send({ type: 'setVpnMode', mode: m });
-      });
-    }
-
-    vpnRegionTabs.addEventListener('click', (e) => {
-      const pill = e.target.closest('.vpn-reg-pill');
-      if (!pill) return;
-      vpnRegionFilter = pill.dataset.reg || 'all';
-      vpnRegionTabs.querySelectorAll('.vpn-reg-pill').forEach((p) => p.classList.toggle('active', p === pill));
-      lastVpnListSig = '';
-      vpnCountryList.scrollTop = 0;
-      if (lastVpnSnap) renderVpnCountries(lastVpnSnap);
-    });
-
-    if (btnVpnVerify) {
-      btnVpnVerify.addEventListener('click', () => {
-        if (isVerifyingTunnel) return;
-        isVerifyingTunnel = true;
-        lastInlineVerify = null;
-        if (verifyOkFlashTimer) { clearTimeout(verifyOkFlashTimer); verifyOkFlashTimer = null; }
-        btnVpnVerify.classList.remove('verified-ok');
-        btnVpnVerify.classList.add('verifying');
-        if (vpnVerifyLabel) setTextIfChanged(vpnVerifyLabel, 'Testing…');
-        if (vpnVerifiedStrip) {
-          vpnVerifiedStrip.classList.remove('is-warn');
-          vpnVerifiedStrip.classList.add('is-testing');
-        }
-        if (vpnVerifiedText) setTextIfChanged(vpnVerifiedText, 'Testing live HTTPS & DNS tunnel…');
-        send({ type: 'verifyVpnTunnel' });
-        if (verifySafetyTimer) clearTimeout(verifySafetyTimer);
-        verifySafetyTimer = setTimeout(() => {
-          resetVerifyButtonUi(false);
-          if (vpnVerifiedStrip) vpnVerifiedStrip.classList.remove('is-testing');
-          if (lastVpnSnap) renderVpnPanel(lastVpnSnap, null);
-        }, 15000);
-      });
-    }
-
-    btnVpnRotate.addEventListener('click', () => {
-      if (btnVpnRotate.classList.contains('rotating')) return;
-      btnVpnRotate.classList.add('rotating');
-      wasBusyWhileRotating = false;
-      lastInlineVerify = null;
-      resetVerifyButtonUi(false);
-      vpnRotateLabel.textContent = 'Rotating…';
-      send({ type: 'rotateVpnIp' });
-      if (rotateFeedbackTimer) clearTimeout(rotateFeedbackTimer);
-      rotateFeedbackTimer = setTimeout(() => {
-        btnVpnRotate.classList.remove('rotating');
-        wasBusyWhileRotating = false;
-        vpnRotateLabel.textContent = 'New IP';
-      }, 6000);
-    });
-
-    btnVpnAutoConnect.addEventListener('click', () => {
-      const nextEnabled = !btnVpnAutoConnect.classList.contains('on');
-      btnVpnAutoConnect.classList.toggle('on', nextEnabled);
-      send({ type: 'setVpnAutoConnect', enabled: nextEnabled });
-    });
-
-    vpnSearchInput.addEventListener('input', () => {
-      lastVpnListSig = '';
-      if (lastVpnSnap) renderVpnCountries(lastVpnSnap);
-    });
-
-    vpnCountryList.addEventListener('click', (e) => {
-      const row = e.target.closest('.vpn-country-row');
-      if (!row || !row.dataset.code) return;
-      lastInlineVerify = null;
-      resetVerifyButtonUi(false);
-      send({ type: 'selectVpnCountry', code: row.dataset.code });
-    });
 
     function setTextIfChanged(el, txt) {
       if (el && el.textContent !== txt) el.textContent = txt;
     }
 
-    function renderVpnPanel(v, verifyResult) {
-      lastVpnSnap = v;
-      const st = v.state || 'disconnected';
-      const isConn = st === 'connected';
-      const isBusy = st === 'connecting' || st === 'downloading' || st === 'healing';
-      const rawStatus = String(v.statusText || '');
-      const statusLower = rawStatus.toLowerCase();
-      const isHealingMsg = st === 'healing' || statusLower.includes('heal') || statusLower.includes('fallback') || statusLower.includes('switch');
+    // =========================================================================
+    // Mode 7: Googlebook Material Design 3 Quick Tab Search (Ctrl+Shift+A)
+    // =========================================================================
+    const tsSearchInput = document.getElementById('ts-search-input');
+    const tsResultsList = document.getElementById('ts-results-list');
+    const tsCountBadge = document.getElementById('ts-count-badge');
+    const btnTsClose = document.getElementById('btn-ts-close');
+    let tsOpenTabs = [];
+    let tsClosedTabs = [];
+    let tsFlatItems = [];
+    let tsSelIdx = 0;
 
-      if (verifyResult && typeof verifyResult === 'object') {
-        lastInlineVerify = verifyResult;
-        if (verifyResult.ok) {
-          resetVerifyButtonUi(true);
-          if (btnVpnVerify) btnVpnVerify.classList.add('verified-ok');
-          if (vpnVerifyLabel) setTextIfChanged(vpnVerifyLabel, 'Verified');
-          if (verifyOkFlashTimer) clearTimeout(verifyOkFlashTimer);
-          verifyOkFlashTimer = setTimeout(() => {
-            verifyOkFlashTimer = null;
-            if (btnVpnVerify) btnVpnVerify.classList.remove('verified-ok');
-            if (!isVerifyingTunnel && vpnVerifyLabel) setTextIfChanged(vpnVerifyLabel, 'Verify');
-          }, 2600);
-        } else {
-          resetVerifyButtonUi(false);
-        }
-      } else if (!isConn) {
-        if (isVerifyingTunnel) resetVerifyButtonUi(false);
-        lastInlineVerify = null;
-      }
+    if (btnTsClose) btnTsClose.addEventListener('click', () => send({ type: 'closePanel' }));
 
-      const heroCls = 'vpn-hero' + (isConn ? ' connected' : (isBusy ? ' connecting' : (st === 'error' ? ' error' : '')));
-      if (vpnHeroCard.className !== heroCls) vpnHeroCard.className = heroCls;
-
-      const badgeCls = 'vpn-badge-live' + (isConn ? ' connected' : (isBusy ? ' connecting' : (st === 'error' ? ' error' : '')));
-      if (vpnStateBadge.className !== badgeCls) vpnStateBadge.className = badgeCls;
-      const badgeLabel = isConn
-        ? (isHealingMsg ? 'Healing' : 'Protected')
-        : (st === 'downloading'
-          ? 'Setup'
-          : (isBusy ? (isHealingMsg ? 'Healing' : 'Connecting') : (st === 'error' ? 'Retry' : 'Off')));
-      setTextIfChanged(vpnStateBadge, badgeLabel);
-
-      const wantOn = isConn || isBusy;
-      if (btnVpnToggle.classList.contains('on') !== wantOn) btnVpnToggle.classList.toggle('on', wantOn);
-      btnVpnToggle.setAttribute('aria-checked', wantOn ? 'true' : 'false');
-      const dispLoc = v.exitCountry || v.countryName || 'Fastest Location';
-      const heroTitle = isConn
-        ? `Protected · ${dispLoc}`
-        : (isBusy
-          ? `${isHealingMsg ? 'Auto-Healing' : 'Connecting'} · ${dispLoc}`
-          : (st === 'error' ? 'Connection Interrupted' : 'VPN Disconnected'));
-      setTextIfChanged(vpnHeroCountry, heroTitle);
-      setTextIfChanged(
-        vpnHeroStatus,
-        rawStatus || (isConn ? `Encrypted tunnel active · ${dispLoc}` : (st === 'error' ? 'Tap power button to retry' : 'Direct connection · Tap to protect'))
-      );
-
-      if (isBusy && btnVpnRotate.classList.contains('rotating')) {
-        wasBusyWhileRotating = true;
-      }
-      if (isConn && btnVpnRotate.classList.contains('rotating') && (wasBusyWhileRotating || (v.exitIp && v.exitIp !== lastObservedExitIp))) {
-        btnVpnRotate.classList.remove('rotating');
-        wasBusyWhileRotating = false;
-        vpnRotateLabel.textContent = 'New IP';
-        if (rotateFeedbackTimer) { clearTimeout(rotateFeedbackTimer); rotateFeedbackTimer = null; }
-      }
-      if (!isConn && !isBusy && btnVpnRotate.classList.contains('rotating')) {
-        btnVpnRotate.classList.remove('rotating');
-        wasBusyWhileRotating = false;
-        vpnRotateLabel.textContent = 'New IP';
-      }
-      if (v.exitIp && v.exitIp !== lastObservedExitIp) {
-        if (lastObservedExitIp && !verifyResult) lastInlineVerify = null;
-        lastObservedExitIp = v.exitIp;
-      }
-
-      if (isConn) {
-        const effEngine = String((lastInlineVerify && lastInlineVerify.engine) || v.activeEngine || v.mode || 'smart').toLowerCase();
-        const isTorActive = effEngine === 'tor';
-        if (vpnVerifiedStrip) {
-          vpnVerifiedStrip.classList.remove('hidden');
-          vpnVerifiedStrip.classList.toggle('is-testing', isVerifyingTunnel);
-          const verifyFailed = !isVerifyingTunnel && ((lastInlineVerify && lastInlineVerify.ok === false) || v.verified === false);
-          vpnVerifiedStrip.classList.toggle('is-warn', verifyFailed);
-        }
-        if (vpnEnginePill) {
-          setTextIfChanged(vpnEnginePill, isTorActive ? '3-Hop Encrypted Tor' : 'Smart Clean-IP');
-          vpnEnginePill.classList.toggle('is-tor', isTorActive);
-        }
-        if (vpnVerifiedText) {
-          if (isVerifyingTunnel) {
-            setTextIfChanged(vpnVerifiedText, 'Testing live HTTPS & DNS tunnel…');
-          } else if (lastInlineVerify) {
-            const vLat = Number(lastInlineVerify.latencyMs || v.latencyMs || 0);
-            if (lastInlineVerify.ok) {
-              setTextIfChanged(vpnVerifiedText, vLat > 0 ? `Verified · ${vLat} ms` : (lastInlineVerify.message || 'Verified · HTTPS & DNS Protected'));
-            } else {
-              setTextIfChanged(vpnVerifiedText, lastInlineVerify.message || 'Check failed · Auto-healing…');
-            }
-          } else if (v.lastVerifyMessage) {
-            setTextIfChanged(vpnVerifiedText, v.lastVerifyMessage);
-          } else if (v.verified === false) {
-            setTextIfChanged(vpnVerifiedText, 'Tunnel active · Tap Verify');
-          } else {
-            setTextIfChanged(vpnVerifiedText, 'Verified · HTTPS & DNS Protected');
-          }
-        }
-
-        if (vpnIpStrip.classList.contains('hidden')) vpnIpStrip.classList.remove('hidden');
-        const effIp = (lastInlineVerify && lastInlineVerify.exitIp) || v.exitIp || 'Verifying IP…';
-        setTextIfChanged(vpnIpVal, effIp);
-        if (vpnLatencyBadge) {
-          const latMs = Number((lastInlineVerify && lastInlineVerify.latencyMs) || v.latencyMs || 0);
-          if (latMs > 0) {
-            setTextIfChanged(vpnLatencyBadge, `${latMs} ms`);
-            vpnLatencyBadge.classList.remove('hidden');
-          } else {
-            vpnLatencyBadge.classList.add('hidden');
-          }
-        }
-        const loc = [v.exitCity, v.exitCountry].filter(Boolean).join(', ');
-        setTextIfChanged(vpnIpLoc, loc || v.countryName || '');
-
-        if (vpnTelemetryRow.classList.contains('hidden')) vpnTelemetryRow.classList.remove('hidden');
-        setTextIfChanged(vpnTimer, formatDuration(v.connectedSeconds));
-        setTextIfChanged(vpnTraffic, `↓ ${formatBytes(v.bytesReceived)} · ↑ ${formatBytes(v.bytesSent)}`);
-      } else {
-        if (vpnVerifiedStrip && !vpnVerifiedStrip.classList.contains('hidden')) vpnVerifiedStrip.classList.add('hidden');
-        if (!vpnIpStrip.classList.contains('hidden')) vpnIpStrip.classList.add('hidden');
-        if (!vpnTelemetryRow.classList.contains('hidden')) vpnTelemetryRow.classList.add('hidden');
-      }
-
-      const showProg = isBusy || (isConn && isHealingMsg && Number(v.progress || 0) > 0 && Number(v.progress || 0) < 100);
-      if (showProg) {
-        if (vpnProgWrap.classList.contains('hidden')) vpnProgWrap.classList.remove('hidden');
-        const nextW = `${Math.max(8, Math.min(100, v.progress || 14))}%`;
-        if (vpnProgFill.style.width !== nextW) vpnProgFill.style.width = nextW;
-      } else {
-        if (!vpnProgWrap.classList.contains('hidden')) vpnProgWrap.classList.add('hidden');
-      }
-
-      if (vpnModeSeg) {
-        const curMode = (v.mode || 'smart').toLowerCase();
-        vpnModeSeg.classList.toggle('is-tor', curMode === 'tor');
-        vpnModeSeg.querySelectorAll('.vpn-mode-btn').forEach((b) => {
-          b.classList.toggle('active', b.dataset.mode === curMode);
-        });
-        syncVpnModeDesc(curMode);
-      }
-      if (typeof v.autoConnect === 'boolean' && btnVpnAutoConnect.classList.contains('on') !== v.autoConnect) {
-        btnVpnAutoConnect.classList.toggle('on', v.autoConnect);
-      }
-      setTextIfChanged(
-        vpnProtocolNote,
-        v.protocol ? `${v.protocol} · WebRTC shield` : 'Smart TLS Tunnel · Clean IP · WebRTC shield'
-      );
-
-      renderVpnCountries(v);
+    function renderTabSearchPanel(d) {
+      tsOpenTabs = Array.isArray(d.openTabs) ? d.openTabs : [];
+      tsClosedTabs = Array.isArray(d.closedTabs) ? d.closedTabs : [];
+      if (tsCountBadge) tsCountBadge.textContent = String(tsOpenTabs.length);
+      if (tsSearchInput) tsSearchInput.value = '';
+      tsSelIdx = 0;
+      renderTabSearchItems();
+      requestAnimationFrame(() => { if (tsSearchInput) tsSearchInput.focus(); });
     }
 
-    const VPN_STREAMING_CODES = new Set(['AUTO', 'US', 'GB', 'CA', 'JP', 'DE', 'NL', 'FR', 'AU', 'SG', 'CH', 'SE', 'KR', 'IN', 'BR', 'IT', 'ES']);
+    function renderTabSearchItems() {
+      if (!tsResultsList) return;
+      const q = (tsSearchInput ? tsSearchInput.value : '').trim().toLowerCase();
+      const matchOpen = tsOpenTabs.filter((t) => !q || (t.title || '').toLowerCase().includes(q) || (t.url || '').toLowerCase().includes(q) || (t.host || '').toLowerCase().includes(q));
+      const matchClosed = tsClosedTabs.filter((c) => !q || (c.title || '').toLowerCase().includes(q) || (c.url || '').toLowerCase().includes(q) || (c.host || '').toLowerCase().includes(q));
 
-    function matchesVpnRegion(c, reg) {
-      if (!reg || reg === 'all') return true;
-      if (reg === 'fast') return !!c.fast;
-      if (reg === 'streaming') return VPN_STREAMING_CODES.has((c.code || '').toUpperCase());
-      const r = (c.region || '').toLowerCase();
-      if (reg === 'americas') return r.includes('america');
-      if (reg === 'europe') return r.includes('europe');
-      if (reg === 'asia') return r.includes('asia');
-      if (reg === 'mea') return r.includes('middle east') || r.includes('africa');
-      return true;
-    }
+      tsFlatItems = [];
+      tsResultsList.innerHTML = '';
 
-    function renderVpnCountries(v) {
-      const q = (vpnSearchInput.value || '').trim().toLowerCase();
-      const list = Array.isArray(v.countries) ? v.countries : [];
-      const curCode = (v.countryCode || 'AUTO').toUpperCase();
-      const isConn = v.state === 'connected';
-      const fastCount = list.reduce((acc, c) => acc + (c && c.fast ? 1 : 0), 0);
-      const sig = `${q}|${vpnRegionFilter}|${curCode}|${isConn ? 1 : 0}|${list.length}|${fastCount}`;
-      if (sig === lastVpnListSig) return;
-      lastVpnListSig = sig;
-
-      const allPill = vpnRegionTabs.querySelector('[data-reg="all"]');
-      if (allPill && list.length > 0) setTextIfChanged(allPill, `All (${list.length})`);
-
-      const prevScroll = vpnCountryList.scrollTop;
-      vpnCountryList.innerHTML = '';
-      const filtered = list.filter((c) => {
-        if (!matchesVpnRegion(c, vpnRegionFilter)) return false;
-        if (!q) return true;
-        return c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || (c.region || '').toLowerCase().includes(q);
-      });
-
-      if (filtered.length === 0) {
-        vpnCountryList.innerHTML = '<div class="empty-msg">No matching locations</div>';
+      if (!matchOpen.length && !matchClosed.length) {
+        tsResultsList.innerHTML = '<div class="empty-msg">No matching tabs found</div>';
         return;
       }
 
+      const splitSvg = '<svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.35"/><path d="M8 3v10" stroke="currentColor" stroke-width="1.35"/></svg>';
+      const closeSvg = '<svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+
       const frag = document.createDocumentFragment();
-      filtered.forEach((c) => {
-        const isSel = c.code === curCode;
-        const row = document.createElement('div');
-        row.className = 'vpn-country-row' + (isSel ? (isConn ? ' active-conn' : ' selected') : '');
-        row.dataset.code = c.code;
-        const ccLabel = c.code === 'AUTO' ? 'AUTO' : (c.code === 'GB' ? 'UK' : c.code);
-        const fastDot = c.fast ? '<span class="vpn-fast-dot" title="Fast high-capacity location"></span>' : '';
-        const checkSvg = isSel
-          ? '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3.5 8.5l3 3 6-6.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-          : '';
-        row.innerHTML = `
-          <span class="vpn-cc-pill">${ccLabel}</span>
-          <div class="vpn-c-meta">
-            <div class="vpn-c-name">${escapeHtml(c.name)}</div>
-            <div class="vpn-c-reg">${escapeHtml(c.region || '')}</div>
-          </div>
-          <span class="vpn-c-right">
-            ${fastDot}
-            <span class="vpn-c-check">${checkSvg}</span>
-          </span>
-        `;
-        frag.appendChild(row);
+      if (matchOpen.length) {
+        const hdr = document.createElement('div');
+        hdr.className = 'section-label';
+        hdr.textContent = `Open Tabs (${matchOpen.length})`;
+        frag.appendChild(hdr);
+
+        matchOpen.forEach((t) => {
+          const itemIdx = tsFlatItems.length;
+          tsFlatItems.push({ kind: 'open', tab: t });
+          const row = document.createElement('div');
+          row.className = 'ts-row' + (t.isActive ? ' is-active' : '') + (itemIdx === tsSelIdx ? ' selected' : '');
+          const favHtml = (!t.isNewTab && t.favicon)
+            ? `<img src="${escapeHtml(t.favicon)}" alt="" onerror="this.remove()">`
+            : escapeHtml(((t.title || 'T')[0] || 'T').toUpperCase());
+          row.innerHTML = `
+            <span class="ts-fav">${favHtml}</span>
+            <div class="ts-meta">
+              <div class="ts-title"></div>
+              <div class="ts-sub"></div>
+            </div>
+            ${t.isSplit ? '<span class="ts-badge">Split</span>' : ''}
+            <div class="ts-acts">
+              ${!t.isActive && !t.isNewTab ? `<button type="button" class="ts-mini-btn act-split" title="Open side-by-side in Split View">${splitSvg}</button>` : ''}
+              <button type="button" class="ts-mini-btn close act-close" title="Close tab">${closeSvg}</button>
+            </div>
+          `;
+          row.querySelector('.ts-title').textContent = t.title || 'Start Page';
+          row.querySelector('.ts-sub').textContent = t.host || t.url || '';
+          row.addEventListener('click', (e) => {
+            if (e.target.closest('.ts-mini-btn')) return;
+            send({ type: 'tabSearchSwitch', id: t.id });
+          });
+          const bSp = row.querySelector('.act-split');
+          if (bSp) bSp.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'tabSearchSplit', id: t.id }); });
+          const bCl = row.querySelector('.act-close');
+          if (bCl) bCl.addEventListener('click', (e) => { e.stopPropagation(); send({ type: 'tabSearchClose', id: t.id }); });
+          frag.appendChild(row);
+        });
+      }
+
+      if (matchClosed.length) {
+        const hdr = document.createElement('div');
+        hdr.className = 'section-label';
+        hdr.style.marginTop = matchOpen.length ? '8px' : '0';
+        hdr.textContent = `Recently Closed (${matchClosed.length})`;
+        frag.appendChild(hdr);
+
+        matchClosed.forEach((c) => {
+          const itemIdx = tsFlatItems.length;
+          tsFlatItems.push({ kind: 'closed', closed: c });
+          const row = document.createElement('div');
+          row.className = 'ts-row' + (itemIdx === tsSelIdx ? ' selected' : '');
+          row.innerHTML = `
+            <span class="ts-fav">↺</span>
+            <div class="ts-meta">
+              <div class="ts-title"></div>
+              <div class="ts-sub"></div>
+            </div>
+          `;
+          row.querySelector('.ts-title').textContent = c.title || c.host || 'Closed Tab';
+          row.querySelector('.ts-sub').textContent = c.host || c.url || '';
+          row.addEventListener('click', () => send({ type: 'tabSearchReopen', url: c.url }));
+          frag.appendChild(row);
+        });
+      }
+      tsResultsList.appendChild(frag);
+    }
+
+    if (tsSearchInput) {
+      tsSearchInput.addEventListener('input', () => {
+        tsSelIdx = 0;
+        renderTabSearchItems();
       });
-      vpnCountryList.appendChild(frag);
-      vpnCountryList.scrollTop = prevScroll;
+      tsSearchInput.addEventListener('keydown', (e) => {
+        if (!tsFlatItems.length) return;
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          tsSelIdx = (tsSelIdx + 1) % tsFlatItems.length;
+          renderTabSearchItems();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          tsSelIdx = (tsSelIdx - 1 + tsFlatItems.length) % tsFlatItems.length;
+          renderTabSearchItems();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          const chosen = tsFlatItems[tsSelIdx] || tsFlatItems[0];
+          if (!chosen) return;
+          if (chosen.kind === 'open') send({ type: 'tabSearchSwitch', id: chosen.tab.id });
+          else if (chosen.kind === 'closed') send({ type: 'tabSearchReopen', url: chosen.closed.url });
+        }
+      });
     }
 
     // =========================================================================
@@ -5150,6 +4353,10 @@
     shFav.addEventListener('click', () => send({ type: 'shareToggleFavorite' }));
     shReading.addEventListener('click', () => send({ type: 'shareToggleReadingList' }));
     shReader.addEventListener('click', () => send({ type: 'shareToggleReader' }));
+    const shShotSave = document.getElementById('sh-shot-save');
+    const shShotCopy = document.getElementById('sh-shot-copy');
+    if (shShotSave) shShotSave.addEventListener('click', () => send({ type: 'captureScreenshot', copy: false }));
+    if (shShotCopy) shShotCopy.addEventListener('click', () => send({ type: 'captureScreenshot', copy: true }));
     shPin.addEventListener('click', () => send({ type: 'shareTogglePin' }));
     document.getElementById('sh-dup').addEventListener('click', () => send({ type: 'shareDuplicateTab' }));
     document.getElementById('sh-newwin').addEventListener('click', () => send({ type: 'shareNewWindow' }));
@@ -5181,6 +4388,8 @@
       shFav.disabled = isNt;
       shReading.disabled = isNt;
       shReader.disabled = isNt;
+      if (shShotSave) shShotSave.disabled = isNt;
+      if (shShotCopy) shShotCopy.disabled = isNt;
 
       shFavLbl.textContent = d.isFavorite ? 'Remove from Quick Access' : 'Add to Quick Access';
       shReadingLbl.textContent = d.isReadingList ? 'Remove from Reading List' : 'Add to Reading List';
@@ -5743,6 +4952,11 @@
     if (mnLink) mnLink.addEventListener('click', () => send({ type: 'openLinkHub' }));
     const mnTabOverview = document.getElementById('mn-tab-overview');
     if (mnTabOverview) mnTabOverview.addEventListener('click', () => send({ type: 'openTabOverview' }));
+    const mnSplitView = document.getElementById('mn-split-view');
+    const mnSplitLbl = document.getElementById('mn-split-lbl');
+    if (mnSplitView) mnSplitView.addEventListener('click', () => send({ type: 'toggleSplitView' }));
+    const mnScreenshot = document.getElementById('mn-screenshot');
+    if (mnScreenshot) mnScreenshot.addEventListener('click', () => send({ type: 'captureScreenshot', copy: false }));
     const mnExtensions = document.getElementById('mn-extensions');
     if (mnExtensions) mnExtensions.addEventListener('click', () => send({ type: 'openExtensions' }));
     document.getElementById('mn-devtools').addEventListener('click', () => send({ type: 'openDevTools' }));
@@ -5755,9 +4969,11 @@
     });
 
     function renderMenuPanel(d) {
+      if (mnSplitLbl) mnSplitLbl.textContent = d.splitViewActive ? 'Exit Split View' : 'Split View';
+      if (mnScreenshot) mnScreenshot.disabled = !!d.isNewTab;
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.10.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.11.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');
@@ -5962,7 +5178,7 @@
         send({ type: 'closePanel' });
         return;
       }
-      if (e.key === 'Escape' && (currentOverlayMode === 'shield' || currentOverlayMode === 'vpn' || currentOverlayMode === 'extensions' || currentOverlayMode === 'sync' || currentOverlayMode === 'sidebar' || currentOverlayMode === 'menu')) {
+      if (e.key === 'Escape' && (currentOverlayMode === 'shield' || currentOverlayMode === 'tabsearch' || currentOverlayMode === 'extensions' || currentOverlayMode === 'sync' || currentOverlayMode === 'sidebar' || currentOverlayMode === 'menu')) {
         e.preventDefault();
         send({ type: 'closePanel' });
         return;
@@ -6066,6 +5282,10 @@
           : `<span>${initial}</span>`;
         const statusTxt = ext.enabled === false ? 'Disabled' : (ext.popupUrl ? 'Click to open popup' : 'Active');
 
+        const optSvg = '<svg viewBox="0 0 18 18" width="14" height="14" fill="none"><circle cx="9" cy="9" r="2.4" stroke="currentColor" stroke-width="1.45"/><path d="M9 2.6v1.6M9 13.8v1.6M2.6 9h1.6M13.8 9h1.6M4.5 4.5l1.1 1.1M12.4 12.4l1.1 1.1M13.5 4.5l-1.1 1.1M5.6 12.4l-1.1 1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+        const pwrSvg = '<svg viewBox="0 0 18 18" width="14" height="14" fill="none"><path d="M9 3.2v5.4M5.4 5.2a5.2 5.2 0 1 0 7.2 0" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg>';
+        const isEnabled = ext.enabled !== false;
+
         row.innerHTML = `
           <button type="button" class="ext-pop-main" title="${escapeHtml(ext.name || 'Extension')}">
             <span class="ext-pop-ico">${icoHtml}</span>
@@ -6078,7 +5298,9 @@
             </div>
           </button>
           <div class="ext-pop-acts">
-            <button type="button" class="ext-pin-toggle${ext.pinned ? ' pinned' : ''}" title="${ext.pinned ? 'Unpin from toolbar' : 'Pin to toolbar'}">
+            ${isEnabled && ext.optionsUrl ? `<button type="button" class="ext-pin-toggle ext-opt-btn" title="Extension options">${optSvg}</button>` : ''}
+            <button type="button" class="ext-pin-toggle ext-en-btn${isEnabled ? ' pinned' : ''}" title="${isEnabled ? 'Disable extension' : 'Enable extension'}">${pwrSvg}</button>
+            <button type="button" class="ext-pin-toggle ext-pin-btn${ext.pinned ? ' pinned' : ''}" title="${ext.pinned ? 'Unpin from toolbar' : 'Pin to toolbar'}">
               ${ext.pinned ? PIN_FILLED_SVG : PIN_SVG}
             </button>
           </div>
@@ -6094,7 +5316,27 @@
           }
         });
 
-        const pinBtn = row.querySelector('.ext-pin-toggle');
+        const optBtn = row.querySelector('.ext-opt-btn');
+        if (optBtn) {
+          optBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            send({ type: 'extOpenOptions', id: ext.id });
+          });
+        }
+
+        const enBtn = row.querySelector('.ext-en-btn');
+        if (enBtn) {
+          enBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const nextEn = !enBtn.classList.contains('pinned');
+            enBtn.classList.toggle('pinned', nextEn);
+            row.classList.toggle('is-disabled', !nextEn);
+            enBtn.title = nextEn ? 'Disable extension' : 'Enable extension';
+            send({ type: 'extToggleEnabled', id: ext.id, enabled: nextEn });
+          });
+        }
+
+        const pinBtn = row.querySelector('.ext-pin-btn');
         pinBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           const nextPin = !pinBtn.classList.contains('pinned');

@@ -497,8 +497,6 @@ namespace DejavuBrowser
             string rawQuery,
             string searchEngine,
             List<SuggestItem> localItems,
-            bool vpnActive,
-            UpstreamEndpoint vpnEndpoint,
             CancellationToken token)
         {
             List<SuggestItem> merged = new List<SuggestItem>(localItems);
@@ -509,7 +507,7 @@ namespace DejavuBrowser
                 return merged;
             }
 
-            List<string> liveTerms = await FetchWebTermsAsync(q, searchEngine, vpnActive, vpnEndpoint, token).ConfigureAwait(false);
+            List<string> liveTerms = await FetchWebTermsAsync(q, searchEngine, token).ConfigureAwait(false);
             if (token.IsCancellationRequested) return merged;
 
             HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -545,8 +543,6 @@ namespace DejavuBrowser
         private async Task<List<string>> FetchWebTermsAsync(
             string query,
             string searchEngine,
-            bool vpnActive,
-            UpstreamEndpoint vpnEndpoint,
             CancellationToken token)
         {
             List<string> terms = new List<string>();
@@ -554,18 +550,7 @@ namespace DejavuBrowser
             {
                 string encoded = Uri.EscapeDataString(query);
 
-                // When VPN is ON, route autocomplete strictly through the active VPN tunnel
-                // (using DuckDuckGo AC so zero real IP leak and zero Google CAPTCHA blocks!).
-                if (vpnActive)
-                {
-                    if (vpnEndpoint == null) return terms;
-                    string ddgJson = await LocalProxyBridge.HttpsGetViaEndpointAsync(
-                        vpnEndpoint, "duckduckgo.com", "/ac/?q=" + encoded, 3500, token).ConfigureAwait(false);
-                    ParseDdgSuggest(ddgJson, terms);
-                    return terms;
-                }
-
-                // Direct mode: fast Google Suggest for Google, DuckDuckGo Suggest for DDG/Brave
+                // Direct fast Google Suggest for Google, DuckDuckGo Suggest for DDG/Brave/fallback
                 if (searchEngine == "google")
                 {
                     string gJson = await DownloadStringFastAsync(

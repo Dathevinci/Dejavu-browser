@@ -116,8 +116,6 @@ namespace DejavuBrowser
         public DejavuSettings Settings;
         public readonly AdBlocker AdBlocker;
         public readonly AutoUpdater Updater;
-        public readonly LocalProxyBridge ProxyBridge;
-        public readonly VpnManager Vpn;
         public readonly SyncManager Sync;
         public readonly TurboDownloadManager TurboDownloads;
         public readonly ExtensionManager Extensions;
@@ -160,10 +158,6 @@ namespace DejavuBrowser
             Updater.UpdateReady += OnUpdaterUpdateReady;
             Updater.StatusChanged += OnUpdaterStatusChanged;
 
-            ProxyBridge = new LocalProxyBridge();
-            Vpn = new VpnManager(ProxyBridge, Settings.vpnCountry, Settings.vpnAutoConnect, Settings.vpnMode);
-            Vpn.StateChanged += OnVpnStateChanged;
-
             Sync = new SyncManager(Profiles.GetProfileDataDir(Profiles.ActiveProfile.id));
             Sync.StateChanged += OnSyncStateChanged;
             Sync.IncomingDrop += OnSyncIncomingDrop;
@@ -190,11 +184,6 @@ namespace DejavuBrowser
             catch
             {
                 WebViewVersion = "";
-            }
-
-            if (Settings.vpnAutoConnect)
-            {
-                StartVpnAutoConnectAsync();
             }
 
             StartBackgroundUpdateCheckAsync();
@@ -232,23 +221,7 @@ namespace DejavuBrowser
 
         private IWebProxy GetTurboDownloadProxy()
         {
-            if (ProxyBridge != null && ProxyBridge.VpnEnabled && ProxyBridge.ListenPort > 0)
-            {
-                return new WebProxy("http://127.0.0.1:" + ProxyBridge.ListenPort, true);
-            }
             return null;
-        }
-
-        private async void StartVpnAutoConnectAsync()
-        {
-            try
-            {
-                if (!_disposed && Vpn != null && Settings != null && Settings.vpnAutoConnect && !Vpn.IsBusyOrConnected)
-                {
-                    await Vpn.ConnectAsync(Settings.vpnCountry);
-                }
-            }
-            catch { }
         }
 
         private async void StartBackgroundUpdateCheckAsync()
@@ -293,19 +266,12 @@ namespace DejavuBrowser
                 : "--disable-gpu ";
             string extraArgs =
                 gpuArgs +
-                "--disable-quic " +
                 "--disable-background-networking " +
                 "--disable-component-update " +
                 "--disable-domain-reliability " +
                 "--disable-breakpad " +
                 "--disable-features=Translate,OptimizationHints,MediaRouter,InterestFeedContentSuggestions " +
-                "--enable-features=ParallelDownloading,WebAuthenticationWindowsHello,WebAuthenticationConditionalUI,FedCm " +
-                "--proxy-server=http://127.0.0.1:" + ProxyBridge.ListenPort + " " +
-                "--proxy-bypass-list=localhost;127.0.0.1;[::1];dejavu.local";
-            if (Settings == null || Settings.vpnWebRtcProtection)
-            {
-                extraArgs += " --force-webrtc-ip-handling-policy=disable_non_proxied_udp";
-            }
+                "--enable-features=ParallelDownloading,WebAuthenticationWindowsHello,WebAuthenticationConditionalUI,FedCm";
             if (Settings != null && !Settings.spellcheckEnabled)
             {
                 extraArgs += " --disable-spell-checking";
@@ -421,8 +387,6 @@ namespace DejavuBrowser
             try { AdBlocker.FlushStats(); } catch { }
             try { if (TurboDownloads != null) TurboDownloads.Dispose(); } catch { }
             try { if (Sync != null) Sync.Dispose(); } catch { }
-            try { if (Vpn != null) Vpn.Dispose(); } catch { }
-            try { if (ProxyBridge != null) ProxyBridge.Dispose(); } catch { }
         }
 
         public bool LaunchOrFocusProfileProcess(string targetProfileId, string extraArgs)
@@ -730,20 +694,6 @@ namespace DejavuBrowser
             });
         }
 
-        private void OnVpnStateChanged(VpnStatusSnapshot snap)
-        {
-            InvokeOnUiThread(() =>
-            {
-                for (int i = 0; i < _windows.Count; i++)
-                {
-                    if (_windows[i] != null && !_windows[i].IsDisposed)
-                    {
-                        _windows[i].HandleAppVpnStateChanged();
-                    }
-                }
-            });
-        }
-
         private void OnSyncStateChanged()
         {
             InvokeOnUiThread(() =>
@@ -837,8 +787,6 @@ namespace DejavuBrowser
         private DejavuSettings _settings;
         private readonly AdBlocker _adBlocker;
         private readonly AutoUpdater _updater;
-        private readonly LocalProxyBridge _proxyBridge;
-        private readonly VpnManager _vpn;
         private readonly SyncManager _sync;
         private readonly TurboDownloadManager _turboDownloads;
         private readonly ExtensionManager _extensions;
@@ -857,12 +805,11 @@ namespace DejavuBrowser
         private bool _forceCloseConfirmed;
 
         // Lightweight reusable Material Design 3 overlay windows (0ms instant open, zero backdrop captures!)
-        private OverlayPopup _popoverPopup;   // Auto-dismiss on click outside: Shield, VPN, Profiles, History, Extensions
+        private OverlayPopup _popoverPopup;   // Auto-dismiss on click outside: Shield, Profiles, History, Extensions, Tab Search
         private OverlayPopup _hudPopup;       // Non-stealing or explicit close: Find, Download, Update
         private OverlayPopup _suggestPopup;   // Never-activating Omnibox Suggestions dropdown (floats over webpages!)
         private OverlayPopup _extActionPopup; // Auto-dismiss popup hosting live chrome-extension://<id>/<popup>
         private System.Windows.Forms.Timer _downloadHideTimer;
-        private System.Windows.Forms.Timer _vpnTelemetryTimer;
         private System.Windows.Forms.Timer _statePushTimer;
         private System.Windows.Forms.Timer _tabDeltaTimer;
         private System.Windows.Forms.Timer _adPulseTimer;
@@ -910,6 +857,13 @@ namespace DejavuBrowser
         private string _dlManagerTab = "all";
         private string _settingsPane = "you";
         private bool _favoritesBarHidden;
+        private int _splitLeftTabId = -1;
+        private int _splitRightTabId = -1;
+        private float _splitRatio = 0.50f;
+        private Panel _splitDivider;
+        private bool _isDraggingSplitDivider;
+        private int _splitDragStartX;
+        private float _splitDragStartRatio = 0.50f;
         private FormWindowState _lastWindowState = FormWindowState.Normal;
         private bool _wasMinimized;
         private bool _wasMaximized;
@@ -1016,8 +970,6 @@ namespace DejavuBrowser
             _settings = appContext.Settings;
             _adBlocker = appContext.AdBlocker;
             _updater = appContext.Updater;
-            _proxyBridge = appContext.ProxyBridge;
-            _vpn = appContext.Vpn;
             _sync = appContext.Sync;
             _turboDownloads = appContext.TurboDownloads;
             _extensions = appContext.Extensions;
@@ -1118,19 +1070,6 @@ namespace DejavuBrowser
                     _activeHudMode = "";
                     _hudPopup.HidePopup(false);
                 }
-            };
-
-            _vpnTelemetryTimer = new System.Windows.Forms.Timer();
-            _vpnTelemetryTimer.Interval = 1000;
-            _vpnTelemetryTimer.Tick += (s, e) =>
-            {
-                if (IsDisposed || _popoverPopup == null || !_popoverPopup.IsPopupOpen ||
-                    _activePopoverMode != "vpn" || _vpn == null || !_vpn.IsConnected)
-                {
-                    _vpnTelemetryTimer.Stop();
-                    return;
-                }
-                SendVpnPanelState(null);
             };
 
             _memorySaverTimer = new System.Windows.Forms.Timer();
@@ -1329,7 +1268,6 @@ namespace DejavuBrowser
             if (_tabDeltaTimer != null) { _tabDeltaTimer.Stop(); _tabDeltaTimer.Dispose(); }
             if (_adPulseTimer != null) { _adPulseTimer.Stop(); _adPulseTimer.Dispose(); }
             if (_mediaPushTimer != null) { _mediaPushTimer.Stop(); _mediaPushTimer.Dispose(); }
-            if (_vpnTelemetryTimer != null) { _vpnTelemetryTimer.Stop(); _vpnTelemetryTimer.Dispose(); }
             if (_downloadHideTimer != null) { _downloadHideTimer.Stop(); _downloadHideTimer.Dispose(); }
             if (_memorySaverTimer != null) { _memorySaverTimer.Stop(); _memorySaverTimer.Dispose(); }
             if (_boundsSaveTimer != null) { _boundsSaveTimer.Stop(); _boundsSaveTimer.Dispose(); }
@@ -1521,9 +1459,6 @@ namespace DejavuBrowser
                 { "favoritesBarHidden", _favoritesBarHidden },
                 { "hideNavRail", _settings.hideNavRail },
                 { "hideFloatingMediaButton", _settings.hideFloatingMediaButton },
-                { "vpnAutoConnect", _settings.vpnAutoConnect },
-                { "vpnMode", _settings.vpnMode ?? "smart" },
-                { "vpnCountry", _settings.vpnCountry ?? "AUTO" },
 
                 // v5.4.0 Appearance & Start Page
                 { "fontSize", _settings.fontSize ?? "medium" },
@@ -1574,8 +1509,7 @@ namespace DejavuBrowser
                 { "autofillAddresses", _settings.autofillAddresses },
                 { "autofillPayments", _settings.autofillPayments },
 
-                // v5.4.0 VPN & System
-                { "vpnWebRtcProtection", _settings.vpnWebRtcProtection },
+                // System & Accessibility
                 { "hardwareAcceleration", _settings.hardwareAcceleration },
                 { "spellcheckEnabled", _settings.spellcheckEnabled },
                 { "devToolsEnabled", _settings.devToolsEnabled }
@@ -1614,28 +1548,8 @@ namespace DejavuBrowser
         {
             _activePopoverMode = "";
             _contextMenuIsShellRelay = false;
-            SyncVpnTelemetryTimer();
             if (_popoverPopup != null) _popoverPopup.HidePopup(keepOwnerForeground);
             if (_extActionPopup != null && _extActionPopup.IsPopupOpen) _extActionPopup.HidePopup(keepOwnerForeground);
-        }
-
-        private void SyncVpnTelemetryTimer()
-        {
-            if (_vpnTelemetryTimer == null) return;
-            bool shouldRun = !IsDisposed &&
-                _popoverPopup != null &&
-                _popoverPopup.IsPopupOpen &&
-                _activePopoverMode == "vpn" &&
-                _vpn != null &&
-                _vpn.IsConnected;
-            if (shouldRun)
-            {
-                if (!_vpnTelemetryTimer.Enabled) _vpnTelemetryTimer.Start();
-            }
-            else
-            {
-                if (_vpnTelemetryTimer.Enabled) _vpnTelemetryTimer.Stop();
-            }
         }
 
         private void HideHud()
@@ -1921,6 +1835,9 @@ namespace DejavuBrowser
             HidePopover();
             HideSuggestPopup();
             CreateTab(isSignUp ? GOOGLE_SIGNUP_URL : GOOGLE_SIGNIN_URL, true);
+            PushShellToast(isSignUp
+                ? "Create your Google Account — dejavu will link your profile automatically"
+                : "Sign in with Google — dejavu will sync your profile & Link automatically", "info");
         }
 
         private Color GetThemeSurfaceColor()
@@ -1940,6 +1857,10 @@ namespace DejavuBrowser
                 if (ac == "rose") return Color.FromArgb(255, 248, 248);
                 if (ac == "lavender") return Color.FromArgb(253, 247, 255);
                 if (ac == "silver") return Color.FromArgb(249, 249, 252);
+                if (ac == "ocean") return Color.FromArgb(244, 250, 254);
+                if (ac == "terracotta") return Color.FromArgb(255, 248, 245);
+                if (ac == "plum") return Color.FromArgb(255, 247, 252);
+                if (ac == "forest") return Color.FromArgb(246, 251, 244);
                 return Color.FromArgb(254, 247, 255);
             }
             if (_isPrivateWindow) return Color.FromArgb(19, 19, 26);
@@ -1954,6 +1875,10 @@ namespace DejavuBrowser
             if (ac == "rose") return Color.FromArgb(24, 17, 20);
             if (ac == "lavender") return Color.FromArgb(22, 18, 25);
             if (ac == "silver") return Color.FromArgb(18, 19, 22);
+            if (ac == "ocean") return Color.FromArgb(14, 20, 23);
+            if (ac == "terracotta") return Color.FromArgb(24, 18, 15);
+            if (ac == "plum") return Color.FromArgb(23, 17, 23);
+            if (ac == "forest") return Color.FromArgb(16, 21, 16);
             return Color.FromArgb(20, 18, 24);
         }
 
@@ -2693,17 +2618,6 @@ namespace DejavuBrowser
             }
         }
 
-        public void HandleAppVpnStateChanged()
-        {
-            if (IsDisposed) return;
-            PushFullStateToShell();
-            if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "vpn")
-            {
-                SendVpnPanelState(null);
-            }
-            SyncVpnTelemetryTimer();
-        }
-
         private async Task InitializeShellViewAsync()
         {
             await _shellView.EnsureCoreWebView2Async(_shellEnv);
@@ -2777,7 +2691,6 @@ namespace DejavuBrowser
                     {
                         CancelPendingExtInstall(_pendingExtStageId, false);
                     }
-                    SyncVpnTelemetryTimer();
                 };
                 await _popoverPopup.InitializeAsync(_shellEnv, HandleVirtualResource);
 
@@ -2925,6 +2838,7 @@ namespace DejavuBrowser
             {
                 if (_isHtmlFullscreen && active != null && !active.IsNewTab && active.WebView != null && !active.WebView.IsDisposed)
                 {
+                    if (_splitDivider != null && _splitDivider.Visible) _splitDivider.Visible = false;
                     if (active.WebView.Bounds != fullRect) active.WebView.Bounds = fullRect;
                     if (!active.WebView.Visible) active.WebView.Visible = true;
                     if (Controls.GetChildIndex(active.WebView) != 0) active.WebView.BringToFront();
@@ -2954,6 +2868,7 @@ namespace DejavuBrowser
 
                 if (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab)
                 {
+                    if (_splitDivider != null && _splitDivider.Visible) _splitDivider.Visible = false;
                     if (Controls.GetChildIndex(_shellView) != 0) _shellView.BringToFront();
                     for (int i = 0; i < _tabs.Count; i++)
                     {
@@ -2975,23 +2890,69 @@ namespace DejavuBrowser
                         Math.Max(1, w - rim * 2 - railW),
                         Math.Max(1, h - topH - rim));
 
-                    // Show & position the newly active WebView FIRST (before hiding the previous WebView)
-                    // so rapid tab switches between live websites have ZERO 1-frame flash of the underlying surface!
-                    if (active.WebView != null && !active.WebView.IsDisposed)
+                    BrowserTab splitLeft;
+                    BrowserTab splitRight;
+                    if (TryGetActiveSplitPair(out splitLeft, out splitRight) &&
+                        contentRect.Width >= (int)Math.Round(420 * DpiScale))
                     {
-                        if (active.WebView.Bounds != contentRect) active.WebView.Bounds = contentRect;
-                        if (!active.WebView.Visible) active.WebView.Visible = true;
-                        if (Controls.GetChildIndex(active.WebView) != 0) active.WebView.BringToFront();
-                    }
+                        EnsureSplitDivider();
+                        int divW = Math.Max(6, (int)Math.Round(8 * DpiScale));
+                        int availW = Math.Max(200, contentRect.Width - divW);
+                        int minPane = Math.Min(180, availW / 3);
+                        int leftW = Math.Max(minPane, Math.Min(availW - minPane, (int)Math.Round(availW * _splitRatio)));
+                        int rightW = Math.Max(1, availW - leftW);
 
-                    for (int i = 0; i < _tabs.Count; i++)
-                    {
-                        BrowserTab t = _tabs[i];
-                        if (t.Id == active.Id || t.WebView == null || t.WebView.IsDisposed) continue;
-                        if (t.WebView.Visible)
+                        Rectangle leftRect = new Rectangle(contentRect.X, contentRect.Y, leftW, contentRect.Height);
+                        Rectangle divRect = new Rectangle(contentRect.X + leftW, contentRect.Y, divW, contentRect.Height);
+                        Rectangle rightRect = new Rectangle(contentRect.X + leftW + divW, contentRect.Y, rightW, contentRect.Height);
+
+                        if (splitLeft.WebView.Bounds != leftRect) splitLeft.WebView.Bounds = leftRect;
+                        if (!splitLeft.WebView.Visible) splitLeft.WebView.Visible = true;
+                        splitLeft.WebView.BringToFront();
+
+                        if (splitRight.WebView.Bounds != rightRect) splitRight.WebView.Bounds = rightRect;
+                        if (!splitRight.WebView.Visible) splitRight.WebView.Visible = true;
+                        splitRight.WebView.BringToFront();
+
+                        _splitDivider.BackColor = GetThemeSurfaceColor();
+                        if (_splitDivider.Bounds != divRect) _splitDivider.Bounds = divRect;
+                        if (!_splitDivider.Visible) _splitDivider.Visible = true;
+                        _splitDivider.BringToFront();
+                        _splitDivider.Invalidate();
+
+                        for (int i = 0; i < _tabs.Count; i++)
                         {
-                            if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
-                            t.WebView.Visible = false;
+                            BrowserTab t = _tabs[i];
+                            if (t.Id == splitLeft.Id || t.Id == splitRight.Id || t.WebView == null || t.WebView.IsDisposed) continue;
+                            if (t.WebView.Visible)
+                            {
+                                if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
+                                t.WebView.Visible = false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (_splitDivider != null && _splitDivider.Visible) _splitDivider.Visible = false;
+
+                        // Show & position the newly active WebView FIRST (before hiding the previous WebView)
+                        // so rapid tab switches between live websites have ZERO 1-frame flash of the underlying surface!
+                        if (active.WebView != null && !active.WebView.IsDisposed)
+                        {
+                            if (active.WebView.Bounds != contentRect) active.WebView.Bounds = contentRect;
+                            if (!active.WebView.Visible) active.WebView.Visible = true;
+                            if (Controls.GetChildIndex(active.WebView) != 0) active.WebView.BringToFront();
+                        }
+
+                        for (int i = 0; i < _tabs.Count; i++)
+                        {
+                            BrowserTab t = _tabs[i];
+                            if (t.Id == active.Id || t.WebView == null || t.WebView.IsDisposed) continue;
+                            if (t.WebView.Visible)
+                            {
+                                if (t.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
+                                t.WebView.Visible = false;
+                            }
                         }
                     }
                 }
@@ -3299,6 +3260,12 @@ namespace DejavuBrowser
             if (idx < 0) return;
 
             BrowserTab tab = _tabs[idx];
+            if (tabId == _splitLeftTabId || tabId == _splitRightTabId)
+            {
+                _splitLeftTabId = -1;
+                _splitRightTabId = -1;
+                if (_splitDivider != null && _splitDivider.Visible) _splitDivider.Visible = false;
+            }
             if (recordHistory && !tab.IsNewTab)
             {
                 RecordClosedTab(tab);
@@ -3886,6 +3853,15 @@ namespace DejavuBrowser
             bool shouldShow = (tab.Id == _activeTabId && !tab.IsNewTab && !_tabOverviewOpen && !_settingsOpen && !_dlManagerOpen && !_extensionsOpen && !_linkOpen);
             wv.Visible = shouldShow;
             wv.KeyDown += OnWebViewKeyDown;
+            wv.GotFocus += (s, e) =>
+            {
+                if (!IsDisposed && _activeTabId != tab.Id &&
+                    (tab.Id == _splitLeftTabId || tab.Id == _splitRightTabId))
+                {
+                    _activeTabId = tab.Id;
+                    SchedulePushTabDeltaToShell();
+                }
+            };
             int topH = TopBarHeightPx;
             int railW = NavRailWidthPx;
             int rim = GetNativeResizeRimPx();
@@ -4198,7 +4174,21 @@ namespace DejavuBrowser
                     SchedulePushTabDeltaToShell();
                 };
 
-                core.HistoryChanged += (s, e) => SchedulePushTabDeltaToShell();
+                core.HistoryChanged += (s, e) =>
+                {
+                    SchedulePushTabDeltaToShell();
+                    try
+                    {
+                        string src = core.Source;
+                        if (!string.IsNullOrEmpty(src) && IsGoogleAccountHost(src) &&
+                            _profiles != null && _profiles.ActiveProfile != null && !_profiles.ActiveProfile.isGoogleSignedIn)
+                        {
+                            tab.Url = src;
+                            ScheduleGoogleAccountDetection(tab);
+                        }
+                    }
+                    catch { }
+                };
                 core.IsDocumentPlayingAudioChanged += (s, e) => SchedulePushTabDeltaToShell();
                 core.IsMutedChanged += (s, e) =>
                 {
@@ -5755,7 +5745,6 @@ namespace DejavuBrowser
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildShieldPayloadJson(), true);
-            SyncVpnTelemetryTimer();
         }
 
         private void ShowProfilesPopoverAt(int anchorRightCss)
@@ -5787,7 +5776,6 @@ namespace DejavuBrowser
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildProfilesPayloadJson(""), true);
             SchedulePushFullStateToShell();
-            SyncVpnTelemetryTimer();
         }
 
         private string BuildProfilesPayloadJson(string backdrop)
@@ -5852,7 +5840,6 @@ namespace DejavuBrowser
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildHistoryPayloadJson(""), true);
-            SyncVpnTelemetryTimer();
         }
 
         private void SetLinkOpen(bool open)
@@ -5897,7 +5884,6 @@ namespace DejavuBrowser
 
             Point screenPt = PointToScreen(new Point(x, y));
             _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildSyncPayloadJson(""), true);
-            SyncVpnTelemetryTimer();
             _sync.SendPingAsync();
             PublishOpenTabsToSync();
         }
@@ -6125,6 +6111,18 @@ namespace DejavuBrowser
                     PushFullStateToShell();
                     SendSyncPanelState(null);
                     PushShellToast("Synced across your devices", "success");
+                }
+                return true;
+            }
+            if (type == "syncReconnect")
+            {
+                if (_sync != null)
+                {
+                    _sync.ReconnectRelay();
+                    SyncAllCollectionsToMobile();
+                    PushFullStateToShell();
+                    SendSyncPanelState(null);
+                    PushShellToast("Reconnecting dual-broker dejavu Link relay...", "info");
                 }
                 return true;
             }
@@ -6596,105 +6594,6 @@ namespace DejavuBrowser
             _downloadHideTimer.Start();
         }
 
-        private void ShowVpnPopoverAt(int anchorRightCss)
-        {
-            if (_popoverPopup == null) return;
-            if (_popoverPopup.IsPopupOpen && _activePopoverMode == "vpn")
-            {
-                HidePopover();
-                return;
-            }
-            if (ShouldSkipToggleReopen("vpn")) return;
-
-            CloseExclusiveModals(true, false, false, false);
-            _activePopoverMode = "vpn";
-            float sc = DpiScale;
-            int popW = (int)Math.Round(392 * sc);
-            int y = GetToolbarPopoverTopPx(sc);
-            int maxH = Math.Max((int)Math.Round(320 * sc), ClientSize.Height - y - (int)Math.Round(12 * sc));
-            int popH = Math.Min(maxH, (int)Math.Round(584 * sc));
-            int anchorRightPx = (int)Math.Round(anchorRightCss * sc);
-            int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorRightPx - popW));
-
-            BrowserTab active = GetActiveTab();
-            bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab);
-            _popoverPopup.UpdateSurfaceTheme(GetEffectiveIsLight(active, captureShell), GetThemeSurfaceColor());
-
-            Point screenPt = PointToScreen(new Point(x, y));
-            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildVpnPayloadJson(""), true);
-            SyncVpnTelemetryTimer();
-        }
-
-        private string BuildVpnPayloadJson(string backdrop)
-        {
-            return BuildVpnPayloadJson(backdrop, null);
-        }
-
-        private string BuildVpnPayloadJson(string backdrop, VpnVerifyResult verifyResult)
-        {
-            BrowserTab tab = GetActiveTab();
-            VpnStatusSnapshot snap = _vpn.GetSnapshot();
-            var payload = new Dictionary<string, object>
-            {
-                { "mode", "vpn" },
-                { "isLight", GetEffectiveIsLight(tab, tab == null || tab.IsNewTab) },
-                { "accentColor", _settings.accentColor ?? "amethyst" },
-                { "vpn", snap }
-            };
-            if (backdrop != null) payload["backdrop"] = backdrop;
-            if (verifyResult != null)
-            {
-                payload["verifyResult"] = new Dictionary<string, object>
-                {
-                    { "ok", verifyResult.ok },
-                    { "exitIp", verifyResult.exitIp ?? "" },
-                    { "latencyMs", verifyResult.latencyMs },
-                    { "engine", verifyResult.engine ?? "smart" },
-                    { "message", verifyResult.message ?? "" }
-                };
-            }
-            return _json.Serialize(payload);
-        }
-
-        private void SendVpnPanelState(string backdrop)
-        {
-            if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "vpn")
-            {
-                _popoverPopup.UpdateState(BuildVpnPayloadJson(backdrop, null));
-            }
-        }
-
-        private async Task HandleVerifyVpnTunnelAsync()
-        {
-            if (_vpn == null || IsDisposed) return;
-            VpnVerifyResult res = await _vpn.VerifyActiveTunnelAsync();
-            if (IsDisposed) return;
-            Action apply = () =>
-            {
-                if (IsDisposed) return;
-                PushFullStateToShell();
-                if (_shellReady && _shellView != null && !_shellView.IsDisposed && _shellView.CoreWebView2 != null)
-                {
-                    var shellMsg = new Dictionary<string, object>
-                    {
-                        { "type", "vpnVerifyResult" },
-                        { "ok", res.ok },
-                        { "exitIp", res.exitIp ?? "" },
-                        { "latencyMs", res.latencyMs },
-                        { "engine", res.engine ?? "smart" },
-                        { "message", res.message ?? "" }
-                    };
-                    try { _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(shellMsg)); } catch { }
-                }
-                if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "vpn")
-                {
-                    _popoverPopup.UpdateState(BuildVpnPayloadJson(null, res));
-                }
-            };
-            if (InvokeRequired) BeginInvoke(apply);
-            else apply();
-        }
-
         private void HideSuggestPopup()
         {
             if (_suggestCts != null)
@@ -6751,14 +6650,14 @@ namespace DejavuBrowser
                 PushNewTabSuggestionsToShell(seq, local);
             }
 
-            // Phase 2: Async live search suggestions (90ms debounce, zero IP leak when VPN is ON!)
+            // Phase 2: Async live search suggestions (90ms debounce)
             try
             {
                 await Task.Delay(90, token);
                 if (token.IsCancellationRequested || seq != _suggestSeq) return;
 
                 List<SuggestItem> merged = await _suggest.MergeWithLiveSuggestionsAsync(
-                    trimmed, _settings.searchEngine, local, _vpn.IsBusyOrConnected, _vpn.ActiveUpstreamEndpoint, token);
+                    trimmed, _settings.searchEngine, local, token);
 
                 if (token.IsCancellationRequested || seq != _suggestSeq || IsDisposed) return;
 
@@ -7070,7 +6969,8 @@ namespace DejavuBrowser
                 {
                     if (key == Keys.I || key == Keys.N || key == Keys.T || key == Keys.B ||
                         key == Keys.L || key == Keys.R || key == Keys.O || key == Keys.OemPipe ||
-                        key == Keys.D || key == Keys.M || key == Keys.Tab)
+                        key == Keys.D || key == Keys.M || key == Keys.Tab ||
+                        key == Keys.V || key == Keys.A || key == Keys.S)
                     {
                         return true;
                     }
@@ -7141,6 +7041,9 @@ namespace DejavuBrowser
                 if (shift && (key == Keys.O || key == Keys.OemPipe)) { ToggleTabOverviewAsync(!_tabOverviewOpen); return true; }
                 if (shift && key == Keys.D) { ToggleReadingListActiveTab(); return true; }
                 if (shift && key == Keys.M) { ShowProfilesPopoverAt((int)(ClientSize.Width / DpiScale) - 108); return true; }
+                if (shift && key == Keys.V) { ToggleSplitView(); return true; }
+                if (shift && key == Keys.A) { ShowTabSearchPopoverAt((int)(ClientSize.Width / DpiScale) - 160); return true; }
+                if (shift && key == Keys.S) { CaptureVisiblePageAsync(false); return true; }
 
                 if (!shift && key == Keys.Oemcomma) { SetSettingsOpen(!_settingsOpen, string.IsNullOrEmpty(_settingsPane) ? "you" : _settingsPane); return true; }
                 if (!shift && key == Keys.T) { CreateDefaultNewTab(true); return true; }
@@ -7368,32 +7271,6 @@ namespace DejavuBrowser
                 bool g = Convert.ToBoolean(msg["globalAdBlockEnabled"]);
                 if (_adBlocker.GlobalEnabled != g) _adBlocker.SetGlobalEnabled(g);
             }
-            if (msg.ContainsKey("vpnAutoConnect"))
-            {
-                _settings.vpnAutoConnect = Convert.ToBoolean(msg["vpnAutoConnect"]);
-                if (_vpn != null) _vpn.AutoConnect = _settings.vpnAutoConnect;
-            }
-            if (msg.ContainsKey("vpnMode"))
-            {
-                string vm = VpnManager.NormalizeMode(Convert.ToString(msg["vpnMode"]));
-                if (!string.Equals(_settings.vpnMode, vm, StringComparison.OrdinalIgnoreCase))
-                {
-                    _settings.vpnMode = vm;
-                    if (_vpn != null)
-                    {
-                        Task ignoredMode = _vpn.SetModeAsync(vm);
-                    }
-                }
-            }
-            if (msg.ContainsKey("vpnCountry"))
-            {
-                string cc = Convert.ToString(msg["vpnCountry"]);
-                if (!string.IsNullOrEmpty(cc))
-                {
-                    _settings.vpnCountry = cc;
-                    if (_vpn != null) _vpn.SetCountryPreferenceOnly(cc);
-                }
-            }
 
             // v5.4.0 Appearance & Start Page
             if (msg.ContainsKey("fontSize"))
@@ -7557,9 +7434,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("autofillPayments"))
                 _settings.autofillPayments = Convert.ToBoolean(msg["autofillPayments"]);
 
-            // v5.4.0 VPN & System
-            if (msg.ContainsKey("vpnWebRtcProtection"))
-                _settings.vpnWebRtcProtection = Convert.ToBoolean(msg["vpnWebRtcProtection"]);
+            // System & Accessibility
             if (msg.ContainsKey("hardwareAcceleration"))
                 _settings.hardwareAcceleration = Convert.ToBoolean(msg["hardwareAcceleration"]);
             if (msg.ContainsKey("spellcheckEnabled"))
@@ -7801,7 +7676,6 @@ namespace DejavuBrowser
             _settings = fresh;
             _appContext.Settings = fresh;
             _adBlocker.SwitchProfileSettings(_settings, _profiles.ActiveSettingsPath);
-            if (_vpn != null) _vpn.AutoConnect = _settings.vpnAutoConnect;
 
             InvalidateCustomWallpaperCache();
             ApplyThemeToAllTabs();
@@ -7821,7 +7695,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.10.0 defaults", "success");
+            PushShellToast("Settings restored to v5.11.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -8247,10 +8121,361 @@ namespace DejavuBrowser
             PushFullStateToShell();
         }
 
+        private bool TryGetActiveSplitPair(out BrowserTab leftTab, out BrowserTab rightTab)
+        {
+            leftTab = null;
+            rightTab = null;
+            if (_splitLeftTabId <= 0 || _splitRightTabId <= 0 || _splitLeftTabId == _splitRightTabId) return false;
+            if (_activeTabId != _splitLeftTabId && _activeTabId != _splitRightTabId) return false;
+
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab t = _tabs[i];
+                if (t == null) continue;
+                if (t.Id == _splitLeftTabId) leftTab = t;
+                else if (t.Id == _splitRightTabId) rightTab = t;
+            }
+            if (leftTab == null || rightTab == null)
+            {
+                _splitLeftTabId = -1;
+                _splitRightTabId = -1;
+                return false;
+            }
+            if (!string.Equals(leftTab.GroupId, _activeTabGroupId, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(rightTab.GroupId, _activeTabGroupId, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+            if (leftTab.IsNewTab || rightTab.IsNewTab ||
+                leftTab.WebView == null || leftTab.WebView.IsDisposed ||
+                rightTab.WebView == null || rightTab.WebView.IsDisposed)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private bool IsSplitViewActiveNow()
+        {
+            BrowserTab l;
+            BrowserTab r;
+            return TryGetActiveSplitPair(out l, out r);
+        }
+
+        private void EnsureSplitDivider()
+        {
+            if (_splitDivider != null && !_splitDivider.IsDisposed) return;
+            _splitDivider = new Panel();
+            _splitDivider.Cursor = Cursors.SizeWE;
+            _splitDivider.Visible = false;
+            _splitDivider.BackColor = GetThemeSurfaceColor();
+            _splitDivider.Paint += (s, e) =>
+            {
+                Graphics g = e.Graphics;
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                bool isLight = GetEffectiveIsLight(GetActiveTab(), false);
+                Color handleCol = isLight ? Color.FromArgb(165, 118, 115, 130) : Color.FromArgb(155, 178, 172, 196);
+                int pw = Math.Max(3, Math.Min(4, _splitDivider.Width - 3));
+                int ph = Math.Min(48, Math.Max(24, _splitDivider.Height / 10));
+                int px = (_splitDivider.Width - pw) / 2;
+                int py = (_splitDivider.Height - ph) / 2;
+                using (SolidBrush br = new SolidBrush(handleCol))
+                using (System.Drawing.Drawing2D.GraphicsPath gp = new System.Drawing.Drawing2D.GraphicsPath())
+                {
+                    int rad = pw;
+                    gp.AddArc(px, py, rad, rad, 180, 180);
+                    gp.AddArc(px, py + ph - rad, rad, rad, 0, 180);
+                    gp.CloseFigure();
+                    g.FillPath(br, gp);
+                }
+            };
+            _splitDivider.MouseDown += (s, e) =>
+            {
+                if (e.Button != MouseButtons.Left) return;
+                _isDraggingSplitDivider = true;
+                _splitDragStartX = Control.MousePosition.X;
+                _splitDragStartRatio = _splitRatio;
+                _splitDivider.Capture = true;
+            };
+            _splitDivider.MouseMove += (s, e) =>
+            {
+                if (!_isDraggingSplitDivider) return;
+                int availW = Math.Max(200, ClientSize.Width - NavRailWidthPx - GetNativeResizeRimPx() * 2);
+                int dx = Control.MousePosition.X - _splitDragStartX;
+                float next = _splitDragStartRatio + ((float)dx / (float)availW);
+                if (next < 0.24f) next = 0.24f;
+                if (next > 0.76f) next = 0.76f;
+                if (Math.Abs(next - _splitRatio) > 0.002f)
+                {
+                    _splitRatio = next;
+                    LayoutViews();
+                }
+            };
+            _splitDivider.MouseUp += (s, e) =>
+            {
+                _isDraggingSplitDivider = false;
+                try { _splitDivider.Capture = false; } catch { }
+            };
+            _splitDivider.DoubleClick += (s, e) =>
+            {
+                _splitRatio = 0.50f;
+                LayoutViews();
+            };
+            Controls.Add(_splitDivider);
+        }
+
+        private void ToggleSplitView()
+        {
+            if (IsSplitViewActiveNow())
+            {
+                ExitSplitView();
+                return;
+            }
+
+            BrowserTab active = GetActiveTab();
+            if (active == null) return;
+            CloseExclusiveModals(true, false, false, false);
+
+            // If active tab is Start Page, find two web tabs or open Google in active tab
+            if (active.IsNewTab)
+            {
+                List<BrowserTab> webTabs = new List<BrowserTab>();
+                for (int i = 0; i < _tabs.Count; i++)
+                {
+                    BrowserTab t = _tabs[i];
+                    if (t != null && !t.IsNewTab && string.Equals(t.GroupId, _activeTabGroupId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        webTabs.Add(t);
+                    }
+                }
+                if (webTabs.Count >= 2)
+                {
+                    _splitLeftTabId = webTabs[0].Id;
+                    _splitRightTabId = webTabs[1].Id;
+                    _splitRatio = 0.50f;
+                    ActivateTab(webTabs[0].Id);
+                    PushFullStateToShell();
+                    PushShellToast("Split View active — drag center handle to resize", "info");
+                    return;
+                }
+                NavigateActiveTab("https://www.google.com/");
+                active = GetActiveTab();
+            }
+
+            // Look for another live web tab in this group to pair on the right
+            BrowserTab partner = null;
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab t = _tabs[i];
+                if (t != null && t.Id != active.Id && !t.IsNewTab &&
+                    string.Equals(t.GroupId, _activeTabGroupId, StringComparison.OrdinalIgnoreCase))
+                {
+                    partner = t;
+                    break;
+                }
+            }
+
+            if (partner == null)
+            {
+                CreateTab("https://www.google.com/", false);
+                if (_tabs.Count > 0)
+                {
+                    BrowserTab last = _tabs[_tabs.Count - 1];
+                    if (last != null && last.Id != active.Id) partner = last;
+                }
+            }
+            if (partner == null) return;
+
+            _splitLeftTabId = active.Id;
+            _splitRightTabId = partner.Id;
+            _splitRatio = 0.50f;
+            _activeTabId = active.Id;
+            LayoutViews();
+            PushFullStateToShell();
+            PushShellToast("Split View active — click either pane or drag center handle", "info");
+        }
+
+        private void SplitTabWithCurrent(int targetTabId)
+        {
+            BrowserTab active = GetActiveTab();
+            BrowserTab target = FindTab(targetTabId);
+            if (target == null) return;
+            if (target.IsNewTab)
+            {
+                ActivateTab(target.Id);
+                ToggleSplitView();
+                return;
+            }
+            if (active == null || active.Id == target.Id || active.IsNewTab)
+            {
+                ActivateTab(target.Id);
+                ToggleSplitView();
+                return;
+            }
+            CloseExclusiveModals(true, false, false, false);
+            _splitLeftTabId = active.Id;
+            _splitRightTabId = target.Id;
+            _splitRatio = 0.50f;
+            _activeTabId = target.Id;
+            LayoutViews();
+            PushFullStateToShell();
+            PushShellToast("Opened side-by-side in Split View", "info");
+        }
+
+        private void SwapSplitPanes()
+        {
+            if (_splitLeftTabId <= 0 || _splitRightTabId <= 0) return;
+            int tmp = _splitLeftTabId;
+            _splitLeftTabId = _splitRightTabId;
+            _splitRightTabId = tmp;
+            _splitRatio = 1.0f - _splitRatio;
+            LayoutViews();
+            PushFullStateToShell();
+        }
+
+        private void ExitSplitView()
+        {
+            _splitLeftTabId = -1;
+            _splitRightTabId = -1;
+            if (_splitDivider != null && _splitDivider.Visible) _splitDivider.Visible = false;
+            LayoutViews();
+            PushFullStateToShell();
+        }
+
+        private void ShowTabSearchPopoverAt(int anchorRightCss)
+        {
+            if (_popoverPopup == null) return;
+            if (_popoverPopup.IsPopupOpen && _activePopoverMode == "tabsearch")
+            {
+                HidePopover();
+                return;
+            }
+            if (ShouldSkipToggleReopen("tabsearch")) return;
+
+            CloseExclusiveModals(true, false, false, false);
+            _activePopoverMode = "tabsearch";
+            float sc = DpiScale;
+            int popW = (int)Math.Round(376 * sc);
+            bool compact = (_settings != null && _settings.compactTabBar);
+            int y = (int)Math.Round((compact ? 40 : 44) * sc);
+            int maxPopH = Math.Max((int)Math.Round(280 * sc), ClientSize.Height - y - (int)Math.Round(12 * sc));
+            int popH = Math.Min(maxPopH, (int)Math.Round(488 * sc));
+            int anchorPx = (int)Math.Round(anchorRightCss * sc);
+            int x = Math.Max((int)(10 * sc), Math.Min(ClientSize.Width - popW - (int)(10 * sc), anchorPx - popW / 2));
+
+            BrowserTab active = GetActiveTab();
+            bool captureShell = (_tabOverviewOpen || _settingsOpen || _dlManagerOpen || _extensionsOpen || _linkOpen || active == null || active.IsNewTab);
+            _popoverPopup.UpdateSurfaceTheme(GetEffectiveIsLight(active, captureShell), GetThemeSurfaceColor());
+
+            Point screenPt = PointToScreen(new Point(x, y));
+            _popoverPopup.ShowAt(new Rectangle(screenPt.X, screenPt.Y, popW, popH), BuildTabSearchPayloadJson(), true);
+        }
+
+        private string BuildTabSearchPayloadJson()
+        {
+            BrowserTab active = GetActiveTab();
+            bool isLight = GetEffectiveIsLight(active, _tabOverviewOpen || _settingsOpen || active == null || active.IsNewTab);
+            List<Dictionary<string, object>> openList = new List<Dictionary<string, object>>();
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab t = _tabs[i];
+                if (t == null) continue;
+                openList.Add(new Dictionary<string, object>
+                {
+                    { "id", t.Id },
+                    { "title", t.IsNewTab ? "Start Page" : (string.IsNullOrEmpty(t.Title) ? FormatDisplayUrl(t.Url) : t.Title) },
+                    { "url", t.Url ?? "" },
+                    { "host", t.IsNewTab ? "dejavu Start Page" : FormatDisplayUrl(t.Url) },
+                    { "favicon", t.Favicon ?? "" },
+                    { "isNewTab", t.IsNewTab },
+                    { "isActive", t.Id == _activeTabId },
+                    { "isSplit", t.Id == _splitLeftTabId || t.Id == _splitRightTabId }
+                });
+            }
+
+            List<Dictionary<string, object>> closedList = new List<Dictionary<string, object>>();
+            ClosedTabInfo[] closedArr = _closedTabs.ToArray();
+            int maxClosed = Math.Min(closedArr.Length, 12);
+            for (int i = 0; i < maxClosed; i++)
+            {
+                ClosedTabInfo c = closedArr[i];
+                if (c == null || string.IsNullOrEmpty(c.Url)) continue;
+                closedList.Add(new Dictionary<string, object>
+                {
+                    { "index", i },
+                    { "title", string.IsNullOrEmpty(c.Title) ? FormatDisplayUrl(c.Url) : c.Title },
+                    { "url", c.Url },
+                    { "host", FormatDisplayUrl(c.Url) }
+                });
+            }
+
+            var payload = new Dictionary<string, object>
+            {
+                { "mode", "tabsearch" },
+                { "isLight", isLight },
+                { "accentColor", _settings.accentColor ?? "amethyst" },
+                { "openTabs", openList },
+                { "closedTabs", closedList },
+                { "splitViewActive", IsSplitViewActiveNow() }
+            };
+            return _json.Serialize(payload);
+        }
+
+        private async void CaptureVisiblePageAsync(bool copyToClipboard)
+        {
+            BrowserTab tab = GetActiveTab();
+            if (tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed)
+            {
+                PushShellToast("Open a webpage first to capture a screenshot", "info");
+                return;
+            }
+            try
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    await tab.WebView.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, ms);
+                    ms.Position = 0;
+                    if (copyToClipboard)
+                    {
+                        using (System.Drawing.Image img = System.Drawing.Image.FromStream(ms))
+                        {
+                            Clipboard.SetImage(img);
+                        }
+                        PushShellToast("Page screenshot copied to clipboard", "success");
+                    }
+                    else
+                    {
+                        string picDir = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+                        if (string.IsNullOrEmpty(picDir) || !Directory.Exists(picDir))
+                        {
+                            picDir = _turboDownloads != null ? _turboDownloads.DownloadsDirectory : Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                        }
+                        string outDir = Path.Combine(picDir, "dejavu Screenshots");
+                        Directory.CreateDirectory(outDir);
+                        string host = AdBlocker.ExtractHost(tab.Url);
+                        if (string.IsNullOrEmpty(host)) host = "page";
+                        char[] bad = Path.GetInvalidFileNameChars();
+                        for (int b = 0; b < bad.Length; b++) host = host.Replace(bad[b], '_');
+                        string fname = "dejavu-" + host + "-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".png";
+                        string fullPath = Path.Combine(outDir, fname);
+                        File.WriteAllBytes(fullPath, ms.ToArray());
+                        PushShellToast("Saved screenshot: " + fname + " (Pictures\\dejavu Screenshots)", "success");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                PushShellToast("Screenshot failed: " + ex.Message, "error");
+            }
+        }
+
         private async void ToggleReaderModeActiveTabAsync()
         {
             BrowserTab tab = GetActiveTab();
             if (tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed) return;
+
+            bool startLight = GetEffectiveIsLight(tab, false);
+            string initTheme = startLight ? "light" : "dark";
 
             string readerJs =
                 "(function(){" +
@@ -8260,42 +8485,61 @@ namespace DejavuBrowser
                 "var root=document.querySelector('#mw-content-text .mw-parser-output,article,[role=\"main\"] article,main,.post-content,.article-body,.entry-content')||document.body;" +
                 "var h1=(document.querySelector('#firstHeading,article h1,main h1,h1')||{textContent:document.title}).textContent.trim();" +
                 "var host=location.hostname.replace(/^www\\./,'');" +
-                "var nodes=root.querySelectorAll('h2,h3,p,blockquote,pre');" +
-                "var parts=[];var seen={};" +
-                "for(var i=0;i<nodes.length&&parts.length<120;i++){" +
+                "var nodes=root.querySelectorAll('h2,h3,p,blockquote,pre,li');" +
+                "var parts=[];var seen={};var words=0;" +
+                "for(var i=0;i<nodes.length&&parts.length<160;i++){" +
                 "  var n=nodes[i];" +
                 "  if(n.closest('nav,aside,.toc,.vector-toc,.navbox,.infobox,.sidebar,.hatnote,.mw-editsection,.reflist,.references,footer,header'))continue;" +
+                "  var tag=n.tagName.toLowerCase();" +
+                "  if(tag==='li'&&n.querySelector('a')&&(n.textContent||'').trim().length<40)continue;" +
                 "  var clone=n.cloneNode(true);" +
                 "  clone.querySelectorAll('.mw-editsection,sup.reference,style,script').forEach(function(x){x.remove();});" +
                 "  var t=(clone.textContent||'').replace(/\\s+/g,' ').trim();" +
-                "  var tag=n.tagName.toLowerCase();" +
-                "  if(tag==='p'&&t.length<35)continue;" +
+                "  if((tag==='p'||tag==='li')&&t.length<32)continue;" +
                 "  if(t.length<6||seen[t])continue;seen[t]=1;" +
-                "  parts.push('<'+tag+'>'+t.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</'+tag+'>');" +
+                "  words+=t.split(/\\s+/).length;" +
+                "  var outTag=tag==='li'?'p':tag;" +
+                "  parts.push('<'+outTag+'>'+t.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</'+outTag+'>');" +
                 "}" +
-                "if(parts.length===0){parts.push('<p>'+(document.body.innerText||'').slice(0,5000).replace(/</g,'&lt;')+'</p>');}" +
+                "if(parts.length===0){var fb=(document.body.innerText||'').slice(0,6000);words=fb.split(/\\s+/).length;parts.push('<p>'+fb.replace(/</g,'&lt;')+'</p>');}" +
+                "var mins=Math.max(1,Math.round(words/215));" +
+                "var THEMES={dark:{bg:'#141218',fg:'#e6e0e9',bar:'#211f26',barFg:'#e6e0e9',bd:'rgba(202,196,208,0.16)',pri:'#d0bcff',onPri:'#381e72'},sepia:{bg:'#f7efe2',fg:'#2c2419',bar:'#ede2cf',barFg:'#2c2419',bd:'rgba(94,76,52,0.18)',pri:'#8a5600',onPri:'#ffffff'},light:{bg:'#fef7ff',fg:'#1d1b20',bar:'#f3edf7',barFg:'#1d1b20',bd:'rgba(73,69,79,0.16)',pri:'#6750a4',onPri:'#ffffff'}};" +
+                "var curT='" + initTheme + "';var sz=19;var fontIdx=0;var widthIdx=1;" +
+                "var FONTS=[{lbl:'Sans',val:'\"Google Sans\",\"Segoe UI Variable\",\"Segoe UI\",system-ui,sans-serif'},{lbl:'Serif',val:'Georgia,\"Times New Roman\",serif'},{lbl:'Mono',val:'\"Cascadia Mono\",Consolas,monospace'}];" +
+                "var WIDTHS=[{lbl:'Narrow',val:'600px'},{lbl:'Medium',val:'720px'},{lbl:'Wide',val:'860px'}];" +
                 "var ov=document.createElement('div');ov.id=ID;" +
-                "ov.style.cssText='position:fixed;inset:0;z-index:2147483647;overflow-y:auto;background:#0d0b16;color:#f1ecff;font-family:Georgia,serif;font-size:19px;line-height:1.78;padding:72px 28px 96px;opacity:0;transition:opacity 0.24s cubic-bezier(0.22,1,0.36,1),background 0.22s ease,color 0.22s ease;';" +
-                "var css='<style>#__dejavu_safari_reader__ *{box-sizing:border-box;}#__dj_r_body,#__dj_r_body *{color:inherit!important;background:transparent!important;border:none!important;box-shadow:none!important;text-shadow:none!important;}#__dj_r_body h1{font-size:2.05em!important;line-height:1.18!important;margin:0 0 22px!important;font-weight:700!important;letter-spacing:-0.015em!important;}#__dj_r_body h2{font-size:1.35em!important;line-height:1.3!important;margin:28px 0 12px!important;font-weight:700!important;border-bottom:1px solid rgba(182,136,255,0.22)!important;padding-bottom:6px!important;}#__dj_r_body h3{font-size:1.12em!important;margin:22px 0 8px!important;font-weight:600!important;}#__dj_r_body p{margin:0 0 16px!important;opacity:0.93;}#__dj_r_body blockquote{margin:18px 0!important;padding:4px 0 4px 16px!important;border-left:3px solid #b688ff!important;opacity:0.86;font-style:italic;}</style>';" +
-                "ov.innerHTML=css+'<div style=\"position:fixed;top:14px;right:20px;display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(20,17,34,0.92);border:1px solid rgba(196,164,255,0.36);color:#f4f0ff;font-family:Segoe UI,system-ui,sans-serif;font-size:12px;z-index:2;box-shadow:0 10px 26px rgba(0,0,0,0.45);\">'+'" +
-                "<button data-a=\"dec\" style=\"background:none;border:none;color:#f4f0ff;cursor:pointer;padding:3px 7px;font-size:12px;\">A−</button>'+'" +
-                "<button data-a=\"inc\" style=\"background:none;border:none;color:#f4f0ff;cursor:pointer;padding:3px 7px;font-size:14px;font-weight:600;\">A+</button>'+'" +
-                "<button data-a=\"font\" style=\"background:rgba(255,255,255,0.10);border:none;border-radius:999px;color:#f4f0ff;cursor:pointer;padding:3px 9px;\">Aa</button>'+'" +
-                "<button data-t=\"dark\" style=\"width:18px;height:18px;border-radius:50%;border:1.5px solid #b688ff;background:#0d0b16;cursor:pointer;\"></button>'+'" +
-                "<button data-t=\"sepia\" style=\"width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,0.35);background:#f6eedc;cursor:pointer;\"></button>'+'" +
-                "<button data-t=\"light\" style=\"width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,0.35);background:#ffffff;cursor:pointer;\"></button>'+'" +
-                "<button data-a=\"close\" style=\"background:linear-gradient(135deg,#8b5cf6,#a855f7);border:none;border-radius:999px;color:#fff;cursor:pointer;padding:4px 12px;font-weight:600;\">Done</button></div>'+'" +
-                "<div id=\"__dj_r_body\" style=\"max-width:680px;margin:0 auto;\"><div style=\"font-family:Segoe UI,system-ui,sans-serif;font-size:11.5px;text-transform:uppercase;letter-spacing:0.09em;opacity:0.58;margin-bottom:10px;\">'+host+' · dejavu Reader</div><h1>'+h1.replace(/</g,'&lt;')+'</h1>'+parts.join('')+'</div>';" +
-                "var sz=19,serif=true;" +
+                "ov.style.cssText='position:fixed;inset:0;z-index:2147483647;overflow-y:auto;font-size:19px;line-height:1.78;padding:86px 28px 110px;opacity:0;transition:opacity 0.22s cubic-bezier(0.2,0,0,1),background-color 0.2s ease,color 0.2s ease;';" +
+                "var css='<style>#__dejavu_safari_reader__ *{box-sizing:border-box;}#__dj_r_body,#__dj_r_body *{color:inherit!important;background:transparent!important;border:none!important;box-shadow:none!important;text-shadow:none!important;}#__dj_r_body h1{font-size:2.05em!important;line-height:1.18!important;margin:0 0 22px!important;font-weight:700!important;letter-spacing:-0.02em!important;}#__dj_r_body h2{font-size:1.34em!important;line-height:1.3!important;margin:30px 0 12px!important;font-weight:700!important;padding-bottom:6px!important;border-bottom:1px solid rgba(140,136,154,0.22)!important;}#__dj_r_body h3{font-size:1.12em!important;margin:22px 0 8px!important;font-weight:600!important;}#__dj_r_body p{margin:0 0 18px!important;opacity:0.92;}#__dj_r_body blockquote{margin:20px 0!important;padding:6px 0 6px 18px!important;border-left:3px solid #6750a4!important;opacity:0.86;font-style:italic;}#__dj_r_bar button{height:30px;border:none;border-radius:999px;font-family:\"Google Sans\",\"Segoe UI\",system-ui,sans-serif;font-size:12px;font-weight:600;cursor:pointer;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;}</style>';" +
+                "ov.innerHTML=css+'<div id=\"__dj_r_bar\" style=\"position:fixed;top:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;z-index:2;box-shadow:0 6px 24px rgba(0,0,0,0.22);\">'+'" +
+                "<button data-a=\"dec\" style=\"background:transparent;\">A−</button>'+'" +
+                "<button data-a=\"inc\" style=\"background:transparent;\">A+</button>'+'" +
+                "<button data-a=\"font\" id=\"__dj_r_fbtn\" style=\"background:rgba(128,128,128,0.15);\">Sans</button>'+'" +
+                "<button data-a=\"width\" id=\"__dj_r_wbtn\" style=\"background:rgba(128,128,128,0.15);\">Medium</button>'+'" +
+                "<button data-t=\"dark\" title=\"Dark\" style=\"width:20px;height:20px;padding:0;background:#141218;border:2px solid rgba(150,150,170,0.5);\"></button>'+'" +
+                "<button data-t=\"sepia\" title=\"Sepia\" style=\"width:20px;height:20px;padding:0;background:#f7efe2;border:2px solid rgba(140,115,82,0.45);\"></button>'+'" +
+                "<button data-t=\"light\" title=\"Paper\" style=\"width:20px;height:20px;padding:0;background:#fef7ff;border:2px solid rgba(120,110,140,0.45);\"></button>'+'" +
+                "<button data-a=\"close\" id=\"__dj_r_done\" style=\"padding:0 14px;\">Done</button></div>'+'" +
+                "<div id=\"__dj_r_body\" style=\"max-width:720px;margin:0 auto;\"><div style=\"font-family:Segoe UI,system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:0.04em;opacity:0.62;margin-bottom:12px;text-transform:uppercase;\">'+host+' · ~'+mins+' min read · Googlebook M3 Reader</div><h1>'+h1.replace(/</g,'&lt;')+'</h1>'+parts.join('')+'</div>';" +
+                "function applyR(){" +
+                "  var th=THEMES[curT]||THEMES.dark;" +
+                "  ov.style.background=th.bg;ov.style.color=th.fg;ov.style.fontFamily=FONTS[fontIdx].val;ov.style.fontSize=sz+'px';" +
+                "  var bar=ov.querySelector('#__dj_r_bar');if(bar){bar.style.background=th.bar;bar.style.color=th.barFg;bar.style.border='1px solid '+th.bd;}" +
+                "  var btns=ov.querySelectorAll('#__dj_r_bar button[data-a]');for(var b=0;b<btns.length;b++){if(btns[b].getAttribute('data-a')!=='close')btns[b].style.color=th.barFg;}" +
+                "  var done=ov.querySelector('#__dj_r_done');if(done){done.style.background=th.pri;done.style.color=th.onPri;}" +
+                "  var fb2=ov.querySelector('#__dj_r_fbtn');if(fb2)fb2.textContent=FONTS[fontIdx].lbl;" +
+                "  var wb2=ov.querySelector('#__dj_r_wbtn');if(wb2)wb2.textContent=WIDTHS[widthIdx].lbl;" +
+                "  var bd2=ov.querySelector('#__dj_r_body');if(bd2)bd2.style.maxWidth=WIDTHS[widthIdx].val;" +
+                "}" +
+                "applyR();" +
                 "ov.addEventListener('click',function(e){" +
-                "  var a=e.target.getAttribute('data-a'),t=e.target.getAttribute('data-t');" +
-                "  if(a==='dec'){sz=Math.max(14,sz-2);ov.style.fontSize=sz+'px';}" +
-                "  else if(a==='inc'){sz=Math.min(30,sz+2);ov.style.fontSize=sz+'px';}" +
-                "  else if(a==='font'){serif=!serif;ov.style.fontFamily=serif?'Georgia,serif':'Segoe UI Variable,system-ui,sans-serif';}" +
+                "  var btn=e.target.closest('button');if(!btn)return;" +
+                "  var a=btn.getAttribute('data-a'),t=btn.getAttribute('data-t');" +
+                "  if(a==='dec'){sz=Math.max(15,sz-2);applyR();}" +
+                "  else if(a==='inc'){sz=Math.min(28,sz+2);applyR();}" +
+                "  else if(a==='font'){fontIdx=(fontIdx+1)%FONTS.length;applyR();}" +
+                "  else if(a==='width'){widthIdx=(widthIdx+1)%WIDTHS.length;applyR();}" +
                 "  else if(a==='close'){ov.style.opacity='0';setTimeout(function(){ov.remove();},180);}" +
-                "  else if(t==='dark'){ov.style.background='#0d0b16';ov.style.color='#f1ecff';}" +
-                "  else if(t==='sepia'){ov.style.background='#f6eedc';ov.style.color='#2d2418';}" +
-                "  else if(t==='light'){ov.style.background='#fbfbfd';ov.style.color='#181622';}" +
+                "  else if(t&&THEMES[t]){curT=t;applyR();}" +
                 "});" +
                 "var onEsc=function(e){if(e.key==='Escape'&&document.getElementById(ID)){ov.style.opacity='0';setTimeout(function(){ov.remove();},180);window.removeEventListener('keydown',onEsc);}};" +
                 "window.addEventListener('keydown',onEsc);" +
@@ -8384,12 +8628,12 @@ namespace DejavuBrowser
 
         private void ShowSharePopoverAt(int anchorRightCss)
         {
-            ShowActionMenuPopoverAt("share", anchorRightCss, 292, 430);
+            ShowActionMenuPopoverAt("share", anchorRightCss, 296, 488);
         }
 
         private void ShowMenuPopoverAt(int anchorRightCss)
         {
-            ShowActionMenuPopoverAt("menu", anchorRightCss, 326, 548);
+            ShowActionMenuPopoverAt("menu", anchorRightCss, 326, 608);
         }
 
         private void ShowActionMenuPopoverAt(string modeName, int anchorRightCss, int widthCss, int heightCss)
@@ -8439,6 +8683,7 @@ namespace DejavuBrowser
                 { "canReopenClosedTab", _closedTabs.Count > 0 },
                 { "isPrivateWindow", _isPrivateWindow },
                 { "windowCount", _appContext.WindowCount },
+                { "splitViewActive", IsSplitViewActiveNow() },
                 { "activeProfile", _profiles.ActiveProfile }
             };
 
@@ -10231,10 +10476,6 @@ namespace DejavuBrowser
                             if (!string.IsNullOrEmpty(ua)) req.UserAgent = ua;
                             if (!string.IsNullOrEmpty(referer)) req.Referer = referer;
                             if (!string.IsNullOrEmpty(cookieHeader)) req.Headers["Cookie"] = cookieHeader;
-                            if (_proxyBridge != null && _proxyBridge.VpnEnabled && _proxyBridge.ListenPort > 0)
-                            {
-                                req.Proxy = new WebProxy("http://127.0.0.1:" + _proxyBridge.ListenPort, true);
-                            }
                             using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
                             using (Stream s = resp.GetResponseStream())
                             using (MemoryStream ms = new MemoryStream())
@@ -10455,14 +10696,6 @@ namespace DejavuBrowser
                     case "openHistory":
                         ShowHistoryPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1140);
                         break;
-                    case "openVpn":
-                        ShowVpnPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1100);
-                        break;
-                    case "verifyVpnTunnel":
-                        {
-                            Task ignoredVerify = HandleVerifyVpnTunnelAsync();
-                        }
-                        break;
                     case "openSync":
                         ShowSyncPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1100);
                         break;
@@ -10605,6 +10838,24 @@ namespace DejavuBrowser
                         break;
                     case "toggleReaderMode":
                         ToggleReaderModeActiveTabAsync();
+                        break;
+                    case "toggleSplitView":
+                        ToggleSplitView();
+                        break;
+                    case "splitTabWithCurrent":
+                        SplitTabWithCurrent(msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : _activeTabId);
+                        break;
+                    case "swapSplitPanes":
+                        SwapSplitPanes();
+                        break;
+                    case "exitSplitView":
+                        ExitSplitView();
+                        break;
+                    case "openTabSearch":
+                        ShowTabSearchPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : ((int)(ClientSize.Width / DpiScale) - 140));
+                        break;
+                    case "captureScreenshot":
+                        CaptureVisiblePageAsync(msg.ContainsKey("copy") && Convert.ToBoolean(msg["copy"]));
                         break;
                     case "toggleTabOverview":
                         bool wantOpen = msg.ContainsKey("open") ? Convert.ToBoolean(msg["open"]) : !_tabOverviewOpen;
@@ -11379,47 +11630,6 @@ namespace DejavuBrowser
                         HandleWebContextMenuAction(action, payload);
                     }
                 }
-                else if (type == "toggleVpn")
-                {
-                    await _vpn.ToggleAsync();
-                }
-                else if (type == "selectVpnCountry")
-                {
-                    string code = VpnManager.NormalizeCountryCode(Convert.ToString(msg["code"]));
-                    _settings.vpnCountry = code;
-                    _profiles.SaveActiveSettings(_settings);
-                    await _vpn.ConnectAsync(code);
-                }
-                else if (type == "disconnectVpn")
-                {
-                    _vpn.Disconnect();
-                }
-                else if (type == "rotateVpnIp")
-                {
-                    await _vpn.RotateIdentityAsync();
-                }
-                else if (type == "setVpnAutoConnect")
-                {
-                    bool enabled = msg.ContainsKey("enabled") && Convert.ToBoolean(msg["enabled"]);
-                    _settings.vpnAutoConnect = enabled;
-                    _profiles.SaveActiveSettings(_settings);
-                    _vpn.AutoConnect = enabled;
-                    PushFullStateToShell();
-                    SendVpnPanelState(null);
-                }
-                else if (type == "setVpnMode")
-                {
-                    string mode = VpnManager.NormalizeMode(msg.ContainsKey("mode") ? Convert.ToString(msg["mode"]) : "smart");
-                    _settings.vpnMode = mode;
-                    _profiles.SaveActiveSettings(_settings);
-                    await _vpn.SetModeAsync(mode);
-                    PushFullStateToShell();
-                    SendVpnPanelState(null);
-                }
-                else if (type == "verifyVpnTunnel")
-                {
-                    await HandleVerifyVpnTunnelAsync();
-                }
                 else if (type == "pickSuggestion")
                 {
                     string val = Convert.ToString(msg["value"]);
@@ -11503,6 +11713,51 @@ namespace DejavuBrowser
                 {
                     HidePopover();
                     ToggleReaderModeActiveTabAsync();
+                }
+                else if (type == "captureScreenshot")
+                {
+                    HidePopover();
+                    CaptureVisiblePageAsync(msg.ContainsKey("copy") && Convert.ToBoolean(msg["copy"]));
+                }
+                else if (type == "toggleSplitView")
+                {
+                    HidePopover();
+                    ToggleSplitView();
+                }
+                else if (type == "openTabSearch")
+                {
+                    HidePopover();
+                    ShowTabSearchPopoverAt((int)(ClientSize.Width / DpiScale) - 160);
+                }
+                else if (type == "tabSearchSwitch")
+                {
+                    HidePopover();
+                    int tid = msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : -1;
+                    if (tid > 0) ActivateTab(tid);
+                }
+                else if (type == "tabSearchClose")
+                {
+                    int tid = msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : -1;
+                    if (tid > 0)
+                    {
+                        CloseTab(tid);
+                        if (_popoverPopup != null && _popoverPopup.IsPopupOpen && _activePopoverMode == "tabsearch")
+                        {
+                            _popoverPopup.UpdateState(BuildTabSearchPayloadJson());
+                        }
+                    }
+                }
+                else if (type == "tabSearchSplit")
+                {
+                    HidePopover();
+                    int tid = msg.ContainsKey("id") ? Convert.ToInt32(msg["id"]) : -1;
+                    if (tid > 0) SplitTabWithCurrent(tid);
+                }
+                else if (type == "tabSearchReopen")
+                {
+                    HidePopover();
+                    string u = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : "";
+                    if (!string.IsNullOrWhiteSpace(u)) CreateTab(u, true);
                 }
                 else if (type == "shareTogglePin")
                 {
@@ -11835,7 +12090,8 @@ namespace DejavuBrowser
                     { "isSuspended", core != null && core.IsSuspended },
                     { "zoomPercent", (int)Math.Round(t.ZoomFactor * 100.0) },
                     { "canGoBack", core != null && core.CanGoBack },
-                    { "canGoForward", core != null && core.CanGoForward }
+                    { "canGoForward", core != null && core.CanGoForward },
+                    { "splitPane", t.Id == _splitLeftTabId ? "left" : (t.Id == _splitRightTabId ? "right" : "") }
                 });
             }
             return tabList;
@@ -11877,38 +12133,16 @@ namespace DejavuBrowser
                 { "activeTabUrl", activeUrl },
                 { "activeTabTitle", activeTitle },
                 { "activeTabIsVideoSite", VideoExtractorEngine.IsSupportedVideoSiteUrl(activeUrl) },
-                { "canReopenClosedTab", _closedTabs.Count > 0 }
+                { "canReopenClosedTab", _closedTabs.Count > 0 },
+                { "splitViewActive", IsSplitViewActiveNow() },
+                { "splitLeftTabId", _splitLeftTabId },
+                { "splitRightTabId", _splitRightTabId }
             };
 
             string deltaJson = _json.Serialize(delta);
             if (string.Equals(deltaJson, _lastTabDeltaJson, StringComparison.Ordinal)) return;
             _lastTabDeltaJson = deltaJson;
             try { _shellView.CoreWebView2.PostWebMessageAsJson(deltaJson); } catch { }
-        }
-
-        private static Dictionary<string, object> BuildShellVpnSummary(VpnStatusSnapshot snap)
-        {
-            if (snap == null) return null;
-            return new Dictionary<string, object>
-            {
-                { "state", snap.state ?? "disconnected" },
-                { "mode", snap.mode ?? "smart" },
-                { "activeEngine", snap.activeEngine ?? "smart" },
-                { "countryCode", snap.countryCode ?? "AUTO" },
-                { "countryName", snap.countryName ?? "" },
-                { "statusText", snap.statusText ?? "" },
-                { "progress", snap.progress },
-                { "exitIp", snap.exitIp ?? "" },
-                { "exitCity", snap.exitCity ?? "" },
-                { "exitCountry", snap.exitCountry ?? "" },
-                { "exitCountryCode", snap.exitCountryCode ?? "" },
-                { "latencyMs", snap.latencyMs },
-                { "autoConnect", snap.autoConnect },
-                { "protocol", snap.protocol ?? "" },
-                { "verified", snap.verified },
-                { "lastVerifyMessage", snap.lastVerifyMessage ?? "" },
-                { "countriesCount", snap.countries != null ? snap.countries.Count : 86 }
-            };
         }
 
         private void PushFullStateToShell()
@@ -12004,6 +12238,9 @@ namespace DejavuBrowser
                 { "appVersion", AutoUpdater.CurrentVersion },
                 { "isDefaultBrowser", _isDefaultBrowser },
                 { "canReopenClosedTab", _closedTabs.Count > 0 },
+                { "splitViewActive", IsSplitViewActiveNow() },
+                { "splitLeftTabId", _splitLeftTabId },
+                { "splitRightTabId", _splitRightTabId },
                 { "updateAvailable", upd != null && upd.IsReady },
                 { "updateStatus", _appContext.UpdateStatusText ?? "" },
                 { "updateReadyVersion", (upd != null && upd.IsReady) ? upd.Version : "" },
@@ -12011,7 +12248,6 @@ namespace DejavuBrowser
                 { "globalAdBlockEnabled", _adBlocker.GlobalEnabled },
                 { "activeForSite", _adBlocker.IsActiveForHost(host) },
                 { "totalBlocked", _adBlocker.TotalBlocked },
-                { "vpn", BuildShellVpnSummary(_vpn.GetSnapshot()) },
                 { "sync", _sync != null ? _sync.GetSnapshot() : null },
                 { "wallpaper", _settings.wallpaper ?? "art:wp-m3-amethyst.jpg" },
                 { "autoThemeFromWallpaper", _settings.autoThemeFromWallpaper },

@@ -1,216 +1,280 @@
 /**
- * dejavu — 16 Collectible Butterfly Profile Avatars
- * Clean scalable SVG medallions + signature halftone butterfly emblem.
+ * dejavu — 16 Material Design 3 Expressive Profile Avatars
+ * Flat tonal HCT medallions + sculpted Googlebook geometric/botanical/butterfly glyphs.
+ * Zero neon glows, zero radial gradients, zero external PNG dependencies.
  */
 (function () {
-  const BUTTERFLY_AVATARS = [
+  const M3_AVATARS = [
     {
       id: 'dejavu-halftone',
-      name: 'DejaVu Halftone',
-      color: '#b688ff',
-      bg: ['#150f29', '#090714'],
-      c1: '#c69bff', c2: '#7c4dff', accent: '#efe4ff',
-      style: 'halftone'
+      name: 'Material You',
+      color: '#d0bcff',
+      dynamic: true,
+      bg: 'var(--md-primary-container)',
+      fg: 'var(--md-primary)',
+      ink: 'var(--md-on-primary-container)',
+      style: 'm3-butterfly'
     },
     {
       id: 'royal-amethyst',
-      name: 'Royal Amethyst',
-      color: '#c084fc',
-      bg: ['#25113d', '#0e071a'],
-      c1: '#e0aaff', c2: '#9d4edd', accent: '#f3d9ff',
-      style: 'swallowtail'
+      name: 'Amethyst Wing',
+      color: '#d0bcff',
+      bg: '#eaddff',
+      fg: '#6750a4',
+      ink: '#21005d',
+      style: 'm3-butterfly'
     },
     {
       id: 'blue-morpho',
-      name: 'Blue Morpho',
-      color: '#38bdf8',
-      bg: ['#09224a', '#040c1f'],
-      c1: '#7dd3fc', c2: '#0284c7', accent: '#e0f2fe',
+      name: 'Pixel Blue',
+      color: '#a8c7fa',
+      bg: '#d3e3fd',
+      fg: '#0b57d0',
+      ink: '#041e49',
       style: 'morpho'
     },
     {
       id: 'solar-monarch',
-      name: 'Solar Monarch',
-      color: '#fb923c',
-      bg: ['#331407', '#140804'],
-      c1: '#fdba74', c2: '#ea580c', accent: '#fef3c7',
-      style: 'monarch'
+      name: 'Honey Monarch',
+      color: '#ffb951',
+      bg: '#ffddb3',
+      fg: '#965a00',
+      ink: '#2c1700',
+      style: 'sunburst'
     },
     {
       id: 'emerald-glasswing',
-      name: 'Emerald Glasswing',
-      color: '#34d399',
-      bg: ['#072a24', '#041210'],
-      c1: '#6ee7b7', c2: '#059669', accent: '#d1fae5',
-      style: 'glasswing'
+      name: 'Botanical Jade',
+      color: '#8bd89b',
+      bg: '#b7f3c2',
+      fg: '#146c2e',
+      ink: '#002109',
+      style: 'leaf'
     },
     {
       id: 'sakura-swallowtail',
-      name: 'Sakura Wing',
-      color: '#f472b6',
-      bg: ['#331228', '#140711'],
-      c1: '#fbcfe8', c2: '#ec4899', accent: '#fff1f2',
-      style: 'swallowtail'
+      name: 'Blossom Petal',
+      color: '#ffb0ce',
+      bg: '#ffd8e6',
+      fg: '#984061',
+      ink: '#3e001f',
+      style: 'petal'
     },
     {
       id: 'obsidian-gold',
-      name: 'Obsidian Gold',
-      color: '#facc15',
-      bg: ['#1b1710', '#090806'],
-      c1: '#fde047', c2: '#b45309', accent: '#fef9c3',
-      style: 'monarch'
+      name: 'Studio Spark',
+      color: '#f2ca52',
+      bg: '#f7e49e',
+      fg: '#7a5900',
+      ink: '#261a00',
+      style: 'spark'
     },
     {
       id: 'aurora-prism',
-      name: 'Aurora Prism',
-      color: '#a78bfa',
-      bg: ['#181236', '#071422'],
-      c1: '#67e8f9', c2: '#e879f9', accent: '#fde68a',
-      style: 'prism'
+      name: 'Aurora Teal',
+      color: '#7bd8c6',
+      bg: '#a6f2e2',
+      fg: '#006a5f',
+      ink: '#00201c',
+      style: 'waves'
     },
     {
       id: 'crimson-velvet',
-      name: 'Crimson Velvet',
-      color: '#fb7185',
-      bg: ['#340c16', '#130508'],
-      c1: '#fda4af', c2: '#be123c', accent: '#ffe4e6',
-      style: 'morpho'
+      name: 'Crimson Crest',
+      color: '#ffb3b5',
+      bg: '#ffdada',
+      fg: '#ba1a37',
+      ink: '#400009',
+      style: 'diamond'
     },
     {
       id: 'arctic-frost',
-      name: 'Arctic Frost',
-      color: '#bae6fd',
-      bg: ['#10263b', '#07111c'],
-      c1: '#f0f9ff', c2: '#60a5fa', accent: '#ffffff',
-      style: 'glasswing'
+      name: 'Glacier Cyan',
+      color: '#72d5f5',
+      bg: '#bfe9ff',
+      fg: '#006684',
+      ink: '#001f2a',
+      style: 'crystal'
     },
     {
       id: 'cyber-neon',
-      name: 'Cyber Neon',
-      color: '#22d3ee',
-      bg: ['#190b33', '#071b24'],
-      c1: '#22d3ee', c2: '#f43f5e', accent: '#f0abfc',
-      style: 'prism'
+      name: 'Royal Indigo',
+      color: '#bbc3ff',
+      bg: '#dfe0ff',
+      fg: '#4355b9',
+      ink: '#000c62',
+      style: 'orbit'
     },
     {
       id: 'lunar-moth',
-      name: 'Lunar Moth',
-      color: '#a7f3d0',
-      bg: ['#0d2420', '#060f12'],
-      c1: '#d1fae5', c2: '#5eead4', accent: '#fef08a',
-      style: 'lunar'
+      name: 'Forest Moon',
+      color: '#9cd49f',
+      bg: '#c2f0c4',
+      fg: '#2e6b38',
+      ink: '#002109',
+      style: 'crescent'
     },
     {
       id: 'sunset-coral',
-      name: 'Sunset Coral',
-      color: '#fb7185',
-      bg: ['#341422', '#170c21'],
-      c1: '#fda4af', c2: '#f97316', accent: '#fde68a',
-      style: 'swallowtail'
+      name: 'Sienna Coral',
+      color: '#ffb59d',
+      bg: '#ffdbd0',
+      fg: '#a83c18',
+      ink: '#3c0d00',
+      style: 'horizon'
     },
     {
       id: 'starlight-indigo',
-      name: 'Starlight Indigo',
-      color: '#818cf8',
-      bg: ['#12163b', '#06081a'],
-      c1: '#a5b4fc', c2: '#4f46e5', accent: '#fef08a',
-      style: 'starlight'
+      name: 'Deep Berry',
+      color: '#f2b0e6',
+      bg: '#ffd7f5',
+      fg: '#85457e',
+      ink: '#360035',
+      style: 'constellation'
     },
     {
       id: 'rose-quartz',
-      name: 'Rose Quartz',
-      color: '#f9a8d4',
-      bg: ['#2f1b2b', '#140c15'],
-      c1: '#fce7f3', c2: '#db2777', accent: '#ffffff',
-      style: 'glasswing'
+      name: 'Orchid Clover',
+      color: '#e2b7ff',
+      bg: '#f3daff',
+      fg: '#7a42a0',
+      ink: '#2c004d',
+      style: 'clover'
     },
     {
       id: 'phantom-opal',
-      name: 'Phantom Opal',
-      color: '#e2e8f0',
-      bg: ['#1c1c28', '#09090e'],
-      c1: '#f8fafc', c2: '#94a3b8', accent: '#c4b5fd',
-      style: 'lunar'
+      name: 'Titanium Slate',
+      color: '#b8c8e2',
+      bg: '#d8e4f8',
+      fg: '#4c5f7a',
+      ink: '#0f1f36',
+      style: 'arch'
     }
   ];
 
   function getAvatar(id) {
-    return BUTTERFLY_AVATARS.find((a) => a.id === id) || BUTTERFLY_AVATARS[0];
+    return M3_AVATARS.find((a) => a.id === id) || M3_AVATARS[0];
   }
 
-  function renderAvatarHtml(id, size = 32) {
+  function renderGlyph(a) {
+    const fg = a.fg;
+    const ink = a.ink;
+    switch (a.style) {
+      case 'm3-butterfly':
+        return `
+          <path d="M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z" fill="${fg}"/>
+          <path d="M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z" fill="${fg}"/>
+          <path d="M31.2 34.4C26.2 24.4 19.6 17.4 13.2 17.0C16.2 24.8 22.8 31.8 31.2 34.4Z" fill="${ink}" fill-opacity="0.28"/>
+          <path d="M32.8 34.4C37.8 24.4 44.4 17.4 50.8 17.0C47.8 24.8 41.2 31.8 32.8 34.4Z" fill="${ink}" fill-opacity="0.28"/>
+          <path d="M31.2 36.6C23.0 36.4 15.2 39.2 15.0 44.8C14.8 49.0 19.4 51.6 24.6 49.6C28.6 48.0 30.8 43.2 31.2 36.6Z" fill="${ink}" fill-opacity="0.72"/>
+          <path d="M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z" fill="${ink}" fill-opacity="0.72"/>
+          <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="${ink}"/>`;
+      case 'morpho':
+        return `
+          <path d="M32 32L14 16C11 23 12 31 19 35L32 35Z" fill="${fg}"/>
+          <path d="M32 32L50 16C53 23 52 31 45 35L32 35Z" fill="${fg}"/>
+          <path d="M32 35L17 37C16 44 21 49 27 47L32 39Z" fill="${ink}" fill-opacity="0.72"/>
+          <path d="M32 35L47 37C48 44 43 49 37 47L32 39Z" fill="${ink}" fill-opacity="0.72"/>
+          <rect x="30.2" y="20" width="3.6" height="26" rx="1.8" fill="${ink}"/>`;
+      case 'sunburst':
+        return `
+          <circle cx="32" cy="32" r="11" fill="${fg}"/>
+          <g fill="${ink}" fill-opacity="0.78">
+            <rect x="30" y="10" width="4" height="8" rx="2"/>
+            <rect x="30" y="46" width="4" height="8" rx="2"/>
+            <rect x="10" y="30" width="8" height="4" rx="2"/>
+            <rect x="46" y="30" width="8" height="4" rx="2"/>
+            <rect x="16.2" y="16.2" width="4" height="7.5" rx="2" transform="rotate(-45 18.2 20)"/>
+            <rect x="43.8" y="40.3" width="4" height="7.5" rx="2" transform="rotate(-45 45.8 44)"/>
+            <rect x="43.8" y="16.2" width="4" height="7.5" rx="2" transform="rotate(45 45.8 20)"/>
+            <rect x="16.2" y="40.3" width="4" height="7.5" rx="2" transform="rotate(45 18.2 44)"/>
+          </g>
+          <circle cx="32" cy="32" r="5" fill="${a.bg}" fill-opacity="0.55"/>`;
+      case 'leaf':
+        return `
+          <path d="M47 17C31 17 18 27 17 44C34 45 47 33 47 17Z" fill="${fg}"/>
+          <path d="M21 43C27 36 35 28 45 20" stroke="${ink}" stroke-width="3.2" stroke-linecap="round"/>
+          <path d="M17 48L24 41" stroke="${ink}" stroke-width="3.4" stroke-linecap="round"/>
+          <path d="M28 36L28 28M34 31L40 31" stroke="${ink}" stroke-width="2.4" stroke-linecap="round" opacity="0.65"/>`;
+      case 'petal':
+        return `
+          <circle cx="32" cy="21" r="9.5" fill="${fg}"/>
+          <circle cx="32" cy="43" r="9.5" fill="${fg}"/>
+          <circle cx="21" cy="32" r="9.5" fill="${ink}" fill-opacity="0.68"/>
+          <circle cx="43" cy="32" r="9.5" fill="${ink}" fill-opacity="0.68"/>
+          <circle cx="32" cy="32" r="6" fill="${a.bg}"/>
+          <circle cx="32" cy="32" r="3" fill="${ink}"/>`;
+      case 'spark':
+        return `
+          <path d="M32 11C33.4 23.8 40.2 30.6 53 32C40.2 33.4 33.4 40.2 32 53C30.6 40.2 23.8 33.4 11 32C23.8 30.6 30.6 23.8 32 11Z" fill="${fg}"/>
+          <circle cx="46.5" cy="17.5" r="3.2" fill="${ink}" fill-opacity="0.75"/>
+          <circle cx="17.5" cy="46.5" r="2.4" fill="${ink}" fill-opacity="0.65"/>`;
+      case 'waves':
+        return `
+          <path d="M14 25C19 19 25 19 32 25C39 31 45 31 50 25" stroke="${fg}" stroke-width="5.2" stroke-linecap="round"/>
+          <path d="M14 35C19 29 25 29 32 35C39 41 45 41 50 35" stroke="${ink}" stroke-width="5.2" stroke-linecap="round" opacity="0.82"/>
+          <path d="M18 45C22.5 41 27.5 41 32 45C36.5 49 41.5 49 46 45" stroke="${fg}" stroke-width="4.4" stroke-linecap="round" opacity="0.7"/>`;
+      case 'diamond':
+        return `
+          <path d="M32 12L49 28L32 52L15 28Z" fill="${fg}"/>
+          <path d="M32 12L49 28H32Z" fill="${ink}" fill-opacity="0.24"/>
+          <path d="M32 28H49L32 52Z" fill="${ink}" fill-opacity="0.5"/>
+          <path d="M23 28L32 19L41 28L32 37Z" fill="${a.bg}" fill-opacity="0.32"/>`;
+      case 'crystal':
+        return `
+          <polygon points="32,12 48,22 48,42 32,52 16,42 16,22" fill="${fg}"/>
+          <polygon points="32,12 48,22 32,32 16,22" fill="${a.bg}" fill-opacity="0.34"/>
+          <polygon points="32,32 48,22 48,42 32,52" fill="${ink}" fill-opacity="0.48"/>
+          <circle cx="32" cy="32" r="4.2" fill="${a.bg}" fill-opacity="0.82"/>`;
+      case 'orbit':
+        return `
+          <ellipse cx="32" cy="32" rx="19" ry="9.5" transform="rotate(-28 32 32)" stroke="${ink}" stroke-width="3.6" opacity="0.8"/>
+          <circle cx="32" cy="32" r="10.5" fill="${fg}"/>
+          <circle cx="46.5" cy="24" r="3.6" fill="${ink}"/>`;
+      case 'crescent':
+        return `
+          <path d="M39.5 16.5C30.8 15.2 22.4 20.6 20.2 29.1C18.0 37.8 23.3 46.6 32.0 48.7C38.6 50.3 45.2 47.4 48.6 42.1C43.1 43.3 37.3 40.7 34.8 35.4C32.0 29.4 34.1 22.1 39.5 16.5Z" fill="${fg}"/>
+          <path d="M44 19L45.4 22.6L49 24L45.4 25.4L44 29L42.6 25.4L39 24L42.6 22.6Z" fill="${ink}"/>`;
+      case 'horizon':
+        return `
+          <path d="M16 37A16 16 0 0 1 48 37Z" fill="${fg}"/>
+          <rect x="13" y="40.5" width="38" height="4.2" rx="2.1" fill="${ink}" fill-opacity="0.82"/>
+          <rect x="20" y="47.5" width="24" height="3.6" rx="1.8" fill="${fg}" fill-opacity="0.72"/>
+          <circle cx="32" cy="31" r="5" fill="${a.bg}" fill-opacity="0.4"/>`;
+      case 'constellation':
+        return `
+          <path d="M18 39L28 24L40 31L47 19" stroke="${ink}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.65"/>
+          <path d="M28 24L35 45L40 31" stroke="${ink}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.45"/>
+          <circle cx="18" cy="39" r="4.5" fill="${fg}"/>
+          <circle cx="28" cy="24" r="5.5" fill="${fg}"/>
+          <circle cx="40" cy="31" r="4.5" fill="${ink}"/>
+          <circle cx="47" cy="19" r="3.6" fill="${fg}"/>
+          <circle cx="35" cy="45" r="3.8" fill="${ink}" fill-opacity="0.8"/>`;
+      case 'clover':
+        return `
+          <rect x="15" y="15" width="16" height="16" rx="8" fill="${fg}"/>
+          <rect x="33" y="15" width="16" height="16" rx="8" fill="${ink}" fill-opacity="0.72"/>
+          <rect x="15" y="33" width="16" height="16" rx="8" fill="${ink}" fill-opacity="0.72"/>
+          <rect x="33" y="33" width="16" height="16" rx="8" fill="${fg}"/>
+          <circle cx="32" cy="32" r="4.5" fill="${a.bg}"/>`;
+      case 'arch':
+      default:
+        return `
+          <path d="M17 48V30C17 21.7 23.7 15 32 15C40.3 15 47 21.7 47 30V48H38.5V30.5C38.5 26.8 35.6 24 32 24C28.4 24 25.5 26.8 25.5 30.5V48H17Z" fill="${fg}"/>
+          <circle cx="32" cy="37" r="4.8" fill="${ink}"/>`;
+    }
+  }
+
+  function renderAvatarHtml(id, size) {
+    const sz = size || 32;
     const a = getAvatar(id);
-    if (a.style === 'halftone') {
-      return `
-        <span class="bf-avatar" style="width:${size}px;height:${size}px;background:radial-gradient(circle at 32% 28%, ${a.bg[0]}, ${a.bg[1]});border-color:${a.color}66;">
-          <img src="https://dejavu.local/logo-transparent.png" alt="${a.name}" style="width:${Math.round(size * 0.78)}px;height:${Math.round(size * 0.78)}px;object-fit:contain;filter:drop-shadow(0 0 6px ${a.color}88);" draggable="false">
-        </span>
-      `;
-    }
-
-    const uid = `av_${a.id.replace(/[^a-z0-9]/gi, '')}_${Math.random().toString(36).slice(2, 6)}`;
-    let wingPath = '';
-    let details = '';
-
-    if (a.style === 'swallowtail') {
-      wingPath = `
-        <path d="M32 31 C26 16, 11 11, 9 22 C7 31, 16 36, 26 35 C17 38, 12 48, 18 53 C21 55, 22 50, 24 54 C26 57, 29 47, 32 39 Z" fill="url(#${uid})"/>
-        <path d="M32 31 C38 16, 53 11, 55 22 C57 31, 48 36, 38 35 C47 38, 52 48, 46 53 C43 55, 42 50, 40 54 C38 57, 35 47, 32 39 Z" fill="url(#${uid})"/>`;
-      details = `<circle cx="17" cy="24" r="2.2" fill="${a.accent}" opacity="0.85"/><circle cx="47" cy="24" r="2.2" fill="${a.accent}" opacity="0.85"/>`;
-    } else if (a.style === 'monarch') {
-      wingPath = `
-        <path d="M32 31 C25 14, 9 13, 8 24 C7 33, 17 37, 27 36 C18 39, 13 48, 21 52 C27 54, 30 45, 32 38 Z" fill="url(#${uid})" stroke="#0b080a" stroke-width="1.4"/>
-        <path d="M32 31 C39 14, 55 13, 56 24 C57 33, 47 37, 37 36 C46 39, 51 48, 43 52 C37 54, 34 45, 32 38 Z" fill="url(#${uid})" stroke="#0b080a" stroke-width="1.4"/>`;
-      details = `
-        <path d="M31 32 L14 22 M31 33 L15 30 M33 32 L50 22 M33 33 L49 30" stroke="#0b080a" stroke-width="1.15" opacity="0.72"/>
-        <circle cx="13" cy="20" r="1.4" fill="${a.accent}"/><circle cx="51" cy="20" r="1.4" fill="${a.accent}"/>
-        <circle cx="12" cy="26" r="1.2" fill="${a.accent}"/><circle cx="52" cy="26" r="1.2" fill="${a.accent}"/>`;
-    } else if (a.style === 'glasswing') {
-      wingPath = `
-        <path d="M32 31 C26 15, 11 14, 10 24 C9 33, 18 36, 27 35 C19 38, 15 47, 22 50 C27 52, 30 45, 32 38 Z" fill="url(#${uid})" fill-opacity="0.34" stroke="${a.c1}" stroke-width="1.8"/>
-        <path d="M32 31 C38 15, 53 14, 54 24 C55 33, 46 36, 37 35 C45 38, 49 47, 42 50 C37 52, 34 45, 32 38 Z" fill="url(#${uid})" fill-opacity="0.34" stroke="${a.c1}" stroke-width="1.8"/>`;
-      details = `<path d="M16 24 Q23 20 29 29 M48 24 Q41 20 35 29" stroke="${a.accent}" stroke-width="1.1" fill="none" opacity="0.8"/>`;
-    } else if (a.style === 'lunar') {
-      wingPath = `
-        <path d="M32 30 C24 14, 8 16, 10 27 C12 34, 20 36, 27 36 C19 39, 17 48, 22 55 C24 57, 25 51, 28 46 C30 43, 31 40, 32 38 Z" fill="url(#${uid})"/>
-        <path d="M32 30 C40 14, 56 16, 54 27 C52 34, 44 36, 37 36 C45 39, 47 48, 42 55 C40 57, 39 51, 36 46 C34 43, 33 40, 32 38 Z" fill="url(#${uid})"/>`;
-      details = `<circle cx="19" cy="26" r="2.6" fill="none" stroke="${a.accent}" stroke-width="1.3"/><circle cx="45" cy="26" r="2.6" fill="none" stroke="${a.accent}" stroke-width="1.3"/>`;
-    } else if (a.style === 'starlight') {
-      wingPath = `
-        <path d="M32 31 C25 14, 10 13, 9 25 C8 33, 18 37, 27 36 C18 39, 14 48, 21 51 C27 53, 30 45, 32 38 Z" fill="url(#${uid})"/>
-        <path d="M32 31 C39 14, 54 13, 55 25 C56 33, 46 37, 37 36 C46 39, 50 48, 43 51 C37 53, 34 45, 32 38 Z" fill="url(#${uid})"/>`;
-      details = `
-        <circle cx="17" cy="23" r="1.4" fill="${a.accent}"/><circle cx="23" cy="28" r="1.1" fill="#fff"/>
-        <circle cx="47" cy="23" r="1.4" fill="${a.accent}"/><circle cx="41" cy="28" r="1.1" fill="#fff"/>
-        <circle cx="21" cy="44" r="1.2" fill="${a.accent}"/><circle cx="43" cy="44" r="1.2" fill="${a.accent}"/>`;
-    } else {
-      // morpho & prism
-      wingPath = `
-        <path d="M32 31 C24 13, 9 13, 8 25 C8 34, 18 37, 27 36 C18 39, 14 49, 22 52 C28 54, 30 46, 32 38 Z" fill="url(#${uid})"/>
-        <path d="M32 31 C40 13, 55 13, 56 25 C56 34, 46 37, 37 36 C46 39, 50 49, 42 52 C36 54, 34 46, 32 38 Z" fill="url(#${uid})"/>`;
-      details = `
-        <path d="M15 24 Q22 21 29 30 M49 24 Q42 21 35 30" stroke="${a.accent}" stroke-width="1.25" fill="none" opacity="0.72"/>
-        <circle cx="19" cy="44" r="1.7" fill="${a.accent}" opacity="0.8"/><circle cx="45" cy="44" r="1.7" fill="${a.accent}" opacity="0.8"/>`;
-    }
-
-    return `
-      <span class="bf-avatar" style="width:${size}px;height:${size}px;background:radial-gradient(circle at 30% 25%, ${a.bg[0]}, ${a.bg[1]});border-color:${a.color}66;">
-        <svg viewBox="0 0 64 64" width="${Math.round(size * 0.88)}" height="${Math.round(size * 0.88)}" style="display:block;filter:drop-shadow(0 0 5px ${a.color}70);">
-          <defs>
-            <linearGradient id="${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="${a.c1}"/>
-              <stop offset="55%" stop-color="${a.c2}"/>
-              <stop offset="100%" stop-color="${a.accent}"/>
-            </linearGradient>
-          </defs>
-          ${wingPath}
-          ${details}
-          <ellipse cx="32" cy="35" rx="1.9" ry="9" fill="${a.accent}" opacity="0.9"/>
-          <path d="M31 26 Q28 19 25 18 M33 26 Q36 19 39 18" stroke="${a.accent}" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.85"/>
-        </svg>
-      </span>
-    `;
+    const cls = a.dynamic ? 'bf-avatar bf-avatar-m3' : 'bf-avatar bf-avatar-m3-tonal';
+    return `<span class="${cls}" data-avatar-id="${a.id}" style="width:${sz}px;height:${sz}px;background:${a.bg};border:none;">` +
+      `<svg viewBox="0 0 64 64" width="${sz}" height="${sz}" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block;width:100%;height:100%;">` +
+      `<rect x="0" y="0" width="64" height="64" rx="32" fill="${a.bg}"/>` +
+      renderGlyph(a) +
+      `</svg></span>`;
   }
 
-  window.DejavuAvatars = { list: BUTTERFLY_AVATARS, get: getAvatar, renderHtml: renderAvatarHtml };
+  window.DejavuAvatars = { list: M3_AVATARS, get: getAvatar, renderHtml: renderAvatarHtml };
 })();

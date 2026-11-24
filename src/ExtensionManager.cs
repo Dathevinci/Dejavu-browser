@@ -151,7 +151,7 @@ namespace DejavuBrowser
     }
 
     /// <summary>
-    /// Native Chromium Extension Engine for dejavu v5.10.0.
+    /// Native Chromium Extension Engine for dejavu v5.11.0.
     /// Wraps WebView2 CoreWebView2Profile browser extension APIs, CRX2/CRX3/ZIP unpacking,
     /// 2-stage Chrome Web Store permission confirmation staging, automatic WebView2 manifest
     /// sanitization, _locales i18n resolution, and read-only Google Chrome import.
@@ -444,12 +444,37 @@ namespace DejavuBrowser
             RaiseChanged();
             try
             {
-                CoreWebView2BrowserExtension ext = await _profile.AddBrowserExtensionAsync(resolvedDir);
+                bool isManaged = IsSubPathOf(resolvedDir, _extensionsDir);
+                CoreWebView2BrowserExtension ext = null;
+                if (isManaged)
+                {
+                    ext = await AddBrowserExtensionWithRetryAsync(resolvedDir);
+                }
+                else
+                {
+                    Exception loadErr = null;
+                    try
+                    {
+                        ext = await _profile.AddBrowserExtensionAsync(resolvedDir);
+                    }
+                    catch (Exception ex)
+                    {
+                        loadErr = ex;
+                    }
+                    if (ext == null && loadErr != null)
+                    {
+                        // Copy into managed folder and sanitize Chrome-only manifest keys so user's original unpacked folder stays untouched
+                        string managedCopy = Path.Combine(_extensionsDir, "unpacked_" + DateTime.UtcNow.Ticks.ToString("x"));
+                        await Task.Run(() => CopyDirectoryRecursive(resolvedDir, managedCopy));
+                        ext = await AddBrowserExtensionWithRetryAsync(managedCopy);
+                        resolvedDir = managedCopy;
+                        isManaged = true;
+                    }
+                }
                 if (ext == null)
                 {
                     return FailResult("Chromium did not return the loaded extension.");
                 }
-                bool isManaged = IsSubPathOf(resolvedDir, _extensionsDir);
                 UpsertRecord(ext.Id, "", resolvedDir, "unpacked", isManaged);
                 await RefreshSnapshotAsync();
                 ExtensionInfo info = FindById(ext.Id);
@@ -559,8 +584,10 @@ namespace DejavuBrowser
             string stagingDir = Path.Combine(stagingRoot, stageId);
             try
             {
+                bool preferEdge = !string.IsNullOrEmpty(storeInput) &&
+                    storeInput.IndexOf("microsoftedge.microsoft.com", StringComparison.OrdinalIgnoreCase) >= 0;
                 Directory.CreateDirectory(stagingRoot);
-                await Task.Run(() => DownloadCrxWithFallback(storeId, tempCrx));
+                await Task.Run(() => DownloadCrxWithFallback(storeId, tempCrx, preferEdge));
 
                 string fmt;
                 await Task.Run(() => ExtractPackageToDirectory(tempCrx, stagingDir, out fmt));
@@ -772,8 +799,10 @@ namespace DejavuBrowser
             string finalDir = null;
             try
             {
+                bool preferEdge = !string.IsNullOrEmpty(input) &&
+                    input.IndexOf("microsoftedge.microsoft.com", StringComparison.OrdinalIgnoreCase) >= 0;
                 Directory.CreateDirectory(_extensionsDir);
-                await Task.Run(() => DownloadCrxWithFallback(storeId, tempCrx));
+                await Task.Run(() => DownloadCrxWithFallback(storeId, tempCrx, preferEdge));
 
                 string fmt;
                 await Task.Run(() => ExtractPackageToDirectory(tempCrx, stagingDir, out fmt));
@@ -1133,7 +1162,9 @@ namespace DejavuBrowser
                     await ext.RemoveAsync();
                 }
 
-                CoreWebView2BrowserExtension reloaded = await _profile.AddBrowserExtensionAsync(rec.folderPath);
+                CoreWebView2BrowserExtension reloaded = rec.managedFolder
+                    ? await AddBrowserExtensionWithRetryAsync(rec.folderPath)
+                    : await _profile.AddBrowserExtensionAsync(rec.folderPath);
                 if (reloaded == null)
                 {
                     return FailResult("Failed to reload extension.");
@@ -1263,7 +1294,7 @@ namespace DejavuBrowser
 
         public static string BuildChromeWebStoreCrxUrl(string storeId, string prodVersion)
         {
-            string ver = string.IsNullOrWhiteSpace(prodVersion) ? "134.0.0.0" : prodVersion.Trim();
+            string ver = string.IsNullOrWhiteSpace(prodVersion) ? "140.0.0.0" : prodVersion.Trim();
             string id = (storeId ?? "").Trim().ToLowerInvariant();
             return "https://clients2.google.com/service/update2/crx?response=redirect" +
                 "&os=win&arch=x64&os_arch=x86_64&nacl_arch=x86-64" +
@@ -1271,6 +1302,13 @@ namespace DejavuBrowser
                 "&prodversion=" + Uri.EscapeDataString(ver) +
                 "&acceptformat=crx2,crx3" +
                 "&x=id%3D" + Uri.EscapeDataString(id) + "%26uc";
+        }
+
+        public static string BuildEdgeAddonsCrxUrl(string storeId)
+        {
+            string id = (storeId ?? "").Trim().ToLowerInvariant();
+            return "https://edge.microsoft.com/extensionwebstorebase/v1/crx?response=redirect" +
+                "&prod=chromiumcrx&prodchannel=&x=id%3D" + Uri.EscapeDataString(id) + "%26installsource%3Dondemand%26uc";
         }
 
         public static bool TryFindZipOffsetInPackage(byte[] bytes, out int zipOffset, out string detectedFormat, out string error)
@@ -1422,7 +1460,7 @@ namespace DejavuBrowser
 
         /// <summary>
         /// Zero-overhead, Trusted-Types-safe (0 .innerHTML, 0 CSS blur, 0 transition:all, 0 setInterval)
-        /// Native Chrome-like Material Design 3 Chrome Web Store integration (v5.10.0):
+        /// Native Chrome-like Material Design 3 Chrome Web Store integration (v5.11.0):
         /// - 24-Palette Material You HCT Dynamic Theme Sync via window.__dejavuSetCwsTheme(palette)
         /// - Live Installed Extensions Sync via window.__dejavuSetInstalledExts(ids)
         /// - Hooks Chrome Web Store's primary CTA button in-place ("Add to dejavu" / "Checking..." / "Adding..." / "Remove from dejavu")
@@ -1439,7 +1477,7 @@ namespace DejavuBrowser
     if (window.__dejavuCwsBannerInit) return;
     window.__dejavuCwsBannerInit = true;
 
-    // Exact 24-Palette Material You HCT Theme Engine (12 seeds x Dark/Light synced with ui/styles.css)
+    // Exact 32-Palette Material You HCT Theme Engine (16 seeds x Dark/Light synced with ui/styles.css)
     // [surface, surfaceLow, surfaceHigh, surfaceHighest, primary, onPrimary, priCont, onPriCont, secCont, onSecCont, terCont, onTerCont, onSurface, onSurfVar, outVar]
     var M3_DARK = {
       amethyst:['#141218','#1d1b20','#2b2930','#36343b','#d0bcff','#381e72','#4f378b','#eaddff','#4a4458','#e8def8','#005046','#9df2e0','#e6e0e9','#cac4d0','#49454f'],
@@ -1453,7 +1491,11 @@ namespace DejavuBrowser
       crimson:['#1a1112','#23191a','#322728','#3d3233','#ffb3b5','#680014','#920020','#ffdada','#5d3f41','#ffdada','#04513d','#a6f3d9','#f0dedf','#d8c1c2','#534344'],
       rose:['#181114','#21191d','#30282c','#3b3237','#ffb0ce','#5e1136','#7b294d','#ffd8e6','#583f49','#fdd9e6','#005140','#a4f3dc','#ecdfe4','#d4c2c9','#504349'],
       lavender:['#161219','#1e1a21','#2d2830','#38333b','#e2b7ff','#48116e','#612b87','#f3daff','#4f425a','#eedcf8','#005044','#a2f3df','#e9e0ec','#cdc3d2','#4b4450'],
-      silver:['#121316','#1a1c1f','#292b2f','#34363a','#b8c8e2','#223146','#38485e','#d8e4f8','#3e4552','#dce4f2','#005047','#a0f1e2','#e3e2e6','#c4c6cf','#44474e']
+      silver:['#121316','#1a1c1f','#292b2f','#34363a','#b8c8e2','#223146','#38485e','#d8e4f8','#3e4552','#dce4f2','#005047','#a0f1e2','#e3e2e6','#c4c6cf','#44474e'],
+      ocean:['#0e1417','#161c1f','#252b2e','#303639','#72d5f5','#003546','#004e66','#bfe9ff','#344a53','#cee6f0','#454364','#e3dfff','#dde3e7','#bfc8cd','#40484c'],
+      terracotta:['#18120f','#211a16','#302824','#3b332e','#f2b89b','#50240c','#6d391e','#ffdbca','#5b4134','#fddcc9','#434b20','#e0e8af','#ede0d9','#d5c3b9','#51443d'],
+      plum:['#171117','#20191f','#2f282e','#3a3239','#f2b0e6','#4f184c','#692f64','#ffd7f5','#553f52','#f5d8f0','#663b2d','#ffdbd0','#ebdfe9','#d2c2cf','#4e434d'],
+      forest:['#101510','#181d18','#262c26','#313731','#9cd49f','#063914','#1d5128','#b8f0bb','#384b39','#d4e8d3','#1e4d52','#bcebf1','#dfe4dc','#c1c9be','#414940']
     };
     var M3_LIGHT = {
       amethyst:['#fef7ff','#f3edf7','#ece6f0','#e6e0e9','#6750a4','#ffffff','#eaddff','#21005d','#e8def8','#1d192b','#9df2e0','#00201c','#1d1b20','#49454f','#cac4d0'],
@@ -1467,7 +1509,11 @@ namespace DejavuBrowser
       crimson:['#fff8f7','#f6eaea','#f0e4e4','#eadede','#ba1a2d','#ffffff','#ffdada','#400009','#fbdddd','#2c1516','#a6f3d9','#002117','#23191a','#534344','#d8c1c2'],
       rose:['#fff8f8','#f4eaed','#eee4e7','#e8dfe2','#a83268','#ffffff','#ffd8e6','#3e001f','#f9d8e4','#2c151e','#a4f3dc','#002118','#21191c','#504349','#d4c2c9'],
       lavender:['#fdf7ff','#f1ebf4','#ebe5ee','#e5dfe8','#7c43a8','#ffffff','#f3daff','#2c004d','#eedcf8','#23172c','#a2f3df','#00201a','#1e1a21','#4b4450','#cdc3d2'],
-      silver:['#f9f9fc','#ecedf1','#e6e8ec','#e0e2e6','#455a77','#ffffff','#d8e4f8','#0f1f36','#dce4f0','#172334','#a0f1e2','#00201c','#1a1c1f','#44474e','#c4c6cf']
+      silver:['#f9f9fc','#ecedf1','#e6e8ec','#e0e2e6','#455a77','#ffffff','#d8e4f8','#0f1f36','#dce4f0','#172334','#a0f1e2','#00201c','#1a1c1f','#44474e','#c4c6cf'],
+      ocean:['#f4fafe','#e8eef2','#e2e8ec','#dce3e7','#006684','#ffffff','#bfe9ff','#001f2a','#cee6f0','#071e26','#e3dfff','#191836','#161c1f','#40484c','#bfc8cd'],
+      terracotta:['#fff8f5','#f3e8e3','#ede2dd','#e7dcd7','#8f4c2b','#ffffff','#ffdbca','#361300','#f8dcd0','#2c160b','#e0e8af','#1a2000','#211a16','#51443d','#d5c3b9'],
+      plum:['#fff7fc','#f3e8f0','#ede2ea','#e7dce4','#85457e','#ffffff','#ffd7f5','#360035','#f3d8ee','#291526','#ffdbd0','#37150a','#20191f','#4e434d','#d2c2cf'],
+      forest:['#f6fbf4','#eaefe8','#e4e9e2','#dee4dc','#37693e','#ffffff','#b8f0bb','#002109','#d4e8d3','#0f1f11','#bcebf1','#002023','#181d18','#414940','#c1c9be']
     };
 
     var currentTheme = { accent: 'amethyst', mode: 'dark' };
@@ -2192,16 +2238,33 @@ namespace DejavuBrowser
             catch { }
         }
 
-        private void DownloadCrxWithFallback(string storeId, string destPath)
+        private void DownloadCrxWithFallback(string storeId, string destPath, bool preferEdge = false)
         {
+            List<string> candidateUrls = new List<string>();
+            if (preferEdge)
+            {
+                candidateUrls.Add(BuildEdgeAddonsCrxUrl(storeId));
+            }
+
             List<string> versions = new List<string>();
             if (!string.IsNullOrWhiteSpace(_prodVersion)) versions.Add(_prodVersion.Trim());
+            if (!versions.Contains("144.0.0.0")) versions.Add("144.0.0.0");
+            if (!versions.Contains("140.0.0.0")) versions.Add("140.0.0.0");
             if (!versions.Contains("138.0.0.0")) versions.Add("138.0.0.0");
             if (!versions.Contains("134.0.0.0")) versions.Add("134.0.0.0");
             if (!versions.Contains("131.0.0.0")) versions.Add("131.0.0.0");
 
+            for (int v = 0; v < versions.Count; v++)
+            {
+                candidateUrls.Add(BuildChromeWebStoreCrxUrl(storeId, versions[v]));
+            }
+            if (!preferEdge)
+            {
+                candidateUrls.Add(BuildEdgeAddonsCrxUrl(storeId));
+            }
+
             Exception lastErr = null;
-            for (int i = 0; i < versions.Count; i++)
+            for (int i = 0; i < candidateUrls.Count; i++)
             {
                 try
                 {
@@ -2210,8 +2273,7 @@ namespace DejavuBrowser
                 catch { }
                 try
                 {
-                    string crxUrl = BuildChromeWebStoreCrxUrl(storeId, versions[i]);
-                    DownloadCrxFile(crxUrl, destPath);
+                    DownloadCrxFile(candidateUrls[i], destPath);
                     return;
                 }
                 catch (Exception ex)
@@ -2220,7 +2282,7 @@ namespace DejavuBrowser
                 }
             }
             if (lastErr != null) throw lastErr;
-            throw new InvalidOperationException("Failed to download CRX package from Chrome Web Store.");
+            throw new InvalidOperationException("Failed to download CRX package from Chrome Web Store or Edge Add-ons.");
         }
 
         private async Task<CoreWebView2BrowserExtension> AddBrowserExtensionWithRetryAsync(string folderPath)

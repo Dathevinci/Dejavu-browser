@@ -181,6 +181,26 @@ namespace DejavuBrowser
             public string TopicId;
         }
 
+        private sealed class MqttBrokerSlot
+        {
+            public readonly int Index;
+            public readonly string Host;
+            public readonly object WriteLock = new object();
+            public volatile bool Connected;
+            public volatile string ConnectedTopicId = "";
+            public volatile TcpClient Client;
+            public volatile Stream Stream;
+            public System.Threading.Timer PingTimer;
+            public long LastRxTicks;
+            public Thread WorkerThread;
+
+            public MqttBrokerSlot(int index, string host)
+            {
+                Index = index;
+                Host = host;
+            }
+        }
+
         static SyncManager()
         {
             try
@@ -223,16 +243,14 @@ namespace DejavuBrowser
         private long _lastLanSeenMs;
         private volatile bool _mqttConnected;
         private string _connectedMqttTopicId = "";
-        private long _lastMqttRxTicks;
 
         // Pending publishes queued before MQTT connection completes
         private PendingMqttPublish _pendingRetainedSnapshot;
         private readonly Queue<PendingMqttPublish> _pendingEvents = new Queue<PendingMqttPublish>();
 
-        // Active sockets for instant <50ms topic switch & clean shutdown
-        private volatile TcpClient _activeMqttClient;
-        private volatile Stream _activeMqttStream;
-        private System.Threading.Timer _mqttPingTimer;
+        // Dual-Broker Active-Active MQTT Mesh (eliminates HiveMQ vs EMQX split-brain!)
+        private MqttBrokerSlot[] _mqttSlots;
+        private string _latestEncryptedSnapshot = "";
 
         // Layer 1: Direct Wi-Fi LAN HTTP Server (17654) & UDP Auto-Discovery (17655)
         private TcpListener _lanListener;
@@ -244,7 +262,6 @@ namespace DejavuBrowser
         private Thread _udpTxThread;
         private readonly Dictionary<string, long> _lastUnicastReplyMs = new Dictionary<string, long>(StringComparer.Ordinal);
 
-        private Thread _relayThread;
         private volatile bool _disposed;
         private volatile int _generation;
 
@@ -653,6 +670,7 @@ namespace DejavuBrowser
                 DeriveManualKeysLocked(_state.pairingCode);
             }
             _topicBeaconHash = ComputeTopicBeaconHash(_topicId);
+            _latestEncryptedSnapshot = "";
         }
 
         public static string ComputeTopicBeaconHash(string topicId)
@@ -1360,6 +1378,10 @@ namespace DejavuBrowser
             }
             RaiseStateChanged();
             PublishEncryptedAsync(envelopeJson, false);
+            if (!string.Equals(dropType, "ping", StringComparison.OrdinalIgnoreCase))
+            {
+                PublishCachedSnapshotAsync();
+            }
         }
 
         public void SendPingAsync()
@@ -1418,129 +1440,160 @@ namespace DejavuBrowser
             SendPingAsync();
         }
 
+        private string BuildSnapshotEnvelopeLocked()
+        {
+            SyncPrefs prefs = _state.prefs ?? new SyncPrefs();
+            List<Dictionary<string, object>> compactTabs = (prefs.tabs)
+                ? BuildCompactList(_cachedLocalTabs, 16, 70, 220)
+                : new List<Dictionary<string, object>>();
+            List<Dictionary<string, object>> compactFavs = (prefs.bookmarks)
+                ? BuildCompactList(_cachedLocalBookmarks, 24, 60, 200)
+                : new List<Dictionary<string, object>>();
+            List<Dictionary<string, object>> compactReading = (prefs.readingList)
+                ? BuildCompactList(_cachedLocalReading, 16, 60, 200)
+                : new List<Dictionary<string, object>>();
+            List<Dictionary<string, object>> compactHistory = (prefs.history)
+                ? BuildCompactList(_cachedLocalHistory, 16, 60, 200)
+                : new List<Dictionary<string, object>>();
+
+            List<Dictionary<string, object>> compactNotes = new List<Dictionary<string, object>>();
+            if (_state.pinnedNotes != null)
+            {
+                for (int i = 0; i < _state.pinnedNotes.Count && compactNotes.Count < 12; i++)
+                {
+                    SyncNoteItem n = _state.pinnedNotes[i];
+                    if (n == null || string.IsNullOrEmpty(n.id) || string.IsNullOrWhiteSpace(n.text)) continue;
+                    compactNotes.Add(new Dictionary<string, object>
+                    {
+                        { "id", n.id },
+                        { "text", Truncate(n.text, 1200) },
+                        { "updatedMs", n.updatedMs },
+                        { "fromName", Truncate(n.fromName ?? "", 48) },
+                        { "platform", string.IsNullOrEmpty(n.platform) ? "windows" : n.platform }
+                    });
+                }
+            }
+
+            List<string> compactDeletedNotes = new List<string>();
+            if (_state.deletedNoteIds != null)
+            {
+                for (int i = 0; i < _state.deletedNoteIds.Count && compactDeletedNotes.Count < 24; i++)
+                {
+                    if (!string.IsNullOrEmpty(_state.deletedNoteIds[i]))
+                    {
+                        compactDeletedNotes.Add(_state.deletedNoteIds[i]);
+                    }
+                }
+            }
+
+            List<Dictionary<string, object>> compactClipHist = new List<Dictionary<string, object>>();
+            if (prefs.clipboard && _state.clipboardHistory != null)
+            {
+                for (int i = 0; i < _state.clipboardHistory.Count && compactClipHist.Count < 10; i++)
+                {
+                    SyncClipboardItem c = _state.clipboardHistory[i];
+                    if (c == null || string.IsNullOrWhiteSpace(c.text)) continue;
+                    compactClipHist.Add(new Dictionary<string, object>
+                    {
+                        { "id", c.id ?? "" },
+                        { "text", Truncate(c.text, 1800) },
+                        { "fromName", Truncate(c.fromName ?? "", 48) },
+                        { "platform", string.IsNullOrEmpty(c.platform) ? "windows" : c.platform },
+                        { "ts", c.ts }
+                    });
+                }
+            }
+
+            Dictionary<string, object> latestClip = null;
+            if (prefs.clipboard && compactClipHist.Count > 0)
+            {
+                latestClip = new Dictionary<string, object>
+                {
+                    { "id", compactClipHist[0]["id"] },
+                    { "text", compactClipHist[0]["text"] },
+                    { "ts", compactClipHist[0]["ts"] }
+                };
+            }
+            else if (prefs.clipboard && _state.drops != null)
+            {
+                for (int i = 0; i < _state.drops.Count; i++)
+                {
+                    SyncDropItem dr = _state.drops[i];
+                    if (dr != null && string.Equals(dr.dropType, "clipboard", StringComparison.OrdinalIgnoreCase) &&
+                        !string.IsNullOrEmpty(dr.text))
+                    {
+                        latestClip = new Dictionary<string, object>
+                        {
+                            { "id", dr.id ?? "" },
+                            { "text", Truncate(dr.text, 1800) },
+                            { "ts", dr.ts }
+                        };
+                        break;
+                    }
+                }
+            }
+
+            long nowMs = NowUnixMs();
+            List<Dictionary<string, object>> recentDrops = new List<Dictionary<string, object>>();
+            if (_state.drops != null)
+            {
+                for (int i = 0; i < _state.drops.Count && recentDrops.Count < 6; i++)
+                {
+                    SyncDropItem dr = _state.drops[i];
+                    if (dr == null || string.IsNullOrEmpty(dr.id)) continue;
+                    if (!string.Equals(dr.fromId, _state.deviceId, StringComparison.Ordinal)) continue;
+                    if (string.Equals(dr.dropType, "ping", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (dr.ts > 0 && (nowMs - dr.ts) > 86400000L) continue;
+                    var rd = new Dictionary<string, object>
+                    {
+                        { "id", dr.id },
+                        { "dropType", dr.dropType ?? "link" },
+                        { "title", Truncate(dr.title ?? "", 160) },
+                        { "url", Truncate(dr.url ?? "", 600) },
+                        { "text", Truncate(dr.text ?? "", 1200) },
+                        { "ts", dr.ts }
+                    };
+                    if (!string.IsNullOrEmpty(dr.quality)) rd["quality"] = Truncate(dr.quality, 24);
+                    if (dr.tabs != null && dr.tabs.Count > 0) rd["tabs"] = BuildCompactList(dr.tabs, 12, 64, 240);
+                    recentDrops.Add(rd);
+                }
+            }
+
+            string id = Guid.NewGuid().ToString("N").Substring(0, 14);
+            _seenIds.Add(id);
+            _lastSyncMs = nowMs;
+
+            var env = new Dictionary<string, object>
+            {
+                { "v", 2 },
+                { "kind", "snapshot" },
+                { "id", id },
+                { "from", _state.deviceId },
+                { "fromName", _state.deviceName },
+                { "platform", "windows" },
+                { "ts", nowMs },
+                { "lanUrl", GetLocalLanUrl() },
+                { "syncMode", _state.syncMode ?? "manual" },
+                { "tabCount", _localTabCount },
+                { "tabs", compactTabs },
+                { "bookmarks", compactFavs },
+                { "reading", compactReading },
+                { "history", compactHistory },
+                { "pinnedNotes", compactNotes },
+                { "deletedNoteIds", compactDeletedNotes },
+                { "clipboardHistory", compactClipHist },
+                { "latestClipboard", latestClip },
+                { "recentDrops", recentDrops }
+            };
+            return _json.Serialize(env);
+        }
+
         private void PublishCachedSnapshotAsync()
         {
             string envelopeJson;
             lock (_lock)
             {
-                SyncPrefs prefs = _state.prefs ?? new SyncPrefs();
-                List<Dictionary<string, object>> compactTabs = (prefs.tabs)
-                    ? BuildCompactList(_cachedLocalTabs, 16, 70, 220)
-                    : new List<Dictionary<string, object>>();
-                List<Dictionary<string, object>> compactFavs = (prefs.bookmarks)
-                    ? BuildCompactList(_cachedLocalBookmarks, 24, 60, 200)
-                    : new List<Dictionary<string, object>>();
-                List<Dictionary<string, object>> compactReading = (prefs.readingList)
-                    ? BuildCompactList(_cachedLocalReading, 16, 60, 200)
-                    : new List<Dictionary<string, object>>();
-                List<Dictionary<string, object>> compactHistory = (prefs.history)
-                    ? BuildCompactList(_cachedLocalHistory, 16, 60, 200)
-                    : new List<Dictionary<string, object>>();
-
-                List<Dictionary<string, object>> compactNotes = new List<Dictionary<string, object>>();
-                if (_state.pinnedNotes != null)
-                {
-                    for (int i = 0; i < _state.pinnedNotes.Count && compactNotes.Count < 12; i++)
-                    {
-                        SyncNoteItem n = _state.pinnedNotes[i];
-                        if (n == null || string.IsNullOrEmpty(n.id) || string.IsNullOrWhiteSpace(n.text)) continue;
-                        compactNotes.Add(new Dictionary<string, object>
-                        {
-                            { "id", n.id },
-                            { "text", Truncate(n.text, 1200) },
-                            { "updatedMs", n.updatedMs },
-                            { "fromName", Truncate(n.fromName ?? "", 48) },
-                            { "platform", string.IsNullOrEmpty(n.platform) ? "windows" : n.platform }
-                        });
-                    }
-                }
-
-                List<string> compactDeletedNotes = new List<string>();
-                if (_state.deletedNoteIds != null)
-                {
-                    for (int i = 0; i < _state.deletedNoteIds.Count && compactDeletedNotes.Count < 24; i++)
-                    {
-                        if (!string.IsNullOrEmpty(_state.deletedNoteIds[i]))
-                        {
-                            compactDeletedNotes.Add(_state.deletedNoteIds[i]);
-                        }
-                    }
-                }
-
-                List<Dictionary<string, object>> compactClipHist = new List<Dictionary<string, object>>();
-                if (prefs.clipboard && _state.clipboardHistory != null)
-                {
-                    for (int i = 0; i < _state.clipboardHistory.Count && compactClipHist.Count < 10; i++)
-                    {
-                        SyncClipboardItem c = _state.clipboardHistory[i];
-                        if (c == null || string.IsNullOrWhiteSpace(c.text)) continue;
-                        compactClipHist.Add(new Dictionary<string, object>
-                        {
-                            { "id", c.id ?? "" },
-                            { "text", Truncate(c.text, 1800) },
-                            { "fromName", Truncate(c.fromName ?? "", 48) },
-                            { "platform", string.IsNullOrEmpty(c.platform) ? "windows" : c.platform },
-                            { "ts", c.ts }
-                        });
-                    }
-                }
-
-                Dictionary<string, object> latestClip = null;
-                if (prefs.clipboard && compactClipHist.Count > 0)
-                {
-                    latestClip = new Dictionary<string, object>
-                    {
-                        { "id", compactClipHist[0]["id"] },
-                        { "text", compactClipHist[0]["text"] },
-                        { "ts", compactClipHist[0]["ts"] }
-                    };
-                }
-                else if (prefs.clipboard && _state.drops != null)
-                {
-                    for (int i = 0; i < _state.drops.Count; i++)
-                    {
-                        SyncDropItem dr = _state.drops[i];
-                        if (dr != null && string.Equals(dr.dropType, "clipboard", StringComparison.OrdinalIgnoreCase) &&
-                            !string.IsNullOrEmpty(dr.text))
-                        {
-                            latestClip = new Dictionary<string, object>
-                            {
-                                { "id", dr.id ?? "" },
-                                { "text", Truncate(dr.text, 1800) },
-                                { "ts", dr.ts }
-                            };
-                            break;
-                        }
-                    }
-                }
-
-                long nowMs = NowUnixMs();
-                string id = Guid.NewGuid().ToString("N").Substring(0, 14);
-                _seenIds.Add(id);
-                _lastSyncMs = nowMs;
-
-                var env = new Dictionary<string, object>
-                {
-                    { "v", 2 },
-                    { "kind", "snapshot" },
-                    { "id", id },
-                    { "from", _state.deviceId },
-                    { "fromName", _state.deviceName },
-                    { "platform", "windows" },
-                    { "ts", nowMs },
-                    { "lanUrl", GetLocalLanUrl() },
-                    { "syncMode", _state.syncMode ?? "manual" },
-                    { "tabCount", _localTabCount },
-                    { "tabs", compactTabs },
-                    { "bookmarks", compactFavs },
-                    { "reading", compactReading },
-                    { "history", compactHistory },
-                    { "pinnedNotes", compactNotes },
-                    { "deletedNoteIds", compactDeletedNotes },
-                    { "clipboardHistory", compactClipHist },
-                    { "latestClipboard", latestClip }
-                };
-                envelopeJson = _json.Serialize(env);
+                envelopeJson = BuildSnapshotEnvelopeLocked();
             }
             PublishEncryptedAsync(envelopeJson, true);
         }
@@ -1730,6 +1783,10 @@ namespace DejavuBrowser
                         deviceId = _state.deviceId;
                         peerLan = _state.peerLanUrl ?? "";
                         encrypted = EncryptWithKeys(envelopeJson, _encKey, _macKey);
+                        if (isRetainedState && !string.IsNullOrEmpty(encrypted))
+                        {
+                            _latestEncryptedSnapshot = encrypted;
+                        }
                     }
                     if (string.IsNullOrEmpty(topic) || string.IsNullOrEmpty(encrypted)) return;
 
@@ -1793,28 +1850,47 @@ namespace DejavuBrowser
 
         private bool TryWriteMqttPublish(string expectedTopicId, string mqttTopic, string payload, bool retain)
         {
-            if (!_mqttConnected) return false;
-            lock (_mqttWriteLock)
+            MqttBrokerSlot[] slots = _mqttSlots;
+            if (slots == null || slots.Length == 0) return false;
+            byte[] pkt = BuildMqttPublishPacket(mqttTopic, payload, retain);
+            int sentCount = 0;
+            for (int i = 0; i < slots.Length; i++)
             {
-                Stream s = _activeMqttStream;
-                if (!_mqttConnected || s == null || !string.Equals(_connectedMqttTopicId, expectedTopicId, StringComparison.Ordinal))
+                if (TryWritePacketToSlot(slots[i], expectedTopicId, pkt))
+                {
+                    sentCount++;
+                }
+            }
+            if (sentCount > 0)
+            {
+                lock (_lock)
+                {
+                    _lastSyncMs = NowUnixMs();
+                }
+                return true;
+            }
+            return false;
+        }
+
+        private bool TryWritePacketToSlot(MqttBrokerSlot slot, string expectedTopicId, byte[] pkt)
+        {
+            if (slot == null || !slot.Connected) return false;
+            lock (slot.WriteLock)
+            {
+                Stream s = slot.Stream;
+                if (!slot.Connected || s == null || !string.Equals(slot.ConnectedTopicId, expectedTopicId, StringComparison.Ordinal))
                 {
                     return false;
                 }
                 try
                 {
-                    byte[] pkt = BuildMqttPublishPacket(mqttTopic, payload, retain);
                     s.Write(pkt, 0, pkt.Length);
                     s.Flush();
-                    lock (_lock)
-                    {
-                        _lastSyncMs = NowUnixMs();
-                    }
                     return true;
                 }
                 catch
                 {
-                    AbortActiveMqtt();
+                    AbortSlot(slot);
                     return false;
                 }
             }
@@ -2024,14 +2100,37 @@ namespace DejavuBrowser
             lock (_lock)
             {
                 if (string.Equals(from, _state.deviceId, StringComparison.Ordinal)) return;
-                if (!string.IsNullOrEmpty(id))
+                long nowMs = NowUnixMs();
+                long msgTs = nowMs;
+                if (msg.ContainsKey("ts"))
                 {
-                    if (_seenIds.Contains(id)) return;
-                    _seenIds.Add(id);
-                    if (_seenIds.Count > 400) _seenIds.Clear();
+                    try { msgTs = Convert.ToInt64(msg["ts"]); } catch { msgTs = nowMs; }
                 }
 
-                long nowMs = NowUnixMs();
+                if (!string.IsNullOrEmpty(id))
+                {
+                    if (_seenIds.Contains(id))
+                    {
+                        // Duplicate retained snapshot after broker reconnect: still refresh LAN & presence if recent!
+                        if ((kind == "snapshot" || kind == "state") && msg.ContainsKey("lanUrl"))
+                        {
+                            string dupLu = Convert.ToString(msg["lanUrl"]);
+                            if (!string.IsNullOrEmpty(dupLu) && dupLu.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+                            {
+                                _state.peerLanUrl = dupLu;
+                            }
+                        }
+                        if ((kind == "snapshot" || kind == "state") && Math.Abs(nowMs - msgTs) < PeerOnlineWindowMs)
+                        {
+                            _state.peerLastSeenMs = nowMs;
+                            UpsertPeerDeviceLocked(from, string.IsNullOrEmpty(fromName) ? "Mobile Device" : fromName, platform, nowMs, null, viaLan);
+                        }
+                        return;
+                    }
+                    _seenIds.Add(id);
+                    if (_seenIds.Count > 600) _seenIds.Clear();
+                }
+
                 _lastSyncMs = nowMs;
                 if (viaLan) _lastLanSeenMs = nowMs;
 
@@ -2141,6 +2240,55 @@ namespace DejavuBrowser
                                     {
                                         notifyDrop = clipDrop;
                                     }
+                                }
+                            }
+                        }
+                    }
+                    if (msg.ContainsKey("recentDrops"))
+                    {
+                        System.Collections.IEnumerable rdSeq = msg["recentDrops"] as System.Collections.IEnumerable;
+                        if (rdSeq != null)
+                        {
+                            foreach (object obj in rdSeq)
+                            {
+                                Dictionary<string, object> rd = obj as Dictionary<string, object>;
+                                if (rd == null) continue;
+                                string rdid = rd.ContainsKey("id") ? (Convert.ToString(rd["id"]) ?? "").Trim() : "";
+                                if (string.IsNullOrEmpty(rdid) || _seenIds.Contains(rdid)) continue;
+                                string rtype = rd.ContainsKey("dropType") ? (Convert.ToString(rd["dropType"]) ?? "link") : "link";
+                                if (string.Equals(rtype, "ping", StringComparison.OrdinalIgnoreCase)) continue;
+                                if (string.Equals(rtype, "clipboard", StringComparison.OrdinalIgnoreCase) && !prefs.clipboard) continue;
+                                _seenIds.Add(rdid);
+                                long rts = nowMs;
+                                if (rd.ContainsKey("ts"))
+                                {
+                                    try { rts = Convert.ToInt64(rd["ts"]); } catch { rts = nowMs; }
+                                }
+                                List<RemoteTabItem> rtabs = rd.ContainsKey("tabs") ? ParseRemoteList(rd["tabs"]) : null;
+                                if (rtabs != null && rtabs.Count == 0) rtabs = null;
+                                SyncDropItem recovered = new SyncDropItem
+                                {
+                                    id = rdid,
+                                    dropType = rtype,
+                                    title = rd.ContainsKey("title") ? (Convert.ToString(rd["title"]) ?? "") : "",
+                                    url = rd.ContainsKey("url") ? (Convert.ToString(rd["url"]) ?? "") : "",
+                                    text = rd.ContainsKey("text") ? (Convert.ToString(rd["text"]) ?? "") : "",
+                                    quality = rd.ContainsKey("quality") ? (Convert.ToString(rd["quality"]) ?? "") : "",
+                                    tabs = rtabs,
+                                    fromId = from,
+                                    fromName = _state.peerName,
+                                    platform = platform,
+                                    ts = rts
+                                };
+                                _state.drops.Insert(0, recovered);
+                                if (_state.drops.Count > 40) _state.drops.RemoveRange(40, _state.drops.Count - 40);
+                                if (string.Equals(rtype, "clipboard", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(recovered.text))
+                                {
+                                    RecordClipboardItemLocked(recovered.id, recovered.text, recovered.fromName, recovered.platform, recovered.ts);
+                                }
+                                if (notifyDrop == null && Math.Abs(nowMs - rts) < 600000L)
+                                {
+                                    notifyDrop = recovered;
                                 }
                             }
                         }
@@ -2297,45 +2445,101 @@ namespace DejavuBrowser
         }
 
         // =====================================================================
-        // Layer 2: Zero-Dependency Pure MQTT v3.1.1 over TLS (HiveMQ + EMQX Failover)
+        // Layer 2: Dual-Broker Active-Active MQTT v3.1.1 over TLS (HiveMQ + EMQX)
         // =====================================================================
-        private void AbortActiveMqtt()
+        private void AbortSlot(MqttBrokerSlot slot)
         {
-            _mqttConnected = false;
-            _connectedMqttTopicId = "";
-            System.Threading.Timer pt = _mqttPingTimer;
-            _mqttPingTimer = null;
+            if (slot == null) return;
+            slot.Connected = false;
+            slot.ConnectedTopicId = "";
+            System.Threading.Timer pt = slot.PingTimer;
+            slot.PingTimer = null;
             if (pt != null)
             {
                 try { pt.Dispose(); } catch { }
             }
-            Stream st = _activeMqttStream;
-            _activeMqttStream = null;
+            Stream st = slot.Stream;
+            slot.Stream = null;
             if (st != null)
             {
                 try { st.Close(); } catch { }
                 try { st.Dispose(); } catch { }
             }
-            TcpClient cli = _activeMqttClient;
-            _activeMqttClient = null;
+            TcpClient cli = slot.Client;
+            slot.Client = null;
             if (cli != null)
             {
                 try { cli.Close(); } catch { }
             }
+            RefreshAggregateRelayStatus();
+        }
+
+        private void AbortActiveMqtt()
+        {
+            _mqttConnected = false;
+            _connectedMqttTopicId = "";
+            MqttBrokerSlot[] slots = _mqttSlots;
+            if (slots != null)
+            {
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    AbortSlot(slots[i]);
+                }
+            }
+        }
+
+        private void RefreshAggregateRelayStatus()
+        {
+            MqttBrokerSlot[] slots = _mqttSlots;
+            List<string> connectedHosts = new List<string>();
+            if (slots != null)
+            {
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    if (slots[i] != null && slots[i].Connected)
+                    {
+                        connectedHosts.Add(slots[i].Host);
+                    }
+                }
+            }
+            bool anyConn = connectedHosts.Count > 0;
+            _mqttConnected = anyConn;
+            bool changed = false;
+            lock (_lock)
+            {
+                string nextBroker = anyConn ? string.Join(" + ", connectedHosts.ToArray()) : (_relayBroker ?? "");
+                string nextStatus = anyConn ? "connected_cloud" : (_relayStatus == "retrying" ? "retrying" : "connecting");
+                if (!string.Equals(_relayStatus, nextStatus, StringComparison.Ordinal) ||
+                    !string.Equals(_relayBroker, nextBroker, StringComparison.Ordinal))
+                {
+                    _relayStatus = nextStatus;
+                    _relayBroker = nextBroker;
+                    if (anyConn) _lastError = "";
+                    changed = true;
+                }
+            }
+            if (changed) RaiseStateChanged();
         }
 
         private void StartRelayWorker()
         {
-            _relayThread = new Thread(RelayLoop);
-            _relayThread.IsBackground = true;
-            _relayThread.Name = "DejavuSyncMqttRelay";
-            _relayThread.Start();
+            _mqttSlots = new MqttBrokerSlot[MqttBrokers.Length];
+            for (int i = 0; i < MqttBrokers.Length; i++)
+            {
+                MqttBrokerSlot slot = new MqttBrokerSlot(i, MqttBrokers[i]);
+                _mqttSlots[i] = slot;
+                Thread t = new Thread(() => RelaySlotLoop(slot));
+                t.IsBackground = true;
+                t.Name = "DejavuSyncMqtt_" + i;
+                slot.WorkerThread = t;
+                t.Start();
+            }
         }
 
-        private void RelayLoop()
+        private void RelaySlotLoop(MqttBrokerSlot slot)
         {
-            int brokerIdx = 0;
             int consecutiveFailures = 0;
+            string host = slot.Host;
 
             while (!_disposed)
             {
@@ -2354,13 +2558,15 @@ namespace DejavuBrowser
                     continue;
                 }
 
-                string host = MqttBrokers[brokerIdx % MqttBrokers.Length];
-                lock (_lock)
+                if (!_mqttConnected)
                 {
-                    _relayStatus = (consecutiveFailures > 0) ? "retrying" : "connecting";
-                    _relayBroker = host;
+                    lock (_lock)
+                    {
+                        _relayStatus = (consecutiveFailures > 0) ? "retrying" : "connecting";
+                        if (string.IsNullOrEmpty(_relayBroker)) _relayBroker = host;
+                    }
+                    RaiseStateChanged();
                 }
-                RaiseStateChanged();
 
                 TcpClient tcp = null;
                 SslStream ssl = null;
@@ -2374,7 +2580,7 @@ namespace DejavuBrowser
                     IAsyncResult ar = tcp.BeginConnect(host, MqttTlsPort, null, null);
                     if (!ar.AsyncWaitHandle.WaitOne(7000, false))
                     {
-                        throw new TimeoutException("MQTT TCP connect timeout");
+                        throw new TimeoutException("MQTT TCP connect timeout (" + host + ")");
                     }
                     tcp.EndConnect(ar);
 
@@ -2387,13 +2593,13 @@ namespace DejavuBrowser
                     ssl = new SslStream(tcp.GetStream(), false);
                     ssl.AuthenticateAsClient(host, null, SslProtocols.Tls12, false);
 
-                    _activeMqttClient = tcp;
-                    _activeMqttStream = ssl;
+                    slot.Client = tcp;
+                    slot.Stream = ssl;
 
                     string shortDev = deviceId.Length > 8 ? deviceId.Substring(0, 8) : deviceId;
-                    string clientId = "dv-w-" + shortDev + "-" + Guid.NewGuid().ToString("N").Substring(0, 4);
+                    string clientId = "dv-w" + slot.Index + "-" + shortDev + "-" + Guid.NewGuid().ToString("N").Substring(0, 4);
                     byte[] connPkt = BuildMqttConnectPacket(clientId, MqttKeepAliveSec);
-                    lock (_mqttWriteLock)
+                    lock (slot.WriteLock)
                     {
                         ssl.Write(connPkt, 0, connPkt.Length);
                         ssl.Flush();
@@ -2413,7 +2619,7 @@ namespace DejavuBrowser
                     // Subscribe to dejavu/v2/<topicId>/#
                     string subFilter = "dejavu/v2/" + topic + "/#";
                     byte[] subPkt = BuildMqttSubscribePacket(1, subFilter);
-                    lock (_mqttWriteLock)
+                    lock (slot.WriteLock)
                     {
                         ssl.Write(subPkt, 0, subPkt.Length);
                         ssl.Flush();
@@ -2421,33 +2627,28 @@ namespace DejavuBrowser
 
                     connectedCleanly = true;
                     consecutiveFailures = 0;
+                    slot.ConnectedTopicId = topic;
+                    slot.Connected = true;
                     _connectedMqttTopicId = topic;
-                    _mqttConnected = true;
-                    Interlocked.Exchange(ref _lastMqttRxTicks, DateTime.UtcNow.Ticks);
+                    Interlocked.Exchange(ref slot.LastRxTicks, DateTime.UtcNow.Ticks);
+                    RefreshAggregateRelayStatus();
 
-                    lock (_lock)
-                    {
-                        _relayStatus = "connected_cloud";
-                        _relayBroker = host;
-                        _lastError = "";
-                    }
-                    RaiseStateChanged();
-
-                    // Start keep-alive PINGREQ timer (every 25s)
+                    // Start keep-alive PINGREQ timer (every 25s) + presence pulse every 50s
                     TcpClient capturedTcp = tcp;
                     SslStream capturedSsl = ssl;
+                    int pingCycles = 0;
                     pingTimer = new System.Threading.Timer(_ =>
                     {
-                        if (_disposed || myGen != _generation || !_mqttConnected || _activeMqttStream != capturedSsl) return;
-                        long lastRx = Interlocked.Read(ref _lastMqttRxTicks);
+                        if (_disposed || myGen != _generation || !slot.Connected || slot.Stream != capturedSsl) return;
+                        long lastRx = Interlocked.Read(ref slot.LastRxTicks);
                         if ((DateTime.UtcNow.Ticks - lastRx) > TimeSpan.FromSeconds(75).Ticks)
                         {
                             try { capturedTcp.Close(); } catch { }
                             return;
                         }
-                        lock (_mqttWriteLock)
+                        lock (slot.WriteLock)
                         {
-                            if (_activeMqttStream != capturedSsl || !_mqttConnected) return;
+                            if (slot.Stream != capturedSsl || !slot.Connected) return;
                             try
                             {
                                 byte[] ping = new byte[] { 0xC0, 0x00 };
@@ -2457,13 +2658,25 @@ namespace DejavuBrowser
                             catch
                             {
                                 try { capturedTcp.Close(); } catch { }
+                                return;
                             }
                         }
+                        pingCycles++;
+                        if (slot.Index == 0 && (pingCycles % 2) == 0)
+                        {
+                            bool hasRecentPeer = false;
+                            lock (_lock)
+                            {
+                                hasRecentPeer = !string.IsNullOrEmpty(_state.peerName) &&
+                                                (NowUnixMs() - _state.peerLastSeenMs) < (3600L * 1000L);
+                            }
+                            if (hasRecentPeer) SendPingAckAsync();
+                        }
                     }, null, MqttPingIntervalMs, MqttPingIntervalMs);
-                    _mqttPingTimer = pingTimer;
+                    slot.PingTimer = pingTimer;
 
-                    // Flush any queued retained snapshot & live events for this topic
-                    FlushPendingMqttPublishes(topic);
+                    // Flush retained snapshot (always guarantee a fresh snapshot on connect!) & queued events
+                    FlushPendingMqttPublishes(slot, topic, deviceId);
 
                     // Main binary MQTT receive loop
                     while (!_disposed && myGen == _generation)
@@ -2476,7 +2689,7 @@ namespace DejavuBrowser
                         byte[] body = remLen > 0 ? new byte[remLen] : new byte[0];
                         if (remLen > 0 && !ReadExact(ssl, body, 0, remLen)) break;
 
-                        Interlocked.Exchange(ref _lastMqttRxTicks, DateTime.UtcNow.Ticks);
+                        Interlocked.Exchange(ref slot.LastRxTicks, DateTime.UtcNow.Ticks);
 
                         int pktType = (hdr >> 4) & 0x0F;
                         if (pktType == 3 && body.Length >= 2) // PUBLISH
@@ -2494,7 +2707,7 @@ namespace DejavuBrowser
                                     pos += 2;
                                     if (qos == 1)
                                     {
-                                        lock (_mqttWriteLock)
+                                        lock (slot.WriteLock)
                                         {
                                             try
                                             {
@@ -2527,26 +2740,29 @@ namespace DejavuBrowser
                     if (!_disposed && myGen == _generation)
                     {
                         consecutiveFailures++;
-                        lock (_lock)
+                        if (!_mqttConnected)
                         {
-                            _relayStatus = "retrying";
-                            _lastError = Truncate(ex.Message ?? "Relay disconnected", 120);
+                            lock (_lock)
+                            {
+                                _relayStatus = "retrying";
+                                _lastError = Truncate(host + ": " + (ex.Message ?? "Relay disconnected"), 120);
+                            }
+                            RaiseStateChanged();
                         }
-                        RaiseStateChanged();
                     }
                 }
                 finally
                 {
-                    if (_activeMqttStream == ssl)
+                    if (slot.Stream == ssl)
                     {
-                        _mqttConnected = false;
-                        _connectedMqttTopicId = "";
-                        _activeMqttStream = null;
-                        _activeMqttClient = null;
+                        slot.Connected = false;
+                        slot.ConnectedTopicId = "";
+                        slot.Stream = null;
+                        slot.Client = null;
                     }
                     if (pingTimer != null)
                     {
-                        if (_mqttPingTimer == pingTimer) _mqttPingTimer = null;
+                        if (slot.PingTimer == pingTimer) slot.PingTimer = null;
                         try { pingTimer.Dispose(); } catch { }
                     }
                     if (ssl != null)
@@ -2558,33 +2774,28 @@ namespace DejavuBrowser
                     {
                         try { tcp.Close(); } catch { }
                     }
+                    RefreshAggregateRelayStatus();
                 }
 
                 if (_disposed) break;
                 if (myGen != _generation)
                 {
-                    // Instant topic switch (<50ms) — zero sleep!
                     consecutiveFailures = 0;
                     continue;
                 }
 
-                if (!connectedCleanly)
-                {
-                    brokerIdx++;
-                    int delayMs = Math.Min(8000, (brokerIdx % MqttBrokers.Length == 0) ? (1500 + consecutiveFailures * 1000) : 800);
-                    SleepInterruptible(delayMs, myGen);
-                }
-                else
-                {
-                    SleepInterruptible(1200, myGen);
-                }
+                int delayMs = connectedCleanly
+                    ? 1500
+                    : Math.Min(12000, 1500 + consecutiveFailures * 1800);
+                SleepInterruptible(delayMs, myGen);
             }
         }
 
-        private void FlushPendingMqttPublishes(string topicId)
+        private void FlushPendingMqttPublishes(MqttBrokerSlot slot, string topicId, string deviceId)
         {
             PendingMqttPublish retained = null;
             List<PendingMqttPublish> events = new List<PendingMqttPublish>();
+            string fallbackEncSnap = null;
             lock (_lock)
             {
                 if (_pendingRetainedSnapshot != null &&
@@ -2601,15 +2812,27 @@ namespace DejavuBrowser
                         events.Add(ev);
                     }
                 }
+                if (retained == null && string.Equals(_topicId, topicId, StringComparison.Ordinal) && _encKey != null && _macKey != null)
+                {
+                    string snapJson = BuildSnapshotEnvelopeLocked();
+                    fallbackEncSnap = EncryptWithKeys(snapJson, _encKey, _macKey);
+                    if (!string.IsNullOrEmpty(fallbackEncSnap)) _latestEncryptedSnapshot = fallbackEncSnap;
+                }
             }
             if (retained != null)
             {
-                TryWriteMqttPublish(topicId, retained.Topic, retained.Payload, retained.Retain);
+                TryWritePacketToSlot(slot, topicId, BuildMqttPublishPacket(retained.Topic, retained.Payload, retained.Retain));
+            }
+            else if (!string.IsNullOrEmpty(fallbackEncSnap))
+            {
+                string stateTopic = "dejavu/v2/" + topicId + "/state/" + deviceId;
+                TryWritePacketToSlot(slot, topicId, BuildMqttPublishPacket(stateTopic, fallbackEncSnap, true));
             }
             for (int i = 0; i < events.Count; i++)
             {
-                TryWriteMqttPublish(topicId, events[i].Topic, events[i].Payload, events[i].Retain);
+                TryWritePacketToSlot(slot, topicId, BuildMqttPublishPacket(events[i].Topic, events[i].Payload, events[i].Retain));
             }
+            SendPingAsync();
         }
 
         private void SleepInterruptible(int totalMs, int expectedGen)
@@ -2792,8 +3015,41 @@ namespace DejavuBrowser
                 using (UdpClient tx = new UdpClient())
                 {
                     tx.EnableBroadcast = true;
-                    IPEndPoint ep = new IPEndPoint(unicastTarget ?? IPAddress.Broadcast, UdpDiscoveryPort);
-                    tx.Send(bytes, bytes.Length, ep);
+                    if (unicastTarget != null)
+                    {
+                        tx.Send(bytes, bytes.Length, new IPEndPoint(unicastTarget, UdpDiscoveryPort));
+                    }
+                    else
+                    {
+                        try { tx.Send(bytes, bytes.Length, new IPEndPoint(IPAddress.Broadcast, UdpDiscoveryPort)); } catch { }
+                        try
+                        {
+                            NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces();
+                            for (int i = 0; i < nics.Length; i++)
+                            {
+                                NetworkInterface nic = nics[i];
+                                if (nic.OperationalStatus != OperationalStatus.Up) continue;
+                                if (nic.NetworkInterfaceType == NetworkInterfaceType.Loopback ||
+                                    nic.NetworkInterfaceType == NetworkInterfaceType.Tunnel) continue;
+                                IPInterfaceProperties props = nic.GetIPProperties();
+                                for (int j = 0; j < props.UnicastAddresses.Count; j++)
+                                {
+                                    UnicastIPAddressInformation ua = props.UnicastAddresses[j];
+                                    if (ua == null || ua.Address == null || ua.IPv4Mask == null) continue;
+                                    if (ua.Address.AddressFamily != AddressFamily.InterNetwork || IPAddress.IsLoopback(ua.Address)) continue;
+                                    byte[] ipB = ua.Address.GetAddressBytes();
+                                    byte[] maskB = ua.IPv4Mask.GetAddressBytes();
+                                    if (ipB.Length == 4 && maskB.Length == 4)
+                                    {
+                                        byte[] bcast = new byte[4];
+                                        for (int k = 0; k < 4; k++) bcast[k] = (byte)(ipB[k] | (~maskB[k] & 0xFF));
+                                        try { tx.Send(bytes, bytes.Length, new IPEndPoint(new IPAddress(bcast), UdpDiscoveryPort)); } catch { }
+                                    }
+                                }
+                            }
+                        }
+                        catch { }
+                    }
                 }
             }
             catch { }
@@ -2956,16 +3212,48 @@ namespace DejavuBrowser
 
                         byte[] allBytes = ms.ToArray();
                         string reqHead = headerEnd > 0 ? Encoding.ASCII.GetString(allBytes, 0, headerEnd) : "";
-                        string respJson = "{\"ok\":true,\"app\":\"dejavu\",\"version\":\"5.10.0\"}";
+                        bool includeSnapshot = false;
                         if (reqHead.StartsWith("POST /sync", StringComparison.OrdinalIgnoreCase) && headerEnd > 0 && contentLen > 0)
                         {
                             int actual = Math.Min(contentLen, allBytes.Length - headerEnd);
                             string body = Encoding.UTF8.GetString(allBytes, headerEnd, actual);
                             HandleEncryptedBlob(body, true);
+                            includeSnapshot = true;
                         }
-                        else if (reqHead.StartsWith("OPTIONS ", StringComparison.OrdinalIgnoreCase))
+                        else if (reqHead.StartsWith("GET /sync", StringComparison.OrdinalIgnoreCase))
+                        {
+                            includeSnapshot = true;
+                        }
+
+                        string respJson;
+                        if (reqHead.StartsWith("OPTIONS ", StringComparison.OrdinalIgnoreCase))
                         {
                             respJson = "";
+                        }
+                        else if (includeSnapshot)
+                        {
+                            string snapBlob;
+                            lock (_lock)
+                            {
+                                snapBlob = _latestEncryptedSnapshot;
+                                if (string.IsNullOrEmpty(snapBlob) && _encKey != null && _macKey != null)
+                                {
+                                    snapBlob = EncryptWithKeys(BuildSnapshotEnvelopeLocked(), _encKey, _macKey);
+                                    _latestEncryptedSnapshot = snapBlob ?? "";
+                                }
+                            }
+                            var respObj = new Dictionary<string, object>
+                            {
+                                { "ok", true },
+                                { "app", "dejavu" },
+                                { "version", "5.11.0" },
+                                { "snapshot", snapBlob ?? "" }
+                            };
+                            respJson = _json.Serialize(respObj);
+                        }
+                        else
+                        {
+                            respJson = "{\"ok\":true,\"app\":\"dejavu\",\"version\":\"5.11.0\"}";
                         }
 
                         byte[] respBytes = Encoding.UTF8.GetBytes(respJson);

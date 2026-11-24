@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>dejavu — Material You Browser for Windows &amp; Android</title>
-  <meta name="description" content="Fast, private Material You browsing for Windows &amp; Android. Built-in self-healing VPN, Brave-grade Shields, Chrome extensions, 32 wallpapers, and dejavu Link.">
+  <title>dejavu — Googlebook Material You Browser for Windows &amp; Android</title>
+  <meta name="description" content="Fast, private Googlebook Material Design 3 browsing for Windows &amp; Android. Split View, Quick Tab Search, 16 Material You themes (32 Light/Dark), Brave-grade Shields, Chrome &amp; Edge extensions, and dual-broker dejavu Link.">
   <meta name="theme-color" content="#faf9ff">
 
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'%3E%3Crect x='2' y='2' width='60' height='60' rx='18' fill='%23D8E2FF'/%3E%3Cpath d='M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z' fill='%231B6EF3'/%3E%3Cpath d='M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z' fill='%231B6EF3'/%3E%3Cpath d='M31.2 36.6C23.0 36.4 15.2 39.2 15.0 44.8C14.8 49.0 19.4 51.6 24.6 49.6C28.6 48.0 30.8 43.2 31.2 36.6Z' fill='%23001A43' fill-opacity='0.72'/%3E%3Cpath d='M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z' fill='%23001A43' fill-opacity='0.72'/%3E%3Cpath d='M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z' fill='%23001A43'/%3E%3C/svg%3E">
@@ -13,15 +13,15 @@
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="dejavu">
-  <meta property="og:title" content="dejavu v5.10.0 — Material You Browser for Windows &amp; Android">
-  <meta property="og:description" content="Fast, private Material You browsing for Windows &amp; Android with built-in VPN, Brave-grade Shields, Chrome extensions, and 32 wallpapers.">
+  <meta property="og:title" content="dejavu v5.11.0 — Material You Browser for Windows &amp; Android">
+  <meta property="og:description" content="Fast, private Googlebook Material You browsing for Windows &amp; Android with Split View, 16 HCT themes (32 Light/Dark), Brave-grade Shields, Chrome &amp; Edge extensions, and dejavu Link.">
   <meta property="og:url" content="https://dathevinci.github.io/Dejavu-browser/">
   <meta property="og:image" content="https://dathevinci.github.io/Dejavu-browser/assets/wallpapers/wp-m3-sky-terrace.jpg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=5.10.0">
+  <link rel="stylesheet" href="styles.css?v=5.11.0">
 </head>
 <body>
   <div id="scroll-sentinel" class="scroll-sentinel" aria-hidden="true"></div>
@@ -45,7 +45,7 @@
           </svg>
         </span>
         <span class="brand-name">dejavu</span>
-        <span id="release-version-badge" class="version-pill">v5.10.0</span>
+        <span id="release-version-badge" class="version-pill">v5.11.0</span>
       </a>
 
       <div class="nav-links" id="nav-links" role="navigation" aria-label="Page sections">
@@ -63,25 +63,29 @@
             <button type="button" class="seed-dot" data-seed="emerald" style="--seed-color:#2e8b57" title="Botanical Jade" aria-label="Botanical Jade" aria-pressed="false"></button>
             <button type="button" class="seed-dot" data-seed="coral" style="--seed-color:#e06b48" title="Sunset Coral" aria-label="Sunset Coral" aria-pressed="false"></button>
             <button type="button" class="seed-dot" data-seed="crimson" style="--seed-color:#d14353" title="Crimson Clay" aria-label="Crimson Clay" aria-pressed="false"></button>
-            <button type="button" id="seed-more-btn" class="seed-more-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="seed-popover" title="All 12 Material You themes">+6</button>
+            <button type="button" id="seed-more-btn" class="seed-more-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="seed-popover" title="All 16 Material You themes">+10</button>
           </div>
 
-          <div id="seed-popover" class="seed-popover" role="dialog" aria-label="12 Material You themes" hidden>
+          <div id="seed-popover" class="seed-popover" role="dialog" aria-label="16 Material You themes" hidden>
             <div class="seed-popover-head">
-              <span>Material You</span>
+              <span>Material You (16)</span>
               <span id="seed-active-pill" class="seed-active-pill">Pixel Blue</span>
             </div>
             <div class="seed-popover-grid">
               <button type="button" class="seed-swatch active" data-seed="sapphire" aria-pressed="true"><span class="swatch-dot" style="--seed-color:#1b6ef3"></span>Pixel Blue</button>
               <button type="button" class="seed-swatch" data-seed="amethyst" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#8b6fd6"></span>Amethyst</button>
               <button type="button" class="seed-swatch" data-seed="indigo" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#4f62c9"></span>Royal Indigo</button>
+              <button type="button" class="seed-swatch" data-seed="ocean" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#0085ad"></span>Glacier Cyan</button>
               <button type="button" class="seed-swatch" data-seed="aurora" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#00897b"></span>Aurora Teal</button>
               <button type="button" class="seed-swatch" data-seed="emerald" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#2e8b57"></span>Botanical Jade</button>
+              <button type="button" class="seed-swatch" data-seed="forest" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#37693e"></span>Pine Moss</button>
               <button type="button" class="seed-swatch" data-seed="lime" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#748a14"></span>Matcha Olive</button>
               <button type="button" class="seed-swatch" data-seed="gold" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#c68112"></span>Honey Amber</button>
+              <button type="button" class="seed-swatch" data-seed="terracotta" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#b3643f"></span>Sienna Clay</button>
               <button type="button" class="seed-swatch" data-seed="coral" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#e06b48"></span>Sunset Coral</button>
               <button type="button" class="seed-swatch" data-seed="crimson" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#d14353"></span>Crimson Clay</button>
               <button type="button" class="seed-swatch" data-seed="rose" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#c44c80"></span>Velvet Rose</button>
+              <button type="button" class="seed-swatch" data-seed="plum" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#9e5397"></span>Deep Berry</button>
               <button type="button" class="seed-swatch" data-seed="lavender" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#9b65c4"></span>Orchid Mist</button>
               <button type="button" class="seed-swatch" data-seed="silver" aria-pressed="false"><span class="swatch-dot" style="--seed-color:#627896"></span>Titanium Slate</button>
             </div>
@@ -122,17 +126,21 @@
       </div>
       <div class="drawer-seeds">
         <span id="mobile-seed-label" class="drawer-seed-title">Pixel Blue</span>
-        <div class="drawer-seeds-grid" role="group" aria-label="Material You 12 colors">
+        <div class="drawer-seeds-grid" role="group" aria-label="Material You 16 colors">
           <button type="button" class="seed-dot active" data-seed="sapphire" style="--seed-color:#1b6ef3" aria-label="Pixel Blue" aria-pressed="true"></button>
           <button type="button" class="seed-dot" data-seed="amethyst" style="--seed-color:#8b6fd6" aria-label="Amethyst" aria-pressed="false"></button>
           <button type="button" class="seed-dot" data-seed="indigo" style="--seed-color:#4f62c9" aria-label="Royal Indigo" aria-pressed="false"></button>
+          <button type="button" class="seed-dot" data-seed="ocean" style="--seed-color:#0085ad" aria-label="Glacier Cyan" aria-pressed="false"></button>
           <button type="button" class="seed-dot" data-seed="aurora" style="--seed-color:#00897b" aria-label="Aurora Teal" aria-pressed="false"></button>
           <button type="button" class="seed-dot" data-seed="emerald" style="--seed-color:#2e8b57" aria-label="Botanical Jade" aria-pressed="false"></button>
+          <button type="button" class="seed-dot" data-seed="forest" style="--seed-color:#37693e" aria-label="Pine Moss" aria-pressed="false"></button>
           <button type="button" class="seed-dot" data-seed="lime" style="--seed-color:#748a14" aria-label="Matcha Olive" aria-pressed="false"></button>
           <button type="button" class="seed-dot" data-seed="gold" style="--seed-color:#c68112" aria-label="Honey Amber" aria-pressed="false"></button>
+          <button type="button" class="seed-dot" data-seed="terracotta" style="--seed-color:#b3643f" aria-label="Sienna Clay" aria-pressed="false"></button>
           <button type="button" class="seed-dot" data-seed="coral" style="--seed-color:#e06b48" aria-label="Sunset Coral" aria-pressed="false"></button>
           <button type="button" class="seed-dot" data-seed="crimson" style="--seed-color:#d14353" aria-label="Crimson Clay" aria-pressed="false"></button>
           <button type="button" class="seed-dot" data-seed="rose" style="--seed-color:#c44c80" aria-label="Velvet Rose" aria-pressed="false"></button>
+          <button type="button" class="seed-dot" data-seed="plum" style="--seed-color:#9e5397" aria-label="Deep Berry" aria-pressed="false"></button>
           <button type="button" class="seed-dot" data-seed="lavender" style="--seed-color:#9b65c4" aria-label="Orchid Mist" aria-pressed="false"></button>
           <button type="button" class="seed-dot" data-seed="silver" style="--seed-color:#627896" aria-label="Titanium Slate" aria-pressed="false"></button>
         </div>
@@ -176,7 +184,7 @@
       <div class="stage-shell">
         <div class="stage-tabs" role="tablist" aria-label="Browser preview">
           <button type="button" class="stage-tab active" role="tab" aria-selected="true" data-stage-tab="start">Start</button>
-          <button type="button" class="stage-tab" role="tab" aria-selected="false" data-stage-tab="vpn">Private VPN</button>
+          <button type="button" class="stage-tab" role="tab" aria-selected="false" data-stage-tab="split">Split View</button>
           <button type="button" class="stage-tab" role="tab" aria-selected="false" data-stage-tab="video">Video &amp; Link</button>
         </div>
 
@@ -206,7 +214,7 @@
                 <span class="omnibox-chip">Shields ON</span>
               </div>
               <div class="desk-tools">
-                <button type="button" class="tool-chip" data-stage-tab="vpn" title="Private VPN">VPN · <span id="dk-vpn-cc">US</span></button>
+                <button type="button" class="tool-chip" data-stage-tab="split" title="Split View">Split</button>
                 <button type="button" id="dk-beam-btn" class="tool-chip" title="Send tab to Pixel">Link</button>
               </div>
             </div>
@@ -233,28 +241,28 @@
                 </div>
               </div>
 
-              <!-- View 2: Private VPN -->
-              <div class="stage-view" data-stage-view="vpn" hidden>
+              <!-- View 2: Native Split View & Tab Search -->
+              <div class="stage-view" data-stage-view="split" hidden>
                 <div class="preview-card">
                   <div class="preview-card-head">
                     <div>
-                      <strong>Self-Healing VPN</strong>
-                      <span id="vpn-status-line" class="preview-sub">Smart Auto-Heal · United States · 38 ms</span>
+                      <strong>Split View &amp; Quick Tab Search</strong>
+                      <span id="split-status-line" class="preview-sub">50 / 50 Dual-Pane · Draggable M3 Divider · Ctrl+Shift+V</span>
                     </div>
-                    <span class="status-pill">Protected</span>
+                    <span class="status-pill">Dual Pane</span>
                   </div>
-                  <div class="vpn-mode-row" role="group" aria-label="VPN routing mode">
-                    <button type="button" class="mini-pill active" data-vpn-mode="smart">Smart Auto-Heal</button>
-                    <button type="button" class="mini-pill" data-vpn-mode="tor">3-Hop Tor</button>
+                  <div class="split-mode-row" role="group" aria-label="Split View layout ratio">
+                    <button type="button" class="mini-pill active" data-split-ratio="50 / 50">50 / 50 Balanced</button>
+                    <button type="button" class="mini-pill" data-split-ratio="65 / 35">65 / 35 Focus</button>
                   </div>
-                  <div class="vpn-loc-row">
-                    <button type="button" class="loc-pill active" data-vpn-cc="US" data-vpn-city="United States" data-vpn-ms="38">United States · 38 ms</button>
-                    <button type="button" class="loc-pill" data-vpn-cc="DE" data-vpn-city="Germany" data-vpn-ms="44">Germany · 44 ms</button>
-                    <button type="button" class="loc-pill" data-vpn-cc="JP" data-vpn-city="Japan" data-vpn-ms="62">Japan · 62 ms</button>
+                  <div class="split-loc-row">
+                    <button type="button" class="loc-pill active" data-split-pair="Docs + GitHub">Docs + GitHub</button>
+                    <button type="button" class="loc-pill" data-split-pair="YouTube + Notes">YouTube + Notes</button>
+                    <button type="button" class="loc-pill" data-split-pair="Gmail + Drive">Gmail + Drive</button>
                   </div>
                   <div class="preview-card-foot">
-                    <span id="vpn-verify-note" class="preview-sub">HTTPS verified · zero broken sites</span>
-                    <button type="button" id="demo-vpn-verify" class="m3-btn m3-btn-tonal m3-btn-xs">Verify</button>
+                    <span id="split-pair-note" class="preview-sub">Paired: Docs + GitHub · Click either pane to focus</span>
+                    <button type="button" id="demo-split-swap" class="m3-btn m3-btn-tonal m3-btn-xs">Swap</button>
                   </div>
                 </div>
               </div>
@@ -294,7 +302,7 @@
               <div id="px-wp" class="wp-backdrop" style="background-image:url('assets/wallpapers/wp-m3-sky-terrace.jpg')"></div>
               <div class="wp-scrim"></div>
               <div class="pixel-body">
-                <div class="pixel-status"><span>12:30</span><span>5G · VPN</span></div>
+                <div class="pixel-status"><span>12:30</span><span>5G · Link</span></div>
                 <div class="pixel-glance">
                   <small id="px-motd-overline">Good afternoon · Pixel</small>
                   <strong id="px-synced-title">Start Page</strong>
@@ -329,26 +337,26 @@
 
         <article class="feature-card">
           <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.9"/><path d="M3.8 12h16.4M12 3.5c2.4 2.4 3.6 5.3 3.6 8.5s-1.2 6.1-3.6 8.5c-2.4-2.4-3.6-5.3-3.6-8.5s1.2-6.1 3.6-8.5z" stroke="currentColor" stroke-width="1.7"/></svg>
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none"><rect x="3" y="4.5" width="18" height="15" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M12 4.5v15" stroke="currentColor" stroke-width="1.9"/></svg>
           </span>
-          <h3>Built-In Self-Healing VPN</h3>
-          <p>One-tap smart routing with automatic 3-hop Tor fallback.</p>
+          <h3>Split View &amp; Tab Search</h3>
+          <p>Browse two tabs side-by-side with a draggable M3 handle, plus Ctrl+Shift+A tab search &amp; screenshots.</p>
         </article>
 
         <article class="feature-card">
           <span class="feature-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none"><path d="M14.5 4.5a2 2 0 1 1 0 4H18a1.5 1.5 0 0 1 1.5 1.5v3.2a2 2 0 1 0 0 4V19A1.5 1.5 0 0 1 18 20.5h-3.8a2 2 0 1 0-4 0H6A1.5 1.5 0 0 1 4.5 19v-3.5a2 2 0 1 1 0-4V10A1.5 1.5 0 0 1 6 8.5h4.5a2 2 0 1 1 4 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
-          <h3>Chrome Extensions</h3>
-          <p>Add Chrome Web Store extensions natively, styled in Material You.</p>
+          <h3>Chrome &amp; Edge Extensions</h3>
+          <p>Install Chrome Web Store &amp; Edge Add-ons natively with M3 filter chips and 1-click toolbar controls.</p>
         </article>
 
         <article class="feature-card">
           <span class="feature-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none"><rect x="3" y="5" width="12" height="9" rx="2" stroke="currentColor" stroke-width="1.9"/><rect x="15.5" y="9" width="5.5" height="10" rx="1.6" stroke="currentColor" stroke-width="1.9"/><path d="M7 17h5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
           </span>
-          <h3>dejavu Link &amp; Downloads</h3>
-          <p>Send tabs PC &harr; Phone with E2EE and 8&times; Turbo video downloads.</p>
+          <h3>Dual-Broker dejavu Link</h3>
+          <p>Always-synced E2EE PC &harr; Phone tabs, clipboard, drops &amp; notes over HiveMQ + EMQX + LAN.</p>
         </article>
       </div>
     </section>
@@ -511,7 +519,7 @@
     <section id="download" class="section container">
       <div class="dl-head">
         <h2>Get dejavu.</h2>
-        <p id="dl-ver-eyebrow" class="section-sub">Release v5.10.0 &middot; Free &amp; open source</p>
+        <p id="dl-ver-eyebrow" class="section-sub">Release v5.11.0 &middot; Free &amp; open source</p>
       </div>
 
       <div class="dl-grid">
@@ -552,7 +560,7 @@
           <strong>Verified Open Source</strong>
           <nav class="verify-links" aria-label="Verification links">
             <a id="trust-dl-sha256" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest/download/SHA256SUMS.txt" target="_blank" rel="noopener noreferrer">SHA256SUMS.txt</a>
-            <a id="trust-release-link" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest" target="_blank" rel="noopener noreferrer">Release v5.10.0</a>
+            <a id="trust-release-link" href="https://github.com/Dathevinci/Dejavu-browser/releases/latest" target="_blank" rel="noopener noreferrer">Release v5.11.0</a>
             <a href="https://github.com/Dathevinci/Dejavu-browser" target="_blank" rel="noopener noreferrer">Source Code</a>
             <a href="https://github.com/Dathevinci/Dejavu-browser/attestations" target="_blank" rel="noopener noreferrer">SLSA Provenance</a>
           </nav>
@@ -577,7 +585,7 @@
           <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
         </svg>
         <strong>dejavu</strong>
-        <span id="foot-version">v5.10.0</span>
+        <span id="foot-version">v5.11.0</span>
       </div>
       <div class="foot-links">
         <a href="https://github.com/Dathevinci/Dejavu-browser" target="_blank" rel="noopener noreferrer">GitHub</a>
@@ -592,6 +600,6 @@
     <a href="#overview">Preview</a>
   </div>
 
-  <script src="app.js?v=5.10.0"></script>
+  <script src="app.js?v=5.11.0"></script>
 </body>
 </html>

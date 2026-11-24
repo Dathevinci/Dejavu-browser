@@ -73,8 +73,6 @@ $baseArgs = @(
   "$root\src\SettingsStore.cs",
   "$root\src\ProfileManager.cs",
   "$root\src\AutoUpdater.cs",
-  "$root\src\LocalProxyBridge.cs",
-  "$root\src\VpnManager.cs",
   "$root\src\SyncManager.cs",
   "$root\src\VideoExtractorEngine.cs",
   "$root\src\TurboDownloadManager.cs",

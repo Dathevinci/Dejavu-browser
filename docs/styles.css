@@ -273,7 +273,87 @@ html[data-theme="light"][data-accent="silver"] {
   --md-on-tertiary-container: #00201c;
 }
 
-/* ---------- 12 Dark Material You HCT Palettes ---------- */
+html[data-theme="light"][data-accent="ocean"] {
+  --md-surface: #f4fafe;
+  --md-surface-container-low: #eef4f8;
+  --md-surface-container: #e8eef2;
+  --md-surface-container-high: #e2e8ec;
+  --md-surface-container-highest: #dce3e7;
+  --md-on-surface: #161c1f;
+  --md-on-surface-variant: #40484c;
+  --md-outline: #70787d;
+  --md-outline-variant: #bfc8cd;
+  --md-primary: #006684;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #bfe9ff;
+  --md-on-primary-container: #001f2a;
+  --md-secondary-container: #cee6f0;
+  --md-on-secondary-container: #071e26;
+  --md-tertiary-container: #e3dfff;
+  --md-on-tertiary-container: #191836;
+}
+
+html[data-theme="light"][data-accent="terracotta"] {
+  --md-surface: #fff8f5;
+  --md-surface-container-low: #f9eee9;
+  --md-surface-container: #f3e8e3;
+  --md-surface-container-high: #ede2dd;
+  --md-surface-container-highest: #e7dcd7;
+  --md-on-surface: #211a16;
+  --md-on-surface-variant: #51443d;
+  --md-outline: #83746c;
+  --md-outline-variant: #d5c3b9;
+  --md-primary: #8f4c2b;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #ffdbca;
+  --md-on-primary-container: #361300;
+  --md-secondary-container: #f8dcd0;
+  --md-on-secondary-container: #2c160b;
+  --md-tertiary-container: #e0e8af;
+  --md-on-tertiary-container: #1a2000;
+}
+
+html[data-theme="light"][data-accent="plum"] {
+  --md-surface: #fff7fc;
+  --md-surface-container-low: #f9eef6;
+  --md-surface-container: #f3e8f0;
+  --md-surface-container-high: #ede2ea;
+  --md-surface-container-highest: #e7dce4;
+  --md-on-surface: #20191f;
+  --md-on-surface-variant: #4e434d;
+  --md-outline: #80737e;
+  --md-outline-variant: #d2c2cf;
+  --md-primary: #85457e;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #ffd7f5;
+  --md-on-primary-container: #360035;
+  --md-secondary-container: #f3d8ee;
+  --md-on-secondary-container: #291526;
+  --md-tertiary-container: #ffdbd0;
+  --md-on-tertiary-container: #37150a;
+}
+
+html[data-theme="light"][data-accent="forest"] {
+  --md-surface: #f6fbf4;
+  --md-surface-container-low: #f0f5ee;
+  --md-surface-container: #eaefe8;
+  --md-surface-container-high: #e4e9e2;
+  --md-surface-container-highest: #dee4dc;
+  --md-on-surface: #181d18;
+  --md-on-surface-variant: #414940;
+  --md-outline: #727970;
+  --md-outline-variant: #c1c9be;
+  --md-primary: #37693e;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #b8f0bb;
+  --md-on-primary-container: #002109;
+  --md-secondary-container: #d4e8d3;
+  --md-on-secondary-container: #0f1f11;
+  --md-tertiary-container: #bcebf1;
+  --md-on-tertiary-container: #002023;
+}
+
+/* ---------- 16 Dark Material You HCT Palettes ---------- */
 html[data-theme="dark"] {
   --md-surface: #111318;
   --md-surface-container-lowest: #0c0e13;
@@ -508,6 +588,82 @@ html[data-theme="dark"][data-accent="silver"] {
   --md-on-primary-container: #d8e4f8;
   --md-secondary-container: #3e4552;
   --md-on-secondary-container: #dce4f2;
+}
+
+html[data-theme="dark"][data-accent="ocean"] {
+  --md-surface: #0e1417;
+  --md-surface-container-lowest: #090f12;
+  --md-surface-container-low: #161c1f;
+  --md-surface-container: #1a2023;
+  --md-surface-container-high: #252b2e;
+  --md-surface-container-highest: #303639;
+  --md-on-surface: #dde3e7;
+  --md-on-surface-variant: #bfc8cd;
+  --md-outline: #899297;
+  --md-outline-variant: #40484c;
+  --md-primary: #72d5f5;
+  --md-on-primary: #003546;
+  --md-primary-container: #004e66;
+  --md-on-primary-container: #bfe9ff;
+  --md-secondary-container: #344a53;
+  --md-on-secondary-container: #cee6f0;
+}
+
+html[data-theme="dark"][data-accent="terracotta"] {
+  --md-surface: #18120f;
+  --md-surface-container-lowest: #120d0a;
+  --md-surface-container-low: #211a16;
+  --md-surface-container: #251e1a;
+  --md-surface-container-high: #302824;
+  --md-surface-container-highest: #3b332e;
+  --md-on-surface: #ede0d9;
+  --md-on-surface-variant: #d5c3b9;
+  --md-outline: #9e8e85;
+  --md-outline-variant: #51443d;
+  --md-primary: #f2b89b;
+  --md-on-primary: #50240c;
+  --md-primary-container: #6d391e;
+  --md-on-primary-container: #ffdbca;
+  --md-secondary-container: #5b4134;
+  --md-on-secondary-container: #fddcc9;
+}
+
+html[data-theme="dark"][data-accent="plum"] {
+  --md-surface: #171117;
+  --md-surface-container-lowest: #120c12;
+  --md-surface-container-low: #20191f;
+  --md-surface-container: #241d23;
+  --md-surface-container-high: #2f282e;
+  --md-surface-container-highest: #3a3239;
+  --md-on-surface: #ebdfe9;
+  --md-on-surface-variant: #d2c2cf;
+  --md-outline: #9b8c99;
+  --md-outline-variant: #4e434d;
+  --md-primary: #f2b0e6;
+  --md-on-primary: #4f184c;
+  --md-primary-container: #692f64;
+  --md-on-primary-container: #ffd7f5;
+  --md-secondary-container: #553f52;
+  --md-on-secondary-container: #f5d8f0;
+}
+
+html[data-theme="dark"][data-accent="forest"] {
+  --md-surface: #101510;
+  --md-surface-container-lowest: #0b0f0b;
+  --md-surface-container-low: #181d18;
+  --md-surface-container: #1c211c;
+  --md-surface-container-high: #262c26;
+  --md-surface-container-highest: #313731;
+  --md-on-surface: #dfe4dc;
+  --md-on-surface-variant: #c1c9be;
+  --md-outline: #8b9389;
+  --md-outline-variant: #414940;
+  --md-primary: #9cd49f;
+  --md-on-primary: #063914;
+  --md-primary-container: #1d5128;
+  --md-on-primary-container: #b8f0bb;
+  --md-secondary-container: #384b39;
+  --md-on-secondary-container: #d4e8d3;
 }
 
 /* ==========================================================================
@@ -1465,7 +1621,7 @@ html[data-theme="dark"] .sp-tile {
   color: var(--md-on-surface);
 }
 
-/* Interactive VPN & Video Preview Cards */
+/* Interactive Split View & Video Preview Cards */
 .preview-card {
   width: 100%;
   padding: 20px;
@@ -1514,8 +1670,8 @@ html[data-theme="dark"] .preview-card {
   flex-shrink: 0;
 }
 
-.vpn-mode-row,
-.vpn-loc-row,
+.split-mode-row,
+.split-loc-row,
 .video-actions {
   display: flex;
   flex-wrap: wrap;

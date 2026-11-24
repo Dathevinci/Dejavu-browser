@@ -572,7 +572,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             if (uiReady) pushStateToUi();
         }));
         syncManager = new SyncManager(this, this);
-        activateGoogleAutoSyncIfSignedIn(false);
+        activateGoogleAutoSyncIfSignedIn(true);
         autoUpdater = new MobileAutoUpdater(this, this);
         downloadManager = new MobileDownloadManager(this, this);
 
@@ -610,6 +610,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             try { active.webView.onResume(); } catch (Throwable ignored) { }
         }
         if (autoUpdater != null) autoUpdater.onActivityResumed(this);
+        if (syncManager != null) {
+            syncManager.sendPing();
+            syncManager.pullDirectLanSnapshotAsync();
+        }
         if (uiReady) pushStateToUi();
     }
 
@@ -1105,6 +1109,26 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             return isLight
                 ? new M3Palette(0xFFF9F9FC, 0xFFEEF0F5, 0xFFE5E8EE, 0xFF455A77, 0xFFD8E4F8, 0xFF233752, 0xFFC3C7D0, 0xFF1D1B20, 0xFF44474E)
                 : new M3Palette(0xFF121316, 0xFF202328, 0xFF2A2D33, 0xFFB8C8E2, 0xFF344154, 0xFFD8E4F8, 0xFF44474E, 0xFFE6E0E9, 0xFFC3C7D0);
+        }
+        if ("ocean".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFF4FAFE, 0xFFE8EEF2, 0xFFE2E8EC, 0xFF006684, 0xFFBFE9FF, 0xFF001F2A, 0xFFBFC8CD, 0xFF161C1F, 0xFF40484C)
+                : new M3Palette(0xFF0E1417, 0xFF1A2023, 0xFF252B2E, 0xFF72D5F5, 0xFF004E66, 0xFFBFE9FF, 0xFF40484C, 0xFFDDE3E7, 0xFFBFC8CD);
+        }
+        if ("terracotta".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFFFF8F5, 0xFFF3E8E3, 0xFFEDE2DD, 0xFF8F4C2B, 0xFFFFDBCA, 0xFF361300, 0xFFD5C3B9, 0xFF211A16, 0xFF51443D)
+                : new M3Palette(0xFF18120F, 0xFF251E1A, 0xFF302824, 0xFFF2B89B, 0xFF6D391E, 0xFFFFDBCA, 0xFF51443D, 0xFFEDE0D9, 0xFFD5C3B9);
+        }
+        if ("plum".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFFFF7FC, 0xFFF3E8F0, 0xFFEDE2EA, 0xFF85457E, 0xFFFFD7F5, 0xFF360035, 0xFFD2C2CF, 0xFF20191F, 0xFF4E434D)
+                : new M3Palette(0xFF171117, 0xFF241D23, 0xFF2F282E, 0xFFF2B0E6, 0xFF692F64, 0xFFFFD7F5, 0xFF4E434D, 0xFFEBDFE9, 0xFFD2C2CF);
+        }
+        if ("forest".equals(accentColor)) {
+            return isLight
+                ? new M3Palette(0xFFF6FBF4, 0xFFEAEFE8, 0xFFE4E9E2, 0xFF37693E, 0xFFB8F0BB, 0xFF002109, 0xFFC1C9BE, 0xFF181D18, 0xFF414940)
+                : new M3Palette(0xFF101510, 0xFF1C211C, 0xFF262C26, 0xFF9CD49F, 0xFF1D5128, 0xFFB8F0BB, 0xFF414940, 0xFFDFE4DC, 0xFFC1C9BE);
         }
         // Default: Amethyst (Official Google Pixel M3 Baseline)
         return isLight
@@ -3174,7 +3198,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.10.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.11.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -3849,7 +3873,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         String a = raw.trim().toLowerCase(Locale.US);
         if ("sapphire".equals(a) || "indigo".equals(a) || "aurora".equals(a) || "emerald".equals(a)
             || "lime".equals(a) || "gold".equals(a) || "coral".equals(a) || "crimson".equals(a)
-            || "rose".equals(a) || "lavender".equals(a) || "silver".equals(a)) {
+            || "rose".equals(a) || "lavender".equals(a) || "silver".equals(a)
+            || "ocean".equals(a) || "terracotta".equals(a) || "plum".equals(a) || "forest".equals(a)) {
             return a;
         }
         return "amethyst";
@@ -5187,6 +5212,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             mainHandler.post(() -> {
                 syncAllCollectionsToPc();
                 Toast.makeText(MainActivity.this, "Synced with Windows PC", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void syncReconnect() {
+            mainHandler.post(() -> {
+                if (syncManager != null) {
+                    syncManager.reconnectRelay();
+                    syncAllCollectionsToPc();
+                }
+                Toast.makeText(MainActivity.this, "Reconnecting dejavu Link relay...", Toast.LENGTH_SHORT).show();
             });
         }
 

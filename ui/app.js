@@ -1,5 +1,5 @@
 /**
- * dejavu v5.10.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * dejavu v5.11.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
  * 12 Official HCT Material You Themes, 32 Pure M3, Butterfly & Froggie Wallpapers, Auto Wallpaper-to-Theme,
  * Redesigned Pixel At-a-Glance Message of the Day Card, Clean 5-Control ChromeOS Toolbar,
  * Zero-Glitch 120Hz Tab Strip, Brave-Grade Shields, Real-Time dejavu Link Hub & 8x Turbo Downloader.
@@ -41,20 +41,7 @@
     imgEl.replaceWith(makeM3LogoSpan(sz, cls));
   }
 
-  // Upgrade default profile avatar to Dynamic Material Design 3 Butterfly SVG
-  if (window.DejavuAvatars && typeof window.DejavuAvatars.renderHtml === 'function') {
-    const origAvatarRender = window.DejavuAvatars.renderHtml;
-    if (Array.isArray(window.DejavuAvatars.list) && window.DejavuAvatars.list[0] && window.DejavuAvatars.list[0].id === 'dejavu-halftone') {
-      window.DejavuAvatars.list[0].name = 'Material You';
-    }
-    window.DejavuAvatars.renderHtml = function (id, size) {
-      const sz = size || 32;
-      if (!id || id === 'dejavu-halftone') {
-        return `<span class="bf-avatar bf-avatar-m3" style="width:${sz}px;height:${sz}px;">${DEJAVU_M3_LOGO_SVG}</span>`;
-      }
-      return origAvatarRender.call(window.DejavuAvatars, id, sz);
-    };
-  }
+  // All 16 Material Design 3 profile avatars (including dynamic Material You) live natively in ui/avatars.js
 
   const body = document.body;
   const chromeHeader = document.getElementById('chrome-header');
@@ -86,12 +73,12 @@
 
   const tabsStrip = document.getElementById('tabs-strip');
   const btnNewTab = document.getElementById('btn-new-tab');
+  const btnTabSearch = document.getElementById('btn-tab-search');
 
   const privateBadgePill = document.getElementById('private-badge-pill');
   const btnDownloads = document.getElementById('btn-downloads');
   const dlDot = document.getElementById('dl-dot');
-  const btnVpn = document.getElementById('btn-vpn');
-  const vpnChipCode = document.getElementById('vpn-chip-code');
+  const btnSplitView = document.getElementById('btn-split-view');
   const btnSync = document.getElementById('btn-sync');
   const syncDot = document.getElementById('sync-dot');
   const btnShare = document.getElementById('btn-share');
@@ -149,9 +136,6 @@
   const newtabStatLabel = document.getElementById('newtab-stat-label');
   const newtabStatText = document.getElementById('newtab-stat-text');
   const statDot = document.getElementById('stat-dot');
-  const newtabVpnChip = document.getElementById('newtab-vpn-chip');
-  const newtabVpnText = document.getElementById('newtab-vpn-text');
-  const newtabVpnSub = document.getElementById('newtab-vpn-sub');
   const newtabLinkChip = document.getElementById('newtab-link-chip');
   const newtabLinkText = document.getElementById('newtab-link-text');
   const newtabExtChip = document.getElementById('newtab-ext-chip');
@@ -237,8 +221,10 @@
   const youHeroEmail = document.getElementById('you-hero-email');
   const btnYouGoogleSignin = document.getElementById('btn-you-google-signin');
   const btnYouGoogleSignup = document.getElementById('btn-you-google-signup');
+  const btnYouGoogleManage = document.getElementById('btn-you-google-manage');
   const btnYouGoogleSync = document.getElementById('btn-you-google-sync');
   const btnYouGoogleSignout = document.getElementById('btn-you-google-signout');
+  const youAccountPerks = document.getElementById('you-account-perks');
   const btnYouCustomizeProfile = document.getElementById('btn-you-customize-profile');
   const youWindowSummary = document.getElementById('you-window-summary');
   const btnYouNewWindow = document.getElementById('btn-you-new-window');
@@ -336,15 +322,7 @@
   const optAutofillAddresses = document.getElementById('opt-autofill-addresses');
   const optAutofillPayments = document.getElementById('opt-autofill-payments');
 
-  // Category 8: Privacy VPN
-  const optVpnSummary = document.getElementById('opt-vpn-summary');
-  const btnOptOpenVpn = document.getElementById('btn-opt-open-vpn');
-  const optVpnAuto = document.getElementById('opt-vpn-auto');
-  const optVpnMode = document.getElementById('opt-vpn-mode');
-  const optVpnWebRtc = document.getElementById('opt-vpn-webrtc');
-  const optVpnCountry = document.getElementById('opt-vpn-country');
-
-  // Category 9: Accessibility & System
+  // Category 8: Accessibility & System
   const optHwAccel = document.getElementById('opt-hw-accel');
   const optSpellcheck = document.getElementById('opt-spellcheck');
   const optDevtools = document.getElementById('opt-devtools');
@@ -572,10 +550,14 @@
     crimson: '#ffb3b5',
     rose: '#ffb0ce',
     lavender: '#e2b7ff',
-    silver: '#b8c8e2'
+    silver: '#b8c8e2',
+    ocean: '#72d5f5',
+    terracotta: '#f2b89b',
+    plum: '#f2b0e6',
+    forest: '#9cd49f'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.10.0 — 32 HD + 1 Live = 33 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.11.0 — 32 HD + 1 Live = 33 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 18 Sculptural / Architectural Material Design 3 HD Wallpapers (10 Dark, 8 Light)
@@ -798,10 +780,6 @@
       savePasswords: true,
       autofillAddresses: true,
       autofillPayments: false,
-      vpnAutoConnect: false,
-      vpnMode: 'smart',
-      vpnCountry: 'AUTO',
-      vpnWebRtcProtection: true,
       hardwareAcceleration: true,
       spellcheckEnabled: true,
       devToolsEnabled: true
@@ -859,7 +837,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.10.0',
+    appVersion: bootData.appVersion || '5.11.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -996,6 +974,12 @@
   btnForward.addEventListener('click', () => send({ type: 'forward' }));
   btnReload.addEventListener('click', () => send({ type: 'reload' }));
   btnNewTab.addEventListener('click', () => send({ type: 'newTab' }));
+  if (btnTabSearch) {
+    btnTabSearch.addEventListener('click', () => {
+      const r = btnTabSearch.getBoundingClientRect();
+      send({ type: 'openTabSearch', anchorRight: Math.round(r.left + r.width / 2) });
+    });
+  }
 
   [btnShield, btnReader, btnZoomPill, btnFavStar, btnReload].forEach((btn) => {
     if (!btn) return;
@@ -1018,15 +1002,9 @@
     send({ type: 'openShield', anchorRight: anchor });
   }
 
-  function openVpnPopover() {
-    const r = btnVpn.getBoundingClientRect();
-    send({ type: 'openVpn', anchorRight: Math.round(r.right + 120) });
-  }
-
   btnShield.addEventListener('click', openShieldPopover);
-  btnVpn.addEventListener('click', openVpnPopover);
+  if (btnSplitView) btnSplitView.addEventListener('click', () => send({ type: 'toggleSplitView' }));
   if (newtabShieldChip) newtabShieldChip.addEventListener('click', openShieldPopover);
-  if (newtabVpnChip) newtabVpnChip.addEventListener('click', openVpnPopover);
   if (newtabLinkChip) newtabLinkChip.addEventListener('click', () => send({ type: 'openLinkHub' }));
   if (newtabExtChip) newtabExtChip.addEventListener('click', () => send({ type: 'openExtensions' }));
 
@@ -2116,15 +2094,14 @@
   // =========================================================================
   const SETTINGS_PANE_META = {
     you: { title: 'You and Google', sub: 'Manage your Google Account, Main Profile, and simultaneous Chrome-style profile windows' },
-    appearance: { title: 'Appearance & Material You', sub: '12 HCT Dynamic Color themes, auto wallpaper matching, 32 HD M3, Butterfly & Froggie wallpapers, typography & zoom' },
+    appearance: { title: 'Appearance & Material You', sub: '16 HCT Dynamic Color themes (32 Light/Dark), auto wallpaper matching, 32 HD M3, Butterfly & Froggie wallpapers, typography & zoom' },
     privacy: { title: 'Privacy & Security', sub: 'Brave-Grade Shields, fingerprinting defense, cookie notice blocking, Clear Browsing Data & permissions' },
     search: { title: 'Search Engine', sub: 'Choose your default search provider, custom search template & address bar suggestions' },
     tabs: { title: 'Tabs & On Startup', sub: 'Startup session restore, Homepage, Memory Saver inactivity timer & keyboard shortcuts' },
     downloads: { title: 'Downloads', sub: 'Save folder, Turbo multi-thread accelerator connections & default video / MP3 quality' },
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
-    vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.10.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.11.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2236,11 +2213,17 @@
     }
     if (youHeroEmail) {
       youHeroEmail.textContent = signedIn
-        ? `${ap.googleEmail || 'Connected Google Account'} · Isolated profile cookies & data`
-        : 'Sign in or create a Google Account to use Gmail, YouTube, Drive & Gemini in this isolated profile';
+        ? `${ap.googleEmail || 'Connected Google Account'} · Google sync & isolated profile cookies active`
+        : 'Sign in with Google to use Gmail, YouTube, Drive & automatic dejavu Link sync';
+    }
+    if (youAccountPerks) {
+      youAccountPerks.innerHTML = signedIn
+        ? '<span class="m3-perk-chip active">Google Signed In</span><span class="m3-perk-chip active">dejavu Link Ready</span><span class="m3-perk-chip">Isolated Profile</span>'
+        : '<span class="m3-perk-chip">Gmail, YouTube &amp; Drive</span><span class="m3-perk-chip">Auto dejavu Link Sync</span><span class="m3-perk-chip">Isolated Cookies</span>';
     }
     if (btnYouGoogleSignin) btnYouGoogleSignin.classList.toggle('hidden', signedIn);
     if (btnYouGoogleSignup) btnYouGoogleSignup.classList.toggle('hidden', signedIn);
+    if (btnYouGoogleManage) btnYouGoogleManage.classList.toggle('hidden', !signedIn);
     if (btnYouGoogleSignout) btnYouGoogleSignout.classList.toggle('hidden', !signedIn);
     if (youWindowSummary) {
       const wc = Number(state.windowCount || 1);
@@ -2432,7 +2415,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.10.0';
+    const ver = state.appVersion || '5.11.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -2570,22 +2553,7 @@
     setSwitchState(optAutofillAddresses, o.autofillAddresses !== false);
     setSwitchState(optAutofillPayments, !!o.autofillPayments);
 
-    // Category 8: Privacy VPN
-    setSegmentedVal(optVpnMode, (state.vpn && state.vpn.mode) || o.vpnMode || 'smart');
-    setSwitchState(optVpnAuto, !!o.vpnAutoConnect);
-    setSwitchState(optVpnWebRtc, o.vpnWebRtcProtection !== false);
-    if (optVpnCountry) optVpnCountry.value = (state.vpn && state.vpn.countryCode) || o.vpnCountry || 'AUTO';
-    if (optVpnSummary && state.vpn) {
-      const st = state.vpn.state || 'disconnected';
-      const totalLoc = state.vpn.countriesCount || (Array.isArray(state.vpn.countries) && state.vpn.countries.length ? state.vpn.countries.length : 86);
-      const engLbl = state.vpn.activeEngine === 'tor' ? '3-Hop Encrypted Tor' : 'Smart Clean-IP';
-      const latTxt = Number(state.vpn.latencyMs || 0) > 0 ? ` · ${state.vpn.latencyMs} ms` : '';
-      optVpnSummary.textContent = st === 'connected'
-        ? `Verified · ${engLbl} · ${state.vpn.exitCountry || state.vpn.countryName || 'VPN'} (${state.vpn.exitIp || 'Encrypted'}${latTxt})`
-        : `Disconnected · ${totalLoc} global countries (Nepal, US, UK, India, Japan…)`;
-    }
-
-    // Category 9: Accessibility & System
+    // Category 8: Accessibility & System
     setSwitchState(optHwAccel, o.hardwareAcceleration !== false);
     setSwitchState(optSpellcheck, o.spellcheckEnabled !== false);
     setSwitchState(optDevtools, o.devToolsEnabled !== false);
@@ -2752,6 +2720,7 @@
   // Category 1 bindings
   if (btnYouGoogleSignin) btnYouGoogleSignin.addEventListener('click', () => send({ type: 'googleSignIn' }));
   if (btnYouGoogleSignup) btnYouGoogleSignup.addEventListener('click', () => send({ type: 'googleSignUp' }));
+  if (btnYouGoogleManage) btnYouGoogleManage.addEventListener('click', () => send({ type: 'openHistoryUrl', url: 'https://myaccount.google.com', newTab: true }));
   if (btnYouGoogleSync) btnYouGoogleSync.addEventListener('click', () => send({ type: 'googleSyncProfile' }));
   if (btnYouGoogleSignout) btnYouGoogleSignout.addEventListener('click', () => send({ type: 'googleSignOut' }));
   if (btnYouCustomizeProfile) btnYouCustomizeProfile.addEventListener('click', () => openProfileSetupModal('edit', state.activeProfile && state.activeProfile.id));
@@ -2962,13 +2931,6 @@
   bindBoolSwitch(optAutofillPayments, 'autofillPayments', false);
 
   // Category 8 bindings
-  if (btnOptOpenVpn) btnOptOpenVpn.addEventListener('click', () => { send({ type: 'toggleSettings', open: false }); setTimeout(openVpnPopover, 60); });
-  bindBoolSwitch(optVpnAuto, 'vpnAutoConnect', false);
-  bindSeg(optVpnMode, 'vpnMode');
-  bindBoolSwitch(optVpnWebRtc, 'vpnWebRtcProtection', false);
-  if (optVpnCountry) optVpnCountry.addEventListener('change', () => updateOpt({ vpnCountry: optVpnCountry.value }));
-
-  // Category 9 bindings
   bindBoolSwitch(optHwAccel, 'hardwareAcceleration', false);
   bindBoolSwitch(optSpellcheck, 'spellcheckEnabled', false);
   bindBoolSwitch(optDevtools, 'devToolsEnabled', false);
@@ -3237,9 +3199,8 @@
         if (psWaitTitle) psWaitTitle.textContent = 'Google Sign-In will open automatically in the new profile window';
         if (psGoogleWait) psGoogleWait.classList.remove('hidden');
       } else {
+        closeProfileSetupModal();
         send({ type: 'googleSignIn', profileId: psState.editingProfileId || undefined });
-        if (psWaitTitle) psWaitTitle.textContent = 'Waiting for Google sign-in…';
-        if (psGoogleWait) psGoogleWait.classList.remove('hidden');
       }
     });
   }
@@ -3251,9 +3212,8 @@
         if (psWaitTitle) psWaitTitle.textContent = 'Google Account Sign-Up will open automatically in the new profile window';
         if (psGoogleWait) psGoogleWait.classList.remove('hidden');
       } else {
+        closeProfileSetupModal();
         send({ type: 'googleSignUp', profileId: psState.editingProfileId || undefined });
-        if (psWaitTitle) psWaitTitle.textContent = 'Waiting for Google Account creation…';
-        if (psGoogleWait) psGoogleWait.classList.remove('hidden');
       }
     });
   }
@@ -3889,6 +3849,8 @@
         { id: 'newTabRight', label: 'New tab to the right', shortcut: 'Ctrl+T', icon: 'new-tab' },
         { id: 'reloadTab', label: 'Reload tab', shortcut: 'Ctrl+R', icon: 'reload', disabled: isNewTab },
         { id: 'duplicateTab', label: 'Duplicate tab', icon: 'duplicate' },
+        { id: 'splitTabWithCurrent', label: state.splitViewActive ? 'Swap Split Panes' : 'Open in Split View', shortcut: 'Ctrl+Shift+V', icon: 'move-window', disabled: isNewTab && !state.splitViewActive },
+        ...(state.splitViewActive ? [{ id: 'exitSplitView', label: 'Exit Split View', icon: 'close' }] : []),
         { id: 'pinTab', label: isPinned ? 'Unpin tab' : 'Pin tab', icon: isPinned ? 'unpin' : 'pin' },
         { id: 'muteTab', label: isMuted ? 'Unmute tab' : 'Mute tab', icon: isMuted ? 'unmute' : 'mute', disabled: isNewTab },
         { separator: true },
@@ -3905,6 +3867,11 @@
         if (act === 'newTabRight') send({ type: 'newTab', afterTabId: tab.id });
         else if (act === 'reloadTab') send({ type: 'reloadTab', id: tab.id });
         else if (act === 'duplicateTab') send({ type: 'duplicateTab', id: tab.id });
+        else if (act === 'splitTabWithCurrent') {
+          if (state.splitViewActive) send({ type: 'swapSplitPanes' });
+          else send({ type: 'splitTabWithCurrent', id: tab.id });
+        }
+        else if (act === 'exitSplitView') send({ type: 'exitSplitView' });
         else if (act === 'pinTab') send({ type: 'pinTab', id: tab.id });
         else if (act === 'muteTab') send({ type: 'muteTab', id: tab.id });
         else if (act === 'moveTabToNewWindow') send({ type: 'moveTabToNewWindow', id: tab.id });
@@ -4548,6 +4515,11 @@
         meta.pinned = isPinned;
         el.classList.toggle('pinned', isPinned);
       }
+      const isSplit = !!tab.splitPane;
+      if (meta.split !== isSplit) {
+        meta.split = isSplit;
+        el.classList.toggle('is-split', isSplit);
+      }
       if (meta.muted !== isMuted) {
         meta.muted = isMuted;
         el.classList.toggle('muted', isMuted);
@@ -4659,41 +4631,6 @@
     }
   }
 
-  let lastVpnChipSig = '';
-  function updateNewtabVpnChip(vpn) {
-    if (!newtabVpnChip || !newtabVpnText) return;
-    const totalLoc = (vpn && vpn.countriesCount) || ((vpn && Array.isArray(vpn.countries) && vpn.countries.length) ? vpn.countries.length : 86);
-    const sig = vpn
-      ? `${vpn.state || ''}|${vpn.exitCountryCode || ''}|${vpn.countryCode || ''}|${vpn.exitCountry || ''}|${vpn.countryName || ''}|${vpn.exitIp || ''}|${vpn.statusText || ''}|${totalLoc}`
-      : `none|${totalLoc}`;
-    if (sig === lastVpnChipSig) return;
-    lastVpnChipSig = sig;
-    if (!vpn) {
-      newtabVpnChip.classList.remove('connected', 'connecting');
-      newtabVpnText.textContent = 'VPN: Off';
-      if (newtabVpnSub) newtabVpnSub.textContent = `${totalLoc} global locations`;
-      return;
-    }
-    const vst = vpn.state || 'disconnected';
-    const isConn = vst === 'connected';
-    const isBusy = vst === 'connecting' || vst === 'downloading';
-    newtabVpnChip.classList.toggle('connected', isConn);
-    newtabVpnChip.classList.toggle('connecting', isBusy);
-    if (isConn) {
-      const rawCode = (vpn.exitCountryCode || vpn.countryCode || 'AUTO').toUpperCase();
-      const codeDisp = rawCode === 'GB' ? 'UK' : (rawCode === 'AUTO' ? 'Auto' : rawCode);
-      const locLabel = vpn.exitCountry || vpn.countryName || codeDisp;
-      newtabVpnText.textContent = `VPN · ${locLabel}`;
-      if (newtabVpnSub) newtabVpnSub.textContent = vpn.exitIp ? `Exit IP ${vpn.exitIp}` : 'Encrypted VPN tunnel';
-    } else if (isBusy) {
-      newtabVpnText.textContent = 'VPN: Connecting…';
-      if (newtabVpnSub) newtabVpnSub.textContent = vpn.statusText || 'Building encrypted tunnel';
-    } else {
-      newtabVpnText.textContent = 'VPN: Off';
-      if (newtabVpnSub) newtabVpnSub.textContent = `${totalLoc} global locations`;
-    }
-  }
-
   function describeRelayStatus(s) {
     const rs = String((s && s.relayStatus) || '').toLowerCase();
     const broker = String((s && s.relayBroker) || '').trim();
@@ -4701,9 +4638,10 @@
       return { cls: 'is-lan', label: 'Direct Wi-Fi LAN', title: 'Direct Wi-Fi LAN E2EE (<5ms)' };
     }
     if (rs === 'connected_cloud') {
+      const dual = broker.includes('hivemq') && broker.includes('emqx');
       return {
         cls: 'is-cloud',
-        label: 'E2EE Cloud · Connected',
+        label: dual ? 'Dual-Broker E2EE · Connected' : 'E2EE Cloud · Connected',
         title: broker ? `Connected via TLS MQTT (${broker})` : 'Connected via TLS MQTT Cloud Relay'
       };
     }
@@ -5123,6 +5061,15 @@
     if (typeof msg.activeTabTitle === 'string') state.activeTabTitle = msg.activeTabTitle;
     if (typeof msg.activeTabIsVideoSite === 'boolean') state.activeTabIsVideoSite = msg.activeTabIsVideoSite;
     if (typeof msg.canReopenClosedTab === 'boolean') state.canReopenClosedTab = msg.canReopenClosedTab;
+    if (typeof msg.splitViewActive === 'boolean') {
+      state.splitViewActive = msg.splitViewActive;
+      if (btnSplitView) {
+        btnSplitView.classList.toggle('is-active', msg.splitViewActive);
+        btnSplitView.title = msg.splitViewActive
+          ? 'Exit Split View (Ctrl+Shift+V)'
+          : 'Split View — Browse two tabs side-by-side (Ctrl+Shift+V)';
+      }
+    }
 
     syncTabs(state.tabs, state.activeTabId);
     if (!bootTabsReady && state.tabs.length > 0) {
@@ -5195,7 +5142,6 @@
     renderReadingListSection(next.readingList || [], prefs.hideReadingList);
     renderFavoritesBar(next.favorites || [], next.showFavoritesBar);
     updateStatText(next.globalAdBlockEnabled, next.totalBlocked);
-    updateNewtabVpnChip(next.vpn);
 
     body.classList.toggle('is-maximized', !!next.isMaximized);
     const maxTitle = next.isMaximized ? 'Restore' : 'Maximize';
@@ -5318,29 +5264,12 @@
           : 'dejavu Link · Sync Tabs, Clipboard & Drops with Phone');
       if (btnSync.title !== syncTitle) btnSync.title = syncTitle;
     }
-
-    if (next.vpn) {
-      const vst = next.vpn.state || 'disconnected';
-      const isConn = vst === 'connected';
-      const isBusy = vst === 'connecting' || vst === 'downloading';
-      btnVpn.classList.toggle('connected', isConn);
-      btnVpn.classList.toggle('connecting', isBusy);
-      const rawCode = (next.vpn.exitCountryCode || next.vpn.countryCode || 'AUTO').toUpperCase();
-      const codeDisp = rawCode === 'GB' ? 'UK' : (rawCode === 'AUTO' ? 'VPN' : rawCode);
-      if (isConn) {
-        if (vpnChipCode.textContent !== codeDisp) vpnChipCode.textContent = codeDisp;
-        vpnChipCode.classList.remove('hidden');
-        btnVpn.title = `dejavu VPN · Protected (${next.vpn.exitCountry || next.vpn.countryName || codeDisp}${next.vpn.exitIp ? ' · ' + next.vpn.exitIp : ''})`;
-      } else if (isBusy) {
-        const pctTxt = `${Math.max(5, next.vpn.progress || 10)}%`;
-        if (vpnChipCode.textContent !== pctTxt) vpnChipCode.textContent = pctTxt;
-        vpnChipCode.classList.remove('hidden');
-        btnVpn.title = next.vpn.statusText || 'dejavu VPN · Connecting…';
-      } else {
-        if (vpnChipCode.textContent !== '') vpnChipCode.textContent = '';
-        vpnChipCode.classList.add('hidden');
-        btnVpn.title = 'dejavu VPN · Disconnected (Click to connect)';
-      }
+    if (btnSplitView) {
+      const isSplit = !!next.splitViewActive;
+      btnSplitView.classList.toggle('is-active', isSplit);
+      btnSplitView.title = isSplit
+        ? 'Exit Split View (Ctrl+Shift+V)'
+        : 'Split View — Browse two tabs side-by-side (Ctrl+Shift+V)';
     }
     updateRailIndicators();
   }
@@ -6325,13 +6254,42 @@
   }
 
   let lastExtGridSig = '';
+  let activeExtFilter = 'all';
+  const extFilterChips = document.getElementById('ext-filter-chips');
+  const extCntAll = document.getElementById('ext-cnt-all');
+  const extCntEnabled = document.getElementById('ext-cnt-enabled');
+  const extCntPinned = document.getElementById('ext-cnt-pinned');
+  const extCntDisabled = document.getElementById('ext-cnt-disabled');
+  const btnExtQuickFile = document.getElementById('btn-ext-quick-file');
+  const btnExtQuickUpdate = document.getElementById('btn-ext-quick-update');
+
+  const CURATED_STARTER_EXTENSIONS = [
+    { id: 'ddkjiahejlhfcafbddmgiahcphecmpfh', name: 'uBlock Origin Lite', desc: 'Lightweight MV3 content blocker' },
+    { id: 'eimadpbcbfnmbkopoojfekhnkhdbieeh', name: 'Dark Reader', desc: 'Dark mode for every website' },
+    { id: 'nngceckbapebfimnlniiiahkandclblb', name: 'Bitwarden', desc: 'Open-source password manager' },
+    { id: 'mnjggcdmjocbbbhaepdhchncahnbgone', name: 'SponsorBlock', desc: 'Skip YouTube sponsor segments' }
+  ];
+
   function renderExtensionsManager() {
     if (!extensionsOverlay || !extCardsGrid) return;
     const list = Array.isArray(state.extensions) ? state.extensions : [];
     const devMode = !!state.extensionsDevMode;
     const busy = !!state.extensionsBusy;
 
+    const enabledCount = list.filter((e) => e && e.enabled !== false).length;
+    const pinnedCount = list.filter((e) => e && e.pinned).length;
+    const disabledCount = list.length - enabledCount;
     if (extCountBadge) extCountBadge.textContent = String(list.length);
+    if (extCntAll) extCntAll.textContent = String(list.length);
+    if (extCntEnabled) extCntEnabled.textContent = String(enabledCount);
+    if (extCntPinned) extCntPinned.textContent = String(pinnedCount);
+    if (extCntDisabled) extCntDisabled.textContent = String(disabledCount);
+    if (extFilterChips) {
+      extFilterChips.querySelectorAll('.ext-filter-chip').forEach((chip) => {
+        chip.classList.toggle('active', chip.dataset.extFilter === activeExtFilter);
+      });
+    }
+
     setSwitchState(extDevSwitch, devMode);
     if (extDevBar) extDevBar.classList.toggle('hidden', !devMode);
     if (btnExtStoreInstall) {
@@ -6357,50 +6315,80 @@
     const q = (extSearchInput ? extSearchInput.value : '').trim().toLowerCase();
     if (btnExtSearchClear) btnExtSearchClear.classList.toggle('hidden', !q);
 
-    const gridSig = `${q}|${devMode ? 1 : 0}|` + list.map((e) =>
-      `${e.id}:${e.name || ''}:${e.version || ''}:${e.enabled !== false ? 1 : 0}:${e.pinned ? 1 : 0}:${e.source || ''}:${e.iconDataUrl ? e.iconDataUrl.length : 0}`
+    const gridSig = `${q}|${activeExtFilter}|${devMode ? 1 : 0}|` + list.map((e) =>
+      `${e.id}:${e.name || ''}:${e.version || ''}:${e.enabled !== false ? 1 : 0}:${e.pinned ? 1 : 0}:${e.popupUrl ? 1 : 0}:${e.optionsUrl ? 1 : 0}:${e.source || ''}:${e.iconDataUrl ? e.iconDataUrl.length : 0}`
     ).join(';');
     if (gridSig === lastExtGridSig) return;
     lastExtGridSig = gridSig;
 
-    const filtered = q
-      ? list.filter((e) =>
-          (e.name || '').toLowerCase().includes(q) ||
-          (e.description || '').toLowerCase().includes(q) ||
-          (e.id || '').toLowerCase().includes(q)
-        )
-      : list;
+    const filtered = list.filter((e) => {
+      if (!e) return false;
+      if (activeExtFilter === 'enabled' && e.enabled === false) return false;
+      if (activeExtFilter === 'pinned' && !e.pinned) return false;
+      if (activeExtFilter === 'disabled' && e.enabled !== false) return false;
+      if (!q) return true;
+      return (e.name || '').toLowerCase().includes(q) ||
+        (e.description || '').toLowerCase().includes(q) ||
+        (e.id || '').toLowerCase().includes(q);
+    });
 
     extCardsGrid.innerHTML = '';
     if (!filtered.length) {
       extCardsGrid.style.display = 'block';
-      extCardsGrid.innerHTML = q
+      const hasFilter = !!(q || (activeExtFilter !== 'all' && list.length > 0));
+      const starterHtml = CURATED_STARTER_EXTENSIONS.map((st) => `
+        <button type="button" class="ext-starter-chip" data-starter-id="${escapeSugHtml(st.id)}">
+          <div>
+            <div class="ext-starter-name">${escapeSugHtml(st.name)}</div>
+            <div class="ext-starter-desc">${escapeSugHtml(st.desc)}</div>
+          </div>
+          <span class="ext-starter-add">+ Install</span>
+        </button>`).join('');
+      extCardsGrid.innerHTML = hasFilter
         ? `<div class="ext-empty">
              <div class="ext-empty-ico">${EXT_PUZZLE_LG_SVG}</div>
-             <div class="ext-empty-title">No extensions match "${escapeSugHtml(q)}"</div>
-             <div class="ext-empty-sub">Try searching by name, description, or Extension ID.</div>
+             <div class="ext-empty-title">${q ? `No extensions match "${escapeSugHtml(q)}"` : `No ${escapeSugHtml(activeExtFilter)} extensions`}</div>
+             <div class="ext-empty-sub">Switch back to All extensions or clear your search query.</div>
              <div class="ext-empty-acts">
-               <button type="button" id="btn-ext-clear-empty" class="m3-btn m3-btn-tonal sm">Clear search</button>
+               <button type="button" id="btn-ext-clear-empty" class="m3-btn m3-btn-tonal sm">Show All Extensions</button>
              </div>
            </div>`
         : `<div class="ext-empty">
              <div class="ext-empty-ico">${EXT_PUZZLE_LG_SVG}</div>
-             <div class="ext-empty-title">Supercharge dejavu with Chrome Extensions</div>
-             <div class="ext-empty-sub">Browse the Chrome Web Store with one-click <strong>Add to dejavu</strong>, paste any Store URL or Extension ID above, import extensions already installed in Google Chrome, or enable <strong>Developer mode</strong> to load unpacked folders and <code>.crx/.zip</code> packages.</div>
+             <div class="ext-empty-title">Supercharge dejavu with Chrome &amp; Edge Extensions</div>
+             <div class="ext-empty-sub">Browse the Chrome Web Store with one-click <strong>Add to dejavu</strong>, paste any Chrome Web Store or Edge Add-ons URL above, import from Google Chrome, or install <code>.crx/.zip</code> packages.</div>
              <div class="ext-empty-acts">
                <button type="button" id="btn-ext-empty-cws" class="m3-btn m3-btn-filled sm">Browse Chrome Web Store</button>
                <button type="button" id="btn-ext-empty-chrome" class="m3-btn m3-btn-tonal sm">Import from Chrome</button>
                <button type="button" id="btn-ext-empty-unpacked" class="m3-btn m3-btn-outlined sm">Load Unpacked</button>
              </div>
+             <div class="ext-starter-wrap">
+               <div class="ext-starter-lbl">1-Click Popular Extensions (Chrome Web Store)</div>
+               <div class="ext-starter-grid">${starterHtml}</div>
+             </div>
            </div>`;
       const bClear = document.getElementById('btn-ext-clear-empty');
-      if (bClear) bClear.addEventListener('click', () => { if (extSearchInput) extSearchInput.value = ''; renderExtensionsManager(); });
+      if (bClear) bClear.addEventListener('click', () => {
+        if (extSearchInput) extSearchInput.value = '';
+        activeExtFilter = 'all';
+        renderExtensionsManager();
+      });
       const bCws = document.getElementById('btn-ext-empty-cws');
       if (bCws) bCws.addEventListener('click', () => { send({ type: 'closeExtensions' }); send({ type: 'newTab', url: 'https://chromewebstore.google.com/' }); });
       const bImp = document.getElementById('btn-ext-empty-chrome');
       if (bImp) bImp.addEventListener('click', openChromeImportModal);
       const bUnp = document.getElementById('btn-ext-empty-unpacked');
       if (bUnp) bUnp.addEventListener('click', () => send({ type: 'extLoadUnpacked' }));
+      extCardsGrid.querySelectorAll('.ext-starter-chip').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const sid = btn.dataset.starterId;
+          if (!sid) return;
+          state.extensionsBusy = true;
+          showExtStatus('Downloading & installing from Chrome Web Store…', 'busy');
+          renderExtensionsManager();
+          send({ type: 'extInstallFromStore', input: sid });
+        });
+      });
       return;
     }
 
@@ -6440,8 +6428,10 @@
         <div class="ext-card-foot">
           <div class="ext-card-btns">
             <button type="button" class="ext-mini-btn act-details">Details</button>
+            ${isEnabled && ext.popupUrl ? '<button type="button" class="ext-mini-btn act-popup" title="Open extension popup">Popup</button>' : ''}
+            ${isEnabled && ext.optionsUrl ? '<button type="button" class="ext-mini-btn act-options" title="Open extension options">Options</button>' : ''}
             <button type="button" class="ext-mini-btn act-pin${isPinned ? ' is-pinned' : ''}" title="${isPinned ? 'Unpin from toolbar' : 'Pin to toolbar'}">${EXT_PIN_ICO_SVG}<span>${isPinned ? 'Pinned' : 'Pin'}</span></button>
-            ${devMode ? '<button type="button" class="ext-mini-btn act-reload" title="Reload extension">Reload</button>' : ''}
+            <button type="button" class="ext-mini-btn act-reload" title="Reload extension">Reload</button>
             <button type="button" class="ext-mini-btn danger act-remove">Remove</button>
           </div>
           <button type="button" class="liquid-switch m3-switch act-toggle${isEnabled ? ' on' : ''}" role="switch" aria-checked="${isEnabled ? 'true' : 'false'}" title="${isEnabled ? 'Disable extension' : 'Enable extension'}">
@@ -6460,6 +6450,10 @@
         renderExtensionsManager();
         if (extScroll) extScroll.scrollTop = 0;
       });
+      const bPop = card.querySelector('.act-popup');
+      if (bPop) bPop.addEventListener('click', () => send({ type: 'extOpenPopup', id: ext.id }));
+      const bOpt = card.querySelector('.act-options');
+      if (bOpt) bOpt.addEventListener('click', () => send({ type: 'extOpenOptions', id: ext.id }));
       card.querySelector('.act-pin').addEventListener('click', () => send({ type: 'extTogglePin', id: ext.id }));
       const bRel = card.querySelector('.act-reload');
       if (bRel) bRel.addEventListener('click', () => send({ type: 'extReload', id: ext.id }));
@@ -6582,6 +6576,21 @@
       renderExtensionsManager();
       send({ type: 'extInstallFromStore', input: val });
       if (extStoreInput) extStoreInput.value = '';
+    });
+  }
+  if (extFilterChips) {
+    extFilterChips.addEventListener('click', (e) => {
+      const chip = e.target.closest('.ext-filter-chip');
+      if (!chip || !chip.dataset.extFilter) return;
+      activeExtFilter = chip.dataset.extFilter;
+      renderExtensionsManager();
+    });
+  }
+  if (btnExtQuickFile) btnExtQuickFile.addEventListener('click', () => send({ type: 'extInstallFile' }));
+  if (btnExtQuickUpdate) {
+    btnExtQuickUpdate.addEventListener('click', () => {
+      showExtStatus('Updating installed extensions…', 'busy');
+      send({ type: 'extUpdateAll' });
     });
   }
   if (btnExtScanChrome) btnExtScanChrome.addEventListener('click', openChromeImportModal);
@@ -7383,6 +7392,13 @@
       setTimeout(() => btnLinkSyncNow.classList.remove('is-syncing'), 900);
     });
   }
+  const btnLinkReconnect = document.getElementById('btn-link-reconnect');
+  if (btnLinkReconnect) {
+    btnLinkReconnect.addEventListener('click', () => {
+      send({ type: 'syncReconnect' });
+      showToast('Reconnecting dual-broker relay & LAN…', 'info');
+    });
+  }
   if (btnLinkGoogleSignin) {
     btnLinkGoogleSignin.addEventListener('click', () => {
       const ap = state.activeProfile || {};
@@ -7664,17 +7680,6 @@
         pendingOmniboxValue = msg.value || msg.fill || null;
       } else if (msg.type === 'newtabSuggestions') {
         renderNewtabSuggestions(msg.items || []);
-      } else if (msg.type === 'vpnVerifyResult') {
-        if (state.vpn) {
-          if (msg.exitIp) state.vpn.exitIp = msg.exitIp;
-          if (typeof msg.latencyMs === 'number' && msg.latencyMs > 0) state.vpn.latencyMs = msg.latencyMs;
-          if (msg.engine) state.vpn.activeEngine = msg.engine;
-          state.vpn.verified = !!msg.ok;
-          if (msg.message) state.vpn.lastVerifyMessage = msg.message;
-        }
-        const latLabel = msg.latencyMs > 0 ? ` · ${msg.latencyMs} ms` : '';
-        showToast(msg.message || (msg.ok ? `VPN Verified${latLabel}` : 'VPN tunnel check failed — auto-healing'), msg.ok ? 'success' : 'error');
-        if (state.settingsOpen) syncSettingsUi();
       } else if (msg.type === 'shellContextMenuAction') {
         const handler = pendingShellOverlayHandler;
         pendingShellOverlayHandler = null;

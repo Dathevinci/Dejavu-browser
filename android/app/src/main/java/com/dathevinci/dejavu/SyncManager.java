@@ -53,7 +53,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 /**
- * dejavu Link v2.3 (v5.10.0) — Cross-Device E2EE Sync Engine (100% byte-compatible with Windows SyncManager.cs)
+ * dejavu Link v2.3 (v5.11.0) — Cross-Device E2EE Sync Engine (100% byte-compatible with Windows SyncManager.cs)
  *
  * Key Derivation & Crypto (unchanged v1/v2 contract):
  * - Zero-QR Google-Account Auto-Sync: 10,000-round SHA-256 chain -> topicId "dv4-...", encKey, macKey
@@ -109,14 +109,30 @@ public final class SyncManager {
         }
     }
 
+    private static final class BrokerSlot {
+        final int index;
+        final String host;
+        final Object writeLock = new Object();
+        volatile SSLSocket socket = null;
+        volatile OutputStream out = null;
+        volatile String topicId = "";
+        volatile boolean connected = false;
+        Thread worker = null;
+
+        BrokerSlot(int index, String host) {
+            this.index = index;
+            this.host = host;
+        }
+    }
+
     private final SharedPreferences prefs;
     private final Listener listener;
     private final ExecutorService ioPool = Executors.newCachedThreadPool();
     private final Object lock = new Object();
-    private final Object mqttWriteLock = new Object();
     private final Object udpSendLock = new Object();
     private final Set<String> seenIds = new HashSet<>();
     private final Deque<String> pendingEvents = new ArrayDeque<>();
+    private final BrokerSlot[] brokerSlots;
 
     private String deviceId;
     private String deviceName;
@@ -166,16 +182,16 @@ public final class SyncManager {
 
     private volatile boolean stopped = false;
     private volatile int generation = 0;
-    private volatile SSLSocket activeMqttSocket = null;
-    private volatile OutputStream activeMqttOut = null;
-    private volatile String activeMqttTopicId = "";
     private volatile DatagramSocket lanUdpSocket = null;
-    private Thread relayThread;
     private Thread lanUdpThread;
 
     public SyncManager(Context ctx, Listener listener) {
         this.prefs = ctx.getApplicationContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         this.listener = listener;
+        this.brokerSlots = new BrokerSlot[MQTT_BROKERS.length];
+        for (int i = 0; i < MQTT_BROKERS.length; i++) {
+            this.brokerSlots[i] = new BrokerSlot(i, MQTT_BROKERS[i]);
+        }
         loadState();
         startLanDiscoveryLoop();
         startRelayLoop();
@@ -183,7 +199,7 @@ public final class SyncManager {
     }
 
     /**
-     * Exact v5.10.0 Cross-Platform Google Auto-Sync Key Derivation (100% bit-identical to Windows SyncManager.cs):
+     * Exact v5.11.0 Cross-Platform Google Auto-Sync Key Derivation (100% bit-identical to Windows SyncManager.cs):
      * - normEmail = email.trim().toLowerCase(Locale.US)
      * - normPass  = passphrase.trim()
      * - seedStr   = "dejavu-google-link-v2:" + normEmail + ":" + normPass
@@ -399,27 +415,43 @@ public final class SyncManager {
     }
 
     /**
-     * Immediately aborts the active TLS MQTT socket so topic switches reconnect in < 50ms.
+     * Public manual relay reconnect trigger (UI "Reconnect Relay" button).
+     */
+    public void reconnectRelay() {
+        synchronized (lock) {
+            generation++;
+            lastError = "";
+        }
+        reconnectRelayAsync();
+        pullDirectLanSnapshotAsync();
+        notifyStateChanged();
+    }
+
+    /**
+     * Immediately aborts all active TLS MQTT sockets so topic switches reconnect in < 50ms.
      */
     private void reconnectRelayAsync() {
-        final SSLSocket sock = activeMqttSocket;
-        activeMqttSocket = null;
-        activeMqttOut = null;
-        activeMqttTopicId = "";
         cloudRelayStatus = "connecting";
-        if (sock != null) {
-            ioPool.execute(() -> {
-                try { sock.close(); } catch (Exception ignored) { }
-            });
-        }
-        if (relayThread != null) {
-            relayThread.interrupt();
+        for (BrokerSlot slot : brokerSlots) {
+            final SSLSocket sock = slot.socket;
+            slot.socket = null;
+            slot.out = null;
+            slot.topicId = "";
+            slot.connected = false;
+            if (sock != null) {
+                ioPool.execute(() -> {
+                    try { sock.close(); } catch (Exception ignored) { }
+                });
+            }
+            if (slot.worker != null) {
+                slot.worker.interrupt();
+            }
         }
         sendUdpLanBeaconAsync();
     }
 
     /**
-     * Activates Zero-QR Google-Account E2EE Auto-Sync using the exact v5.10.0 cross-platform spec.
+     * Activates Zero-QR Google-Account E2EE Auto-Sync using the exact v5.11.0 cross-platform spec.
      */
     public boolean configureGoogleAccountSync(String email, String passphrase) {
         if (email == null || !email.trim().contains("@")) return false;
@@ -763,6 +795,8 @@ public final class SyncManager {
                 drops = next;
                 if ("clipboard".equals(dropType) && !safeText.isEmpty()) {
                     recordClipboardItemLocked(id, safeText, deviceName, "android", ts);
+                }
+                if (!"ping".equals(dropType)) {
                     updateSnapshot = true;
                 }
                 saveLocked();
@@ -1106,6 +1140,7 @@ public final class SyncManager {
         }
         publishCurrentSnapshotAsync();
         sendPing();
+        pullDirectLanSnapshotAsync();
     }
 
     public void publishTabs(JSONArray tabsArr) {
@@ -1171,6 +1206,31 @@ public final class SyncManager {
             } else {
                 env.put("latestClipboard", JSONObject.NULL);
             }
+            JSONArray recentDrops = new JSONArray();
+            long nowMs = System.currentTimeMillis();
+            for (int i = 0; i < drops.length() && recentDrops.length() < 6; i++) {
+                JSONObject dr = drops.optJSONObject(i);
+                if (dr == null) continue;
+                String did = dr.optString("id", "");
+                if (did.isEmpty() || !deviceId.equals(dr.optString("fromId", ""))) continue;
+                String dtype = dr.optString("dropType", "link");
+                if ("ping".equals(dtype)) continue;
+                long dts = dr.optLong("ts", 0L);
+                if (dts > 0L && (nowMs - dts) > 86_400_000L) continue;
+                JSONObject rd = new JSONObject();
+                rd.put("id", did);
+                rd.put("dropType", dtype);
+                rd.put("title", truncate(dr.optString("title", ""), 160));
+                rd.put("url", truncate(dr.optString("url", ""), 600));
+                rd.put("text", truncate(dr.optString("text", ""), 1200));
+                rd.put("ts", dts);
+                String dq = dr.optString("quality", "");
+                if (!dq.isEmpty()) rd.put("quality", truncate(dq, 24));
+                JSONArray dt = dr.optJSONArray("tabs");
+                if (dt != null && dt.length() > 0) rd.put("tabs", compactUrlItems(dt, 12, 64, 240));
+                recentDrops.put(rd);
+            }
+            env.put("recentDrops", recentDrops);
             return env.toString();
         } catch (Exception e) {
             return null;
@@ -1298,10 +1358,10 @@ public final class SyncManager {
             URL u = new URL(lanUrl.replaceAll("/+$", "") + "/sync");
             conn = (HttpURLConnection) u.openConnection();
             conn.setRequestMethod("POST");
-            conn.setConnectTimeout(1200);
-            conn.setReadTimeout(1200);
+            conn.setConnectTimeout(1500);
+            conn.setReadTimeout(1800);
             conn.setDoOutput(true);
-            conn.setRequestProperty("User-Agent", "dejavu-link-android/5.10.0");
+            conn.setRequestProperty("User-Agent", "dejavu-link-android/5.11.0");
             conn.setRequestProperty("Content-Type", "text/plain; charset=utf-8");
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(body);
@@ -1313,6 +1373,16 @@ public final class SyncManager {
                 boolean wasLanActive = (now - lastLanSuccessMs) < LAN_ACTIVE_WINDOW_MS;
                 lastLanSuccessMs = now;
                 lastSyncMs = now;
+                try (InputStream is = conn.getInputStream()) {
+                    String respText = readStreamUtf8Limited(is, 256 * 1024);
+                    if (respText != null && respText.trim().startsWith("{")) {
+                        JSONObject respObj = new JSONObject(respText);
+                        String peerSnap = respObj.optString("snapshot", "");
+                        if (peerSnap.startsWith("DV1.")) {
+                            handleEncryptedBlob(peerSnap);
+                        }
+                    }
+                } catch (Exception ignored) { }
                 if (!wasLanActive) notifyStateChanged();
             }
         } catch (Exception ignored) {
@@ -1321,12 +1391,64 @@ public final class SyncManager {
         }
     }
 
-    private boolean sendMqttPublishIfConnected(String expectedTopicId, String mqttTopic, byte[] payload, boolean retain) {
-        synchronized (mqttWriteLock) {
-            OutputStream out = activeMqttOut;
-            if (out == null || !expectedTopicId.equals(activeMqttTopicId)) return false;
+    public void pullDirectLanSnapshotAsync() {
+        if (stopped) return;
+        ioPool.execute(() -> {
+            String lan;
+            synchronized (lock) { lan = peerLanUrl; }
+            if (lan == null || !lan.startsWith("http://")) return;
+            HttpURLConnection conn = null;
             try {
-                byte[] pkt = buildMqttPublishPacket(mqttTopic, payload, retain);
+                URL u = new URL(lan.replaceAll("/+$", "") + "/sync");
+                conn = (HttpURLConnection) u.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setConnectTimeout(1500);
+                conn.setReadTimeout(1800);
+                conn.setRequestProperty("User-Agent", "dejavu-link-android/5.11.0");
+                int code = conn.getResponseCode();
+                if (code >= 200 && code < 300) {
+                    try (InputStream is = conn.getInputStream()) {
+                        String respText = readStreamUtf8Limited(is, 256 * 1024);
+                        if (respText != null && respText.trim().startsWith("{")) {
+                            JSONObject respObj = new JSONObject(respText);
+                            String peerSnap = respObj.optString("snapshot", "");
+                            if (peerSnap.startsWith("DV1.")) {
+                                lastLanSuccessMs = System.currentTimeMillis();
+                                handleEncryptedBlob(peerSnap);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+            } finally {
+                if (conn != null) conn.disconnect();
+            }
+        });
+    }
+
+    private static String readStreamUtf8Limited(InputStream is, int maxBytes) throws IOException {
+        if (is == null) return "";
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        byte[] buf = new byte[4096];
+        int total = 0;
+        int n;
+        while ((n = is.read(buf)) > 0) {
+            int take = Math.min(n, maxBytes - total);
+            if (take > 0) {
+                bos.write(buf, 0, take);
+                total += take;
+            }
+            if (total >= maxBytes) break;
+        }
+        return new String(bos.toByteArray(), StandardCharsets.UTF_8);
+    }
+
+    private boolean writePacketToSlot(BrokerSlot slot, String expectedTopicId, byte[] pkt) {
+        if (slot == null || !slot.connected) return false;
+        synchronized (slot.writeLock) {
+            OutputStream out = slot.out;
+            if (out == null || !slot.connected || !expectedTopicId.equals(slot.topicId)) return false;
+            try {
                 out.write(pkt);
                 out.flush();
                 return true;
@@ -1336,7 +1458,22 @@ public final class SyncManager {
         }
     }
 
-    private void flushPendingQueueOnConnect(final String connectedTopic, final String devId) {
+    private boolean sendMqttPublishIfConnected(String expectedTopicId, String mqttTopic, byte[] payload, boolean retain) {
+        try {
+            byte[] pkt = buildMqttPublishPacket(mqttTopic, payload, retain);
+            int sent = 0;
+            for (BrokerSlot slot : brokerSlots) {
+                if (writePacketToSlot(slot, expectedTopicId, pkt)) {
+                    sent++;
+                }
+            }
+            return sent > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void flushPendingQueueOnConnect(final BrokerSlot slot, final String connectedTopic, final String devId) {
         String snapJson;
         ArrayDeque<String> evs = new ArrayDeque<>();
         synchronized (lock) {
@@ -1359,7 +1496,8 @@ public final class SyncManager {
             }
             if (snapJson != null) {
                 byte[] enc = encrypt(snapJson, ek, mk).getBytes(StandardCharsets.UTF_8);
-                if (sendMqttPublishIfConnected(connectedTopic, "dejavu/v2/" + connectedTopic + "/state/" + devId, enc, true)) {
+                byte[] pkt = buildMqttPublishPacket("dejavu/v2/" + connectedTopic + "/state/" + devId, enc, true);
+                if (writePacketToSlot(slot, connectedTopic, pkt)) {
                     lastSyncMs = System.currentTimeMillis();
                 }
             }
@@ -1367,10 +1505,12 @@ public final class SyncManager {
                 String ev = evs.pollFirst();
                 if (ev == null) continue;
                 byte[] enc = encrypt(ev, ek, mk).getBytes(StandardCharsets.UTF_8);
-                if (sendMqttPublishIfConnected(connectedTopic, "dejavu/v2/" + connectedTopic + "/event", enc, false)) {
+                byte[] pkt = buildMqttPublishPacket("dejavu/v2/" + connectedTopic + "/event", enc, false);
+                if (writePacketToSlot(slot, connectedTopic, pkt)) {
                     lastSyncMs = System.currentTimeMillis();
                 }
             }
+            sendPing();
         } catch (Exception ignored) { }
     }
 
@@ -1398,8 +1538,18 @@ public final class SyncManager {
 
             synchronized (lock) {
                 if (deviceId.equals(from)) return;
+                long msgTs = msg.optLong("ts", now);
                 if (!id.isEmpty()) {
-                    if (seenIds.contains(id)) return;
+                    if (seenIds.contains(id)) {
+                        if ("snapshot".equals(kind) || "state".equals(kind)) {
+                            String dupLu = msg.optString("lanUrl", "");
+                            if (dupLu.startsWith("http://")) peerLanUrl = dupLu;
+                            if (Math.abs(now - msgTs) < PEER_ONLINE_WINDOW_MS) {
+                                peerLastSeenMs = now;
+                            }
+                        }
+                        return;
+                    }
                     seenIds.add(id);
                     if (seenIds.size() > 600) seenIds.clear();
                 }
@@ -1481,6 +1631,46 @@ public final class SyncManager {
                                         incomingDrop = dropItem;
                                     }
                                 }
+                            }
+                        }
+                    }
+                    JSONArray incRecentDrops = msg.optJSONArray("recentDrops");
+                    if (incRecentDrops != null) {
+                        for (int ri = 0; ri < incRecentDrops.length(); ri++) {
+                            JSONObject rd = incRecentDrops.optJSONObject(ri);
+                            if (rd == null) continue;
+                            String rdid = rd.optString("id", "").trim();
+                            if (rdid.isEmpty() || seenIds.contains(rdid) || hasDropIdLocked(rdid)) continue;
+                            String rtype = rd.optString("dropType", "link");
+                            if ("ping".equals(rtype)) continue;
+                            if ("clipboard".equals(rtype) && !prefClipboard) continue;
+                            seenIds.add(rdid);
+                            long rts = rd.optLong("ts", now);
+                            String rtext = rd.optString("text", "");
+                            String rqual = rd.optString("quality", "");
+                            JSONArray rtabs = rd.optJSONArray("tabs");
+                            JSONObject recItem = new JSONObject();
+                            recItem.put("id", rdid);
+                            recItem.put("dropType", rtype);
+                            recItem.put("title", rd.optString("title", ""));
+                            recItem.put("url", rd.optString("url", ""));
+                            recItem.put("text", rtext);
+                            if (!rqual.isEmpty()) recItem.put("quality", rqual);
+                            if (rtabs != null && rtabs.length() > 0) recItem.put("tabs", rtabs);
+                            recItem.put("fromId", from);
+                            recItem.put("fromName", peerName);
+                            recItem.put("platform", peerPlatform);
+                            recItem.put("ts", rts);
+
+                            JSONArray nextD = new JSONArray();
+                            nextD.put(recItem);
+                            for (int di = 0; di < drops.length() && nextD.length() < 40; di++) nextD.put(drops.opt(di));
+                            drops = nextD;
+                            if ("clipboard".equals(rtype) && !rtext.isEmpty()) {
+                                recordClipboardItemLocked(rdid, rtext, peerName, peerPlatform, rts);
+                            }
+                            if (incomingDrop == null && Math.abs(now - rts) < 600_000L) {
+                                incomingDrop = recItem;
                             }
                         }
                     }
@@ -1681,186 +1871,220 @@ public final class SyncManager {
         if (changed) notifyStateChanged();
     }
 
-    private void startRelayLoop() {
-        relayThread = new Thread(() -> {
-            int brokerIdx = 0;
-            long backoffMs = 1500L;
-            SecureRandom rng = new SecureRandom();
+    private void refreshAggregateCloudStatus(String fallbackBroker, String fallbackErr) {
+        StringBuilder hosts = new StringBuilder();
+        boolean anyConn = false;
+        for (BrokerSlot slot : brokerSlots) {
+            if (slot != null && slot.connected) {
+                if (hosts.length() > 0) hosts.append(" + ");
+                hosts.append(slot.host);
+                anyConn = true;
+            }
+        }
+        if (anyConn) {
+            updateCloudStatus("connected_cloud", hosts.toString(), "");
+        } else {
+            String nextStatus = (fallbackErr != null && !fallbackErr.isEmpty()) ? "retrying" : "connecting";
+            updateCloudStatus(nextStatus, fallbackBroker != null ? fallbackBroker : "", fallbackErr != null ? fallbackErr : "");
+        }
+    }
 
-            while (!stopped) {
-                final int myGen;
-                final String topic;
-                final String devId;
-                synchronized (lock) {
-                    myGen = generation;
-                    topic = topicId;
-                    devId = deviceId;
+    private void startRelayLoop() {
+        for (final BrokerSlot slot : brokerSlots) {
+            Thread t = new Thread(() -> runBrokerSlotLoop(slot), "DejavuMqttRelay-" + slot.index);
+            t.setDaemon(true);
+            slot.worker = t;
+            t.start();
+        }
+    }
+
+    private void runBrokerSlotLoop(final BrokerSlot slot) {
+        long backoffMs = 1500L;
+        SecureRandom rng = new SecureRandom();
+        final String brokerHost = slot.host;
+
+        while (!stopped) {
+            final int myGen;
+            final String topic;
+            final String devId;
+            synchronized (lock) {
+                myGen = generation;
+                topic = topicId;
+                devId = deviceId;
+            }
+            if (topic.isEmpty()) {
+                try { Thread.sleep(1500); } catch (InterruptedException ignored) { }
+                continue;
+            }
+
+            if (!"connected_cloud".equals(cloudRelayStatus)) {
+                updateCloudStatus("connecting", brokerHost, "");
+            }
+
+            Socket plainSock = null;
+            SSLSocket sock = null;
+            try {
+                plainSock = new Socket();
+                plainSock.connect(new InetSocketAddress(brokerHost, MQTT_TLS_PORT), 10_000);
+                plainSock.setSoTimeout(10_000);
+                SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+                sock = (SSLSocket) factory.createSocket(plainSock, brokerHost, MQTT_TLS_PORT, true);
+                plainSock = null;
+                SSLParameters sslParams = sock.getSSLParameters();
+                if (sslParams != null) {
+                    sslParams.setEndpointIdentificationAlgorithm("HTTPS");
+                    sock.setSSLParameters(sslParams);
                 }
-                if (topic.isEmpty()) {
-                    try { Thread.sleep(1500); } catch (InterruptedException ignored) { }
+                sock.setSoTimeout(10_000);
+                sock.startHandshake();
+                if (!HttpsURLConnection.getDefaultHostnameVerifier().verify(brokerHost, sock.getSession())) {
+                    throw new SSLPeerUnverifiedException("MQTT broker hostname mismatch: " + brokerHost);
+                }
+
+                if (stopped || myGen != generation) {
+                    try { sock.close(); } catch (Exception ignored) { }
                     continue;
                 }
 
-                String brokerHost = MQTT_BROKERS[brokerIdx % MQTT_BROKERS.length];
-                updateCloudStatus("connecting", brokerHost, "");
+                InputStream in = sock.getInputStream();
+                OutputStream out = sock.getOutputStream();
 
-                Socket plainSock = null;
-                SSLSocket sock = null;
-                try {
-                    plainSock = new Socket();
-                    plainSock.connect(new InetSocketAddress(brokerHost, MQTT_TLS_PORT), 10_000);
-                    plainSock.setSoTimeout(10_000);
-                    SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-                    // Wrap connected TCP socket with explicit hostname so TLS SNI + strict hostname verification run on HiveMQ/EMQX
-                    sock = (SSLSocket) factory.createSocket(plainSock, brokerHost, MQTT_TLS_PORT, true);
-                    plainSock = null;
-                    SSLParameters sslParams = sock.getSSLParameters();
-                    if (sslParams != null) {
-                        sslParams.setEndpointIdentificationAlgorithm("HTTPS");
-                        sock.setSSLParameters(sslParams);
-                    }
-                    sock.setSoTimeout(10_000);
-                    sock.startHandshake();
-                    if (!HttpsURLConnection.getDefaultHostnameVerifier().verify(brokerHost, sock.getSession())) {
-                        throw new SSLPeerUnverifiedException("MQTT broker hostname mismatch: " + brokerHost);
-                    }
+                String shortDev = devId.length() > 8 ? devId.substring(0, 8) : devId;
+                String rnd = String.format(Locale.US, "%04x", rng.nextInt(0x10000));
+                String clientId = "djva" + slot.index + "-" + shortDev + "-" + rnd;
 
-                    if (stopped || myGen != generation) {
-                        try { sock.close(); } catch (Exception ignored) { }
-                        continue;
-                    }
+                out.write(buildMqttConnectPacket(clientId));
+                out.flush();
 
-                    InputStream in = sock.getInputStream();
-                    OutputStream out = sock.getOutputStream();
+                int hdr = in.read();
+                if (hdr < 0 || (hdr & 0xF0) != 0x20) {
+                    throw new IOException("Expected MQTT CONNACK");
+                }
+                int connAckLen = readMqttRemainingLength(in);
+                if (connAckLen < 2 || connAckLen > 16) {
+                    throw new IOException("Invalid MQTT CONNACK length");
+                }
+                byte[] ackBody = readExactBytes(in, connAckLen);
+                if (ackBody[1] != 0x00) {
+                    throw new IOException("MQTT CONNACK rejected (" + (ackBody[1] & 0xFF) + ")");
+                }
 
-                    // Build compact MQTT Client ID <= 23 chars
-                    String shortDev = devId.length() > 10 ? devId.substring(0, 10) : devId;
-                    String rnd = String.format(Locale.US, "%04x", rng.nextInt(0x10000));
-                    String clientId = "djva-" + shortDev + "-" + rnd;
+                String subFilter = "dejavu/v2/" + topic + "/#";
+                out.write(buildMqttSubscribePacket(1, subFilter));
+                out.flush();
 
-                    out.write(buildMqttConnectPacket(clientId));
-                    out.flush();
+                sock.setSoTimeout(5000);
+                synchronized (slot.writeLock) {
+                    slot.socket = sock;
+                    slot.out = out;
+                    slot.topicId = topic;
+                    slot.connected = true;
+                }
 
-                    int hdr = in.read();
-                    if (hdr < 0 || (hdr & 0xF0) != 0x20) {
-                        throw new IOException("Expected MQTT CONNACK");
-                    }
-                    int connAckLen = readMqttRemainingLength(in);
-                    if (connAckLen < 2 || connAckLen > 16) {
-                        throw new IOException("Invalid MQTT CONNACK length");
-                    }
-                    byte[] ackBody = readExactBytes(in, connAckLen);
-                    if (ackBody[1] != 0x00) {
-                        throw new IOException("MQTT CONNACK rejected (" + (ackBody[1] & 0xFF) + ")");
-                    }
+                backoffMs = 1500L;
+                refreshAggregateCloudStatus(brokerHost, "");
 
-                    String subFilter = "dejavu/v2/" + topic + "/#";
-                    out.write(buildMqttSubscribePacket(1, subFilter));
-                    out.flush();
+                final String connTopic = topic;
+                final String connDev = devId;
+                ioPool.execute(() -> flushPendingQueueOnConnect(slot, connTopic, connDev));
 
-                    sock.setSoTimeout(5000);
-                    synchronized (mqttWriteLock) {
-                        activeMqttSocket = sock;
-                        activeMqttOut = out;
-                        activeMqttTopicId = topic;
-                    }
+                long lastPingSentMs = System.currentTimeMillis();
+                long lastBrokerRxMs = lastPingSentMs;
+                long lastPresencePulseMs = lastPingSentMs;
+                String selfStateTopic = "dejavu/v2/" + topic + "/state/" + devId;
 
-                    backoffMs = 1500L;
-                    updateCloudStatus("connected_cloud", brokerHost, "");
-
-                    // Flush retained snapshot + queued events on dedicated worker so reader loop starts immediately
-                    final String connTopic = topic;
-                    final String connDev = devId;
-                    ioPool.execute(() -> flushPendingQueueOnConnect(connTopic, connDev));
-
-                    long lastPingSentMs = System.currentTimeMillis();
-                    long lastBrokerRxMs = lastPingSentMs;
-                    String selfStateTopic = "dejavu/v2/" + topic + "/state/" + devId;
-
-                    while (!stopped && myGen == generation) {
-                        int first;
-                        try {
-                            first = in.read();
-                        } catch (SocketTimeoutException timeout) {
-                            long now = System.currentTimeMillis();
-                            if ((now - lastBrokerRxMs) > 65_000L) {
-                                throw new IOException("MQTT keepalive timeout");
-                            }
-                            if ((now - lastPingSentMs) >= MQTT_PING_INTERVAL_MS) {
-                                synchronized (mqttWriteLock) {
-                                    out.write(new byte[] { (byte) 0xC0, 0x00 });
-                                    out.flush();
-                                }
-                                lastPingSentMs = now;
-                            }
-                            continue;
-                        }
-
-                        if (first < 0) break;
+                while (!stopped && myGen == generation) {
+                    int first;
+                    try {
+                        first = in.read();
+                    } catch (SocketTimeoutException timeout) {
                         long now = System.currentTimeMillis();
-                        lastBrokerRxMs = now;
-
-                        int pktType = (first >> 4) & 0x0F;
-                        int qos = (first >> 1) & 0x03;
-                        int remLen = readMqttRemainingLength(in);
-                        if (remLen < 0 || remLen > MQTT_MAX_PACKET_BYTES) {
-                            throw new IOException("Invalid MQTT frame length: " + remLen);
+                        if ((now - lastBrokerRxMs) > 65_000L) {
+                            throw new IOException("MQTT keepalive timeout");
                         }
-                        byte[] frame = remLen > 0 ? readExactBytes(in, remLen) : new byte[0];
-
-                        if (pktType == 3 && frame.length >= 2) {
-                            int tLen = ((frame[0] & 0xFF) << 8) | (frame[1] & 0xFF);
-                            int off = 2 + tLen;
-                            if (qos > 0) off += 2;
-                            if (off <= frame.length) {
-                                String pubTopic = new String(frame, 2, tLen, StandardCharsets.UTF_8);
-                                if (!selfStateTopic.equals(pubTopic)) {
-                                    String payloadStr = new String(frame, off, frame.length - off, StandardCharsets.UTF_8);
-                                    if (!payloadStr.isEmpty()) {
-                                        handleEncryptedBlob(payloadStr);
-                                    }
-                                }
-                            }
-                        }
-
                         if ((now - lastPingSentMs) >= MQTT_PING_INTERVAL_MS) {
-                            synchronized (mqttWriteLock) {
+                            synchronized (slot.writeLock) {
                                 out.write(new byte[] { (byte) 0xC0, 0x00 });
                                 out.flush();
                             }
                             lastPingSentMs = now;
                         }
+                        if (slot.index == 0 && (now - lastPresencePulseMs) >= 50_000L) {
+                            lastPresencePulseMs = now;
+                            boolean recentPeer;
+                            synchronized (lock) {
+                                recentPeer = !peerName.isEmpty() && (now - peerLastSeenMs) < 3_600_000L;
+                            }
+                            if (recentPeer) sendPingAck();
+                        }
+                        continue;
                     }
-                } catch (Exception ex) {
-                    if (!stopped && myGen == generation) {
-                        brokerIdx = (brokerIdx + 1) % MQTT_BROKERS.length;
-                        String em = ex.getMessage() != null ? ex.getMessage() : "Relay disconnected";
-                        updateCloudStatus("retrying", brokerHost, truncate(em, 80));
+
+                    if (first < 0) break;
+                    long now = System.currentTimeMillis();
+                    lastBrokerRxMs = now;
+
+                    int pktType = (first >> 4) & 0x0F;
+                    int qos = (first >> 1) & 0x03;
+                    int remLen = readMqttRemainingLength(in);
+                    if (remLen < 0 || remLen > MQTT_MAX_PACKET_BYTES) {
+                        throw new IOException("Invalid MQTT frame length: " + remLen);
                     }
-                } finally {
-                    synchronized (mqttWriteLock) {
-                        if (activeMqttSocket == sock) {
-                            activeMqttSocket = null;
-                            activeMqttOut = null;
-                            activeMqttTopicId = "";
+                    byte[] frame = remLen > 0 ? readExactBytes(in, remLen) : new byte[0];
+
+                    if (pktType == 3 && frame.length >= 2) {
+                        int tLen = ((frame[0] & 0xFF) << 8) | (frame[1] & 0xFF);
+                        int off = 2 + tLen;
+                        if (qos > 0) off += 2;
+                        if (off <= frame.length) {
+                            String pubTopic = new String(frame, 2, tLen, StandardCharsets.UTF_8);
+                            if (!selfStateTopic.equals(pubTopic)) {
+                                String payloadStr = new String(frame, off, frame.length - off, StandardCharsets.UTF_8);
+                                if (!payloadStr.isEmpty()) {
+                                    handleEncryptedBlob(payloadStr);
+                                }
+                            }
                         }
                     }
-                    if (sock != null) {
-                        try { sock.close(); } catch (Exception ignored) { }
-                    }
-                    if (plainSock != null) {
-                        try { plainSock.close(); } catch (Exception ignored) { }
+
+                    if ((now - lastPingSentMs) >= MQTT_PING_INTERVAL_MS) {
+                        synchronized (slot.writeLock) {
+                            out.write(new byte[] { (byte) 0xC0, 0x00 });
+                            out.flush();
+                        }
+                        lastPingSentMs = now;
                     }
                 }
-
+            } catch (Exception ex) {
                 if (!stopped && myGen == generation) {
-                    try { Thread.sleep(backoffMs); } catch (InterruptedException ignored) { }
-                    backoffMs = Math.min(6000L, backoffMs + 1500L);
+                    String em = ex.getMessage() != null ? ex.getMessage() : "Relay disconnected";
+                    refreshAggregateCloudStatus(brokerHost, truncate(brokerHost + ": " + em, 80));
+                }
+            } finally {
+                synchronized (slot.writeLock) {
+                    if (slot.socket == sock) {
+                        slot.socket = null;
+                        slot.out = null;
+                        slot.topicId = "";
+                        slot.connected = false;
+                    }
+                }
+                if (sock != null) {
+                    try { sock.close(); } catch (Exception ignored) { }
+                }
+                if (plainSock != null) {
+                    try { plainSock.close(); } catch (Exception ignored) { }
+                }
+                if (!stopped && myGen == generation) {
+                    refreshAggregateCloudStatus(brokerHost, lastError);
                 }
             }
-        }, "DejavuMqttRelay");
-        relayThread.setDaemon(true);
-        relayThread.start();
+
+            if (!stopped && myGen == generation) {
+                try { Thread.sleep(backoffMs); } catch (InterruptedException ignored) { }
+                backoffMs = Math.min(10_000L, backoffMs + 1500L);
+            }
+        }
     }
 
     // =========================================================================
@@ -1934,6 +2158,7 @@ public final class SyncManager {
                                 if (urlChanged || !wasLanActive) {
                                     notifyStateChanged();
                                     publishCurrentSnapshotAsync();
+                                    pullDirectLanSnapshotAsync();
                                 }
                             }
                         } catch (Exception ignored) { }
@@ -2023,7 +2248,6 @@ public final class SyncManager {
         if (udp != null) {
             try { udp.close(); } catch (Exception ignored) { }
         }
-        if (relayThread != null) relayThread.interrupt();
         if (lanUdpThread != null) lanUdpThread.interrupt();
         ioPool.shutdownNow();
     }

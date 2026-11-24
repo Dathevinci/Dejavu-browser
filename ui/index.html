@@ -41,6 +41,9 @@
         <button id="btn-new-tab" class="m3-icon-btn" title="New Tab (Ctrl+T)">
           <svg viewBox="0 0 18 18" fill="none"><path d="M9 4.2v9.6M4.2 9h9.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
+        <button id="btn-tab-search" class="m3-icon-btn tab-search-btn" title="Search Open &amp; Closed Tabs (Ctrl+Shift+A)" aria-label="Search Tabs">
+          <svg viewBox="0 0 18 18" fill="none"><path d="M5.2 7.2L9 11l3.8-3.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
         <div id="drag-spacer" class="drag-spacer"></div>
       </div>
 
@@ -130,7 +133,7 @@
         </div>
       </div>
 
-      <!-- Right: Calm 5-Control ChromeOS Material Design 3 Dock (VPN, Downloads, Extensions, Profile, Menu) -->
+      <!-- Right: Calm ChromeOS Material Design 3 Dock (Split View, Downloads, Extensions, Profile, Menu) -->
       <div class="toolbar-right">
         <div id="private-badge-pill" class="private-badge-pill hidden" title="Private Browsing Window — History and cookies are not saved">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" aria-hidden="true">
@@ -143,14 +146,11 @@
         </div>
 
         <div class="util-pill">
-          <button id="btn-vpn" class="vpn-trigger" title="dejavu Global VPN (86+ Countries)">
-            <svg class="vpn-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 2.5L4.5 5.4v5.7c0 4.9 3.2 9.2 7.5 10.4 4.3-1.2 7.5-5.5 7.5-10.4V5.4L12 2.5z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="12" cy="11.4" r="4.1" stroke="currentColor" stroke-width="1.5"/>
-              <ellipse cx="12" cy="11.4" rx="1.8" ry="4.1" stroke="currentColor" stroke-width="1.35"/>
-              <path d="M8.1 11.4h7.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+          <button id="btn-split-view" class="icon-btn split-toolbar-btn" title="Split View — Browse two tabs side-by-side (Ctrl+Shift+V)">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="4.5" width="18" height="15" rx="3" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M12 4.5v15" stroke="currentColor" stroke-width="1.8"/>
             </svg>
-            <span id="vpn-chip-code" class="vpn-chip-code hidden"></span>
           </button>
 
           <button id="btn-downloads" class="icon-btn dl-trigger" title="Turbo Download Manager (8x · Ctrl+J)">
@@ -386,14 +386,6 @@
 
               <span class="m3-glance-div" aria-hidden="true"></span>
 
-              <button type="button" id="newtab-vpn-chip" class="m3-glance-item m3-glance-vpn" title="Open dejavu 86-Country Encrypted VPN">
-                <span class="vpn-status-dot" id="newtab-vpn-dot"></span>
-                <span id="newtab-vpn-text" class="m3-glance-lbl strong">VPN: Off</span>
-                <span id="newtab-vpn-sub" class="hidden">86+ locations</span>
-              </button>
-
-              <span class="m3-glance-div" aria-hidden="true"></span>
-
               <button type="button" id="newtab-link-chip" class="m3-glance-item m3-glance-link" title="Open dejavu Link Hub (Google Auto-Sync PC ↔ Phone)">
                 <span class="m3-glance-ico secondary">
                   <svg viewBox="0 0 18 18" fill="none" width="14" height="14">
@@ -488,7 +480,7 @@
           </svg>
           <div>
             <div class="store-title">Customize Start Page</div>
-            <div class="store-sub">12 Material You themes, auto-matching &amp; 32 HD M3, Butterfly &amp; Froggie wallpapers</div>
+            <div class="store-sub">16 Material You themes (32 Light/Dark), auto-matching &amp; 32 HD M3, Butterfly &amp; Froggie wallpapers</div>
           </div>
         </div>
         <div class="store-head-actions">
@@ -503,7 +495,7 @@
       <!-- Material You 12-Theme Palette Strip + Auto-Match Toggle -->
       <div class="store-theme-card">
         <div class="store-theme-top">
-          <span class="store-theme-label">Material You Dynamic Color (12 HCT Palettes)</span>
+          <span class="store-theme-label">Material You Dynamic Color (16 HCT Palettes · 32 Themes)</span>
           <label class="sp-pref-chip" style="gap:10px;">
             <span>Auto-match theme to wallpaper</span>
             <button type="button" id="pref-auto-theme" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
@@ -512,14 +504,18 @@
         <div class="store-accent-grid" id="store-accent-swatches">
           <button type="button" class="accent-swatch active" data-accent-choice="amethyst"><span class="sw-dot" style="--sw:#d0bcff"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Amethyst</span></button>
           <button type="button" class="accent-swatch" data-accent-choice="sapphire"><span class="sw-dot" style="--sw:#a8c7fa"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Pixel Blue</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="indigo"><span class="sw-dot" style="--sw:#bbc3ff"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Royal Indigo</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="aurora"><span class="sw-dot" style="--sw:#7bd8c6"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Aurora Teal</span></button>
+          <button type="button" class="accent-swatch" data-accent-choice="indigo"><span class="sw-dot" style="--sw:#bbc3ff"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Indigo</span></button>
+          <button type="button" class="accent-swatch" data-accent-choice="ocean"><span class="sw-dot" style="--sw:#72d5f5"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Glacier</span></button>
+          <button type="button" class="accent-swatch" data-accent-choice="aurora"><span class="sw-dot" style="--sw:#7bd8c6"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Aurora</span></button>
           <button type="button" class="accent-swatch" data-accent-choice="emerald"><span class="sw-dot" style="--sw:#8bd89b"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Jade</span></button>
+          <button type="button" class="accent-swatch" data-accent-choice="forest"><span class="sw-dot" style="--sw:#9cd49f"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Pine Moss</span></button>
           <button type="button" class="accent-swatch" data-accent-choice="lime"><span class="sw-dot" style="--sw:#c4d97a"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Matcha</span></button>
           <button type="button" class="accent-swatch" data-accent-choice="gold"><span class="sw-dot" style="--sw:#ffb951"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Amber</span></button>
+          <button type="button" class="accent-swatch" data-accent-choice="terracotta"><span class="sw-dot" style="--sw:#f2b89b"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Sienna</span></button>
           <button type="button" class="accent-swatch" data-accent-choice="coral"><span class="sw-dot" style="--sw:#ffb59d"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Coral</span></button>
           <button type="button" class="accent-swatch" data-accent-choice="crimson"><span class="sw-dot" style="--sw:#ffb3b5"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Crimson</span></button>
           <button type="button" class="accent-swatch" data-accent-choice="rose"><span class="sw-dot" style="--sw:#ffb0ce"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Rose</span></button>
+          <button type="button" class="accent-swatch" data-accent-choice="plum"><span class="sw-dot" style="--sw:#f2b0e6"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Berry</span></button>
           <button type="button" class="accent-swatch" data-accent-choice="lavender"><span class="sw-dot" style="--sw:#e2b7ff"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Orchid</span></button>
           <button type="button" class="accent-swatch" data-accent-choice="silver"><span class="sw-dot" style="--sw:#b8c8e2"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Slate</span></button>
         </div>
@@ -582,7 +578,7 @@
               <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
             </svg>
             <span class="m3-appbar-title">Settings</span>
-            <span id="settings-version-sub" class="m3-tonal-badge">v5.10.0</span>
+            <span id="settings-version-sub" class="m3-tonal-badge">v5.11.0</span>
           </div>
 
           <div class="m3-appbar-search">
@@ -633,10 +629,6 @@
                 <span class="snav-ico"><svg viewBox="0 0 20 20" fill="none"><circle cx="7.2" cy="10" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M10.6 10h6.6M14.5 10v2.6M17 10v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
                 <span>Passwords &amp; Autofill</span>
               </button>
-              <button type="button" class="settings-nav-item" data-pane="vpn" role="tab">
-                <span class="snav-ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2.5L4.5 5.4v5.7c0 4.9 3.2 9.2 7.5 10.4 4.3-1.2 7.5-5.5 7.5-10.4V5.4L12 2.5z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="11.4" r="4.1" stroke="currentColor" stroke-width="1.5"/><ellipse cx="12" cy="11.4" rx="1.8" ry="4.1" stroke="currentColor" stroke-width="1.35"/><path d="M8.1 11.4h7.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg></span>
-                <span>Privacy VPN</span>
-              </button>
               <button type="button" class="settings-nav-item" data-pane="system" role="tab">
                 <span class="snav-ico"><svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="9.5" rx="2" stroke="currentColor" stroke-width="1.55"/><path d="M7 16.4h6M10 13.5v2.9" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg></span>
                 <span>Accessibility &amp; System</span>
@@ -672,7 +664,7 @@
                     <svg viewBox="0 0 28 28" width="28" height="28" fill="none"><circle cx="12.5" cy="12.5" r="7.5" stroke="currentColor" stroke-width="1.9"/><path d="M18.2 18.2l5.6 5.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                   </div>
                   <div class="m3-empty-title">No matching settings</div>
-                  <div class="m3-empty-sub">Try searching for "cookies", "zoom", "Google", "VPN", "downloads", or "wallpaper".</div>
+                  <div class="m3-empty-sub">Try searching for "cookies", "zoom", "Google", "shields", "downloads", or "wallpaper".</div>
                   <button type="button" id="btn-settings-empty-clear" class="m3-btn m3-btn-filled sm">Clear search</button>
                 </div>
 
@@ -692,21 +684,39 @@
                             <span id="you-main-chip" class="m3-status-chip primary">Main Profile</span>
                             <span id="you-sync-chip" class="m3-status-chip">Local Profile</span>
                           </div>
-                          <div id="you-hero-email" class="m3-account-email">Sign in with Google to use Gmail, YouTube, Drive &amp; Gemini in this isolated profile</div>
+                          <div id="you-hero-email" class="m3-account-email">Sign in with Google to use Gmail, YouTube, Drive &amp; automatic dejavu Link sync</div>
+                          <div id="you-account-perks" class="m3-account-perks">
+                            <span class="m3-perk-chip">Gmail, YouTube &amp; Drive</span>
+                            <span class="m3-perk-chip">Auto dejavu Link Sync</span>
+                            <span class="m3-perk-chip">Isolated Cookies</span>
+                          </div>
                         </div>
                       </div>
                       <div class="m3-account-actions" id="you-account-actions">
-                        <button type="button" id="btn-you-google-signin" class="m3-btn m3-btn-filled">
-                          <svg viewBox="0 0 18 18" width="16" height="16" aria-hidden="true">
-                            <path fill="currentColor" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/>
-                            <path fill="currentColor" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z" opacity="0.9"/>
-                            <path fill="currentColor" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z" opacity="0.8"/>
-                            <path fill="currentColor" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" opacity="0.95"/>
-                          </svg>
+                        <button type="button" id="btn-you-google-signin" class="m3-btn m3-btn-google">
+                          <span class="m3-google-g-chip" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="15" height="15">
+                              <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3.01h3.89c2.27-2.09 3.57-5.18 3.57-8.82z"/>
+                              <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.89-3.01c-1.08.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.72-4.95H1.28v3.11A12 12 0 0 0 12 24z"/>
+                              <path fill="#FBBC05" d="M5.28 14.28A7.22 7.22 0 0 1 4.9 12c0-.79.14-1.56.38-2.28V6.61H1.28A12 12 0 0 0 0 12c0 1.94.46 3.77 1.28 5.39l4-3.11z"/>
+                              <path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.58 1.79l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.28 6.61l4 3.11C6.23 6.88 8.88 4.77 12 4.77z"/>
+                            </svg>
+                          </span>
                           <span>Sign in with Google</span>
                         </button>
                         <button type="button" id="btn-you-google-signup" class="m3-btn m3-btn-tonal">Create Google Account</button>
-                        <button type="button" id="btn-you-google-sync" class="m3-btn m3-btn-outlined">Sync Profile</button>
+                        <button type="button" id="btn-you-google-manage" class="m3-btn m3-btn-tonal hidden">
+                          <span class="m3-google-g-chip sm" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="13" height="13">
+                              <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3.01h3.89c2.27-2.09 3.57-5.18 3.57-8.82z"/>
+                              <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.89-3.01c-1.08.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.72-4.95H1.28v3.11A12 12 0 0 0 12 24z"/>
+                              <path fill="#FBBC05" d="M5.28 14.28A7.22 7.22 0 0 1 4.9 12c0-.79.14-1.56.38-2.28V6.61H1.28A12 12 0 0 0 0 12c0 1.94.46 3.77 1.28 5.39l4-3.11z"/>
+                              <path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.58 1.79l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.28 6.61l4 3.11C6.23 6.88 8.88 4.77 12 4.77z"/>
+                            </svg>
+                          </span>
+                          <span>Manage Google Account</span>
+                        </button>
+                        <button type="button" id="btn-you-google-sync" class="m3-btn m3-btn-outlined">Refresh Profile</button>
                         <button type="button" id="btn-you-google-signout" class="m3-btn m3-btn-danger hidden">Sign Out</button>
                       </div>
                     </div>
@@ -783,8 +793,8 @@
 
                       <div class="opt-row stacked">
                         <div class="opt-meta">
-                          <div class="opt-title opt-row-title">Material You Dynamic Color Seed (12 HCT Palettes)</div>
-                          <div class="opt-desc">Generates harmonious primary, tonal container &amp; surface elevation tokens across the entire browser</div>
+                          <div class="opt-title opt-row-title">Material You Dynamic Color Seed (16 HCT Palettes · 32 Themes)</div>
+                          <div class="opt-desc">Generates harmonious Googlebook primary, tonal container &amp; surface elevation tokens across the entire browser</div>
                         </div>
                         <div class="accent-swatches" id="opt-accent-swatches">
                           <button type="button" class="accent-swatch active" data-accent-choice="amethyst">
@@ -799,6 +809,10 @@
                             <span class="sw-dot" style="--sw:#bbc3ff;--sw-ring:#303f9f"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                             <span>Royal Indigo</span>
                           </button>
+                          <button type="button" class="accent-swatch" data-accent-choice="ocean">
+                            <span class="sw-dot" style="--sw:#72d5f5;--sw-ring:#004e66"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span>Glacier Cyan</span>
+                          </button>
                           <button type="button" class="accent-swatch" data-accent-choice="aurora">
                             <span class="sw-dot" style="--sw:#7bd8c6;--sw-ring:#005048"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                             <span>Aurora Teal</span>
@@ -807,6 +821,10 @@
                             <span class="sw-dot" style="--sw:#8bd89b;--sw-ring:#005321"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                             <span>Botanical Jade</span>
                           </button>
+                          <button type="button" class="accent-swatch" data-accent-choice="forest">
+                            <span class="sw-dot" style="--sw:#9cd49f;--sw-ring:#1d5128"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span>Pine Moss</span>
+                          </button>
                           <button type="button" class="accent-swatch" data-accent-choice="lime">
                             <span class="sw-dot" style="--sw:#c4d97a;--sw-ring:#404c00"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                             <span>Matcha Olive</span>
@@ -814,6 +832,10 @@
                           <button type="button" class="accent-swatch" data-accent-choice="gold">
                             <span class="sw-dot" style="--sw:#ffb951;--sw-ring:#643e00"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                             <span>Honey Amber</span>
+                          </button>
+                          <button type="button" class="accent-swatch" data-accent-choice="terracotta">
+                            <span class="sw-dot" style="--sw:#f2b89b;--sw-ring:#6d391e"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span>Sienna Clay</span>
                           </button>
                           <button type="button" class="accent-swatch" data-accent-choice="coral">
                             <span class="sw-dot" style="--sw:#ffb59d;--sw-ring:#822806"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -826,6 +848,10 @@
                           <button type="button" class="accent-swatch" data-accent-choice="rose">
                             <span class="sw-dot" style="--sw:#ffb0ce;--sw-ring:#7b294d"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                             <span>Velvet Rose</span>
+                          </button>
+                          <button type="button" class="accent-swatch" data-accent-choice="plum">
+                            <span class="sw-dot" style="--sw:#f2b0e6;--sw-ring:#692f64"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span>Deep Berry</span>
                           </button>
                           <button type="button" class="accent-swatch" data-accent-choice="lavender">
                             <span class="sw-dot" style="--sw:#e2b7ff;--sw-ring:#612b87"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -1005,7 +1031,7 @@
                       <div class="opt-row">
                         <div class="opt-meta">
                           <div class="opt-title opt-row-title">Privacy Report Card</div>
-                          <div class="opt-desc">Live blocked trackers count and quick VPN status chip</div>
+                          <div class="opt-desc">Live blocked trackers count, dejavu Link, and Extensions status strip</div>
                         </div>
                         <button type="button" id="opt-sp-privacy" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
                       </div>
@@ -1584,84 +1610,7 @@
                 </div>
 
                 <!-- =========================================================
-                     Category 8: Privacy VPN
-                     ========================================================= -->
-                <div class="settings-pane hidden" data-pane-body="vpn" data-cat-label="Privacy VPN">
-                  <div class="m3-pref-section opt-group">
-                    <div class="m3-pref-heading">86-Country Global Encrypted VPN</div>
-                    <div class="m3-pref-card">
-                      <div class="opt-row">
-                        <div class="m3-row-ico tertiary">
-                          <svg viewBox="0 0 20 20" width="20" height="20" fill="none"><circle cx="10" cy="10" r="6.6" stroke="currentColor" stroke-width="1.55"/><ellipse cx="10" cy="10" rx="3.1" ry="6.6" stroke="currentColor" stroke-width="1.4"/><path d="M3.7 8.1h12.6M3.7 11.9h12.6" stroke="currentColor" stroke-width="1.25" opacity="0.72"/></svg>
-                        </div>
-                        <div class="opt-meta">
-                          <div class="opt-title opt-row-title">Live VPN Tunnel Status</div>
-                          <div id="opt-vpn-summary" class="opt-desc">Disconnected · 86+ global countries including Nepal, US, UK, India &amp; Japan</div>
-                        </div>
-                        <button type="button" id="btn-opt-open-vpn" class="m3-btn m3-btn-filled sm">Open VPN Panel</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="m3-pref-section opt-group">
-                    <div class="m3-pref-heading">VPN Tunnel &amp; Country Preferences</div>
-                    <div class="m3-pref-card">
-                      <div class="opt-row">
-                        <div class="opt-meta">
-                          <div class="opt-title opt-row-title">Auto-Connect VPN on Startup</div>
-                          <div class="opt-desc">Automatically establish your encrypted tunnel when dejavu launches</div>
-                        </div>
-                        <button type="button" id="opt-vpn-auto" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-                      </div>
-                      <div class="opt-row">
-                        <div class="opt-meta">
-                          <div class="opt-title opt-row-title">Routing Mode</div>
-                          <div class="opt-desc">Smart: Auto-verified clean IP + auto-heal · 3-Hop Tor: Encrypted 3-hop Tor onion route</div>
-                        </div>
-                        <div class="m3-segmented compact opt-seg" id="opt-vpn-mode">
-                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="smart" title="Auto-verified clean IP + auto-heal"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Smart</span></button>
-                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="tor" title="Encrypted 3-hop Tor onion route"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>3-Hop Tor</span></button>
-                        </div>
-                      </div>
-                      <div class="opt-row">
-                        <div class="opt-meta">
-                          <div class="opt-title opt-row-title">WebRTC Leak Protection</div>
-                          <div class="opt-desc">Prevent local IP address leaks during real-time browser connections</div>
-                        </div>
-                        <button type="button" id="opt-vpn-webrtc" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-                      </div>
-                      <div class="opt-row">
-                        <div class="opt-meta">
-                          <div class="opt-title opt-row-title">Preferred Exit Country</div>
-                          <div class="opt-desc">Choose your default exit region or browse all 86+ countries in the VPN panel</div>
-                        </div>
-                        <div class="m3-select-wrap">
-                          <select id="opt-vpn-country" class="m3-select" aria-label="Preferred VPN country">
-                            <option value="AUTO" selected>Fastest Location (Auto)</option>
-                            <option value="US">United States (US)</option>
-                            <option value="GB">United Kingdom (UK)</option>
-                            <option value="NP">Nepal (NP)</option>
-                            <option value="IN">India (IN)</option>
-                            <option value="JP">Japan (JP)</option>
-                            <option value="SG">Singapore (SG)</option>
-                            <option value="DE">Germany (DE)</option>
-                            <option value="NL">Netherlands (NL)</option>
-                            <option value="CH">Switzerland (CH)</option>
-                            <option value="CA">Canada (CA)</option>
-                            <option value="AU">Australia (AU)</option>
-                            <option value="FR">France (FR)</option>
-                            <option value="SE">Sweden (SE)</option>
-                            <option value="KR">South Korea (KR)</option>
-                            <option value="BR">Brazil (BR)</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- =========================================================
-                     Category 9: Accessibility & System
+                     Category 8: Accessibility & System
                      ========================================================= -->
                 <div class="settings-pane hidden" data-pane-body="system" data-cat-label="Accessibility & System">
                   <div class="m3-pref-section opt-group">
@@ -1758,8 +1707,8 @@
                         </svg>
                       </div>
                       <div class="m3-about-copy">
-                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v5.10.0</span></div>
-                        <div class="m3-about-sub">Pure Material Design 3 Browser · 12 HCT Themes, 32 HD Wallpapers, Brave-Grade Shields &amp; 120Hz Tab Engine</div>
+                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v5.11.0</span></div>
+                        <div class="m3-about-sub">Googlebook Material Design 3 Browser · 16 HCT Themes (32 Light/Dark), Split View, Tab Search, Brave-Grade Shields &amp; Dual-Broker Link</div>
                         <div id="about-update-status" class="m3-about-update-line">Checking update status…</div>
                       </div>
                       <button type="button" id="btn-about-check-update" class="m3-btn m3-btn-filled sm">Check for Updates</button>
@@ -1792,7 +1741,7 @@
                       <div class="opt-row">
                         <div class="opt-meta">
                           <div class="opt-title opt-row-title">GitHub Releases</div>
-                          <div class="opt-desc">View v5.10.0 release notes, Windows Setup installer, and Android APK</div>
+                          <div class="opt-desc">View v5.11.0 release notes, Windows Setup installer, and Android APK</div>
                         </div>
                         <button type="button" id="btn-about-github" class="m3-btn m3-btn-outlined sm">Open GitHub</button>
                       </div>
@@ -1842,17 +1791,24 @@
               </svg>
             </div>
             <h2 id="ps-google-title" class="ps-title">Sign in to dejavu</h2>
-            <p id="ps-google-sub" class="ps-sub">Sign in or create a Google Account to use Gmail, YouTube, Drive, and Gemini in an isolated profile window.</p>
+            <p id="ps-google-sub" class="ps-sub">Use your Google Account for Gmail, YouTube, Drive, Gemini, and automatic encrypted dejavu Link sync across Windows &amp; Android.</p>
+            <div class="ps-benefits-row">
+              <span class="m3-perk-chip">Gmail &amp; YouTube</span>
+              <span class="m3-perk-chip">Auto Phone Sync</span>
+              <span class="m3-perk-chip">Isolated Profile</span>
+            </div>
           </div>
 
           <div class="ps-action-stack">
-            <button type="button" id="ps-btn-google-signin" class="m3-btn m3-btn-filled lg full">
-              <svg viewBox="0 0 18 18" width="16" height="16" aria-hidden="true">
-                <path fill="currentColor" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/>
-                <path fill="currentColor" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z" opacity="0.9"/>
-                <path fill="currentColor" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z" opacity="0.8"/>
-                <path fill="currentColor" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" opacity="0.95"/>
-              </svg>
+            <button type="button" id="ps-btn-google-signin" class="m3-btn m3-btn-google lg full">
+              <span class="m3-google-g-chip" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                  <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3.01h3.89c2.27-2.09 3.57-5.18 3.57-8.82z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.89-3.01c-1.08.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.72-4.95H1.28v3.11A12 12 0 0 0 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.28A7.22 7.22 0 0 1 4.9 12c0-.79.14-1.56.38-2.28V6.61H1.28A12 12 0 0 0 0 12c0 1.94.46 3.77 1.28 5.39l4-3.11z"/>
+                  <path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.58 1.79l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.28 6.61l4 3.11C6.23 6.88 8.88 4.77 12 4.77z"/>
+                </svg>
+              </span>
               <span>Sign in with Google</span>
             </button>
 
@@ -1912,18 +1868,22 @@
           </div>
 
           <div class="ps-field-group">
-            <div class="ps-label">Material You Theme Color</div>
+            <div class="ps-label">Material You Theme Color (16 HCT Palettes)</div>
             <div class="ps-color-row" id="ps-color-grid">
               <button type="button" class="ps-color-dot active" data-seed="amethyst" title="Amethyst" style="--sw:#d0bcff"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button type="button" class="ps-color-dot" data-seed="sapphire" title="Pixel Blue" style="--sw:#a8c7fa"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button type="button" class="ps-color-dot" data-seed="indigo" title="Royal Indigo" style="--sw:#bbc3ff"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button type="button" class="ps-color-dot" data-seed="ocean" title="Glacier Cyan" style="--sw:#72d5f5"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button type="button" class="ps-color-dot" data-seed="aurora" title="Aurora Teal" style="--sw:#7bd8c6"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button type="button" class="ps-color-dot" data-seed="emerald" title="Botanical Jade" style="--sw:#8bd89b"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button type="button" class="ps-color-dot" data-seed="forest" title="Pine Moss" style="--sw:#9cd49f"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button type="button" class="ps-color-dot" data-seed="lime" title="Matcha Olive" style="--sw:#c4d97a"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button type="button" class="ps-color-dot" data-seed="gold" title="Honey Amber" style="--sw:#ffb951"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button type="button" class="ps-color-dot" data-seed="terracotta" title="Sienna Clay" style="--sw:#f2b89b"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button type="button" class="ps-color-dot" data-seed="coral" title="Sunset Coral" style="--sw:#ffb59d"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button type="button" class="ps-color-dot" data-seed="crimson" title="Crimson Clay" style="--sw:#ffb3b5"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button type="button" class="ps-color-dot" data-seed="rose" title="Velvet Rose" style="--sw:#ffb0ce"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button type="button" class="ps-color-dot" data-seed="plum" title="Deep Berry" style="--sw:#f2b0e6"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button type="button" class="ps-color-dot" data-seed="lavender" title="Orchid Mist" style="--sw:#e2b7ff"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button type="button" class="ps-color-dot" data-seed="silver" title="Titanium Slate" style="--sw:#b8c8e2"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             </div>
@@ -2030,7 +1990,7 @@
     <section id="reset-confirm-overlay" class="m3-modal-scrim hidden" aria-label="Reset Settings">
       <div id="reset-confirm-modal" class="m3-dialog-card compact" role="dialog" aria-modal="true">
         <h3 class="m3-dialog-title">Reset dejavu settings?</h3>
-        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v5.10.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
+        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v5.11.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
         <div class="m3-dialog-actions">
           <button type="button" id="btn-reset-cancel" class="m3-btn m3-btn-text">Cancel</button>
           <button type="button" id="btn-reset-confirm" class="m3-btn m3-btn-danger">Reset Settings</button>
@@ -2221,7 +2181,7 @@
 
             <form id="ext-store-form" class="ext-store-pill-form">
               <svg viewBox="0 0 18 18" width="15" height="15" fill="none" class="ext-store-ico" aria-hidden="true"><path d="M7.6 10.4a3.3 3.3 0 0 0 4.6 0l2-2a3.3 3.3 0 0 0-4.6-4.6L8.4 5M10.4 7.6a3.3 3.3 0 0 0-4.6 0l-2 2a3.3 3.3 0 0 0 4.6 4.6l1.2-1.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-              <input id="ext-store-input" type="text" placeholder="Paste Chrome Web Store URL or 32-char Extension ID…" spellcheck="false" autocomplete="off">
+              <input id="ext-store-input" type="text" placeholder="Paste Chrome Web Store / Edge Add-ons URL or 32-char ID…" spellcheck="false" autocomplete="off">
               <button type="submit" id="btn-ext-store-install" class="m3-btn m3-btn-filled sm ext-install-btn">Install</button>
             </form>
 
@@ -2229,6 +2189,20 @@
               <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><path d="M9 3.4v7.8M6 8.2L9 11.2l3-3M3.6 14.6h10.8" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <span>Import from Chrome</span>
             </button>
+          </div>
+
+          <!-- Googlebook M3 Filter Chips & Quick Actions Row -->
+          <div class="ext-filter-row" id="ext-filter-chips" role="tablist" aria-label="Filter extensions">
+            <div class="ext-filter-pills">
+              <button type="button" class="ext-filter-chip active" data-ext-filter="all">All <span class="ext-chip-cnt" id="ext-cnt-all">0</span></button>
+              <button type="button" class="ext-filter-chip" data-ext-filter="enabled">Enabled <span class="ext-chip-cnt" id="ext-cnt-enabled">0</span></button>
+              <button type="button" class="ext-filter-chip" data-ext-filter="pinned">Pinned <span class="ext-chip-cnt" id="ext-cnt-pinned">0</span></button>
+              <button type="button" class="ext-filter-chip" data-ext-filter="disabled">Disabled <span class="ext-chip-cnt" id="ext-cnt-disabled">0</span></button>
+            </div>
+            <div class="ext-quick-links">
+              <button type="button" id="btn-ext-quick-file" class="m3-btn m3-btn-outlined sm" title="Install a local .crx or .zip extension package">Install .crx/.zip</button>
+              <button type="button" id="btn-ext-quick-update" class="m3-btn m3-btn-outlined sm" title="Check and update store extensions">Update All</button>
+            </div>
           </div>
 
           <!-- Chrome 157 Developer Mode Drawer (revealed when Developer mode switch is ON) -->
@@ -2632,11 +2606,14 @@
 
               <!-- Transport Diagnostics Summary Card -->
               <div id="link-card-diag" class="m3-pref-section">
-                <div class="m3-pref-heading">Transport Diagnostics</div>
+                <div class="m3-pref-heading-row">
+                  <div class="m3-pref-heading">Transport Diagnostics</div>
+                  <button type="button" id="btn-link-reconnect" class="m3-btn m3-btn-outlined sm" title="Reconnect dual-broker TLS relay &amp; LAN discovery">Reconnect Relay</button>
+                </div>
                 <div class="m3-pref-card link-diag-grid">
                   <div class="link-diag-cell">
                     <span class="link-diag-label">Active Transport</span>
-                    <span id="link-diag-transport" class="link-diag-value">Direct Wi-Fi LAN / TLS MQTT</span>
+                    <span id="link-diag-transport" class="link-diag-value">Bidirectional LAN + Dual-Broker TLS</span>
                   </div>
                   <div class="link-diag-cell">
                     <span class="link-diag-label">Broker / Endpoint</span>

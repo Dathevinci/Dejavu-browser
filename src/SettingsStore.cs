@@ -275,7 +275,8 @@ namespace DejavuBrowser
             return v == "amethyst" || v == "sapphire" || v == "indigo" ||
                    v == "aurora" || v == "emerald" || v == "lime" ||
                    v == "gold" || v == "coral" || v == "crimson" ||
-                   v == "rose" || v == "lavender" || v == "silver";
+                   v == "rose" || v == "lavender" || v == "silver" ||
+                   v == "ocean" || v == "terracotta" || v == "plum" || v == "forest";
         }
 
         public static string NormalizeAccent(string val)

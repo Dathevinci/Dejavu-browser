@@ -22,6 +22,8 @@ namespace DejavuBrowser
         private int _showGeneration;
         private bool _lastSurfaceLight;
         private Color _lastSurfaceColor = Color.Empty;
+        private bool _lastAmoledDark;
+        private string _lastMaterialStyle = "tonal";
 
         public bool IsPopupOpen
         {
@@ -188,6 +190,16 @@ namespace DejavuBrowser
             await navDone.Task;
 
             _ready = true;
+            if (!_isExtensionPopup)
+            {
+                try
+                {
+                    string shJson = "{\"mode\":\"styleHints\",\"amoledDark\":" + (_lastAmoledDark ? "true" : "false")
+                        + ",\"materialStyle\":\"" + (_lastMaterialStyle ?? "tonal") + "\"}";
+                    core.PostWebMessageAsJson(shJson);
+                }
+                catch { }
+            }
             if (_pendingJson != null)
             {
                 core.PostWebMessageAsJson(_pendingJson);
@@ -290,6 +302,24 @@ namespace DejavuBrowser
             UpdateSurfaceTheme(isLight, bg);
         }
 
+        public void UpdateStyleHints(bool amoledDark, string materialStyle)
+        {
+            if (IsDisposed || _isExtensionPopup) return;
+            string normStyle = (materialStyle == "vibrant" || materialStyle == "minimal") ? materialStyle : "tonal";
+            _lastAmoledDark = amoledDark;
+            _lastMaterialStyle = normStyle;
+            if (_ready && _wv != null && !_wv.IsDisposed && _wv.CoreWebView2 != null)
+            {
+                try
+                {
+                    string json = "{\"mode\":\"styleHints\",\"amoledDark\":" + (amoledDark ? "true" : "false")
+                        + ",\"materialStyle\":\"" + normStyle + "\"}";
+                    _wv.CoreWebView2.PostWebMessageAsJson(json);
+                }
+                catch { }
+            }
+        }
+
         public void UpdateSurfaceTheme(bool isLight, Color surfaceColor)
         {
             if (IsDisposed) return;
@@ -320,6 +350,16 @@ namespace DejavuBrowser
             {
                 if (_ready && _wv.CoreWebView2 != null)
                 {
+                    if (!_isExtensionPopup)
+                    {
+                        try
+                        {
+                            string shJson = "{\"mode\":\"styleHints\",\"amoledDark\":" + (_lastAmoledDark ? "true" : "false")
+                                + ",\"materialStyle\":\"" + (_lastMaterialStyle ?? "tonal") + "\"}";
+                            _wv.CoreWebView2.PostWebMessageAsJson(shJson);
+                        }
+                        catch { }
+                    }
                     _wv.CoreWebView2.PostWebMessageAsJson(stateJson);
                 }
                 else

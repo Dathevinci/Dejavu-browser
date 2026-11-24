@@ -40,6 +40,23 @@
       border-color: color-mix(in srgb, var(--md-outline-variant) 58%, transparent);
     }
 
+    body.amoled-dark,
+    body.amoled-dark .overlay-shell {
+      background: #0a0a0e;
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    body.amoled-dark #mode-contextmenu.overlay-shell {
+      background: #0c0c10;
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .overlay-shell button:focus-visible,
+    .overlay-shell input:focus-visible {
+      outline: 2px solid var(--md-primary);
+      outline-offset: 1px;
+    }
+
     @keyframes m3OverlayIn {
       from { opacity: 0; transform: translate3d(0, -5px, 0) scale(0.96); }
       to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
@@ -2658,7 +2675,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v5.12.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v5.13.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -3127,7 +3144,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v5.12.0</span>
+        <span id="mn-version-lbl">dejavu v5.13.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -3742,7 +3759,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.12.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.13.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -3867,6 +3884,11 @@
         if (mnZoomReset && typeof d.zoomPercent === 'number') mnZoomReset.textContent = `${d.zoomPercent}%`;
         return;
       }
+      if (d.mode === 'styleHints') {
+        document.body.classList.toggle('amoled-dark', !!d.amoledDark && !document.body.classList.contains('theme-light'));
+        if (d.materialStyle) document.body.dataset.materialStyle = d.materialStyle;
+        return;
+      }
 
       const wantLight = !d.isPrivateWindow && (typeof d.isLight === 'boolean' ? d.isLight : d.theme === 'light');
       const accentSeed = d.accentColor || d.accent;
@@ -3877,6 +3899,14 @@
       document.body.classList.toggle('is-private', !!d.isPrivateWindow);
       document.body.classList.toggle('theme-light', wantLight);
       document.body.classList.toggle('theme-dark', !wantLight);
+      if (typeof d.amoledDark === 'boolean') {
+        document.body.classList.toggle('amoled-dark', d.amoledDark && !wantLight && !d.isPrivateWindow);
+      } else if (wantLight || d.isPrivateWindow) {
+        document.body.classList.remove('amoled-dark');
+      }
+      if (d.materialStyle) {
+        document.body.dataset.materialStyle = d.materialStyle;
+      }
       if (typeof d.reduceMotion === 'boolean') {
         document.body.classList.toggle('reduce-motion', d.reduceMotion);
       }
@@ -4973,7 +5003,7 @@
       if (mnScreenshot) mnScreenshot.disabled = !!d.isNewTab;
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.12.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.13.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');

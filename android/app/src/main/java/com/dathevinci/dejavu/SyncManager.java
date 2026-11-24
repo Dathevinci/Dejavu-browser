@@ -53,7 +53,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 /**
- * dejavu Link v2.3 (v5.12.0) — Cross-Device E2EE Sync Engine (100% byte-compatible with Windows SyncManager.cs)
+ * dejavu Link v2.3 (v5.13.0) — Cross-Device E2EE Sync Engine (100% byte-compatible with Windows SyncManager.cs)
  *
  * Key Derivation & Crypto (unchanged v1/v2 contract):
  * - Zero-QR Google-Account Auto-Sync: 10,000-round SHA-256 chain -> topicId "dv4-...", encKey, macKey
@@ -199,7 +199,7 @@ public final class SyncManager {
     }
 
     /**
-     * Exact v5.12.0 Cross-Platform Google Auto-Sync Key Derivation (100% bit-identical to Windows SyncManager.cs):
+     * Exact v5.13.0 Cross-Platform Google Auto-Sync Key Derivation (100% bit-identical to Windows SyncManager.cs):
      * - normEmail = email.trim().toLowerCase(Locale.US)
      * - normPass  = passphrase.trim()
      * - seedStr   = "dejavu-google-link-v2:" + normEmail + ":" + normPass
@@ -451,7 +451,7 @@ public final class SyncManager {
     }
 
     /**
-     * Activates Zero-QR Google-Account E2EE Auto-Sync using the exact v5.12.0 cross-platform spec.
+     * Activates Zero-QR Google-Account E2EE Auto-Sync using the exact v5.13.0 cross-platform spec.
      */
     public boolean configureGoogleAccountSync(String email, String passphrase) {
         if (email == null || !email.trim().contains("@")) return false;
@@ -1361,7 +1361,7 @@ public final class SyncManager {
             conn.setConnectTimeout(1500);
             conn.setReadTimeout(1800);
             conn.setDoOutput(true);
-            conn.setRequestProperty("User-Agent", "dejavu-link-android/5.12.0");
+            conn.setRequestProperty("User-Agent", "dejavu-link-android/5.13.0");
             conn.setRequestProperty("Content-Type", "text/plain; charset=utf-8");
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(body);
@@ -1404,7 +1404,7 @@ public final class SyncManager {
                 conn.setRequestMethod("GET");
                 conn.setConnectTimeout(1500);
                 conn.setReadTimeout(1800);
-                conn.setRequestProperty("User-Agent", "dejavu-link-android/5.12.0");
+                conn.setRequestProperty("User-Agent", "dejavu-link-android/5.13.0");
                 int code = conn.getResponseCode();
                 if (code >= 200 && code < 300) {
                     try (InputStream is = conn.getInputStream()) {

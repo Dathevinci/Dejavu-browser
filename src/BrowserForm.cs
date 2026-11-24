@@ -1869,6 +1869,7 @@ namespace DejavuBrowser
                 return Color.FromArgb(254, 247, 255);
             }
             if (_isPrivateWindow) return Color.FromArgb(19, 19, 26);
+            if (_settings != null && _settings.amoledDark) return Color.FromArgb(0, 0, 0);
             if (ac == "sapphire") return Color.FromArgb(17, 19, 24);
             if (ac == "indigo") return Color.FromArgb(18, 19, 27);
             if (ac == "aurora") return Color.FromArgb(15, 21, 19);
@@ -1948,6 +1949,31 @@ namespace DejavuBrowser
                 case "froggie-lime": accent = "lime"; mode = "light"; return true;
                 case "wp-m3-froggie-sage.jpg":
                 case "froggie-sage": accent = "aurora"; mode = "dark"; return true;
+                // 12 bespoke v5.13.0 Googlebook Material Design 3 vector wallpapers
+                case "vec:m3-googlebook-waves":
+                case "m3-googlebook-waves": accent = "sapphire"; mode = "dark"; return true;
+                case "vec:m3-pixel-scallops":
+                case "m3-pixel-scallops": accent = "amethyst"; mode = "light"; return true;
+                case "vec:m3-bauhaus-blocks":
+                case "m3-bauhaus-blocks": accent = "indigo"; mode = "dark"; return true;
+                case "vec:m3-chroma-ribbons":
+                case "m3-chroma-ribbons": accent = "ocean"; mode = "dark"; return true;
+                case "vec:m3-topo-contours":
+                case "m3-topo-contours": accent = "forest"; mode = "dark"; return true;
+                case "vec:m3-pebble-stack":
+                case "m3-pebble-stack": accent = "terracotta"; mode = "light"; return true;
+                case "vec:m3-paper-fold":
+                case "m3-paper-fold": accent = "sapphire"; mode = "light"; return true;
+                case "vec:m3-prism-glass":
+                case "m3-prism-glass": accent = "plum"; mode = "dark"; return true;
+                case "vec:m3-nordic-arch":
+                case "m3-nordic-arch": accent = "aurora"; mode = "light"; return true;
+                case "vec:m3-botanical-arc":
+                case "m3-botanical-arc": accent = "emerald"; mode = "dark"; return true;
+                case "vec:m3-solar-rings":
+                case "m3-solar-rings": accent = "gold"; mode = "light"; return true;
+                case "vec:m3-oled-monolith":
+                case "m3-oled-monolith": accent = "silver"; mode = "dark"; return true;
                 default:
                     return false;
             }
@@ -2118,17 +2144,19 @@ namespace DejavuBrowser
                 }
                 catch { }
             }
+            bool amoled = (!isLightTheme && !_isPrivateWindow && _settings != null && _settings.amoledDark);
+            string matStyle = (_settings != null && !string.IsNullOrEmpty(_settings.materialStyle)) ? _settings.materialStyle : "tonal";
             if (_popoverPopup != null && !_popoverPopup.IsDisposed)
             {
-                try { _popoverPopup.UpdateSurfaceTheme(isLightTheme, surface); } catch { }
+                try { _popoverPopup.UpdateSurfaceTheme(isLightTheme, surface); _popoverPopup.UpdateStyleHints(amoled, matStyle); } catch { }
             }
             if (_hudPopup != null && !_hudPopup.IsDisposed)
             {
-                try { _hudPopup.UpdateSurfaceTheme(isLightTheme, surface); } catch { }
+                try { _hudPopup.UpdateSurfaceTheme(isLightTheme, surface); _hudPopup.UpdateStyleHints(amoled, matStyle); } catch { }
             }
             if (_suggestPopup != null && !_suggestPopup.IsDisposed)
             {
-                try { _suggestPopup.UpdateSurfaceTheme(isLightTheme, surface); } catch { }
+                try { _suggestPopup.UpdateSurfaceTheme(isLightTheme, surface); _suggestPopup.UpdateStyleHints(amoled, matStyle); } catch { }
             }
             for (int i = 0; i < _tabs.Count; i++)
             {
@@ -7899,7 +7927,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.12.0 defaults", "success");
+            PushShellToast("Settings restored to v5.13.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -8379,6 +8407,21 @@ namespace DejavuBrowser
             return TryGetActiveSplitPair(out l, out r);
         }
 
+        private void WakeTabForSplit(BrowserTab tab)
+        {
+            if (tab == null || tab.IsNewTab || tab.WebView == null || tab.WebView.IsDisposed) return;
+            tab.LastActiveUtc = DateTime.UtcNow;
+            if (tab.CoreReady && tab.WebView.CoreWebView2 != null)
+            {
+                try
+                {
+                    if (tab.WebView.CoreWebView2.IsSuspended) tab.WebView.CoreWebView2.Resume();
+                    tab.WebView.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
+                }
+                catch { }
+            }
+        }
+
         private void EnsureSplitDivider()
         {
             if (_splitDivider != null && !_splitDivider.IsDisposed) return;
@@ -8507,6 +8550,8 @@ namespace DejavuBrowser
             _splitRightTabId = partner.Id;
             _splitRatio = 0.50f;
             _activeTabId = active.Id;
+            WakeTabForSplit(active);
+            WakeTabForSplit(partner);
             LayoutViews();
             PushFullStateToShell();
             PushShellToast("Split View active — click either pane or drag center handle", "info");
@@ -8534,6 +8579,8 @@ namespace DejavuBrowser
             _splitRightTabId = target.Id;
             _splitRatio = 0.50f;
             _activeTabId = target.Id;
+            WakeTabForSplit(active);
+            WakeTabForSplit(target);
             LayoutViews();
             PushFullStateToShell();
             PushShellToast("Opened side-by-side in Split View", "info");
@@ -8692,6 +8739,9 @@ namespace DejavuBrowser
             if (tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed) return;
 
             bool startLight = GetEffectiveIsLight(tab, false);
+            bool readerAmoled = (!startLight && !_isPrivateWindow && _settings != null && _settings.amoledDark);
+            string readerDarkBg = readerAmoled ? "#000000" : "#141218";
+            string readerDarkBar = readerAmoled ? "#111016" : "#211f26";
             string initTheme = startLight ? "light" : "dark";
 
             string readerJs =
@@ -8720,7 +8770,7 @@ namespace DejavuBrowser
                 "}" +
                 "if(parts.length===0){var fb=(document.body.innerText||'').slice(0,6000);words=fb.split(/\\s+/).length;parts.push('<p>'+fb.replace(/</g,'&lt;')+'</p>');}" +
                 "var mins=Math.max(1,Math.round(words/215));" +
-                "var THEMES={dark:{bg:'#141218',fg:'#e6e0e9',bar:'#211f26',barFg:'#e6e0e9',bd:'rgba(202,196,208,0.16)',pri:'#d0bcff',onPri:'#381e72'},sepia:{bg:'#f7efe2',fg:'#2c2419',bar:'#ede2cf',barFg:'#2c2419',bd:'rgba(94,76,52,0.18)',pri:'#8a5600',onPri:'#ffffff'},light:{bg:'#fef7ff',fg:'#1d1b20',bar:'#f3edf7',barFg:'#1d1b20',bd:'rgba(73,69,79,0.16)',pri:'#6750a4',onPri:'#ffffff'}};" +
+                "var THEMES={dark:{bg:'" + readerDarkBg + "',fg:'#e6e0e9',bar:'" + readerDarkBar + "',barFg:'#e6e0e9',bd:'rgba(202,196,208,0.16)',pri:'#d0bcff',onPri:'#381e72'},sepia:{bg:'#f7efe2',fg:'#2c2419',bar:'#ede2cf',barFg:'#2c2419',bd:'rgba(94,76,52,0.18)',pri:'#8a5600',onPri:'#ffffff'},light:{bg:'#fef7ff',fg:'#1d1b20',bar:'#f3edf7',barFg:'#1d1b20',bd:'rgba(73,69,79,0.16)',pri:'#6750a4',onPri:'#ffffff'}};" +
                 "var curT='" + initTheme + "';var sz=19;var fontIdx=0;var widthIdx=1;" +
                 "var FONTS=[{lbl:'Sans',val:'\"Google Sans\",\"Segoe UI Variable\",\"Segoe UI\",system-ui,sans-serif'},{lbl:'Serif',val:'Georgia,\"Times New Roman\",serif'},{lbl:'Mono',val:'\"Cascadia Mono\",Consolas,monospace'}];" +
                 "var WIDTHS=[{lbl:'Narrow',val:'600px'},{lbl:'Medium',val:'720px'},{lbl:'Wide',val:'860px'}];" +

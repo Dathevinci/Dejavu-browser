@@ -151,7 +151,7 @@ namespace DejavuBrowser
     }
 
     /// <summary>
-    /// Native Chromium Extension Engine for dejavu v5.12.0.
+    /// Native Chromium Extension Engine for dejavu v5.13.0.
     /// Wraps WebView2 CoreWebView2Profile browser extension APIs, CRX2/CRX3/ZIP unpacking,
     /// 2-stage Chrome Web Store permission confirmation staging, automatic WebView2 manifest
     /// sanitization, _locales i18n resolution, and read-only Google Chrome import.
@@ -1460,7 +1460,7 @@ namespace DejavuBrowser
 
         /// <summary>
         /// Zero-overhead, Trusted-Types-safe (0 .innerHTML, 0 CSS blur, 0 transition:all, 0 setInterval)
-        /// Native Chrome-like Material Design 3 Chrome Web Store integration (v5.12.0):
+        /// Native Chrome-like Material Design 3 Chrome Web Store integration (v5.13.0):
         /// - 24-Palette Material You HCT Dynamic Theme Sync via window.__dejavuSetCwsTheme(palette)
         /// - Live Installed Extensions Sync via window.__dejavuSetInstalledExts(ids)
         /// - Hooks Chrome Web Store's primary CTA button in-place ("Add to dejavu" / "Checking..." / "Adding..." / "Remove from dejavu")

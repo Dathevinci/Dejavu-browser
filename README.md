@@ -4,21 +4,20 @@ A fast, private native **Google Material Design 3** browser for **Windows 10/11*
 
 **Official Website:** **[dathevinci.github.io/Dejavu-browser](https://dathevinci.github.io/Dejavu-browser/)**
 
-## Download (`v5.12.0`)
+## Download (`v5.13.0`)
 
 Grab the latest release from the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
 
-- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.12.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
-- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.12.0.0`, runs from any folder or USB with no admin rights required).
-- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.12.0` · `versionCode 620`, Android 8.0+).
+- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.13.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
+- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.13.0.0`, runs from any folder or USB with no admin rights required).
+- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.13.0` · `versionCode 630`, Android 8.0+).
 - **`SHA256SUMS.txt`** — Official SHA-256 checksums paired with GitHub **SLSA Build Provenance Attestations**.
 
-## What's New in v5.12.0
+## What's New in v5.13.0
 
-- **Mobile UI Polish & Fluid 120Hz Animations**: Fixed shortcut sheet clipping behind the bottom nav bar, blocked accidental Android text-selection toolbars on long-press, guaranteed M3 SVG avatar fallback beneath Google photos, eliminated the scroll-hide black dead bar with edge-to-edge GPU chrome glide, and added smooth sheet exit & Start Page animations.
-- **Reliable Tabs, Pinned Tabs & Favorites Persistence**: Atomic `.tmp` + `.bak` writes on Windows, full open + pinned tab session restore across Windows & Android (with lazy background suspension on Android), and deletion tombstones so removed favorites never reset or get resurrected by Sync.
-- **Redesigned `dejavu Link` Continuity Hub**: Eliminated duplicate/self-echo ghost devices, added friendly phone model names (e.g. `Samsung Galaxy Z Fold`) and a 1-click `×` Forget Device button that clears retained broker state, and simplified the layout into a calm Googlebook Phone Hub with cohesive tonal Quick Actions.
-- **Artwork-First Wallpaper & Style Studio + 12 Googlebook Wallpapers (45 Themes Total)**: Clean 2-tab Studio (`Wallpapers` | `Style & Layout`) with zero text clutter, 12 bespoke Googlebook Material 3 vector wallpapers, **AMOLED Pitch Black**, **Material Style** (`Tonal` | `Vibrant` | `Minimal`), **Tab Bar Style** (`Googlebook` | `Floating` | `Classic`), **Shortcut Shape** (`Circles` | `Tiles`), and **Start Page Clock** (`Off` | `Minimal` | `Bold`).
+- **Zero-Overlap Compact Android Bottom Bar (`54dp`)**: Webpages reserve the exact height of the visible bar so site footers, chat inputs, and bottom navbars are never covered, while scroll-collapse expands the page cleanly behind the bar with zero black gap. Includes a new **Compact (1-Row)** default bar (switchable with **Classic (2-Row)** in Settings) and SPA inner-scroll detection.
+- **Core Android Browser Upgrades**: Added `<input type="file">` file/photo upload picker (`onShowFileChooser`), external app URI & `intent://` handling with fallback URLs, themed Googlebook Material 3 camera/mic/location & share dialogs, true immersive fullscreen video, `onPageFinished` session auto-save, and deferred `pushStateToUi()` for lower browsing CPU/RAM.
+- **Windows A-to-Z Googlebook Material 3 Parity**: Every native popup (Main Menu, Profile, Shields, Tab Search, Sidebar, Extensions, Context Menus, Split View divider, and Reader View) now honors **AMOLED Pitch Black**, all 16 dynamic palettes, and **Material Style**; fixed Split View wake-up for hibernated tabs and added C# auto-theme matching for all 12 Googlebook vector wallpapers.
 
 ## Core Capabilities
 

@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DownloadManager;
 import android.app.role.RoleManager;
+import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -51,8 +52,11 @@ import android.view.animation.PathInterpolator;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
+import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
 import android.webkit.URLUtil;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -214,9 +218,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
     }
 
-    private static final class ScrollTrackBridge {
+    private final class ScrollTrackBridge {
+        private final MobileTab tab;
         private final ObservableWebView webView;
-        ScrollTrackBridge(ObservableWebView wv) {
+        ScrollTrackBridge(MobileTab tab, ObservableWebView wv) {
+            this.tab = tab;
             this.webView = wv;
         }
         @JavascriptInterface
@@ -226,6 +232,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 webView.touchStartedAtTop = false;
                 webView.disallowRefreshThisGesture = true;
             }
+        }
+        @JavascriptInterface
+        public void onInnerScroll(final int deltaY, final int scrollTop) {
+            mainHandler.post(() -> handleWebScrollDelta(tab, Math.max(0, scrollTop), deltaY));
         }
     }
 
@@ -388,7 +398,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private final List<String> deletedBookmarkUrls = new ArrayList<>();
     private final Runnable saveSessionTask = this::saveOpenTabsSession;
     private String barPosition = "bottom"; // "bottom" (Safari/Samsung) | "top" (Chrome)
+    private boolean compactBottomBar = true; // Compact 54dp single-row Googlebook bar on webpages (false = 2-row)
     private boolean autoHideBar = true;
+    private boolean uiStateDirty = false;
     private boolean darkWebPages = false;
     private int pageZoom = 100;
     private final Map<String, Integer> siteZoomLevels = new HashMap<>();
@@ -461,6 +473,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private LinearLayout bottomChrome;
     private ProgressBar loadProgress;
     private FrameLayout bottomUrlSlot;
+    private LinearLayout compactWebRow;
+    private FrameLayout compactUrlSlot;
+    private ImageView compactBack;
+    private View compactTabsWrap;
+    private TextView compactTabsBadge;
+    private ImageView compactMenu;
     private LinearLayout urlPillBox;
     private LinearLayout navDockRow;
     private EditText urlInput;
@@ -518,6 +536,32 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private ObjectAnimator progressAnimator = null;
     private Dialog activeAuthDialog = null;
     private WebView activeAuthWebView = null;
+    private ValueCallback<Uri[]> pendingFileChooserCallback = null;
+
+    private final ActivityResultLauncher<Intent> fileChooserLauncher = registerForActivityResult(
+        new ActivityResultContracts.StartActivityForResult(),
+        result -> {
+            ValueCallback<Uri[]> cb = pendingFileChooserCallback;
+            pendingFileChooserCallback = null;
+            if (cb == null) return;
+            Uri[] uris = null;
+            try {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Intent data = result.getData();
+                    ClipData clip = data.getClipData();
+                    if (clip != null && clip.getItemCount() > 0) {
+                        uris = new Uri[clip.getItemCount()];
+                        for (int i = 0; i < clip.getItemCount(); i++) {
+                            uris[i] = clip.getItemAt(i).getUri();
+                        }
+                    } else if (data.getData() != null) {
+                        uris = new Uri[] { data.getData() };
+                    }
+                }
+            } catch (Exception ignored) { }
+            try { cb.onReceiveValue(uris); } catch (Exception ignored) { }
+        }
+    );
 
     private final ActivityResultLauncher<Intent> defaultBrowserLauncher = registerForActivityResult(
         new ActivityResultContracts.StartActivityForResult(),
@@ -850,6 +894,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         bottomChrome = findViewById(R.id.bottom_chrome);
         loadProgress = findViewById(R.id.load_progress);
         bottomUrlSlot = findViewById(R.id.bottom_url_slot);
+        compactWebRow = findViewById(R.id.compact_web_row);
+        compactUrlSlot = findViewById(R.id.compact_url_slot);
+        compactBack = findViewById(R.id.compact_back);
+        compactTabsWrap = findViewById(R.id.compact_tabs_wrap);
+        compactTabsBadge = findViewById(R.id.compact_tabs_badge);
+        compactMenu = findViewById(R.id.compact_menu);
         urlPillBox = findViewById(R.id.url_pill_box);
         navDockRow = findViewById(R.id.nav_dock_row);
         urlInput = findViewById(R.id.url_input);
@@ -985,6 +1035,33 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         updateChromeVisibility();
     }
 
+    private boolean isCompactWebBarActive() {
+        if (!compactBottomBar || "top".equals(barPosition)) return false;
+        if (!"none".equals(activeUiScreen)) return false;
+        MobileTab active = getActiveTab();
+        if (active == null || active.isNewTab) return false;
+        if (urlInput != null && urlInput.hasFocus()) return false;
+        return !isImeVisible();
+    }
+
+    private void syncUrlPillSlot() {
+        if (urlPillBox == null || topUrlSlot == null || bottomUrlSlot == null) return;
+        boolean isTop = "top".equals(barPosition);
+        boolean compact = isCompactWebBarActive() && compactUrlSlot != null;
+        FrameLayout target = isTop ? topUrlSlot : (compact ? compactUrlSlot : bottomUrlSlot);
+        ViewParent parent = urlPillBox.getParent();
+        if (parent != target) {
+            if (parent instanceof ViewGroup) ((ViewGroup) parent).removeView(urlPillBox);
+            target.addView(urlPillBox);
+        }
+        int desiredH = compact ? dp(40) : dp(44);
+        ViewGroup.LayoutParams lp = urlPillBox.getLayoutParams();
+        if (lp != null && lp.height != desiredH) {
+            lp.height = desiredH;
+            urlPillBox.setLayoutParams(lp);
+        }
+    }
+
     private void updateViewportPadding() {
         if (viewportHost == null) return;
         boolean topBar = "top".equals(barPosition);
@@ -995,7 +1072,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         int topPad = insetTopPx;
         if (topBar && hasWebTab && !chromeCollapsed && topChrome != null && topChrome.getVisibility() == View.VISIBLE) {
-            topPad += (topUrlSlot != null && topUrlSlot.getHeight() > 0) ? topUrlSlot.getHeight() : dp(64);
+            topPad += (topUrlSlot != null && topUrlSlot.getHeight() > 0) ? topUrlSlot.getHeight() : dp(60);
         }
         if (findBar != null && findBar.getVisibility() == View.VISIBLE) {
             topPad += findBar.getHeight() > 0 ? findBar.getHeight() : dp(48);
@@ -1005,40 +1082,39 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (hideBottomForWebIme) {
             // Soft keyboard open on live webpage: bottomChrome is hidden and webpage resizes cleanly ABOVE keyboard
             bottomPad = Math.max(insetBottomPx, insetImePx);
-        } else if (onWeb && autoHideBar && !topBar) {
-            // Full-bleed edge-to-edge web viewport: bottomChrome glides smoothly over live webpage with ZERO black dead bar!
+        } else if (onWeb && chromeCollapsed) {
+            // Scroll-collapsed full-screen reading: zero bottom dead bar
             bottomPad = insetBottomPx;
         } else {
+            // Whenever bottomChrome is visible (Compact 54dp or 2-Row), reserve its exact height so
+            // fixed website bottom navbars, chat inputs, and page footers are NEVER covered!
             bottomPad = insetBottomPx;
             if (!chromeCollapsed && bottomChrome != null && bottomChrome.getVisibility() == View.VISIBLE) {
-                int navH = (navDockRow != null && navDockRow.getHeight() > 0) ? navDockRow.getHeight() : dp(54);
-                if (hasWebTab) {
-                    int urlH = (bottomUrlSlot != null && bottomUrlSlot.getHeight() > 0) ? bottomUrlSlot.getHeight() : dp(60);
-                    bottomPad += topBar ? navH : (navH + urlH);
+                int barContentH = 0;
+                if (compactWebRow != null && compactWebRow.getVisibility() == View.VISIBLE) {
+                    barContentH += compactWebRow.getHeight() > 0 ? compactWebRow.getHeight() : dp(54);
                 } else {
-                    bottomPad += navH;
+                    if (navDockRow != null && navDockRow.getVisibility() == View.VISIBLE) {
+                        barContentH += navDockRow.getHeight() > 0 ? navDockRow.getHeight() : dp(48);
+                    }
+                    if (!topBar && bottomUrlSlot != null && bottomUrlSlot.getVisibility() == View.VISIBLE) {
+                        barContentH += bottomUrlSlot.getHeight() > 0 ? bottomUrlSlot.getHeight() : dp(54);
+                    }
                 }
+                bottomPad += barContentH;
             }
         }
         if (viewportHost.getPaddingLeft() != insetLeftPx ||
             viewportHost.getPaddingTop() != topPad ||
             viewportHost.getPaddingRight() != insetRightPx ||
             viewportHost.getPaddingBottom() != bottomPad) {
-            ignoreScrollUntilMs = Math.max(ignoreScrollUntilMs, SystemClock.uptimeMillis() + 280L);
+            ignoreScrollUntilMs = Math.max(ignoreScrollUntilMs, SystemClock.uptimeMillis() + 260L);
             viewportHost.setPadding(insetLeftPx, topPad, insetRightPx, bottomPad);
         }
     }
 
     private void applyBarPosition() {
-        boolean isTop = "top".equals(barPosition);
-        if (urlPillBox != null && topUrlSlot != null && bottomUrlSlot != null) {
-            ViewParent parent = urlPillBox.getParent();
-            FrameLayout target = isTop ? topUrlSlot : bottomUrlSlot;
-            if (parent != target) {
-                if (parent instanceof ViewGroup) ((ViewGroup) parent).removeView(urlPillBox);
-                target.addView(urlPillBox);
-            }
-        }
+        syncUrlPillSlot();
         updateCollapsedPillLayoutParams();
         updateChromeVisibility();
     }
@@ -1321,6 +1397,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         if (navBack != null) navBack.setColorFilter(p.onSurfaceVariant);
         if (navForward != null) navForward.setColorFilter(p.onSurfaceVariant);
+        if (compactBack != null) compactBack.setColorFilter(p.onSurfaceVariant);
+        if (compactMenu != null) compactMenu.setColorFilter(p.onSurfaceVariant);
         applySyncPillTheme(p, isLight, isSyncActivelyPaired());
         if (navMenu != null) navMenu.setColorFilter(p.onSurfaceVariant);
         if (navTabsBadge != null) {
@@ -1330,6 +1408,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             } else {
                 navTabsBadge.setBackground(makeM3PillDrawable(Color.TRANSPARENT, p.onSurfaceVariant, 1.6f, 6f));
                 navTabsBadge.setTextColor(p.onSurface);
+            }
+        }
+        if (compactTabsBadge != null) {
+            if (isPriv) {
+                compactTabsBadge.setBackground(makeM3PillDrawable(withAlpha(p.primary, 0x28), p.primary, 1.6f, 6f));
+                compactTabsBadge.setTextColor(p.primary);
+            } else {
+                compactTabsBadge.setBackground(makeM3PillDrawable(Color.TRANSPARENT, p.onSurfaceVariant, 1.6f, 6f));
+                compactTabsBadge.setTextColor(p.onSurface);
             }
         }
 
@@ -1582,6 +1669,20 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             goActiveTabHome();
             return true;
         });
+
+        if (compactBack != null) {
+            compactBack.setOnClickListener(v -> navBack.performClick());
+            compactBack.setOnLongClickListener(v -> {
+                goActiveTabHome();
+                return true;
+            });
+        }
+        if (compactTabsWrap != null) {
+            compactTabsWrap.setOnClickListener(v -> navTabsWrap.performClick());
+        }
+        if (compactMenu != null) {
+            compactMenu.setOnClickListener(v -> navMenu.performClick());
+        }
 
         navForward.setOnClickListener(v -> {
             MobileTab t = getActiveTab();
@@ -1851,16 +1952,19 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         boolean isTop = "top".equals(barPosition);
         float pillHiddenOffset = isTop ? dp(14) : -dp(14);
-        // Pure 120Hz GPU-accelerated chrome glide — zero viewport padding reflow jank!
         if (collapsed) {
+            // Expand WebView behind the bar on frame 0 BEFORE gliding the bar away -> ZERO black dead bar!
+            pendingDeferredViewportPad = false;
+            mainHandler.removeCallbacks(deferredViewportPaddingTask);
+            updateViewportPadding();
             if (isTop && topChrome != null) {
                 topChrome.animate().cancel();
-                topChrome.animate().translationY(-topChrome.getHeight()).alpha(0.0f).setDuration(260)
+                topChrome.animate().translationY(-topChrome.getHeight()).alpha(0.0f).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (bottomChrome != null && bottomChrome.getVisibility() == View.VISIBLE) {
                 bottomChrome.animate().cancel();
-                bottomChrome.animate().translationY(bottomChrome.getHeight()).alpha(0.0f).setDuration(260)
+                bottomChrome.animate().translationY(bottomChrome.getHeight()).alpha(0.0f).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (collapsedPill != null) {
@@ -1878,13 +1982,22 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         } else {
             if (topChrome != null) {
                 topChrome.animate().cancel();
-                topChrome.animate().translationY(0f).alpha(1f).setDuration(240)
+                topChrome.animate().translationY(0f).alpha(1f).setDuration(220)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (bottomChrome != null) {
                 bottomChrome.animate().cancel();
-                bottomChrome.animate().translationY(0f).alpha(1f).setDuration(240)
-                    .setInterpolator(M3_EMPHASIZED_DECEL).start();
+                bottomChrome.animate().translationY(0f).alpha(1f).setDuration(220)
+                    .setInterpolator(M3_EMPHASIZED_DECEL)
+                    .withEndAction(() -> {
+                        if (!chromeCollapsed) {
+                            if (isUserTouchingWeb) {
+                                pendingDeferredViewportPad = true;
+                            } else {
+                                updateViewportPadding();
+                            }
+                        }
+                    }).start();
             }
             if (collapsedPill != null && collapsedPill.getVisibility() == View.VISIBLE) {
                 collapsedPill.animate().cancel();
@@ -1892,16 +2005,16 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     .setInterpolator(M3_EMPHASIZED_DECEL)
                     .withEndAction(() -> collapsedPill.setVisibility(View.GONE)).start();
             }
-        }
-        updateBannerTopMargins();
-        if (isTop) {
-            if (isUserTouchingWeb) {
-                pendingDeferredViewportPad = true;
-                mainHandler.removeCallbacks(deferredViewportPaddingTask);
-            } else {
-                scheduleDeferredViewportPadding(220L);
+            if (isTop) {
+                if (isUserTouchingWeb) {
+                    pendingDeferredViewportPad = true;
+                    mainHandler.removeCallbacks(deferredViewportPaddingTask);
+                } else {
+                    scheduleDeferredViewportPadding(220L);
+                }
             }
         }
+        updateBannerTopMargins();
     }
 
     private void captureActiveTabThumbnail() {
@@ -1982,10 +2095,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             final String clean = shared.trim();
             final String extractedUrl = extractFirstUrl(clean);
 
-            new AlertDialog.Builder(this)
-                .setTitle("Share with dejavu")
-                .setMessage(clean.length() > 140 ? clean.substring(0, 140) + "..." : clean)
-                .setPositiveButton("Send to Windows PC", (d, w) -> {
+            showM3ActionDialog(
+                "Share with dejavu",
+                clean.length() > 160 ? clean.substring(0, 160) + "..." : clean,
+                "Send to PC",
+                () -> {
                     if (extractedUrl != null) {
                         syncManager.sendDrop("link", subject != null && !subject.isEmpty() ? subject : formatHost(extractedUrl), extractedUrl, "");
                     } else {
@@ -1993,16 +2107,132 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     }
                     Toast.makeText(this, "Sent straight to Windows PC!", Toast.LENGTH_SHORT).show();
                     openUiScreen("sync");
-                })
-                .setNeutralButton(extractedUrl != null ? "Open in dejavu" : "Save to Feed", (d, w) -> {
+                },
+                extractedUrl != null ? "Open Tab" : "Save Note",
+                () -> {
                     if (extractedUrl != null) createTab(extractedUrl, true, false);
                     else {
                         syncManager.sendDrop("text", "Note", "", clean);
                         openUiScreen("sync");
                     }
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+                },
+                "Cancel",
+                null
+            );
+        }
+    }
+
+    private void showM3ActionDialog(
+        String title,
+        String body,
+        String primaryLabel,
+        Runnable onPrimary,
+        String secondaryLabel,
+        Runnable onSecondary,
+        String cancelLabel,
+        Runnable onCancel
+    ) {
+        try {
+            boolean isLight = isEffectiveLightTheme();
+            M3Palette p = resolveM3Palette(isLight, false);
+            Dialog dlg = new Dialog(this);
+            dlg.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dlg.setCanceledOnTouchOutside(true);
+
+            LinearLayout card = new LinearLayout(this);
+            card.setOrientation(LinearLayout.VERTICAL);
+            card.setPadding(dp(22), dp(22), dp(22), dp(18));
+            card.setBackground(makeM3PillDrawable(p.surfaceContainerHigh, withAlpha(p.outlineVariant, 0x55), 0.75f, 28f));
+
+            TextView tvTitle = new TextView(this);
+            tvTitle.setText(title);
+            tvTitle.setTextColor(p.onSurface);
+            tvTitle.setTextSize(18f);
+            tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+            card.addView(tvTitle);
+
+            TextView tvBody = new TextView(this);
+            tvBody.setText(body);
+            tvBody.setTextColor(p.onSurfaceVariant);
+            tvBody.setTextSize(13.5f);
+            tvBody.setPadding(0, dp(8), 0, dp(18));
+            card.addView(tvBody);
+
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
+
+            final boolean[] acted = new boolean[] { false };
+
+            if (cancelLabel != null && !cancelLabel.isEmpty()) {
+                TextView btnCancel = new TextView(this);
+                btnCancel.setText(cancelLabel);
+                btnCancel.setTextColor(p.onSurfaceVariant);
+                btnCancel.setTextSize(13.5f);
+                btnCancel.setTypeface(null, android.graphics.Typeface.BOLD);
+                btnCancel.setPadding(dp(14), dp(10), dp(14), dp(10));
+                btnCancel.setOnClickListener(v -> {
+                    acted[0] = true;
+                    dlg.dismiss();
+                    if (onCancel != null) onCancel.run();
+                });
+                row.addView(btnCancel);
+            }
+
+            if (secondaryLabel != null && !secondaryLabel.isEmpty()) {
+                TextView btnSec = new TextView(this);
+                btnSec.setText(secondaryLabel);
+                btnSec.setTextColor(p.onSurface);
+                btnSec.setTextSize(13.5f);
+                btnSec.setTypeface(null, android.graphics.Typeface.BOLD);
+                btnSec.setPadding(dp(16), dp(10), dp(16), dp(10));
+                btnSec.setBackground(makeM3PillDrawable(p.surfaceContainer, 0, 0f, 20f));
+                LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                slp.setMarginStart(dp(8));
+                btnSec.setLayoutParams(slp);
+                btnSec.setOnClickListener(v -> {
+                    acted[0] = true;
+                    dlg.dismiss();
+                    if (onSecondary != null) onSecondary.run();
+                });
+                row.addView(btnSec);
+            }
+
+            if (primaryLabel != null && !primaryLabel.isEmpty()) {
+                TextView btnPri = new TextView(this);
+                btnPri.setText(primaryLabel);
+                btnPri.setTextColor(p.onPrimaryContainer);
+                btnPri.setTextSize(13.5f);
+                btnPri.setTypeface(null, android.graphics.Typeface.BOLD);
+                btnPri.setPadding(dp(18), dp(10), dp(18), dp(10));
+                btnPri.setBackground(makeM3PillDrawable(p.primaryContainer, 0, 0f, 20f));
+                LinearLayout.LayoutParams plp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                plp.setMarginStart(dp(8));
+                btnPri.setLayoutParams(plp);
+                btnPri.setOnClickListener(v -> {
+                    acted[0] = true;
+                    dlg.dismiss();
+                    if (onPrimary != null) onPrimary.run();
+                });
+                row.addView(btnPri);
+            }
+
+            card.addView(row);
+            dlg.setContentView(card);
+            dlg.setOnDismissListener(d -> {
+                if (!acted[0] && onCancel != null) onCancel.run();
+            });
+            Window win = dlg.getWindow();
+            if (win != null) {
+                win.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                int w = Math.min(dp(380), Math.round(getResources().getDisplayMetrics().widthPixels * 0.90f));
+                win.setLayout(w, ViewGroup.LayoutParams.WRAP_CONTENT);
+            }
+            dlg.show();
+        } catch (Exception ignored) {
+            if (onCancel != null) onCancel.run();
         }
     }
 
@@ -2470,7 +2700,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(wv, !tab.isPrivate && !blockThirdPartyCookies);
-        wv.addJavascriptInterface(new ScrollTrackBridge(wv), "__djvScroll");
+        wv.addJavascriptInterface(new ScrollTrackBridge(tab, wv), "__djvScroll");
         wv.addJavascriptInterface(new MobileMediaBridge(tab), "__djvMedia");
         wv.addJavascriptInterface(new MobileShieldBridge(tab), "__djvShield");
         if (!tab.isPrivate) {
@@ -2484,43 +2714,24 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 scrollAccumY = 0;
                 mainHandler.removeCallbacks(deferredViewportPaddingTask);
             } else if (pendingDeferredViewportPad) {
-                scheduleDeferredViewportPadding(220L);
+                scheduleDeferredViewportPadding(180L);
             }
         });
 
-        wv.setScrollListener((scrollY, deltaY) -> {
-            if (tab.id != activeTabId || !"none".equals(activeUiScreen) || urlInput.hasFocus() || isImeVisible()) return;
-            if (!autoHideBar) return;
-            long now = SystemClock.uptimeMillis();
-            if (now < ignoreScrollUntilMs) {
-                scrollAccumY = 0;
-                return;
-            }
-            if (pendingDeferredViewportPad && !isUserTouchingWeb) {
-                scheduleDeferredViewportPadding(220L);
-            }
-            if ((scrollAccumY > 0 && deltaY < -dp(2)) || (scrollAccumY < 0 && deltaY > dp(2))) {
-                scrollAccumY = deltaY;
-            } else {
-                scrollAccumY += deltaY;
-            }
-            long sinceToggle = now - lastChromeToggleMs;
-            if (!chromeCollapsed && scrollAccumY > dp(52) && scrollY > dp(84) && sinceToggle >= 320L) {
-                scrollAccumY = 0;
-                lastChromeToggleMs = now;
-                setChromeCollapsed(true);
-            } else if (chromeCollapsed && ((scrollAccumY < -dp(36) && sinceToggle >= 320L) || scrollY < dp(20))) {
-                scrollAccumY = 0;
-                lastChromeToggleMs = now;
-                setChromeCollapsed(false);
-            }
-        });
+        wv.setScrollListener((scrollY, deltaY) -> handleWebScrollDelta(tab, scrollY, deltaY));
 
         wv.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 if (request == null || request.getUrl() == null) return false;
                 String reqUrl = request.getUrl().toString();
+                String scheme = request.getUrl().getScheme();
+                String lowScheme = scheme != null ? scheme.toLowerCase(Locale.US) : "";
+                if (!lowScheme.isEmpty() && !"http".equals(lowScheme) && !"https".equals(lowScheme)
+                    && !"about".equals(lowScheme) && !"blob".equals(lowScheme)
+                    && !"data".equals(lowScheme) && !"javascript".equals(lowScheme)) {
+                    return handleExternalUriScheme(tab, reqUrl, lowScheme);
+                }
                 if (request.isForMainFrame() && adBlocker != null && !isLikelyAuthPopupUrl(reqUrl)
                     && adBlocker.isSiteShieldUp(tab.url) && adBlocker.isSpamPopup(reqUrl)) {
                     tab.blockedCount++;
@@ -2543,14 +2754,6 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     if (sr.strippedCount > 0 && sr.url != null && !sr.url.equals(reqUrl)) {
                         tab.trackingParamsStripped += sr.strippedCount;
                         loadTabUrl(tab, sr.url);
-                        return true;
-                    }
-                }
-                if (doNotTrack && request.isForMainFrame() && !request.isRedirect() && request.hasGesture()
-                    && (reqUrl.startsWith("http://") || reqUrl.startsWith("https://"))) {
-                    Map<String, String> reqHdrs = request.getRequestHeaders();
-                    if (reqHdrs == null || !"1".equals(reqHdrs.get("DNT"))) {
-                        loadTabUrl(tab, reqUrl);
                         return true;
                     }
                 }
@@ -2650,6 +2853,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (!tab.isPrivate) {
                     recordHistory(tab.title, tab.url);
                     saveLocalCollections();
+                    scheduleSaveOpenTabsSession();
                     publishOpenTabsToPc();
                     if (syncManager != null) syncManager.publishCollection("history", history);
                 }
@@ -2719,6 +2923,90 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             }
 
             @Override
+            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+                if (pendingFileChooserCallback != null) {
+                    try { pendingFileChooserCallback.onReceiveValue(null); } catch (Exception ignored) { }
+                    pendingFileChooserCallback = null;
+                }
+                pendingFileChooserCallback = filePathCallback;
+                try {
+                    Intent chooserIntent = fileChooserParams != null ? fileChooserParams.createIntent() : new Intent(Intent.ACTION_GET_CONTENT);
+                    if (fileChooserParams == null) {
+                        chooserIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                        chooserIntent.setType("*/*");
+                    } else if (fileChooserParams.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) {
+                        chooserIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                    }
+                    fileChooserLauncher.launch(Intent.createChooser(chooserIntent, "Choose file"));
+                    return true;
+                } catch (Exception ex) {
+                    pendingFileChooserCallback = null;
+                    try { filePathCallback.onReceiveValue(null); } catch (Exception ignored) { }
+                    return false;
+                }
+            }
+
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                if (request == null) return;
+                mainHandler.post(() -> {
+                    String originHost = (request.getOrigin() != null && request.getOrigin().getHost() != null)
+                        ? request.getOrigin().getHost() : "This website";
+                    String[] resources = request.getResources();
+                    if (resources == null || resources.length == 0) {
+                        request.deny();
+                        return;
+                    }
+                    StringBuilder desc = new StringBuilder();
+                    for (String r : resources) {
+                        if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(r)) {
+                            if (desc.length() > 0) desc.append(" & ");
+                            desc.append("Camera");
+                        } else if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(r)) {
+                            if (desc.length() > 0) desc.append(" & ");
+                            desc.append("Microphone");
+                        } else if (PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID.equals(r)) {
+                            request.grant(new String[] { r });
+                            return;
+                        }
+                    }
+                    if (desc.length() == 0) {
+                        request.deny();
+                        return;
+                    }
+                    showM3ActionDialog(
+                        originHost,
+                        "Allow " + originHost + " to use your " + desc + "?",
+                        "Allow",
+                        () -> { try { request.grant(resources); } catch (Exception ignored) { } },
+                        null,
+                        null,
+                        "Block",
+                        () -> { try { request.deny(); } catch (Exception ignored) { } }
+                    );
+                });
+            }
+
+            @Override
+            public void onGeolocationPermissionsShowPrompt(final String origin, final GeolocationPermissions.Callback callback) {
+                if (callback == null) return;
+                mainHandler.post(() -> {
+                    String host = formatHost(origin);
+                    if (host.isEmpty()) host = "This website";
+                    showM3ActionDialog(
+                        host,
+                        "Allow " + host + " to access your location?",
+                        "Allow",
+                        () -> callback.invoke(origin, true, false),
+                        null,
+                        null,
+                        "Block",
+                        () -> callback.invoke(origin, false, false)
+                    );
+                });
+            }
+
+            @Override
             public void onShowCustomView(View view, CustomViewCallback callback) {
                 if (customFullscreenView != null) {
                     callback.onCustomViewHidden();
@@ -2732,6 +3020,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 bottomChrome.setVisibility(View.GONE);
                 topChrome.setVisibility(View.GONE);
                 collapsedPill.setVisibility(View.GONE);
+                try {
+                    WindowInsetsControllerCompat wic = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+                    if (wic != null) {
+                        wic.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                        wic.hide(WindowInsetsCompat.Type.systemBars());
+                    }
+                } catch (Exception ignored) { }
             }
 
             @Override
@@ -3261,15 +3556,76 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         } catch (Exception ignored) { }
     }
 
+    private void handleWebScrollDelta(MobileTab tab, int scrollY, int deltaY) {
+        if (tab == null || tab.id != activeTabId || !"none".equals(activeUiScreen) || urlInput.hasFocus() || isImeVisible()) return;
+        if (!autoHideBar) return;
+        long now = SystemClock.uptimeMillis();
+        if (now < ignoreScrollUntilMs) {
+            scrollAccumY = 0;
+            return;
+        }
+        if (pendingDeferredViewportPad && !isUserTouchingWeb) {
+            scheduleDeferredViewportPadding(180L);
+        }
+        if ((scrollAccumY > 0 && deltaY < -dp(2)) || (scrollAccumY < 0 && deltaY > dp(2))) {
+            scrollAccumY = deltaY;
+        } else {
+            scrollAccumY += deltaY;
+        }
+        long sinceToggle = now - lastChromeToggleMs;
+        if (!chromeCollapsed && scrollAccumY > dp(48) && scrollY > dp(72) && sinceToggle >= 300L) {
+            scrollAccumY = 0;
+            lastChromeToggleMs = now;
+            setChromeCollapsed(true);
+        } else if (chromeCollapsed && ((scrollAccumY < -dp(32) && sinceToggle >= 300L) || scrollY < dp(16))) {
+            scrollAccumY = 0;
+            lastChromeToggleMs = now;
+            setChromeCollapsed(false);
+        }
+    }
+
+    private boolean handleExternalUriScheme(MobileTab tab, String reqUrl, String scheme) {
+        try {
+            if ("intent".equals(scheme)) {
+                Intent intent = Intent.parseUri(reqUrl, Intent.URI_INTENT_SCHEME);
+                if (intent != null) {
+                    intent.addCategory(Intent.CATEGORY_BROWSABLE);
+                    intent.setComponent(null);
+                    intent.setSelector(null);
+                    try {
+                        startActivity(intent);
+                        return true;
+                    } catch (ActivityNotFoundException nf) {
+                        String fallback = intent.getStringExtra("browser_fallback_url");
+                        if (fallback != null && (fallback.startsWith("http://") || fallback.startsWith("https://"))) {
+                            loadTabUrl(tab, fallback);
+                            return true;
+                        }
+                    }
+                }
+                return true;
+            }
+            Intent ext = new Intent(Intent.ACTION_VIEW, Uri.parse(reqUrl));
+            ext.addCategory(Intent.CATEGORY_BROWSABLE);
+            startActivity(ext);
+            return true;
+        } catch (Exception ignored) {
+            return true;
+        }
+    }
+
     private static String getScrollTopTrackerScript() {
-        return "(function(){if(window.__djvScrollHooked)return;window.__djvScrollHooked=1;var last=true;" +
+        return "(function(){if(window.__djvScrollHooked)return;window.__djvScrollHooked=1;var last=true;var wm=new WeakMap();var lastPost=0;" +
             "function send(v){v=!!v;if(v!==last){last=v;try{window.__djvScroll&&window.__djvScroll.setAtTop(v);}catch(e){}}}" +
             "function docTop(){return (window.scrollY||(document.documentElement&&document.documentElement.scrollTop)||(document.body&&document.body.scrollTop)||0);}" +
             "function checkEl(el){if(docTop()>1)return false;" +
             "var n=el;while(n&&n!==document&&n!==window){try{if(n.scrollHeight>n.clientHeight+2&&n.scrollTop>1)return false;}catch(e){}n=n.parentElement;}return true;}" +
             "window.addEventListener('touchstart',function(e){send(checkEl(e.target));},{capture:true,passive:true});" +
             "window.addEventListener('touchmove',function(e){if(!checkEl(e.target))send(false);},{capture:true,passive:true});" +
-            "window.addEventListener('scroll',function(e){var t=e.target;if(t&&t!==document&&t!==window&&t.scrollHeight>t.clientHeight+2&&t.scrollTop>1){send(false);}else{send(docTop()<=1);}},{capture:true,passive:true});" +
+            "window.addEventListener('scroll',function(e){var t=e.target;if(t&&t!==document&&t!==window&&t.scrollHeight>t.clientHeight+2){" +
+            "var st=t.scrollTop||0;send(st<=1);var prev=wm.has(t)?wm.get(t):st;wm.set(t,st);var dy=st-prev;" +
+            "var now=Date.now();if(Math.abs(dy)>=4&&(now-lastPost>=55||st<=2)){lastPost=now;try{window.__djvScroll&&window.__djvScroll.onInnerScroll(Math.round(dy*(window.devicePixelRatio||1)),Math.round(st*(window.devicePixelRatio||1)));}catch(ex){}}" +
+            "}else{send(docTop()<=1);}},{capture:true,passive:true});" +
             "})();";
     }
 
@@ -3306,7 +3662,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.12.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.13.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -3523,6 +3879,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             customFullscreenView = null;
         }
         fullscreenContainer.setVisibility(View.GONE);
+        try {
+            WindowInsetsControllerCompat wic = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+            if (wic != null) {
+                wic.show(WindowInsetsCompat.Type.systemBars());
+            }
+        } catch (Exception ignored) { }
         updateChromeVisibility();
         if (customViewCallback != null) {
             try { customViewCallback.onCustomViewHidden(); } catch (Exception ignored) { }
@@ -3575,15 +3937,21 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         boolean hideBottomForWebIme = onWeb && !urlInput.hasFocus() && imeVisible;
         boolean showUrlBar = !hideBars && !isStart && (inOmnibox || (onWeb && (isTop || !hideBottomForWebIme)));
 
+        boolean compactWeb = isCompactWebBarActive();
+        syncUrlPillSlot();
+
         if (statusScrim != null) {
             statusScrim.setVisibility(onWeb ? View.VISIBLE : View.GONE);
         }
+        if (compactWebRow != null) {
+            compactWebRow.setVisibility((!hideBars && compactWeb && !hideBottomForWebIme) ? View.VISIBLE : View.GONE);
+        }
         if (navDockRow != null) {
-            navDockRow.setVisibility((hideBars || inOmnibox || hideBottomForWebIme) ? View.GONE : View.VISIBLE);
+            navDockRow.setVisibility((hideBars || inOmnibox || hideBottomForWebIme || compactWeb) ? View.GONE : View.VISIBLE);
         }
 
         // Start Page has its own Pixel Search Pill (#sp-search-pill): hide native URL slots on "start"
-        if (showUrlBar) {
+        if (showUrlBar && !compactWeb) {
             if (isTop) {
                 animateUrlSlotReveal(topUrlSlot, true);
                 hideUrlSlotImmediate(bottomUrlSlot);
@@ -3762,6 +4130,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             lastNavBackAlpha = backAlpha;
             navBack.animate().cancel();
             navBack.animate().alpha(backAlpha).setDuration(160).setInterpolator(M3_EMPHASIZED_DECEL).start();
+            if (compactBack != null) {
+                compactBack.animate().cancel();
+                compactBack.animate().alpha(backAlpha).setDuration(160).setInterpolator(M3_EMPHASIZED_DECEL).start();
+            }
         }
         if (navForward != null && lastNavFwdAlpha != fwdAlpha) {
             lastNavFwdAlpha = fwdAlpha;
@@ -3773,7 +4145,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         for (MobileTab mt : tabs) {
             if (mt.isPrivate == isPriv) tabCount++;
         }
-        navTabsBadge.setText(tabCount > 99 ? "∞" : String.valueOf(Math.max(1, tabCount)));
+        String tabCountStr = tabCount > 99 ? "∞" : String.valueOf(Math.max(1, tabCount));
+        navTabsBadge.setText(tabCountStr);
+        if (compactTabsBadge != null) compactTabsBadge.setText(tabCountStr);
 
         applySyncPillTheme(p, isLight, isSyncActivelyPaired());
     }
@@ -3801,11 +4175,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private int computeVisibleBottomChromeDp() {
         if (bottomChrome == null || bottomChrome.getVisibility() != View.VISIBLE) return 0;
         int total = 0;
+        if (compactWebRow != null && compactWebRow.getVisibility() == View.VISIBLE) {
+            total += compactWebRow.getHeight() > 0 ? pxToDp(compactWebRow.getHeight()) : 54;
+            return total;
+        }
         if (bottomUrlSlot != null && bottomUrlSlot.getVisibility() == View.VISIBLE) {
-            total += bottomUrlSlot.getHeight() > 0 ? pxToDp(bottomUrlSlot.getHeight()) : 60;
+            total += bottomUrlSlot.getHeight() > 0 ? pxToDp(bottomUrlSlot.getHeight()) : 54;
         }
         if (navDockRow != null && navDockRow.getVisibility() == View.VISIBLE) {
-            total += navDockRow.getHeight() > 0 ? pxToDp(navDockRow.getHeight()) : 54;
+            total += navDockRow.getHeight() > 0 ? pxToDp(navDockRow.getHeight()) : 48;
         }
         return total;
     }
@@ -3847,6 +4225,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private void pushStateToUi() {
         if (!uiReady) return;
         mainHandler.post(() -> {
+            // Zero-wasted-CPU guard: when browsing a live webpage with uiWebView hidden, defer JSON push until UI opens!
+            if ("none".equals(activeUiScreen) && uiWebView != null && uiWebView.getVisibility() != View.VISIBLE) {
+                uiStateDirty = true;
+                return;
+            }
+            uiStateDirty = false;
             try {
                 JSONObject st = new JSONObject();
                 st.put("screen", activeUiScreen);
@@ -3863,6 +4247,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("autoThemeFromWallpaper", autoThemeFromWallpaper);
                 st.put("showMotd", showMotd);
                 st.put("barPosition", barPosition);
+                st.put("compactBottomBar", compactBottomBar);
                 st.put("autoHideBar", autoHideBar);
                 st.put("darkWebPages", darkWebPages);
                 st.put("pageZoom", pageZoom);
@@ -4234,6 +4619,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         autoThemeFromWallpaper = prefs.getBoolean("autoThemeFromWallpaper", true);
         showMotd = prefs.getBoolean("showMotd", true);
         barPosition = "top".equals(prefs.getString("barPosition", "bottom")) ? "top" : "bottom";
+        compactBottomBar = prefs.getBoolean("compactBottomBar", true);
         autoHideBar = prefs.getBoolean("autoHideBar", true);
         darkWebPages = prefs.getBoolean("darkWebPages", false);
         pageZoom = Math.max(50, Math.min(200, prefs.getInt("pageZoom", 100)));
@@ -4395,6 +4781,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putBoolean("autoThemeFromWallpaper", autoThemeFromWallpaper)
             .putBoolean("showMotd", showMotd)
             .putString("barPosition", barPosition)
+            .putBoolean("compactBottomBar", compactBottomBar)
             .putBoolean("autoHideBar", autoHideBar)
             .putBoolean("darkWebPages", darkWebPages)
             .putInt("pageZoom", pageZoom)
@@ -4936,6 +5323,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         mainHandler.removeCallbacks(hideBannerTask);
         mainHandler.removeCallbacks(saveSessionTask);
         dismissActiveAuthDialog();
+        if (pendingFileChooserCallback != null) {
+            try { pendingFileChooserCallback.onReceiveValue(null); } catch (Exception ignored) { }
+            pendingFileChooserCallback = null;
+        }
         saveOpenTabsSession();
         saveLocalCollectionsSync();
         if (adBlocker != null) adBlocker.shutdown();
@@ -5681,6 +6072,28 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
 
         @JavascriptInterface
+        public void setBottomBarStyle(final String style) {
+            mainHandler.post(() -> {
+                compactBottomBar = !"expanded".equalsIgnoreCase(style);
+                saveLocalCollections();
+                applyBarPosition();
+                applyNativeTheme();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleCompactBottomBar() {
+            mainHandler.post(() -> {
+                compactBottomBar = !compactBottomBar;
+                saveLocalCollections();
+                applyBarPosition();
+                applyNativeTheme();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
         public void toggleAutoHideBar() {
             mainHandler.post(() -> {
                 autoHideBar = !autoHideBar;
@@ -6353,6 +6766,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 accentColor = "amethyst";
                 wallpaper = "wp-m3-amethyst.jpg";
                 barPosition = "bottom";
+                compactBottomBar = true;
                 autoHideBar = true;
                 darkWebPages = false;
                 pageZoom = 100;

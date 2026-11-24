@@ -189,13 +189,13 @@
             android:progressTint="@color/amethyst"
             android:visibility="gone" />
 
-        <!-- Floating Address / Omnibox Slot (Hidden on Start Page; Shown on Webpages & Omnibox) -->
+        <!-- Floating Address / Omnibox Slot (Expanded 2-Row Mode & Omnibox Input) -->
         <FrameLayout
             android:id="@+id/bottom_url_slot"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingStart="12dp"
-            android:paddingTop="8dp"
+            android:paddingTop="6dp"
             android:paddingEnd="12dp"
             android:paddingBottom="4dp"
             android:visibility="gone">
@@ -203,13 +203,13 @@
             <LinearLayout
                 android:id="@+id/url_pill_box"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="44dp"
                 android:background="@drawable/bg_glass_pill"
                 android:elevation="1dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingEnd="8dp">
+                android:paddingStart="11dp"
+                android:paddingEnd="7dp">
 
                 <!-- Left: Clean Minimal Shield / HTTPS Lock / Private / Search indicator -->
                 <LinearLayout
@@ -298,11 +298,71 @@
             </LinearLayout>
         </FrameLayout>
 
-        <!-- Sleek, Calm 5-Destination Material 3 Navigation Bar -->
+        <!-- Googlebook Compact Single-Row Webpage Bar (54dp total — half the height, zero webpage overlap) -->
+        <LinearLayout
+            android:id="@+id/compact_web_row"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/compact_back"
+                android:layout_width="40dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Back"
+                android:padding="10dp"
+                android:src="@drawable/ic_back"
+                android:tint="@color/ink_muted" />
+
+            <FrameLayout
+                android:id="@+id/compact_url_slot"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1" />
+
+            <FrameLayout
+                android:id="@+id/compact_tabs_wrap"
+                android:layout_width="40dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <TextView
+                    android:id="@+id/compact_tabs_badge"
+                    android:layout_width="21dp"
+                    android:layout_height="21dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_tab_badge"
+                    android:fontFeatureSettings="tnum"
+                    android:gravity="center"
+                    android:text="1"
+                    android:textColor="@color/ink_primary"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <ImageView
+                android:id="@+id/compact_menu"
+                android:layout_width="40dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Menu"
+                android:padding="10dp"
+                android:src="@drawable/ic_more_horiz"
+                android:tint="@color/ink_muted" />
+        </LinearLayout>
+
+        <!-- Sleek, Calm 5-Destination Material 3 Navigation Bar (Start Page & Expanded 2-Row Mode) -->
         <LinearLayout
             android:id="@+id/nav_dock_row"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
+            android:layout_height="48dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingStart="8dp"

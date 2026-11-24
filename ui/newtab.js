@@ -1,5 +1,5 @@
 /**
- * dejavu v5.11.0 — Zero-Idle-CPU Pure Material Design 3 Wallpaper Engine
+ * dejavu v5.12.0 — Zero-Idle-CPU Pure Material Design 3 Wallpaper Engine
  * - Static HD wallpapers (`art:wp-m3-*` & `custom`): single-shot draw on load, resize,
  *   or option change — STRICTLY ZERO continuous requestAnimationFrame loop (0.0% idle CPU!).
  * - Single adaptive live theme (`live:m3-expressive`): reacts cleanly to all 12 Material You
@@ -46,6 +46,21 @@
     'art:wp-m3-froggie-sage.jpg'
   ]);
 
+  const VALID_M3_VEC_IDS = new Set([
+    'vec:m3-googlebook-waves',
+    'vec:m3-pixel-scallops',
+    'vec:m3-bauhaus-blocks',
+    'vec:m3-chroma-ribbons',
+    'vec:m3-topo-contours',
+    'vec:m3-pebble-stack',
+    'vec:m3-paper-fold',
+    'vec:m3-prism-glass',
+    'vec:m3-nordic-arch',
+    'vec:m3-botanical-arc',
+    'vec:m3-solar-rings',
+    'vec:m3-oled-monolith'
+  ]);
+
   const LIGHT_M3_ART_IDS = new Set([
     'art:wp-m3-porcelain.jpg',
     'art:wp-m3-meadow.jpg',
@@ -60,7 +75,10 @@
     'art:wp-m3-butterfly-coral.jpg',
     'art:wp-m3-butterfly-lavender.jpg',
     'art:wp-m3-froggie-mint.jpg',
-    'art:wp-m3-froggie-lime.jpg'
+    'art:wp-m3-froggie-lime.jpg',
+    'vec:m3-nordic-arch',
+    'vec:m3-botanical-arc',
+    'vec:m3-solar-rings'
   ]);
 
   const LIVE_THEMES = {
@@ -131,8 +149,144 @@
       rgb: [130, 146, 172],
       dark:  { bg: '#121316', surf1: '#1a1c1f', surf2: '#292b2f', p: '#b8c8e2', pc: '#38485e', sc: '#3e4552', tc: '#005047', t: '#84d4c6' },
       light: { bg: '#f9f9fc', surf1: '#ecedf1', surf2: '#e0e2e6', p: '#455a77', pc: '#d8e4f8', sc: '#dce4f0', tc: '#a0f1e2', t: '#005047' }
+    },
+    ocean: {
+      rgb: [28, 160, 206],
+      dark:  { bg: '#0e1417', surf1: '#161d21', surf2: '#232b2f', p: '#72d5f5', pc: '#004e66', sc: '#2f4954', tc: '#3e4569', t: '#c2c8f4' },
+      light: { bg: '#f4fafe', surf1: '#e6eff4', surf2: '#dbe6ec', p: '#006684', pc: '#bfe9ff', sc: '#d0e6f2', tc: '#e1e4ff', t: '#4f577f' }
+    },
+    terracotta: {
+      rgb: [198, 114, 72],
+      dark:  { bg: '#18120f', surf1: '#231b17', surf2: '#312823', p: '#f2b89b', pc: '#6d391e', sc: '#574238', tc: '#4d4822', t: '#d6cc92' },
+      light: { bg: '#fff8f5', surf1: '#f3e8e3', surf2: '#e9ddd7', p: '#8f4c2b', pc: '#ffdbca', sc: '#f4ded4', tc: '#eee5ab', t: '#645d31' }
+    },
+    plum: {
+      rgb: [176, 88, 162],
+      dark:  { bg: '#171117', surf1: '#221a21', surf2: '#30272f', p: '#f2b0e6', pc: '#692f64', sc: '#543f52', tc: '#643a35', t: '#f5b8af' },
+      light: { bg: '#fff7fc', surf1: '#f3e8f0', surf2: '#e9dde6', p: '#85457e', pc: '#ffd7f5', sc: '#eedce9', tc: '#ffdad4', t: '#7f524b' }
+    },
+    forest: {
+      rgb: [72, 148, 84],
+      dark:  { bg: '#101510', surf1: '#181f18', surf2: '#252d25', p: '#9cd49f', pc: '#1d5128', sc: '#394b3b', tc: '#1f4d56', t: '#a0cfd9' },
+      light: { bg: '#f6fbf4', surf1: '#e9efe7', surf2: '#dde5db', p: '#37693e', pc: '#b8f0bb', sc: '#d4e8d4', tc: '#bcebf4', t: '#35656e' }
     }
   };
+
+  function buildVectorWallpaperSvg(wpId) {
+    const W = 1600, H = 1000;
+    const defs = {
+      'vec:m3-googlebook-waves': () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+        <rect width="${W}" height="${H}" fill="#10141c"/>
+        <circle cx="1320" cy="210" r="260" fill="#1e3154"/>
+        <circle cx="1320" cy="210" r="150" fill="#2b4a82"/>
+        <path d="M0 440 C360 300 680 610 1120 430 C1340 340 1490 380 ${W} 340 L${W} ${H} L0 ${H} Z" fill="#182233"/>
+        <path d="M0 620 C420 500 760 760 1240 570 C1420 500 1520 530 ${W} 500 L${W} ${H} L0 ${H} Z" fill="#21314d"/>
+        <path d="M0 790 C380 710 820 880 1280 740 C1440 690 1540 720 ${W} 700 L${W} ${H} L0 ${H} Z" fill="#2d4774"/>
+        <rect x="110" y="130" width="260" height="84" rx="42" fill="#263b5e" opacity="0.88" transform="rotate(-14 240 172)"/>
+      </svg>`,
+      'vec:m3-pixel-scallops': () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+        <rect width="${W}" height="${H}" fill="#14111a"/>
+        <path d="M0 640 Q420 470 860 660 T${W} 560 L${W} ${H} L0 ${H} Z" fill="#1e1928"/>
+        <g transform="translate(1220 270)" fill="#3b2968"><circle r="210"/><circle cx="165" cy="0" r="78"/><circle cx="-165" cy="0" r="78"/><circle cx="0" cy="165" r="78"/><circle cx="0" cy="-165" r="78"/><circle cx="117" cy="117" r="78"/><circle cx="-117" cy="117" r="78"/><circle cx="117" cy="-117" r="78"/><circle cx="-117" cy="-117" r="78"/></g>
+        <circle cx="1220" cy="270" r="118" fill="#573d96"/>
+        <g transform="translate(270 760)" fill="#4a3154"><circle r="185"/><circle cx="145" cy="0" r="68"/><circle cx="-145" cy="0" r="68"/><circle cx="0" cy="145" r="68"/><circle cx="0" cy="-145" r="68"/><circle cx="102" cy="102" r="68"/><circle cx="-102" cy="102" r="68"/><circle cx="102" cy="-102" r="68"/><circle cx="-102" cy="-102" r="68"/></g>
+        <circle cx="270" cy="760" r="92" fill="#d0bcff" opacity="0.28"/>
+      </svg>`,
+      'vec:m3-bauhaus-blocks': () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+        <rect width="${W}" height="${H}" fill="#1a1310"/>
+        <rect x="80" y="80" width="460" height="840" rx="230" fill="#2b1f1a"/>
+        <path d="M540 500 A360 360 0 0 1 1260 500 L1260 920 L540 920 Z" fill="#4f2c1c"/>
+        <circle cx="1260" cy="250" r="175" fill="#7c4225"/>
+        <circle cx="310" cy="310" r="130" fill="#f2b89b" opacity="0.26"/>
+        <rect x="640" y="620" width="840" height="240" rx="120" fill="#3a2820"/>
+        <circle cx="1360" cy="740" r="82" fill="#f2b89b" opacity="0.72"/>
+      </svg>`,
+      'vec:m3-chroma-ribbons': () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+        <rect width="${W}" height="${H}" fill="#0c1418"/>
+        <path d="M-120 760 L640 -80 L1060 -80 L280 1080 L-120 1080 Z" fill="#122732"/>
+        <path d="M220 1080 L1020 -80 L1380 -80 L580 1080 Z" fill="#00455c"/>
+        <path d="M620 1080 L1420 -80 L1740 -80 L940 1080 Z" fill="#00607c"/>
+        <path d="M980 1080 L1680 120 L1740 460 L1240 1080 Z" fill="#72d5f5" opacity="0.26"/>
+        <circle cx="290" cy="240" r="145" fill="#173847"/>
+      </svg>`,
+      'vec:m3-topo-contours': () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+        <rect width="${W}" height="${H}" fill="#0f1510"/>
+        <path d="M-80 280 C280 120 620 420 1040 240 C1320 120 1480 260 1680 190 L1680 1060 L-80 1060 Z" fill="#151e16"/>
+        <path d="M-80 430 C320 280 650 560 1080 390 C1350 280 1500 410 1680 350 L1680 1060 L-80 1060 Z" fill="#1b271c"/>
+        <path d="M-80 590 C350 450 690 700 1120 550 C1370 460 1510 560 1680 510 L1680 1060 L-80 1060 Z" fill="#213323"/>
+        <path d="M-80 750 C380 630 740 840 1180 710 C1400 640 1530 720 1680 680 L1680 1060 L-80 1060 Z" fill="#29432c"/>
+        <path d="M-80 280 C280 120 620 420 1040 240 C1320 120 1480 260 1680 190" fill="none" stroke="#9cd49f" stroke-opacity="0.22" stroke-width="3"/>
+        <path d="M-80 430 C320 280 650 560 1080 390 C1350 280 1500 410 1680 350" fill="none" stroke="#9cd49f" stroke-opacity="0.28" stroke-width="3"/>
+        <path d="M-80 590 C350 450 690 700 1120 550 C1370 460 1510 560 1680 510" fill="none" stroke="#9cd49f" stroke-opacity="0.34" stroke-width="3"/>
+        <path d="M-80 750 C380 630 740 840 1180 710 C1400 640 1530 720 1680 680" fill="none" stroke="#9cd49f" stroke-opacity="0.42" stroke-width="3"/>
+      </svg>`,
+      'vec:m3-pebble-stack': () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+        <rect width="${W}" height="${H}" fill="#0f1614"/>
+        <ellipse cx="800" cy="960" rx="900" ry="260" fill="#172420"/>
+        <rect x="490" y="610" width="620" height="220" rx="110" fill="#1f3832"/>
+        <rect x="580" y="420" width="440" height="190" rx="95" fill="#295249"/>
+        <rect x="665" y="260" width="270" height="160" rx="80" fill="#3a7467"/>
+        <circle cx="800" cy="182" r="76" fill="#7bd8c6" opacity="0.68"/>
+      </svg>`,
+      'vec:m3-paper-fold': () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+        <rect width="${W}" height="${H}" fill="#171117"/>
+        <polygon points="0,0 920,0 560,1000 0,1000" fill="#211821"/>
+        <polygon points="920,0 1600,0 1600,620 710,580" fill="#322031"/>
+        <polygon points="710,580 1600,620 1600,1000 560,1000" fill="#4a2847"/>
+        <polygon points="0,420 710,580 560,1000 0,1000" fill="#2a1d2a"/>
+        <polygon points="920,0 1160,0 710,580" fill="#f2b0e6" opacity="0.16"/>
+      </svg>`,
+      'vec:m3-prism-glass': () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+        <rect width="${W}" height="${H}" fill="#11121c"/>
+        <rect x="90" y="120" width="520" height="760" rx="64" fill="#1b1e33" transform="rotate(-6 350 500)"/>
+        <rect x="490" y="90" width="560" height="820" rx="64" fill="#252b4f" transform="rotate(4 770 500)"/>
+        <rect x="940" y="150" width="540" height="720" rx="64" fill="#343f7a" transform="rotate(-5 1210 510)"/>
+        <rect x="1080" y="240" width="320" height="520" rx="48" fill="#bbc3ff" opacity="0.18" transform="rotate(-5 1240 500)"/>
+      </svg>`,
+      'vec:m3-nordic-arch': () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+        <rect width="${W}" height="${H}" fill="#f6f8ff"/>
+        <path d="M180 1000 L180 460 A360 360 0 0 1 900 460 L900 1000 Z" fill="#e2e9fc"/>
+        <path d="M680 1000 L680 520 A340 340 0 0 1 1360 520 L1360 1000 Z" fill="#cddcf9"/>
+        <path d="M440 1000 L440 620 A240 240 0 0 1 920 620 L920 1000 Z" fill="#b4cdf8"/>
+        <circle cx="1220" cy="240" r="115" fill="#99bdf7"/>
+      </svg>`,
+      'vec:m3-botanical-arc': () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+        <rect width="${W}" height="${H}" fill="#f4faf2"/>
+        <path d="M0 1000 C0 520 340 200 840 200 C840 680 500 1000 0 1000 Z" fill="#d9ecd7"/>
+        <path d="M1600 0 C1140 0 820 320 820 780 C1280 780 1600 460 1600 0 Z" fill="#c3e4c3"/>
+        <path d="M460 1000 C560 660 860 440 1240 440 C1160 760 880 1000 460 1000 Z" fill="#a8d8aa"/>
+        <circle cx="320" cy="240" r="98" fill="#89c48d"/>
+      </svg>`,
+      'vec:m3-solar-rings': () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+        <rect width="${W}" height="${H}" fill="#fff8ef"/>
+        <circle cx="800" cy="520" r="560" fill="#faebd7"/>
+        <circle cx="800" cy="520" r="410" fill="#f6dcba"/>
+        <circle cx="800" cy="520" r="270" fill="#f3c993"/>
+        <circle cx="800" cy="520" r="145" fill="#efb268"/>
+        <path d="M0 780 Q440 690 820 770 T${W} 730 L${W} ${H} L0 ${H} Z" fill="#f2dfc6"/>
+      </svg>`,
+      'vec:m3-oled-monolith': () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+        <rect width="${W}" height="${H}" fill="#000000"/>
+        <circle cx="1280" cy="260" r="320" fill="none" stroke="#4f378b" stroke-width="52" opacity="0.55"/>
+        <circle cx="1280" cy="260" r="190" fill="none" stroke="#d0bcff" stroke-width="18" opacity="0.48"/>
+        <path d="M-80 860 Q460 540 980 820 T1680 680" fill="none" stroke="#4f378b" stroke-width="76" stroke-linecap="round" opacity="0.42"/>
+        <path d="M-80 920 Q500 660 1040 880 T1680 780" fill="none" stroke="#d0bcff" stroke-width="14" stroke-linecap="round" opacity="0.35"/>
+      </svg>`
+    };
+    const fn = defs[wpId];
+    return fn ? fn() : null;
+  }
+
+  const vecUrlCache = new Map();
+  function getVectorWallpaperDataUrl(wpId) {
+    if (!wpId || !VALID_M3_VEC_IDS.has(wpId)) return '';
+    if (vecUrlCache.has(wpId)) return vecUrlCache.get(wpId);
+    const svg = buildVectorWallpaperSvg(wpId);
+    if (!svg) return '';
+    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    vecUrlCache.set(wpId, url);
+    return url;
+  }
 
   const LIVE_FRAME_INTERVAL_MS = 1000 / 30; // Gentle ~30fps cap for Material You Live only
   const ART_FADE_MS = 260;
@@ -160,6 +314,8 @@
     const raw = wp.trim();
     if (raw === 'live:m3-expressive' || raw === 'm3-expressive') return 'live:m3-expressive';
     if (raw.startsWith('custom')) return raw;
+    if (VALID_M3_VEC_IDS.has(raw)) return raw;
+    if (raw.startsWith('m3-') && VALID_M3_VEC_IDS.has('vec:' + raw)) return 'vec:' + raw;
     if (VALID_M3_ART_IDS.has(raw)) return raw;
     const asArt = raw.startsWith('art:')
       ? raw
@@ -186,7 +342,7 @@
 
   function isStaticWallpaper(wp) {
     const id = wp || currentWallpaper || '';
-    return id.startsWith('art:') || id.startsWith('custom');
+    return id.startsWith('art:') || id.startsWith('vec:') || id.startsWith('custom');
   }
 
   function isLightMaterialWallpaper(wp) {
@@ -524,7 +680,7 @@
   }
 
   function loadArtSource(wpId) {
-    if (wpId.startsWith('art:') && artCache.has(wpId)) {
+    if ((wpId.startsWith('art:') || wpId.startsWith('vec:')) && artCache.has(wpId)) {
       const cached = artCache.get(wpId);
       if (cached.complete && cached.naturalWidth > 0) {
         applyLoadedArt(wpId, cached);
@@ -534,7 +690,7 @@
     const img = new Image();
     img.decoding = 'async';
     const onDone = () => {
-      if (wpId.startsWith('art:') && img.naturalWidth > 0) {
+      if ((wpId.startsWith('art:') || wpId.startsWith('vec:')) && img.naturalWidth > 0) {
         artCache.set(wpId, img);
       }
       applyLoadedArt(wpId, img);
@@ -552,7 +708,9 @@
       refreshRenderState();
       markReady();
     };
-    if (wpId.startsWith('art:')) {
+    if (wpId.startsWith('vec:')) {
+      img.src = getVectorWallpaperDataUrl(wpId);
+    } else if (wpId.startsWith('art:')) {
       img.src = `https://dejavu.local/${wpId.slice(4)}`;
     } else {
       img.src = `https://dejavu.local/custom-wallpaper?t=${Date.now()}`;
@@ -685,6 +843,7 @@
     normalizeWallpaperId,
     sampleImageTheme,
     setCustomThemeCallback,
+    getVectorWallpaperDataUrl,
     LIVE_THEMES
   };
 })();

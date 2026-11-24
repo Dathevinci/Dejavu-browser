@@ -1,5 +1,5 @@
 /* ==========================================================================
-   dejavu v5.11.0 — Authentic Chromebook × Pixel Material Design 3 Expressive
+   dejavu v5.12.0 — Authentic Chromebook × Pixel Material Design 3 Expressive
    12 Official HCT Tonal Palettes · Official M3 Motion · State Layers
    Zero Compositing Overhead · Strictly Zero CSS Filter Softening
    ========================================================================== */
@@ -5232,17 +5232,19 @@ body.force-light .m3-ctx-menu {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(860px, calc(100% - 36px));
-  max-height: min(640px, calc(100% - 24px));
-  padding: 22px 24px;
+  width: min(880px, calc(100% - 36px));
+  height: min(640px, calc(100% - 28px));
+  max-height: calc(100% - 28px);
+  padding: 18px 22px 20px;
   border-radius: var(--md-shape-2xl);
   background: var(--md-surface-container-low);
-  border: none;
+  border: 1px solid color-mix(in srgb, var(--md-outline-variant) 42%, transparent);
   box-shadow: var(--md-elev-4);
   z-index: 165;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow: hidden;
   animation: m3DialogIn 240ms var(--md-ease-emphasized-decel);
 }
 
@@ -5252,13 +5254,137 @@ body.force-light .m3-ctx-menu {
 }
 
 .store-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: nowrap; flex-shrink: 0; }
-.store-brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.store-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .store-brand img { width: 28px; height: 28px; object-fit: contain; }
-.store-title { font-size: 17px; font-weight: 500; color: var(--md-on-surface); letter-spacing: -0.01em; }
-.store-sub { font-size: 11.8px; color: var(--md-on-surface-variant); }
-.store-head-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.store-filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
-.store-filter-heading { font-size: 12.2px; font-weight: 600; color: var(--md-on-surface-variant); letter-spacing: 0.01em; }
+.store-title { font-size: 16px; font-weight: 600; color: var(--md-on-surface); letter-spacing: -0.015em; white-space: nowrap; }
+.store-head-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+.store-mode-seg {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  gap: 2px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-high);
+  flex-shrink: 0;
+}
+
+.store-mode-btn {
+  height: 30px;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--md-shape-full);
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  font-family: inherit;
+  font-size: 12.2px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--md-dur-short) var(--md-ease-emphasized), color var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-press) var(--md-ease-emphasized);
+}
+
+.store-mode-btn:hover:not(.active) { color: var(--md-on-surface); }
+.store-mode-btn:active { transform: scale(0.97); }
+.store-mode-btn.active { background: var(--md-primary); color: var(--md-on-primary); }
+
+.store-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  animation: m3PaneIn 180ms var(--md-ease-emphasized-decel);
+}
+
+.store-pane.hidden { display: none !important; }
+
+.store-style-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  gap: 12px;
+}
+
+.store-style-card {
+  padding: 14px 16px;
+  border-radius: var(--md-shape-xl);
+  background: var(--md-surface-container);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.store-style-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.store-style-label {
+  font-size: 12.6px;
+  font-weight: 600;
+  color: var(--md-on-surface);
+}
+
+.store-swatch-orbs {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .store-swatch-orbs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.store-swatch-orbs .accent-swatch.orb {
+  padding: 6px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-high);
+  border: 2px solid transparent;
+  min-height: 44px;
+}
+
+.store-swatch-orbs .accent-swatch.orb .sw-dot {
+  width: 28px;
+  height: 28px;
+}
+
+.store-swatch-orbs .accent-swatch.orb.active {
+  border-color: var(--md-primary);
+  background: var(--md-secondary-container);
+}
+
+.store-swatch-orbs .accent-swatch.orb.active .sw-dot {
+  box-shadow: none;
+}
+
+.store-style-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .store-style-grid { grid-template-columns: 1fr; }
+}
+
+.store-style-row {
+  padding: 12px 14px;
+  border-radius: var(--md-shape-lg);
+  background: var(--md-surface-container);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.store-filter-bar { display: flex; align-items: center; justify-content: flex-start; gap: 10px; flex-wrap: nowrap; flex-shrink: 0; }
 
 .store-tabs { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border-radius: var(--md-shape-full); background: var(--md-surface-container); border: none; flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .store-tabs::-webkit-scrollbar { display: none; }
@@ -5273,27 +5399,23 @@ body.force-light .m3-ctx-menu {
 .store-upload-btn:hover { box-shadow: var(--md-state-on-tonal); }
 .store-upload-btn:active { transform: scale(0.97); }
 
-.sp-prefs-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 10px 14px; border-radius: var(--md-shape-lg); background: var(--md-surface-container); flex-shrink: 0; }
+.sp-prefs-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; padding: 12px 16px; border-radius: var(--md-shape-xl); background: var(--md-surface-container); flex-shrink: 0; }
 .sp-pref-chip { display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 500; color: var(--md-on-surface); cursor: pointer; white-space: nowrap; }
 
-.wallpaper-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(195px, 1fr)); align-content: start; gap: 12px; overflow-y: auto; overscroll-behavior: contain; padding: 2px 4px 6px 2px; }
-.wp-card { position: relative; display: flex; flex-direction: column; min-height: 162px; padding: 0; border-radius: 18px; border: 2px solid transparent; background: var(--md-surface-container-high); overflow: hidden; cursor: pointer; text-align: left; color: var(--md-on-surface); font-family: inherit; contain: layout style; transition: transform var(--md-dur-medium) var(--md-ease-emphasized-decel), border-color var(--md-dur-short) var(--md-ease-emphasized), box-shadow var(--md-dur-short) var(--md-ease-emphasized); }
-body.theme-light .wp-card, body.force-light .wp-card { background: var(--md-surface-container-lowest); box-shadow: 0 1px 2px rgba(29, 27, 32, 0.06); }
+/* Artwork-First Googlebook Wallpaper Tiles (Zero Clutter, Zero Verbose Text) */
+.wallpaper-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); grid-auto-rows: max-content; align-content: start; gap: 10px; overflow-y: auto; overscroll-behavior: contain; padding: 2px 4px 8px 2px; flex: 1 1 auto; min-height: 0; }
+.wp-card { position: relative; display: block; width: 100%; height: auto; padding: 0; border-radius: 16px; border: 2px solid transparent; background: var(--md-surface-container-high); overflow: hidden; cursor: pointer; text-align: left; color: #ffffff; font-family: inherit; contain: layout style; transition: transform var(--md-dur-medium) var(--md-ease-emphasized-decel), border-color var(--md-dur-short) var(--md-ease-emphasized), box-shadow var(--md-dur-short) var(--md-ease-emphasized); }
+body.theme-light .wp-card, body.force-light .wp-card { background: var(--md-surface-container-lowest); box-shadow: 0 1px 3px rgba(29, 27, 32, 0.08); }
 .wp-card:hover { transform: translate3d(0, -2px, 0); box-shadow: var(--md-elev-2); }
-.wp-card:active { transform: scale(0.975); transition-duration: var(--md-dur-press); }
-.wp-card.active { border-color: var(--md-primary); }
-.wp-thumb { width: 100%; height: 104px; flex-shrink: 0; position: relative; overflow: hidden; background-size: cover; background-position: center; }
-.wp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 280ms var(--md-ease-emphasized-decel); }
-.wp-card:hover .wp-thumb img { transform: scale(1.04); }
-.wp-badge { position: absolute; top: 8px; left: 8px; padding: 2px 8px; border-radius: var(--md-shape-full); font-size: 10px; font-weight: 700; background: var(--md-surface-container-highest); color: var(--md-on-surface); }
-.wp-card.is-m3 .wp-badge { background: var(--md-primary-container); color: var(--md-on-primary-container); }
-.wp-card.is-butterfly .wp-badge { background: var(--md-tertiary-container); color: var(--md-on-tertiary-container); }
-.wp-card.is-froggie .wp-badge { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
-.wp-check { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: var(--md-shape-full); background: var(--md-primary); color: var(--md-on-primary); font-size: 12px; font-weight: 800; display: none; align-items: center; justify-content: center; }
+.wp-card:active { transform: scale(0.97); transition-duration: var(--md-dur-press); }
+.wp-card.active { border-color: var(--md-primary); box-shadow: 0 0 0 1px var(--md-primary); }
+.wp-thumb { display: block; width: 100%; aspect-ratio: 16 / 10; position: relative; overflow: hidden; background-size: cover; background-position: center; }
+.wp-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 320ms var(--md-ease-emphasized-decel); }
+.wp-card:hover .wp-thumb img { transform: scale(1.05); }
+.wp-check { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: var(--md-shape-full); background: var(--md-primary); color: var(--md-on-primary); display: none; align-items: center; justify-content: center; box-shadow: var(--md-elev-1); z-index: 2; }
 .wp-card.active .wp-check { display: flex; animation: m3CheckPop 220ms var(--md-ease-spring); }
-.wp-meta { padding: 9px 12px 12px; }
-.wp-name { font-size: 12.6px; font-weight: 600; color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.wp-desc { font-size: 10.8px; color: var(--md-on-surface-variant); margin-top: 2px; line-height: 1.32; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.wp-label-bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 10px 8px; background: linear-gradient(180deg, rgba(14, 12, 18, 0) 0%, rgba(14, 12, 18, 0.72) 100%); display: flex; align-items: flex-end; pointer-events: none; }
+.wp-name { font-size: 11.8px; font-weight: 600; color: #f6f3fa; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.005em; }
 
 /* Add Site Dialog */
 .shortcut-modal {
@@ -6190,7 +6312,7 @@ body.force-light .ext-details-hero {
 }
 
 /* ==========================================================================
-   Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub (v5.11.0)
+   Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub (v5.12.0)
    Gliding Segmented Views · Device Presence & Ping · Notes & Clip History
    ========================================================================== */
 .link-hub-overlay { z-index: 175; }
@@ -6409,7 +6531,7 @@ body.force-light .link-card {
 }
 
 .link-devices-grid.is-multi {
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
 }
 
 @media (max-width: 720px) {
@@ -6837,9 +6959,9 @@ body.force-light .link-accordion {
   min-height: 54px;
   padding: 10px 13px;
   border-radius: var(--md-shape-lg);
-  border: 1px solid color-mix(in srgb, var(--md-outline-variant) 34%, transparent);
-  background: var(--md-secondary-container);
-  color: var(--md-on-secondary-container);
+  border: none;
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface);
   font-family: inherit;
   text-align: left;
   display: flex;
@@ -6847,25 +6969,74 @@ body.force-light .link-accordion {
   gap: 10px;
   min-width: 0;
   cursor: pointer;
-  transition: filter var(--md-dur-short) ease, transform var(--md-dur-press) ease, background-color var(--md-dur-short) ease, border-color var(--md-dur-short) ease;
+  transition: transform var(--md-dur-press) ease, background-color var(--md-dur-short) ease, box-shadow var(--md-dur-short) ease;
 }
 
 .link-quick-tile.is-primary {
-  background: var(--md-primary);
-  color: var(--md-on-primary);
-  border-color: transparent;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
 }
 
-.link-quick-tile.is-tertiary {
-  background: var(--md-tertiary-container);
-  color: var(--md-on-tertiary-container);
-  border-color: transparent;
-}
-
-.link-quick-tile:hover:not(:disabled) { box-shadow: var(--md-elev-1), var(--md-state-on-tonal); }
-.link-quick-tile.is-primary:hover:not(:disabled) { box-shadow: var(--md-elev-1), var(--md-state-on-primary); }
+.link-quick-tile:hover:not(:disabled) { background: var(--md-secondary-container); color: var(--md-on-secondary-container); box-shadow: var(--md-elev-1); }
+.link-quick-tile.is-primary:hover:not(:disabled) { background: var(--md-primary-container); color: var(--md-on-primary-container); box-shadow: var(--md-elev-1), var(--md-state-on-primary-container); }
 .link-quick-tile:active:not(:disabled) { transform: scale(0.975); }
-.link-quick-tile:disabled { opacity: 0.44; cursor: default; }
+.link-quick-tile:disabled { opacity: 0.42; cursor: default; }
+
+.link-e2ee-pill {
+  height: 26px;
+  padding: 0 11px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface-variant);
+  font-size: 11.4px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.link-e2ee-pill svg { color: var(--md-primary); }
+
+.link-dot-ind {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-outline);
+  flex-shrink: 0;
+}
+
+.link-dot-ind.is-online { background: #4ade80; }
+.link-dot-ind.is-synced { background: var(--md-primary); }
+
+.link-device-acts {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.link-forget-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--md-shape-full);
+  border: none;
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.58;
+  transition: opacity var(--md-dur-short) ease, background-color var(--md-dur-short) ease, color var(--md-dur-short) ease, transform var(--md-dur-press) ease;
+}
+
+.link-device-card:hover .link-forget-btn { opacity: 1; }
+.link-forget-btn:hover { background: var(--md-error-container); color: var(--md-on-error-container); }
+.link-forget-btn:active { transform: scale(0.92); }
 
 .link-quick-tile-ico {
   width: 32px;
@@ -7532,7 +7703,7 @@ body.force-light .link-note-card {
 }
 
 /* ==========================================================================
-   Chrome-Style Material Design 3 Extension Install Dialog & Added Bubble (v5.11.0)
+   Chrome-Style Material Design 3 Extension Install Dialog & Added Bubble (v5.12.0)
    Pure Opaque HCT Tonal Surfaces · 200ms Spring Reveal · Zero Blur
    ========================================================================== */
 @keyframes extModalReveal {
@@ -7837,4 +8008,136 @@ body.force-light .link-note-card {
 
 .ext-bubble-manage-btn:hover {
   background-color: var(--md-state-hover);
+}
+
+/* ==========================================================================
+   Googlebook Material Design 3 Customizations (AMOLED, Styles, Tab Bar, Clock)
+   ========================================================================== */
+body.amoled-dark:not(.theme-light):not(.force-light) {
+  --md-surface: #000000;
+  --md-surface-container-lowest: #000000;
+  --md-surface-container-low: #09090c;
+  --md-surface-container: #101014;
+  --md-surface-container-high: #191920;
+  --md-surface-container-highest: #23232c;
+  --md-chrome-strip-bg: #000000;
+  --md-chrome-bar-bg: #0c0c10;
+  --md-omnibox-bg: #15151b;
+  --md-omnibox-hover-bg: #1c1c24;
+  --md-omnibox-focus-bg: #08080b;
+}
+
+body[data-material-style="vibrant"] .tab-pill.active {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+body[data-material-style="vibrant"] .tab-pill.active::before {
+  background: radial-gradient(circle at 0 0, transparent 10.5px, var(--md-secondary-container) 11px);
+}
+body[data-material-style="vibrant"] .tab-pill.active::after {
+  background: radial-gradient(circle at 100% 0, transparent 10.5px, var(--md-secondary-container) 11px);
+}
+body[data-material-style="vibrant"] .m3-fav-squircle {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+
+body[data-material-style="minimal"] {
+  --md-chrome-bar-bg: var(--md-surface-container-low);
+  --md-omnibox-bg: var(--md-surface-container);
+}
+body[data-material-style="minimal"] .nt-motd-card,
+body[data-material-style="minimal"] .m3-glance-strip {
+  box-shadow: none;
+  border: 1px solid color-mix(in srgb, var(--md-outline-variant) 42%, transparent);
+}
+
+/* Googlebook Floating Pill Tab Bar Style */
+body[data-tab-style="floating"] #tabs-strip {
+  align-items: center;
+  gap: 4px;
+  padding-bottom: 4px;
+}
+body[data-tab-style="floating"] .tab-pill {
+  height: 30px;
+  border-radius: var(--md-shape-full);
+  margin-bottom: 2px;
+}
+body[data-tab-style="floating"] .tab-pill::before,
+body[data-tab-style="floating"] .tab-pill::after {
+  display: none !important;
+}
+body[data-tab-style="floating"] .tab-pill.active {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  box-shadow: var(--md-elev-1);
+}
+body[data-tab-style="floating"] .tab-pill.active .tab-title {
+  color: var(--md-on-secondary-container);
+}
+
+/* Classic Chrome Divider Tab Style */
+body[data-tab-style="classic"] .tab-pill {
+  border-radius: 10px 10px 0 0;
+}
+body[data-tab-style="classic"] .tab-pill:not(.active):not(:hover) {
+  border-right: 1px solid color-mix(in srgb, var(--md-outline-variant) 36%, transparent);
+}
+
+/* Googlebook Rounded Tile Shortcuts Style */
+body[data-shortcut-style="tile"] .m3-fav-squircle {
+  width: 54px;
+  height: 54px;
+  border-radius: 17px;
+}
+body[data-shortcut-style="tile"] .m3-fav-item:hover .m3-fav-squircle {
+  border-radius: 20px;
+}
+
+/* Optional Googlebook Start Page Digital Clock */
+.nt-clock-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 4px;
+  user-select: none;
+}
+
+.nt-clock-time {
+  font-size: 46px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  font-variant-numeric: tabular-nums;
+  color: var(--md-on-surface);
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.24);
+}
+
+.nt-clock-wrap[data-clock-style="bold"] .nt-clock-time {
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--md-primary);
+}
+
+.nt-clock-date {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--md-on-surface-variant);
+  letter-spacing: 0.01em;
+}
+
+body.theme-light .nt-clock-time,
+body.force-light .nt-clock-time {
+  text-shadow: 0 1px 12px rgba(255, 255, 255, 0.55);
+}
+
+.settings-wp-grid {
+  max-height: 360px;
+  overflow-y: auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 780px) {
+  .settings-wp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

@@ -53,7 +53,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 /**
- * dejavu Link v2.3 (v5.11.0) — Cross-Device E2EE Sync Engine (100% byte-compatible with Windows SyncManager.cs)
+ * dejavu Link v2.3 (v5.12.0) — Cross-Device E2EE Sync Engine (100% byte-compatible with Windows SyncManager.cs)
  *
  * Key Derivation & Crypto (unchanged v1/v2 contract):
  * - Zero-QR Google-Account Auto-Sync: 10,000-round SHA-256 chain -> topicId "dv4-...", encKey, macKey
@@ -199,7 +199,7 @@ public final class SyncManager {
     }
 
     /**
-     * Exact v5.11.0 Cross-Platform Google Auto-Sync Key Derivation (100% bit-identical to Windows SyncManager.cs):
+     * Exact v5.12.0 Cross-Platform Google Auto-Sync Key Derivation (100% bit-identical to Windows SyncManager.cs):
      * - normEmail = email.trim().toLowerCase(Locale.US)
      * - normPass  = passphrase.trim()
      * - seedStr   = "dejavu-google-link-v2:" + normEmail + ":" + normPass
@@ -451,7 +451,7 @@ public final class SyncManager {
     }
 
     /**
-     * Activates Zero-QR Google-Account E2EE Auto-Sync using the exact v5.11.0 cross-platform spec.
+     * Activates Zero-QR Google-Account E2EE Auto-Sync using the exact v5.12.0 cross-platform spec.
      */
     public boolean configureGoogleAccountSync(String email, String passphrase) {
         if (email == null || !email.trim().contains("@")) return false;
@@ -1361,7 +1361,7 @@ public final class SyncManager {
             conn.setConnectTimeout(1500);
             conn.setReadTimeout(1800);
             conn.setDoOutput(true);
-            conn.setRequestProperty("User-Agent", "dejavu-link-android/5.11.0");
+            conn.setRequestProperty("User-Agent", "dejavu-link-android/5.12.0");
             conn.setRequestProperty("Content-Type", "text/plain; charset=utf-8");
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(body);
@@ -1404,7 +1404,7 @@ public final class SyncManager {
                 conn.setRequestMethod("GET");
                 conn.setConnectTimeout(1500);
                 conn.setReadTimeout(1800);
-                conn.setRequestProperty("User-Agent", "dejavu-link-android/5.11.0");
+                conn.setRequestProperty("User-Agent", "dejavu-link-android/5.12.0");
                 int code = conn.getResponseCode();
                 if (code >= 200 && code < 300) {
                     try (InputStream is = conn.getInputStream()) {
@@ -1538,14 +1538,21 @@ public final class SyncManager {
 
             synchronized (lock) {
                 if (deviceId.equals(from)) return;
-                long msgTs = msg.optLong("ts", now);
+                if ("android".equalsIgnoreCase(platform) && !deviceName.isEmpty() && deviceName.equalsIgnoreCase(fromName)) {
+                    return;
+                }
+                long rawTs = msg.optLong("ts", now);
+                long effectiveTs = (rawTs > 0 && rawTs <= now + 60_000L) ? Math.min(rawTs, now) : now;
+                if (("snapshot".equals(kind) || "state".equals(kind)) && (now - effectiveTs) > 7L * 24L * 3600L * 1000L) {
+                    return;
+                }
                 if (!id.isEmpty()) {
                     if (seenIds.contains(id)) {
                         if ("snapshot".equals(kind) || "state".equals(kind)) {
                             String dupLu = msg.optString("lanUrl", "");
                             if (dupLu.startsWith("http://")) peerLanUrl = dupLu;
-                            if (Math.abs(now - msgTs) < PEER_ONLINE_WINDOW_MS) {
-                                peerLastSeenMs = now;
+                            if (Math.abs(now - effectiveTs) < PEER_ONLINE_WINDOW_MS && effectiveTs >= peerLastSeenMs) {
+                                peerLastSeenMs = effectiveTs;
                             }
                         }
                         return;
@@ -1554,19 +1561,22 @@ public final class SyncManager {
                     if (seenIds.size() > 600) seenIds.clear();
                 }
 
-                peerId = from;
-                peerName = fromName.isEmpty() ? "Windows PC" : fromName;
-                peerPlatform = platform.isEmpty() ? "windows" : platform;
-                peerLastSeenMs = now;
-                if (msg.has("tabCount")) {
-                    peerTabCount = Math.max(0, msg.optInt("tabCount", peerTabCount));
+                boolean isFresherPeer = effectiveTs >= peerLastSeenMs || peerName.isEmpty();
+                if (isFresherPeer) {
+                    peerId = from;
+                    peerName = fromName.isEmpty() ? "Windows PC" : fromName;
+                    peerPlatform = platform.isEmpty() ? "windows" : platform;
+                    peerLastSeenMs = effectiveTs;
+                    if (msg.has("tabCount")) {
+                        peerTabCount = Math.max(0, msg.optInt("tabCount", peerTabCount));
+                    }
                 }
                 lastSyncMs = now;
                 String lu = msg.optString("lanUrl", "");
                 if (lu.startsWith("http://")) peerLanUrl = lu;
 
                 if ("snapshot".equals(kind) || "state".equals(kind)) {
-                    if (prefTabs) {
+                    if (prefTabs && isFresherPeer) {
                         JSONArray t = msg.optJSONArray("tabs");
                         if (t != null) remoteTabs = t;
                     }

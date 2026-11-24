@@ -377,8 +377,16 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private String wallpaper = "wp-m3-amethyst.jpg";
     private String accentColor = "amethyst";
     private String themeMode = "dark"; // "dark" | "light" | "auto"
+    private String materialStyle = "tonal"; // "tonal" | "vibrant" | "minimal"
+    private boolean amoledDark = false;
+    private String shortcutStyle = "circle"; // "circle" | "tile"
+    private String clockStyle = "off"; // "off" | "minimal" | "bold"
     private boolean autoThemeFromWallpaper = true; // Pixel Wallpaper & Style auto theme + polarity matching
     private boolean showMotd = true; // Google Pixel Message of the Day
+    private boolean localOverlayOpen = false;
+    private boolean bookmarksInitialized = false;
+    private final List<String> deletedBookmarkUrls = new ArrayList<>();
+    private final Runnable saveSessionTask = this::saveOpenTabsSession;
     private String barPosition = "bottom"; // "bottom" (Safari/Samsung) | "top" (Chrome)
     private boolean autoHideBar = true;
     private boolean darkWebPages = false;
@@ -584,7 +592,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         setupChromeListeners();
         setupBackNavigation();
 
-        createTab(null, true, false);
+        if (!restoreOpenTabsSession()) {
+            createTab(null, true, false);
+        }
         handleIncomingIntent(getIntent());
 
         // Automatically check GitHub Releases silently 3.5s after app launch
@@ -600,6 +610,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (active != null && active.webView != null) {
             try { active.webView.onPause(); } catch (Throwable ignored) { }
         }
+        saveOpenTabsSession();
+        saveLocalCollectionsSync();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        saveOpenTabsSession();
+        saveLocalCollectionsSync();
     }
 
     @Override
@@ -986,6 +1005,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (hideBottomForWebIme) {
             // Soft keyboard open on live webpage: bottomChrome is hidden and webpage resizes cleanly ABOVE keyboard
             bottomPad = Math.max(insetBottomPx, insetImePx);
+        } else if (onWeb && autoHideBar && !topBar) {
+            // Full-bleed edge-to-edge web viewport: bottomChrome glides smoothly over live webpage with ZERO black dead bar!
+            bottomPad = insetBottomPx;
         } else {
             bottomPad = insetBottomPx;
             if (!chromeCollapsed && bottomChrome != null && bottomChrome.getVisibility() == View.VISIBLE) {
@@ -1048,6 +1070,18 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     private M3Palette resolveM3Palette(boolean isLight, boolean isPrivate) {
+        M3Palette base = resolveM3PaletteBase(isLight, isPrivate);
+        if (!isLight && !isPrivate && amoledDark) {
+            return new M3Palette(
+                0xFF000000, 0xFF0C0B10, 0xFF16151C,
+                base.primary, base.primaryContainer, base.onPrimaryContainer,
+                base.outlineVariant, base.onSurface, base.onSurfaceVariant
+            );
+        }
+        return base;
+    }
+
+    private M3Palette resolveM3PaletteBase(boolean isLight, boolean isPrivate) {
         if (isPrivate) {
             return new M3Palette(
                 0xFF120A22, 0xFF1B1030, 0xFF291A45,
@@ -1738,6 +1772,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             if (t.webView != null) t.webView.setVisibility(View.GONE);
         }
         openUiScreen("start");
+        scheduleSaveOpenTabsSession();
     }
 
     private void scheduleSuggestionsFetch(final String query) {
@@ -1815,17 +1850,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         chromeCollapsed = collapsed;
 
         boolean isTop = "top".equals(barPosition);
-        float pillHiddenOffset = isTop ? dp(12) : -dp(12);
-        // Pure GPU-accelerated animation only — NEVER call updateViewportPadding() mid-drag!
+        float pillHiddenOffset = isTop ? dp(14) : -dp(14);
+        // Pure 120Hz GPU-accelerated chrome glide — zero viewport padding reflow jank!
         if (collapsed) {
             if (isTop && topChrome != null) {
                 topChrome.animate().cancel();
-                topChrome.animate().translationY(-topChrome.getHeight()).setDuration(240)
+                topChrome.animate().translationY(-topChrome.getHeight()).alpha(0.0f).setDuration(260)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (bottomChrome != null && bottomChrome.getVisibility() == View.VISIBLE) {
                 bottomChrome.animate().cancel();
-                bottomChrome.animate().translationY(bottomChrome.getHeight()).setDuration(240)
+                bottomChrome.animate().translationY(bottomChrome.getHeight()).alpha(0.0f).setDuration(260)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (collapsedPill != null) {
@@ -1834,34 +1869,38 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 collapsedPill.animate().cancel();
                 collapsedPill.setVisibility(View.VISIBLE);
                 collapsedPill.setAlpha(0f);
+                collapsedPill.setScaleX(0.92f);
+                collapsedPill.setScaleY(0.92f);
                 collapsedPill.setTranslationY(pillHiddenOffset);
-                collapsedPill.animate().alpha(1f).translationY(0f).setDuration(220)
+                collapsedPill.animate().alpha(0.94f).scaleX(1f).scaleY(1f).translationY(0f).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
         } else {
             if (topChrome != null) {
                 topChrome.animate().cancel();
-                topChrome.animate().translationY(0f).setDuration(240)
+                topChrome.animate().translationY(0f).alpha(1f).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (bottomChrome != null) {
                 bottomChrome.animate().cancel();
-                bottomChrome.animate().translationY(0f).setDuration(240)
+                bottomChrome.animate().translationY(0f).alpha(1f).setDuration(240)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
             if (collapsedPill != null && collapsedPill.getVisibility() == View.VISIBLE) {
                 collapsedPill.animate().cancel();
-                collapsedPill.animate().alpha(0f).translationY(pillHiddenOffset).setDuration(180)
+                collapsedPill.animate().alpha(0f).scaleX(0.92f).scaleY(0.92f).translationY(pillHiddenOffset).setDuration(180)
                     .setInterpolator(M3_EMPHASIZED_DECEL)
                     .withEndAction(() -> collapsedPill.setVisibility(View.GONE)).start();
             }
         }
         updateBannerTopMargins();
-        if (isUserTouchingWeb) {
-            pendingDeferredViewportPad = true;
-            mainHandler.removeCallbacks(deferredViewportPaddingTask);
-        } else {
-            scheduleDeferredViewportPadding(220L);
+        if (isTop) {
+            if (isUserTouchingWeb) {
+                pendingDeferredViewportPad = true;
+                mainHandler.removeCallbacks(deferredViewportPaddingTask);
+            } else {
+                scheduleDeferredViewportPadding(220L);
+            }
         }
     }
 
@@ -2007,7 +2046,72 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             pushStateToUi();
         }
         if (!isPrivate) publishOpenTabsToPc();
+        scheduleSaveOpenTabsSession();
         return tab;
+    }
+
+    private void scheduleSaveOpenTabsSession() {
+        mainHandler.removeCallbacks(saveSessionTask);
+        mainHandler.postDelayed(saveSessionTask, 400L);
+    }
+
+    private void saveOpenTabsSession() {
+        if (prefs == null) return;
+        try {
+            JSONArray arr = new JSONArray();
+            int savedActiveIdx = 0;
+            for (MobileTab t : tabs) {
+                if (t == null || t.isPrivate) continue;
+                JSONObject o = new JSONObject();
+                boolean isNt = t.isNewTab || t.url == null || t.url.trim().isEmpty() || t.url.startsWith("dejavu://");
+                o.put("url", isNt ? "dejavu://newtab" : t.url.trim());
+                o.put("title", (t.title != null && !t.title.trim().isEmpty()) ? t.title.trim() : (isNt ? "Start Page" : formatHost(t.url)));
+                o.put("isNewTab", isNt);
+                o.put("desktopMode", t.desktopMode);
+                if (t.id == activeTabId) savedActiveIdx = arr.length();
+                arr.put(o);
+                if (arr.length() >= 30) break;
+            }
+            prefs.edit()
+                .putString("savedTabsSession", arr.toString())
+                .putInt("savedActiveTabIndex", savedActiveIdx)
+                .commit();
+        } catch (Exception ignored) { }
+    }
+
+    private boolean restoreOpenTabsSession() {
+        if (prefs == null) return false;
+        try {
+            String raw = prefs.getString("savedTabsSession", "");
+            if (raw == null || raw.trim().isEmpty()) return false;
+            JSONArray arr = new JSONArray(raw);
+            if (arr.length() == 0) return false;
+            int savedActiveIdx = prefs.getInt("savedActiveTabIndex", 0);
+            int createdCount = 0;
+            for (int i = 0; i < arr.length() && createdCount < 30; i++) {
+                JSONObject o = arr.optJSONObject(i);
+                if (o == null) continue;
+                String u = o.optString("url", "dejavu://newtab").trim();
+                boolean isNt = o.optBoolean("isNewTab", false) || u.isEmpty() || u.startsWith("dejavu://");
+                MobileTab tab = new MobileTab();
+                tab.id = nextTabId++;
+                tab.isPrivate = false;
+                tab.desktopMode = o.optBoolean("desktopMode", desktopSiteDefault);
+                tab.isNewTab = isNt;
+                tab.url = isNt ? "dejavu://newtab" : u;
+                String ttl = o.optString("title", "").trim();
+                tab.title = !ttl.isEmpty() ? ttl : (isNt ? "Start Page" : formatHost(u));
+                tab.suspended = !isNt; // Lazy-load background tabs to keep startup RAM tiny!
+                tabs.add(tab);
+                createdCount++;
+            }
+            if (tabs.isEmpty()) return false;
+            int idx = Math.max(0, Math.min(tabs.size() - 1, savedActiveIdx));
+            activateTab(tabs.get(idx).id);
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     private void activateTab(int tabId) {
@@ -2081,6 +2185,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         updateChromeVisibility();
         updateChromeUi();
         pushStateToUi();
+        scheduleSaveOpenTabsSession();
     }
 
     private void closeTab(int tabId) {
@@ -2112,6 +2217,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             pushStateToUi();
         }
         publishOpenTabsToPc();
+        scheduleSaveOpenTabsSession();
     }
 
     private void closeAllTabs(boolean onlyPrivate) {
@@ -2148,6 +2254,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             }
         }
         publishOpenTabsToPc();
+        scheduleSaveOpenTabsSession();
     }
 
     private void navigateActiveTab(String rawInput) {
@@ -2175,6 +2282,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         updateChromeVisibility();
         updateChromeUi();
         pushStateToUi();
+        scheduleSaveOpenTabsSession();
     }
 
     private static boolean isLocalHttpHost(String host) {
@@ -3198,7 +3306,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.11.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.12.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -3459,7 +3567,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
     private void updateChromeVisibility() {
         boolean isTop = "top".equals(barPosition);
-        boolean hideBars = isModalSheetScreen(activeUiScreen) || "tabs".equals(activeUiScreen);
+        boolean hideBars = localOverlayOpen || isModalSheetScreen(activeUiScreen) || "tabs".equals(activeUiScreen);
         boolean isStart = "start".equals(activeUiScreen);
         boolean inOmnibox = "omnibox".equals(activeUiScreen);
         boolean onWeb = "none".equals(activeUiScreen);
@@ -3496,14 +3604,34 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 bottomChrome.getPaddingBottom() != bottomBarPad) {
                 bottomChrome.setPadding(insetLeftPx, 0, insetRightPx, bottomBarPad);
             }
-            bottomChrome.setVisibility(showBottom ? View.VISIBLE : View.GONE);
-            if (showBottom && !chromeCollapsed) bottomChrome.setTranslationY(0f);
+            if (showBottom) {
+                boolean wasHidden = bottomChrome.getVisibility() != View.VISIBLE;
+                bottomChrome.animate().cancel();
+                bottomChrome.setVisibility(View.VISIBLE);
+                if (wasHidden && !chromeCollapsed) {
+                    bottomChrome.setAlpha(0f);
+                    bottomChrome.setTranslationY(dp(18));
+                    bottomChrome.animate().alpha(1f).translationY(0f).setDuration(220)
+                        .setInterpolator(M3_EMPHASIZED_DECEL).start();
+                } else if (!chromeCollapsed) {
+                    bottomChrome.setAlpha(1f);
+                    bottomChrome.setTranslationY(0f);
+                }
+            } else if (bottomChrome.getVisibility() == View.VISIBLE) {
+                bottomChrome.animate().cancel();
+                bottomChrome.setVisibility(View.GONE);
+                bottomChrome.setAlpha(1f);
+                bottomChrome.setTranslationY(0f);
+            }
         }
         if (topChrome != null) {
             boolean hasFind = findBar != null && findBar.getVisibility() == View.VISIBLE;
             boolean showTop = !hideBars && ((isTop && showUrlBar) || hasFind);
             topChrome.setVisibility(showTop ? View.VISIBLE : View.GONE);
-            if (showTop && !chromeCollapsed) topChrome.setTranslationY(0f);
+            if (showTop && !chromeCollapsed) {
+                topChrome.setAlpha(1f);
+                topChrome.setTranslationY(0f);
+            }
         }
         if (collapsedPill != null && (hideBars || !chromeCollapsed || !onWeb || hideBottomForWebIme)) {
             collapsedPill.setVisibility(View.GONE);
@@ -3518,8 +3646,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
     private void openUiScreen(String screen) {
         setChromeCollapsed(false);
+        localOverlayOpen = false;
         activeUiScreen = screen;
+        uiWebView.animate().cancel();
+        boolean wasHidden = uiWebView.getVisibility() != View.VISIBLE;
         uiWebView.setVisibility(View.VISIBLE);
+        if (wasHidden) {
+            uiWebView.setAlpha(0f);
+            uiWebView.animate().alpha(1f).setDuration(180).setInterpolator(M3_EMPHASIZED_DECEL).start();
+        } else {
+            uiWebView.setAlpha(1f);
+        }
         swipeRefresh.setEnabled(false);
         updateChromeVisibility();
         updateChromeUi();
@@ -3528,14 +3665,19 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
     private void closeOverlayScreen() {
         pendingContextMenu = null;
+        localOverlayOpen = false;
         MobileTab active = getActiveTab();
         if (active == null || active.isNewTab) {
             activeUiScreen = "start";
+            uiWebView.animate().cancel();
+            uiWebView.setAlpha(1f);
             uiWebView.setVisibility(View.VISIBLE);
             swipeRefresh.setEnabled(false);
         } else {
             activeUiScreen = "none";
+            uiWebView.animate().cancel();
             uiWebView.setVisibility(View.GONE);
+            uiWebView.setAlpha(1f);
             swipeRefresh.setEnabled(pullToRefresh);
         }
         if (urlInput.hasFocus()) {
@@ -3714,6 +3856,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("accentColor", accentColor);
                 st.put("themeMode", themeMode);
                 st.put("effectiveTheme", isEffectiveLightTheme() ? "light" : "dark");
+                st.put("materialStyle", materialStyle);
+                st.put("amoledDark", amoledDark);
+                st.put("shortcutStyle", shortcutStyle);
+                st.put("clockStyle", clockStyle);
                 st.put("autoThemeFromWallpaper", autoThemeFromWallpaper);
                 st.put("showMotd", showMotd);
                 st.put("barPosition", barPosition);
@@ -3862,6 +4008,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         String id = raw.trim();
         if (id.startsWith("art:")) id = id.substring(4);
         if ("obsidian".equals(id) || "live:m3-expressive".equals(id)) return "obsidian";
+        if (id.startsWith("vec:m3-")) return id;
+        if (id.startsWith("m3-")) return "vec:" + id;
         if (id.startsWith("wp-m3-") && id.endsWith(".jpg")) return id;
         String candidate = "wp-m3-" + id.toLowerCase(Locale.US) + ".jpg";
         if (resolveWallpaperAutoTheme(candidate) != null) return candidate;
@@ -3914,6 +4062,18 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if ("wp-m3-froggie-mint.jpg".equals(wpId))        return new String[] { "aurora", "light" };
         if ("wp-m3-froggie-lime.jpg".equals(wpId))        return new String[] { "lime", "light" };
         if ("wp-m3-froggie-sage.jpg".equals(wpId))        return new String[] { "aurora", "dark" };
+        if ("vec:m3-googlebook-waves".equals(wpId))       return new String[] { "sapphire", "dark" };
+        if ("vec:m3-pixel-scallops".equals(wpId))         return new String[] { "amethyst", "dark" };
+        if ("vec:m3-bauhaus-blocks".equals(wpId))         return new String[] { "terracotta", "dark" };
+        if ("vec:m3-chroma-ribbons".equals(wpId))         return new String[] { "ocean", "dark" };
+        if ("vec:m3-topo-contours".equals(wpId))          return new String[] { "forest", "dark" };
+        if ("vec:m3-pebble-stack".equals(wpId))           return new String[] { "aurora", "dark" };
+        if ("vec:m3-paper-fold".equals(wpId))             return new String[] { "plum", "dark" };
+        if ("vec:m3-prism-glass".equals(wpId))            return new String[] { "indigo", "dark" };
+        if ("vec:m3-nordic-arch".equals(wpId))            return new String[] { "sapphire", "light" };
+        if ("vec:m3-botanical-arc".equals(wpId))          return new String[] { "forest", "light" };
+        if ("vec:m3-solar-rings".equals(wpId))            return new String[] { "gold", "light" };
+        if ("vec:m3-oled-monolith".equals(wpId))          return new String[] { "amethyst", "dark" };
         return null;
     }
 
@@ -4064,6 +4224,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         accentColor = normalizeAccent(prefs.getString("accentColor", "amethyst"));
         String tm = prefs.getString("themeMode", "dark");
         themeMode = ("light".equals(tm) || "auto".equals(tm)) ? tm : "dark";
+        String ms = prefs.getString("materialStyle", "tonal");
+        materialStyle = ("vibrant".equals(ms) || "minimal".equals(ms)) ? ms : "tonal";
+        amoledDark = prefs.getBoolean("amoledDark", false);
+        String ss = prefs.getString("shortcutStyle", "circle");
+        shortcutStyle = "tile".equals(ss) ? "tile" : "circle";
+        String cs = prefs.getString("clockStyle", "off");
+        clockStyle = ("minimal".equals(cs) || "bold".equals(cs)) ? cs : "off";
         autoThemeFromWallpaper = prefs.getBoolean("autoThemeFromWallpaper", true);
         showMotd = prefs.getBoolean("showMotd", true);
         barPosition = "top".equals(prefs.getString("barPosition", "bottom")) ? "top" : "bottom";
@@ -4116,8 +4283,29 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             profiles = new JSONArray();
         }
         ensureValidProfiles();
-        try { bookmarks = new JSONArray(prefs.getString("bookmarks", "")); } catch (Exception e) { bookmarks = defaultBookmarks(); }
-        if (bookmarks.length() == 0) bookmarks = defaultBookmarks();
+        bookmarksInitialized = prefs.getBoolean("bookmarksInitialized", false);
+        deletedBookmarkUrls.clear();
+        try {
+            String delRaw = prefs.getString("deletedBookmarkUrls", "[]");
+            if (delRaw != null && !delRaw.isEmpty()) {
+                JSONArray delArr = new JSONArray(delRaw);
+                for (int i = 0; i < delArr.length() && i < 120; i++) {
+                    String u = delArr.optString(i, "").trim().toLowerCase(Locale.US);
+                    if (!u.isEmpty()) deletedBookmarkUrls.add(u);
+                }
+            }
+        } catch (Exception ignored) { }
+        String bmRaw = prefs.getString("bookmarks", "");
+        if (bmRaw != null && !bmRaw.isEmpty()) {
+            try { bookmarks = new JSONArray(bmRaw); } catch (Exception e) { bookmarks = new JSONArray(); }
+            if (bookmarks.length() > 0) bookmarksInitialized = true;
+        } else {
+            bookmarks = new JSONArray();
+        }
+        if (!bookmarksInitialized && bookmarks.length() == 0) {
+            bookmarks = defaultBookmarks();
+            bookmarksInitialized = true;
+        }
         try { readingList = new JSONArray(prefs.getString("readingList", "[]")); } catch (Exception e) { readingList = new JSONArray(); }
         try { history = new JSONArray(prefs.getString("history", "[]")); } catch (Exception e) { history = new JSONArray(); }
     }
@@ -4144,7 +4332,45 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         return arr;
     }
 
+    private static String normalizeBookmarkKey(String url) {
+        if (url == null) return "";
+        String s = url.trim();
+        while (s.endsWith("/")) s = s.substring(0, s.length() - 1);
+        return s.toLowerCase(Locale.US);
+    }
+
+    private boolean isBookmarkDeleted(String url) {
+        String k = normalizeBookmarkKey(url);
+        if (k.isEmpty()) return false;
+        for (String d : deletedBookmarkUrls) {
+            if (k.equals(d)) return true;
+        }
+        return false;
+    }
+
+    private void recordBookmarkDeleted(String url) {
+        String k = normalizeBookmarkKey(url);
+        if (k.isEmpty()) return;
+        deletedBookmarkUrls.remove(k);
+        deletedBookmarkUrls.add(0, k);
+        while (deletedBookmarkUrls.size() > 120) deletedBookmarkUrls.remove(deletedBookmarkUrls.size() - 1);
+    }
+
+    private void clearBookmarkDeleted(String url) {
+        String k = normalizeBookmarkKey(url);
+        if (!k.isEmpty()) deletedBookmarkUrls.remove(k);
+    }
+
     private void saveLocalCollections() {
+        writeLocalCollections(false);
+    }
+
+    private void saveLocalCollectionsSync() {
+        writeLocalCollections(true);
+    }
+
+    private void writeLocalCollections(boolean synchronous) {
+        if (prefs == null) return;
         JSONObject szObj = new JSONObject();
         try {
             for (Map.Entry<String, Integer> e : siteZoomLevels.entrySet()) {
@@ -4153,11 +4379,19 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 }
             }
         } catch (Exception ignored) { }
-        prefs.edit()
+        JSONArray delArr = new JSONArray();
+        for (int i = 0; i < deletedBookmarkUrls.size() && i < 120; i++) {
+            delArr.put(deletedBookmarkUrls.get(i));
+        }
+        SharedPreferences.Editor ed = prefs.edit()
             .putString("searchEngine", searchEngine)
             .putString("wallpaper", wallpaper)
             .putString("accentColor", accentColor)
             .putString("themeMode", themeMode)
+            .putString("materialStyle", materialStyle)
+            .putBoolean("amoledDark", amoledDark)
+            .putString("shortcutStyle", shortcutStyle)
+            .putString("clockStyle", clockStyle)
             .putBoolean("autoThemeFromWallpaper", autoThemeFromWallpaper)
             .putBoolean("showMotd", showMotd)
             .putString("barPosition", barPosition)
@@ -4193,10 +4427,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putBoolean("stripTrackingParams", adBlocker == null || adBlocker.isStripTrackingParams())
             .putLong("totalTrackingStripped", adBlocker != null ? adBlocker.getTotalTrackingStripped() : 0L)
             .putString("pausedShieldHosts", adBlocker != null ? adBlocker.exportPausedHostsJson() : "[]")
+            .putBoolean("bookmarksInitialized", bookmarksInitialized)
+            .putString("deletedBookmarkUrls", delArr.toString())
             .putString("bookmarks", bookmarks.toString())
             .putString("readingList", readingList.toString())
-            .putString("history", history.toString())
-            .apply();
+            .putString("history", history.toString());
+        if (synchronous) ed.commit();
+        else ed.apply();
     }
 
     private void recordHistory(String title, String url) {
@@ -4471,12 +4708,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 JSONObject o = items.optJSONObject(i);
                 if (o == null) continue;
                 String u = o.optString("url", "");
-                if (u.isEmpty() || hasUrl(bookmarks, u)) continue;
+                if (u.isEmpty() || hasUrl(bookmarks, u) || isBookmarkDeleted(u)) continue;
                 bookmarks.put(o);
                 changed = true;
             }
             if (changed) {
-                saveLocalCollections();
+                bookmarksInitialized = true;
+                saveLocalCollectionsSync();
                 pushStateToUi();
             }
         });
@@ -4696,8 +4934,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         super.onDestroy();
         mainHandler.removeCallbacks(deferredViewportPaddingTask);
         mainHandler.removeCallbacks(hideBannerTask);
+        mainHandler.removeCallbacks(saveSessionTask);
         dismissActiveAuthDialog();
-        saveLocalCollections();
+        saveOpenTabsSession();
+        saveLocalCollectionsSync();
         if (adBlocker != null) adBlocker.shutdown();
         if (downloadManager != null) downloadManager.shutdown();
         if (syncManager != null) syncManager.shutdown();
@@ -4787,6 +5027,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         @JavascriptInterface
         public void closeScreen() {
             mainHandler.post(MainActivity.this::closeOverlayScreen);
+        }
+
+        @JavascriptInterface
+        public void setLocalOverlayOpen(final boolean open) {
+            mainHandler.post(() -> {
+                if (localOverlayOpen != open) {
+                    localOverlayOpen = open;
+                    updateChromeVisibility();
+                    pushStateToUi();
+                }
+            });
         }
 
         @JavascriptInterface
@@ -4920,7 +5171,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (url == null || url.isEmpty()) return;
                 if (!hasUrl(bookmarks, url)) {
                     bookmarks = toggleInList(bookmarks, (title == null || title.trim().isEmpty()) ? formatHost(url) : title.trim(), url);
-                    saveLocalCollections();
+                    bookmarksInitialized = true;
+                    clearBookmarkDeleted(url);
+                    saveLocalCollectionsSync();
                     syncManager.publishCollection("bookmarks", bookmarks);
                     pushStateToUi();
                     Toast.makeText(MainActivity.this, "Pinned to Favorites", Toast.LENGTH_SHORT).show();
@@ -4932,7 +5185,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         public void removeFavorite(final String url) {
             mainHandler.post(() -> {
                 bookmarks = removeFromList(bookmarks, url);
-                saveLocalCollections();
+                bookmarksInitialized = true;
+                recordBookmarkDeleted(url);
+                saveLocalCollectionsSync();
                 syncManager.publishCollection("bookmarks", bookmarks);
                 pushStateToUi();
             });
@@ -5240,10 +5495,14 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 MobileTab t = getActiveTab();
                 if (t == null || t.isNewTab || t.url == null) return;
                 bookmarks = toggleInList(bookmarks, t.title, t.url);
-                saveLocalCollections();
+                bookmarksInitialized = true;
+                boolean saved = hasUrl(bookmarks, t.url);
+                if (saved) clearBookmarkDeleted(t.url);
+                else recordBookmarkDeleted(t.url);
+                saveLocalCollectionsSync();
                 syncManager.publishCollection("bookmarks", bookmarks);
                 pushStateToUi();
-                Toast.makeText(MainActivity.this, hasUrl(bookmarks, t.url) ? "Saved to Bookmarks" : "Removed Bookmark", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, saved ? "Saved to Bookmarks" : "Removed Bookmark", Toast.LENGTH_SHORT).show();
             });
         }
 
@@ -5366,6 +5625,46 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 saveLocalCollections();
                 applyNativeTheme();
                 updateChromeUi();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void setMaterialStyle(final String style) {
+            mainHandler.post(() -> {
+                materialStyle = ("vibrant".equalsIgnoreCase(style) || "minimal".equalsIgnoreCase(style))
+                    ? style.toLowerCase(Locale.US) : "tonal";
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleAmoledDark() {
+            mainHandler.post(() -> {
+                amoledDark = !amoledDark;
+                saveLocalCollections();
+                applyNativeTheme();
+                updateChromeUi();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void setShortcutStyle(final String style) {
+            mainHandler.post(() -> {
+                shortcutStyle = "tile".equalsIgnoreCase(style) ? "tile" : "circle";
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void setClockStyle(final String style) {
+            mainHandler.post(() -> {
+                clockStyle = ("minimal".equalsIgnoreCase(style) || "bold".equalsIgnoreCase(style))
+                    ? style.toLowerCase(Locale.US) : "off";
+                saveLocalCollections();
                 pushStateToUi();
             });
         }
@@ -5719,7 +6018,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     } catch (Exception ignored) { }
                 }
                 bookmarks = next;
-                saveLocalCollections();
+                bookmarksInitialized = true;
+                clearBookmarkDeleted(resolved);
+                saveLocalCollectionsSync();
                 syncManager.publishCollection("bookmarks", bookmarks);
                 pushStateToUi();
                 Toast.makeText(MainActivity.this, "Shortcut updated", Toast.LENGTH_SHORT).show();
@@ -6043,6 +6344,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         public void resetSettings() {
             mainHandler.post(() -> {
                 themeMode = "dark";
+                materialStyle = "tonal";
+                amoledDark = false;
+                shortcutStyle = "circle";
+                clockStyle = "off";
                 autoThemeFromWallpaper = true;
                 showMotd = true;
                 accentColor = "amethyst";

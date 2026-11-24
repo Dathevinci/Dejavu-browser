@@ -1,5 +1,5 @@
 /**
- * dejavu v5.11.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * dejavu v5.12.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
  * 12 Official HCT Material You Themes, 32 Pure M3, Butterfly & Froggie Wallpapers, Auto Wallpaper-to-Theme,
  * Redesigned Pixel At-a-Glance Message of the Day Card, Clean 5-Control ChromeOS Toolbar,
  * Zero-Glitch 120Hz Tab Strip, Brave-Grade Shields, Real-Time dejavu Link Hub & 8x Turbo Downloader.
@@ -100,6 +100,9 @@
   const favbarList = document.getElementById('favbar-list');
 
   const spPrivateChip = document.getElementById('sp-private-chip');
+  const ntClockWrap = document.getElementById('nt-clock-wrap');
+  const ntClockTime = document.getElementById('nt-clock-time');
+  const ntClockDate = document.getElementById('nt-clock-date');
   const startpageProfileBadge = document.getElementById('startpage-profile-badge');
   const spBadgeAvatar = document.getElementById('sp-badge-avatar');
   const spBadgeGreeting = document.getElementById('sp-badge-greeting');
@@ -165,6 +168,9 @@
   const btnStoreClose = document.getElementById('btn-store-close');
   const btnStoreMoreOptions = document.getElementById('btn-store-more-options');
   const btnCustomWp = document.getElementById('btn-custom-wp');
+  const storeModeSeg = document.getElementById('store-mode-seg');
+  const storePaneWallpapers = document.getElementById('store-pane-wallpapers');
+  const storePaneStyle = document.getElementById('store-pane-style');
   const storeTabs = document.getElementById('store-tabs');
   const wallpaperGrid = document.getElementById('wallpaper-grid');
 
@@ -175,6 +181,12 @@
   const prefMotd = document.getElementById('pref-motd');
   const prefAutoTheme = document.getElementById('pref-auto-theme');
   const storeAccentSwatches = document.getElementById('store-accent-swatches');
+  const storeAppearanceMode = document.getElementById('store-appearance-mode');
+  const storeMaterialStyle = document.getElementById('store-material-style');
+  const storeTabbarStyle = document.getElementById('store-tabbar-style');
+  const storeShortcutStyle = document.getElementById('store-shortcut-style');
+  const storeClockStyle = document.getElementById('store-clock-style');
+  const storeAmoledDark = document.getElementById('store-amoled-dark');
 
   // Left Navigation Rail
   const railHome = document.getElementById('rail-home');
@@ -234,8 +246,13 @@
 
   // Category 2: Appearance & Material You
   const optAppearanceMode = document.getElementById('opt-appearance-mode');
+  const optAmoledDark = document.getElementById('opt-amoled-dark');
+  const optMaterialStyle = document.getElementById('opt-material-style');
   const optAccentSwatches = document.getElementById('opt-accent-swatches');
   const optAutoTheme = document.getElementById('opt-auto-theme');
+  const optTabbarStyle = document.getElementById('opt-tabbar-style');
+  const optShortcutStyle = document.getElementById('opt-shortcut-style');
+  const optClockStyle = document.getElementById('opt-clock-style');
   const settingsWpCountPill = document.getElementById('settings-wp-count-pill');
   const optWpFilter = document.getElementById('opt-wp-filter');
   const btnOptUploadWp = document.getElementById('btn-opt-upload-wp');
@@ -557,7 +574,7 @@
     forest: '#9cd49f'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.11.0 — 32 HD + 1 Live = 33 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.12.0 — 32 HD + 12 Googlebook Vector + 1 Live = 45 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 18 Sculptural / Architectural Material Design 3 HD Wallpapers (10 Dark, 8 Light)
@@ -595,8 +612,21 @@
     { id: 'art:wp-m3-froggie-mint.jpg', slug: 'froggie-mint', cat: 'art', m3: true, butterfly: false, froggie: true, mode: 'Light', seed: 'aurora', name: 'Mint Lily Froggie', desc: 'Pastel mint-ceramic froggie perched on a sunlit porcelain lily pad amid calm ripples', img: 'https://dejavu.local/wp-m3-froggie-mint.jpg' },
     { id: 'art:wp-m3-froggie-lime.jpg', slug: 'froggie-lime', cat: 'art', m3: true, butterfly: false, froggie: true, mode: 'Light', seed: 'lime', name: 'Matcha Froggie', desc: 'Cheerful matcha-lime clay froggie holding a leaf umbrella on sunlit sage hills', img: 'https://dejavu.local/wp-m3-froggie-lime.jpg' },
     { id: 'art:wp-m3-froggie-sage.jpg', slug: 'froggie-sage', cat: 'art', m3: true, butterfly: false, froggie: true, mode: 'Dark', seed: 'aurora', name: 'Twilight Froggie', desc: 'Sleepy celadon-sage clay froggie napping in a teal lotus petal under a twilight firefly', img: 'https://dejavu.local/wp-m3-froggie-sage.jpg' },
+    // 12 Bespoke Googlebook Material Design 3 Vector Editions (7 Dark, 5 Light)
+    { id: 'vec:m3-googlebook-waves', slug: 'googlebook-waves', cat: 'art', m3: true, googlebook: true, mode: 'Dark', seed: 'sapphire', name: 'Googlebook Waves', desc: 'Crisp Chromebook layered cobalt & periwinkle horizon ribbons' },
+    { id: 'vec:m3-pixel-scallops', slug: 'pixel-scallops', cat: 'art', m3: true, googlebook: true, mode: 'Light', seed: 'amethyst', name: 'Pixel Scallops', desc: 'Playful Material 3 lavender scalloped geometry on sunlit porcelain' },
+    { id: 'vec:m3-bauhaus-blocks', slug: 'bauhaus-blocks', cat: 'art', m3: true, googlebook: true, mode: 'Dark', seed: 'indigo', name: 'Bauhaus Blocks', desc: 'Architectural indigo & cobalt Googlebook geometric composition' },
+    { id: 'vec:m3-chroma-ribbons', slug: 'chroma-ribbons', cat: 'art', m3: true, googlebook: true, mode: 'Dark', seed: 'ocean', name: 'Chroma Ribbons', desc: 'Sweeping glacier-cyan Material ribbons over midnight ocean tones' },
+    { id: 'vec:m3-topo-contours', slug: 'topo-contours', cat: 'art', m3: true, googlebook: true, mode: 'Dark', seed: 'forest', name: 'Topo Contours', desc: 'Minimalist pine-moss elevation contours in deep studio charcoal' },
+    { id: 'vec:m3-pebble-stack', slug: 'pebble-stack', cat: 'art', m3: true, googlebook: true, mode: 'Light', seed: 'terracotta', name: 'Pebble Stack', desc: 'Warm sienna & alabaster balanced Material 3 ceramic stones' },
+    { id: 'vec:m3-paper-fold', slug: 'paper-fold', cat: 'art', m3: true, googlebook: true, mode: 'Light', seed: 'sapphire', name: 'Paper Fold', desc: 'Clean sunlit sky-blue Googlebook origami diagonal folds' },
+    { id: 'vec:m3-prism-glass', slug: 'prism-glass', cat: 'art', m3: true, googlebook: true, mode: 'Dark', seed: 'plum', name: 'Prism Studio', desc: 'Deep berry & plum translucent tonal planes on dark obsidian' },
+    { id: 'vec:m3-nordic-arch', slug: 'nordic-arch', cat: 'art', m3: true, googlebook: true, mode: 'Light', seed: 'aurora', name: 'Nordic Arch', desc: 'Airy seafoam-teal Material 3 recessed architectural arches' },
+    { id: 'vec:m3-botanical-arc', slug: 'botanical-arc', cat: 'art', m3: true, googlebook: true, mode: 'Dark', seed: 'emerald', name: 'Botanical Arc', desc: 'Sculptural jade & emerald sweeping curves in deep slate' },
+    { id: 'vec:m3-solar-rings', slug: 'solar-rings', cat: 'art', m3: true, googlebook: true, mode: 'Light', seed: 'gold', name: 'Solar Rings', desc: 'Warm honey-amber concentric Material rings on ivory paper' },
+    { id: 'vec:m3-oled-monolith', slug: 'oled-monolith', cat: 'art', m3: true, googlebook: true, mode: 'Dark', seed: 'silver', name: 'OLED Monolith', desc: 'Pure pitch-black titanium geometry designed for AMOLED screens' },
     // 1 Adaptive Material You Live Theme
-    { id: 'live:m3-expressive', slug: 'm3-expressive', cat: 'live', m3: true, butterfly: false, froggie: false, mode: 'Adaptive', name: 'Material You Live', desc: 'Adaptive tonal shapes reacting to all 12 Dynamic Color Seeds & Dark/Light mode', grad: 'linear-gradient(135deg, #4f378b 0%, #211f26 52%, #633b48 100%)' }
+    { id: 'live:m3-expressive', slug: 'm3-expressive', cat: 'live', m3: true, butterfly: false, froggie: false, mode: 'Adaptive', name: 'Material You Live', desc: 'Adaptive tonal shapes reacting to all 16 Dynamic Color Seeds & Dark/Light mode', grad: 'linear-gradient(135deg, #4f378b 0%, #211f26 52%, #633b48 100%)' }
   ];
 
   const VALID_WALLPAPER_IDS = new Set(WALLPAPER_CATALOG.map((w) => w.id));
@@ -643,18 +673,19 @@
 
   function syncWallpaperFilterCounts() {
     const total = WALLPAPER_CATALOG.length;
+    const gbCnt = WALLPAPER_CATALOG.filter((w) => !!w.googlebook).length;
+    const matCnt = WALLPAPER_CATALOG.filter((w) => w.cat === 'art' && !w.googlebook && !w.butterfly && !w.froggie).length;
     const bfCnt = WALLPAPER_CATALOG.filter((w) => !!w.butterfly).length;
     const frogCnt = WALLPAPER_CATALOG.filter((w) => !!w.froggie).length;
-    const darkCnt = WALLPAPER_CATALOG.filter((w) => (w.mode || '').toLowerCase() === 'dark').length;
-    const lightCnt = WALLPAPER_CATALOG.filter((w) => (w.mode || '').toLowerCase() === 'light').length;
-    const liveCnt = WALLPAPER_CATALOG.filter((w) => w.cat === 'live').length;
     const labels = {
       all: `All (${total})`,
+      googlebook: `Googlebook (${gbCnt})`,
+      material: `Material (${matCnt})`,
       butterfly: `Butterfly (${bfCnt})`,
       froggie: `Froggie (${frogCnt})`,
-      dark: `Dark (${darkCnt})`,
-      light: `Light (${lightCnt})`,
-      live: `Live (${liveCnt})`
+      dark: 'Dark',
+      light: 'Light',
+      live: 'Live'
     };
     if (settingsWpCountPill) settingsWpCountPill.textContent = String(total);
     if (storeTabs) {
@@ -732,6 +763,11 @@
       appearanceMode: 'auto',
       accentColor: 'amethyst',
       autoThemeFromWallpaper: true,
+      materialStyle: 'tonal',
+      amoledDark: false,
+      tabBarStyle: 'googlebook',
+      shortcutStyle: 'circle',
+      clockStyle: 'off',
       fontSize: 'medium',
       fontFamily: 'system',
       showHomeButton: true,
@@ -837,7 +873,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.11.0',
+    appVersion: bootData.appVersion || '5.12.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -1985,6 +2021,8 @@
 
     const items = WALLPAPER_CATALOG.filter((item) => {
       if (catFilter === 'all') return true;
+      if (catFilter === 'googlebook') return !!item.googlebook;
+      if (catFilter === 'material') return item.cat === 'art' && !item.googlebook && !item.butterfly && !item.froggie;
       if (catFilter === 'butterfly') return !!item.butterfly;
       if (catFilter === 'froggie') return !!item.froggie;
       if (catFilter === 'dark') return (item.mode || '').toLowerCase() === 'dark';
@@ -1997,7 +2035,7 @@
         id: activeWp.startsWith('custom') ? activeWp : 'custom',
         cat: 'art',
         m3: true,
-        name: 'My Wallpaper',
+        name: 'My Photo',
         desc: 'Custom photo from your PC',
         img: `https://dejavu.local/custom-wallpaper?t=${Date.now()}`,
         isCustom: true
@@ -2011,19 +2049,25 @@
       card.className = 'wp-card'
         + (isSelected ? ' active' : '')
         + (item.m3 ? ' is-m3' : '')
+        + (item.googlebook ? ' is-googlebook' : '')
         + (item.butterfly ? ' is-butterfly' : '')
         + (item.froggie ? ' is-froggie' : '');
+      card.title = item.desc ? `${item.name} — ${item.desc}` : item.name;
       card.dataset.wpId = item.id;
       if (item.slug) card.dataset.wpSlug = item.slug;
-      card.dataset.wpCat = item.froggie ? 'froggie' : (item.butterfly ? 'butterfly' : (item.cat === 'live' ? 'live' : 'art'));
+      card.dataset.wpCat = item.googlebook ? 'googlebook' : (item.froggie ? 'froggie' : (item.butterfly ? 'butterfly' : (item.cat === 'live' ? 'live' : 'art')));
       if (item.mode) card.dataset.wpMode = item.mode.toLowerCase();
       if (item.seed) card.dataset.wpSeed = item.seed;
 
       const thumb = document.createElement('div');
       thumb.className = 'wp-thumb';
-      if (item.img) {
+      const vecUrl = item.id.startsWith('vec:') && window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.getVectorWallpaperDataUrl
+        ? window.DejavuNewTabCanvas.getVectorWallpaperDataUrl(item.id)
+        : '';
+      const imgSrc = item.img || vecUrl;
+      if (imgSrc) {
         const img = document.createElement('img');
-        img.src = item.img;
+        img.src = imgSrc;
         img.alt = item.name;
         img.loading = 'lazy';
         img.draggable = false;
@@ -2037,28 +2081,20 @@
         </svg>`;
       }
 
-      const badge = document.createElement('span');
-      badge.className = 'wp-badge';
-      if (item.isCustom) badge.textContent = 'Custom';
-      else if (item.froggie) badge.textContent = `Froggie M3 · ${item.mode || 'HD'}`;
-      else if (item.butterfly) badge.textContent = `Butterfly M3 · ${item.mode || 'HD'}`;
-      else if (item.cat === 'live') badge.textContent = 'Material You · Live';
-      else badge.textContent = `Material 3 · ${item.mode || 'HD'}`;
-      thumb.appendChild(badge);
-
       const check = document.createElement('span');
       check.className = 'wp-check';
-      check.textContent = '✓';
+      check.innerHTML = '<svg viewBox="0 0 16 16" width="12" height="12" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       thumb.appendChild(check);
 
-      const meta = document.createElement('div');
-      meta.className = 'wp-meta';
-      meta.innerHTML = `<div class="wp-name"></div><div class="wp-desc"></div>`;
-      meta.querySelector('.wp-name').textContent = item.name;
-      meta.querySelector('.wp-desc').textContent = item.desc;
+      const labelBar = document.createElement('div');
+      labelBar.className = 'wp-label-bar';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'wp-name';
+      nameEl.textContent = item.name;
+      labelBar.appendChild(nameEl);
+      thumb.appendChild(labelBar);
 
       card.appendChild(thumb);
-      card.appendChild(meta);
       card.addEventListener('click', () => {
         state.wallpaper = item.id;
         window.DejavuNewTabCanvas.setWallpaper(item.id);
@@ -2094,14 +2130,14 @@
   // =========================================================================
   const SETTINGS_PANE_META = {
     you: { title: 'You and Google', sub: 'Manage your Google Account, Main Profile, and simultaneous Chrome-style profile windows' },
-    appearance: { title: 'Appearance & Material You', sub: '16 HCT Dynamic Color themes (32 Light/Dark), auto wallpaper matching, 32 HD M3, Butterfly & Froggie wallpapers, typography & zoom' },
+    appearance: { title: 'Appearance & Material You', sub: '16 Dynamic Color palettes, AMOLED Dark Mode, Googlebook styles, 45 wallpapers, typography & zoom' },
     privacy: { title: 'Privacy & Security', sub: 'Brave-Grade Shields, fingerprinting defense, cookie notice blocking, Clear Browsing Data & permissions' },
     search: { title: 'Search Engine', sub: 'Choose your default search provider, custom search template & address bar suggestions' },
     tabs: { title: 'Tabs & On Startup', sub: 'Startup session restore, Homepage, Memory Saver inactivity timer & keyboard shortcuts' },
     downloads: { title: 'Downloads', sub: 'Save folder, Turbo multi-thread accelerator connections & default video / MP3 quality' },
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.11.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.12.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2341,13 +2377,43 @@
     return effLight;
   }
 
+  function syncStartPageClock() {
+    if (!ntClockWrap) return;
+    const style = (state.browserOptions && state.browserOptions.clockStyle) || 'off';
+    const show = style === 'minimal' || style === 'bold';
+    ntClockWrap.classList.toggle('hidden', !show);
+    ntClockWrap.dataset.clockStyle = style;
+    if (!show) return;
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    if (ntClockTime) ntClockTime.textContent = `${hh}:${mm}`;
+    if (ntClockDate) {
+      try {
+        ntClockDate.textContent = now.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+      } catch {
+        ntClockDate.textContent = now.toDateString();
+      }
+    }
+  }
+  setInterval(syncStartPageClock, 15000);
+
   let lastBrowserOptionsSig = '';
   let lastPausedHostsSig = '';
   function applyBrowserOptions(opts) {
     const o = opts || {};
     const ac = o.accentColor || 'amethyst';
+    const matStyle = o.materialStyle || 'tonal';
+    const tabStyle = o.tabBarStyle || 'googlebook';
+    const scStyle = o.shortcutStyle || 'circle';
+    const clkStyle = o.clockStyle || 'off';
     const optSig = JSON.stringify([
       ac,
+      matStyle,
+      !!o.amoledDark,
+      tabStyle,
+      scStyle,
+      clkStyle,
       !!o.compactTabBar,
       !!o.alwaysShowTabClose,
       !!o.hideNavRail,
@@ -2372,6 +2438,10 @@
       if (prevAccent && prevAccent !== ac) triggerThemeTransition();
       if (document.documentElement.dataset.accent !== ac) document.documentElement.dataset.accent = ac;
       if (body.dataset.accent !== ac) body.dataset.accent = ac;
+      body.dataset.materialStyle = matStyle;
+      body.dataset.tabStyle = tabStyle;
+      body.dataset.shortcutStyle = scStyle;
+      body.classList.toggle('amoled-dark', !!o.amoledDark);
       body.classList.toggle('compact-tabs', !!o.compactTabBar);
       body.classList.toggle('always-show-tab-close', !!o.alwaysShowTabClose);
       body.classList.toggle('nav-rail-hidden', !!o.hideNavRail);
@@ -2379,6 +2449,7 @@
       if (btnToolbarHome) btnToolbarHome.classList.toggle('hidden', o.showHomeButton === false);
       if (spPrivateChip) spPrivateChip.classList.toggle('hidden', !state.isPrivateWindow);
       if (heroSearchWrap) heroSearchWrap.classList.toggle('hidden', !!o.hideStartPageSearch);
+      syncStartPageClock();
       syncMotdDisplay();
       syncAccentSwatchesUi(ac, o.autoThemeFromWallpaper !== false);
       if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
@@ -2415,7 +2486,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.11.0';
+    const ver = state.appVersion || '5.12.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -2425,6 +2496,17 @@
 
     // Category 2: Appearance & Material You
     setSegmentedVal(optAppearanceMode, o.appearanceMode || 'auto');
+    setSegmentedVal(storeAppearanceMode, o.appearanceMode || 'auto');
+    setSwitchState(optAmoledDark, !!o.amoledDark);
+    setSwitchState(storeAmoledDark, !!o.amoledDark);
+    setSegmentedVal(optMaterialStyle, o.materialStyle || 'tonal');
+    setSegmentedVal(storeMaterialStyle, o.materialStyle || 'tonal');
+    setSegmentedVal(optTabbarStyle, o.tabBarStyle || 'googlebook');
+    setSegmentedVal(storeTabbarStyle, o.tabBarStyle || 'googlebook');
+    setSegmentedVal(optShortcutStyle, o.shortcutStyle || 'circle');
+    setSegmentedVal(storeShortcutStyle, o.shortcutStyle || 'circle');
+    setSegmentedVal(optClockStyle, o.clockStyle || 'off');
+    setSegmentedVal(storeClockStyle, o.clockStyle || 'off');
     syncAccentSwatchesUi(o.accentColor || 'amethyst', o.autoThemeFromWallpaper !== false);
     setSegmentedVal(optWpDim, o.wallpaperDim || 'balanced');
     if (optFontSize) optFontSize.value = o.fontSize || 'medium';
@@ -2730,6 +2812,17 @@
 
   // Category 2 bindings
   bindSeg(optAppearanceMode, 'appearanceMode');
+  bindSeg(storeAppearanceMode, 'appearanceMode');
+  bindBoolSwitch(optAmoledDark, 'amoledDark', false);
+  bindBoolSwitch(storeAmoledDark, 'amoledDark', false);
+  bindSeg(optMaterialStyle, 'materialStyle');
+  bindSeg(storeMaterialStyle, 'materialStyle');
+  bindSeg(optTabbarStyle, 'tabBarStyle');
+  bindSeg(storeTabbarStyle, 'tabBarStyle');
+  bindSeg(optShortcutStyle, 'shortcutStyle');
+  bindSeg(storeShortcutStyle, 'shortcutStyle');
+  bindSeg(optClockStyle, 'clockStyle');
+  bindSeg(storeClockStyle, 'clockStyle');
   bindSeg(optWpDim, 'wallpaperDim');
   if (optAccentSwatches) {
     optAccentSwatches.addEventListener('click', (e) => {
@@ -3419,14 +3512,36 @@
   });
   if (railCollapse) railCollapse.addEventListener('click', () => send({ type: 'toggleNavRail' }));
 
-  // Customize Start Page Wallpaper Modal
+  // Customize Start Page Wallpaper & Style Studio Modal
+  let activeStorePane = 'wallpapers';
+  function setActiveStorePane(pane) {
+    activeStorePane = pane === 'style' ? 'style' : 'wallpapers';
+    if (storeModeSeg) {
+      storeModeSeg.querySelectorAll('.store-mode-btn').forEach((b) => {
+        const on = b.dataset.storePane === activeStorePane;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+    }
+    if (storePaneWallpapers) storePaneWallpapers.classList.toggle('hidden', activeStorePane !== 'wallpapers');
+    if (storePaneStyle) storePaneStyle.classList.toggle('hidden', activeStorePane !== 'style');
+    if (activeStorePane === 'wallpapers') renderWallpaperGrid();
+    else syncSettingsUi();
+  }
+  if (storeModeSeg) {
+    storeModeSeg.addEventListener('click', (e) => {
+      const btn = e.target.closest('.store-mode-btn');
+      if (!btn) return;
+      setActiveStorePane(btn.dataset.storePane || 'wallpapers');
+    });
+  }
   btnWallpaperStore.addEventListener('click', () => {
     shortcutModal.classList.add('hidden');
     const opening = wallpaperStore.classList.contains('hidden');
     wallpaperStore.classList.toggle('hidden', !opening);
     if (opening) {
       applyStartPagePrefs(state.startPagePrefs);
-      renderWallpaperGrid();
+      setActiveStorePane(activeStorePane);
     }
   });
   btnStoreClose.addEventListener('click', () => wallpaperStore.classList.add('hidden'));
@@ -6761,6 +6876,26 @@
     return { cls: '', label: 'E2EE Cloud TLS' };
   }
 
+  function formatFriendlyDeviceName(rawName, platform) {
+    const raw = String(rawName || '').trim();
+    const isAndroid = String(platform || '').toLowerCase() === 'android';
+    if (!raw) return isAndroid ? 'Android Phone' : 'Windows PC';
+    if (/^samsung\s+sm-f9\d*/i.test(raw)) return 'Samsung Galaxy Z Fold';
+    if (/^samsung\s+sm-f7\d*/i.test(raw)) return 'Samsung Galaxy Z Flip';
+    if (/^samsung\s+sm-s9\d*/i.test(raw)) return 'Samsung Galaxy S';
+    if (/^samsung\s+sm-a\d*/i.test(raw)) return 'Samsung Galaxy A';
+    if (/^samsung\s+sm-g\d*/i.test(raw)) return 'Samsung Galaxy';
+    if (/^samsung\s+/i.test(raw)) return 'Samsung ' + raw.slice(8).trim();
+    if (/^google\s+/i.test(raw)) return 'Google ' + raw.slice(7).trim();
+    return raw;
+  }
+
+  function normalizeDeviceKey(platform, name) {
+    const p = String(platform || 'android').toLowerCase().trim() || 'android';
+    const n = String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    return `${p}:${n || 'device'}`;
+  }
+
   function renderLinkDevices(s) {
     if (!linkDevicesGrid) return;
     const pcTabsCount = Array.isArray(state.tabs) ? state.tabs.filter((t) => t && !t.isNewTab && t.url).length : 0;
@@ -6777,42 +6912,72 @@
       tabCount: pcTabsCount,
       transport: s.relayStatus === 'connected_lan' ? 'lan' : (s.relayStatus === 'connected_cloud' ? 'cloud' : 'local')
     };
+    const selfNameNorm = String(selfDev.name || s.deviceName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const selfSig = normalizeDeviceKey('windows', selfDev.name || s.deviceName);
+    const selfId = String(selfDev.id || s.deviceId || '').toLowerCase();
 
-    const peers = devices.filter((d) => d && !d.isSelf);
-    const hasCustomPeers = peers.length > 1;
-    linkDevicesGrid.classList.toggle('is-multi', hasCustomPeers);
+    // Defensive client-side dedup & self-echo guard (never show duplicate ghosts or self as a peer)
+    const peerMap = new Map();
+    devices.forEach((d) => {
+      if (!d || d.isSelf) return;
+      const dId = String(d.id || '').toLowerCase();
+      if (selfId && dId && dId === selfId) return;
+      const plat = String(d.platform || 'android').toLowerCase();
+      const dNameNorm = String(d.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (selfNameNorm && dNameNorm && dNameNorm === selfNameNorm) return;
+      const sig = normalizeDeviceKey(plat, d.name);
+      if (plat === 'windows' && sig === selfSig) return;
+      const prev = peerMap.get(sig);
+      const ts = Number(d.lastSeenMs || 0);
+      if (!prev || ts >= Number(prev.lastSeenMs || 0)) {
+        peerMap.set(sig, d);
+      }
+    });
+    const peers = Array.from(peerMap.values()).sort((a, b) => Number(b.lastSeenMs || 0) - Number(a.lastSeenMs || 0));
+
+    const hasMultiplePeers = peers.length > 1;
+    linkDevicesGrid.classList.toggle('is-multi', hasMultiplePeers);
     linkDevicesGrid.innerHTML = '';
 
-    const buildDeviceCard = (dev, isPhoneSlot) => {
+    const buildDeviceCard = (dev) => {
       const card = document.createElement('div');
       const online = !!dev.isOnline;
       const synced = !online && Number(dev.lastSeenMs || 0) > 0;
-      const isPhone = isPhoneSlot || String(dev.platform || '').toLowerCase() === 'android';
-      card.className = 'link-device-card' + (isPhone ? ' is-phone' : '') + (online ? ' is-online' : '');
+      const isPhone = String(dev.platform || '').toLowerCase() === 'android';
+      card.className = 'link-device-card' + (isPhone ? ' is-phone' : '') + (online ? ' is-online' : '') + (dev.isSelf ? ' is-self' : '');
 
-      const badgeCls = online ? 'online' : (synced ? 'synced' : '');
-      const badgeText = online
-        ? 'Online now'
-        : (synced ? `Last seen ${formatLinkRelativeTime(dev.lastSeenMs)}` : 'Ready to link');
       const tabCnt = typeof dev.tabCount === 'number' ? dev.tabCount : (dev.isSelf ? pcTabsCount : remoteTabsCount);
       const trPill = resolveTransportPill(dev, s.relayStatus);
-      const devLabel = dev.name || (isPhone ? 'Android Phone' : 'This Windows PC');
+      const trShort = trPill.cls === 'is-lan' ? 'Wi-Fi LAN' : (trPill.cls === 'is-cloud' ? 'Cloud E2EE' : 'This PC');
+      const devLabel = formatFriendlyDeviceName(dev.name, dev.platform);
 
+      const statusText = dev.isSelf
+        ? `This PC · ${tabCnt} ${tabCnt === 1 ? 'tab' : 'tabs'}`
+        : (online
+          ? `Online · ${trShort} · ${tabCnt} ${tabCnt === 1 ? 'tab' : 'tabs'}`
+          : (synced
+            ? `Last seen ${formatLinkRelativeTime(dev.lastSeenMs)} · ${tabCnt} ${tabCnt === 1 ? 'tab' : 'tabs'}`
+            : 'Ready to link'));
+
+      const isGhostPlaceholder = dev.id === 'android-slot';
       card.innerHTML = `
         <span class="link-device-ico" aria-hidden="true">${isPhone ? LINK_PHONE_SVG : LINK_DESKTOP_SVG}</span>
         <div class="link-device-meta">
           <div class="link-device-name-row">
             <span class="link-device-name"></span>
-            <span class="link-presence-pill ${badgeCls}"><span class="link-presence-dot"></span><span>${escapeSugHtml(badgeText)}</span></span>
+            <span class="link-dot-ind ${online ? 'is-online' : (synced ? 'is-synced' : '')}" aria-hidden="true"></span>
           </div>
-          <div class="link-device-pills">
-            <span class="link-meta-pill ${trPill.cls}">${escapeSugHtml(trPill.label)}</span>
-            <span class="link-meta-pill is-tabs">${tabCnt} ${tabCnt === 1 ? 'tab' : 'tabs'}</span>
-          </div>
+          <div class="link-device-sub"></div>
         </div>
-        ${dev.isSelf ? '' : `<button type="button" class="link-ping-btn" title="Ring &amp; notify ${escapeSugHtml(devLabel)}">${LINK_PING_SVG}<span>Ping</span></button>`}
+        ${dev.isSelf ? '' : `
+          <div class="link-device-acts">
+            <button type="button" class="link-ping-btn" title="Ping ${escapeSugHtml(devLabel)}">${LINK_PING_SVG}<span>Ping</span></button>
+            ${!isGhostPlaceholder ? `<button type="button" class="link-forget-btn" title="Remove ${escapeSugHtml(devLabel)} from list" aria-label="Remove device">×</button>` : ''}
+          </div>
+        `}
       `;
       card.querySelector('.link-device-name').textContent = devLabel;
+      card.querySelector('.link-device-sub').textContent = statusText;
 
       const pingBtn = card.querySelector('.link-ping-btn');
       if (pingBtn) {
@@ -6820,20 +6985,28 @@
           send({ type: 'syncPingPeer' });
           pingBtn.classList.add('is-pinged');
           const lbl = pingBtn.querySelector('span');
-          if (lbl) lbl.textContent = 'Pinged ✓';
-          showToast(`📱 Ping sent to ${devLabel}`, 'info');
+          if (lbl) lbl.textContent = 'Sent';
+          showToast(`Ping sent to ${devLabel}`, 'info');
           setTimeout(() => {
             pingBtn.classList.remove('is-pinged');
             if (lbl) lbl.textContent = 'Ping';
-          }, 1600);
+          }, 1500);
+        });
+      }
+      const forgetBtn = card.querySelector('.link-forget-btn');
+      if (forgetBtn) {
+        forgetBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          send({ type: 'syncForgetDevice', id: dev.id || dev.name || '' });
+          showToast(`Removed ${devLabel}`, 'info');
         });
       }
       return card;
     };
 
-    if (hasCustomPeers) {
-      linkDevicesGrid.appendChild(buildDeviceCard(selfDev, false));
-      peers.forEach((p) => linkDevicesGrid.appendChild(buildDeviceCard(p, true)));
+    if (hasMultiplePeers) {
+      linkDevicesGrid.appendChild(buildDeviceCard(selfDev));
+      peers.forEach((p) => linkDevicesGrid.appendChild(buildDeviceCard(p)));
     } else {
       const peerDev = peers[0] || {
         id: 'android-slot',
@@ -6845,13 +7018,13 @@
         tabCount: remoteTabsCount,
         transport: s.relayStatus === 'connected_lan' ? 'lan' : 'cloud'
       };
-      linkDevicesGrid.appendChild(buildDeviceCard(selfDev, false));
+      linkDevicesGrid.appendChild(buildDeviceCard(selfDev));
       const bridge = document.createElement('div');
       bridge.className = 'link-device-bridge' + ((peerDev.isOnline || s.connected) ? ' is-live' : '');
       bridge.setAttribute('aria-hidden', 'true');
       bridge.innerHTML = LINK_BRIDGE_SVG;
       linkDevicesGrid.appendChild(bridge);
-      linkDevicesGrid.appendChild(buildDeviceCard(peerDev, true));
+      linkDevicesGrid.appendChild(buildDeviceCard(peerDev));
     }
   }
 
@@ -6974,37 +7147,37 @@
     const isGoogleMode = s.syncMode === 'google' && !!s.googleEmail;
     const profileGoogleEmail = (ap.isGoogleSignedIn && ap.googleEmail) ? ap.googleEmail : '';
 
-    // Header Status Pill + Live Relay Health Badge
+    // Header Status Pill (Single Clean Calm Status — Transport Details Live in Sync Settings)
     const relayInfo = describeRelayStatus(s);
     const hasLinkTransport = isGoogleMode || !!s.connected || !!s.paired;
     if (linkHeaderStatus) {
       linkHeaderStatus.classList.remove('primary', 'tertiary');
       if (isGoogleMode) {
-        linkHeaderStatus.textContent = s.peerOnline ? 'Google Auto-Sync · Phone Online' : 'Google Auto-Sync Active';
+        if (s.peerOnline) {
+          linkHeaderStatus.textContent = relayInfo.cls === 'is-lan' ? 'Connected · Wi-Fi LAN' : 'Connected · Phone Online';
+        } else if (relayInfo.cls === 'is-retrying') {
+          linkHeaderStatus.textContent = 'Reconnecting…';
+        } else {
+          linkHeaderStatus.textContent = 'Google Sync Ready';
+        }
         linkHeaderStatus.classList.add('tertiary');
       } else if (s.connected) {
-        linkHeaderStatus.textContent = `Paired · ${s.peerName || 'Android Phone'}`;
+        linkHeaderStatus.textContent = `Linked · ${formatFriendlyDeviceName(s.peerName, s.peerPlatform)}`;
         linkHeaderStatus.classList.add('primary');
       } else {
         linkHeaderStatus.textContent = 'Sign in to Sync';
       }
     }
-    if (linkRelayPill && linkRelayText) {
-      linkRelayPill.classList.remove('is-lan', 'is-cloud', 'is-connecting', 'is-retrying');
-      const showRelay = hasLinkTransport && !!relayInfo.label;
-      linkRelayPill.classList.toggle('hidden', !showRelay);
-      if (showRelay) {
-        if (relayInfo.cls) linkRelayPill.classList.add(relayInfo.cls);
-        linkRelayText.textContent = relayInfo.label;
-        linkRelayPill.title = relayInfo.title;
-      }
+    if (linkRelayPill) {
+      linkRelayPill.classList.add('hidden');
     }
     if (linkRelaySub) {
-      const lastSyncStr = s.lastSyncMs ? ` · Synced ${formatLinkRelativeTime(s.lastSyncMs)}` : '';
-      if (relayInfo.label) {
-        linkRelaySub.textContent = `${relayInfo.label}${s.relayBroker && relayInfo.cls === 'is-cloud' ? ' (' + s.relayBroker + ')' : ''}${lastSyncStr}`;
+      if (s.lastSyncMs) {
+        linkRelaySub.textContent = `Synced ${formatLinkRelativeTime(s.lastSyncMs)}`;
+      } else if (relayInfo.cls === 'is-lan') {
+        linkRelaySub.textContent = 'Direct Wi-Fi LAN · Encrypted';
       } else {
-        linkRelaySub.textContent = `AES-256 E2EE over Direct Wi-Fi LAN & TLS Cloud Relay${lastSyncStr}`;
+        linkRelaySub.textContent = 'End-to-end encrypted';
       }
     }
 

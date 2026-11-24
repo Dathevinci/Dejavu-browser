@@ -4,21 +4,21 @@ A fast, private native **Google Material Design 3** browser for **Windows 10/11*
 
 **Official Website:** **[dathevinci.github.io/Dejavu-browser](https://dathevinci.github.io/Dejavu-browser/)**
 
-## Download (`v5.11.0`)
+## Download (`v5.12.0`)
 
 Grab the latest release from the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
 
-- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.11.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
-- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.11.0.0`, runs from any folder or USB with no admin rights required).
-- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.11.0` · `versionCode 610`, Android 8.0+).
+- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.12.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
+- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.12.0.0`, runs from any folder or USB with no admin rights required).
+- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.12.0` · `versionCode 620`, Android 8.0+).
 - **`SHA256SUMS.txt`** — Official SHA-256 checksums paired with GitHub **SLSA Build Provenance Attestations**.
 
-## What's New in v5.11.0
+## What's New in v5.12.0
 
-- **Googlebook Material Design 3 & 16 HCT Themes (32 Light/Dark)**: Expanded dynamic color seeds with `Glacier Cyan`, `Sienna Clay`, `Deep Berry`, and `Pine Moss`, balanced 4×4 dual-tone swatch grids, polished Google Account login cards, and 16 redesigned flat tonal Material Design 3 profile medallions across Windows & Android.
-- **Dual-Broker Active-Active `dejavu Link` Sync**: Simultaneous HiveMQ + EMQX TLS MQTT mesh (eliminating split-brain disconnects), offline `recentDrops` recovery inside retained snapshots, multi-NIC bidirectional LAN sync, and 1-tap Reconnect Relay.
-- **Native Split View (`Ctrl+Shift+V`), Quick Tab Search (`Ctrl+Shift+A`), Screenshots (`Ctrl+Shift+S`) & M3 Reader View (`Ctrl+Shift+R`)**: Side-by-side browsing with a draggable M3 divider, instant open/closed tab search, native PNG screenshot save/copy, and upgraded Googlebook M3 Reader mode.
-- **Upgraded Extensions Engine & UI + Direct Networking**: Chromium 144/140 + Microsoft Edge Add-ons Store CRX support, WebView2 manifest retry sanitization on unpack/reload, M3 filter chips (`All | Enabled | Pinned | Disabled`), 1-click starter extensions, inline toolbar popover controls, and legacy VPN removed for faster direct HTTP/3 QUIC browsing.
+- **Mobile UI Polish & Fluid 120Hz Animations**: Fixed shortcut sheet clipping behind the bottom nav bar, blocked accidental Android text-selection toolbars on long-press, guaranteed M3 SVG avatar fallback beneath Google photos, eliminated the scroll-hide black dead bar with edge-to-edge GPU chrome glide, and added smooth sheet exit & Start Page animations.
+- **Reliable Tabs, Pinned Tabs & Favorites Persistence**: Atomic `.tmp` + `.bak` writes on Windows, full open + pinned tab session restore across Windows & Android (with lazy background suspension on Android), and deletion tombstones so removed favorites never reset or get resurrected by Sync.
+- **Redesigned `dejavu Link` Continuity Hub**: Eliminated duplicate/self-echo ghost devices, added friendly phone model names (e.g. `Samsung Galaxy Z Fold`) and a 1-click `×` Forget Device button that clears retained broker state, and simplified the layout into a calm Googlebook Phone Hub with cohesive tonal Quick Actions.
+- **Artwork-First Wallpaper & Style Studio + 12 Googlebook Wallpapers (45 Themes Total)**: Clean 2-tab Studio (`Wallpapers` | `Style & Layout`) with zero text clutter, 12 bespoke Googlebook Material 3 vector wallpapers, **AMOLED Pitch Black**, **Material Style** (`Tonal` | `Vibrant` | `Minimal`), **Tab Bar Style** (`Googlebook` | `Floating` | `Classic`), **Shortcut Shape** (`Circles` | `Tiles`), and **Start Page Clock** (`Off` | `Minimal` | `Bold`).
 
 ## Core Capabilities
 

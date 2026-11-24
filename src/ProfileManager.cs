@@ -710,6 +710,58 @@ namespace DejavuBrowser
             SettingsStore.SaveToPath(ActiveSettingsPath, settings);
         }
 
+        private static void WriteFileAtomic(string path, string content)
+        {
+            if (string.IsNullOrEmpty(path)) return;
+            try
+            {
+                string dir = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                string tmp = path + ".tmp";
+                string bak = path + ".bak";
+                File.WriteAllText(tmp, content ?? "");
+                if (File.Exists(path))
+                {
+                    try
+                    {
+                        File.Replace(tmp, path, bak, true);
+                    }
+                    catch
+                    {
+                        try { File.Copy(path, bak, true); } catch { }
+                        File.Copy(tmp, path, true);
+                        try { File.Delete(tmp); } catch { }
+                    }
+                }
+                else
+                {
+                    File.Move(tmp, path);
+                }
+            }
+            catch
+            {
+                try { File.WriteAllText(path, content ?? ""); } catch { }
+            }
+        }
+
+        private static T DeserializeWithBackup<T>(string path) where T : class
+        {
+            string[] candidates = new string[] { path, path + ".bak" };
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                try
+                {
+                    if (!File.Exists(candidates[i])) continue;
+                    string txt = File.ReadAllText(candidates[i]);
+                    if (string.IsNullOrWhiteSpace(txt)) continue;
+                    T parsed = Json.Deserialize<T>(txt);
+                    if (parsed != null) return parsed;
+                }
+                catch { }
+            }
+            return null;
+        }
+
         public void LoadActiveProfileCollections()
         {
             lock (Sync)
@@ -718,42 +770,14 @@ namespace DejavuBrowser
                 History = new List<HistoryItem>();
                 ReadingList = new List<ReadingListItem>();
                 TabGroups = new List<TabGroupItem>();
-                try
-                {
-                    if (File.Exists(ActiveFavoritesPath))
-                    {
-                        List<FavoriteItem> favs = Json.Deserialize<List<FavoriteItem>>(File.ReadAllText(ActiveFavoritesPath));
-                        if (favs != null) Favorites = favs;
-                    }
-                }
-                catch { }
-                try
-                {
-                    if (File.Exists(ActiveHistoryPath))
-                    {
-                        List<HistoryItem> hist = Json.Deserialize<List<HistoryItem>>(File.ReadAllText(ActiveHistoryPath));
-                        if (hist != null) History = hist;
-                    }
-                }
-                catch { }
-                try
-                {
-                    if (File.Exists(ActiveReadingListPath))
-                    {
-                        List<ReadingListItem> rl = Json.Deserialize<List<ReadingListItem>>(File.ReadAllText(ActiveReadingListPath));
-                        if (rl != null) ReadingList = rl;
-                    }
-                }
-                catch { }
-                try
-                {
-                    if (File.Exists(ActiveTabGroupsPath))
-                    {
-                        List<TabGroupItem> tg = Json.Deserialize<List<TabGroupItem>>(File.ReadAllText(ActiveTabGroupsPath));
-                        if (tg != null) TabGroups = tg;
-                    }
-                }
-                catch { }
+                List<FavoriteItem> favs = DeserializeWithBackup<List<FavoriteItem>>(ActiveFavoritesPath);
+                if (favs != null) Favorites = favs;
+                List<HistoryItem> hist = DeserializeWithBackup<List<HistoryItem>>(ActiveHistoryPath);
+                if (hist != null) History = hist;
+                List<ReadingListItem> rl = DeserializeWithBackup<List<ReadingListItem>>(ActiveReadingListPath);
+                if (rl != null) ReadingList = rl;
+                List<TabGroupItem> tg = DeserializeWithBackup<List<TabGroupItem>>(ActiveTabGroupsPath);
+                if (tg != null) TabGroups = tg;
                 if (TabGroups.Count == 0)
                 {
                     TabGroups.Add(new TabGroupItem { id = "default", name = "Start Tabs", color = "#b688ff" });
@@ -765,7 +789,7 @@ namespace DejavuBrowser
         {
             lock (Sync)
             {
-                try { File.WriteAllText(ActiveReadingListPath, Json.Serialize(ReadingList)); } catch { }
+                WriteFileAtomic(ActiveReadingListPath, Json.Serialize(ReadingList));
             }
         }
 
@@ -773,7 +797,7 @@ namespace DejavuBrowser
         {
             lock (Sync)
             {
-                try { File.WriteAllText(ActiveTabGroupsPath, Json.Serialize(TabGroups)); } catch { }
+                WriteFileAtomic(ActiveTabGroupsPath, Json.Serialize(TabGroups));
             }
         }
 
@@ -781,7 +805,7 @@ namespace DejavuBrowser
         {
             lock (Sync)
             {
-                try { File.WriteAllText(ActiveFavoritesPath, Json.Serialize(Favorites)); } catch { }
+                WriteFileAtomic(ActiveFavoritesPath, Json.Serialize(Favorites));
             }
         }
 
@@ -789,7 +813,7 @@ namespace DejavuBrowser
         {
             lock (Sync)
             {
-                try { File.WriteAllText(ActiveHistoryPath, Json.Serialize(History)); } catch { }
+                WriteFileAtomic(ActiveHistoryPath, Json.Serialize(History));
             }
         }
 

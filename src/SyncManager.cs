@@ -464,6 +464,7 @@ namespace DejavuBrowser
                     if (!string.IsNullOrEmpty(_state.drops[i].id)) _seenIds.Add(_state.drops[i].id);
                 }
 
+                CleanupPeerDevicesLocked(NowUnixMs());
                 DeriveActiveKeysLocked();
                 _pendingRetainedSnapshot = null;
                 _pendingEvents.Clear();
@@ -795,6 +796,7 @@ namespace DejavuBrowser
                     { "tabCount", _localTabCount }
                 });
 
+                CleanupPeerDevicesLocked(nowMs);
                 if (_state.devices != null && _state.devices.Count > 0)
                 {
                     List<SyncDeviceInfo> peers = new List<SyncDeviceInfo>(_state.devices);
@@ -802,7 +804,7 @@ namespace DejavuBrowser
                     for (int i = 0; i < peers.Count; i++)
                     {
                         SyncDeviceInfo d = peers[i];
-                        if (d == null || string.Equals(d.id, _state.deviceId, StringComparison.Ordinal)) continue;
+                        if (d == null || IsSelfEchoDeviceLocked(d.id, d.name, d.platform)) continue;
                         bool dOnline = (nowMs - d.lastSeenMs) < PeerOnlineWindowMs;
                         string dTransport = !string.IsNullOrEmpty(d.transport)
                             ? d.transport
@@ -824,7 +826,8 @@ namespace DejavuBrowser
                         });
                     }
                 }
-                else if (!string.IsNullOrEmpty(_state.peerName))
+                else if (!string.IsNullOrEmpty(_state.peerName) &&
+                         !IsSelfEchoDeviceLocked(_state.peerId, _state.peerName, _state.peerPlatform))
                 {
                     deviceList.Add(new Dictionary<string, object>
                     {
@@ -1896,40 +1899,213 @@ namespace DejavuBrowser
             }
         }
 
-        private void UpsertPeerDeviceLocked(string fromId, string fromName, string platform, long nowMs, int? tabCount, bool viaLan)
+        private const long MaxPeerStaleMs = 7L * 24L * 3600L * 1000L;
+
+        private static string NormalizeDeviceSignature(string name, string platform)
         {
-            if (_state.devices == null) _state.devices = new List<SyncDeviceInfo>();
-            string key = string.IsNullOrEmpty(fromId) ? ("peer:" + fromName) : fromId;
-            SyncDeviceInfo existing = null;
-            for (int i = 0; i < _state.devices.Count; i++)
+            string n = (name ?? "").Trim().ToLowerInvariant();
+            string p = (platform ?? "android").Trim().ToLowerInvariant();
+            if (string.IsNullOrEmpty(p)) p = "android";
+            return p + "|" + n;
+        }
+
+        private bool IsSelfEchoDeviceLocked(string fromId, string fromName, string platform)
+        {
+            if (_state == null) return false;
+            if (!string.IsNullOrEmpty(fromId) && string.Equals(fromId, _state.deviceId, StringComparison.Ordinal))
             {
-                if (string.Equals(_state.devices[i].id, key, StringComparison.Ordinal))
+                return true;
+            }
+            if (!string.IsNullOrWhiteSpace(fromName) && !string.IsNullOrWhiteSpace(_state.deviceName))
+            {
+                if (string.Equals(fromName.Trim(), _state.deviceName.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
-                    existing = _state.devices[i];
-                    break;
+                    return true;
                 }
             }
+            return false;
+        }
+
+        private void ClearRetainedMqttStateAsync(string victimDeviceId)
+        {
+            if (string.IsNullOrWhiteSpace(victimDeviceId)) return;
+            string topic;
+            lock (_lock)
+            {
+                topic = _topicId;
+                if (string.IsNullOrEmpty(topic) || string.Equals(victimDeviceId, _state.deviceId, StringComparison.Ordinal)) return;
+            }
+            string mqttTopic = "dejavu/v2/" + topic + "/state/" + victimDeviceId.Trim();
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try { TryWriteMqttPublish(topic, mqttTopic, "", true); } catch { }
+            });
+        }
+
+        private void CleanupPeerDevicesLocked(long nowMs)
+        {
+            if (_state == null) return;
+            if (_state.devices == null) _state.devices = new List<SyncDeviceInfo>();
+            if (!string.IsNullOrEmpty(_state.peerName) &&
+                IsSelfEchoDeviceLocked(_state.peerId, _state.peerName, _state.peerPlatform))
+            {
+                _state.peerId = "";
+                _state.peerName = "";
+                _state.peerPlatform = "";
+                _state.peerLastSeenMs = 0;
+                _state.peerTabCount = 0;
+            }
+
+            // Deduplicate by (platform, normalized name), keeping the freshest entry and dropping self-echoes / 7d+ ghosts
+            Dictionary<string, SyncDeviceInfo> bestBySig = new Dictionary<string, SyncDeviceInfo>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < _state.devices.Count; i++)
+            {
+                SyncDeviceInfo d = _state.devices[i];
+                if (d == null) continue;
+                if (IsSelfEchoDeviceLocked(d.id, d.name, d.platform)) continue;
+                if (d.lastSeenMs > 0 && (nowMs - d.lastSeenMs) > MaxPeerStaleMs) continue;
+                string sig = NormalizeDeviceSignature(d.name, d.platform);
+                if (string.IsNullOrEmpty(d.name)) sig = "id|" + (d.id ?? i.ToString());
+                SyncDeviceInfo prev;
+                if (!bestBySig.TryGetValue(sig, out prev) || d.lastSeenMs > prev.lastSeenMs)
+                {
+                    bestBySig[sig] = d;
+                }
+            }
+            List<SyncDeviceInfo> cleaned = new List<SyncDeviceInfo>(bestBySig.Values);
+            cleaned.Sort((a, b) => b.lastSeenMs.CompareTo(a.lastSeenMs));
+            if (cleaned.Count > 6) cleaned.RemoveRange(6, cleaned.Count - 6);
+            _state.devices = cleaned;
+        }
+
+        public void ForgetDevice(string deviceIdOrName)
+        {
+            if (string.IsNullOrWhiteSpace(deviceIdOrName)) return;
+            string needle = deviceIdOrName.Trim();
+            List<string> idsToPurge = new List<string>();
+            lock (_lock)
+            {
+                if (_state.devices != null)
+                {
+                    for (int i = _state.devices.Count - 1; i >= 0; i--)
+                    {
+                        SyncDeviceInfo d = _state.devices[i];
+                        if (d == null) { _state.devices.RemoveAt(i); continue; }
+                        if (string.Equals(d.id, needle, StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(d.name, needle, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!string.IsNullOrEmpty(d.id)) idsToPurge.Add(d.id);
+                            _state.devices.RemoveAt(i);
+                        }
+                    }
+                }
+                if (string.Equals(_state.peerId, needle, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(_state.peerName, needle, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!string.IsNullOrEmpty(_state.peerId)) idsToPurge.Add(_state.peerId);
+                    _state.peerId = "";
+                    _state.peerName = "";
+                    _state.peerPlatform = "";
+                    _state.peerLastSeenMs = 0;
+                    _state.peerTabCount = 0;
+                    _state.remoteTabs.Clear();
+                }
+                SaveLocked();
+            }
+            for (int i = 0; i < idsToPurge.Count; i++)
+            {
+                ClearRetainedMqttStateAsync(idsToPurge[i]);
+            }
+            RaiseStateChanged();
+        }
+
+        private void UpsertPeerDeviceLocked(string fromId, string fromName, string platform, long eventTs, int? tabCount, bool viaLan)
+        {
+            if (IsSelfEchoDeviceLocked(fromId, fromName, platform)) return;
+            if (_state.devices == null) _state.devices = new List<SyncDeviceInfo>();
+            long nowMs = NowUnixMs();
+            long safeTs = (eventTs > 0 && eventTs <= nowMs + 60000L) ? Math.Min(eventTs, nowMs) : nowMs;
+            if ((nowMs - safeTs) > MaxPeerStaleMs) return;
+
+            string key = string.IsNullOrEmpty(fromId) ? ("peer:" + fromName) : fromId;
+            string cleanName = string.IsNullOrEmpty(fromName) ? "Mobile Device" : fromName.Trim();
+            string cleanPlat = string.IsNullOrEmpty(platform) ? "android" : platform.Trim().ToLowerInvariant();
+            string targetSig = NormalizeDeviceSignature(cleanName, cleanPlat);
+
+            SyncDeviceInfo existing = null;
+            List<string> obsoleteIds = new List<string>();
+            for (int i = _state.devices.Count - 1; i >= 0; i--)
+            {
+                SyncDeviceInfo cur = _state.devices[i];
+                if (cur == null) { _state.devices.RemoveAt(i); continue; }
+                bool idMatch = string.Equals(cur.id, key, StringComparison.Ordinal);
+                bool sigMatch = !string.IsNullOrEmpty(cleanName) &&
+                    string.Equals(NormalizeDeviceSignature(cur.name, cur.platform), targetSig, StringComparison.OrdinalIgnoreCase);
+                if (idMatch || sigMatch)
+                {
+                    if (existing == null)
+                    {
+                        existing = cur;
+                    }
+                    else
+                    {
+                        // Collapse duplicate ghost with same device name & platform
+                        if (cur.lastSeenMs > existing.lastSeenMs)
+                        {
+                            if (!string.IsNullOrEmpty(existing.id) && !string.Equals(existing.id, key, StringComparison.Ordinal))
+                                obsoleteIds.Add(existing.id);
+                            _state.devices.Remove(existing);
+                            existing = cur;
+                        }
+                        else
+                        {
+                            if (!string.IsNullOrEmpty(cur.id) && !string.Equals(cur.id, key, StringComparison.Ordinal))
+                                obsoleteIds.Add(cur.id);
+                            _state.devices.RemoveAt(i);
+                        }
+                    }
+                }
+            }
+
             if (existing == null)
             {
                 existing = new SyncDeviceInfo
                 {
                     id = key,
-                    isSelf = false
+                    isSelf = false,
+                    lastSeenMs = 0
                 };
                 _state.devices.Add(existing);
-                if (_state.devices.Count > 8)
-                {
-                    _state.devices.Sort((a, b) => b.lastSeenMs.CompareTo(a.lastSeenMs));
-                    _state.devices.RemoveRange(8, _state.devices.Count - 8);
-                }
             }
-            existing.name = string.IsNullOrEmpty(fromName) ? "Mobile Device" : fromName;
-            existing.platform = string.IsNullOrEmpty(platform) ? "android" : platform;
+            else if (safeTs < existing.lastSeenMs && !string.Equals(existing.id, key, StringComparison.Ordinal))
+            {
+                // Older retained ghost from a previous install — ignore and purge its stale retained MQTT topic!
+                if (!string.IsNullOrEmpty(fromId)) ClearRetainedMqttStateAsync(fromId);
+                return;
+            }
+            else if (!string.Equals(existing.id, key, StringComparison.Ordinal) && safeTs >= existing.lastSeenMs)
+            {
+                if (!string.IsNullOrEmpty(existing.id)) obsoleteIds.Add(existing.id);
+                existing.id = key;
+            }
+
+            existing.name = cleanName;
+            existing.platform = cleanPlat;
             bool lanRecent = viaLan || (_lastLanSeenMs > 0 && (nowMs - _lastLanSeenMs) < PeerOnlineWindowMs && !string.IsNullOrEmpty(_state.peerLanUrl));
             existing.transport = lanRecent ? "lan" : "cloud";
-            existing.lastSeenMs = nowMs;
-            existing.isOnline = true;
-            if (tabCount.HasValue) existing.tabCount = Math.Max(0, tabCount.Value);
+            if (safeTs >= existing.lastSeenMs) existing.lastSeenMs = safeTs;
+            existing.isOnline = (nowMs - existing.lastSeenMs) < PeerOnlineWindowMs;
+            if (tabCount.HasValue && safeTs >= existing.lastSeenMs) existing.tabCount = Math.Max(0, tabCount.Value);
+
+            if (_state.devices.Count > 6)
+            {
+                _state.devices.Sort((a, b) => b.lastSeenMs.CompareTo(a.lastSeenMs));
+                _state.devices.RemoveRange(6, _state.devices.Count - 6);
+            }
+            for (int i = 0; i < obsoleteIds.Count; i++)
+            {
+                ClearRetainedMqttStateAsync(obsoleteIds[i]);
+            }
         }
 
         private void MergeIncomingNotesLocked(object rawPinned, object rawDeleted, string defaultFromName, string defaultPlatform, long nowMs)
@@ -2099,19 +2275,32 @@ namespace DejavuBrowser
 
             lock (_lock)
             {
-                if (string.Equals(from, _state.deviceId, StringComparison.Ordinal)) return;
+                if (IsSelfEchoDeviceLocked(from, fromName, platform))
+                {
+                    if (!string.IsNullOrEmpty(from) && !string.Equals(from, _state.deviceId, StringComparison.Ordinal))
+                    {
+                        ClearRetainedMqttStateAsync(from);
+                    }
+                    return;
+                }
                 long nowMs = NowUnixMs();
                 long msgTs = nowMs;
                 if (msg.ContainsKey("ts"))
                 {
                     try { msgTs = Convert.ToInt64(msg["ts"]); } catch { msgTs = nowMs; }
                 }
+                long effectiveTs = (msgTs > 0 && msgTs <= nowMs + 60000L) ? Math.Min(msgTs, nowMs) : nowMs;
+                if ((kind == "snapshot" || kind == "state") && (nowMs - effectiveTs) > MaxPeerStaleMs)
+                {
+                    if (!string.IsNullOrEmpty(from)) ClearRetainedMqttStateAsync(from);
+                    return;
+                }
 
                 if (!string.IsNullOrEmpty(id))
                 {
                     if (_seenIds.Contains(id))
                     {
-                        // Duplicate retained snapshot after broker reconnect: still refresh LAN & presence if recent!
+                        // Duplicate retained snapshot after broker reconnect: still refresh LAN & presence using real msgTs!
                         if ((kind == "snapshot" || kind == "state") && msg.ContainsKey("lanUrl"))
                         {
                             string dupLu = Convert.ToString(msg["lanUrl"]);
@@ -2120,10 +2309,10 @@ namespace DejavuBrowser
                                 _state.peerLanUrl = dupLu;
                             }
                         }
-                        if ((kind == "snapshot" || kind == "state") && Math.Abs(nowMs - msgTs) < PeerOnlineWindowMs)
+                        if ((kind == "snapshot" || kind == "state") && Math.Abs(nowMs - effectiveTs) < PeerOnlineWindowMs)
                         {
-                            _state.peerLastSeenMs = nowMs;
-                            UpsertPeerDeviceLocked(from, string.IsNullOrEmpty(fromName) ? "Mobile Device" : fromName, platform, nowMs, null, viaLan);
+                            if (effectiveTs >= _state.peerLastSeenMs) _state.peerLastSeenMs = effectiveTs;
+                            UpsertPeerDeviceLocked(from, string.IsNullOrEmpty(fromName) ? "Mobile Device" : fromName, platform, effectiveTs, null, viaLan);
                         }
                         return;
                     }
@@ -2134,10 +2323,14 @@ namespace DejavuBrowser
                 _lastSyncMs = nowMs;
                 if (viaLan) _lastLanSeenMs = nowMs;
 
-                _state.peerId = from;
-                _state.peerName = string.IsNullOrEmpty(fromName) ? "Mobile Device" : fromName;
-                _state.peerPlatform = platform;
-                _state.peerLastSeenMs = nowMs;
+                bool isFresherPeer = effectiveTs >= _state.peerLastSeenMs || string.IsNullOrEmpty(_state.peerName);
+                if (isFresherPeer)
+                {
+                    _state.peerId = from;
+                    _state.peerName = string.IsNullOrEmpty(fromName) ? "Mobile Device" : fromName;
+                    _state.peerPlatform = platform;
+                    _state.peerLastSeenMs = effectiveTs;
+                }
                 if (msg.ContainsKey("lanUrl"))
                 {
                     string lu = Convert.ToString(msg["lanUrl"]);
@@ -2157,7 +2350,7 @@ namespace DejavuBrowser
 
                 if (kind == "snapshot" || kind == "state")
                 {
-                    if (prefs.tabs && msg.ContainsKey("tabs"))
+                    if (prefs.tabs && msg.ContainsKey("tabs") && isFresherPeer)
                     {
                         List<RemoteTabItem> parsedTabs = ParseRemoteList(msg["tabs"]);
                         _state.remoteTabs = parsedTabs;
@@ -2368,7 +2561,7 @@ namespace DejavuBrowser
                     }
                 }
 
-                UpsertPeerDeviceLocked(from, _state.peerName, platform, nowMs, reportedTabs, viaLan);
+                UpsertPeerDeviceLocked(from, string.IsNullOrEmpty(fromName) ? "Mobile Device" : fromName, platform, effectiveTs, reportedTabs, viaLan);
                 SaveLocked();
             }
 
@@ -3246,14 +3439,14 @@ namespace DejavuBrowser
                             {
                                 { "ok", true },
                                 { "app", "dejavu" },
-                                { "version", "5.11.0" },
+                                { "version", "5.12.0" },
                                 { "snapshot", snapBlob ?? "" }
                             };
                             respJson = _json.Serialize(respObj);
                         }
                         else
                         {
-                            respJson = "{\"ok\":true,\"app\":\"dejavu\",\"version\":\"5.11.0\"}";
+                            respJson = "{\"ok\":true,\"app\":\"dejavu\",\"version\":\"5.12.0\"}";
                         }
 
                         byte[] respBytes = Encoding.UTF8.GetBytes(respJson);

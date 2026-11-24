@@ -273,8 +273,12 @@
     <section id="newtab-view">
       <div class="startpage-scroll">
         <div class="startpage-container">
-          <!-- Calm Material 3 Brand Header, Pixel At-a-Glance Profile Chip & Message of the Day -->
+          <!-- Calm Material 3 Brand Header, Optional Googlebook Clock & At-a-Glance Message of the Day -->
           <div class="hero-brand anim-rise-1">
+            <div id="nt-clock-wrap" class="nt-clock-wrap hidden" aria-live="off">
+              <div id="nt-clock-time" class="nt-clock-time">12:00</div>
+              <div id="nt-clock-date" class="nt-clock-date">Tuesday, Nov 24</div>
+            </div>
             <div class="hero-logo-wrap nt-logo">
               <svg id="newtab-logo" class="djv-m3-logo djv-m3-logo-hero" viewBox="0 0 64 64" width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="dejavu">
                 <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
@@ -464,11 +468,11 @@
       <div id="overview-grid" class="overview-grid"></div>
     </section>
 
-    <!-- Customize Start Page & Material Design 3 Wallpaper Gallery Modal -->
+    <!-- Googlebook Material Design 3 Wallpaper & Style Studio (Artwork-First, Zero Clutter) -->
     <div id="wallpaper-store" class="wallpaper-store hidden">
       <div class="store-head">
         <div class="store-brand">
-          <svg class="djv-m3-logo" viewBox="0 0 64 64" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <svg class="djv-m3-logo" viewBox="0 0 64 64" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
             <path d="M31.4 33.8C29.0 23.4 20.6 12.6 13.0 13.8C8.6 14.5 7.8 20.8 10.8 27.6C13.6 33.8 21.4 36.6 31.4 35.4Z" fill="var(--md-primary)"/>
             <path d="M32.6 33.8C35.0 23.4 43.4 12.6 51.0 13.8C55.4 14.5 56.2 20.8 53.2 27.6C50.4 33.8 42.6 36.6 32.6 35.4Z" fill="var(--md-primary)"/>
@@ -478,87 +482,146 @@
             <path d="M32.8 36.6C41.0 36.4 48.8 39.2 49.0 44.8C49.2 49.0 44.6 51.6 39.4 49.6C35.4 48.0 33.2 43.2 32.8 36.6Z" fill="var(--md-on-primary-container)" fill-opacity="0.76"/>
             <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
           </svg>
-          <div>
-            <div class="store-title">Customize Start Page</div>
-            <div class="store-sub">16 Material You themes (32 Light/Dark), auto-matching &amp; 32 HD M3, Butterfly &amp; Froggie wallpapers</div>
-          </div>
+          <div class="store-title">Wallpaper &amp; Style</div>
         </div>
+
+        <div class="store-mode-seg" id="store-mode-seg" role="tablist" aria-label="Customization view">
+          <button type="button" class="store-mode-btn active" data-store-pane="wallpapers" role="tab" aria-selected="true">Wallpapers</button>
+          <button type="button" class="store-mode-btn" data-store-pane="style" role="tab" aria-selected="false">Style &amp; Layout</button>
+        </div>
+
         <div class="store-head-actions">
-          <button id="btn-store-more-options" class="store-upload-btn" title="Open Full Settings (Ctrl+,)">Settings…</button>
-          <button id="btn-custom-wp" class="store-upload-btn" title="Use your own image">+ Custom</button>
-          <button id="btn-store-close" class="icon-btn sm" title="Close">
+          <button type="button" id="btn-custom-wp" class="store-upload-btn" title="Upload your own wallpaper image">+ Photo</button>
+          <button type="button" id="btn-store-more-options" class="icon-btn sm" title="Open Full Appearance Settings">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" id="btn-store-close" class="icon-btn sm" title="Close (Esc)">
             <svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           </button>
         </div>
       </div>
 
-      <!-- Material You 12-Theme Palette Strip + Auto-Match Toggle -->
-      <div class="store-theme-card">
-        <div class="store-theme-top">
-          <span class="store-theme-label">Material You Dynamic Color (16 HCT Palettes · 32 Themes)</span>
-          <label class="sp-pref-chip" style="gap:10px;">
-            <span>Auto-match theme to wallpaper</span>
-            <button type="button" id="pref-auto-theme" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+      <!-- Pane 1: Clean Artwork-First Wallpaper Gallery -->
+      <div id="store-pane-wallpapers" class="store-pane">
+        <div class="store-filter-bar">
+          <div class="store-tabs" id="store-tabs">
+            <button type="button" class="store-tab active" data-cat="all"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>All (45)</span></button>
+            <button type="button" class="store-tab" data-cat="googlebook"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Googlebook (12)</span></button>
+            <button type="button" class="store-tab" data-cat="material"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Material (18)</span></button>
+            <button type="button" class="store-tab" data-cat="butterfly"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Butterfly (10)</span></button>
+            <button type="button" class="store-tab" data-cat="froggie"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Froggie (4)</span></button>
+            <button type="button" class="store-tab" data-cat="dark"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Dark</span></button>
+            <button type="button" class="store-tab" data-cat="light"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Light</span></button>
+            <button type="button" class="store-tab" data-cat="live"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Live</span></button>
+          </div>
+        </div>
+        <div id="wallpaper-grid" class="wallpaper-grid"></div>
+      </div>
+
+      <!-- Pane 2: Googlebook Material You Style & Layout Studio -->
+      <div id="store-pane-style" class="store-pane store-style-scroll hidden">
+        <div class="store-style-card">
+          <div class="store-style-head">
+            <span class="store-style-label">Material You Palette</span>
+            <label class="sp-pref-chip">
+              <span>Auto-match</span>
+              <button type="button" id="pref-auto-theme" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            </label>
+          </div>
+          <div class="store-swatch-orbs" id="store-accent-swatches">
+            <button type="button" class="accent-swatch orb active" data-accent-choice="amethyst" title="Amethyst"><span class="sw-dot" style="--sw:#d0bcff;--sw-ring:#4f378b"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="sapphire" title="Pixel Blue"><span class="sw-dot" style="--sw:#a8c7fa;--sw-ring:#0842a0"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="indigo" title="Royal Indigo"><span class="sw-dot" style="--sw:#bbc3ff;--sw-ring:#303f9f"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="ocean" title="Glacier Cyan"><span class="sw-dot" style="--sw:#72d5f5;--sw-ring:#004e66"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="aurora" title="Aurora Teal"><span class="sw-dot" style="--sw:#7bd8c6;--sw-ring:#005048"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="emerald" title="Botanical Jade"><span class="sw-dot" style="--sw:#8bd89b;--sw-ring:#005321"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="forest" title="Pine Moss"><span class="sw-dot" style="--sw:#9cd49f;--sw-ring:#1d5128"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="lime" title="Matcha Olive"><span class="sw-dot" style="--sw:#c4d97a;--sw-ring:#404c00"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="gold" title="Honey Amber"><span class="sw-dot" style="--sw:#ffb951;--sw-ring:#643e00"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="terracotta" title="Sienna Clay"><span class="sw-dot" style="--sw:#f2b89b;--sw-ring:#6d391e"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="coral" title="Sunset Coral"><span class="sw-dot" style="--sw:#ffb59d;--sw-ring:#822806"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="crimson" title="Crimson Clay"><span class="sw-dot" style="--sw:#ffb3b5;--sw-ring:#920020"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="rose" title="Velvet Rose"><span class="sw-dot" style="--sw:#ffb0ce;--sw-ring:#7b294d"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="plum" title="Deep Berry"><span class="sw-dot" style="--sw:#f2b0e6;--sw-ring:#692f64"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="lavender" title="Orchid Mist"><span class="sw-dot" style="--sw:#e2b7ff;--sw-ring:#612b87"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <button type="button" class="accent-swatch orb" data-accent-choice="silver" title="Titanium Slate"><span class="sw-dot" style="--sw:#b8c8e2;--sw-ring:#38485e"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+          </div>
+        </div>
+
+        <div class="store-style-grid">
+          <div class="store-style-row">
+            <span class="store-style-label">Theme Mode</span>
+            <div class="m3-segmented compact opt-seg" id="store-appearance-mode">
+              <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="auto"><span>Auto</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="light"><span>Light</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="dark"><span>Dark</span></button>
+            </div>
+          </div>
+
+          <div class="store-style-row">
+            <span class="store-style-label">Material Style</span>
+            <div class="m3-segmented compact opt-seg" id="store-material-style">
+              <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="tonal"><span>Tonal</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="vibrant"><span>Vibrant</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="minimal"><span>Minimal</span></button>
+            </div>
+          </div>
+
+          <div class="store-style-row">
+            <span class="store-style-label">Tab Bar Style</span>
+            <div class="m3-segmented compact opt-seg" id="store-tabbar-style">
+              <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="googlebook"><span>Googlebook</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="floating"><span>Floating</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="classic"><span>Classic</span></button>
+            </div>
+          </div>
+
+          <div class="store-style-row">
+            <span class="store-style-label">Shortcut Shape</span>
+            <div class="m3-segmented compact opt-seg" id="store-shortcut-style">
+              <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="circle"><span>Circles</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="tile"><span>Tiles</span></button>
+            </div>
+          </div>
+
+          <div class="store-style-row">
+            <span class="store-style-label">Start Page Clock</span>
+            <div class="m3-segmented compact opt-seg" id="store-clock-style">
+              <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="off"><span>Off</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="minimal"><span>Minimal</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="bold"><span>Bold</span></button>
+            </div>
+          </div>
+
+          <div class="store-style-row">
+            <span class="store-style-label">AMOLED Pitch Black</span>
+            <button type="button" id="store-amoled-dark" class="liquid-switch m3-switch sm" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+          </div>
+        </div>
+
+        <div class="sp-prefs-bar">
+          <label class="sp-pref-chip">
+            <span>Quick Access</span>
+            <button type="button" id="pref-favorites" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+          </label>
+          <label class="sp-pref-chip">
+            <span>Frequent</span>
+            <button type="button" id="pref-frequent" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+          </label>
+          <label class="sp-pref-chip">
+            <span>At a Glance</span>
+            <button type="button" id="pref-privacy" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+          </label>
+          <label class="sp-pref-chip">
+            <span>Reading List</span>
+            <button type="button" id="pref-reading" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+          </label>
+          <label class="sp-pref-chip">
+            <span>Daily Note</span>
+            <button type="button" id="pref-motd" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
           </label>
         </div>
-        <div class="store-accent-grid" id="store-accent-swatches">
-          <button type="button" class="accent-swatch active" data-accent-choice="amethyst"><span class="sw-dot" style="--sw:#d0bcff"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Amethyst</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="sapphire"><span class="sw-dot" style="--sw:#a8c7fa"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Pixel Blue</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="indigo"><span class="sw-dot" style="--sw:#bbc3ff"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Indigo</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="ocean"><span class="sw-dot" style="--sw:#72d5f5"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Glacier</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="aurora"><span class="sw-dot" style="--sw:#7bd8c6"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Aurora</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="emerald"><span class="sw-dot" style="--sw:#8bd89b"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Jade</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="forest"><span class="sw-dot" style="--sw:#9cd49f"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Pine Moss</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="lime"><span class="sw-dot" style="--sw:#c4d97a"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Matcha</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="gold"><span class="sw-dot" style="--sw:#ffb951"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Amber</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="terracotta"><span class="sw-dot" style="--sw:#f2b89b"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Sienna</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="coral"><span class="sw-dot" style="--sw:#ffb59d"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Coral</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="crimson"><span class="sw-dot" style="--sw:#ffb3b5"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Crimson</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="rose"><span class="sw-dot" style="--sw:#ffb0ce"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Rose</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="plum"><span class="sw-dot" style="--sw:#f2b0e6"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Berry</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="lavender"><span class="sw-dot" style="--sw:#e2b7ff"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Orchid</span></button>
-          <button type="button" class="accent-swatch" data-accent-choice="silver"><span class="sw-dot" style="--sw:#b8c8e2"><svg class="sw-check-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l3 3 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Slate</span></button>
-        </div>
       </div>
-
-      <!-- Start Page Section Toggles -->
-      <div class="sp-prefs-bar">
-        <label class="sp-pref-chip">
-          <span>Quick Access</span>
-          <button type="button" id="pref-favorites" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-        </label>
-        <label class="sp-pref-chip">
-          <span>Frequently Visited</span>
-          <button type="button" id="pref-frequent" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-        </label>
-        <label class="sp-pref-chip">
-          <span>Privacy Report</span>
-          <button type="button" id="pref-privacy" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-        </label>
-        <label class="sp-pref-chip">
-          <span>Reading List</span>
-          <button type="button" id="pref-reading" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-        </label>
-        <label class="sp-pref-chip">
-          <span>Message of the Day</span>
-          <button type="button" id="pref-motd" class="liquid-switch m3-switch sm on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-        </label>
-      </div>
-
-      <!-- Wallpaper Studio Filter Bar -->
-      <div class="store-filter-bar">
-        <span class="store-filter-heading">Wallpapers</span>
-        <div class="store-tabs" id="store-tabs">
-          <button type="button" class="store-tab active" data-cat="all"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>All (33)</span></button>
-          <button type="button" class="store-tab" data-cat="butterfly"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Butterfly (10)</span></button>
-          <button type="button" class="store-tab" data-cat="froggie"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Froggie (4)</span></button>
-          <button type="button" class="store-tab" data-cat="dark"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Dark (18)</span></button>
-          <button type="button" class="store-tab" data-cat="light"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Light (14)</span></button>
-          <button type="button" class="store-tab" data-cat="live"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Live (1)</span></button>
-        </div>
-      </div>
-
-      <div id="wallpaper-grid" class="wallpaper-grid"></div>
     </div>
 
     <!-- Full-Viewport Google Chrome × Pixel Material Design 3 Settings Workspace (Ctrl+,) -->
@@ -578,7 +641,7 @@
               <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
             </svg>
             <span class="m3-appbar-title">Settings</span>
-            <span id="settings-version-sub" class="m3-tonal-badge">v5.11.0</span>
+            <span id="settings-version-sub" class="m3-tonal-badge">v5.12.0</span>
           </div>
 
           <div class="m3-appbar-search">
@@ -866,6 +929,26 @@
 
                       <div class="opt-row">
                         <div class="opt-meta">
+                          <div class="opt-title opt-row-title">AMOLED Pitch Black Dark Mode</div>
+                          <div class="opt-desc">Use true OLED black surfaces in Dark mode for ultra-clean contrast</div>
+                        </div>
+                        <button type="button" id="opt-amoled-dark" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
+
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Material You Style</div>
+                          <div class="opt-desc">Switch between calm Tonal, expressive Vibrant, or neutral Minimal Googlebook surfaces</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-material-style">
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="tonal"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Tonal</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="vibrant"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Vibrant</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="minimal"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Minimal</span></button>
+                        </div>
+                      </div>
+
+                      <div class="opt-row">
+                        <div class="opt-meta">
                           <div class="opt-title opt-row-title">Auto-match theme to wallpaper</div>
                           <div class="opt-desc">Automatically adapts your Material You color seed &amp; Dark/Light mode whenever you pick a wallpaper or upload a custom photo</div>
                         </div>
@@ -874,22 +957,24 @@
                     </div>
                   </div>
 
-                  <!-- Pure Material Design 3 Wallpaper Studio (All 33 Themes: 32 HD + 1 Live) -->
+                  <!-- Googlebook Material Design 3 Wallpaper Studio (45 Themes) -->
                   <div class="m3-pref-section opt-group">
                     <div class="m3-pref-heading-row">
-                      <div class="m3-pref-heading">Pure Material Design 3 Wallpaper Studio <span id="settings-wp-count-pill" class="m3-tonal-badge sm">33</span></div>
+                      <div class="m3-pref-heading">Wallpaper Studio <span id="settings-wp-count-pill" class="m3-tonal-badge sm">45</span></div>
                       <button type="button" id="btn-opt-upload-wp" class="m3-btn m3-btn-tonal sm">+ Custom Photo</button>
                     </div>
                     <div class="m3-pref-card">
                       <div class="opt-row stacked">
                         <div class="opt-wp-toolbar">
                           <div class="m3-chip-group" id="opt-wp-filter">
-                            <button type="button" class="m3-filter-chip opt-seg-btn active" data-cat="all"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>All (33)</span></button>
+                            <button type="button" class="m3-filter-chip opt-seg-btn active" data-cat="all"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>All (45)</span></button>
+                            <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="googlebook"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Googlebook (12)</span></button>
+                            <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="material"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Material (18)</span></button>
                             <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="butterfly"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Butterfly (10)</span></button>
                             <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="froggie"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Froggie (4)</span></button>
-                            <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="dark"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Dark (18)</span></button>
-                            <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="light"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Light (14)</span></button>
-                            <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="live"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Live (1)</span></button>
+                            <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="dark"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Dark</span></button>
+                            <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="light"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Light</span></button>
+                            <button type="button" class="m3-filter-chip opt-seg-btn" data-cat="live"><svg class="chip-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Live</span></button>
                           </div>
                         </div>
                         <div id="settings-wallpaper-grid" class="wallpaper-grid settings-wp-grid"></div>
@@ -974,6 +1059,17 @@
                       </div>
                       <div class="opt-row">
                         <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Tab Bar Style</div>
+                          <div class="opt-desc">Choose Googlebook connected tabs, Floating pill tabs, or clean Classic tabs</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-tabbar-style">
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="googlebook"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Googlebook</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="floating"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Floating</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="classic"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Classic</span></button>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
                           <div class="opt-title opt-row-title">Compact Tab Bar</div>
                           <div class="opt-desc">Use a sleeker 34px top tab strip for extra vertical webpage viewport</div>
                         </div>
@@ -1014,6 +1110,27 @@
                   <div class="m3-pref-section opt-group">
                     <div class="m3-pref-heading">Start Page Visibility</div>
                     <div class="m3-pref-card">
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Start Page Clock</div>
+                          <div class="opt-desc">Show a Googlebook Material 3 digital clock above your Start Page</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-clock-style">
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="off"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Off</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="minimal"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Minimal</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="bold"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Bold</span></button>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Quick Access Shape</div>
+                          <div class="opt-desc">Display Start Page shortcuts as classic Material circles or Googlebook rounded tiles</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-shortcut-style">
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="circle"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Circles</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="tile"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Tiles</span></button>
+                        </div>
+                      </div>
                       <div class="opt-row">
                         <div class="opt-meta">
                           <div class="opt-title opt-row-title">Quick Access Grid</div>
@@ -1707,7 +1824,7 @@
                         </svg>
                       </div>
                       <div class="m3-about-copy">
-                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v5.11.0</span></div>
+                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v5.12.0</span></div>
                         <div class="m3-about-sub">Googlebook Material Design 3 Browser · 16 HCT Themes (32 Light/Dark), Split View, Tab Search, Brave-Grade Shields &amp; Dual-Broker Link</div>
                         <div id="about-update-status" class="m3-about-update-line">Checking update status…</div>
                       </div>
@@ -1741,7 +1858,7 @@
                       <div class="opt-row">
                         <div class="opt-meta">
                           <div class="opt-title opt-row-title">GitHub Releases</div>
-                          <div class="opt-desc">View v5.11.0 release notes, Windows Setup installer, and Android APK</div>
+                          <div class="opt-desc">View v5.12.0 release notes, Windows Setup installer, and Android APK</div>
                         </div>
                         <button type="button" id="btn-about-github" class="m3-btn m3-btn-outlined sm">Open GitHub</button>
                       </div>
@@ -1990,7 +2107,7 @@
     <section id="reset-confirm-overlay" class="m3-modal-scrim hidden" aria-label="Reset Settings">
       <div id="reset-confirm-modal" class="m3-dialog-card compact" role="dialog" aria-modal="true">
         <h3 class="m3-dialog-title">Reset dejavu settings?</h3>
-        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v5.11.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
+        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v5.12.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
         <div class="m3-dialog-actions">
           <button type="button" id="btn-reset-cancel" class="m3-btn m3-btn-text">Cancel</button>
           <button type="button" id="btn-reset-confirm" class="m3-btn m3-btn-danger">Reset Settings</button>
@@ -2268,9 +2385,9 @@
             </svg>
             <span class="m3-appbar-title">dejavu Link</span>
             <span id="link-header-status" class="m3-status-chip">Sign in to Sync</span>
-            <span id="link-relay-pill" class="link-relay-pill hidden" title="Live encrypted sync transport">
+            <span id="link-relay-pill" class="link-relay-pill hidden" aria-hidden="true">
               <span class="link-relay-dot" aria-hidden="true"></span>
-              <span id="link-relay-text">Connecting…</span>
+              <span id="link-relay-text"></span>
             </span>
           </div>
 
@@ -2297,13 +2414,13 @@
                   <div class="link-account-meta">
                     <div class="link-account-title-row">
                       <span id="link-google-name" class="link-account-name">Google Account</span>
-                      <span id="link-e2ee-badge" class="m3-status-chip tertiary">
-                        <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true"><path d="M8 1.8L3 3.8v3.9c0 3.2 2.1 5.6 5 6.6 2.9-1 5-3.4 5-6.6V3.8L8 1.8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M5.7 8.1l1.5 1.5 3.1-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        <span>Automatic E2EE Sync via Google Account</span>
-                      </span>
                     </div>
                     <div id="link-google-email" class="link-account-email"></div>
                   </div>
+                  <span id="link-e2ee-badge" class="link-e2ee-pill" title="End-to-end encrypted sync via your Google Account">
+                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true"><path d="M8 1.8L3 3.8v3.9c0 3.2 2.1 5.6 5 6.6 2.9-1 5-3.4 5-6.6V3.8L8 1.8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M5.7 8.1l1.5 1.5 3.1-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span>Encrypted</span>
+                  </span>
                 </div>
               </div>
 
@@ -2400,11 +2517,11 @@
               </div>
             </section>
 
-            <!-- Card 2: Instant Cross-Device Actions (4-Pill M3 Action Grid + Smart Beam Bar) -->
-            <section id="link-card-actions" class="link-card" aria-label="Instant Cross-Device Actions">
+            <!-- Card 2: Quick Actions & Smart Beam Bar -->
+            <section id="link-card-actions" class="link-card" aria-label="Quick Actions">
               <div class="link-card-head">
-                <div class="link-card-title">Instant Cross-Device Actions</div>
-                <span id="link-relay-sub" class="link-card-sub">AES-256 E2EE over Direct Wi-Fi LAN &amp; TLS Cloud Relay</span>
+                <div class="link-card-title">Quick Actions</div>
+                <span id="link-relay-sub" class="link-card-sub">End-to-end encrypted</span>
               </div>
 
               <div class="link-instant-grid">
@@ -2416,7 +2533,7 @@
                   </span>
                   <span class="link-quick-tile-copy">
                     <span id="link-send-tab-lbl" class="link-quick-tile-title">Send Active Tab</span>
-                    <span id="link-send-tab-sub" class="link-quick-tile-sub">Open on Phone</span>
+                    <span id="link-send-tab-sub" class="link-quick-tile-sub">Open on phone</span>
                   </span>
                 </button>
 
@@ -2443,19 +2560,19 @@
                   </span>
                   <span class="link-quick-tile-copy">
                     <span id="link-send-clip-lbl" class="link-quick-tile-title">Send Clipboard</span>
-                    <span class="link-quick-tile-sub">E2EE paste</span>
+                    <span class="link-quick-tile-sub">Shared paste</span>
                   </span>
                 </button>
 
-                <button type="button" id="btn-link-send-download" class="link-quick-tile is-tertiary">
+                <button type="button" id="btn-link-send-download" class="link-quick-tile">
                   <span class="link-quick-tile-ico" aria-hidden="true">
                     <svg viewBox="0 0 18 18" width="16" height="16" fill="none">
                       <path d="M9 2.8v8.4M5.6 8.2L9 11.6l3.4-3.4M3.5 14.6h11" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </span>
                   <span class="link-quick-tile-copy">
-                    <span id="link-send-dl-lbl" class="link-quick-tile-title">8× to Phone</span>
-                    <span class="link-quick-tile-sub">Remote Turbo DL</span>
+                    <span id="link-send-dl-lbl" class="link-quick-tile-title">Download on Phone</span>
+                    <span class="link-quick-tile-sub">8× Turbo DL</span>
                   </span>
                 </button>
               </div>

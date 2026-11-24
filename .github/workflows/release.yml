@@ -256,27 +256,27 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — Googlebook Material Design 3, Split View, Dual-Broker Link, 16 Material You Themes & Upgraded Extensions
+          ### dejavu __TAG__ — Googlebook Material Design 3 Studio, Mobile 120Hz Polish, Rock-Solid Persistence & Clean dejavu Link
 
-          - **Googlebook Material Design 3 & 16 Dynamic Color Seeds (32 Light/Dark Themes)**:
-            - Expanded Material You HCT themes from 12 → **16 color seeds** (`Glacier Cyan`, `Sienna Clay`, `Deep Berry`, `Pine Moss` + 12 classics) across Windows, Android, Chrome Web Store banner, and the website, with balanced 4×4 dual-tone color swatch grids.
-            - **All 16 Profile Avatars Redesigned** into crisp flat tonal Material Design 3 medallions (zero neon gradients/glows) on both Windows and Android, paired with polished **Google Account Profile Login** (multi-color Google `"G"` pills, benefit chips, SPA auto-detection, and Manage/Refresh/Sign-Out controls).
-          - **Fixed & Upgraded `dejavu Link` (PC ↔ Phone)**:
-            - **Dual-Broker Active-Active TLS MQTT Mesh** (`broker.hivemq.com:8883` + `broker.emqx.io:8883` simultaneously) eliminates split-brain disconnects, plus **retained `recentDrops`** offline recovery, multi-NIC UDP LAN discovery with bidirectional HTTP `/sync` snapshots, and a 1-tap **Reconnect Relay** control on Windows & Android.
-          - **New Native Browser Features (Windows)**:
-            - **Split View (`Ctrl+Shift+V`)** — side-by-side dual-tab browsing with a draggable Material 3 divider (double-click to reset 50/50), click-to-focus pane switching, Swap & Exit.
-            - **Quick Tab Search (`Ctrl+Shift+A`)** — instant keyboard-navigable popover across Open Tabs (with Split/Close actions) and Recently Closed Tabs.
-            - **Page Screenshot Capture (`Ctrl+Shift+S`)** — save PNG to `Pictures\dejavu Screenshots` or copy directly to clipboard.
-            - **Googlebook M3 Reader View (`Ctrl+Shift+R`)** — authentic Material Design 3 reading mode with Dark/Sepia/Paper themes, Sans/Serif/Mono typography, column widths, and reading-time estimate.
-          - **Upgraded Extensions Engine & UI**:
-            - Added Chromium `144`/`140` CRX fetch fallback + **Microsoft Edge Add-ons Store** URL/CRX support, WebView2 manifest retry sanitization on unpack/reload, M3 filter chips (`All | Enabled | Pinned | Disabled`), 1-click starter extensions, card Popup/Options/Reload controls, and inline toolbar popover Options + Enable/Disable toggles.
-          - **Streamlined Direct Networking**:
-            - Removed legacy built-in VPN & local proxy bridge for faster direct HTTP/3 QUIC connections, lower RAM usage, and a smaller footprint (`FileVersion 5.11.0.0` · Android `versionCode 610`).
+          - **Mobile UI Fixes & Smooth 120Hz Material 3 Motion (Android)**:
+            - **Zero Bottom-Bar Clipping or Text-Selection Popups**: Local modals (Shortcut menu, Add Favorite, Userscripts, Reset) cleanly hide the bottom bar so every action (`Remove`, etc.) is fully visible, and chrome text selection/callouts are disabled on long-press.
+            - **Crisp Profile Avatars & Edge-to-Edge Scrolling**: Sculpted Material Design 3 SVG avatars always render beneath Google photos (eliminating blank circles when photos fail/load), and webpages now render edge-to-edge under the auto-hiding bottom bar with pure GPU glide and zero black dead bar.
+            - **Fluid Animations**: Added smooth GPU sheet exit (`sheetDrop`), springy sheet entry, staggered Start Page reveal, and smooth tab-switch transitions.
+          - **Rock-Solid Tab, Pinned Tab & Favorites Persistence (Windows + Android)**:
+            - **Atomic Disk Writes & Auto-Backup**: Settings, favorites, history, reading list, and tab groups on Windows use atomic `.tmp` + `.bak` replacement to prevent corruption or resets.
+            - **Full Session & Pinned Tab Restore**: Open tabs and pinned tabs now persist automatically across restarts on both Windows (defaulting to restore session) and Android (with lazy background tab suspension to keep startup RAM low), plus deletion tombstones so removed shortcuts never reset or get resurrected by Sync.
+          - **Redesigned `dejavu Link` Continuity Hub (PC ↔ Phone)**:
+            - **Zero Ghost/Duplicate Devices**: Eliminated self-echo desktop cards (with phone icons) and duplicate phone cards via strict device-ID + normalized-name deduplication, timestamp clamping, stale >7-day ghost rejection, friendly device model names (e.g. `Samsung Galaxy Z Fold`), and a 1-click `×` Forget Device action that clears retained broker state.
+            - **Calm Googlebook Phone Hub Layout**: Replaced noisy multi-pill headers, raw broker hostnames, and clashing tiles with a single calm status pill, clean side-by-side device cards, and cohesive tonal Quick Actions.
+          - **Artwork-First Wallpaper & Style Studio + 12 New Googlebook Wallpapers + M3 Customizations**:
+            - **Clean 2-Tab Studio (`Wallpapers` | `Style & Layout`)**: Full-bleed 16:10 artwork tiles with zero corner badges and zero text walls across Windows & Android.
+            - **12 Bespoke Googlebook Material 3 Vector Wallpapers (45 Themes Total)** + **16 Dynamic Material You Palettes** (`Googlebook Waves`, `Pixel Scallops`, `Bauhaus Blocks`, `Chroma Ribbons`, `Topo Contours`, `Pebble Stack`, `Paper Fold`, `Prism Studio`, `Nordic Arch`, `Botanical Arc`, `Solar Rings`, `OLED Monolith`).
+            - **New Googlebook Customizations**: **AMOLED Pitch Black** (`#000000` OLED dark mode), **Material Style** (`Tonal` | `Vibrant` | `Minimal`), **Tab Bar Style** (`Googlebook` | `Floating` | `Classic` on Desktop), **Shortcut Shape** (`Circles` | `Tiles`), and **Start Page Clock** (`Off` | `Minimal` | `Bold`).
 
           #### Downloads & Verification
-          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.11.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
-          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.11.0.0`, `/highentropyva+`, deterministic build)
-          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 610`, V1+V2+V3 signed, Android 8.0+)
+          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.12.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
+          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.12.0.0`, `/highentropyva+`, deterministic build)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 620`, V1+V2+V3 signed, Android 8.0+)
           - **SHA256SUMS.txt** — Official SHA-256 verification checksums for all release binaries (paired with GitHub SLSA Build Provenance Attestations)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
@@ -294,5 +294,5 @@ jobs:
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
             release-files/SHA256SUMS.txt \
-            --title "dejavu $TAG — Googlebook M3, Split View, Dual-Broker Link, 16 Themes & Extensions" \
+            --title "dejavu $TAG — Googlebook M3 Studio, 120Hz Mobile Polish, Persistence & Clean Link" \
             --notes-file /tmp/release_notes.md

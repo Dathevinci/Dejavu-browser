@@ -817,6 +817,7 @@ namespace DejavuBrowser
         private System.Windows.Forms.Timer _memorySaverTimer;
         private System.Windows.Forms.Timer _boundsSaveTimer;
         private System.Windows.Forms.Timer _zoomSaveTimer;
+        private System.Windows.Forms.Timer _sessionSaveTimer;
         private bool _suppressZoomChangedSave;
         private bool _restoreMaximizedOnShow;
         private bool _wasMaximizedBeforeMinimize;
@@ -1099,6 +1100,17 @@ namespace DejavuBrowser
                 }
             };
 
+            _sessionSaveTimer = new System.Windows.Forms.Timer();
+            _sessionSaveTimer.Interval = 550;
+            _sessionSaveTimer.Tick += (s, e) =>
+            {
+                _sessionSaveTimer.Stop();
+                if (!IsDisposed && !_isPrivateWindow)
+                {
+                    PersistSessionTabsNow(true);
+                }
+            };
+
             Shown += (s, e) =>
             {
                 if (_restoreMaximizedOnShow)
@@ -1246,20 +1258,7 @@ namespace DejavuBrowser
                 try
                 {
                     PersistWindowBoundsToSettings(false);
-                    List<string> sessionUrls = new List<string>();
-                    for (int i = 0; i < _tabs.Count; i++)
-                    {
-                        BrowserTab bt = _tabs[i];
-                        if (bt != null && !bt.IsNewTab && !string.IsNullOrEmpty(bt.Url) &&
-                            (bt.Url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                             bt.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
-                        {
-                            sessionUrls.Add(bt.Url);
-                            if (sessionUrls.Count >= 16) break;
-                        }
-                    }
-                    _settings.lastSessionUrls = sessionUrls;
-                    _profiles.SaveActiveSettings(_settings);
+                    PersistSessionTabsNow(true);
                 }
                 catch { }
             }
@@ -1272,6 +1271,7 @@ namespace DejavuBrowser
             if (_memorySaverTimer != null) { _memorySaverTimer.Stop(); _memorySaverTimer.Dispose(); }
             if (_boundsSaveTimer != null) { _boundsSaveTimer.Stop(); _boundsSaveTimer.Dispose(); }
             if (_zoomSaveTimer != null) { _zoomSaveTimer.Stop(); _zoomSaveTimer.Dispose(); }
+            if (_sessionSaveTimer != null) { _sessionSaveTimer.Stop(); _sessionSaveTimer.Dispose(); }
 
             if (_popoverPopup != null) { try { _popoverPopup.Close(); } catch { } }
             if (_hudPopup != null) { try { _hudPopup.Close(); } catch { } }
@@ -1451,9 +1451,14 @@ namespace DejavuBrowser
                 { "defaultZoomPercent", _settings.defaultZoomPercent > 0 ? _settings.defaultZoomPercent : 100 },
                 { "newTabMode", _settings.newTabMode ?? "startpage" },
                 { "homepageUrl", _settings.homepageUrl ?? "https://www.google.com" },
-                { "startupBehavior", _settings.startupBehavior ?? "startpage" },
+                { "startupBehavior", _settings.startupBehavior ?? "restore" },
                 { "reduceWallpaperMotion", _settings.reduceWallpaperMotion },
                 { "wallpaperDim", _settings.wallpaperDim ?? "balanced" },
+                { "materialStyle", _settings.materialStyle ?? "tonal" },
+                { "amoledDark", _settings.amoledDark },
+                { "tabBarStyle", _settings.tabBarStyle ?? "googlebook" },
+                { "shortcutStyle", _settings.shortcutStyle ?? "circle" },
+                { "clockStyle", _settings.clockStyle ?? "off" },
                 { "hideGreetingBadge", _settings.hideGreetingBadge },
                 { "hideStartPageSearch", _settings.hideStartPageSearch },
                 { "favoritesBarHidden", _favoritesBarHidden },
@@ -2568,21 +2573,82 @@ namespace DejavuBrowser
                     startUrl = ResolveInputToUrl(_initialUrl);
                 }
 
-                if (string.IsNullOrEmpty(startUrl) &&
-                    !_isPrivateWindow &&
-                    _appContext.WindowCount <= 1 &&
-                    _settings.startupBehavior == "restore" &&
-                    _settings.lastSessionUrls != null &&
-                    _settings.lastSessionUrls.Count > 0)
+                bool restoredAny = false;
+                if (!_isPrivateWindow && _appContext.WindowCount <= 1)
                 {
-                    for (int i = 0; i < _settings.lastSessionUrls.Count; i++)
+                    HashSet<string> restoredPinnedUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    // Always restore pinned tabs saved on the tab bar first (permanent across restarts!)
+                    if (_settings.pinnedTabs != null && _settings.pinnedTabs.Count > 0)
                     {
-                        CreateTab(_settings.lastSessionUrls[i], i == _settings.lastSessionUrls.Count - 1);
+                        for (int i = 0; i < _settings.pinnedTabs.Count; i++)
+                        {
+                            SessionTabItem pt = _settings.pinnedTabs[i];
+                            if (pt == null || string.IsNullOrWhiteSpace(pt.url)) continue;
+                            string pu = pt.url.Trim();
+                            if (!pu.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                                !pu.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) continue;
+                            if (!restoredPinnedUrls.Add(pu)) continue;
+                            CreateTab(pu, false);
+                            if (_tabs.Count > 0)
+                            {
+                                BrowserTab created = _tabs[_tabs.Count - 1];
+                                created.IsPinned = true;
+                                if (!string.IsNullOrWhiteSpace(pt.title)) created.Title = pt.title.Trim();
+                            }
+                            restoredAny = true;
+                        }
                     }
+
+                    // Restore open session tabs when startupBehavior is "restore" (the default)
+                    if (string.IsNullOrEmpty(startUrl) &&
+                        !string.Equals(_settings.startupBehavior, "startpage", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (_settings.sessionTabs != null && _settings.sessionTabs.Count > 0)
+                        {
+                            for (int i = 0; i < _settings.sessionTabs.Count; i++)
+                            {
+                                SessionTabItem st = _settings.sessionTabs[i];
+                                if (st == null || string.IsNullOrWhiteSpace(st.url)) continue;
+                                string su = st.url.Trim();
+                                if (!su.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                                    !su.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) continue;
+                                if (st.isPinned && restoredPinnedUrls.Contains(su)) continue;
+                                CreateTab(su, false);
+                                if (_tabs.Count > 0)
+                                {
+                                    BrowserTab created = _tabs[_tabs.Count - 1];
+                                    if (st.isPinned) created.IsPinned = true;
+                                    if (!string.IsNullOrWhiteSpace(st.title)) created.Title = st.title.Trim();
+                                }
+                                restoredAny = true;
+                            }
+                        }
+                        else if (_settings.lastSessionUrls != null && _settings.lastSessionUrls.Count > 0)
+                        {
+                            for (int i = 0; i < _settings.lastSessionUrls.Count; i++)
+                            {
+                                string lu = _settings.lastSessionUrls[i];
+                                if (string.IsNullOrWhiteSpace(lu) || restoredPinnedUrls.Contains(lu.Trim())) continue;
+                                CreateTab(lu.Trim(), false);
+                                restoredAny = true;
+                            }
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(startUrl))
+                {
+                    CreateTab(startUrl, true);
+                }
+                else if (restoredAny && _tabs.Count > 0)
+                {
+                    int targetIdx = _settings.activeSessionIndex;
+                    if (targetIdx < 0 || targetIdx >= _tabs.Count) targetIdx = _tabs.Count - 1;
+                    ActivateTab(_tabs[targetIdx].Id);
                 }
                 else
                 {
-                    CreateTab(startUrl, true);
+                    CreateTab(null, true);
                 }
                 if (_sync != null && !_isPrivateWindow)
                 {
@@ -3109,6 +3175,60 @@ namespace DejavuBrowser
                 ActivateTab(tab.Id);
             }
             else PushTabDeltaToShell();
+            ScheduleSessionSave();
+        }
+
+        private void ScheduleSessionSave()
+        {
+            if (_isPrivateWindow || IsDisposed || _sessionSaveTimer == null) return;
+            try
+            {
+                _sessionSaveTimer.Stop();
+                _sessionSaveTimer.Start();
+            }
+            catch { }
+        }
+
+        private void PersistSessionTabsNow(bool saveToDisk)
+        {
+            if (_isPrivateWindow || _settings == null) return;
+            try
+            {
+                List<SessionTabItem> sessionList = new List<SessionTabItem>();
+                List<SessionTabItem> pinnedList = new List<SessionTabItem>();
+                List<string> legacyUrls = new List<string>();
+                int activeIdx = 0;
+
+                for (int i = 0; i < _tabs.Count; i++)
+                {
+                    BrowserTab bt = _tabs[i];
+                    if (bt == null || bt.IsNewTab || string.IsNullOrWhiteSpace(bt.Url)) continue;
+                    string u = bt.Url.Trim();
+                    if (!u.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                        !u.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) continue;
+                    SessionTabItem item = new SessionTabItem
+                    {
+                        url = u,
+                        title = string.IsNullOrWhiteSpace(bt.Title) ? FormatDisplayUrl(u) : bt.Title.Trim(),
+                        isPinned = bt.IsPinned,
+                        groupId = bt.GroupId ?? "default"
+                    };
+                    if (bt.Id == _activeTabId) activeIdx = sessionList.Count;
+                    if (sessionList.Count < 24) sessionList.Add(item);
+                    if (bt.IsPinned && pinnedList.Count < 16) pinnedList.Add(item);
+                    if (legacyUrls.Count < 24) legacyUrls.Add(u);
+                }
+
+                _settings.sessionTabs = sessionList;
+                _settings.pinnedTabs = pinnedList;
+                _settings.lastSessionUrls = legacyUrls;
+                _settings.activeSessionIndex = activeIdx;
+                if (saveToDisk && _profiles != null)
+                {
+                    _profiles.SaveActiveSettings(_settings);
+                }
+            }
+            catch { }
         }
 
         private void CreateDefaultNewTab(bool activate)
@@ -3303,6 +3423,7 @@ namespace DejavuBrowser
                 tab.IsLoading = false;
                 tab.BlockedCount = 0;
                 ActivateTab(tab.Id);
+                ScheduleSessionSave();
                 return;
             }
 
@@ -3336,6 +3457,7 @@ namespace DejavuBrowser
             {
                 PushTabDeltaToShell();
             }
+            ScheduleSessionSave();
         }
 
         private void GoHomeActiveTab()
@@ -3436,6 +3558,7 @@ namespace DejavuBrowser
             LayoutViews();
             if (closedOverlay) PushFullStateToShell();
             else PushTabDeltaToShell();
+            ScheduleSessionSave();
         }
 
         private static CoreWebView2PermissionState MapPermissionState(string settingVal)
@@ -6122,7 +6245,23 @@ namespace DejavuBrowser
                     SyncAllCollectionsToMobile();
                     PushFullStateToShell();
                     SendSyncPanelState(null);
-                    PushShellToast("Reconnecting dual-broker dejavu Link relay...", "info");
+                    PushShellToast("Reconnecting dejavu Link...", "info");
+                }
+                return true;
+            }
+            if (type == "syncForgetDevice")
+            {
+                if (_sync != null)
+                {
+                    string targetId = msg.ContainsKey("id") ? (Convert.ToString(msg["id"]) ?? "").Trim() : "";
+                    if (string.IsNullOrEmpty(targetId) && msg.ContainsKey("name")) targetId = (Convert.ToString(msg["name"]) ?? "").Trim();
+                    if (!string.IsNullOrEmpty(targetId))
+                    {
+                        _sync.ForgetDevice(targetId);
+                        PushFullStateToShell();
+                        SendSyncPanelState(null);
+                        PushShellToast("Removed device from dejavu Link", "info");
+                    }
                 }
                 return true;
             }
@@ -6506,6 +6645,46 @@ namespace DejavuBrowser
             ShowIncomingSyncHud(item);
         }
 
+        private static string NormalizeFavoriteKey(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return "";
+            string s = url.Trim();
+            while (s.EndsWith("/")) s = s.Substring(0, s.Length - 1);
+            return s.ToLowerInvariant();
+        }
+
+        private bool IsFavoriteDeletedByUser(string url)
+        {
+            if (_settings == null || _settings.deletedFavoriteUrls == null || _settings.deletedFavoriteUrls.Count == 0) return false;
+            string key = NormalizeFavoriteKey(url);
+            if (string.IsNullOrEmpty(key)) return false;
+            for (int i = 0; i < _settings.deletedFavoriteUrls.Count; i++)
+            {
+                if (string.Equals(_settings.deletedFavoriteUrls[i], key, StringComparison.OrdinalIgnoreCase)) return true;
+            }
+            return false;
+        }
+
+        private void RecordFavoriteDeleted(string url)
+        {
+            if (_settings == null) return;
+            string key = NormalizeFavoriteKey(url);
+            if (string.IsNullOrEmpty(key)) return;
+            if (_settings.deletedFavoriteUrls == null) _settings.deletedFavoriteUrls = new List<string>();
+            _settings.deletedFavoriteUrls.RemoveAll(x => string.Equals(x, key, StringComparison.OrdinalIgnoreCase));
+            _settings.deletedFavoriteUrls.Insert(0, key);
+            if (_settings.deletedFavoriteUrls.Count > 120)
+                _settings.deletedFavoriteUrls.RemoveRange(120, _settings.deletedFavoriteUrls.Count - 120);
+        }
+
+        private void ClearFavoriteDeleted(string url)
+        {
+            if (_settings == null || _settings.deletedFavoriteUrls == null) return;
+            string key = NormalizeFavoriteKey(url);
+            if (string.IsNullOrEmpty(key)) return;
+            _settings.deletedFavoriteUrls.RemoveAll(x => string.Equals(x, key, StringComparison.OrdinalIgnoreCase));
+        }
+
         public void HandleAppSyncRemoteBookmarks(List<RemoteTabItem> incoming)
         {
             if (IsDisposed || incoming == null || incoming.Count == 0) return;
@@ -6514,7 +6693,7 @@ namespace DejavuBrowser
             for (int i = 0; i < incoming.Count; i++)
             {
                 string u = incoming[i].url;
-                if (string.IsNullOrWhiteSpace(u) || _profiles.IsFavorite(u)) continue;
+                if (string.IsNullOrWhiteSpace(u) || _profiles.IsFavorite(u) || IsFavoriteDeletedByUser(u)) continue;
                 _profiles.ToggleFavorite(u, incoming[i].title, "");
                 added = true;
             }
@@ -7234,6 +7413,26 @@ namespace DejavuBrowser
                 string wd = Convert.ToString(msg["wallpaperDim"]);
                 if (wd == "vivid" || wd == "balanced" || wd == "calm") _settings.wallpaperDim = wd;
             }
+            if (msg.ContainsKey("materialStyle"))
+                _settings.materialStyle = SettingsStore.NormalizeMaterialStyle(Convert.ToString(msg["materialStyle"]));
+            if (msg.ContainsKey("amoledDark"))
+            {
+                _settings.amoledDark = Convert.ToBoolean(msg["amoledDark"]);
+                ApplyThemeToAllTabs();
+            }
+            if (msg.ContainsKey("tabBarStyle"))
+            {
+                string tbs = SettingsStore.NormalizeTabBarStyle(Convert.ToString(msg["tabBarStyle"]));
+                if (!string.Equals(_settings.tabBarStyle, tbs, StringComparison.OrdinalIgnoreCase))
+                {
+                    _settings.tabBarStyle = tbs;
+                    needLayout = true;
+                }
+            }
+            if (msg.ContainsKey("shortcutStyle"))
+                _settings.shortcutStyle = SettingsStore.NormalizeShortcutStyle(Convert.ToString(msg["shortcutStyle"]));
+            if (msg.ContainsKey("clockStyle"))
+                _settings.clockStyle = SettingsStore.NormalizeClockStyle(Convert.ToString(msg["clockStyle"]));
             if (msg.ContainsKey("hideGreetingBadge"))
                 _settings.hideGreetingBadge = Convert.ToBoolean(msg["hideGreetingBadge"]);
             if (msg.ContainsKey("hideStartPageSearch"))
@@ -7672,6 +7871,11 @@ namespace DejavuBrowser
             fresh.wallpaper = _settings.wallpaper ?? fresh.wallpaper;
             fresh.customWallpaperPath = _settings.customWallpaperPath ?? "";
             fresh.lastSessionUrls = _settings.lastSessionUrls ?? new List<string>();
+            fresh.sessionTabs = _settings.sessionTabs ?? new List<SessionTabItem>();
+            fresh.pinnedTabs = _settings.pinnedTabs ?? new List<SessionTabItem>();
+            fresh.activeSessionIndex = _settings.activeSessionIndex;
+            fresh.shortcutsInitialized = _settings.shortcutsInitialized;
+            fresh.deletedFavoriteUrls = _settings.deletedFavoriteUrls ?? new List<string>();
 
             _settings = fresh;
             _appContext.Settings = fresh;
@@ -7695,7 +7899,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.11.0 defaults", "success");
+            PushShellToast("Settings restored to v5.12.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -7708,15 +7912,26 @@ namespace DejavuBrowser
             BrowserTab tab = FindTab(tabId);
             if (tab == null || tab.IsNewTab || string.IsNullOrEmpty(tab.Url)) return;
             bool hadBar = HasFavoritesBar;
-            int prevCount = _profiles.Favorites != null ? _profiles.Favorites.Count : 0;
-            _profiles.ToggleFavorite(tab.Url, tab.Title, tab.Favicon);
-            if (_profiles.Favorites != null && _profiles.Favorites.Count > prevCount)
+            bool added = _profiles.ToggleFavorite(tab.Url, tab.Title, tab.Favicon);
+            if (added)
             {
                 _favoritesBarHidden = false;
+                if (_settings != null)
+                {
+                    _settings.favoritesBarHidden = false;
+                    ClearFavoriteDeleted(tab.Url);
+                    _profiles.SaveActiveSettings(_settings);
+                }
+            }
+            else if (_settings != null)
+            {
+                RecordFavoriteDeleted(tab.Url);
+                _profiles.SaveActiveSettings(_settings);
             }
             if (hadBar != HasFavoritesBar) LayoutViews();
             PushFullStateToShell();
             RefreshSidebarIfOpen();
+            if (_sync != null && !_isPrivateWindow) SyncAllCollectionsToMobile();
         }
 
         private void ToggleReadingListActiveTab()
@@ -7751,6 +7966,7 @@ namespace DejavuBrowser
             _tabs.AddRange(unpinned);
             PushTabDeltaToShell();
             RefreshSidebarIfOpen();
+            PersistSessionTabsNow(true);
         }
 
         private void ReorderTab(int tabId, int newIndex)
@@ -7791,6 +8007,7 @@ namespace DejavuBrowser
 
             PushTabDeltaToShell();
             RefreshSidebarIfOpen();
+            ScheduleSessionSave();
         }
 
         private void ReorderFavorite(string idOrUrl, int newIndex)
@@ -10950,10 +11167,33 @@ namespace DejavuBrowser
                         ToggleFavoriteActiveTab();
                         break;
                     case "removeFavorite":
-                        bool hadBar = HasFavoritesBar;
-                        _profiles.RemoveFavorite(Convert.ToString(msg["id"]));
-                        if (hadBar != HasFavoritesBar) LayoutViews();
-                        PushFullStateToShell();
+                        {
+                            bool hadBar = HasFavoritesBar;
+                            string remIdOrUrl = Convert.ToString(msg["id"]);
+                            string remUrl = remIdOrUrl;
+                            if (_profiles.Favorites != null)
+                            {
+                                for (int fi = 0; fi < _profiles.Favorites.Count; fi++)
+                                {
+                                    FavoriteItem f = _profiles.Favorites[fi];
+                                    if (f != null && (string.Equals(f.id, remIdOrUrl, StringComparison.OrdinalIgnoreCase) ||
+                                                      string.Equals(f.url, remIdOrUrl, StringComparison.OrdinalIgnoreCase)))
+                                    {
+                                        remUrl = f.url;
+                                        break;
+                                    }
+                                }
+                            }
+                            _profiles.RemoveFavorite(remIdOrUrl);
+                            if (_settings != null && !string.IsNullOrWhiteSpace(remUrl))
+                            {
+                                RecordFavoriteDeleted(remUrl);
+                                _profiles.SaveActiveSettings(_settings);
+                            }
+                            if (hadBar != HasFavoritesBar) LayoutViews();
+                            PushFullStateToShell();
+                            if (_sync != null && !_isPrivateWindow) SyncAllCollectionsToMobile();
+                        }
                         break;
                     case "saveShortcuts":
                         SaveShortcutsFromMessage(msg);
@@ -11889,6 +12129,7 @@ namespace DejavuBrowser
                 if (!string.IsNullOrEmpty(url)) next.Add(new ShortcutItem { name = name, url = url });
             }
             _settings.shortcuts = next;
+            _settings.shortcutsInitialized = true;
             _profiles.SaveActiveSettings(_settings);
             PushFullStateToShell();
         }

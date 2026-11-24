@@ -11,6 +11,14 @@ namespace DejavuBrowser
         public string url { get; set; }
     }
 
+    public class SessionTabItem
+    {
+        public string url { get; set; }
+        public string title { get; set; }
+        public bool isPinned { get; set; }
+        public string groupId { get; set; }
+    }
+
     public class DejavuSettings
     {
         public string searchEngine { get; set; }
@@ -40,8 +48,18 @@ namespace DejavuBrowser
         public string homepageUrl { get; set; }
         public string startupBehavior { get; set; }
         public List<string> lastSessionUrls { get; set; }
+        public List<SessionTabItem> sessionTabs { get; set; }
+        public List<SessionTabItem> pinnedTabs { get; set; }
+        public int activeSessionIndex { get; set; }
+        public bool shortcutsInitialized { get; set; }
+        public List<string> deletedFavoriteUrls { get; set; }
         public bool reduceWallpaperMotion { get; set; }
         public string wallpaperDim { get; set; }
+        public string materialStyle { get; set; }
+        public bool amoledDark { get; set; }
+        public string tabBarStyle { get; set; }
+        public string shortcutStyle { get; set; }
+        public string clockStyle { get; set; }
         public bool hideGreetingBadge { get; set; }
         public bool hideStartPageSearch { get; set; }
         public bool favoritesBarHidden { get; set; }
@@ -131,10 +149,20 @@ namespace DejavuBrowser
             siteZoomLevels = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             newTabMode = "startpage";
             homepageUrl = "https://www.google.com";
-            startupBehavior = "startpage";
+            startupBehavior = "restore";
             lastSessionUrls = new List<string>();
+            sessionTabs = new List<SessionTabItem>();
+            pinnedTabs = new List<SessionTabItem>();
+            activeSessionIndex = 0;
+            shortcutsInitialized = false;
+            deletedFavoriteUrls = new List<string>();
             reduceWallpaperMotion = false;
             wallpaperDim = "balanced";
+            materialStyle = "tonal";
+            amoledDark = false;
+            tabBarStyle = "googlebook";
+            shortcutStyle = "circle";
+            clockStyle = "off";
             hideGreetingBadge = false;
             hideStartPageSearch = false;
             favoritesBarHidden = false;
@@ -294,6 +322,33 @@ namespace DejavuBrowser
             return "standard";
         }
 
+        public static string NormalizeMaterialStyle(string val)
+        {
+            if (string.Equals(val, "vibrant", StringComparison.OrdinalIgnoreCase)) return "vibrant";
+            if (string.Equals(val, "minimal", StringComparison.OrdinalIgnoreCase)) return "minimal";
+            return "tonal";
+        }
+
+        public static string NormalizeTabBarStyle(string val)
+        {
+            if (string.Equals(val, "floating", StringComparison.OrdinalIgnoreCase)) return "floating";
+            if (string.Equals(val, "classic", StringComparison.OrdinalIgnoreCase)) return "classic";
+            return "googlebook";
+        }
+
+        public static string NormalizeShortcutStyle(string val)
+        {
+            if (string.Equals(val, "tile", StringComparison.OrdinalIgnoreCase)) return "tile";
+            return "circle";
+        }
+
+        public static string NormalizeClockStyle(string val)
+        {
+            if (string.Equals(val, "minimal", StringComparison.OrdinalIgnoreCase)) return "minimal";
+            if (string.Equals(val, "bold", StringComparison.OrdinalIgnoreCase)) return "bold";
+            return "off";
+        }
+
         public static void NormalizeWindowBounds(DejavuSettings s)
         {
             if (s == null) return;
@@ -326,11 +381,15 @@ namespace DejavuBrowser
         {
             lock (Sync)
             {
-                try
+                string[] candidates = new string[] { path, path + ".bak" };
+                for (int c = 0; c < candidates.Length; c++)
                 {
-                    if (File.Exists(path))
+                    try
                     {
-                        string text = File.ReadAllText(path);
+                        string cand = candidates[c];
+                        if (!File.Exists(cand)) continue;
+                        string text = File.ReadAllText(cand);
+                        if (string.IsNullOrWhiteSpace(text)) continue;
                         DejavuSettings loaded = Json.Deserialize<DejavuSettings>(text);
                         if (loaded != null)
                         {
@@ -338,6 +397,8 @@ namespace DejavuBrowser
                             if (string.IsNullOrEmpty(loaded.wallpaper) ||
                                 (loaded.wallpaper.StartsWith("art:", StringComparison.OrdinalIgnoreCase) &&
                                  !loaded.wallpaper.StartsWith("art:wp-m3-", StringComparison.OrdinalIgnoreCase)) ||
+                                (loaded.wallpaper.StartsWith("vec:", StringComparison.OrdinalIgnoreCase) &&
+                                 !loaded.wallpaper.StartsWith("vec:m3-", StringComparison.OrdinalIgnoreCase)) ||
                                 (loaded.wallpaper.StartsWith("live:", StringComparison.OrdinalIgnoreCase) &&
                                  !string.Equals(loaded.wallpaper, "live:m3-expressive", StringComparison.OrdinalIgnoreCase)))
                             {
@@ -371,9 +432,16 @@ namespace DejavuBrowser
                             }
                             if (string.IsNullOrEmpty(loaded.newTabMode)) loaded.newTabMode = "startpage";
                             if (string.IsNullOrEmpty(loaded.homepageUrl)) loaded.homepageUrl = "https://www.google.com";
-                            if (string.IsNullOrEmpty(loaded.startupBehavior)) loaded.startupBehavior = "startpage";
+                            if (string.IsNullOrEmpty(loaded.startupBehavior)) loaded.startupBehavior = "restore";
                             if (loaded.lastSessionUrls == null) loaded.lastSessionUrls = new List<string>();
+                            if (loaded.sessionTabs == null) loaded.sessionTabs = new List<SessionTabItem>();
+                            if (loaded.pinnedTabs == null) loaded.pinnedTabs = new List<SessionTabItem>();
+                            if (loaded.deletedFavoriteUrls == null) loaded.deletedFavoriteUrls = new List<string>();
                             if (string.IsNullOrEmpty(loaded.wallpaperDim)) loaded.wallpaperDim = "balanced";
+                            loaded.materialStyle = NormalizeMaterialStyle(loaded.materialStyle);
+                            loaded.tabBarStyle = NormalizeTabBarStyle(loaded.tabBarStyle);
+                            loaded.shortcutStyle = NormalizeShortcutStyle(loaded.shortcutStyle);
+                            loaded.clockStyle = NormalizeClockStyle(loaded.clockStyle);
 
                             // v5.4.0 normalizations
                             loaded.shieldLevel = NormalizeShieldLevel(loaded.shieldLevel);
@@ -394,15 +462,23 @@ namespace DejavuBrowser
                             // v5.8.0 — Normalize persistent window bounds
                             NormalizeWindowBounds(loaded);
 
-                            if (loaded.shortcuts == null || loaded.shortcuts.Count == 0)
+                            if (loaded.shortcuts == null)
+                            {
+                                loaded.shortcuts = new List<ShortcutItem>();
+                            }
+                            if (!loaded.shortcutsInitialized && loaded.shortcuts.Count == 0 && !text.Contains("\"shortcutsInitialized\""))
                             {
                                 loaded.shortcuts = new DejavuSettings().shortcuts;
+                            }
+                            else if (loaded.shortcuts.Count > 0)
+                            {
+                                loaded.shortcutsInitialized = true;
                             }
                             return loaded;
                         }
                     }
+                    catch { }
                 }
-                catch { }
                 return new DejavuSettings();
             }
         }
@@ -422,9 +498,25 @@ namespace DejavuBrowser
                     if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
                     string text = Json.Serialize(settings);
                     string tmp = path + ".tmp";
+                    string bak = path + ".bak";
                     File.WriteAllText(tmp, text);
-                    if (File.Exists(path)) File.Delete(path);
-                    File.Move(tmp, path);
+                    if (File.Exists(path))
+                    {
+                        try
+                        {
+                            File.Replace(tmp, path, bak, true);
+                        }
+                        catch
+                        {
+                            try { File.Copy(path, bak, true); } catch { }
+                            File.Copy(tmp, path, true);
+                            try { File.Delete(tmp); } catch { }
+                        }
+                    }
+                    else
+                    {
+                        File.Move(tmp, path);
+                    }
                 }
                 catch
                 {

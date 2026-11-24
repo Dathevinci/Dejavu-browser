@@ -126,7 +126,54 @@
       --md-surface-container-highest: var(--input-bg);
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; scrollbar-width: none; }
+    /* Googlebook AMOLED Pitch Black Dark Mode */
+    body.amoled-dark:not(.theme-light) {
+      --bg: #000000;
+      --canvas-bg: #000000;
+      --sheet-bg: #08080b;
+      --group-bg: #111116;
+      --group-press: #1a1a22;
+      --card: #111116;
+      --sheet-elev: #191921;
+      --input-bg: #22222c;
+    }
+
+    /* Googlebook Material Style Variants */
+    body[data-material-style="vibrant"] .fav-sq {
+      background: var(--accent-soft);
+      color: var(--accent-bright);
+    }
+    body[data-material-style="vibrant"] .sp-m3-search {
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.32), inset 0 0 0 1.5px rgba(208, 188, 255, 0.22);
+    }
+    body[data-material-style="minimal"] .sp-motd-card,
+    body[data-material-style="minimal"] .sp-m3-search {
+      box-shadow: none;
+      border: 1px solid var(--border-subtle);
+    }
+
+    /* Googlebook Rounded Tile Shortcut Style */
+    body[data-shortcut-style="tile"] .fav-sq {
+      width: 54px; height: 54px; border-radius: 17px;
+    }
+    body[data-shortcut-style="tile"] .fav-tile:active .fav-sq {
+      border-radius: 20px;
+    }
+
+    /* Prevent Android WebView long-press native text-selection popup on UI controls */
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      scrollbar-width: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    input, textarea, .code-pill, .sync-clip-txt, .sync-note-body {
+      -webkit-user-select: text;
+      user-select: text;
+      -webkit-touch-callout: default;
+    }
     *::-webkit-scrollbar { display: none; }
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%;
@@ -211,20 +258,39 @@
       display: flex; flex-direction: column;
       overflow: hidden;
       contain: layout style;
-      animation: sheetRise 0.3s var(--md-ease-decel) both;
+      will-change: transform, opacity;
+      animation: sheetRise 0.34s var(--md-ease-decel) both;
+    }
+    .sheet-backdrop.is-closing::before {
+      animation: fadeScrimOut 0.2s var(--md-ease-emphasized) both;
+    }
+    .sheet-backdrop.is-closing .sheet-panel {
+      animation: sheetDrop 0.22s cubic-bezier(0.3, 0, 0.8, 0.15) both;
     }
     #scr-tabs:not(.hidden), #scr-omnibox:not(.hidden) {
-      animation: screenFadeRise 0.24s var(--md-ease-decel) both;
+      animation: screenFadeRise 0.26s var(--md-ease-decel) both;
     }
+    #scr-start:not(.hidden) .sp-hero { animation: spCascade 0.32s var(--md-ease-decel) both; }
+    #scr-start:not(.hidden) .sp-glance-stack { animation: spCascade 0.36s var(--md-ease-decel) 35ms both; }
+    #scr-start:not(.hidden) .sp-qa-wrap { animation: spCascade 0.4s var(--md-ease-decel) 65ms both; }
 
     @keyframes fadeScrim { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeScrimOut { from { opacity: 1; } to { opacity: 0; } }
     @keyframes sheetRise {
-      from { transform: translateY(36px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+      from { transform: translate3d(0, 68px, 0) scale(0.985); opacity: 0; }
+      to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+    }
+    @keyframes sheetDrop {
+      from { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+      to { transform: translate3d(0, 84px, 0) scale(0.985); opacity: 0; }
+    }
+    @keyframes spCascade {
+      from { transform: translate3d(0, 12px, 0); opacity: 0; }
+      to { transform: translate3d(0, 0, 0); opacity: 1; }
     }
     @keyframes screenFadeRise {
-      from { transform: translateY(12px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+      from { transform: translate3d(0, 16px, 0) scale(0.988); opacity: 0; }
+      to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
     }
     @keyframes subViewSlideIn {
       from { transform: translateX(14px); opacity: 0; }
@@ -743,14 +809,37 @@
       display: flex; flex-direction: column; gap: 10px;
     }
     .sp-qa-bar {
-      display: flex; justify-content: flex-end; padding: 0 4px;
+      display: flex; justify-content: flex-end; padding: 0 2px;
     }
     .sp-qa-edit {
-      font-size: 12px; font-weight: 560; color: var(--muted); opacity: 0.82;
-      background: none; border: none; padding: 2px 6px; font-family: inherit; cursor: pointer;
-      transition: color 0.15s ease, opacity 0.15s ease;
+      height: 26px; padding: 0 11px; border-radius: 999px;
+      font-size: 11.5px; font-weight: 600; color: var(--muted);
+      background: rgba(33, 31, 39, 0.72); border: none; font-family: inherit; cursor: pointer;
+      transition: background-color 0.16s var(--md-ease-emphasized), color 0.16s ease, transform 0.16s var(--md-ease-spring);
     }
-    .sp-qa-edit.editing { color: var(--accent); opacity: 1; font-weight: 640; }
+    body.theme-light .sp-qa-edit { background: rgba(255, 255, 255, 0.82); color: var(--muted); }
+    .sp-qa-edit:active { transform: scale(0.94); }
+    .sp-qa-edit.editing { background: var(--accent-soft); color: var(--accent-bright); font-weight: 640; }
+    body.theme-light .sp-qa-edit.editing { color: var(--accent); }
+
+    /* Optional Googlebook Start Page Digital Clock */
+    .sp-clock-wrap {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      margin-bottom: 4px;
+    }
+    .sp-clock-wrap.hidden { display: none !important; }
+    .sp-clock-time {
+      font-size: 46px; font-weight: 500; letter-spacing: -0.03em; line-height: 1.02;
+      color: var(--ink); font-variant-numeric: tabular-nums;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.28);
+    }
+    .sp-clock-wrap[data-clock-style="bold"] .sp-clock-time {
+      font-size: 62px; font-weight: 700; letter-spacing: -0.04em; color: var(--accent);
+    }
+    .sp-clock-date {
+      font-size: 12.5px; font-weight: 540; color: var(--muted);
+    }
+    body.theme-light .sp-clock-time { text-shadow: 0 1px 10px rgba(255, 255, 255, 0.55); }
 
     .fav-grid {
       display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1010,7 +1099,7 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.11.0) — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.12.0) — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
@@ -1378,33 +1467,45 @@
     .cbd-danger-btn:disabled { opacity: 0.42; pointer-events: none; }
 
     /* =====================================================================
-       SHEET D: WALLPAPERS GALLERY — ARTWORK FIRST
+       SHEET D: WALLPAPER & STYLE STUDIO — ARTWORK FIRST (ZERO CLUTTER)
        ===================================================================== */
     .wp-grid {
-      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
       contain: layout style;
     }
     .wp-tile {
-      position: relative; border-radius: 20px; overflow: hidden;
+      position: relative; aspect-ratio: 16 / 11; border-radius: 18px; overflow: hidden;
       border: 2px solid transparent; background: var(--group-bg);
-      padding: 0; text-align: left; color: var(--ink); font-family: inherit; cursor: pointer;
-      transition: transform 0.18s var(--md-ease-spring), border-color 0.16s var(--md-ease-emphasized), opacity 0.15s ease;
+      padding: 0; text-align: left; color: #f6f3fa; font-family: inherit; cursor: pointer;
+      transition: transform 0.2s var(--md-ease-spring), border-color 0.16s var(--md-ease-emphasized), opacity 0.15s ease;
     }
-    .wp-tile:active { transform: scale(0.96); opacity: 0.94; }
-    .wp-tile.active { border-color: var(--accent); }
-    .wp-tile img, .wp-live-thumb { width: 100%; height: 132px; object-fit: cover; display: block; }
-    .wp-tile-meta { padding: 10px 12px; }
+    .wp-tile:active { transform: scale(0.955); opacity: 0.94; }
+    .wp-tile.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .wp-tile img, .wp-live-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .wp-tile-meta {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 18px 10px 8px;
+      background: linear-gradient(180deg, rgba(14, 12, 18, 0) 0%, rgba(14, 12, 18, 0.76) 100%);
+      pointer-events: none;
+    }
     .wp-tile-name {
-      font-size: 13px; font-weight: 560; line-height: 1.25;
+      font-size: 12px; font-weight: 600; line-height: 1.2; color: #f6f3fa;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .wp-check {
-      position: absolute; top: 9px; right: 9px;
+      position: absolute; top: 8px; right: 8px;
       width: 24px; height: 24px; border-radius: 50%;
       background: var(--accent); color: var(--accent-ink);
       display: none; align-items: center; justify-content: center;
+      box-shadow: var(--shadow-sm); z-index: 2;
     }
     .wp-tile.active .wp-check { display: inline-flex; }
+    .wp-pane { display: flex; flex-direction: column; gap: 14px; }
+    .wp-pane.hidden { display: none !important; }
+    .sp-prof-av, .yg-avatar, .prof-row-av, .sync-av { position: relative; overflow: hidden; }
+    .sp-prof-av svg, .yg-avatar svg, .prof-row-av svg, .sync-av svg { width: 100%; height: 100%; display: block; border-radius: 50%; }
+    .av-photo-layer { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
 
     /* =====================================================================
        SHEET E: DOWNLOADS — CLEAN 8x MANAGER WITH GLIDING TABS
@@ -1540,7 +1641,7 @@
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
     /* =====================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.11.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.12.0)
        ===================================================================== */
     .sh-hero-card {
       background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
@@ -1632,8 +1733,12 @@
       </div>
     </div>
 
-    <!-- Calm Centered Hero -->
+    <!-- Calm Centered Hero (with Optional Googlebook Digital Clock) -->
     <div id="sp-hero-normal" class="sp-hero">
+      <div id="sp-clock-wrap" class="sp-clock-wrap hidden" aria-live="off">
+        <div id="sp-clock-time" class="sp-clock-time">12:00</div>
+        <div id="sp-clock-date" class="sp-clock-date">Tue, Nov 24</div>
+      </div>
       <div id="sp-hero-logo" class="sp-logo-badge" aria-label="dejavu">
         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="2" y="2" width="60" height="60" rx="18" fill="var(--md-primary-container)"/>
@@ -1785,7 +1890,7 @@
             </button>
             <h2 id="menu-sheet-title" class="sheet-title">Menu</h2>
           </div>
-          <button type="button" class="pill-btn ghost" onclick="call('closeScreen')">Done</button>
+          <button type="button" class="pill-btn ghost" onclick="closeActiveSheet(this)">Done</button>
         </div>
       </div>
 
@@ -1923,7 +2028,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.11.0) — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.12.0) — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -1931,7 +2036,7 @@
         <div class="sheet-grab"></div>
         <div class="sheet-title-row">
           <h2 class="sheet-title">dejavu Link</h2>
-          <button type="button" class="pill-btn ghost" onclick="call('closeScreen')">Done</button>
+          <button type="button" class="pill-btn ghost" onclick="closeActiveSheet(this)">Done</button>
         </div>
       </div>
 
@@ -1980,13 +2085,13 @@
             </div>
           </div>
 
-          <!-- Live E2EE Transport Health Bar (tap to reconnect relay) -->
-          <div id="sync-relay-row" class="sync-relay-row" onclick="call('syncReconnect')" title="Tap to reconnect relay">
+          <!-- Calm Encrypted Connection Pill (tap to refresh connection) -->
+          <div id="sync-relay-row" class="sync-relay-row" onclick="call('syncReconnect')" title="Tap to reconnect">
             <span class="sync-relay-left">
               <span id="sync-relay-dot" class="sync-relay-dot"></span>
-              <span id="sync-relay-txt">E2EE Cloud TLS · Connected</span>
+              <span id="sync-relay-txt">Connected · Encrypted</span>
             </span>
-            <span id="sync-relay-broker" class="sync-relay-broker">HiveMQ + EMQX</span>
+            <span id="sync-relay-broker" class="sync-relay-broker">Reconnect</span>
           </div>
         </div>
 
@@ -2142,7 +2247,7 @@
             </button>
             <h2 id="set-sheet-title" class="sheet-title">Settings</h2>
           </div>
-          <button type="button" class="pill-btn ghost" onclick="call('closeScreen')">Done</button>
+          <button type="button" class="pill-btn ghost" onclick="closeActiveSheet(this)">Done</button>
         </div>
         <!-- Live M3 Search Settings Pill -->
         <div id="set-search-bar" class="set-search-bar">
@@ -2219,7 +2324,7 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.8v5.2M12 7.8h.01"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.11.0 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.12.0 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -2262,6 +2367,43 @@
                 </span>
                 <span class="g-chev">›</span>
               </button>
+
+              <div class="g-row set-item" data-search="amoled oled pitch black true black dark mode battery" onclick="call('toggleAmoledDark')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">AMOLED Pitch Black</div>
+                  <div class="g-row-sub">True black surfaces in Dark mode</div>
+                </div>
+                <button type="button" id="sw-amoled-dark" class="sw" aria-label="AMOLED Pitch Black"></button>
+              </div>
+
+              <div class="set-block set-item" data-search="material you style tonal vibrant minimal googlebook surface">
+                <div style="font-size:14.5px;font-weight:540;">Material style</div>
+                <div class="m3-seg-3" id="set-matstyle-seg" role="group" aria-label="Material style">
+                  <span class="seg-glider is-tonal" aria-hidden="true"></span>
+                  <button type="button" id="m-ms-tonal-btn" class="active" onclick="call('setMaterialStyle','tonal')">Tonal</button>
+                  <button type="button" id="m-ms-vibrant-btn" onclick="call('setMaterialStyle','vibrant')">Vibrant</button>
+                  <button type="button" id="m-ms-minimal-btn" onclick="call('setMaterialStyle','minimal')">Minimal</button>
+                </div>
+              </div>
+
+              <div class="set-block set-item" data-search="shortcut shape circle tile squircle googlebook quick access">
+                <div style="font-size:14.5px;font-weight:540;">Shortcut shape</div>
+                <div class="bar-seg" id="set-scstyle-seg">
+                  <span class="seg-glider is-tonal" aria-hidden="true"></span>
+                  <button type="button" id="opt-sc-circle" class="active" onclick="call('setShortcutStyle','circle')">Circles</button>
+                  <button type="button" id="opt-sc-tile" onclick="call('setShortcutStyle','tile')">Tiles</button>
+                </div>
+              </div>
+
+              <div class="set-block set-item" data-search="clock start page time minimal bold googlebook lockscreen">
+                <div style="font-size:14.5px;font-weight:540;">Start Page clock</div>
+                <div class="m3-seg-3" id="set-clock-seg" role="group" aria-label="Start Page clock">
+                  <span class="seg-glider is-tonal" aria-hidden="true"></span>
+                  <button type="button" id="m-clk-off-btn" class="active" onclick="call('setClockStyle','off')">Off</button>
+                  <button type="button" id="m-clk-min-btn" onclick="call('setClockStyle','minimal')">Minimal</button>
+                  <button type="button" id="m-clk-bold-btn" onclick="call('setClockStyle','bold')">Bold</button>
+                </div>
+              </div>
 
               <div class="g-row set-item" data-search="auto match theme wallpaper pixel style dynamic palette dark light polarity" onclick="call('toggleAutoThemeFromWallpaper')">
                 <div class="g-row-meta">
@@ -2502,7 +2644,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.11.0 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.12.0 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2526,10 +2668,10 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.11.0 about">
+              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.12.0 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.11.0</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.12.0</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
                 <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check for updates</button>
@@ -2568,7 +2710,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.11.0
+          dejavu Mobile v5.12.0
         </div>
       </div>
     </div>
@@ -2589,7 +2731,7 @@
             </button>
             <h2 class="sheet-title">You &amp; Google</h2>
           </div>
-          <button type="button" class="pill-btn ghost" onclick="call('closeScreen')">Done</button>
+          <button type="button" class="pill-btn ghost" onclick="closeActiveSheet(this)">Done</button>
         </div>
       </div>
 
@@ -2719,26 +2861,95 @@
   </div>
 
   <!-- ===================================================================
-       SHEET D: WALLPAPERS GALLERY — ARTWORK FIRST
+       SHEET D: WALLPAPER & STYLE STUDIO — GOOGLEBOOK ARTWORK FIRST
        =================================================================== -->
   <div id="scr-wallpapers" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
       <div class="sheet-head" data-swipe-dismiss="1">
         <div class="sheet-grab"></div>
         <div class="sheet-title-row">
-          <h2 class="sheet-title">Wallpapers</h2>
-          <button type="button" class="pill-btn ghost" onclick="call('closeScreen')">Done</button>
+          <h2 class="sheet-title">Wallpaper &amp; Style</h2>
+          <button type="button" class="pill-btn ghost" onclick="animateCloseSheet('scr-wallpapers', () => call('closeScreen'))">Done</button>
+        </div>
+        <div class="bar-seg" id="wp-studio-seg">
+          <span class="seg-glider is-tonal" aria-hidden="true"></span>
+          <button type="button" id="wp-tab-gallery" class="active" onclick="setWpStudioTab('gallery')">Wallpapers (45)</button>
+          <button type="button" id="wp-tab-style" onclick="setWpStudioTab('style')">Style &amp; Layout</button>
         </div>
         <div id="m-wp-filters" class="m3-chip-strip">
-          <button type="button" class="m3-chip active" data-wpf="all" onclick="setWpFilter('all')">All (33)</button>
+          <button type="button" class="m3-chip active" data-wpf="all" onclick="setWpFilter('all')">All (45)</button>
+          <button type="button" class="m3-chip" data-wpf="googlebook" onclick="setWpFilter('googlebook')">Googlebook (12)</button>
+          <button type="button" class="m3-chip" data-wpf="material" onclick="setWpFilter('material')">Material (18)</button>
           <button type="button" class="m3-chip" data-wpf="butterfly" onclick="setWpFilter('butterfly')">Butterfly (10)</button>
           <button type="button" class="m3-chip" data-wpf="froggie" onclick="setWpFilter('froggie')">Froggie (4)</button>
-          <button type="button" class="m3-chip" data-wpf="dark" onclick="setWpFilter('dark')">Dark (18)</button>
-          <button type="button" class="m3-chip" data-wpf="light" onclick="setWpFilter('light')">Light (14)</button>
+          <button type="button" class="m3-chip" data-wpf="dark" onclick="setWpFilter('dark')">Dark</button>
+          <button type="button" class="m3-chip" data-wpf="light" onclick="setWpFilter('light')">Light</button>
         </div>
       </div>
       <div class="sheet-body">
-        <div id="m-wp-grid" class="wp-grid"></div>
+        <div id="wp-pane-gallery" class="wp-pane">
+          <div id="m-wp-grid" class="wp-grid"></div>
+        </div>
+        <div id="wp-pane-style" class="wp-pane hidden">
+          <div class="g-group">
+            <div class="set-block">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <span style="font-size:14px;font-weight:560;">Color palette</span>
+                <span id="wp-style-accent-lbl" style="font-size:12px;color:var(--muted);">Amethyst</span>
+              </div>
+              <div id="wp-style-accents" class="orb-group"></div>
+            </div>
+            <div class="set-block">
+              <div style="font-size:14px;font-weight:560;">Theme mode</div>
+              <div class="m3-seg-3" id="wp-theme-seg" role="group">
+                <span class="seg-glider is-tonal" aria-hidden="true"></span>
+                <button type="button" id="wp-th-light" onclick="call('setThemeMode','light')">Light</button>
+                <button type="button" id="wp-th-dark" class="active" onclick="call('setThemeMode','dark')">Dark</button>
+                <button type="button" id="wp-th-auto" onclick="call('setThemeMode','auto')">Auto</button>
+              </div>
+            </div>
+            <div class="g-row" onclick="call('toggleAmoledDark')">
+              <div class="g-row-meta">
+                <div class="g-row-title">AMOLED Pitch Black</div>
+                <div class="g-row-sub">Pure black OLED dark surfaces</div>
+              </div>
+              <button type="button" id="sw-wp-amoled" class="sw" aria-label="AMOLED Pitch Black"></button>
+            </div>
+            <div class="set-block">
+              <div style="font-size:14px;font-weight:560;">Material style</div>
+              <div class="m3-seg-3" id="wp-matstyle-seg" role="group">
+                <span class="seg-glider is-tonal" aria-hidden="true"></span>
+                <button type="button" id="wp-ms-tonal" class="active" onclick="call('setMaterialStyle','tonal')">Tonal</button>
+                <button type="button" id="wp-ms-vibrant" onclick="call('setMaterialStyle','vibrant')">Vibrant</button>
+                <button type="button" id="wp-ms-minimal" onclick="call('setMaterialStyle','minimal')">Minimal</button>
+              </div>
+            </div>
+            <div class="set-block">
+              <div style="font-size:14px;font-weight:560;">Shortcut shape</div>
+              <div class="bar-seg" id="wp-scstyle-seg">
+                <span class="seg-glider is-tonal" aria-hidden="true"></span>
+                <button type="button" id="wp-sc-circle" class="active" onclick="call('setShortcutStyle','circle')">Circles</button>
+                <button type="button" id="wp-sc-tile" onclick="call('setShortcutStyle','tile')">Tiles</button>
+              </div>
+            </div>
+            <div class="set-block">
+              <div style="font-size:14px;font-weight:560;">Start Page clock</div>
+              <div class="m3-seg-3" id="wp-clock-seg" role="group">
+                <span class="seg-glider is-tonal" aria-hidden="true"></span>
+                <button type="button" id="wp-clk-off" class="active" onclick="call('setClockStyle','off')">Off</button>
+                <button type="button" id="wp-clk-min" onclick="call('setClockStyle','minimal')">Minimal</button>
+                <button type="button" id="wp-clk-bold" onclick="call('setClockStyle','bold')">Bold</button>
+              </div>
+            </div>
+            <div class="g-row" onclick="call('toggleAutoThemeFromWallpaper')">
+              <div class="g-row-meta">
+                <div class="g-row-title">Auto-match wallpaper</div>
+                <div class="g-row-sub">Adapt palette &amp; light/dark mode</div>
+              </div>
+              <button type="button" id="sw-wp-autotheme" class="sw on" aria-label="Auto-match wallpaper"></button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2754,7 +2965,7 @@
           <h2 class="sheet-title">Downloads</h2>
           <div style="display:flex;align-items:center;gap:6px;">
             <button type="button" class="pill-btn ghost muted" onclick="call('turboClearDone')">Clear</button>
-            <button type="button" class="pill-btn ghost" onclick="call('closeScreen')">Done</button>
+            <button type="button" class="pill-btn ghost" onclick="closeActiveSheet(this)">Done</button>
           </div>
         </div>
       </div>
@@ -2829,7 +3040,7 @@
           </div>
           <div style="display:flex;align-items:center;gap:6px;">
             <button type="button" class="pill-btn sm tonal" onclick="openUserscriptModal(null)">+ Script</button>
-            <button type="button" class="pill-btn ghost" onclick="call('closeScreen')">Done</button>
+            <button type="button" class="pill-btn ghost" onclick="closeActiveSheet(this)">Done</button>
           </div>
         </div>
       </div>
@@ -2845,7 +3056,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.11.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.12.0)
        =================================================================== -->
   <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2853,7 +3064,7 @@
         <div class="sheet-grab"></div>
         <div class="sheet-title-row">
           <h2 class="sheet-title">dejavu Shields</h2>
-          <button type="button" class="pill-btn ghost" onclick="call('closeScreen')">Done</button>
+          <button type="button" class="pill-btn ghost" onclick="closeActiveSheet(this)">Done</button>
         </div>
       </div>
 
@@ -2973,7 +3184,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.11.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.12.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -3016,6 +3227,18 @@
       { id: 'wp-m3-froggie-mint.jpg',        slug: 'froggie-mint',       name: 'Mint Lily Froggie',     m3: true, mode: 'light', seed: 'aurora',   category: 'froggie',   butterfly: false, froggie: true  },
       { id: 'wp-m3-froggie-lime.jpg',        slug: 'froggie-lime',       name: 'Matcha Froggie',        m3: true, mode: 'light', seed: 'lime',     category: 'froggie',   butterfly: false, froggie: true  },
       { id: 'wp-m3-froggie-sage.jpg',        slug: 'froggie-sage',       name: 'Twilight Froggie',      m3: true, mode: 'dark',  seed: 'aurora',   category: 'froggie',   butterfly: false, froggie: true  },
+      { id: 'vec:m3-googlebook-waves',       slug: 'googlebook-waves',   name: 'Googlebook Waves',      m3: true, mode: 'dark',  seed: 'sapphire', category: 'googlebook', googlebook: true },
+      { id: 'vec:m3-pixel-scallops',         slug: 'pixel-scallops',     name: 'Pixel Scallops',        m3: true, mode: 'light', seed: 'amethyst', category: 'googlebook', googlebook: true },
+      { id: 'vec:m3-bauhaus-blocks',         slug: 'bauhaus-blocks',     name: 'Bauhaus Blocks',        m3: true, mode: 'dark',  seed: 'indigo',   category: 'googlebook', googlebook: true },
+      { id: 'vec:m3-chroma-ribbons',         slug: 'chroma-ribbons',     name: 'Chroma Ribbons',        m3: true, mode: 'dark',  seed: 'ocean',    category: 'googlebook', googlebook: true },
+      { id: 'vec:m3-topo-contours',          slug: 'topo-contours',      name: 'Topo Contours',         m3: true, mode: 'dark',  seed: 'forest',   category: 'googlebook', googlebook: true },
+      { id: 'vec:m3-pebble-stack',           slug: 'pebble-stack',       name: 'Pebble Stack',          m3: true, mode: 'light', seed: 'terracotta', category: 'googlebook', googlebook: true },
+      { id: 'vec:m3-paper-fold',             slug: 'paper-fold',         name: 'Paper Fold',            m3: true, mode: 'light', seed: 'sapphire', category: 'googlebook', googlebook: true },
+      { id: 'vec:m3-prism-glass',            slug: 'prism-glass',        name: 'Prism Studio',          m3: true, mode: 'dark',  seed: 'plum',     category: 'googlebook', googlebook: true },
+      { id: 'vec:m3-nordic-arch',            slug: 'nordic-arch',        name: 'Nordic Arch',           m3: true, mode: 'light', seed: 'aurora',   category: 'googlebook', googlebook: true },
+      { id: 'vec:m3-botanical-arc',          slug: 'botanical-arc',      name: 'Botanical Arc',         m3: true, mode: 'dark',  seed: 'emerald',  category: 'googlebook', googlebook: true },
+      { id: 'vec:m3-solar-rings',            slug: 'solar-rings',        name: 'Solar Rings',           m3: true, mode: 'light', seed: 'gold',     category: 'googlebook', googlebook: true },
+      { id: 'vec:m3-oled-monolith',          slug: 'oled-monolith',      name: 'OLED Monolith',         m3: true, mode: 'dark',  seed: 'silver',   category: 'googlebook', googlebook: true },
       { id: 'obsidian',                      slug: 'obsidian',           name: 'Material You Live',     m3: true, mode: '',      seed: '',         category: 'live',      butterfly: false, froggie: false, live: true }
     ];
     const DEFAULT_M3_WP = 'wp-m3-amethyst.jpg';
@@ -3026,6 +3249,48 @@
       if (w.slug) WP_SLUG_MAP[w.slug] = w.id;
     });
 
+    const MOBILE_VEC_CACHE = {};
+    function buildMobileVectorWallpaperDataUrl(id) {
+      if (MOBILE_VEC_CACHE[id]) return MOBILE_VEC_CACHE[id];
+      const W = 900, H = 1600;
+      let body = '';
+      if (id === 'vec:m3-googlebook-waves') {
+        body = `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0d1729"/><stop offset="100%" stop-color="#182a4a"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#g)"/><path d="M0 980 C260 800 540 1120 900 840 L900 1600 L0 1600 Z" fill="#1b3a6b"/><path d="M0 1150 C300 980 610 1240 900 1010 L900 1600 L0 1600 Z" fill="#2c5ba8" fill-opacity="0.82"/><path d="M0 1320 C340 1160 660 1380 900 1190 L900 1600 L0 1600 Z" fill="#a8c7fa" fill-opacity="0.22"/><circle cx="710" cy="340" r="190" fill="#a8c7fa" fill-opacity="0.14"/>`;
+      } else if (id === 'vec:m3-pixel-scallops') {
+        body = `<rect width="${W}" height="${H}" fill="#f7f2fa"/><circle cx="180" cy="320" r="240" fill="#eaddff"/><circle cx="760" cy="480" r="260" fill="#d0bcff" fill-opacity="0.48"/><path d="M0 1120 Q225 960 450 1120 T900 1120 L900 1600 L0 1600 Z" fill="#e2d1ff"/><path d="M0 1310 Q225 1170 450 1310 T900 1310 L900 1600 L0 1600 Z" fill="#6750a4" fill-opacity="0.16"/>`;
+      } else if (id === 'vec:m3-bauhaus-blocks') {
+        body = `<rect width="${W}" height="${H}" fill="#12131d"/><rect x="80" y="180" width="360" height="440" rx="64" fill="#1e2238"/><rect x="400" y="340" width="420" height="420" rx="210" fill="#303f9f" fill-opacity="0.65"/><rect x="120" y="880" width="660" height="320" rx="72" fill="#252946"/><circle cx="260" cy="1040" r="105" fill="#bbc3ff" fill-opacity="0.42"/><rect x="440" y="960" width="280" height="160" rx="80" fill="#7c8cff" fill-opacity="0.34"/>`;
+      } else if (id === 'vec:m3-chroma-ribbons') {
+        body = `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#09151c"/><stop offset="100%" stop-color="#0f2836"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#g)"/><path d="M-80 420 C240 220 560 580 980 340 L980 620 C560 860 240 500 -80 700 Z" fill="#004e66" fill-opacity="0.72"/><path d="M-80 860 C280 660 580 1040 980 790 L980 1070 C580 1320 280 940 -80 1140 Z" fill="#72d5f5" fill-opacity="0.24"/><circle cx="720" cy="1340" r="240" fill="#006684" fill-opacity="0.32"/>`;
+      } else if (id === 'vec:m3-topo-contours') {
+        body = `<rect width="${W}" height="${H}" fill="#101712"/><g fill="none" stroke="#9cd49f" stroke-opacity="0.24" stroke-width="5"><ellipse cx="220" cy="420" rx="240" ry="180"/><ellipse cx="220" cy="420" rx="340" ry="260"/><ellipse cx="220" cy="420" rx="450" ry="350"/><ellipse cx="740" cy="1180" rx="220" ry="170"/><ellipse cx="740" cy="1180" rx="330" ry="260"/><ellipse cx="740" cy="1180" rx="450" ry="360"/></g><circle cx="740" cy="1180" r="120" fill="#1d5128" fill-opacity="0.58"/>`;
+      } else if (id === 'vec:m3-pebble-stack') {
+        body = `<rect width="${W}" height="${H}" fill="#fdf6f2"/><ellipse cx="450" cy="1260" rx="330" ry="140" fill="#f3dcd1"/><ellipse cx="450" cy="1000" rx="250" ry="125" fill="#e6b8a2"/><ellipse cx="450" cy="760" rx="175" ry="102" fill="#c97b59" fill-opacity="0.62"/><circle cx="450" cy="540" r="92" fill="#8f4c2b" fill-opacity="0.34"/>`;
+      } else if (id === 'vec:m3-paper-fold') {
+        body = `<rect width="${W}" height="${H}" fill="#f4f8ff"/><polygon points="0,0 900,0 900,640 0,980" fill="#e2edff"/><polygon points="0,780 900,440 900,1600 0,1600" fill="#d3e3fd"/><polygon points="240,1600 900,980 900,1600" fill="#a8c7fa" fill-opacity="0.55"/>`;
+      } else if (id === 'vec:m3-prism-glass') {
+        body = `<rect width="${W}" height="${H}" fill="#171018"/><polygon points="0,280 900,80 900,620 0,840" fill="#3a1c3c" fill-opacity="0.72"/><polygon points="0,760 900,520 900,1080 0,1320" fill="#692f64" fill-opacity="0.55"/><circle cx="720" cy="360" r="170" fill="#f2b0e6" fill-opacity="0.18"/><rect x="100" y="1020" width="320" height="320" rx="76" fill="#f2b0e6" fill-opacity="0.14"/>`;
+      } else if (id === 'vec:m3-nordic-arch') {
+        body = `<rect width="${W}" height="${H}" fill="#eef7f4"/><path d="M120 1600 V620 A330 330 0 0 1 780 620 V1600 Z" fill="#d2ece5"/><path d="M230 1600 V740 A220 220 0 0 1 670 740 V1600 Z" fill="#a5dfd2"/><circle cx="450" cy="500" r="96" fill="#006a60" fill-opacity="0.22"/>`;
+      } else if (id === 'vec:m3-botanical-arc') {
+        body = `<rect width="${W}" height="${H}" fill="#0f1711"/><path d="M0 1600 C100 1080 380 860 900 800 L900 1600 Z" fill="#183620"/><path d="M0 1600 C240 1240 520 1060 900 1040 L900 1600 Z" fill="#1d5128" fill-opacity="0.8"/><circle cx="240" cy="420" r="190" fill="#8bd89b" fill-opacity="0.16"/><circle cx="640" cy="320" r="110" fill="#8bd89b" fill-opacity="0.12"/>`;
+      } else if (id === 'vec:m3-solar-rings') {
+        body = `<rect width="${W}" height="${H}" fill="#fff8ee"/><circle cx="450" cy="640" r="440" fill="#ffedd5"/><circle cx="450" cy="640" r="320" fill="#fed7aa"/><circle cx="450" cy="640" r="205" fill="#fdba74" fill-opacity="0.72"/><circle cx="450" cy="640" r="105" fill="#d97706" fill-opacity="0.38"/><path d="M0 1260 Q450 1120 900 1260 L900 1600 L0 1600 Z" fill="#fde4c0"/>`;
+      } else {
+        body = `<rect width="${W}" height="${H}" fill="#000000"/><rect x="110" y="260" width="680" height="460" rx="88" fill="#0e0f14" stroke="#252834" stroke-width="3"/><rect x="210" y="820" width="480" height="520" rx="88" fill="#12141c" stroke="#2a2e3d" stroke-width="3"/><circle cx="450" cy="490" r="120" fill="#b8c8e2" fill-opacity="0.12"/>`;
+      }
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">${body}</svg>`;
+      const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      MOBILE_VEC_CACHE[id] = url;
+      return url;
+    }
+
+    function getWallpaperAssetUrl(id) {
+      if (!id || id === 'obsidian') return '';
+      if (id.startsWith('vec:')) return buildMobileVectorWallpaperDataUrl(id);
+      return `wallpapers/${id}`;
+    }
+
     function normalizeWallpaperId(raw) {
       if (!raw || typeof raw !== 'string') return DEFAULT_M3_WP;
       let id = raw.trim();
@@ -3034,6 +3299,7 @@
       if (VALID_WP_MAP[id]) return id;
       const low = id.toLowerCase();
       if (WP_SLUG_MAP[low]) return WP_SLUG_MAP[low];
+      if (low.startsWith('vec:m3-') && VALID_WP_MAP[low]) return low;
       const candidate = 'wp-m3-' + low.replace(/^wp-m3-/, '').replace(/\.jpg$/i, '') + '.jpg';
       return VALID_WP_MAP[candidate] ? candidate : DEFAULT_M3_WP;
     }
@@ -3185,7 +3451,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.11.0)
+    // Zero-mutation DOM equality-guard helpers (v5.12.0)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -3327,12 +3593,64 @@
       }, 150);
     }
 
+    function updateStartPageClock() {
+      const wrap = document.getElementById('sp-clock-wrap');
+      if (!wrap) return;
+      const style = (state && state.clockStyle) || 'off';
+      const show = (style === 'minimal' || style === 'bold') && !state.activePrivate;
+      setCls(wrap, 'hidden', !show);
+      if (wrap.dataset.clockStyle !== style) wrap.dataset.clockStyle = style;
+      if (!show) return;
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      setTxt(document.getElementById('sp-clock-time'), `${hh}:${mm}`);
+      try {
+        setTxt(document.getElementById('sp-clock-date'), now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }));
+      } catch (e) {}
+    }
+
     function updateClockGreeting() {
+      updateStartPageClock();
       updateStartMotd();
+    }
+    setInterval(updateStartPageClock, 15000);
+
+    function syncNativeLocalOverlay() {
+      const anyModal = !!localContextMenu ||
+        !document.getElementById('add-fav-modal')?.classList.contains('hidden') ||
+        !document.getElementById('userscript-modal')?.classList.contains('hidden') ||
+        !document.getElementById('reset-settings-modal')?.classList.contains('hidden');
+      call('setLocalOverlayOpen', anyModal);
+    }
+
+    function animateCloseSheet(elOrId, doneCb) {
+      const el = typeof elOrId === 'string' ? document.getElementById(elOrId) : elOrId;
+      if (!el || el.classList.contains('hidden')) {
+        if (typeof doneCb === 'function') doneCb();
+        return;
+      }
+      if (el.classList.contains('is-closing')) return;
+      el.classList.add('is-closing');
+      setTimeout(() => {
+        el.classList.remove('is-closing');
+        if (typeof doneCb === 'function') doneCb();
+      }, 190);
+    }
+
+    function closeActiveSheet(el) {
+      const backdrop = el && el.closest ? el.closest('.sheet-backdrop') : null;
+      if (backdrop) {
+        animateCloseSheet(backdrop, () => call('closeScreen'));
+      } else {
+        call('closeScreen');
+      }
     }
 
     function backdropClose(ev) {
-      if (ev.target === ev.currentTarget) call('closeScreen');
+      if (ev.target === ev.currentTarget) {
+        animateCloseSheet(ev.currentTarget, () => call('closeScreen'));
+      }
     }
     function ctxBackdropClose(ev) {
       if (ev.target === ev.currentTarget) closeContextMenu();
@@ -3536,8 +3854,9 @@
           lpTimer = null;
           triggered = true;
           el.dataset.lpConsumed = '1';
+          try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch (_) {}
           onLongPress();
-        }, 480);
+        }, 440);
       }, { passive: true });
       el.addEventListener('touchmove', (e) => {
         if (!lpTimer || !e.touches || !e.touches.length) return;
@@ -3567,6 +3886,7 @@
       document.getElementById('fav-in-name').value = '';
       document.getElementById('fav-in-url').value = '';
       document.getElementById('add-fav-modal').classList.remove('hidden');
+      syncNativeLocalOverlay();
       setTimeout(() => document.getElementById('fav-in-name').focus(), 60);
     }
     function openEditFav(fav) {
@@ -3577,11 +3897,13 @@
       document.getElementById('fav-in-name').value = fav.title || '';
       document.getElementById('fav-in-url').value = fav.url || '';
       document.getElementById('add-fav-modal').classList.remove('hidden');
+      syncNativeLocalOverlay();
       setTimeout(() => document.getElementById('fav-in-name').focus(), 60);
     }
     function closeAddFav() {
       editingFavOldUrl = null;
       document.getElementById('add-fav-modal').classList.add('hidden');
+      syncNativeLocalOverlay();
     }
     function submitAddFav() {
       const name = document.getElementById('fav-in-name').value.trim();
@@ -3611,15 +3933,26 @@
       localContextMenu = ctx || null;
       const scr = document.getElementById('scr-context-menu');
       if (!scr || !localContextMenu) return;
+      try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch (_) {}
       renderContextMenuSheet(localContextMenu);
+      scr.classList.remove('is-closing');
       scr.classList.remove('hidden');
+      syncNativeLocalOverlay();
     }
     function closeContextMenu() {
       const wasLocal = !!localContextMenu;
-      localContextMenu = null;
       const scr = document.getElementById('scr-context-menu');
-      if (scr) scr.classList.add('hidden');
-      if (!wasLocal && state && state.screen === 'context-menu') call('closeScreen');
+      const finish = () => {
+        localContextMenu = null;
+        if (scr) scr.classList.add('hidden');
+        syncNativeLocalOverlay();
+        if (!wasLocal && state && state.screen === 'context-menu') call('closeScreen');
+      };
+      if (scr && !scr.classList.contains('hidden')) {
+        animateCloseSheet(scr, finish);
+      } else {
+        finish();
+      }
     }
 
     function buildCtxActionRow(opt) {
@@ -4065,10 +4398,12 @@
     function openResetSettingsModal() {
       const m = document.getElementById('reset-settings-modal');
       if (m) m.classList.remove('hidden');
+      syncNativeLocalOverlay();
     }
     function closeResetSettingsModal() {
       const m = document.getElementById('reset-settings-modal');
       if (m) m.classList.add('hidden');
+      syncNativeLocalOverlay();
     }
     function confirmResetSettings() {
       closeResetSettingsModal();
@@ -4175,7 +4510,7 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.11.0)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.12.0)
     const _domSigs = {
       sysTop: '',
       safeTop: '',
@@ -4240,10 +4575,18 @@
       syncMobileGlider(document.getElementById('tabs-mode-seg'), { isPriv: tabViewPrivate });
       syncMobileGlider(document.getElementById('sync-view-seg'));
       syncMobileGlider(document.getElementById('set-theme-seg'));
+      syncMobileGlider(document.getElementById('set-matstyle-seg'));
+      syncMobileGlider(document.getElementById('set-scstyle-seg'));
+      syncMobileGlider(document.getElementById('set-clock-seg'));
       syncMobileGlider(document.getElementById('set-bar-seg'));
       syncMobileGlider(document.getElementById('set-shield-level-seg'));
       syncMobileGlider(document.getElementById('shields-level-seg'));
       syncMobileGlider(document.getElementById('dl-mode-seg'));
+      syncMobileGlider(document.getElementById('wp-studio-seg'));
+      syncMobileGlider(document.getElementById('wp-theme-seg'));
+      syncMobileGlider(document.getElementById('wp-matstyle-seg'));
+      syncMobileGlider(document.getElementById('wp-scstyle-seg'));
+      syncMobileGlider(document.getElementById('wp-clock-seg'));
     }
     window.addEventListener('resize', syncAllMobileGliders, { passive: true });
 
@@ -4278,9 +4621,7 @@
         if (avSig !== _domSigs.spProfAv) {
           _domSigs.spProfAv = avSig;
           spProfAv.style.background = 'transparent';
-          spProfAv.innerHTML = prof.isGoogleSignedIn && prof.googleAvatarUrl
-            ? `<img src="${esc(prof.googleAvatarUrl)}" alt="" onerror="this.remove()">`
-            : renderMobileM3AvatarSvg(accId, 34);
+          spProfAv.innerHTML = renderProfileAvatarLayers(accId, prof, 34);
         }
       }
 
@@ -4290,9 +4631,9 @@
         setCls(editBtn, 'editing', favEditMode);
       }
 
-      // Airy 4-Column Borderless Quick Access Tiles (Diff-Guarded)
+      // Airy 4-Column Borderless Quick Access Tiles (Up to 11 Saved Sites + Add)
       const fg = document.getElementById('sp-fav-grid');
-      const favSlice = (state.bookmarks || []).slice(0, 7);
+      const favSlice = (state.bookmarks || []).slice(0, 11);
       const favSig = JSON.stringify({
         edit: favEditMode,
         items: favSlice.map((b) => [b.url || '', b.title || ''])
@@ -4550,7 +4891,7 @@
         if (!shown.length) {
           tg.innerHTML = `<div class="empty" style="grid-column:1/-1;">${tabViewPrivate ? 'No private tabs open.' : 'No open tabs.'}</div>`;
         } else {
-          const wpUrl = (normWp && normWp !== 'obsidian') ? `wallpapers/${normWp}` : '';
+          const wpUrl = getWallpaperAssetUrl(normWp);
           shown.forEach((t) => {
             const card = document.createElement('div');
             card.className = 'tab-card' + (t.id === state.activeTabId ? ' active' : '') + (t.suspended ? ' is-suspended' : '') + (animateCards ? ' is-entering' : '');
@@ -4727,34 +5068,30 @@
         }
       }
 
-      // Live Relay & LAN Health Status
-      const rBroker = sync.relayBroker || '';
+      // Calm Encrypted Connection Pill (hide noisy broker hostnames from primary UI)
       const rDot = document.getElementById('sync-relay-dot');
       const rTxt = document.getElementById('sync-relay-txt');
       const rBrk = document.getElementById('sync-relay-broker');
-      const brokerShort = (rBroker.includes('hivemq') && rBroker.includes('emqx')) ? 'HiveMQ + EMQX'
-        : (rBroker.includes('hivemq') ? 'HiveMQ TLS'
-        : (rBroker.includes('emqx') ? 'EMQX TLS' : (rBroker || 'Dual TLS')));
       if (isLan) {
         setCls(rDot, 'connecting', false);
         setCls(rDot, 'retrying', false);
-        setTxt(rTxt, 'Direct Wi-Fi LAN · Instant E2EE');
-        setTxt(rBrk, 'LAN + Cloud');
+        setTxt(rTxt, 'Connected · Direct Wi-Fi');
+        setTxt(rBrk, 'Encrypted');
       } else if (rStat === 'connected_cloud') {
         setCls(rDot, 'connecting', false);
         setCls(rDot, 'retrying', false);
-        setTxt(rTxt, 'E2EE Cloud TLS · Connected');
-        setTxt(rBrk, brokerShort);
+        setTxt(rTxt, 'Connected · Encrypted');
+        setTxt(rBrk, 'Refresh');
       } else if (rStat === 'retrying') {
         setCls(rDot, 'connecting', false);
         setCls(rDot, 'retrying', true);
-        setTxt(rTxt, 'Reconnecting to E2EE relay…');
-        setTxt(rBrk, brokerShort);
+        setTxt(rTxt, 'Reconnecting…');
+        setTxt(rBrk, 'Retry');
       } else {
         setCls(rDot, 'connecting', true);
         setCls(rDot, 'retrying', false);
-        setTxt(rTxt, 'Connecting to E2EE relay…');
-        setTxt(rBrk, brokerShort);
+        setTxt(rTxt, 'Connecting…');
+        setTxt(rBrk, 'Retry');
       }
 
       setTxt(document.getElementById('sync-pass-status'), sync.hasPassphrase ? 'Custom E2EE passphrase active' : 'Extra E2EE sync passphrase (optional)');
@@ -5083,17 +5420,23 @@
       return `<svg viewBox="0 0 64 64" width="${s}" height="${s}" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="32" fill="${a.bg}"/>${g}</svg>`;
     }
 
+    function renderProfileAvatarLayers(accId, prof, sz) {
+      const baseSvg = renderMobileM3AvatarSvg(accId, sz || 48);
+      if (prof && prof.isGoogleSignedIn && prof.googleAvatarUrl) {
+        return `${baseSvg}<img class="av-photo-layer" src="${esc(prof.googleAvatarUrl)}" referrerpolicy="no-referrer" alt="" onerror="this.remove()">`;
+      }
+      return baseSvg;
+    }
+
     function renderAvatarContent(el, prof, showGoogleDot) {
       if (!el || !prof) return;
       const accId = prof.accentColor || state.accentColor || 'amethyst';
       el.style.background = 'transparent';
-      const imgHtml = (prof.isGoogleSignedIn && prof.googleAvatarUrl)
-        ? `<img src="${esc(prof.googleAvatarUrl)}" alt="" onerror="this.remove()">`
-        : renderMobileM3AvatarSvg(accId, 64);
+      const layers = renderProfileAvatarLayers(accId, prof, 64);
       const gDot = (showGoogleDot && prof.isGoogleSignedIn)
         ? `<span class="yg-avatar-g">${GOOGLE_G_SVG}</span>`
         : '';
-      el.innerHTML = imgHtml + gDot;
+      el.innerHTML = layers + gDot;
     }
 
     function renderSettingsSheet() {
@@ -5145,7 +5488,7 @@
         : 'Standard Android downloads');
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.11.0';
+      const curV = u.currentVersion || '5.12.0';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -5183,11 +5526,24 @@
       const wpThumb = document.getElementById('set-wp-thumb');
       if (wpThumb && curWp !== _domSigs.setWpThumb) {
         _domSigs.setWpThumb = curWp;
-        wpThumb.style.backgroundImage = curWp === 'obsidian'
+        const assetUrl = getWallpaperAssetUrl(curWp);
+        wpThumb.style.backgroundImage = curWp === 'obsidian' || !assetUrl
           ? 'linear-gradient(135deg,#4f378b 0%,#141218 55%,#633b48 100%)'
-          : `url("wallpapers/${curWp}")`;
+          : `url("${assetUrl}")`;
       }
       setTxt(document.getElementById('set-wp-sub'), wpMeta ? wpMeta.name : 'Obsidian Monolith');
+      setCls(document.getElementById('sw-amoled-dark'), 'on', !!state.amoledDark);
+      const matSt = state.materialStyle || 'tonal';
+      setCls(document.getElementById('m-ms-tonal-btn'), 'active', matSt === 'tonal');
+      setCls(document.getElementById('m-ms-vibrant-btn'), 'active', matSt === 'vibrant');
+      setCls(document.getElementById('m-ms-minimal-btn'), 'active', matSt === 'minimal');
+      const scSt = state.shortcutStyle || 'circle';
+      setCls(document.getElementById('opt-sc-circle'), 'active', scSt !== 'tile');
+      setCls(document.getElementById('opt-sc-tile'), 'active', scSt === 'tile');
+      const clkSt = state.clockStyle || 'off';
+      setCls(document.getElementById('m-clk-off-btn'), 'active', clkSt === 'off');
+      setCls(document.getElementById('m-clk-min-btn'), 'active', clkSt === 'minimal');
+      setCls(document.getElementById('m-clk-bold-btn'), 'active', clkSt === 'bold');
       setCls(document.getElementById('sw-auto-wp-theme'), 'on', state.autoThemeFromWallpaper !== false);
 
       const zoom = Math.max(50, Math.min(200, Number(state.activeZoom || state.pageZoom || 100)));
@@ -5353,6 +5709,9 @@
         applySettingsViewLayout(false);
         if (settingsView === 'appearance') {
           syncMobileGlider(document.getElementById('set-theme-seg'));
+          syncMobileGlider(document.getElementById('set-matstyle-seg'));
+          syncMobileGlider(document.getElementById('set-scstyle-seg'));
+          syncMobileGlider(document.getElementById('set-clock-seg'));
           syncMobileGlider(document.getElementById('set-bar-seg'));
         } else if (settingsView === 'privacy') {
           syncMobileGlider(document.getElementById('set-shield-level-seg'));
@@ -5450,9 +5809,7 @@
           const pHex = ACCENT_HEX[p.accentColor] || '#d0bcff';
           const row = document.createElement('div');
           row.className = 'g-row';
-          const avContent = (p.isGoogleSignedIn && p.googleAvatarUrl)
-            ? `<img src="${esc(p.googleAvatarUrl)}" alt="" onerror="this.remove()">`
-            : renderMobileM3AvatarSvg(p.accentColor || 'amethyst', 36);
+          const avContent = renderProfileAvatarLayers(p.accentColor || 'amethyst', p, 36);
           const subTxt = (p.isGoogleSignedIn && p.googleEmail)
             ? p.googleEmail
             : `${ACCENT_LABEL[p.accentColor] || 'Amethyst'}`;
@@ -5520,6 +5877,25 @@
     }
 
     let wpFilter = 'all';
+    let wpStudioTab = 'gallery';
+    function setWpStudioTab(tab) {
+      wpStudioTab = tab === 'style' ? 'style' : 'gallery';
+      setCls(document.getElementById('wp-tab-gallery'), 'active', wpStudioTab === 'gallery');
+      setCls(document.getElementById('wp-tab-style'), 'active', wpStudioTab === 'style');
+      setCls(document.getElementById('wp-pane-gallery'), 'hidden', wpStudioTab !== 'gallery');
+      setCls(document.getElementById('wp-pane-style'), 'hidden', wpStudioTab !== 'style');
+      setDisp(document.getElementById('m-wp-filters'), wpStudioTab === 'gallery' ? 'flex' : 'none');
+      renderWallpapersSheet();
+      requestAnimationFrame(() => {
+        syncMobileGlider(document.getElementById('wp-studio-seg'));
+        if (wpStudioTab === 'style') {
+          syncMobileGlider(document.getElementById('wp-theme-seg'));
+          syncMobileGlider(document.getElementById('wp-matstyle-seg'));
+          syncMobileGlider(document.getElementById('wp-scstyle-seg'));
+          syncMobileGlider(document.getElementById('wp-clock-seg'));
+        }
+      });
+    }
     function setWpFilter(f) {
       wpFilter = f || 'all';
       document.querySelectorAll('#m-wp-filters .m3-chip').forEach((c) => setCls(c, 'active', c.dataset.wpf === wpFilter));
@@ -5528,15 +5904,67 @@
 
     function renderWallpapersSheet() {
       const wg = document.getElementById('m-wp-grid');
-      if (!wg) return;
       const isLight = (state.effectiveTheme || state.themeMode) === 'light';
       const activeWp = normalizeWallpaperId(state.wallpaper);
+
+      // Keep Style & Layout tab controls in sync
+      const curAcc = state.accentColor || 'amethyst';
+      setTxt(document.getElementById('wp-style-accent-lbl'), ACCENT_LABEL[curAcc] || 'Amethyst');
+      const wpAccBox = document.getElementById('wp-style-accents');
+      if (wpAccBox) {
+        if (wpAccBox.children.length === ACCENTS.length) {
+          Array.from(wpAccBox.children).forEach((b, idx) => setCls(b, 'active', ACCENTS[idx][0] === curAcc));
+        } else {
+          wpAccBox.innerHTML = '';
+          ACCENTS.forEach(([id, hex, lbl]) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'acc-orb' + (curAcc === id ? ' active' : '');
+            b.style.background = hex;
+            b.title = lbl;
+            b.setAttribute('aria-label', lbl);
+            b.onclick = () => call('setAccent', id);
+            wpAccBox.appendChild(b);
+          });
+        }
+      }
+      const mode = state.themeMode || 'dark';
+      setCls(document.getElementById('wp-th-light'), 'active', mode === 'light');
+      setCls(document.getElementById('wp-th-dark'), 'active', mode === 'dark');
+      setCls(document.getElementById('wp-th-auto'), 'active', mode === 'auto');
+      setCls(document.getElementById('sw-wp-amoled'), 'on', !!state.amoledDark);
+      const matSt = state.materialStyle || 'tonal';
+      setCls(document.getElementById('wp-ms-tonal'), 'active', matSt === 'tonal');
+      setCls(document.getElementById('wp-ms-vibrant'), 'active', matSt === 'vibrant');
+      setCls(document.getElementById('wp-ms-minimal'), 'active', matSt === 'minimal');
+      const scSt = state.shortcutStyle || 'circle';
+      setCls(document.getElementById('wp-sc-circle'), 'active', scSt !== 'tile');
+      setCls(document.getElementById('wp-sc-tile'), 'active', scSt === 'tile');
+      const clkSt = state.clockStyle || 'off';
+      setCls(document.getElementById('wp-clk-off'), 'active', clkSt === 'off');
+      setCls(document.getElementById('wp-clk-min'), 'active', clkSt === 'minimal');
+      setCls(document.getElementById('wp-clk-bold'), 'active', clkSt === 'bold');
+      setCls(document.getElementById('sw-wp-autotheme'), 'on', state.autoThemeFromWallpaper !== false);
+
+      requestAnimationFrame(() => {
+        syncMobileGlider(document.getElementById('wp-studio-seg'));
+        if (wpStudioTab === 'style') {
+          syncMobileGlider(document.getElementById('wp-theme-seg'));
+          syncMobileGlider(document.getElementById('wp-matstyle-seg'));
+          syncMobileGlider(document.getElementById('wp-scstyle-seg'));
+          syncMobileGlider(document.getElementById('wp-clock-seg'));
+        }
+      });
+
+      if (!wg) return;
       const wpSig = `${wpFilter}|${isLight ? 1 : 0}|${activeWp}`;
       if (wpSig === _domSigs.wpGrid) return;
       _domSigs.wpGrid = wpSig;
 
       wg.innerHTML = '';
       const filtered = WALLPAPERS.filter((w) => {
+        if (wpFilter === 'googlebook') return !!w.googlebook;
+        if (wpFilter === 'material') return w.category === 'abstract';
         if (wpFilter === 'butterfly') return !!w.butterfly;
         if (wpFilter === 'froggie') return !!w.froggie;
         if (wpFilter === 'dark') return w.mode === 'dark';
@@ -5549,9 +5977,10 @@
         btn.className = 'wp-tile' + (activeWp === w.id ? ' active' : '');
         btn.dataset.wpId = w.id;
         if (w.slug) btn.dataset.wpSlug = w.slug;
-        const thumb = w.id === 'obsidian'
+        const assetUrl = getWallpaperAssetUrl(w.id);
+        const thumb = w.id === 'obsidian' || !assetUrl
           ? `<div class="wp-live-thumb" style="background:${isLight ? 'linear-gradient(135deg,#eaddff 0%,#fef7ff 55%,#ffd8e4 100%)' : 'linear-gradient(135deg,#4f378b 0%,#141218 55%,#633b48 100%)'};"></div>`
-          : `<img src="wallpapers/${w.id}" alt="${esc(w.name)}">`;
+          : `<img src="${assetUrl}" alt="${esc(w.name)}" loading="lazy" draggable="false">`;
         btn.innerHTML = `
           ${thumb}
           <span class="wp-check"><svg viewBox="0 0 14 14" width="11" height="11" fill="none"><path d="M3 7.2l2.6 2.6L11 4.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -5804,7 +6233,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.11.0 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.12.0 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -5830,11 +6259,13 @@
       document.getElementById('us-in-desc').value = (us && us.description) || '';
       document.getElementById('us-in-code').value = (us && us.code) || '';
       document.getElementById('userscript-modal').classList.remove('hidden');
+      syncNativeLocalOverlay();
       setTimeout(() => document.getElementById('us-in-name').focus(), 60);
     }
     function closeUserscriptModal() {
       editingUserscriptId = '';
       document.getElementById('userscript-modal').classList.add('hidden');
+      syncNativeLocalOverlay();
     }
     function parseUserscriptHeader() {
       const code = (document.getElementById('us-in-code').value || '');
@@ -5949,6 +6380,11 @@
       if (document.documentElement.dataset.accent !== accent) document.documentElement.dataset.accent = accent;
       if (document.body.dataset.accent !== accent) document.body.dataset.accent = accent;
       setCls(document.body, 'theme-light', isLight);
+      setCls(document.body, 'amoled-dark', !!state.amoledDark);
+      const nextMat = state.materialStyle || 'tonal';
+      if (document.body.dataset.materialStyle !== nextMat) document.body.dataset.materialStyle = nextMat;
+      const nextSc = state.shortcutStyle || 'circle';
+      if (document.body.dataset.shortcutStyle !== nextSc) document.body.dataset.shortcutStyle = nextSc;
 
       if (state.defaultYoutubeQuality && state.defaultYoutubeQuality !== lastDefaultYtq) {
         lastDefaultYtq = state.defaultYoutubeQuality;
@@ -5988,8 +6424,9 @@
         const hadPrev = !!_domSigs.wpBg;
         const prevImg = wpBg.style.backgroundImage;
         _domSigs.wpBg = wpKey;
-        const nextImg = (curWp && curWp !== 'obsidian')
-          ? `url("wallpapers/${curWp}")`
+        const assetUrl = getWallpaperAssetUrl(curWp);
+        const nextImg = (curWp && curWp !== 'obsidian' && assetUrl)
+          ? `url("${assetUrl}")`
           : (isLight
             ? 'linear-gradient(140deg, #eaddff 0%, #fef7ff 52%, #ffd8e4 100%)'
             : 'linear-gradient(140deg, #4f378b 0%, #141218 52%, #633b48 100%)');
@@ -6029,7 +6466,12 @@
         }
         if (scr !== 'start') favEditMode = false;
         if (scr !== 'profile' && scr !== 'clear-data' && scr !== 'extensions') returnToSettings = false;
-        if (scr !== 'context-menu') localContextMenu = null;
+        if (scr !== 'context-menu') {
+          if (localContextMenu) {
+            localContextMenu = null;
+            syncNativeLocalOverlay();
+          }
+        }
         lastScreen = scr;
       }
 
@@ -6086,6 +6528,10 @@
         else if (fn === 'openDownloads') st.screen = 'downloads';
         else if (fn === 'setThemeMode') { st.themeMode = args[0] || 'dark'; st.effectiveTheme = st.themeMode === 'light' ? 'light' : 'dark'; }
         else if (fn === 'setAccent') { st.accentColor = args[0] || 'amethyst'; if (st.activeProfile) st.activeProfile.accentColor = st.accentColor; }
+        else if (fn === 'toggleAmoledDark') st.amoledDark = !st.amoledDark;
+        else if (fn === 'setMaterialStyle') st.materialStyle = args[0] || 'tonal';
+        else if (fn === 'setShortcutStyle') st.shortcutStyle = args[0] || 'circle';
+        else if (fn === 'setClockStyle') st.clockStyle = args[0] || 'off';
         else if (fn === 'setWallpaper' || fn === 'setWallpaperWithTheme') {
           st.wallpaper = normalizeWallpaperId(args[0] || DEFAULT_M3_WP);
           if (st.autoThemeFromWallpaper !== false && st.wallpaper !== 'obsidian') {
@@ -6350,7 +6796,7 @@
               ],
               drops: [
                 { id: 'vid_pc_1', dropType: 'video', title: 'Material 3 Expressive Motion Deep Dive', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=422', text: 'Continue watching at 07:02', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 45000 },
-                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.11.0-release.mp4', url: 'https://example.com/dejavu-v5.11.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
+                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.12.0-release.mp4', url: 'https://example.com/dejavu-v5.12.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
                 { id: 'bt_pc_1', dropType: 'batch_tabs', title: '2 tabs from Windows 11 Desktop', url: 'https://m3.material.io', text: 'Material Design 3 · GitHub', tabs: [{ title: 'Material Design 3', url: 'https://m3.material.io' }, { title: 'GitHub', url: 'https://github.com' }], fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 210000 }
               ]
             } : {
@@ -6416,9 +6862,9 @@
               ],
               sync: previewSync,
               update: {
-                currentVersion: '5.11.0',
+                currentVersion: '5.12.0',
                 status: qp.get('upd') === '1' ? 'available' : 'uptodate',
-                latestVersion: qp.get('upd') === '1' ? '5.12.0' : '5.11.0',
+                latestVersion: qp.get('upd') === '1' ? '5.13.0' : '5.12.0',
                 sizeLabel: qp.get('upd') === '1' ? '10.2 MB' : '',
                 releaseUrl: 'https://github.com/Dathevinci/Dejavu-browser/releases/latest',
                 available: qp.get('upd') === '1',

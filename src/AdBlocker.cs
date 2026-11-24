@@ -1306,6 +1306,8 @@ namespace DejavuBrowser
             HashSet<string> coreSet = new HashSet<string>(CoreAdDomains, StringComparer.OrdinalIgnoreCase);
             excs.ExceptWith(coreSet);
 
+            doms.TrimExcess();
+            excs.TrimExcess();
             lock (_lock)
             {
                 _domains = doms;
@@ -1315,6 +1317,7 @@ namespace DejavuBrowser
                 _siteCosmetics = cos;
                 _genericCosmetics = genCos;
             }
+            try { GC.Collect(2, GCCollectionMode.Optimized, false); } catch { }
         }
 
         private void RefreshAllListsFromWeb()
@@ -1439,6 +1442,8 @@ namespace DejavuBrowser
 
                 if (freshDomains.Count > CoreAdDomains.Length)
                 {
+                    freshDomains.TrimExcess();
+                    freshExceptions.TrimExcess();
                     lock (_lock)
                     {
                         _domains = freshDomains;
@@ -1480,6 +1485,7 @@ namespace DejavuBrowser
 
                     Action onUpdated = ListsUpdated;
                     if (onUpdated != null) onUpdated();
+                    try { GC.Collect(2, GCCollectionMode.Optimized, false); } catch { }
                 }
             }
             catch { }

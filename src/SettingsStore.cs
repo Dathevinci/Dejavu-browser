@@ -35,6 +35,7 @@ namespace DejavuBrowser
         public bool alwaysShowTabClose { get; set; }
         public bool compactTabBar { get; set; }
         public int defaultZoomPercent { get; set; }
+        public Dictionary<string, int> siteZoomLevels { get; set; }
         public string newTabMode { get; set; }
         public string homepageUrl { get; set; }
         public string startupBehavior { get; set; }
@@ -84,6 +85,7 @@ namespace DejavuBrowser
         public bool tabHoverPreview { get; set; }
 
         // v5.4.0 — Downloads
+        public bool turboDownloaderEnabled { get; set; }
         public string downloadFolder { get; set; }
         public bool askDownloadLocation { get; set; }
         public int turboThreads { get; set; }
@@ -126,6 +128,7 @@ namespace DejavuBrowser
             alwaysShowTabClose = false;
             compactTabBar = false;
             defaultZoomPercent = 100;
+            siteZoomLevels = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             newTabMode = "startpage";
             homepageUrl = "https://www.google.com";
             startupBehavior = "startpage";
@@ -167,10 +170,11 @@ namespace DejavuBrowser
             addressBarSuggestions = true;
 
             memorySaverEnabled = true;
-            memorySaverMinutes = 30;
+            memorySaverMinutes = 15;
             confirmCloseMultipleTabs = false;
             tabHoverPreview = true;
 
+            turboDownloaderEnabled = true;
             downloadFolder = "";
             askDownloadLocation = false;
             turboThreads = 8;
@@ -344,7 +348,26 @@ namespace DejavuBrowser
                             if (loaded.pausedHosts == null) loaded.pausedHosts = new List<string>();
                             if (string.IsNullOrEmpty(loaded.appearanceMode)) loaded.appearanceMode = "auto";
                             loaded.accentColor = NormalizeAccent(loaded.accentColor);
-                            if (loaded.defaultZoomPercent < 50 || loaded.defaultZoomPercent > 200) loaded.defaultZoomPercent = 100;
+                            if (loaded.defaultZoomPercent < 50 || loaded.defaultZoomPercent > 250) loaded.defaultZoomPercent = 100;
+                            Dictionary<string, int> cleanZooms = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                            if (loaded.siteZoomLevels != null)
+                            {
+                                foreach (KeyValuePair<string, int> kv in loaded.siteZoomLevels)
+                                {
+                                    if (cleanZooms.Count >= 300) break;
+                                    if (string.IsNullOrWhiteSpace(kv.Key)) continue;
+                                    int zp = kv.Value;
+                                    if (zp >= 50 && zp <= 250)
+                                    {
+                                        cleanZooms[kv.Key.Trim().ToLowerInvariant()] = zp;
+                                    }
+                                }
+                            }
+                            loaded.siteZoomLevels = cleanZooms;
+                            if (!text.Contains("\"turboDownloaderEnabled\""))
+                            {
+                                loaded.turboDownloaderEnabled = true;
+                            }
                             if (string.IsNullOrEmpty(loaded.newTabMode)) loaded.newTabMode = "startpage";
                             if (string.IsNullOrEmpty(loaded.homepageUrl)) loaded.homepageUrl = "https://www.google.com";
                             if (string.IsNullOrEmpty(loaded.startupBehavior)) loaded.startupBehavior = "startpage";

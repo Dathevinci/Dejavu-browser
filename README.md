@@ -4,21 +4,21 @@ A fast, private native **Google Material Design 3** browser for **Windows 10/11*
 
 **Official Website:** **[dathevinci.github.io/Dejavu-browser](https://dathevinci.github.io/Dejavu-browser/)**
 
-## Download (`v5.9.1`)
+## Download (`v5.10.0`)
 
 Grab the latest release from the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
 
-- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.9.1.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
-- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.9.1.0`, runs from any folder or USB with no admin rights required).
-- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.9.1` · `versionCode 591`, Android 8.0+).
+- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.10.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
+- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.10.0.0`, runs from any folder or USB with no admin rights required).
+- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.10.0` · `versionCode 600`, Android 8.0+).
 - **`SHA256SUMS.txt`** — Official SHA-256 checksums paired with GitHub **SLSA Build Provenance Attestations**.
 
-## What's New in v5.9.1
+## What's New in v5.10.0
 
-- **Native In-App Android Automatic Updater**: Downloads verified signed APKs directly inside `dejavu Mobile` with live progress, verifies cryptographic **SHA-256** against `SHA256SUMS.txt` + V1/V2/V3 signing certificates, pre-downloads silently on unmetered Wi-Fi, and installs in-place via Android's official **`PackageInstaller.Session`** API (`USER_ACTION_NOT_REQUIRED` on Android 12+, `setRequestUpdateOwnership` on Android 14+, automatic permission-grant resume) — never redirecting to GitHub.
-- **A-to-Z Pixelbook / ChromeOS Material Design 3 Redesign**: Authentic ChromeOS tonal surface hierarchy across tabs, toolbar, left-aligned zero-jump Realbox omnibox (emphasized host + muted path, instant focus swap), borderless ghost bookmarks bar, Memory Saver sleeping-tab dotted rings, and true M3 state layers (zero `filter: brightness()` or blur hacks).
-- **Pixelbook Start Page & Edge-to-Edge Workspaces**: Single-row circular-to-squircle shortcut wells with adaptive contrast pills over all 32 wallpapers, borderless At-a-Glance greeting & status strips, and full-viewport ChromeOS workspaces for **Settings**, **Extensions**, **Turbo Downloads**, and **dejavu Link Hub** — plus matching Light Mode tonal cards across popovers and Android companion.
-- **End-to-End CSS, JS & C# Optimization**: Atomic single-frame Dark ↔ Light theme switching (zero mid-transition flash), signature-cached workspace rendering, zero-allocation tab sync loops, 200+ lines of redundant CSS removed, throttled native default-browser checks, and deduplicated WebView2 state deltas.
+- **Lower Memory Usage (Windows & Android)**: Instant `Low` memory target for hidden popups, extension popups (`about:blank` reset), and background tabs on Windows, faster Memory Saver (`5m | 15m | 30m | 1h`), native working-set trimming on minimize/tab close, trimmed AdBlocker heaps, plus Android background WebView `onPause()` + `RENDERER_PRIORITY_WAIVED`, automatic LRU background tab hibernation (`saveState` + `destroy` with Material 3 `Sleeping` chip), and `onTrimMemory()` reclamation.
+- **Persistent Page Zoom / Scaling (`50%–250%` Desktop · `50%–200%` Android)**: Remembers both per-site zoom and default zoom across reloads, new tabs, and restarts — including `Ctrl+-` / `Ctrl++` / `Ctrl+Wheel` / menu zoom on Windows and `±10%` menu steps (`90%` in one tap!) on Android.
+- **Toggle Off `dejavu Downloader` (8× Turbo & Video Grabber)**: New master switch in **Settings → Downloads** on both Windows and Android to cleanly disable 8× download interception, media sniffing, and the floating Butterfly video pill in favor of standard native browser/Android downloads.
+- **A-to-Z Material Design 3 Optimization & Native Android Auto-Updater**: Zero idle GPU `will-change` waste, crisp Material 3 disabled row states, interactive reset-to-100% zoom pill, Pixelbook/Chromebook M3 chrome, and native in-app SHA-256 + `PackageInstaller` Android auto-updates.
 
 ## Core Capabilities
 

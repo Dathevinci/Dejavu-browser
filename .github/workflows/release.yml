@@ -256,22 +256,23 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — Native In-App Android Automatic Updater & Pixelbook Material Design 3 Polish
+          ### dejavu __TAG__ — Low-Memory Engine, Persistent Zoom Scaling, Optional dejavu Downloader & Material Design 3 Optimization
 
-          - **Native In-App Android Automatic Updater (Zero GitHub Redirect)**:
-            - **Direct In-App Download & Cryptographic Verification** — Streams `dejavu-mobile.apk` directly inside `dejavu Mobile` with live progress in both the floating banner and Settings, verifying exact **SHA-256** against `SHA256SUMS.txt`, APK archive integrity, and V1/V2/V3 signing certificate parity before installing.
-            - **Official Android `PackageInstaller.Session` In-Place Upgrades** — Installs seamlessly inside Android (`USER_ACTION_NOT_REQUIRED` on Android 12+, `setRequestUpdateOwnership` on Android 14+, foreground Activity confirmation launch for Android 14–16 compatibility, and automatic `FileProvider` fallback).
-            - **Seamless Wi-Fi Pre-Download & Permission Resume** — Silently pre-downloads and verifies updates on unmetered Wi-Fi for instant 1-tap installation, and automatically resumes installation when returning after granting Android's one-time *"Install unknown apps"* permission.
-          - **Pixelbook / ChromeOS Material Design 3 Redesign & Performance Polish**:
-            - Authentic ChromeOS tonal chrome hierarchy, zero-jump left-aligned Realbox omnibox, refined connected active tabs with Memory Saver sleeping-tab rings, open single-row Pixelbook Start Page, edge-to-edge ChromeOS workspaces (Settings, Extensions, Turbo Downloads, dejavu Link Hub), atomic single-frame theme switching, and C#/JS/CSS performance optimizations.
-          - **Core Platform & Security Hardening (`__TAG__` · Android `versionCode 591`)**:
-            - Full Win32 PE VersionInfo (`FileVersion 5.9.1.0`, `dejavu Browser`), explicit `asInvoker` manifest, `/highentropyva+` & `/deterministic`, zero `WScript.Shell`/batch scripts, Microsoft Trusted Signing + PFX CI hooks, Play-Protect-clean V1+V2+V3 signed Android APK, **`SHA256SUMS.txt`**, and GitHub **SLSA Build Provenance Attestations**.
-            - Preserves Native Chrome-like Material You Extensions, Persistent Window Bounds, Self-Healing VPN + 3-Hop Tor, Theme-Adaptive 24-Palette Butterfly Video Downloader FAB, 32 Curated M3 HD Wallpapers, `dejavu Link v2.3`, Brave-Exact Shields (`279K+` Windows / `108K+` Android rules), and Windows Hello / Android Passkeys.
+          - **Major Memory Reductions (Windows & Android)**:
+            - **Windows WebView2 & Host** — Hidden overlay & extension popups drop to `Low` memory target immediately (extension popups unload to `about:blank`), inactive non-audible tabs shift to `Low` memory immediately, faster Memory Saver (`5m | 15m | 30m | 1h`, default `15m`), idle thumbnail pruning, Win32 working-set trimming on minimize/tab close, trimmed AdBlocker hash sets, and leaner Chromium runtime flags.
+            - **Android WebView Hibernation** — Inactive tabs pause (`onPause`) with waived renderer priority (`RENDERER_PRIORITY_WAIVED`), automatic LRU background tab hibernation (`saveState` + `destroy` beyond 3 background tabs, instant restore on tap), `onTrimMemory()` / `onLowMemory()` reclamation, a new **Memory Saver** toggle, and Material 3 **`Sleeping`** tab badges.
+          - **Persistent Page Zoom / Scaling Across Sessions**:
+            - Saves both **per-site zoom** (`siteZoomLevels`) and **default page zoom** across reloads, new tabs, and restarts — supporting `Ctrl+-` / `Ctrl++` / `Ctrl+Wheel` / menu zoom (`50%–250%`) on Windows and `±10%` menu steps (`90%` in one tap) + `50%–200%` slider on Android.
+          - **Master Toggle to Turn Off `dejavu Downloader` (8× Turbo & Video Grabber)**:
+            - New switch in **Settings → Downloads** on both Windows and Android to cleanly disable 8× download interception, background media sniffing, and the floating Butterfly video button — falling back to standard native browser/Android downloads and reducing RAM usage.
+          - **A-to-Z Material Design 3 Polish & Native Android Auto-Updater (`__TAG__` · Android `versionCode 600`)**:
+            - Removed idle GPU `will-change` layers, added crisp M3 disabled row states and click-to-reset zoom pill, while preserving native SHA-256 + `PackageInstaller` Android auto-updates, Pixelbook M3 chrome, Native Chrome-like Material You Extensions, Persistent Window Bounds, Self-Healing VPN + 3-Hop Tor, 32 Curated M3 Wallpapers, `dejavu Link v2.3`, and Brave-Exact Shields.
+            - Full Win32 PE VersionInfo (`FileVersion 5.10.0.0`, `dejavu Browser`), explicit `asInvoker` manifest, `/highentropyva+` & `/deterministic`, Play-Protect-clean V1+V2+V3 signed Android APK, **`SHA256SUMS.txt`**, and GitHub **SLSA Build Provenance Attestations**.
 
           #### Downloads & Verification
-          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.9.1.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
-          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.9.1.0`, `/highentropyva+`, deterministic build)
-          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 591`, V1+V2+V3 signed, Android 8.0+)
+          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.10.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
+          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.10.0.0`, `/highentropyva+`, deterministic build)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 600`, V1+V2+V3 signed, Android 8.0+)
           - **SHA256SUMS.txt** — Official SHA-256 verification checksums for all release binaries (paired with GitHub SLSA Build Provenance Attestations)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
@@ -289,5 +290,5 @@ jobs:
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
             release-files/SHA256SUMS.txt \
-            --title "dejavu $TAG — Native Android In-App Auto-Updater & Pixelbook M3 Polish" \
+            --title "dejavu $TAG — Low-Memory Engine, Persistent Zoom, Optional Downloader & Material 3 Polish" \
             --notes-file /tmp/release_notes.md

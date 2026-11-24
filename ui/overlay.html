@@ -1154,7 +1154,7 @@
     .hist-row:hover .hist-row-acts { display: flex; }
 
     /* =========================================================================
-       Mode 7: Upgraded Material Design 3 VPN Control Center (v5.9.1 · 392×584)
+       Mode 7: Upgraded Material Design 3 VPN Control Center (v5.10.0 · 392×584)
        Verified Tunnel Status Strip · 1-Tap Verify + New IP · Active Engine Pill
        ========================================================================= */
     .vpn-panel-box {
@@ -3125,7 +3125,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v5.9.1</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v5.10.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -3200,7 +3200,7 @@
     </div>
   </div>
 
-  <!-- Mode 7: Upgraded Material Design 3 VPN Control Center (v5.9.1 · 392×584) -->
+  <!-- Mode 7: Upgraded Material Design 3 VPN Control Center (v5.10.0 · 392×584) -->
   <div id="mode-vpn" class="overlay-shell hidden">
     <div class="panel-box vpn-panel-box">
       <div class="panel-head">
@@ -3671,7 +3671,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v5.9.1</span>
+        <span id="mn-version-lbl">dejavu v5.10.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -4293,7 +4293,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.9.1'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.10.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -5201,17 +5201,24 @@
     if (btnDlsMedia) btnDlsMedia.addEventListener('click', () => send({ type: 'openDlManager', tab: 'media' }));
 
     function renderDownloadsPanel(d) {
+      const turboOn = d.turboDownloaderEnabled !== false;
       const turbo = Array.isArray(d.turboItems) ? d.turboItems : [];
       const legacy = Array.isArray(d.items) ? d.items : [];
       const mediaCnt = Number(d.mediaCount || 0);
-      if (btnDlsMedia) btnDlsMedia.textContent = mediaCnt > 0 ? `Media (${mediaCnt})` : 'Grab Media';
+      if (btnDlsMedia) {
+        btnDlsMedia.classList.toggle('hidden', !turboOn);
+        btnDlsMedia.textContent = mediaCnt > 0 ? `Media (${mediaCnt})` : 'Grab Media';
+      }
+      if (btnDlsManager) btnDlsManager.classList.toggle('hidden', !turboOn);
 
       const totalCount = turbo.length + legacy.length;
       btnDlsClear.classList.toggle('hidden', totalCount === 0);
       dlsList.innerHTML = '';
 
       if (totalCount === 0) {
-        dlsList.innerHTML = '<div class="empty-msg">No downloads yet.<br>Click <strong>8x Manager</strong> to download YouTube MP4/MP3 or any URL, or <strong>Grab Media</strong> from this page.</div>';
+        dlsList.innerHTML = turboOn
+          ? '<div class="empty-msg">No downloads yet.<br>Click <strong>8x Manager</strong> to download YouTube MP4/MP3 or any URL, or <strong>Grab Media</strong> from this page.</div>'
+          : '<div class="empty-msg">No downloads yet.<br>Files you download appear here automatically.</div>';
         return;
       }
 
@@ -5750,7 +5757,7 @@
     function renderMenuPanel(d) {
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.9.1'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.10.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');

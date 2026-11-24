@@ -1,5 +1,5 @@
 /**
- * dejavu v5.9.1 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * dejavu v5.10.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
  * 12 Official HCT Material You Themes, 32 Pure M3, Butterfly & Froggie Wallpapers, Auto Wallpaper-to-Theme,
  * Redesigned Pixel At-a-Glance Message of the Day Card, Clean 5-Control ChromeOS Toolbar,
  * Zero-Glitch 120Hz Tab Strip, Brave-Grade Shields, Real-Time dejavu Link Hub & 8x Turbo Downloader.
@@ -320,9 +320,15 @@
   const btnOptOpenDlFolder = document.getElementById('btn-opt-open-dl-folder');
   const optAskDlLocation = document.getElementById('opt-ask-dl-location');
   const optAutoOpenDl = document.getElementById('opt-auto-open-dl');
+  const optTurboDownloaderEnabled = document.getElementById('opt-turbo-downloader-enabled');
   const optTurboThreads = document.getElementById('opt-turbo-threads');
   const optDefaultVideoQuality = document.getElementById('opt-default-video-quality');
   const optFloatingMediaBtn = document.getElementById('opt-floating-media-btn');
+  const rowMemoryMinutes = document.getElementById('row-memory-minutes');
+  const rowAutoOpenDl = document.getElementById('row-auto-open-dl');
+  const rowTurboThreads = document.getElementById('row-turbo-threads');
+  const rowVideoQuality = document.getElementById('row-video-quality');
+  const rowFloatingMediaBtn = document.getElementById('row-floating-media-btn');
 
   // Category 7: Passwords & Autofill
   const btnOpenGooglePasswords = document.getElementById('btn-open-google-passwords');
@@ -569,7 +575,7 @@
     silver: '#b8c8e2'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.9.1 — 32 HD + 1 Live = 33 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.10.0 — 32 HD + 1 Live = 33 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 18 Sculptural / Architectural Material Design 3 HD Wallpapers (10 Dark, 8 Light)
@@ -780,9 +786,10 @@
       permClipboard: 'ask',
       permAutoplay: 'allow',
       memorySaverEnabled: true,
-      memorySaverMinutes: 30,
+      memorySaverMinutes: 15,
       confirmCloseMultipleTabs: false,
       tabHoverPreview: true,
+      turboDownloaderEnabled: true,
       downloadFolder: '',
       askDownloadLocation: false,
       turboThreads: 8,
@@ -852,7 +859,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.9.1',
+    appVersion: bootData.appVersion || '5.10.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -2117,7 +2124,7 @@
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     vpn: { title: 'Privacy VPN', sub: '86-country encrypted tunnel, Smart & Global Tor routing, auto-connect & WebRTC shield' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.9.1, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.10.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2425,7 +2432,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.9.1';
+    const ver = state.appVersion || '5.10.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -2527,12 +2534,15 @@
     if (optHomepageUrl && document.activeElement !== optHomepageUrl) {
       optHomepageUrl.value = o.homepageUrl || 'https://www.google.com';
     }
-    setSwitchState(optMemorySaver, o.memorySaverEnabled !== false);
-    setSegmentedVal(optMemoryMinutes, o.memorySaverMinutes || 30);
+    const memOn = o.memorySaverEnabled !== false;
+    setSwitchState(optMemorySaver, memOn);
+    setSegmentedVal(optMemoryMinutes, o.memorySaverMinutes || 15);
+    if (rowMemoryMinutes) rowMemoryMinutes.classList.toggle('is-disabled', !memOn);
     setSwitchState(optConfirmCloseTabs, !!o.confirmCloseMultipleTabs);
     setSwitchState(optTabHover, o.tabHoverPreview !== false);
 
     // Category 6: Downloads
+    const turboOn = o.turboDownloaderEnabled !== false;
     if (optDownloadFolderPath) {
       const dir = o.downloadFolder || state.downloadFolder || state.downloadsDir || 'Downloads';
       optDownloadFolderPath.textContent = dir;
@@ -2540,12 +2550,20 @@
     }
     setSwitchState(optAskDlLocation, !!o.askDownloadLocation);
     setSwitchState(optAutoOpenDl, !!o.autoOpenDownloads);
+    setSwitchState(optTurboDownloaderEnabled, turboOn);
     setSegmentedVal(optTurboThreads, o.turboThreads || 8);
     if (optDefaultVideoQuality) optDefaultVideoQuality.value = o.defaultVideoQuality || 'best';
     if (dlmQualitySelect && o.defaultVideoQuality && !state.dlManagerOpen) {
       dlmQualitySelect.value = o.defaultVideoQuality;
     }
     setSwitchState(optFloatingMediaBtn, !o.hideFloatingMediaButton);
+    if (rowAutoOpenDl) rowAutoOpenDl.classList.toggle('is-disabled', !turboOn);
+    if (rowTurboThreads) rowTurboThreads.classList.toggle('is-disabled', !turboOn);
+    if (rowVideoQuality) rowVideoQuality.classList.toggle('is-disabled', !turboOn);
+    if (rowFloatingMediaBtn) rowFloatingMediaBtn.classList.toggle('is-disabled', !turboOn);
+    if (railMedia) {
+      railMedia.classList.toggle('hidden', !turboOn);
+    }
 
     // Category 7: Passwords & Autofill
     setSwitchState(optSavePasswords, o.savePasswords !== false);
@@ -2786,6 +2804,16 @@
       updateOpt({ defaultZoomPercent: Number(optDefaultZoomSlider.value) || 100 });
     });
   }
+  if (optDefaultZoomVal) {
+    optDefaultZoomVal.addEventListener('click', () => {
+      if (optDefaultZoomSlider) {
+        optDefaultZoomSlider.value = '100';
+        syncZoomSliderFill(100);
+      }
+      optDefaultZoomVal.textContent = '100%';
+      updateOpt({ defaultZoomPercent: 100 });
+    });
+  }
   bindBoolSwitch(optShowHome, 'showHomeButton', false);
   bindBoolSwitch(optShowFavbar, 'favoritesBarHidden', true);
   bindBoolSwitch(optShowNavRail, 'hideNavRail', true);
@@ -2917,6 +2945,7 @@
   if (btnOptOpenDlFolder) btnOptOpenDlFolder.addEventListener('click', () => send({ type: 'turboOpenFolder' }));
   bindBoolSwitch(optAskDlLocation, 'askDownloadLocation', false);
   bindBoolSwitch(optAutoOpenDl, 'autoOpenDownloads', false);
+  bindBoolSwitch(optTurboDownloaderEnabled, 'turboDownloaderEnabled', false);
   bindSeg(optTurboThreads, 'turboThreads', Number);
   if (optDefaultVideoQuality) optDefaultVideoQuality.addEventListener('change', () => updateOpt({ defaultVideoQuality: optDefaultVideoQuality.value }));
   bindBoolSwitch(optFloatingMediaBtn, 'hideFloatingMediaButton', true);

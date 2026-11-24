@@ -62,7 +62,7 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * AntDM-Style 8-Thread Accelerated Turbo Download Manager + Native YouTube InnerTube
  * Multi-Client Quality/Audio Resolver + Android MediaMuxer + HLS .m3u8 Assembler
- * for dejavu Mobile v5.9.1.
+ * for dejavu Mobile v5.10.0.
  */
 public class MobileDownloadManager {
     public interface Listener {
@@ -2717,7 +2717,7 @@ public class MobileDownloadManager {
     }
 
     /**
-     * Zero-Idle-CPU Isolated Shadow DOM Material Design 3 Expressive Butterfly Video/Audio Downloader FAB (v5.9.1).
+     * Zero-Idle-CPU Isolated Shadow DOM Material Design 3 Expressive Butterfly Video/Audio Downloader FAB (v5.10.0).
      * - Full 24-Palette Material You HCT Dynamic Theme Engine (12 seeds x Dark & Light) via window.__dejavuSetMediaTheme({accent,mode}).
      * - Default Collapsed Rest State: unobtrusive 36x36px circular M3 badge with sculpted dejavu Butterfly SVG in active theme
      *   (100% document.createElementNS, YouTube Trusted Types CSP safe, event-driven with zero polling timers, GPU-only motion).

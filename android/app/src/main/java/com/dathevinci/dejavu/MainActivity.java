@@ -100,6 +100,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -332,6 +333,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private static final Interpolator M3_EMPHASIZED_DECEL = new PathInterpolator(0.05f, 0.7f, 0.1f, 1.0f);
     private static final Interpolator M3_SPRING = new PathInterpolator(0.34f, 1.56f, 0.64f, 1.0f);
 
+    private static final int MAX_LIVE_BACKGROUND_TABS = 3;
+
     private static final class MobileTab {
         int id;
         volatile String url = "dejavu://newtab";
@@ -340,6 +343,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         boolean isPrivate = false;
         boolean loading = false;
         boolean desktopMode = false;
+        boolean suspended = false;
+        long lastActiveMs = SystemClock.uptimeMillis();
+        Bundle savedWebState = null;
         volatile int blockedCount = 0;
         int trackingParamsStripped = 0;
         String thumbDataUrl = "";
@@ -377,6 +383,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private boolean autoHideBar = true;
     private boolean darkWebPages = false;
     private int pageZoom = 100;
+    private final Map<String, Integer> siteZoomLevels = new HashMap<>();
     private boolean desktopSiteDefault = false;
     private boolean httpsFirst = true;
     private boolean doNotTrack = true;
@@ -384,6 +391,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private boolean blockThirdPartyCookies = false;
     private boolean pullToRefresh = true;
     private boolean openLinksInBackground = false;
+    private boolean memorySaverEnabled = true;
+    private boolean turboDownloaderEnabled = true;
     private String defaultYoutubeQuality = "auto"; // "auto" | "1080p" | "720p" | "360p" | "m4a"
     private boolean floatingDownloadButton = true;
     private boolean extSponsorCleaner = true;
@@ -585,10 +594,125 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        MobileTab active = getActiveTab();
+        if (active != null && active.webView != null) {
+            try { active.webView.onPause(); } catch (Throwable ignored) { }
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+        MobileTab active = getActiveTab();
+        if (active != null && active.webView != null && !active.isNewTab) {
+            try { active.webView.onResume(); } catch (Throwable ignored) { }
+        }
         if (autoUpdater != null) autoUpdater.onActivityResumed(this);
         if (uiReady) pushStateToUi();
+    }
+
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        if (!memorySaverEnabled) return;
+        if (level >= TRIM_MEMORY_RUNNING_CRITICAL || level >= TRIM_MEMORY_COMPLETE) {
+            reclaimBackgroundMemory(0);
+        } else if (level >= TRIM_MEMORY_UI_HIDDEN || level >= TRIM_MEMORY_RUNNING_LOW) {
+            reclaimBackgroundMemory(1);
+        }
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        if (memorySaverEnabled) {
+            reclaimBackgroundMemory(0);
+        }
+    }
+
+    private void reclaimBackgroundMemory(int keepMaxBackground) {
+        for (MobileTab t : tabs) {
+            if (t.id != activeTabId) {
+                t.thumbDataUrl = "";
+                if (downloadManager != null) downloadManager.clearTabMedia(t.id);
+            }
+        }
+        enforceBackgroundWebViewCap(keepMaxBackground);
+    }
+
+    private void hibernateTab(MobileTab t) {
+        if (t == null || t.webView == null || t.isNewTab) return;
+        try {
+            Bundle state = new Bundle();
+            t.webView.saveState(state);
+            t.savedWebState = state;
+        } catch (Throwable ignored) {
+            t.savedWebState = null;
+        }
+        if (t.shieldScriptHandler != null) {
+            try { t.shieldScriptHandler.remove(); } catch (Throwable ignored) { }
+            t.shieldScriptHandler = null;
+        }
+        if (t.scrollScriptHandler != null) {
+            try { t.scrollScriptHandler.remove(); } catch (Throwable ignored) { }
+            t.scrollScriptHandler = null;
+        }
+        try {
+            t.webView.stopLoading();
+            t.webView.onPause();
+            webContainer.removeView(t.webView);
+            t.webView.destroy();
+        } catch (Throwable ignored) { }
+        t.webView = null;
+        t.hasDocumentStartScript = false;
+        t.loading = false;
+        t.suspended = true;
+        if (downloadManager != null) downloadManager.clearTabMedia(t.id);
+    }
+
+    private void enforceBackgroundWebViewCap(int maxBg) {
+        if (!memorySaverEnabled) return;
+        List<MobileTab> liveBg = new ArrayList<>();
+        for (MobileTab t : tabs) {
+            if (t.id != activeTabId && !t.isNewTab && t.webView != null) {
+                liveBg.add(t);
+            }
+        }
+        int excess = liveBg.size() - Math.max(0, maxBg);
+        if (excess <= 0) return;
+        Collections.sort(liveBg, (a, b) -> Long.compare(a.lastActiveMs, b.lastActiveMs));
+        for (int i = 0; i < excess; i++) {
+            hibernateTab(liveBg.get(i));
+        }
+    }
+
+    private boolean isFloatingDownloadButtonEffective() {
+        return turboDownloaderEnabled && floatingDownloadButton;
+    }
+
+    private int resolveZoomForUrl(String url) {
+        int fallback = Math.max(50, Math.min(200, pageZoom));
+        if (url == null || url.isEmpty()) return fallback;
+        String host = MobileAdBlocker.normalizeHost(url);
+        if (!host.isEmpty()) {
+            Integer saved = siteZoomLevels.get(host);
+            if (saved != null && saved >= 50 && saved <= 200) {
+                return saved;
+            }
+        }
+        return fallback;
+    }
+
+    private void applyZoomForTab(MobileTab tab, String url) {
+        if (tab == null || tab.webView == null) return;
+        try {
+            int z = resolveZoomForUrl(url);
+            if (tab.webView.getSettings().getTextZoom() != z) {
+                tab.webView.getSettings().setTextZoom(z);
+            }
+        } catch (Throwable ignored) { }
     }
 
     @SuppressWarnings("deprecation")
@@ -1868,11 +1992,17 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         setChromeCollapsed(false);
         activeTabId = tabId;
         MobileTab active = getActiveTab();
+        if (active != null) active.lastActiveMs = SystemClock.uptimeMillis();
         for (MobileTab t : tabs) {
             if (t.webView != null) {
                 t.webView.animate().cancel();
                 t.webView.setAlpha(1f);
-                t.webView.setVisibility((t == active && !t.isNewTab) ? View.VISIBLE : View.GONE);
+                boolean isVisible = (t == active && !t.isNewTab);
+                t.webView.setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                if (!isVisible) {
+                    try { t.webView.onPause(); } catch (Throwable ignored) { }
+                    try { t.webView.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_WAIVED, true); } catch (Throwable ignored) { }
+                }
             }
         }
         if (active == null || active.isNewTab) {
@@ -1894,7 +2024,24 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             activeUiScreen = "none";
             uiWebView.setVisibility(View.GONE);
             swipeRefresh.setEnabled(pullToRefresh);
+            boolean wasHibernated = (active.webView == null);
             ensureTabWebView(active);
+            if (wasHibernated) {
+                active.suspended = false;
+                boolean restored = false;
+                if (active.savedWebState != null) {
+                    try {
+                        restored = (active.webView.restoreState(active.savedWebState) != null);
+                    } catch (Throwable ignored) { }
+                    active.savedWebState = null;
+                }
+                if (!restored && active.url != null && !active.url.isEmpty() && !"dejavu://newtab".equals(active.url)) {
+                    loadTabUrl(active, active.url);
+                }
+            }
+            try { active.webView.onResume(); } catch (Throwable ignored) { }
+            try { active.webView.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, true); } catch (Throwable ignored) { }
+            applyZoomForTab(active, active.url);
             active.webView.animate().cancel();
             active.webView.setVisibility(View.VISIBLE);
             if (switchedTab) {
@@ -1905,6 +2052,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 active.webView.setAlpha(1f);
             }
         }
+        enforceBackgroundWebViewCap(MAX_LIVE_BACKGROUND_TABS);
         applyNativeTheme();
         updateChromeVisibility();
         updateChromeUi();
@@ -2149,7 +2297,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         for (MobileTab t : tabs) {
             if (t.webView == null) continue;
             WebSettings ws = t.webView.getSettings();
-            ws.setTextZoom(pageZoom);
+            ws.setTextZoom(resolveZoomForUrl(t.url));
             ws.setJavaScriptCanOpenWindowsAutomatically(!blockPopups);
             ws.setUserAgentString(t.desktopMode ? DESKTOP_UA : resolveMobileUserAgent());
             cm.setAcceptThirdPartyCookies(t.webView, !t.isPrivate && !blockThirdPartyCookies);
@@ -2175,7 +2323,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         ws.setUseWideViewPort(true);
         ws.setBuiltInZoomControls(true);
         ws.setDisplayZoomControls(false);
-        ws.setTextZoom(pageZoom);
+        ws.setTextZoom(resolveZoomForUrl(tab.url));
         ws.setJavaScriptCanOpenWindowsAutomatically(!blockPopups);
         ws.setSupportMultipleWindows(true);
         ws.setMediaPlaybackRequiresUserGesture(false);
@@ -2290,7 +2438,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     });
                     return adBlocker.createBlockedResponse(request);
                 }
-                if (downloadManager != null && !request.isForMainFrame()) {
+                if (turboDownloaderEnabled && downloadManager != null && !request.isForMainFrame()) {
                     boolean added = downloadManager.recordSniffedMedia(tab.id, reqUrl, "", tab.title);
                     if (added) {
                         final JSONArray mediaSnap = downloadManager.getMediaSnapshot(tab.id);
@@ -2312,6 +2460,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 tab.loading = true;
                 tab.url = url;
                 tab.blockedCount = 0;
+                applyZoomForTab(tab, url);
                 if (downloadManager != null) downloadManager.clearTabMedia(tab.id);
                 if (tab.webView != null) {
                     tab.webView.innerScrollAtTop = true;
@@ -2350,11 +2499,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                         view.evaluateJavascript(siteCssJs, null);
                     }
                 }
-                if (floatingDownloadButton) {
+                if (isFloatingDownloadButtonEffective()) {
                     view.evaluateJavascript(MobileDownloadManager.getFloatingDownloadButtonScript(), null);
                     pushMediaThemeToTab(view);
                 }
-                if (downloadManager != null) {
+                if (turboDownloaderEnabled && downloadManager != null) {
                     JSONArray mediaSnap = downloadManager.getMediaSnapshot(tab.id);
                     if (mediaSnap != null && mediaSnap.length() > 0) {
                         view.evaluateJavascript("if(window.__djvUpdateMobileSniffed)window.__djvUpdateMobileSniffed(" + mediaSnap.toString() + ");", null);
@@ -2462,7 +2611,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         wv.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
             try {
                 String fileName = URLUtil.guessFileName(url, contentDisposition, mimetype);
-                if (downloadManager != null && url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
+                if (turboDownloaderEnabled && downloadManager != null && url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
                     String cookies = CookieManager.getInstance().getCookie(url);
                     String queued = downloadManager.enqueueDownload(url, fileName, tab.url, userAgent, cookies, 8);
                     Toast.makeText(MainActivity.this, "8x Turbo Download: " + queued, Toast.LENGTH_SHORT).show();
@@ -3025,7 +3174,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.9.1)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.10.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -3554,6 +3703,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("blockThirdPartyCookies", blockThirdPartyCookies);
                 st.put("pullToRefresh", pullToRefresh);
                 st.put("openLinksInBackground", openLinksInBackground);
+                st.put("memorySaverEnabled", memorySaverEnabled);
+                st.put("turboDownloaderEnabled", turboDownloaderEnabled);
                 st.put("defaultYoutubeQuality", defaultYoutubeQuality);
                 st.put("floatingDownloadButton", floatingDownloadButton);
                 st.put("adBlockEnabled", adBlocker.isEnabled());
@@ -3590,6 +3741,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("shields", shieldsObj);
 
                 st.put("activeUrl", activePageUrl);
+                st.put("activeZoom", resolveZoomForUrl(activePageUrl));
                 st.put("activeTitle", (active != null && !active.isNewTab) ? active.title : (active != null && active.isPrivate ? "Private Tab" : "Start Page"));
                 st.put("activePrivate", active != null && active.isPrivate);
                 st.put("desktopMode", active != null && active.desktopMode);
@@ -3608,6 +3760,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     o.put("url", t.url);
                     o.put("isNewTab", t.isNewTab);
                     o.put("isPrivate", t.isPrivate);
+                    o.put("suspended", t.suspended);
                     o.put("thumb", "tabs".equals(activeUiScreen) ? (t.thumbDataUrl != null ? t.thumbDataUrl : "") : "");
                     tabArr.put(o);
                 }
@@ -3891,7 +4044,22 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         barPosition = "top".equals(prefs.getString("barPosition", "bottom")) ? "top" : "bottom";
         autoHideBar = prefs.getBoolean("autoHideBar", true);
         darkWebPages = prefs.getBoolean("darkWebPages", false);
-        pageZoom = Math.max(80, Math.min(150, prefs.getInt("pageZoom", 100)));
+        pageZoom = Math.max(50, Math.min(200, prefs.getInt("pageZoom", 100)));
+        siteZoomLevels.clear();
+        try {
+            String szRaw = prefs.getString("siteZoomLevels", "{}");
+            if (szRaw != null && !szRaw.isEmpty()) {
+                JSONObject szObj = new JSONObject(szRaw);
+                Iterator<String> keys = szObj.keys();
+                while (keys.hasNext() && siteZoomLevels.size() < 200) {
+                    String host = keys.next();
+                    int zp = szObj.optInt(host, 100);
+                    if (host != null && !host.isEmpty() && zp >= 50 && zp <= 200) {
+                        siteZoomLevels.put(host.toLowerCase(Locale.US), zp);
+                    }
+                }
+            }
+        } catch (Exception ignored) { }
         desktopSiteDefault = prefs.getBoolean("desktopSiteDefault", false);
         httpsFirst = prefs.getBoolean("httpsFirst", true);
         doNotTrack = prefs.getBoolean("doNotTrack", true);
@@ -3899,6 +4067,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         blockThirdPartyCookies = prefs.getBoolean("blockThirdPartyCookies", false);
         pullToRefresh = prefs.getBoolean("pullToRefresh", true);
         openLinksInBackground = prefs.getBoolean("openLinksInBackground", false);
+        memorySaverEnabled = prefs.getBoolean("memorySaverEnabled", true);
+        turboDownloaderEnabled = prefs.getBoolean("turboDownloaderEnabled", true);
         defaultYoutubeQuality = normalizeYoutubeQuality(prefs.getString("defaultYoutubeQuality", "auto"));
         floatingDownloadButton = prefs.getBoolean("floatingDownloadButton", true);
         extSponsorCleaner = prefs.getBoolean("extSponsorCleaner", true);
@@ -3950,6 +4120,14 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     private void saveLocalCollections() {
+        JSONObject szObj = new JSONObject();
+        try {
+            for (Map.Entry<String, Integer> e : siteZoomLevels.entrySet()) {
+                if (e.getKey() != null && e.getValue() != null) {
+                    szObj.put(e.getKey(), e.getValue().intValue());
+                }
+            }
+        } catch (Exception ignored) { }
         prefs.edit()
             .putString("searchEngine", searchEngine)
             .putString("wallpaper", wallpaper)
@@ -3961,6 +4139,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putBoolean("autoHideBar", autoHideBar)
             .putBoolean("darkWebPages", darkWebPages)
             .putInt("pageZoom", pageZoom)
+            .putString("siteZoomLevels", szObj.toString())
             .putBoolean("desktopSiteDefault", desktopSiteDefault)
             .putBoolean("httpsFirst", httpsFirst)
             .putBoolean("doNotTrack", doNotTrack)
@@ -3968,6 +4147,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putBoolean("blockThirdPartyCookies", blockThirdPartyCookies)
             .putBoolean("pullToRefresh", pullToRefresh)
             .putBoolean("openLinksInBackground", openLinksInBackground)
+            .putBoolean("memorySaverEnabled", memorySaverEnabled)
+            .putBoolean("turboDownloaderEnabled", turboDownloaderEnabled)
             .putString("defaultYoutubeQuality", defaultYoutubeQuality)
             .putBoolean("floatingDownloadButton", floatingDownloadButton)
             .putBoolean("extSponsorCleaner", extSponsorCleaner)
@@ -4445,7 +4626,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
     private void scanActivePageMedia() {
         final MobileTab t = getActiveTab();
-        if (downloadManager == null || t == null || t.isNewTab || t.webView == null) return;
+        if (!turboDownloaderEnabled || downloadManager == null || t == null || t.isNewTab || t.webView == null) return;
         if (MobileDownloadManager.isYouTubeUrl(t.url)) {
             downloadManager.probeVideoFormatsAsync(t.url, t.id, null);
         }
@@ -5187,9 +5368,25 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         @JavascriptInterface
         public void setPageZoom(final int zoom) {
             mainHandler.post(() -> {
-                pageZoom = Math.max(80, Math.min(150, zoom));
+                pageZoom = Math.max(50, Math.min(200, zoom));
+                MobileTab active = getActiveTab();
+                if (active != null && !active.isNewTab && !active.isPrivate && active.url != null) {
+                    String host = MobileAdBlocker.normalizeHost(active.url);
+                    if (!host.isEmpty()) {
+                        if (pageZoom == 100) {
+                            siteZoomLevels.remove(host);
+                        } else {
+                            if (siteZoomLevels.size() >= 200 && !siteZoomLevels.containsKey(host)) {
+                                siteZoomLevels.clear();
+                            }
+                            siteZoomLevels.put(host, pageZoom);
+                        }
+                    }
+                }
                 for (MobileTab t : tabs) {
-                    if (t.webView != null) t.webView.getSettings().setTextZoom(pageZoom);
+                    if (t.webView != null) {
+                        t.webView.getSettings().setTextZoom(pageZoom);
+                    }
                 }
                 saveLocalCollections();
                 pushStateToUi();
@@ -5513,12 +5710,47 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
 
         @JavascriptInterface
+        public void toggleMemorySaver() {
+            mainHandler.post(() -> {
+                memorySaverEnabled = !memorySaverEnabled;
+                if (memorySaverEnabled) {
+                    enforceBackgroundWebViewCap(MAX_LIVE_BACKGROUND_TABS);
+                }
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleTurboDownloader() {
+            mainHandler.post(() -> {
+                turboDownloaderEnabled = !turboDownloaderEnabled;
+                boolean effFab = isFloatingDownloadButtonEffective();
+                for (MobileTab t : tabs) {
+                    if (!turboDownloaderEnabled && downloadManager != null) {
+                        downloadManager.clearTabMedia(t.id);
+                    }
+                    if (t.webView == null || t.isNewTab) continue;
+                    if (effFab) {
+                        t.webView.evaluateJavascript(MobileDownloadManager.getFloatingDownloadButtonScript(), null);
+                        pushMediaThemeToTab(t.webView);
+                    } else {
+                        t.webView.evaluateJavascript("(function(){var h=document.getElementById('__djv_m_antdm__');if(h)h.remove();window.__djvMobileAntDm=false;})();", null);
+                    }
+                }
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
         public void toggleFloatingDownloadButton() {
             mainHandler.post(() -> {
                 floatingDownloadButton = !floatingDownloadButton;
+                boolean effFab = isFloatingDownloadButtonEffective();
                 for (MobileTab t : tabs) {
                     if (t.webView == null || t.isNewTab) continue;
-                    if (floatingDownloadButton) {
+                    if (effFab) {
                         t.webView.evaluateJavascript(MobileDownloadManager.getFloatingDownloadButtonScript(), null);
                         pushMediaThemeToTab(t.webView);
                     } else {
@@ -5783,10 +6015,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 autoHideBar = true;
                 darkWebPages = false;
                 pageZoom = 100;
+                siteZoomLevels.clear();
                 desktopSiteDefault = false;
                 searchEngine = "google";
                 pullToRefresh = true;
                 openLinksInBackground = false;
+                memorySaverEnabled = true;
+                turboDownloaderEnabled = true;
                 httpsFirst = true;
                 doNotTrack = true;
                 blockPopups = true;

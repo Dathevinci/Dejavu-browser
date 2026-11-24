@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 
 /**
- * dejavu True Brave-Exact Shields Mobile Engine (v5.9.1)
+ * dejavu True Brave-Exact Shields Mobile Engine (v5.10.0)
  * - Background cached EasyList + EasyPrivacy + uBlock Quick-Fixes + Brave Specific/Disconnect/Unbreak + OISD + Peter Lowe
  *   compiled into ctx.getFilesDir()/filters-v4/ with 24h TTL (zero UI-thread I/O, 100,000+ rules!)
  * - 720+ millisecond-0 built-in core ad, tracker, telemetry, OEM, d3ward, adblock-tester, popunder & crypto-miner domains
@@ -842,7 +842,7 @@ public final class MobileAdBlocker {
             conn.setInstanceFollowRedirects(false);
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(15000);
-            conn.setRequestProperty("User-Agent", "dejavu-mobile/5.9.1");
+            conn.setRequestProperty("User-Agent", "dejavu-mobile/5.10.0");
             conn.setRequestProperty("Accept-Encoding", "gzip");
             int code = conn.getResponseCode();
             if (code >= 300 && code < 400) {
@@ -1495,13 +1495,18 @@ public final class MobileAdBlocker {
      * 2. Clean empty 200 text/html for blocked ad iframes (Accept includes text/html or Sec-Fetch-Dest: iframe)
      * 3. 403 Blocked for blocked ad scripts/images/XHR/fetch/beacons so real adblock tests register them as blocked
      */
+    private static final Map<String, String> BLOCKED_RESPONSE_HEADERS;
+    static {
+        Map<String, String> h = new HashMap<>(4);
+        h.put("Cache-Control", "no-store");
+        h.put("Access-Control-Allow-Origin", "*");
+        BLOCKED_RESPONSE_HEADERS = Collections.unmodifiableMap(h);
+    }
+
     public WebResourceResponse createBlockedResponse(WebResourceRequest request) {
         String reqUrl = (request != null && request.getUrl() != null) ? request.getUrl().toString() : "";
         String low = reqUrl.toLowerCase(Locale.US);
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Cache-Control", "no-store");
-        headers.put("Access-Control-Allow-Origin", "*");
+        Map<String, String> headers = BLOCKED_RESPONSE_HEADERS;
 
         // 1. Brave google-ima.js surrogate ONLY for imasdk.googleapis.com/.../ima3.js
         if (low.contains("imasdk.googleapis.com") && low.contains("ima3")) {

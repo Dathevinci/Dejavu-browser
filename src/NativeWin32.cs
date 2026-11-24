@@ -216,6 +216,22 @@ namespace DejavuBrowser
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern IntPtr LoadLibrary(string lpFileName);
 
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetCurrentProcess();
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool SetProcessWorkingSetSize(IntPtr hProcess, IntPtr dwMinimumWorkingSetSize, IntPtr dwMaximumWorkingSetSize);
+
+        public static void TrimProcessWorkingSet()
+        {
+            try
+            {
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, false);
+                SetProcessWorkingSetSize(GetCurrentProcess(), new IntPtr(-1), new IntPtr(-1));
+            }
+            catch { }
+        }
+
         public static void EnablePerMonitorDpi()
         {
             try

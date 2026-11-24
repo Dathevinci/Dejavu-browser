@@ -71,6 +71,7 @@ namespace DejavuBrowser
         public DateTime LastActiveUtc;
         public string UpgradedFromHttpUrl;
         public string DefaultUserAgent;
+        public bool FloatingMediaInjected;
 
         public BrowserTab(int id, string groupId)
         {
@@ -293,7 +294,12 @@ namespace DejavuBrowser
             string extraArgs =
                 gpuArgs +
                 "--disable-quic " +
-                "--enable-features=ParallelDownloading,BackForwardCache,WebAuthenticationWindowsHello,WebAuthenticationConditionalUI,FedCm " +
+                "--disable-background-networking " +
+                "--disable-component-update " +
+                "--disable-domain-reliability " +
+                "--disable-breakpad " +
+                "--disable-features=Translate,OptimizationHints,MediaRouter,InterestFeedContentSuggestions " +
+                "--enable-features=ParallelDownloading,WebAuthenticationWindowsHello,WebAuthenticationConditionalUI,FedCm " +
                 "--proxy-server=http://127.0.0.1:" + ProxyBridge.ListenPort + " " +
                 "--proxy-bypass-list=localhost;127.0.0.1;[::1];dejavu.local";
             if (Settings == null || Settings.vpnWebRtcProtection)
@@ -863,6 +869,8 @@ namespace DejavuBrowser
         private System.Windows.Forms.Timer _mediaPushTimer;
         private System.Windows.Forms.Timer _memorySaverTimer;
         private System.Windows.Forms.Timer _boundsSaveTimer;
+        private System.Windows.Forms.Timer _zoomSaveTimer;
+        private bool _suppressZoomChangedSave;
         private bool _restoreMaximizedOnShow;
         private bool _wasMaximizedBeforeMinimize;
         private bool _initialPlacementApplied;
@@ -1141,6 +1149,17 @@ namespace DejavuBrowser
                 }
             };
 
+            _zoomSaveTimer = new System.Windows.Forms.Timer();
+            _zoomSaveTimer.Interval = 380;
+            _zoomSaveTimer.Tick += (s, e) =>
+            {
+                _zoomSaveTimer.Stop();
+                if (!IsDisposed && !_isPrivateWindow && _settings != null && _profiles != null)
+                {
+                    try { _profiles.SaveActiveSettings(_settings); } catch { }
+                }
+            };
+
             Shown += (s, e) =>
             {
                 if (_restoreMaximizedOnShow)
@@ -1185,11 +1204,17 @@ namespace DejavuBrowser
                 {
                     _wasMinimized = true;
                     HidePopover(false);
+                    SetWindowMemoryTargetLow(true);
+                    NativeWin32.TrimProcessWorkingSet();
                     return;
                 }
                 bool isZoomedNow = IsHandleCreated && NativeWin32.IsZoomed(Handle);
                 bool restoredFromMin = _wasMinimized;
-                if (restoredFromMin) _wasMinimized = false;
+                if (restoredFromMin)
+                {
+                    _wasMinimized = false;
+                    SetWindowMemoryTargetLow(false);
+                }
                 _wasMaximized = isZoomedNow || (WindowState == FormWindowState.Maximized);
 
                 if (!isZoomedNow && WindowState == FormWindowState.Normal && !_isHtmlFullscreen &&
@@ -1308,6 +1333,7 @@ namespace DejavuBrowser
             if (_downloadHideTimer != null) { _downloadHideTimer.Stop(); _downloadHideTimer.Dispose(); }
             if (_memorySaverTimer != null) { _memorySaverTimer.Stop(); _memorySaverTimer.Dispose(); }
             if (_boundsSaveTimer != null) { _boundsSaveTimer.Stop(); _boundsSaveTimer.Dispose(); }
+            if (_zoomSaveTimer != null) { _zoomSaveTimer.Stop(); _zoomSaveTimer.Dispose(); }
 
             if (_popoverPopup != null) { try { _popoverPopup.Close(); } catch { } }
             if (_hudPopup != null) { try { _hudPopup.Close(); } catch { } }
@@ -1334,29 +1360,118 @@ namespace DejavuBrowser
             }
         }
 
-        private void RunMemorySaverSweep()
+        private bool IsTurboDownloaderEnabled
         {
-            if (IsDisposed || _settings == null || !_settings.memorySaverEnabled) return;
-            int thresholdMinutes = (_settings.memorySaverMinutes >= 5 && _settings.memorySaverMinutes <= 240)
-                ? _settings.memorySaverMinutes
-                : 30;
-            DateTime now = DateTime.UtcNow;
+            get { return _settings == null || _settings.turboDownloaderEnabled; }
+        }
+
+        private bool IsFloatingMediaButtonEffective
+        {
+            get { return IsTurboDownloaderEnabled && (_settings == null || !_settings.hideFloatingMediaButton); }
+        }
+
+        private void SetWindowMemoryTargetLow(bool low)
+        {
+            CoreWebView2MemoryUsageTargetLevel level = low
+                ? CoreWebView2MemoryUsageTargetLevel.Low
+                : CoreWebView2MemoryUsageTargetLevel.Normal;
+            try
+            {
+                if (_shellView != null && !_shellView.IsDisposed && _shellView.CoreWebView2 != null)
+                {
+                    _shellView.CoreWebView2.MemoryUsageTargetLevel = level;
+                }
+            }
+            catch { }
+            try
+            {
+                if (low)
+                {
+                    if (_popoverPopup != null) _popoverPopup.SetMemoryUsageLow(true);
+                    if (_hudPopup != null) _hudPopup.SetMemoryUsageLow(true);
+                    if (_suggestPopup != null) _suggestPopup.SetMemoryUsageLow(true);
+                    if (_extActionPopup != null) _extActionPopup.SetMemoryUsageLow(true);
+                }
+            }
+            catch { }
             for (int i = 0; i < _tabs.Count; i++)
             {
                 BrowserTab t = _tabs[i];
-                if (t == null || t.Id == _activeTabId || t.IsNewTab || t.IsPinned) continue;
-                if (!t.CoreReady || t.WebView == null || t.WebView.IsDisposed || t.WebView.CoreWebView2 == null) continue;
+                if (t == null || !t.CoreReady || t.WebView == null || t.WebView.IsDisposed || t.WebView.CoreWebView2 == null) continue;
                 try
                 {
                     CoreWebView2 core = t.WebView.CoreWebView2;
-                    if (core.IsSuspended || core.IsDocumentPlayingAudio) continue;
-                    if ((now - t.LastActiveUtc).TotalMinutes >= thresholdMinutes)
+                    if (low)
                     {
-                        Task<bool> ignored = core.TrySuspendAsync();
+                        if (!core.IsDocumentPlayingAudio)
+                        {
+                            core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
+                        }
+                    }
+                    else if (t.Id == _activeTabId)
+                    {
+                        core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
                     }
                 }
                 catch { }
             }
+        }
+
+        private void RunMemorySaverSweep()
+        {
+            if (IsDisposed || _settings == null) return;
+            bool saverOn = _settings.memorySaverEnabled;
+            int thresholdMinutes = (_settings.memorySaverMinutes >= 5 && _settings.memorySaverMinutes <= 240)
+                ? _settings.memorySaverMinutes
+                : 15;
+            DateTime now = DateTime.UtcNow;
+            bool didReclaim = false;
+            bool suspendedAny = false;
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab t = _tabs[i];
+                if (t == null || t.Id == _activeTabId || t.IsNewTab) continue;
+
+                // Prune cached base64 overview thumbnails for background tabs idle > 5 min when overview is closed
+                if (!_tabOverviewOpen && !string.IsNullOrEmpty(t.ThumbnailDataUrl) && (now - t.LastActiveUtc).TotalMinutes >= 5.0)
+                {
+                    t.ThumbnailDataUrl = "";
+                    t.ThumbnailUrl = "";
+                    didReclaim = true;
+                }
+
+                if (!saverOn || t.IsPinned) continue;
+                if (!t.CoreReady || t.WebView == null || t.WebView.IsDisposed || t.WebView.CoreWebView2 == null) continue;
+                try
+                {
+                    CoreWebView2 core = t.WebView.CoreWebView2;
+                    if (core.IsDocumentPlayingAudio) continue;
+                    core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
+                    if (core.IsSuspended) continue;
+                    if ((now - t.LastActiveUtc).TotalMinutes >= thresholdMinutes)
+                    {
+                        t.ThumbnailDataUrl = "";
+                        t.ThumbnailUrl = "";
+                        SuspendTabQuietlyAsync(core);
+                        suspendedAny = true;
+                        didReclaim = true;
+                    }
+                }
+                catch { }
+            }
+            if (suspendedAny) SchedulePushTabDeltaToShell();
+            if (didReclaim) NativeWin32.TrimProcessWorkingSet();
+        }
+
+        private async void SuspendTabQuietlyAsync(CoreWebView2 core)
+        {
+            if (core == null) return;
+            try
+            {
+                bool ok = await core.TrySuspendAsync();
+                if (ok && !IsDisposed) SchedulePushTabDeltaToShell();
+            }
+            catch { }
         }
 
         private bool HasFavoritesBar
@@ -1442,11 +1557,12 @@ namespace DejavuBrowser
 
                 // v5.4.0 Tabs & Performance
                 { "memorySaverEnabled", _settings.memorySaverEnabled },
-                { "memorySaverMinutes", _settings.memorySaverMinutes > 0 ? _settings.memorySaverMinutes : 30 },
+                { "memorySaverMinutes", _settings.memorySaverMinutes > 0 ? _settings.memorySaverMinutes : 15 },
                 { "confirmCloseMultipleTabs", _settings.confirmCloseMultipleTabs },
                 { "tabHoverPreview", _settings.tabHoverPreview },
 
                 // v5.4.0 Downloads
+                { "turboDownloaderEnabled", _settings.turboDownloaderEnabled },
                 { "downloadFolder", _settings.downloadFolder ?? "" },
                 { "askDownloadLocation", _settings.askDownloadLocation },
                 { "turboThreads", _settings.turboThreads > 0 ? _settings.turboThreads : 8 },
@@ -2990,6 +3106,7 @@ namespace DejavuBrowser
         private void CreateTab(string initialUrl, bool activate, int afterTabId)
         {
             BrowserTab tab = new BrowserTab(_nextTabId++, _activeTabGroupId);
+            tab.ZoomFactor = ResolveZoomPercentForUrl(initialUrl) / 100.0;
             if (!string.IsNullOrEmpty(initialUrl))
             {
                 tab.IsNewTab = false;
@@ -3072,8 +3189,31 @@ namespace DejavuBrowser
                 try
                 {
                     if (tab.WebView.CoreWebView2.IsSuspended) tab.WebView.CoreWebView2.Resume();
+                    tab.WebView.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
                 }
                 catch { }
+            }
+
+            // Immediately nudge inactive non-audible background tabs into Low memory target to cut RAM usage
+            if (_settings == null || _settings.memorySaverEnabled)
+            {
+                for (int i = 0; i < _tabs.Count; i++)
+                {
+                    BrowserTab other = _tabs[i];
+                    if (other == null || other.Id == tabId || !other.CoreReady ||
+                        other.WebView == null || other.WebView.IsDisposed || other.WebView.CoreWebView2 == null)
+                    {
+                        continue;
+                    }
+                    try
+                    {
+                        if (!other.WebView.CoreWebView2.IsDocumentPlayingAudio)
+                        {
+                            other.WebView.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
+                        }
+                    }
+                    catch { }
+                }
             }
 
             UpdateWindowTitle();
@@ -3204,7 +3344,10 @@ namespace DejavuBrowser
                 if (tab.WebView.ContainsFocus) NativeWin32.SetFocus(Handle);
                 Controls.Remove(tab.WebView);
                 tab.WebView.Dispose();
+                tab.WebView = null;
+                NativeWin32.TrimProcessWorkingSet();
             }
+            tab.ThumbnailDataUrl = "";
             _pendingMediaPushDueUtc.Remove(tab.Id);
             if (_turboDownloads != null) _turboDownloads.ClearTabMedia(tab.Id);
             _tabs.RemoveAt(idx);
@@ -3779,11 +3922,29 @@ namespace DejavuBrowser
                 {
                     try { core.IsMuted = true; } catch { }
                 }
-                double defZoom = (_settings != null && _settings.defaultZoomPercent >= 50 && _settings.defaultZoomPercent <= 200)
-                    ? (_settings.defaultZoomPercent / 100.0)
-                    : 1.0;
+                string initialZoomUrl = !string.IsNullOrEmpty(tab.PendingNavigateUrl) ? tab.PendingNavigateUrl : tab.Url;
+                double defZoom = ResolveZoomPercentForUrl(initialZoomUrl) / 100.0;
                 tab.ZoomFactor = defZoom;
+                _suppressZoomChangedSave = true;
                 try { wv.ZoomFactor = defZoom; } catch { }
+                finally { _suppressZoomChangedSave = false; }
+
+                wv.ZoomFactorChanged += (s, e) =>
+                {
+                    if (_suppressZoomChangedSave || IsDisposed || tab == null || tab.IsNewTab || wv == null || wv.IsDisposed) return;
+                    try
+                    {
+                        double zf = Math.Round(Math.Max(0.5, Math.Min(2.5, wv.ZoomFactor)), 2);
+                        if (Math.Abs(tab.ZoomFactor - zf) >= 0.005)
+                        {
+                            tab.ZoomFactor = zf;
+                            int pct = (int)Math.Round(zf * 100.0);
+                            PersistTabZoom(tab, pct);
+                            SchedulePushTabDeltaToShell();
+                        }
+                    }
+                    catch { }
+                };
 
                 core.Settings.IsStatusBarEnabled = true;
                 core.Settings.AreDefaultContextMenusEnabled = true;
@@ -3824,10 +3985,11 @@ namespace DejavuBrowser
                 };
 
                 tab.ShieldScriptId = await core.AddScriptToExecuteOnDocumentCreatedAsync(_docStartScript);
-                if (!string.IsNullOrEmpty(_floatingMediaScript))
+                if (IsTurboDownloaderEnabled && !string.IsNullOrEmpty(_floatingMediaScript))
                 {
                     await core.AddScriptToExecuteOnDocumentCreatedAsync(BuildMediaThemeScript(tab));
                     await core.AddScriptToExecuteOnDocumentCreatedAsync(_floatingMediaScript);
+                    tab.FloatingMediaInjected = true;
                 }
                 if (!string.IsNullOrEmpty(_cwsBannerScript))
                 {
@@ -3916,6 +4078,7 @@ namespace DejavuBrowser
 
                     tab.IsLoading = true;
                     tab.Url = e.Uri;
+                    ApplyResolvedZoomToTab(tab, e.Uri);
                     tab.BlockedCount = 0;
                     tab.CosmeticBlockedCount = 0;
                     tab.FingerprintingBlockedCount = 0;
@@ -3924,7 +4087,7 @@ namespace DejavuBrowser
                     _pendingMediaPushDueUtc.Remove(tab.Id);
                     SyncCdpBlockedUrlsForNavigation(tab, e.Uri);
                     bool paused = _adBlocker.IsPausedForHost(AdBlocker.ExtractHost(e.Uri));
-                    bool floatBtnOn = (_settings == null || !_settings.hideFloatingMediaButton);
+                    bool floatBtnOn = IsFloatingMediaButtonEffective;
                     core.ExecuteScriptAsync(
                         "window.__dejavuAdblockPaused = " + (paused ? "true" : "false") + ";" +
                         "if(window.__dejavuUpdateShieldCfg)window.__dejavuUpdateShieldCfg({enabled:" + (_adBlocker.GlobalEnabled ? "true" : "false") +
@@ -3934,7 +4097,7 @@ namespace DejavuBrowser
                         ",blockCookies:" + (_adBlocker.BlockCookieNotices ? "true" : "false") + "});" +
                         "window.__dejavuFloatingBtnEnabled = " + (floatBtnOn ? "true" : "false") + ";" +
                         "if(window.__dejavuSetFloatingBtnEnabled)window.__dejavuSetFloatingBtnEnabled(" + (floatBtnOn ? "true" : "false") + ");" +
-                        BuildMediaThemeScript(tab));
+                        (IsTurboDownloaderEnabled ? BuildMediaThemeScript(tab) : ""));
                     SchedulePushTabDeltaToShell();
                 };
 
@@ -4573,7 +4736,7 @@ namespace DejavuBrowser
         {
             try
             {
-                if (_turboDownloads == null || tab == null || e == null || e.Request == null || e.Response == null) return;
+                if (!IsTurboDownloaderEnabled || _turboDownloads == null || tab == null || e == null || e.Request == null || e.Response == null) return;
                 int status = e.Response.StatusCode;
                 if (status < 200 || status >= 300) return;
                 string uri = e.Request.Uri;
@@ -4614,7 +4777,7 @@ namespace DejavuBrowser
         private void PushSniffedMediaToTabWidget(BrowserTab tab)
         {
             if (_turboDownloads == null || tab == null || tab.IsNewTab || !tab.CoreReady || tab.WebView == null || tab.WebView.IsDisposed) return;
-            if (_settings != null && _settings.hideFloatingMediaButton) return;
+            if (!IsFloatingMediaButtonEffective) return;
             // Per-tab 400ms trailing debounce so bursts of media HTTP responses coalesce into 1 ExecuteScriptAsync call!
             _pendingMediaPushDueUtc[tab.Id] = DateTime.UtcNow.AddMilliseconds(400);
             if (_mediaPushTimer != null && !_mediaPushTimer.Enabled)
@@ -4663,7 +4826,7 @@ namespace DejavuBrowser
             {
                 return;
             }
-            if (_settings != null && _settings.hideFloatingMediaButton) return;
+            if (!IsFloatingMediaButtonEffective) return;
             try
             {
                 var list = _turboDownloads.BuildMediaPayloadList(tab.Id);
@@ -5295,9 +5458,9 @@ namespace DejavuBrowser
                     }
                 }
 
-                // Route all HTTP/HTTPS downloads through our multi-thread AntDM-style Turbo Download Manager!
-                // (blob: and data: downloads stay on native WebView2 so browser-generated files never break.)
-                if (_turboDownloads != null &&
+                // Route HTTP/HTTPS downloads through our multi-thread Turbo Download Manager when enabled;
+                // when disabled (or for blob:/data: URLs), fall through to native WebView2 downloads.
+                if (IsTurboDownloaderEnabled && _turboDownloads != null &&
                     (dlUri.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
                      dlUri.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
                 {
@@ -7140,7 +7303,7 @@ namespace DejavuBrowser
             if (msg.ContainsKey("defaultZoomPercent"))
             {
                 int z = Convert.ToInt32(msg["defaultZoomPercent"]);
-                if (z >= 50 && z <= 200 && _settings.defaultZoomPercent != z)
+                if (z >= 50 && z <= 250 && _settings.defaultZoomPercent != z)
                 {
                     _settings.defaultZoomPercent = z;
                     needZoomApply = true;
@@ -7197,15 +7360,7 @@ namespace DejavuBrowser
                 if (_settings.hideFloatingMediaButton != nextHideFloat)
                 {
                     _settings.hideFloatingMediaButton = nextHideFloat;
-                    string enArg = nextHideFloat ? "false" : "true";
-                    for (int i = 0; i < _tabs.Count; i++)
-                    {
-                        BrowserTab bt = _tabs[i];
-                        if (bt != null && bt.CoreReady && bt.WebView != null && !bt.WebView.IsDisposed)
-                        {
-                            try { bt.WebView.CoreWebView2.ExecuteScriptAsync("if(window.__dejavuSetFloatingBtnEnabled)window.__dejavuSetFloatingBtnEnabled(" + enArg + ");"); } catch { }
-                        }
-                    }
+                    SyncFloatingMediaButtonOnAllTabsAsync();
                 }
             }
             if (msg.ContainsKey("globalAdBlockEnabled"))
@@ -7342,6 +7497,31 @@ namespace DejavuBrowser
                 _settings.tabHoverPreview = Convert.ToBoolean(msg["tabHoverPreview"]);
 
             // v5.4.0 Downloads
+            if (msg.ContainsKey("turboDownloaderEnabled"))
+            {
+                bool nextTurbo = Convert.ToBoolean(msg["turboDownloaderEnabled"]);
+                if (_settings.turboDownloaderEnabled != nextTurbo)
+                {
+                    _settings.turboDownloaderEnabled = nextTurbo;
+                    if (!nextTurbo)
+                    {
+                        _pendingMediaPushDueUtc.Clear();
+                        if (_dlManagerOpen)
+                        {
+                            _dlManagerOpen = false;
+                            needLayout = true;
+                        }
+                        if (_turboDownloads != null)
+                        {
+                            for (int i = 0; i < _tabs.Count; i++)
+                            {
+                                if (_tabs[i] != null) _turboDownloads.ClearTabMedia(_tabs[i].Id);
+                            }
+                        }
+                    }
+                    SyncFloatingMediaButtonOnAllTabsAsync();
+                }
+            }
             if (msg.ContainsKey("downloadFolder"))
             {
                 _settings.downloadFolder = (Convert.ToString(msg["downloadFolder"]) ?? "").Trim();
@@ -7399,14 +7579,22 @@ namespace DejavuBrowser
             if (needZoomApply)
             {
                 double zf = _settings.defaultZoomPercent / 100.0;
-                for (int i = 0; i < _tabs.Count; i++)
+                _suppressZoomChangedSave = true;
+                try
                 {
-                    BrowserTab bt = _tabs[i];
-                    bt.ZoomFactor = zf;
-                    if (bt.WebView != null && bt.CoreReady)
+                    for (int i = 0; i < _tabs.Count; i++)
                     {
-                        try { bt.WebView.ZoomFactor = zf; } catch { }
+                        BrowserTab bt = _tabs[i];
+                        bt.ZoomFactor = zf;
+                        if (bt.WebView != null && bt.CoreReady && !bt.WebView.IsDisposed)
+                        {
+                            try { bt.WebView.ZoomFactor = zf; } catch { }
+                        }
                     }
+                }
+                finally
+                {
+                    _suppressZoomChangedSave = false;
                 }
             }
 
@@ -7633,7 +7821,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.9.1 defaults", "success");
+            PushShellToast("Settings restored to v5.10.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -9035,7 +9223,8 @@ namespace DejavuBrowser
                 { "accentColor", _settings.accentColor ?? "amethyst" },
                 { "items", _downloads },
                 { "turboItems", turboItems },
-                { "mediaCount", mediaItems.Count }
+                { "mediaCount", mediaItems.Count },
+                { "turboDownloaderEnabled", IsTurboDownloaderEnabled }
             };
             if (backdrop != null) payload["backdrop"] = backdrop;
             return _json.Serialize(payload);
@@ -9111,22 +9300,135 @@ namespace DejavuBrowser
             else t.WebView.CoreWebView2.Reload();
         }
 
+        private int ResolveZoomPercentForUrl(string url)
+        {
+            int fallback = (_settings != null && _settings.defaultZoomPercent >= 50 && _settings.defaultZoomPercent <= 250)
+                ? _settings.defaultZoomPercent
+                : 100;
+            if (_settings == null || _settings.siteZoomLevels == null || string.IsNullOrEmpty(url)) return fallback;
+            string host = AdBlocker.ExtractHost(url);
+            if (!string.IsNullOrEmpty(host))
+            {
+                int saved;
+                if (_settings.siteZoomLevels.TryGetValue(host, out saved) && saved >= 50 && saved <= 250)
+                {
+                    return saved;
+                }
+            }
+            return fallback;
+        }
+
+        private void ApplyResolvedZoomToTab(BrowserTab tab, string url)
+        {
+            if (tab == null || tab.IsNewTab || tab.WebView == null || tab.WebView.IsDisposed) return;
+            int pct = ResolveZoomPercentForUrl(url);
+            double zf = Math.Round(Math.Max(0.5, Math.Min(2.5, pct / 100.0)), 2);
+            if (Math.Abs(tab.ZoomFactor - zf) < 0.005) return;
+            tab.ZoomFactor = zf;
+            _suppressZoomChangedSave = true;
+            try { tab.WebView.ZoomFactor = zf; } catch { }
+            finally { _suppressZoomChangedSave = false; }
+        }
+
+        private void PersistTabZoom(BrowserTab tab, int pct)
+        {
+            if (_isPrivateWindow || _settings == null) return;
+            int clamped = Math.Max(50, Math.Min(250, pct));
+            _settings.defaultZoomPercent = clamped;
+            if (_settings.siteZoomLevels == null)
+            {
+                _settings.siteZoomLevels = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            }
+            if (tab != null && !tab.IsNewTab && !string.IsNullOrEmpty(tab.Url))
+            {
+                string host = AdBlocker.ExtractHost(tab.Url);
+                if (!string.IsNullOrEmpty(host))
+                {
+                    if (clamped == 100)
+                    {
+                        _settings.siteZoomLevels.Remove(host);
+                    }
+                    else
+                    {
+                        if (_settings.siteZoomLevels.Count >= 300 && !_settings.siteZoomLevels.ContainsKey(host))
+                        {
+                            _settings.siteZoomLevels.Clear();
+                        }
+                        _settings.siteZoomLevels[host] = clamped;
+                    }
+                }
+            }
+            if (_zoomSaveTimer != null && !IsDisposed)
+            {
+                try { _zoomSaveTimer.Stop(); _zoomSaveTimer.Start(); } catch { }
+            }
+            else if (_profiles != null)
+            {
+                try { _profiles.SaveActiveSettings(_settings); } catch { }
+            }
+        }
+
+        private async void SyncFloatingMediaButtonOnAllTabsAsync()
+        {
+            bool turboOn = IsTurboDownloaderEnabled;
+            bool floatOn = IsFloatingMediaButtonEffective;
+            string enArg = floatOn ? "true" : "false";
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab bt = _tabs[i];
+                if (bt == null || !bt.CoreReady || bt.WebView == null || bt.WebView.IsDisposed || bt.WebView.CoreWebView2 == null) continue;
+                try
+                {
+                    CoreWebView2 core = bt.WebView.CoreWebView2;
+                    if (turboOn && !bt.FloatingMediaInjected && !string.IsNullOrEmpty(_floatingMediaScript))
+                    {
+                        string themeScript = BuildMediaThemeScript(bt);
+                        await core.AddScriptToExecuteOnDocumentCreatedAsync(themeScript);
+                        await core.AddScriptToExecuteOnDocumentCreatedAsync(_floatingMediaScript);
+                        bt.FloatingMediaInjected = true;
+                        await core.ExecuteScriptAsync(themeScript);
+                        await core.ExecuteScriptAsync(_floatingMediaScript);
+                    }
+                    await core.ExecuteScriptAsync(
+                        "window.__dejavuFloatingBtnEnabled = " + enArg + ";" +
+                        "if(window.__dejavuSetFloatingBtnEnabled)window.__dejavuSetFloatingBtnEnabled(" + enArg + ");");
+                }
+                catch { }
+            }
+        }
+
         private void AdjustZoom(double delta)
         {
             BrowserTab t = GetActiveTab();
-            if (t == null || t.IsNewTab || t.WebView == null) return;
-            t.ZoomFactor = Math.Round(Math.Max(0.5, Math.Min(2.5, t.ZoomFactor + delta)), 2);
-            t.WebView.ZoomFactor = t.ZoomFactor;
-            PushTabDeltaToShell();
+            if (t == null) return;
+            double next = Math.Round(Math.Max(0.5, Math.Min(2.5, t.ZoomFactor + delta)), 2);
+            int pct = (int)Math.Round(next * 100.0);
+            t.ZoomFactor = next;
+            if (!t.IsNewTab && t.WebView != null && !t.WebView.IsDisposed)
+            {
+                _suppressZoomChangedSave = true;
+                try { t.WebView.ZoomFactor = next; } catch { }
+                finally { _suppressZoomChangedSave = false; }
+            }
+            PersistTabZoom(t, pct);
+            if (_settingsOpen) PushFullStateToShell();
+            else PushTabDeltaToShell();
         }
 
         private void ResetZoom()
         {
             BrowserTab t = GetActiveTab();
-            if (t == null || t.IsNewTab || t.WebView == null) return;
+            if (t == null) return;
             t.ZoomFactor = 1.0;
-            t.WebView.ZoomFactor = 1.0;
-            PushTabDeltaToShell();
+            if (!t.IsNewTab && t.WebView != null && !t.WebView.IsDisposed)
+            {
+                _suppressZoomChangedSave = true;
+                try { t.WebView.ZoomFactor = 1.0; } catch { }
+                finally { _suppressZoomChangedSave = false; }
+            }
+            PersistTabZoom(t, 100);
+            if (_settingsOpen) PushFullStateToShell();
+            else PushTabDeltaToShell();
         }
 
         private void ToggleMuteTab(int tabId)
@@ -10183,13 +10485,19 @@ namespace DejavuBrowser
                         ShowDownloadsPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : 1060);
                         break;
                     case "openDlManager":
-                        SetDlManagerOpen(true, msg.ContainsKey("tab") ? Convert.ToString(msg["tab"]) : "all");
+                        if (IsTurboDownloaderEnabled)
+                            SetDlManagerOpen(true, msg.ContainsKey("tab") ? Convert.ToString(msg["tab"]) : "all");
+                        else
+                            ShowDownloadsPopoverAt(1060);
                         break;
                     case "closeDlManager":
                         SetDlManagerOpen(false, null);
                         break;
                     case "toggleDlManager":
-                        SetDlManagerOpen(!_dlManagerOpen, msg.ContainsKey("tab") ? Convert.ToString(msg["tab"]) : _dlManagerTab);
+                        if (IsTurboDownloaderEnabled)
+                            SetDlManagerOpen(!_dlManagerOpen, msg.ContainsKey("tab") ? Convert.ToString(msg["tab"]) : _dlManagerTab);
+                        else
+                            ShowDownloadsPopoverAt(1060);
                         break;
                     case "turboAddUrl":
                         if (_turboDownloads != null && msg.ContainsKey("url"))

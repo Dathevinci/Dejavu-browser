@@ -139,7 +139,6 @@
     }
     #wp-bg-prev { pointer-events: none; }
     #wp-bg {
-      will-change: opacity;
       transition: opacity 0.28s var(--md-ease-decel);
     }
     #wp-vignette {
@@ -181,7 +180,6 @@
       opacity: var(--scrim-alpha, 1);
       pointer-events: none;
       animation: fadeScrim 0.2s var(--md-ease-decel) both;
-      will-change: opacity;
     }
     .sheet-backdrop.is-dragging::before {
       animation: none;
@@ -206,7 +204,6 @@
       overflow: hidden;
       contain: layout style;
       animation: sheetRise 0.3s var(--md-ease-decel) both;
-      will-change: transform, opacity;
     }
     #scr-tabs:not(.hidden), #scr-omnibox:not(.hidden) {
       animation: screenFadeRise 0.24s var(--md-ease-decel) both;
@@ -1005,7 +1002,7 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.9.1) — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.10.0) — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
@@ -1287,6 +1284,21 @@
 
     .set-section { display: flex; flex-direction: column; gap: 12px; }
     .set-section.hidden-cat, .set-section.search-hide, .set-item.search-hide { display: none !important; }
+    .g-row.is-disabled, .set-block.is-disabled {
+      opacity: 0.44;
+      pointer-events: none;
+      transition: opacity 0.16s ease;
+    }
+    .tab-card.is-suspended .tab-card-preview { opacity: 0.78; }
+    .tab-card-sleep-badge {
+      position: absolute; top: 8px; right: 8px;
+      height: 20px; padding: 0 8px; border-radius: 999px;
+      background: var(--accent-soft); color: var(--accent-bright);
+      font-size: 10px; font-weight: 660; letter-spacing: 0.01em;
+      display: inline-flex; align-items: center; gap: 4px;
+      pointer-events: none;
+    }
+    body.theme-light .tab-card-sleep-badge { color: var(--accent); }
     .set-search-empty {
       display: none; flex-direction: column; align-items: center; gap: 12px;
       padding: 36px 18px; text-align: center; color: var(--muted); font-size: 14px;
@@ -1512,7 +1524,7 @@
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
     /* =====================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.9.1)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.10.0)
        ===================================================================== */
     .sh-hero-card {
       background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
@@ -1823,9 +1835,9 @@
             <div class="zoom-row">
               <span style="font-size:14px;font-weight:520;color:var(--muted);">Text size</span>
               <div class="zoom-stepper">
-                <button type="button" class="zoom-btn" onclick="stepZoom(-15)">A-</button>
+                <button type="button" class="zoom-btn" onclick="stepZoom(-10)">A-</button>
                 <span id="m-zoom-val" class="zoom-val" onclick="call('setPageZoom',100)">100%</span>
-                <button type="button" class="zoom-btn" onclick="stepZoom(15)">A+</button>
+                <button type="button" class="zoom-btn" onclick="stepZoom(10)">A+</button>
               </div>
             </div>
           </div>
@@ -1895,7 +1907,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.9.1) — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.10.0) — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2191,7 +2203,7 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.8v5.2M12 7.8h.01"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.9.1 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.10.0 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -2243,14 +2255,14 @@
                 <button type="button" id="sw-auto-wp-theme" class="sw on" aria-label="Auto-match theme to wallpaper"></button>
               </div>
 
-              <div class="set-block set-item" data-search="text zoom font size accessibility scale 80 150 slider">
+              <div class="set-block set-item" data-search="text zoom page scaling font size accessibility scale 50 200 slider">
                 <div class="m3-slider-top">
-                  <span style="font-size:14.5px;font-weight:540;">Text zoom</span>
+                  <span style="font-size:14.5px;font-weight:540;">Page zoom</span>
                   <button type="button" id="opt-zoom-pill" class="m3-zoom-pill" title="Reset to 100%" onclick="call('setPageZoom',100)">100%</button>
                 </div>
                 <div class="m3-slider-row">
                   <span class="m3-slider-lbl">A-</span>
-                  <input id="opt-zoom-slider" class="m3-slider" type="range" min="80" max="150" step="5" value="100" oninput="onSettingsZoomInput(this.value)" onchange="call('setPageZoom', Number(this.value))">
+                  <input id="opt-zoom-slider" class="m3-slider" type="range" min="50" max="200" step="5" value="100" oninput="onSettingsZoomInput(this.value)" onchange="call('setPageZoom', Number(this.value))">
                   <span class="m3-slider-lbl" style="font-size:14px;">A+</span>
                 </div>
               </div>
@@ -2415,17 +2427,32 @@
                 </div>
                 <button type="button" id="sw-bglinks" class="sw" aria-label="Open links in background"></button>
               </div>
+              <div class="g-row set-item" data-search="memory saver ram performance sleep hibernate background tabs" onclick="call('toggleMemorySaver')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">Memory Saver</div>
+                  <div class="g-row-sub">Hibernate inactive background tabs to save RAM</div>
+                </div>
+                <button type="button" id="sw-memsaver" class="sw on" aria-label="Memory Saver"></button>
+              </div>
             </div>
           </div>
 
           <!-- SUB-VIEW 4: DOWNLOADS -->
-          <div id="set-cat-downloads" class="set-section" data-cat="downloads" data-search="downloads youtube quality auto 1080p 720p 360p audio m4a floating video button turbo 8x">
+          <div id="set-cat-downloads" class="set-section" data-cat="downloads" data-search="downloads dejavu downloader ant download manager youtube quality auto 1080p 720p 360p audio m4a floating video button turbo 8x">
             <div class="sec-hdr set-sec-hdr">
               <span>Downloads</span>
               <span class="set-match-pill"></span>
             </div>
             <div class="g-group">
-              <div class="set-block set-item" data-search="default youtube quality preference auto 1080p 720p 360p audio m4a">
+              <div class="g-row set-item" data-search="dejavu downloader ant download manager turbo 8x enable disable standard android downloads" onclick="call('toggleTurboDownloader')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">dejavu Downloader (8x &amp; Video)</div>
+                  <div class="g-row-sub">Off: standard Android downloads &amp; less RAM</div>
+                </div>
+                <button type="button" id="sw-turbodl" class="sw on" aria-label="dejavu Downloader"></button>
+              </div>
+
+              <div id="set-yt-qual-block" class="set-block set-item" data-search="default youtube quality preference auto 1080p 720p 360p audio m4a">
                 <div>
                   <div style="font-size:14.5px;font-weight:540;">Default YouTube quality</div>
                   <div style="font-size:12px;color:var(--muted);margin-top:2px;">Preferred resolution for 8x downloads</div>
@@ -2439,7 +2466,7 @@
                 </div>
               </div>
 
-              <div class="g-row set-item" data-search="floating video download button youtube overlay pill" onclick="call('toggleFloatingDownloadButton')">
+              <div id="set-floatdl-row" class="g-row set-item" data-search="floating video download button youtube overlay pill" onclick="call('toggleFloatingDownloadButton')">
                 <div class="g-row-meta">
                   <div class="g-row-title">Floating video button</div>
                   <div class="g-row-sub">Show quick download pill on video pages</div>
@@ -2459,7 +2486,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.9.1 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.10.0 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2483,10 +2510,10 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.9.1 about">
+              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.10.0 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.9.1</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.10.0</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
                 <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check for updates</button>
@@ -2525,7 +2552,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.9.1
+          dejavu Mobile v5.10.0
         </div>
       </div>
     </div>
@@ -2797,7 +2824,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.9.1)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.10.0)
        =================================================================== -->
   <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2925,7 +2952,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.9.1 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.10.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -3133,7 +3160,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.9.1)
+    // Zero-mutation DOM equality-guard helpers (v5.10.0)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -3783,8 +3810,8 @@
     function openNewInMode() { if (tabViewPrivate) call('openNewPrivateTab', ''); else call('openNewTab', ''); }
     function closeAllInMode() { call('closeAllTabs', !!tabViewPrivate); }
     function stepZoom(delta) {
-      const cur = Number(state.pageZoom || 100);
-      call('setPageZoom', Math.max(80, Math.min(150, cur + delta)));
+      const cur = Number(state.activeZoom || state.pageZoom || 100);
+      call('setPageZoom', Math.max(50, Math.min(200, cur + delta)));
     }
 
     function handleSettingsAccountBtn(ev) {
@@ -4123,7 +4150,7 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.9.1)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.10.0)
     const _domSigs = {
       sysTop: '',
       safeTop: '',
@@ -4489,7 +4516,7 @@
       const tabsSig = JSON.stringify({
         priv: tabViewPrivate,
         wp: normWp,
-        tabs: shown.map((t) => [t.id, t.title || '', t.url || '', !!t.isNewTab, !!t.isPrivate, t.thumb ? `${t.thumb.length}:${t.thumb.slice(-24)}` : ''])
+        tabs: shown.map((t) => [t.id, t.title || '', t.url || '', !!t.isNewTab, !!t.isPrivate, !!t.suspended, t.thumb ? `${t.thumb.length}:${t.thumb.slice(-24)}` : ''])
       });
 
       if (tg && tabsSig !== _domSigs.tabsGrid) {
@@ -4502,11 +4529,13 @@
           const wpUrl = (normWp && normWp !== 'obsidian') ? `wallpapers/${normWp}` : '';
           shown.forEach((t) => {
             const card = document.createElement('div');
-            card.className = 'tab-card' + (t.id === state.activeTabId ? ' active' : '') + (animateCards ? ' is-entering' : '');
+            card.className = 'tab-card' + (t.id === state.activeTabId ? ' active' : '') + (t.suspended ? ' is-suspended' : '') + (animateCards ? ' is-entering' : '');
             card.dataset.tabId = String(t.id);
+            const sleepChip = t.suspended ? '<span class="tab-card-sleep-badge">Sleeping</span>' : '';
             const previewHtml = (!t.isNewTab && t.thumb)
-              ? `<img class="live-shot" src="${t.thumb}" alt=""><div class="tab-card-host">${esc(getHost(t.url))}</div>`
+              ? `<img class="live-shot" src="${t.thumb}" alt="">${sleepChip}<div class="tab-card-host">${esc(getHost(t.url))}</div>`
               : `<div class="tab-card-start-prev" style="${wpUrl ? `background-image:url('${wpUrl}')` : 'background:linear-gradient(145deg,#382663,#141218 70%);'}">
+                   ${sleepChip}
                    ${getDynamicButterflySvg(34)}
                    <span style="font-size:12px;font-weight:560;color:#f6f4ff;">${t.isPrivate ? 'Private tab' : (t.isNewTab ? 'Start Page' : esc(getHost(t.url)))}</span>
                  </div>`;
@@ -4593,7 +4622,7 @@
         setAttr(bmSvg, 'fill', isBm ? 'currentColor' : 'none');
         setCls(document.getElementById('m-desk-chip'), 'active', !!state.desktopMode);
         setCls(document.getElementById('m-darkweb-chip'), 'active', !!state.darkWebPages);
-        setTxt(document.getElementById('m-zoom-val'), `${state.pageZoom || 100}%`);
+        setTxt(document.getElementById('m-zoom-val'), `${state.activeZoom || state.pageZoom || 100}%`);
       }
 
       setTxt(document.getElementById('m-cnt-bm'), String((state.bookmarks || []).length));
@@ -5021,18 +5050,22 @@
 
       const curEng = state.searchEngine || 'google';
       const engObj = ENGINES.find((e) => e[0] === curEng) || ENGINES[0];
-      setTxt(document.getElementById('set-sum-search'), `${engObj[1]}${state.pullToRefresh !== false ? ' · Pull-to-refresh' : ''}`);
+      const memSaverOn = state.memorySaverEnabled !== false;
+      setTxt(document.getElementById('set-sum-search'), `${engObj[1]}${memSaverOn ? ' · Memory Saver' : ''}`);
 
       const extSnap = state.extensions || {};
       const nExt = typeof extSnap.activeCount === 'number' ? extSnap.activeCount : 4;
       setTxt(document.getElementById('set-sum-extensions'), `${nExt} active`);
 
+      const turboDlOn = state.turboDownloaderEnabled !== false;
       const ytq = state.defaultYoutubeQuality || 'auto';
       const ytqLbl = ytq === 'auto' ? 'Auto quality' : (ytq === 'm4a' ? 'Audio M4A' : ytq);
-      setTxt(document.getElementById('set-sum-downloads'), `${ytqLbl}${state.floatingDownloadButton !== false ? ' · Floating pill' : ''}`);
+      setTxt(document.getElementById('set-sum-downloads'), turboDlOn
+        ? `${ytqLbl}${state.floatingDownloadButton !== false ? ' · Floating pill' : ''}`
+        : 'Standard Android downloads');
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.9.1';
+      const curV = u.currentVersion || '5.10.0';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -5077,7 +5110,7 @@
       setTxt(document.getElementById('set-wp-sub'), wpMeta ? wpMeta.name : 'Obsidian Monolith');
       setCls(document.getElementById('sw-auto-wp-theme'), 'on', state.autoThemeFromWallpaper !== false);
 
-      const zoom = Math.max(80, Math.min(150, Number(state.pageZoom || 100)));
+      const zoom = Math.max(50, Math.min(200, Number(state.activeZoom || state.pageZoom || 100)));
       setProp(document.getElementById('opt-zoom-slider'), 'value', String(zoom));
       setTxt(document.getElementById('opt-zoom-pill'), `${zoom}%`);
       setCls(document.getElementById('sw-desktop-def'), 'on', !!state.desktopSiteDefault);
@@ -5124,12 +5157,18 @@
       }
       setCls(document.getElementById('sw-ptr'), 'on', state.pullToRefresh !== false);
       setCls(document.getElementById('sw-bglinks'), 'on', !!state.openLinksInBackground);
+      setCls(document.getElementById('sw-memsaver'), 'on', memSaverOn);
 
       // 6. Downloads Controls
+      setCls(document.getElementById('sw-turbodl'), 'on', turboDlOn);
+      setCls(document.getElementById('set-yt-qual-block'), 'is-disabled', !turboDlOn);
+      setCls(document.getElementById('set-floatdl-row'), 'is-disabled', !turboDlOn);
       document.querySelectorAll('#opt-yt-qual-strip .m3-chip').forEach((chip) => setCls(chip, 'active', chip.dataset.ytq === ytq));
       setCls(document.getElementById('sw-floatdl'), 'on', state.floatingDownloadButton !== false);
       const dlCnt = (state.turboDownloads || []).length;
-      setTxt(document.getElementById('opt-dl-sub'), dlCnt > 0 ? `${dlCnt} items · Downloads/dejavu/` : 'Downloads/dejavu/');
+      setTxt(document.getElementById('opt-dl-sub'), turboDlOn
+        ? (dlCnt > 0 ? `${dlCnt} items · Downloads/dejavu/` : 'Downloads/dejavu/')
+        : 'Standard system Downloads folder');
 
       // 7. Sync & About Controls
       const isDefBrowser = !!state.isDefaultBrowser;
@@ -5679,7 +5718,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.9.1 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.10.0 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -6225,7 +6264,7 @@
               ],
               drops: [
                 { id: 'vid_pc_1', dropType: 'video', title: 'Material 3 Expressive Motion Deep Dive', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=422', text: 'Continue watching at 07:02', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 45000 },
-                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.9.1-release.mp4', url: 'https://example.com/dejavu-v5.9.1-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
+                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.10.0-release.mp4', url: 'https://example.com/dejavu-v5.10.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
                 { id: 'bt_pc_1', dropType: 'batch_tabs', title: '2 tabs from Windows 11 Desktop', url: 'https://m3.material.io', text: 'Material Design 3 · GitHub', tabs: [{ title: 'Material Design 3', url: 'https://m3.material.io' }, { title: 'GitHub', url: 'https://github.com' }], fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 210000 }
               ]
             } : {
@@ -6291,9 +6330,9 @@
               ],
               sync: previewSync,
               update: {
-                currentVersion: '5.9.1',
+                currentVersion: '5.10.0',
                 status: qp.get('upd') === '1' ? 'available' : 'uptodate',
-                latestVersion: qp.get('upd') === '1' ? '5.10.0' : '5.9.1',
+                latestVersion: qp.get('upd') === '1' ? '5.11.0' : '5.10.0',
                 sizeLabel: qp.get('upd') === '1' ? '10.2 MB' : '',
                 releaseUrl: 'https://github.com/Dathevinci/Dejavu-browser/releases/latest',
                 available: qp.get('upd') === '1',

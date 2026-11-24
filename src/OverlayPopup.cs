@@ -18,6 +18,7 @@ namespace DejavuBrowser
         private bool _everShown;
         private bool _isOpen;
         private bool _hiding;
+        private bool _isExtensionPopup;
         private int _showGeneration;
         private bool _lastSurfaceLight;
         private Color _lastSurfaceColor = Color.Empty;
@@ -192,10 +193,24 @@ namespace DejavuBrowser
                 core.PostWebMessageAsJson(_pendingJson);
                 _pendingJson = null;
             }
+            if (!_isOpen) SetMemoryUsageLow(true);
+        }
+
+        public void SetMemoryUsageLow(bool low)
+        {
+            if (IsDisposed || _wv == null || _wv.IsDisposed || _wv.CoreWebView2 == null) return;
+            try
+            {
+                _wv.CoreWebView2.MemoryUsageTargetLevel = low
+                    ? CoreWebView2MemoryUsageTargetLevel.Low
+                    : CoreWebView2MemoryUsageTargetLevel.Normal;
+            }
+            catch { }
         }
 
         public async Task InitializeForExtensionPopupAsync(CoreWebView2Environment env, Action<string> onNewWindowUrl)
         {
+            _isExtensionPopup = true;
             await _wv.EnsureCoreWebView2Async(env);
             CoreWebView2 core = _wv.CoreWebView2;
             core.Settings.AreDefaultContextMenusEnabled = true;
@@ -300,6 +315,7 @@ namespace DejavuBrowser
         public void ShowAt(Rectangle screenBounds, string stateJson, bool activate)
         {
             _showGeneration++;
+            SetMemoryUsageLow(false);
             if (!string.IsNullOrEmpty(stateJson))
             {
                 if (_ready && _wv.CoreWebView2 != null)
@@ -485,6 +501,13 @@ namespace DejavuBrowser
 
                 Action cb = PopupHidden;
                 if (cb != null) cb();
+
+                // Drop hidden overlay/extension popup WebView2 to Low memory target immediately
+                if (_isExtensionPopup && _ready && _wv != null && !_wv.IsDisposed && _wv.CoreWebView2 != null)
+                {
+                    try { _wv.CoreWebView2.Navigate("about:blank"); } catch { }
+                }
+                SetMemoryUsageLow(true);
             }
             finally
             {

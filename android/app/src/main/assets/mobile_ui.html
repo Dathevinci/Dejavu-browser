@@ -43,9 +43,18 @@
       --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.28);
       --md-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
       --md-ease-decel: cubic-bezier(0.05, 0.7, 0.1, 1.0);
-      --md-ease-spring: cubic-bezier(0.34, 1.48, 0.64, 1);
+      --md-ease-spring: cubic-bezier(0.34, 1.46, 0.64, 1);
       --md-ease-spring-smooth: cubic-bezier(0.22, 1.14, 0.36, 1);
+      --md-ease-spatial: cubic-bezier(0.18, 1.06, 0.28, 1);
       --font: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    /* Prevent initial dark-to-light theme hydration flash on first paint */
+    body.no-theme-trans,
+    body.no-theme-trans *,
+    body.no-theme-trans *::before,
+    body.no-theme-trans *::after {
+      transition: none !important;
     }
 
     body.theme-light {
@@ -259,7 +268,19 @@
       overflow: hidden;
       contain: layout style;
       will-change: transform, opacity;
-      animation: sheetRise 0.34s var(--md-ease-decel) both;
+      animation: sheetRise 0.36s var(--md-ease-spatial) both;
+    }
+    .sheet-backdrop:not(.hidden):not(.is-closing) .sheet-body > *:nth-child(1) {
+      animation: sheetItemBloom 0.28s var(--md-ease-decel) 20ms both;
+    }
+    .sheet-backdrop:not(.hidden):not(.is-closing) .sheet-body > *:nth-child(2) {
+      animation: sheetItemBloom 0.3s var(--md-ease-decel) 50ms both;
+    }
+    .sheet-backdrop:not(.hidden):not(.is-closing) .sheet-body > *:nth-child(3) {
+      animation: sheetItemBloom 0.32s var(--md-ease-decel) 80ms both;
+    }
+    .sheet-backdrop:not(.hidden):not(.is-closing) .sheet-body > *:nth-child(4) {
+      animation: sheetItemBloom 0.34s var(--md-ease-decel) 105ms both;
     }
     .sheet-backdrop.is-closing::before {
       animation: fadeScrimOut 0.2s var(--md-ease-emphasized) both;
@@ -268,45 +289,50 @@
       animation: sheetDrop 0.22s cubic-bezier(0.3, 0, 0.8, 0.15) both;
     }
     #scr-tabs:not(.hidden), #scr-omnibox:not(.hidden) {
-      animation: screenFadeRise 0.26s var(--md-ease-decel) both;
+      animation: screenFadeRise 0.28s var(--md-ease-spatial) both;
     }
-    #scr-start:not(.hidden) .sp-hero { animation: spCascade 0.32s var(--md-ease-decel) both; }
-    #scr-start:not(.hidden) .sp-glance-stack { animation: spCascade 0.36s var(--md-ease-decel) 35ms both; }
-    #scr-start:not(.hidden) .sp-qa-wrap { animation: spCascade 0.4s var(--md-ease-decel) 65ms both; }
+    #scr-start:not(.hidden) .sp-hero { animation: spCascade 0.34s var(--md-ease-spatial) both; }
+    #scr-start:not(.hidden) .sp-glance-stack { animation: spCascade 0.38s var(--md-ease-spatial) 35ms both; }
+    #scr-start:not(.hidden) .sp-brave-stats { animation: spCascade 0.4s var(--md-ease-spatial) 60ms both; }
+    #scr-start:not(.hidden) .sp-qa-wrap { animation: spCascade 0.42s var(--md-ease-spatial) 85ms both; }
 
     @keyframes fadeScrim { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fadeScrimOut { from { opacity: 1; } to { opacity: 0; } }
     @keyframes sheetRise {
-      from { transform: translate3d(0, 68px, 0) scale(0.985); opacity: 0; }
+      from { transform: translate3d(0, 56px, 0) scale(0.986); opacity: 0; }
       to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+    }
+    @keyframes sheetItemBloom {
+      from { transform: translate3d(0, 10px, 0); opacity: 0; }
+      to { transform: translate3d(0, 0, 0); opacity: 1; }
     }
     @keyframes sheetDrop {
       from { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
       to { transform: translate3d(0, 84px, 0) scale(0.985); opacity: 0; }
     }
     @keyframes spCascade {
-      from { transform: translate3d(0, 12px, 0); opacity: 0; }
-      to { transform: translate3d(0, 0, 0); opacity: 1; }
+      from { transform: translate3d(0, 14px, 0) scale(0.99); opacity: 0; }
+      to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
     }
     @keyframes screenFadeRise {
-      from { transform: translate3d(0, 16px, 0) scale(0.988); opacity: 0; }
+      from { transform: translate3d(0, 16px, 0) scale(0.986); opacity: 0; }
       to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
     }
     @keyframes subViewSlideIn {
-      from { transform: translateX(14px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+      from { transform: translate3d(18px, 0, 0); opacity: 0; }
+      to { transform: translate3d(0, 0, 0); opacity: 1; }
     }
     @keyframes subViewSlideBack {
-      from { transform: translateX(-10px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+      from { transform: translate3d(-12px, 0, 0); opacity: 0; }
+      to { transform: translate3d(0, 0, 0); opacity: 1; }
     }
     @keyframes modalPopIn {
-      from { transform: scale(0.94) translateY(10px); opacity: 0; }
-      to { transform: scale(1) translateY(0); opacity: 1; }
+      from { transform: translate3d(0, 12px, 0) scale(0.94); opacity: 0; }
+      to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
     }
     @keyframes tabCardEnter {
-      from { transform: translateY(10px) scale(0.98); opacity: 0; }
-      to { transform: translateY(0) scale(1); opacity: 1; }
+      from { transform: translate3d(0, 14px, 0) scale(0.96); opacity: 0; }
+      to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
     }
 
     .sub-slide-in { animation: subViewSlideIn 0.22s var(--md-ease-decel) both; }
@@ -472,28 +498,40 @@
     .g-row-val { font-size: 13px; color: var(--muted); font-weight: 500; flex-shrink: 0; }
     .g-chev { color: var(--subtle); font-size: 18px; line-height: 1; flex-shrink: 0; }
 
-    /* Authentic Google Pixel Material Design 3 52x32 Switch */
+    /* Authentic Google Pixel Android 15 Material Design 3 52x32 Switch with Elastic Thumb Stretch */
     .sw {
       width: 52px; height: 32px; border-radius: 999px; flex-shrink: 0;
       background: var(--input-bg); border: 2px solid var(--subtle);
       position: relative; cursor: pointer; padding: 0;
-      transition: background-color 0.2s var(--md-ease-emphasized), border-color 0.2s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring);
+      transition: background-color 0.22s var(--md-ease-emphasized), border-color 0.22s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring);
     }
     .sw:active { transform: scale(0.95); }
     .sw::after {
       content: ''; position: absolute; top: 6px; left: 6px;
-      width: 16px; height: 16px; border-radius: 50%;
+      width: 16px; height: 16px; border-radius: 999px;
       background: var(--subtle);
       display: flex; align-items: center; justify-content: center;
       font-size: 0; font-weight: 800; line-height: 1; color: var(--accent);
-      transition: transform 0.26s var(--md-ease-spring), width 0.2s var(--md-ease-spring), height 0.2s var(--md-ease-spring), top 0.2s var(--md-ease-spring), left 0.2s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized), font-size 0.16s var(--md-ease-spring);
+      transform: translate3d(0, 0, 0);
+      transition: transform 0.3s var(--md-ease-spring), width 0.22s var(--md-ease-spatial), height 0.22s var(--md-ease-spatial), top 0.22s var(--md-ease-spatial), left 0.22s var(--md-ease-spatial), background-color 0.16s var(--md-ease-emphasized), font-size 0.18s var(--md-ease-spring);
+    }
+    .sw:active::after {
+      top: 3px;
+      width: 24px;
+      height: 22px;
     }
     .sw.on { background: var(--accent); border-color: var(--accent); }
     .sw.on::after {
       content: '✓'; top: 2px; left: 2px;
       width: 24px; height: 24px; font-size: 13px;
       background: var(--accent-ink);
-      transform: translateX(20px);
+      transform: translate3d(20px, 0, 0);
+    }
+    .sw.on:active::after {
+      top: 1px;
+      width: 28px;
+      height: 26px;
+      transform: translate3d(17px, 0, 0);
     }
 
     /* Real Site Favicon Container */
@@ -1059,8 +1097,13 @@
       transition: transform 0.18s var(--md-ease-spring), border-color 0.16s var(--md-ease-emphasized), opacity 0.15s ease;
       cursor: pointer; -webkit-user-select: none; user-select: none;
     }
-    .tab-card.is-entering { animation: tabCardEnter 0.24s var(--md-ease-decel) both; }
-    .tab-card:active { transform: scale(0.965); opacity: 0.94; }
+    .tab-card.is-entering { animation: tabCardEnter 0.3s var(--md-ease-spatial) both; }
+    .tab-card.is-entering:nth-child(2) { animation-delay: 28ms; }
+    .tab-card.is-entering:nth-child(3) { animation-delay: 56ms; }
+    .tab-card.is-entering:nth-child(4) { animation-delay: 84ms; }
+    .tab-card.is-entering:nth-child(5) { animation-delay: 112ms; }
+    .tab-card.is-entering:nth-child(6) { animation-delay: 140ms; }
+    .tab-card:active { transform: scale(0.955); opacity: 0.94; }
     .tab-card.active { border-color: var(--accent); }
     .tab-card-hdr {
       height: 38px; padding: 0 8px 0 11px;
@@ -1133,9 +1176,9 @@
       background: transparent; color: var(--ink);
       display: inline-flex; align-items: center; justify-content: center;
       cursor: pointer; padding: 0;
-      transition: background-color 0.15s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring), opacity 0.15s ease, color 0.15s ease;
+      transition: background-color 0.16s var(--md-ease-emphasized), transform 0.24s var(--md-ease-spring), opacity 0.15s ease, color 0.15s ease;
     }
-    .cm-strip-btn:active { background: var(--group-press); transform: scale(0.92); }
+    .cm-strip-btn:active { background: var(--group-press); transform: scale(0.88); }
     .cm-strip-btn.active { color: var(--accent); background: var(--accent-soft); }
     .cm-strip-btn.disabled { opacity: 0.34; pointer-events: none; }
     .cm-strip-badge {
@@ -1152,9 +1195,9 @@
       border: 2px solid var(--subtle); background: transparent;
       display: inline-flex; align-items: center; justify-content: center;
       color: var(--accent-ink);
-      transition: background-color 0.15s var(--md-ease-emphasized), border-color 0.15s var(--md-ease-emphasized);
+      transition: background-color 0.18s var(--md-ease-emphasized), border-color 0.18s var(--md-ease-emphasized), transform 0.24s var(--md-ease-spring);
     }
-    .chrome-chk.on { background: var(--accent); border-color: var(--accent); }
+    .chrome-chk.on { background: var(--accent); border-color: var(--accent); transform: scale(1.04); }
 
     .page-hdr-card {
       display: flex; align-items: center; gap: 12px;
@@ -1185,7 +1228,7 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.14.0) — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.15.0) — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
@@ -1727,7 +1770,7 @@
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
     /* =====================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.14.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.15.0)
        ===================================================================== */
     .sh-hero-card {
       background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
@@ -1795,7 +1838,7 @@
     }
   </style>
 </head>
-<body>
+<body class="no-theme-trans">
   <!-- Full-Bleed Edge-to-Edge Wallpaper Layer (Dual-Layer GPU Opacity Crossfade) -->
   <div id="wp-layer" class="show">
     <div id="wp-bg-prev"></div>
@@ -2181,7 +2224,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.14.0) — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.15.0) — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2477,7 +2520,7 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.8v5.2M12 7.8h.01"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.14.0 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.15.0 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -2825,7 +2868,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.14.0 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.15.0 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2849,10 +2892,10 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.14.0 about">
+              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.15.0 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.14.0</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.15.0</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
                 <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check for updates</button>
@@ -2891,7 +2934,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.14.0
+          dejavu Mobile v5.15.0
         </div>
       </div>
     </div>
@@ -3237,7 +3280,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.14.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.15.0)
        =================================================================== -->
   <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -3375,7 +3418,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.14.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.15.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -3642,7 +3685,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.14.0)
+    // Zero-mutation DOM equality-guard helpers (v5.15.0)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -4723,7 +4766,7 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.14.0)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.15.0)
     const _domSigs = {
       sysTop: '',
       safeTop: '',
@@ -5798,7 +5841,7 @@
         : 'Standard Android downloads');
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.14.0';
+      const curV = u.currentVersion || '5.15.0';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -6552,7 +6595,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.14.0 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.15.0 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -6689,6 +6732,7 @@
 
     let lastScreen = '';
     let lastDefaultYtq = '';
+    let _hydratedOnce = false;
     window.__onDejavuState = function (st) {
       state = st || {};
       const accent = state.accentColor || 'amethyst';
@@ -6704,6 +6748,10 @@
       if (document.body.dataset.materialStyle !== nextMat) document.body.dataset.materialStyle = nextMat;
       const nextSc = state.shortcutStyle || 'circle';
       if (document.body.dataset.shortcutStyle !== nextSc) document.body.dataset.shortcutStyle = nextSc;
+      if (!_hydratedOnce) {
+        _hydratedOnce = true;
+        requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('no-theme-trans')));
+      }
 
       if (state.defaultYoutubeQuality && state.defaultYoutubeQuality !== lastDefaultYtq) {
         lastDefaultYtq = state.defaultYoutubeQuality;
@@ -7121,7 +7169,7 @@
               ],
               drops: [
                 { id: 'vid_pc_1', dropType: 'video', title: 'Material 3 Expressive Motion Deep Dive', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=422', text: 'Continue watching at 07:02', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 45000 },
-                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.14.0-release.mp4', url: 'https://example.com/dejavu-v5.14.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
+                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.15.0-release.mp4', url: 'https://example.com/dejavu-v5.15.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
                 { id: 'bt_pc_1', dropType: 'batch_tabs', title: '2 tabs from Windows 11 Desktop', url: 'https://m3.material.io', text: 'Material Design 3 · GitHub', tabs: [{ title: 'Material Design 3', url: 'https://m3.material.io' }, { title: 'GitHub', url: 'https://github.com' }], fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 210000 }
               ]
             } : {
@@ -7188,9 +7236,9 @@
               ],
               sync: previewSync,
               update: {
-                currentVersion: '5.14.0',
+                currentVersion: '5.15.0',
                 status: qp.get('upd') === '1' ? 'available' : 'uptodate',
-                latestVersion: qp.get('upd') === '1' ? '5.15.0' : '5.14.0',
+                latestVersion: qp.get('upd') === '1' ? '5.16.0' : '5.15.0',
                 sizeLabel: qp.get('upd') === '1' ? '10.2 MB' : '',
                 releaseUrl: 'https://github.com/Dathevinci/Dejavu-browser/releases/latest',
                 available: qp.get('upd') === '1',

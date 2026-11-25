@@ -4,20 +4,20 @@ A fast, private native **Google Material Design 3** browser for **Windows 10/11*
 
 **Official Website:** **[dathevinci.github.io/Dejavu-browser](https://dathevinci.github.io/Dejavu-browser/)**
 
-## Download (`v5.14.0`)
+## Download (`v5.15.0`)
 
 Grab the latest release from the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
 
-- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.14.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
-- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.14.0.0`, runs from any folder or USB with no admin rights required).
-- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.14.0` · `versionCode 640`, Android 8.0+).
+- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.15.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
+- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.15.0.0`, runs from any folder or USB with no admin rights required).
+- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.15.0` · `versionCode 650`, Android 8.0+).
 - **`SHA256SUMS.txt`** — Official SHA-256 checksums paired with GitHub **SLSA Build Provenance Attestations**.
 
-## What's New in v5.14.0
+## What's New in v5.15.0
 
-- **Authentic Chrome × Brave Android 56dp Top Toolbar**: Replaced the default bottom bar with Chrome's clean single-row top bar (`[Home/Back] [🔒 Address Pill ↻] [🛡️ Brave Shields Badge] [[2] Tabs] [⋮ Menu]`) so webpages have 100% unobstructed viewport height, with smooth scroll-collapse and optional Bottom Bar toggles in Settings.
-- **Chrome × Brave Material Design 3 Mobile UI**: Redesigned the Android New Tab Page with Chrome's 56dp Search pill, top-bar Shields pill + Tab Counter + `⋮` Menu, and **Brave's 3-column Privacy Stats card** (Ads & trackers blocked, Est. data saved, Est. time saved); rebuilt the Overflow Menu (`⋮`) with Chrome's top 5-icon quick action strip and single-column M3 groups; added top-left `[+]` in Tab Switcher and `[Share]` `[Copy]` `[Edit URL]` in the Omnibox.
-- **Brave-Grade Shields Upgrades**: Upgraded the Shields sheet to Brave's 3-column stats + stripped tracking links summary, and added extra mobile cosmetic rules for YouTube Mobile ad slots, sticky/bottom ad banners, and app-install nags.
+- **Expanded Windows Googlebook Customization Studio**: Added 5 one-click Material Design 3 theme presets (**Pixel Night**, **AMOLED Obsidian**, **Porcelain Studio**, **Nordic Sage**, **Berry Studio**) plus 6 new persisted controls in Settings → Appearance & Wallpaper Studio: **Corner Roundness** (`Rounded`/`Pill`/`Sharp`), **Interface Density** (`Compact`/`Comfortable`/`Spacious`), **Animation Feel** (`Fluid 120Hz`/`Snappy`/`Off`), **Address Bar Style** (`Pill`/`Outlined`/`Elevated`), **Start Page Layout** (`Balanced`/`Minimal`/`Focus`), and **Quick Access Columns** (`4`/`5`/`6`) — synced live across main chrome and native popovers.
+- **120Hz Expressive Material Design 3 Animations (Windows & Android)**: Upgraded both platforms to GPU-accelerated spatial & expressive spring curves with gliding segmented pill indicators, elastic M3 switch thumb-stretch, staggered Start Page & sheet card blooms, native Android tab-switch glide/crossfade, real-time spring pop on the Brave Shields badge, and zero initial light-mode hydration flash.
+- **Chrome × Brave Android Foundation**: 56dp single-row Chrome top toolbar with live Brave Shields badge, Brave 3-column Privacy Stats NTP, Chrome 5-icon Overflow Menu strip, and 108K+ ad/tracker/cosmetic rules.
 
 ## Core Capabilities
 

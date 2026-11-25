@@ -1,5 +1,5 @@
 /* ==========================================================================
-   dejavu v5.14.0 — Authentic Chromebook × Pixel Material Design 3 Expressive
+   dejavu v5.15.0 — Authentic Chromebook × Pixel Material Design 3 Expressive
    12 Official HCT Tonal Palettes · Official M3 Motion · State Layers
    Zero Compositing Overhead · Strictly Zero CSS Filter Softening
    ========================================================================== */
@@ -11,17 +11,21 @@
   --chrome-h: 88px;
   --nav-rail-w: 56px;
 
-  /* Official Material Design 3 Expressive Motion Tokens (GPU transform & opacity only) */
+  /* Official Material Design 3 Expressive 120Hz Motion Tokens (GPU transform & opacity only) */
+  --md-motion-scale: 1;
   --md-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
   --md-ease-emphasized-decel: cubic-bezier(0.05, 0.7, 0.1, 1);
   --md-ease-emphasized-accel: cubic-bezier(0.3, 0, 0.8, 0.15);
   --md-ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --md-ease-spring: cubic-bezier(0.34, 1.38, 0.64, 1);
-  --md-dur-press: 90ms;
-  --md-dur-short: 150ms;
-  --md-dur-medium: 220ms;
-  --md-dur-enter: 240ms;
-  --md-dur-exit: 170ms;
+  --md-ease-spring-spatial: cubic-bezier(0.22, 1.16, 0.36, 1);
+  --md-ease-spring-expressive: cubic-bezier(0.34, 1.48, 0.64, 1);
+  --md-dur-press: calc(90ms * var(--md-motion-scale));
+  --md-dur-short: calc(155ms * var(--md-motion-scale));
+  --md-dur-medium: calc(240ms * var(--md-motion-scale));
+  --md-dur-enter: calc(280ms * var(--md-motion-scale));
+  --md-dur-exit: calc(180ms * var(--md-motion-scale));
+  --md-dur-spring: calc(340ms * var(--md-motion-scale));
 
   /* Official Material Design 3 Expressive Shape Scale (ev_58c2c880) */
   --md-shape-xs: 4px;
@@ -1130,7 +1134,7 @@ body.tab-overview-open #tabbar.tabbar-row {
 }
 
 .tab-pill.tab-entering {
-  animation: m3TabIn 180ms var(--md-ease-emphasized-decel);
+  animation: m3TabIn calc(240ms * var(--md-motion-scale)) var(--md-ease-spring-spatial) both;
 }
 
 .tab-pill.has-audio:not(.pinned) {
@@ -1138,7 +1142,7 @@ body.tab-overview-open #tabbar.tabbar-row {
 }
 
 @keyframes m3TabIn {
-  from { opacity: 0; transform: translate3d(-6px, 0, 0) scale(0.96); }
+  from { opacity: 0; transform: translate3d(-10px, 2px, 0) scale(0.95); }
   to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
@@ -2367,15 +2371,40 @@ body.is-fullscreen #viewport { top: 0; left: 0; }
   z-index: 5;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(4px);
-  transition: opacity var(--md-dur-enter) var(--md-ease-emphasized-decel), transform var(--md-dur-enter) var(--md-ease-emphasized-decel);
+  transform: translate3d(0, 8px, 0) scale(0.992);
+  transition: opacity var(--md-dur-enter) var(--md-ease-emphasized-decel), transform var(--md-dur-spring) var(--md-ease-spring-spatial);
 }
 
 body.on-newtab:not(.tab-overview-open):not(.settings-open):not(.dl-manager-open):not(.extensions-open):not(.link-hub-open):not(.modal-open) #newtab-view {
   opacity: 1;
   pointer-events: auto;
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0) scale(1);
 }
+
+/* Silky 120Hz Googlebook Start Page Staggered Spatial Cascade */
+#newtab-view .hero-brand,
+#newtab-view .nt-motd-wrap,
+#newtab-view .hero-search-wrap,
+#newtab-view #sp-sec-favorites,
+#newtab-view .sp-section {
+  transition: opacity var(--md-dur-enter) var(--md-ease-emphasized-decel), transform var(--md-dur-spring) var(--md-ease-spring-spatial);
+}
+
+body:not(.on-newtab) #newtab-view .hero-brand,
+body:not(.on-newtab) #newtab-view .nt-motd-wrap,
+body:not(.on-newtab) #newtab-view .hero-search-wrap,
+body:not(.on-newtab) #newtab-view #sp-sec-favorites,
+body:not(.on-newtab) #newtab-view .sp-section {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  transition-delay: 0ms;
+}
+
+body.on-newtab #newtab-view .hero-brand { transition-delay: calc(15ms * var(--md-motion-scale)); }
+body.on-newtab #newtab-view .nt-motd-wrap { transition-delay: calc(45ms * var(--md-motion-scale)); }
+body.on-newtab #newtab-view .hero-search-wrap { transition-delay: calc(75ms * var(--md-motion-scale)); }
+body.on-newtab #newtab-view #sp-sec-favorites { transition-delay: calc(105ms * var(--md-motion-scale)); }
+body.on-newtab #newtab-view .sp-section { transition-delay: calc(135ms * var(--md-motion-scale)); }
 
 .startpage-scroll {
   width: 100%;
@@ -2924,7 +2953,7 @@ body.force-light .m3-fav-item:hover {
   background: var(--md-surface-container-high);
   border: none;
   box-shadow: var(--md-elev-1);
-  transition: border-radius var(--md-dur-medium) var(--md-ease-emphasized-decel), background-color var(--md-dur-short) var(--md-ease-emphasized), box-shadow var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-medium) var(--md-ease-spring);
+  transition: border-radius var(--md-dur-spring) var(--md-ease-spring-spatial), background-color var(--md-dur-short) var(--md-ease-emphasized), box-shadow var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-spring) var(--md-ease-spring-expressive);
 }
 
 body.theme-light .m3-fav-squircle,
@@ -2937,9 +2966,9 @@ body.force-light .m3-fav-squircle {
   border-radius: 17px;
   background: var(--md-secondary-container);
   box-shadow: var(--md-elev-2);
-  transform: translate3d(0, -2px, 0);
+  transform: translate3d(0, -3px, 0) scale(1.04);
 }
-.m3-fav-item:active .m3-fav-squircle { transform: scale(0.93); transition-duration: var(--md-dur-press); }
+.m3-fav-item:active .m3-fav-squircle { transform: translate3d(0, 0, 0) scale(0.92); transition-duration: var(--md-dur-press); }
 .m3-fav-squircle img { width: 24px; height: 24px; border-radius: 5px; object-fit: contain; pointer-events: none; }
 .m3-fav-letter { font-size: 19px; font-weight: 600; color: var(--md-primary); }
 
@@ -3376,8 +3405,8 @@ body.theme-light .ov-card, body.force-light .ov-card { background: var(--md-surf
   align-items: center;
   justify-content: center;
   color: var(--md-primary);
-  transform: translateX(0);
-  transition: transform 220ms var(--md-ease-spring), width 180ms var(--md-ease-spring), height 180ms var(--md-ease-spring), left 220ms var(--md-ease-spring), background-color var(--md-dur-short) ease, box-shadow var(--md-dur-short) ease;
+  transform: translate3d(0, 0, 0);
+  transition: transform var(--md-dur-spring) var(--md-ease-spring-expressive), width var(--md-dur-medium) var(--md-ease-spring-spatial), height var(--md-dur-medium) var(--md-ease-spring-spatial), left var(--md-dur-spring) var(--md-ease-spring-expressive), background-color var(--md-dur-short) ease, box-shadow var(--md-dur-short) ease;
 }
 
 .liquid-switch:hover .switch-knob,
@@ -3391,19 +3420,20 @@ body.theme-light .ov-card, body.force-light .ov-card { background: var(--md-surf
   height: 14px;
   opacity: 0;
   transform: scale(0.4);
-  transition: opacity 160ms var(--md-ease-emphasized), transform 220ms var(--md-ease-spring);
+  transition: opacity var(--md-dur-short) var(--md-ease-emphasized), transform var(--md-dur-spring) var(--md-ease-spring-expressive);
 }
 
 .liquid-switch:active .switch-knob,
 .m3-switch:active .switch-knob {
-  width: 22px;
+  width: 24px;
   height: 22px;
 }
 
 .liquid-switch.on:active .switch-knob,
 .m3-switch.on:active .switch-knob {
-  width: 26px;
+  width: 28px;
   height: 26px;
+  transform: translate3d(17px, 0, 0);
 }
 
 .liquid-switch.on,
@@ -3417,7 +3447,7 @@ body.theme-light .ov-card, body.force-light .ov-card { background: var(--md-surf
   left: 2px;
   width: 24px;
   height: 24px;
-  transform: translateX(20px);
+  transform: translate3d(20px, 0, 0);
   background: var(--md-on-primary);
 }
 
@@ -3461,8 +3491,10 @@ body.theme-light .ov-card, body.force-light .ov-card { background: var(--md-surf
   outline-offset: 2px;
 }
 
-/* 3. True Material 3 Connected Segmented Buttons with Leading Checkmark SVG */
+/* 3. True Material 3 Connected Segmented Buttons with 120Hz Gliding Pill Indicator */
 .m3-segmented {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: stretch;
   border-radius: var(--md-shape-full);
@@ -3472,11 +3504,32 @@ body.theme-light .ov-card, body.force-light .ov-card { background: var(--md-surf
   flex-shrink: 0;
 }
 
+.m3-seg-glider {
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  z-index: 0;
+  background: var(--md-secondary-container);
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, width;
+  transition: transform var(--md-dur-spring) var(--md-ease-spring-spatial), width var(--md-dur-spring) var(--md-ease-spring-spatial), opacity var(--md-dur-short) ease;
+}
+
+.m3-seg-glider.no-trans {
+  transition: none !important;
+}
+
 .m3-seg-btn {
+  position: relative;
+  z-index: 1;
   height: 38px;
   padding: 0 16px;
   border: none;
-  border-right: 1px solid var(--md-outline);
+  border-right: 1px solid color-mix(in srgb, var(--md-outline) 65%, transparent);
   outline: none;
   background: transparent;
   color: var(--md-on-surface);
@@ -3494,7 +3547,7 @@ body.theme-light .ov-card, body.force-light .ov-card { background: var(--md-surf
 
 .m3-seg-btn:last-child { border-right: none; }
 .m3-seg-btn:hover:not(.active) { background: var(--md-state-hover); }
-.m3-seg-btn:active { transform: scale(0.97); }
+.m3-seg-btn:active { transform: scale(0.965); }
 
 .m3-seg-btn .seg-check {
   width: 15px;
@@ -3508,9 +3561,13 @@ body.theme-light .ov-card, body.force-light .ov-card { background: var(--md-surf
   color: var(--md-on-secondary-container);
 }
 
+.m3-segmented.has-glider .m3-seg-btn.active {
+  background: transparent;
+}
+
 .m3-seg-btn.active .seg-check {
   display: inline-block;
-  animation: m3CheckPop 210ms var(--md-ease-spring);
+  animation: m3CheckPop calc(240ms * var(--md-motion-scale)) var(--md-ease-spring-expressive);
 }
 
 .m3-segmented.compact .m3-seg-btn { height: 34px; padding: 0 13px; font-size: 12px; }
@@ -3807,8 +3864,8 @@ body.force-light .m3-slider {
 }
 
 @keyframes m3WorkspaceIn {
-  from { opacity: 0; transform: translate3d(0, 6px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.992); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
 .m3-settings-workspace {
@@ -3824,7 +3881,7 @@ body.force-light .m3-slider {
 }
 
 @keyframes m3WinIn {
-  from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.965); }
+  from { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.955); }
   to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
@@ -4141,12 +4198,12 @@ body.force-light .m3-appbar-search { background: var(--md-surface-container-high
 .m3-empty-sub { font-size: 12.8px; max-width: 390px; line-height: 1.48; }
 
 @keyframes m3PaneIn {
-  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
   to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 .settings-pane { display: flex; flex-direction: column; gap: 22px; }
-.settings-pane:not(.hidden) { animation: m3PaneIn 200ms var(--md-ease-emphasized-decel); }
+.settings-pane:not(.hidden) { animation: m3PaneIn calc(260ms * var(--md-motion-scale)) var(--md-ease-spring-spatial) both; }
 .settings-pane.hidden,
 .opt-group.search-hidden,
 .opt-row.search-hidden { display: none !important; }
@@ -6312,7 +6369,7 @@ body.force-light .ext-details-hero {
 }
 
 /* ==========================================================================
-   Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub (v5.14.0)
+   Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub (v5.15.0)
    Gliding Segmented Views · Device Presence & Ping · Notes & Clip History
    ========================================================================== */
 .link-hub-overlay { z-index: 175; }
@@ -7703,7 +7760,7 @@ body.force-light .link-note-card {
 }
 
 /* ==========================================================================
-   Chrome-Style Material Design 3 Extension Install Dialog & Added Bubble (v5.14.0)
+   Chrome-Style Material Design 3 Extension Install Dialog & Added Bubble (v5.15.0)
    Pure Opaque HCT Tonal Surfaces · 200ms Spring Reveal · Zero Blur
    ========================================================================== */
 @keyframes extModalReveal {
@@ -8141,3 +8198,276 @@ body.force-light .nt-clock-time {
 @media (max-width: 780px) {
   .settings-wp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ==========================================================================
+   Googlebook Studio 1-Click Theme Presets & Extended M3 Customizations
+   ========================================================================== */
+.store-preset-hint {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--md-on-surface-variant);
+}
+
+.gb-presets-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(182px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.gb-presets-strip.compact {
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+}
+
+.gb-preset-chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 11px;
+  border-radius: var(--md-shape-lg);
+  border: 1.5px solid color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  contain: layout style;
+  transition: transform var(--md-dur-spring) var(--md-ease-spring-expressive), background-color var(--md-dur-short) var(--md-ease-emphasized), border-color var(--md-dur-short) var(--md-ease-emphasized), box-shadow var(--md-dur-short) var(--md-ease-emphasized);
+}
+
+.gb-presets-strip.compact .gb-preset-chip {
+  padding: 7px 10px;
+  gap: 7px;
+  border-radius: var(--md-shape-full);
+}
+
+body.theme-light .gb-preset-chip,
+body.force-light .gb-preset-chip {
+  background: var(--md-surface-container-low);
+}
+
+.gb-preset-chip:hover {
+  transform: translate3d(0, -2px, 0);
+  background: var(--md-surface-container-highest);
+  box-shadow: var(--md-elev-1);
+}
+
+.gb-preset-chip:active {
+  transform: scale(0.96);
+  transition-duration: var(--md-dur-press);
+}
+
+.gb-preset-chip.active {
+  border-color: var(--md-primary);
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  box-shadow: 0 0 0 1px var(--md-primary);
+}
+
+.gb-preset-orb {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--p1) 0%, var(--p1) 46%, var(--p3) 46%, var(--p2) 100%);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.22);
+}
+
+.gb-presets-strip.compact .gb-preset-orb {
+  width: 20px;
+  height: 20px;
+}
+
+.gb-preset-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.gb-preset-name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gb-preset-sub {
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--md-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gb-preset-chip.active .gb-preset-sub {
+  color: var(--md-on-secondary-container);
+  opacity: 0.84;
+}
+
+/* 1. Corner Roundness (Rounded / Pill Expressive / Sharp Pro) */
+body[data-corner-radius="pill"] {
+  --md-shape-sm: 12px;
+  --md-shape-md: 18px;
+  --md-shape-lg: 22px;
+  --md-shape-lg-inc: 26px;
+  --md-shape-xl: 30px;
+  --md-shape-2xl: 34px;
+}
+body[data-corner-radius="pill"] .tab-pill { border-radius: 16px 16px 0 0; }
+body[data-corner-radius="pill"] .wp-card { border-radius: 22px; }
+body[data-corner-radius="pill"] .m3-fav-item { border-radius: 24px; }
+body[data-corner-radius="pill"] .gb-preset-chip { border-radius: 999px; }
+
+body[data-corner-radius="sharp"] {
+  --md-shape-xs: 2px;
+  --md-shape-sm: 4px;
+  --md-shape-md: 6px;
+  --md-shape-lg: 8px;
+  --md-shape-lg-inc: 10px;
+  --md-shape-xl: 10px;
+  --md-shape-2xl: 12px;
+}
+body[data-corner-radius="sharp"] #omnibox-pill.omnibox-pill { border-radius: 10px; }
+body[data-corner-radius="sharp"] .hero-search { border-radius: 12px; }
+body[data-corner-radius="sharp"] .tab-pill { border-radius: 6px 6px 0 0; }
+body[data-corner-radius="sharp"] .tab-pill:not(.active)::before { border-radius: 5px; }
+body[data-corner-radius="sharp"][data-tab-style="floating"] .tab-pill { border-radius: 8px; }
+body[data-corner-radius="sharp"] .m3-fav-squircle { border-radius: 10px; }
+body[data-corner-radius="sharp"] .m3-fav-item { border-radius: 10px; }
+body[data-corner-radius="sharp"] .wp-card { border-radius: 8px; }
+body[data-corner-radius="sharp"] .m3-segmented { border-radius: 10px; }
+body[data-corner-radius="sharp"] .m3-btn { border-radius: 8px; }
+body[data-corner-radius="sharp"] .gb-preset-chip { border-radius: 8px; }
+body[data-corner-radius="sharp"] .liquid-switch,
+body[data-corner-radius="sharp"] .m3-switch { border-radius: 999px; }
+
+/* 2. Interface Density (Compact / Comfortable / Spacious) */
+body[data-ui-density="compact"] {
+  --nav-rail-w: 50px;
+}
+body[data-ui-density="compact"] #omnibox-pill.omnibox-pill { height: 32px; }
+body[data-ui-density="compact"] .opt-row { min-height: 52px; padding: 10px 16px; }
+body[data-ui-density="compact"] .opt-row.stacked { padding: 13px 16px; gap: 10px; }
+body[data-ui-density="compact"] .settings-pane { gap: 15px; }
+body[data-ui-density="compact"] .m3-settings-appbar { height: 54px; }
+body[data-ui-density="compact"] .startpage-container { gap: 16px; }
+body[data-ui-density="compact"] .m3-seg-btn { height: 32px; padding: 0 12px; font-size: 12px; }
+body[data-ui-density="compact"] .m3-segmented.compact .m3-seg-btn { height: 30px; padding: 0 11px; font-size: 11.5px; }
+
+body[data-ui-density="spacious"] .opt-row { min-height: 74px; padding: 18px 24px; }
+body[data-ui-density="spacious"] .settings-pane { gap: 28px; }
+body[data-ui-density="spacious"] .startpage-container { gap: 30px; }
+body[data-ui-density="spacious"] .m3-fav-grid { gap: 12px 12px; }
+
+/* 3. Animation Feel (Fluid 120Hz / Snappy / Off) */
+body[data-animation-speed="snappy"] {
+  --md-motion-scale: 0.62;
+}
+body[data-animation-speed="off"] {
+  --md-motion-scale: 0;
+}
+body[data-animation-speed="off"] *,
+body[data-animation-speed="off"] *::before,
+body[data-animation-speed="off"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0ms !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0ms !important;
+}
+
+/* 4. Address Bar Style (Pill / Outlined / Elevated) */
+body[data-omnibox-style="outlined"] #omnibox-pill.omnibox-pill {
+  background: transparent;
+  border: 1.5px solid color-mix(in srgb, var(--md-outline) 78%, transparent);
+}
+body[data-omnibox-style="outlined"] #omnibox-pill.omnibox-pill:hover:not(.is-editing):not(:focus-within) {
+  background: color-mix(in srgb, var(--md-on-surface) 5%, transparent);
+  border-color: var(--md-on-surface-variant);
+}
+body[data-omnibox-style="outlined"] #omnibox-pill.omnibox-pill:focus-within,
+body[data-omnibox-style="outlined"] #omnibox-pill.omnibox-pill.is-editing {
+  background: var(--md-omnibox-focus-bg);
+  border: 2px solid var(--md-primary);
+}
+body[data-omnibox-style="outlined"] .hero-search {
+  background: color-mix(in srgb, var(--md-surface-container-low) 86%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--md-outline) 78%, transparent);
+  box-shadow: none;
+}
+
+body[data-omnibox-style="elevated"] #omnibox-pill.omnibox-pill {
+  background: var(--md-surface-container-highest);
+  border: 1px solid color-mix(in srgb, var(--md-outline-variant) 42%, transparent);
+  box-shadow: var(--md-elev-1);
+}
+body[data-omnibox-style="elevated"] #omnibox-pill.omnibox-pill:hover:not(.is-editing):not(:focus-within) {
+  box-shadow: var(--md-elev-2);
+}
+body[data-omnibox-style="elevated"] #omnibox-pill.omnibox-pill:focus-within,
+body[data-omnibox-style="elevated"] #omnibox-pill.omnibox-pill.is-editing {
+  background: var(--md-omnibox-focus-bg);
+  border: 2px solid var(--md-primary);
+  box-shadow: var(--md-elev-2);
+}
+body[data-omnibox-style="elevated"] .hero-search {
+  box-shadow: var(--md-elev-3);
+}
+
+/* 5. Start Page Layout (Balanced / Minimal Zen / Compact Focus) */
+body[data-start-page-layout="minimal"] #nt-motd-wrap,
+body[data-start-page-layout="minimal"] #sp-sec-privacy,
+body[data-start-page-layout="minimal"] #sp-sec-frequent,
+body[data-start-page-layout="minimal"] #sp-sec-reading {
+  display: none !important;
+}
+body[data-start-page-layout="minimal"] .startpage-container {
+  gap: 28px;
+}
+
+body[data-start-page-layout="focus"] .startpage-scroll {
+  padding-top: 18px;
+  padding-bottom: 42px;
+}
+body[data-start-page-layout="focus"] .startpage-container {
+  margin: 0 auto;
+  gap: 14px;
+}
+body[data-start-page-layout="focus"] .hero-logo-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+}
+body[data-start-page-layout="focus"] #newtab-logo {
+  width: 44px;
+  height: 44px;
+}
+body[data-start-page-layout="focus"] .hero-title {
+  font-size: 24px;
+}
+body[data-start-page-layout="focus"] .hero-search {
+  height: 46px;
+}
+
+/* 6. Quick Access Shortcut Columns (4 / 5 / 6 per row) */
+body[data-shortcut-cols="4"] #sp-sec-favorites.sp-favorites-tray { max-width: 410px; }
+body[data-shortcut-cols="5"] #sp-sec-favorites.sp-favorites-tray { max-width: 520px; }
+body[data-shortcut-cols="6"] #sp-sec-favorites.sp-favorites-tray { max-width: 620px; }
+
+/* Extra 120Hz Expressive Micro-Interactions across Chrome & Studio */
+.accent-swatch,
+.m3-filter-chip,
+.store-tab,
+.icon-btn {
+  transition-timing-function: var(--md-ease-spring-spatial);
+}
+.accent-swatch:active { transform: scale(0.95); }
+.wp-card {
+  transition: transform var(--md-dur-spring) var(--md-ease-spring-spatial), border-color var(--md-dur-short) var(--md-ease-emphasized), box-shadow var(--md-dur-short) var(--md-ease-emphasized);
+}
+.wp-card:hover { transform: translate3d(0, -3px, 0) scale(1.012); }

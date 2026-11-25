@@ -1459,6 +1459,12 @@ namespace DejavuBrowser
                 { "tabBarStyle", _settings.tabBarStyle ?? "googlebook" },
                 { "shortcutStyle", _settings.shortcutStyle ?? "circle" },
                 { "clockStyle", _settings.clockStyle ?? "off" },
+                { "cornerRadius", _settings.cornerRadius ?? "rounded" },
+                { "uiDensity", _settings.uiDensity ?? "comfortable" },
+                { "animationSpeed", _settings.animationSpeed ?? "fluid" },
+                { "omniboxStyle", _settings.omniboxStyle ?? "pill" },
+                { "startPageLayout", _settings.startPageLayout ?? "balanced" },
+                { "shortcutColumns", _settings.shortcutColumns == 4 || _settings.shortcutColumns == 6 ? _settings.shortcutColumns : 5 },
                 { "hideGreetingBadge", _settings.hideGreetingBadge },
                 { "hideStartPageSearch", _settings.hideStartPageSearch },
                 { "favoritesBarHidden", _favoritesBarHidden },
@@ -1949,7 +1955,7 @@ namespace DejavuBrowser
                 case "froggie-lime": accent = "lime"; mode = "light"; return true;
                 case "wp-m3-froggie-sage.jpg":
                 case "froggie-sage": accent = "aurora"; mode = "dark"; return true;
-                // 12 bespoke v5.14.0 Googlebook Material Design 3 vector wallpapers
+                // 12 bespoke v5.15.0 Googlebook Material Design 3 vector wallpapers
                 case "vec:m3-googlebook-waves":
                 case "m3-googlebook-waves": accent = "sapphire"; mode = "dark"; return true;
                 case "vec:m3-pixel-scallops":
@@ -2146,17 +2152,19 @@ namespace DejavuBrowser
             }
             bool amoled = (!isLightTheme && !_isPrivateWindow && _settings != null && _settings.amoledDark);
             string matStyle = (_settings != null && !string.IsNullOrEmpty(_settings.materialStyle)) ? _settings.materialStyle : "tonal";
+            string crStyle = (_settings != null && !string.IsNullOrEmpty(_settings.cornerRadius)) ? _settings.cornerRadius : "rounded";
+            string animSpeed = (_settings != null && !string.IsNullOrEmpty(_settings.animationSpeed)) ? _settings.animationSpeed : "fluid";
             if (_popoverPopup != null && !_popoverPopup.IsDisposed)
             {
-                try { _popoverPopup.UpdateSurfaceTheme(isLightTheme, surface); _popoverPopup.UpdateStyleHints(amoled, matStyle); } catch { }
+                try { _popoverPopup.UpdateSurfaceTheme(isLightTheme, surface); _popoverPopup.UpdateStyleHints(amoled, matStyle, crStyle, animSpeed); } catch { }
             }
             if (_hudPopup != null && !_hudPopup.IsDisposed)
             {
-                try { _hudPopup.UpdateSurfaceTheme(isLightTheme, surface); _hudPopup.UpdateStyleHints(amoled, matStyle); } catch { }
+                try { _hudPopup.UpdateSurfaceTheme(isLightTheme, surface); _hudPopup.UpdateStyleHints(amoled, matStyle, crStyle, animSpeed); } catch { }
             }
             if (_suggestPopup != null && !_suggestPopup.IsDisposed)
             {
-                try { _suggestPopup.UpdateSurfaceTheme(isLightTheme, surface); _suggestPopup.UpdateStyleHints(amoled, matStyle); } catch { }
+                try { _suggestPopup.UpdateSurfaceTheme(isLightTheme, surface); _suggestPopup.UpdateStyleHints(amoled, matStyle, crStyle, animSpeed); } catch { }
             }
             for (int i = 0; i < _tabs.Count; i++)
             {
@@ -7461,6 +7469,30 @@ namespace DejavuBrowser
                 _settings.shortcutStyle = SettingsStore.NormalizeShortcutStyle(Convert.ToString(msg["shortcutStyle"]));
             if (msg.ContainsKey("clockStyle"))
                 _settings.clockStyle = SettingsStore.NormalizeClockStyle(Convert.ToString(msg["clockStyle"]));
+            if (msg.ContainsKey("cornerRadius"))
+            {
+                _settings.cornerRadius = SettingsStore.NormalizeCornerRadius(Convert.ToString(msg["cornerRadius"]));
+                ApplyThemeToAllTabs();
+            }
+            if (msg.ContainsKey("uiDensity"))
+                _settings.uiDensity = SettingsStore.NormalizeUiDensity(Convert.ToString(msg["uiDensity"]));
+            if (msg.ContainsKey("animationSpeed"))
+            {
+                _settings.animationSpeed = SettingsStore.NormalizeAnimationSpeed(Convert.ToString(msg["animationSpeed"]));
+                ApplyThemeToAllTabs();
+            }
+            if (msg.ContainsKey("omniboxStyle"))
+                _settings.omniboxStyle = SettingsStore.NormalizeOmniboxStyle(Convert.ToString(msg["omniboxStyle"]));
+            if (msg.ContainsKey("startPageLayout"))
+                _settings.startPageLayout = SettingsStore.NormalizeStartPageLayout(Convert.ToString(msg["startPageLayout"]));
+            if (msg.ContainsKey("shortcutColumns"))
+            {
+                int cols;
+                if (int.TryParse(Convert.ToString(msg["shortcutColumns"]), out cols))
+                {
+                    _settings.shortcutColumns = SettingsStore.NormalizeShortcutColumns(cols);
+                }
+            }
             if (msg.ContainsKey("hideGreetingBadge"))
                 _settings.hideGreetingBadge = Convert.ToBoolean(msg["hideGreetingBadge"]);
             if (msg.ContainsKey("hideStartPageSearch"))
@@ -7927,7 +7959,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.14.0 defaults", "success");
+            PushShellToast("Settings restored to v5.15.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()

@@ -1,5 +1,5 @@
 /**
- * dejavu v5.14.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * dejavu v5.15.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
  * 12 Official HCT Material You Themes, 32 Pure M3, Butterfly & Froggie Wallpapers, Auto Wallpaper-to-Theme,
  * Redesigned Pixel At-a-Glance Message of the Day Card, Clean 5-Control ChromeOS Toolbar,
  * Zero-Glitch 120Hz Tab Strip, Brave-Grade Shields, Real-Time dejavu Link Hub & 8x Turbo Downloader.
@@ -181,12 +181,19 @@
   const prefMotd = document.getElementById('pref-motd');
   const prefAutoTheme = document.getElementById('pref-auto-theme');
   const storeAccentSwatches = document.getElementById('store-accent-swatches');
+  const storeGbPresets = document.getElementById('store-gb-presets');
   const storeAppearanceMode = document.getElementById('store-appearance-mode');
   const storeMaterialStyle = document.getElementById('store-material-style');
   const storeTabbarStyle = document.getElementById('store-tabbar-style');
   const storeShortcutStyle = document.getElementById('store-shortcut-style');
   const storeClockStyle = document.getElementById('store-clock-style');
   const storeAmoledDark = document.getElementById('store-amoled-dark');
+  const storeCornerRadius = document.getElementById('store-corner-radius');
+  const storeUiDensity = document.getElementById('store-ui-density');
+  const storeAnimationSpeed = document.getElementById('store-animation-speed');
+  const storeOmniboxStyle = document.getElementById('store-omnibox-style');
+  const storeSpLayout = document.getElementById('store-sp-layout');
+  const storeScColumns = document.getElementById('store-sc-columns');
 
   // Left Navigation Rail
   const railHome = document.getElementById('rail-home');
@@ -245,13 +252,20 @@
   const settingsProfilesList = document.getElementById('settings-profiles-list');
 
   // Category 2: Appearance & Material You
+  const optGbPresets = document.getElementById('opt-gb-presets');
   const optAppearanceMode = document.getElementById('opt-appearance-mode');
   const optAmoledDark = document.getElementById('opt-amoled-dark');
   const optMaterialStyle = document.getElementById('opt-material-style');
+  const optCornerRadius = document.getElementById('opt-corner-radius');
+  const optUiDensity = document.getElementById('opt-ui-density');
+  const optAnimationSpeed = document.getElementById('opt-animation-speed');
   const optAccentSwatches = document.getElementById('opt-accent-swatches');
   const optAutoTheme = document.getElementById('opt-auto-theme');
   const optTabbarStyle = document.getElementById('opt-tabbar-style');
+  const optOmniboxStyle = document.getElementById('opt-omnibox-style');
   const optShortcutStyle = document.getElementById('opt-shortcut-style');
+  const optSpLayout = document.getElementById('opt-sp-layout');
+  const optScColumns = document.getElementById('opt-sc-columns');
   const optClockStyle = document.getElementById('opt-clock-style');
   const settingsWpCountPill = document.getElementById('settings-wp-count-pill');
   const optWpFilter = document.getElementById('opt-wp-filter');
@@ -574,7 +588,7 @@
     forest: '#9cd49f'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.14.0 — 32 HD + 12 Googlebook Vector + 1 Live = 45 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.15.0 — 32 HD + 12 Googlebook Vector + 1 Live = 45 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 18 Sculptural / Architectural Material Design 3 HD Wallpapers (10 Dark, 8 Light)
@@ -768,6 +782,12 @@
       tabBarStyle: 'googlebook',
       shortcutStyle: 'circle',
       clockStyle: 'off',
+      cornerRadius: 'rounded',
+      uiDensity: 'comfortable',
+      animationSpeed: 'fluid',
+      omniboxStyle: 'pill',
+      startPageLayout: 'balanced',
+      shortcutColumns: 5,
       fontSize: 'medium',
       fontFamily: 'system',
       showHomeButton: true,
@@ -873,7 +893,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.14.0',
+    appVersion: bootData.appVersion || '5.15.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -2137,7 +2157,7 @@
     downloads: { title: 'Downloads', sub: 'Save folder, Turbo multi-thread accelerator connections & default video / MP3 quality' },
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.14.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.15.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2215,7 +2235,45 @@
     if (key === 'appearance') renderSettingsWallpaperGrid();
     if (key === 'you') renderYouAndGooglePane();
     if (key === 'system') send({ type: 'checkDefaultBrowser' });
+    syncAllDesktopGliders(true);
   }
+
+  function positionSegGlider(container, instant) {
+    if (!container || !container.classList.contains('m3-segmented')) return;
+    const activeBtn = container.querySelector('.opt-seg-btn.active');
+    let glider = container.querySelector(':scope > .m3-seg-glider');
+    if (!activeBtn || activeBtn.offsetWidth === 0) {
+      if (glider) glider.style.opacity = '0';
+      return;
+    }
+    if (!glider) {
+      glider = document.createElement('span');
+      glider.className = 'm3-seg-glider';
+      glider.setAttribute('aria-hidden', 'true');
+      container.insertBefore(glider, container.firstChild);
+    }
+    const snap = !!instant || glider.dataset.ready !== '1';
+    if (snap) glider.classList.add('no-trans');
+    glider.style.width = `${activeBtn.offsetWidth}px`;
+    glider.style.transform = `translate3d(${activeBtn.offsetLeft}px, 0, 0)`;
+    glider.style.opacity = '1';
+    container.classList.add('has-glider');
+    if (snap) {
+      void glider.offsetWidth;
+      glider.classList.remove('no-trans');
+      glider.dataset.ready = '1';
+    }
+  }
+
+  let desktopGliderRaf = 0;
+  function syncAllDesktopGliders(instant) {
+    if (desktopGliderRaf) cancelAnimationFrame(desktopGliderRaf);
+    desktopGliderRaf = requestAnimationFrame(() => {
+      desktopGliderRaf = 0;
+      document.querySelectorAll('.m3-segmented').forEach((seg) => positionSegGlider(seg, instant));
+    });
+  }
+  window.addEventListener('resize', () => syncAllDesktopGliders(true));
 
   function setSegmentedVal(container, val) {
     if (!container) return;
@@ -2223,6 +2281,7 @@
     container.querySelectorAll('.opt-seg-btn').forEach((b) => {
       b.classList.toggle('active', String(b.dataset.val) === str);
     });
+    positionSegGlider(container, false);
   }
 
   let lastYouPaneSig = '';
@@ -2398,6 +2457,112 @@
   }
   setInterval(syncStartPageClock, 15000);
 
+  const GOOGLEBOOK_PRESETS = Object.freeze({
+    'pixel-night': {
+      name: 'Pixel Night',
+      wallpaper: 'vec:m3-googlebook-waves',
+      appearanceMode: 'dark',
+      accentColor: 'sapphire',
+      amoledDark: false,
+      materialStyle: 'tonal',
+      tabBarStyle: 'googlebook',
+      cornerRadius: 'rounded',
+      omniboxStyle: 'pill'
+    },
+    'amoled-obsidian': {
+      name: 'AMOLED Obsidian',
+      wallpaper: 'vec:m3-oled-monolith',
+      appearanceMode: 'dark',
+      accentColor: 'silver',
+      amoledDark: true,
+      materialStyle: 'minimal',
+      tabBarStyle: 'floating',
+      cornerRadius: 'rounded',
+      omniboxStyle: 'outlined'
+    },
+    'porcelain-studio': {
+      name: 'Porcelain Studio',
+      wallpaper: 'vec:m3-paper-fold',
+      appearanceMode: 'light',
+      accentColor: 'sapphire',
+      amoledDark: false,
+      materialStyle: 'tonal',
+      tabBarStyle: 'googlebook',
+      cornerRadius: 'pill',
+      omniboxStyle: 'elevated'
+    },
+    'nordic-sage': {
+      name: 'Nordic Sage',
+      wallpaper: 'vec:m3-botanical-arc',
+      appearanceMode: 'dark',
+      accentColor: 'emerald',
+      amoledDark: false,
+      materialStyle: 'vibrant',
+      tabBarStyle: 'floating',
+      cornerRadius: 'pill',
+      omniboxStyle: 'pill'
+    },
+    'berry-studio': {
+      name: 'Berry Studio',
+      wallpaper: 'vec:m3-prism-glass',
+      appearanceMode: 'dark',
+      accentColor: 'plum',
+      amoledDark: false,
+      materialStyle: 'vibrant',
+      tabBarStyle: 'googlebook',
+      cornerRadius: 'rounded',
+      omniboxStyle: 'elevated'
+    }
+  });
+
+  function syncPresetChipsUi() {
+    const o = state.browserOptions || {};
+    const wp = state.wallpaper || '';
+    [optGbPresets, storeGbPresets].forEach((strip) => {
+      if (!strip) return;
+      strip.querySelectorAll('.gb-preset-chip').forEach((btn) => {
+        const p = GOOGLEBOOK_PRESETS[btn.dataset.preset || ''];
+        const matched = !!p &&
+          wp === p.wallpaper &&
+          (o.accentColor || 'amethyst') === p.accentColor &&
+          !!o.amoledDark === !!p.amoledDark &&
+          (o.materialStyle || 'tonal') === p.materialStyle &&
+          (o.tabBarStyle || 'googlebook') === p.tabBarStyle;
+        btn.classList.toggle('active', matched);
+      });
+    });
+  }
+
+  function applyGooglebookPreset(presetId) {
+    const p = GOOGLEBOOK_PRESETS[presetId];
+    if (!p) return;
+    triggerThemeTransition();
+    state.wallpaper = p.wallpaper;
+    if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setWallpaper) {
+      window.DejavuNewTabCanvas.setWallpaper(p.wallpaper);
+    }
+    send({
+      type: 'setWallpaper',
+      wallpaper: p.wallpaper,
+      accentColor: p.accentColor,
+      appearanceMode: p.appearanceMode
+    });
+    updateOpt({
+      appearanceMode: p.appearanceMode,
+      accentColor: p.accentColor,
+      amoledDark: p.amoledDark,
+      materialStyle: p.materialStyle,
+      tabBarStyle: p.tabBarStyle,
+      cornerRadius: p.cornerRadius,
+      omniboxStyle: p.omniboxStyle
+    });
+    renderWallpaperGrid();
+    renderSettingsWallpaperGrid();
+    syncPresetChipsUi();
+    syncAllDesktopGliders(false);
+    showToast(`Applied ${p.name} theme`, 'success');
+  }
+
   let lastBrowserOptionsSig = '';
   let lastPausedHostsSig = '';
   function applyBrowserOptions(opts) {
@@ -2407,6 +2572,12 @@
     const tabStyle = o.tabBarStyle || 'googlebook';
     const scStyle = o.shortcutStyle || 'circle';
     const clkStyle = o.clockStyle || 'off';
+    const cornerRad = o.cornerRadius || 'rounded';
+    const uiDens = o.uiDensity || 'comfortable';
+    const animSpd = o.animationSpeed || 'fluid';
+    const omniStyle = o.omniboxStyle || 'pill';
+    const spLayout = o.startPageLayout || 'balanced';
+    const scCols = [4, 5, 6].includes(Number(o.shortcutColumns)) ? Number(o.shortcutColumns) : 5;
     const optSig = JSON.stringify([
       ac,
       matStyle,
@@ -2414,6 +2585,12 @@
       tabStyle,
       scStyle,
       clkStyle,
+      cornerRad,
+      uiDens,
+      animSpd,
+      omniStyle,
+      spLayout,
+      scCols,
       !!o.compactTabBar,
       !!o.alwaysShowTabClose,
       !!o.hideNavRail,
@@ -2434,6 +2611,7 @@
     const optsChanged = (optSig !== lastBrowserOptionsSig);
     if (optsChanged) {
       const prevAccent = document.documentElement.dataset.accent;
+      const prevDensity = body.dataset.uiDensity;
       lastBrowserOptionsSig = optSig;
       if (prevAccent && prevAccent !== ac) triggerThemeTransition();
       if (document.documentElement.dataset.accent !== ac) document.documentElement.dataset.accent = ac;
@@ -2441,24 +2619,34 @@
       body.dataset.materialStyle = matStyle;
       body.dataset.tabStyle = tabStyle;
       body.dataset.shortcutStyle = scStyle;
+      body.dataset.cornerRadius = cornerRad;
+      body.dataset.uiDensity = uiDens;
+      body.dataset.animationSpeed = animSpd;
+      body.dataset.omniboxStyle = omniStyle;
+      body.dataset.startPageLayout = spLayout;
+      body.dataset.shortcutCols = String(scCols);
       body.classList.toggle('amoled-dark', !!o.amoledDark);
       body.classList.toggle('compact-tabs', !!o.compactTabBar);
       body.classList.toggle('always-show-tab-close', !!o.alwaysShowTabClose);
       body.classList.toggle('nav-rail-hidden', !!o.hideNavRail);
-      body.classList.toggle('reduce-motion', !!o.reduceWallpaperMotion);
+      body.classList.toggle('reduce-motion', !!o.reduceWallpaperMotion || animSpd === 'off');
       if (btnToolbarHome) btnToolbarHome.classList.toggle('hidden', o.showHomeButton === false);
       if (spPrivateChip) spPrivateChip.classList.toggle('hidden', !state.isPrivateWindow);
       if (heroSearchWrap) heroSearchWrap.classList.toggle('hidden', !!o.hideStartPageSearch);
       syncStartPageClock();
       syncMotdDisplay();
       syncAccentSwatchesUi(ac, o.autoThemeFromWallpaper !== false);
+      syncPresetChipsUi();
       if (window.DejavuNewTabCanvas && window.DejavuNewTabCanvas.setOptions) {
         window.DejavuNewTabCanvas.setOptions({
-          reduceMotion: !!o.reduceWallpaperMotion,
+          reduceMotion: !!o.reduceWallpaperMotion || animSpd === 'off',
           dim: o.wallpaperDim || 'balanced',
           lightMode: !state.isPrivateWindow && (o.appearanceMode === 'light'),
           accentColor: ac
         });
+      }
+      if (prevDensity && prevDensity !== uiDens) {
+        syncAllDesktopGliders(true);
       }
     }
 
@@ -2486,7 +2674,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.14.0';
+    const ver = state.appVersion || '5.15.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -2501,13 +2689,27 @@
     setSwitchState(storeAmoledDark, !!o.amoledDark);
     setSegmentedVal(optMaterialStyle, o.materialStyle || 'tonal');
     setSegmentedVal(storeMaterialStyle, o.materialStyle || 'tonal');
+    setSegmentedVal(optCornerRadius, o.cornerRadius || 'rounded');
+    setSegmentedVal(storeCornerRadius, o.cornerRadius || 'rounded');
+    setSegmentedVal(optUiDensity, o.uiDensity || 'comfortable');
+    setSegmentedVal(storeUiDensity, o.uiDensity || 'comfortable');
+    setSegmentedVal(optAnimationSpeed, o.animationSpeed || 'fluid');
+    setSegmentedVal(storeAnimationSpeed, o.animationSpeed || 'fluid');
     setSegmentedVal(optTabbarStyle, o.tabBarStyle || 'googlebook');
     setSegmentedVal(storeTabbarStyle, o.tabBarStyle || 'googlebook');
+    setSegmentedVal(optOmniboxStyle, o.omniboxStyle || 'pill');
+    setSegmentedVal(storeOmniboxStyle, o.omniboxStyle || 'pill');
     setSegmentedVal(optShortcutStyle, o.shortcutStyle || 'circle');
     setSegmentedVal(storeShortcutStyle, o.shortcutStyle || 'circle');
+    setSegmentedVal(optSpLayout, o.startPageLayout || 'balanced');
+    setSegmentedVal(storeSpLayout, o.startPageLayout || 'balanced');
+    const scColsVal = [4, 5, 6].includes(Number(o.shortcutColumns)) ? Number(o.shortcutColumns) : 5;
+    setSegmentedVal(optScColumns, scColsVal);
+    setSegmentedVal(storeScColumns, scColsVal);
     setSegmentedVal(optClockStyle, o.clockStyle || 'off');
     setSegmentedVal(storeClockStyle, o.clockStyle || 'off');
     syncAccentSwatchesUi(o.accentColor || 'amethyst', o.autoThemeFromWallpaper !== false);
+    syncPresetChipsUi();
     setSegmentedVal(optWpDim, o.wallpaperDim || 'balanced');
     if (optFontSize) optFontSize.value = o.fontSize || 'medium';
     if (optFontFamily) optFontFamily.value = o.fontFamily || 'system';
@@ -2811,16 +3013,36 @@
   if (btnYouAddProfile) btnYouAddProfile.addEventListener('click', () => openProfileSetupModal('add'));
 
   // Category 2 bindings
+  [optGbPresets, storeGbPresets].forEach((strip) => {
+    if (!strip) return;
+    strip.addEventListener('click', (e) => {
+      const btn = e.target.closest('.gb-preset-chip');
+      if (!btn || !btn.dataset.preset) return;
+      applyGooglebookPreset(btn.dataset.preset);
+    });
+  });
   bindSeg(optAppearanceMode, 'appearanceMode');
   bindSeg(storeAppearanceMode, 'appearanceMode');
   bindBoolSwitch(optAmoledDark, 'amoledDark', false);
   bindBoolSwitch(storeAmoledDark, 'amoledDark', false);
   bindSeg(optMaterialStyle, 'materialStyle');
   bindSeg(storeMaterialStyle, 'materialStyle');
+  bindSeg(optCornerRadius, 'cornerRadius');
+  bindSeg(storeCornerRadius, 'cornerRadius');
+  bindSeg(optUiDensity, 'uiDensity');
+  bindSeg(storeUiDensity, 'uiDensity');
+  bindSeg(optAnimationSpeed, 'animationSpeed');
+  bindSeg(storeAnimationSpeed, 'animationSpeed');
   bindSeg(optTabbarStyle, 'tabBarStyle');
   bindSeg(storeTabbarStyle, 'tabBarStyle');
+  bindSeg(optOmniboxStyle, 'omniboxStyle');
+  bindSeg(storeOmniboxStyle, 'omniboxStyle');
   bindSeg(optShortcutStyle, 'shortcutStyle');
   bindSeg(storeShortcutStyle, 'shortcutStyle');
+  bindSeg(optSpLayout, 'startPageLayout');
+  bindSeg(storeSpLayout, 'startPageLayout');
+  bindSeg(optScColumns, 'shortcutColumns', Number);
+  bindSeg(storeScColumns, 'shortcutColumns', Number);
   bindSeg(optClockStyle, 'clockStyle');
   bindSeg(storeClockStyle, 'clockStyle');
   bindSeg(optWpDim, 'wallpaperDim');
@@ -3526,7 +3748,10 @@
     if (storePaneWallpapers) storePaneWallpapers.classList.toggle('hidden', activeStorePane !== 'wallpapers');
     if (storePaneStyle) storePaneStyle.classList.toggle('hidden', activeStorePane !== 'style');
     if (activeStorePane === 'wallpapers') renderWallpaperGrid();
-    else syncSettingsUi();
+    else {
+      syncSettingsUi();
+      syncAllDesktopGliders(true);
+    }
   }
   if (storeModeSeg) {
     storeModeSeg.addEventListener('click', (e) => {
@@ -5348,6 +5573,7 @@
       wallpaperStore.classList.add('hidden');
       shortcutModal.classList.add('hidden');
       if (!wasOptOpen) {
+        syncAllDesktopGliders(true);
         if (settingsSearchInput) settingsSearchInput.value = '';
         if (btnSettingsSearchClear) btnSettingsSearchClear.classList.add('hidden');
         setActiveSettingsPane(next.settingsPane || activeSettingsPane || 'you');

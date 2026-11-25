@@ -24,6 +24,8 @@ namespace DejavuBrowser
         private Color _lastSurfaceColor = Color.Empty;
         private bool _lastAmoledDark;
         private string _lastMaterialStyle = "tonal";
+        private string _lastCornerRadius = "rounded";
+        private string _lastAnimationSpeed = "fluid";
 
         public bool IsPopupOpen
         {
@@ -195,7 +197,9 @@ namespace DejavuBrowser
                 try
                 {
                     string shJson = "{\"mode\":\"styleHints\",\"amoledDark\":" + (_lastAmoledDark ? "true" : "false")
-                        + ",\"materialStyle\":\"" + (_lastMaterialStyle ?? "tonal") + "\"}";
+                        + ",\"materialStyle\":\"" + (_lastMaterialStyle ?? "tonal")
+                        + "\",\"cornerRadius\":\"" + (_lastCornerRadius ?? "rounded")
+                        + "\",\"animationSpeed\":\"" + (_lastAnimationSpeed ?? "fluid") + "\"}";
                     core.PostWebMessageAsJson(shJson);
                 }
                 catch { }
@@ -302,18 +306,24 @@ namespace DejavuBrowser
             UpdateSurfaceTheme(isLight, bg);
         }
 
-        public void UpdateStyleHints(bool amoledDark, string materialStyle)
+        public void UpdateStyleHints(bool amoledDark, string materialStyle, string cornerRadius = "rounded", string animationSpeed = "fluid")
         {
             if (IsDisposed || _isExtensionPopup) return;
             string normStyle = (materialStyle == "vibrant" || materialStyle == "minimal") ? materialStyle : "tonal";
+            string normCorner = (cornerRadius == "pill" || cornerRadius == "sharp") ? cornerRadius : "rounded";
+            string normAnim = (animationSpeed == "snappy" || animationSpeed == "off") ? animationSpeed : "fluid";
             _lastAmoledDark = amoledDark;
             _lastMaterialStyle = normStyle;
+            _lastCornerRadius = normCorner;
+            _lastAnimationSpeed = normAnim;
             if (_ready && _wv != null && !_wv.IsDisposed && _wv.CoreWebView2 != null)
             {
                 try
                 {
                     string json = "{\"mode\":\"styleHints\",\"amoledDark\":" + (amoledDark ? "true" : "false")
-                        + ",\"materialStyle\":\"" + normStyle + "\"}";
+                        + ",\"materialStyle\":\"" + normStyle
+                        + "\",\"cornerRadius\":\"" + normCorner
+                        + "\",\"animationSpeed\":\"" + normAnim + "\"}";
                     _wv.CoreWebView2.PostWebMessageAsJson(json);
                 }
                 catch { }
@@ -355,7 +365,9 @@ namespace DejavuBrowser
                         try
                         {
                             string shJson = "{\"mode\":\"styleHints\",\"amoledDark\":" + (_lastAmoledDark ? "true" : "false")
-                                + ",\"materialStyle\":\"" + (_lastMaterialStyle ?? "tonal") + "\"}";
+                                + ",\"materialStyle\":\"" + (_lastMaterialStyle ?? "tonal")
+                                + "\",\"cornerRadius\":\"" + (_lastCornerRadius ?? "rounded")
+                                + "\",\"animationSpeed\":\"" + (_lastAnimationSpeed ?? "fluid") + "\"}";
                             _wv.CoreWebView2.PostWebMessageAsJson(shJson);
                         }
                         catch { }

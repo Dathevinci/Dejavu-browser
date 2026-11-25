@@ -341,7 +341,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     private static final Interpolator M3_EMPHASIZED_DECEL = new PathInterpolator(0.05f, 0.7f, 0.1f, 1.0f);
-    private static final Interpolator M3_SPRING = new PathInterpolator(0.34f, 1.56f, 0.64f, 1.0f);
+    private static final Interpolator M3_SPRING = new PathInterpolator(0.34f, 1.44f, 0.64f, 1.0f);
+    private static final Interpolator M3_SPRING_SPATIAL = new PathInterpolator(0.20f, 1.14f, 0.36f, 1.0f);
+
+    private int lastShieldBadgeCount = -1;
+    private int lastShieldBadgeTabId = -1;
 
     private static final int MAX_LIVE_BACKGROUND_TABS = 3;
 
@@ -2440,6 +2444,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             if (t.webView != null) {
                 t.webView.animate().cancel();
                 t.webView.setAlpha(1f);
+                t.webView.setTranslationY(0f);
                 boolean isVisible = (t == active && !t.isNewTab);
                 t.webView.setVisibility(isVisible ? View.VISIBLE : View.GONE);
                 if (!isVisible) {
@@ -2453,12 +2458,14 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             if (uiWebView != null) {
                 uiWebView.animate().cancel();
                 if (switchedTab && uiWebView.getVisibility() != View.VISIBLE) {
-                    uiWebView.setAlpha(0.86f);
+                    uiWebView.setAlpha(0.84f);
+                    uiWebView.setTranslationY(dp(8));
                     uiWebView.setVisibility(View.VISIBLE);
-                    uiWebView.animate().alpha(1f).setDuration(140)
-                        .setInterpolator(M3_EMPHASIZED_DECEL).start();
+                    uiWebView.animate().alpha(1f).translationY(0f).setDuration(200)
+                        .setInterpolator(M3_SPRING_SPATIAL).start();
                 } else {
                     uiWebView.setAlpha(1f);
+                    uiWebView.setTranslationY(0f);
                     uiWebView.setVisibility(View.VISIBLE);
                 }
             }
@@ -2488,11 +2495,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             active.webView.animate().cancel();
             active.webView.setVisibility(View.VISIBLE);
             if (switchedTab) {
-                active.webView.setAlpha(0.86f);
-                active.webView.animate().alpha(1f).setDuration(140)
-                    .setInterpolator(M3_EMPHASIZED_DECEL).start();
+                active.webView.setAlpha(0.84f);
+                active.webView.setTranslationY(dp(8));
+                active.webView.animate().alpha(1f).translationY(0f).setDuration(200)
+                    .setInterpolator(M3_SPRING_SPATIAL).start();
             } else {
                 active.webView.setAlpha(1f);
+                active.webView.setTranslationY(0f);
             }
         }
         enforceBackgroundWebViewCap(MAX_LIVE_BACKGROUND_TABS);
@@ -3747,7 +3756,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.14.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.15.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -4223,11 +4232,26 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
         if (topShieldBadge != null) {
             int blk = (onWeb && t != null) ? t.blockedCount : 0;
+            int tabIdNow = (t != null) ? t.id : -1;
             if (onWeb && siteShieldUp && blk > 0) {
+                boolean wasHidden = topShieldBadge.getVisibility() != View.VISIBLE;
+                boolean countIncreased = (tabIdNow == lastShieldBadgeTabId && blk > lastShieldBadgeCount);
                 topShieldBadge.setText(blk > 99 ? "99+" : String.valueOf(blk));
                 topShieldBadge.setVisibility(View.VISIBLE);
+                if (wasHidden || countIncreased) {
+                    topShieldBadge.animate().cancel();
+                    topShieldBadge.setScaleX(0.72f);
+                    topShieldBadge.setScaleY(0.72f);
+                    topShieldBadge.setAlpha(0.65f);
+                    topShieldBadge.animate().scaleX(1f).scaleY(1f).alpha(1f)
+                        .setDuration(240).setInterpolator(M3_SPRING).start();
+                }
+                lastShieldBadgeCount = blk;
+                lastShieldBadgeTabId = tabIdNow;
             } else {
                 topShieldBadge.setVisibility(View.GONE);
+                lastShieldBadgeCount = 0;
+                lastShieldBadgeTabId = tabIdNow;
             }
         }
 

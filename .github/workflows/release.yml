@@ -256,25 +256,26 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — Authentic Chrome × Brave Android Browser with Material Design 3
+          ### dejavu __TAG__ — Googlebook Customization Studio & 120Hz Expressive Material Design 3 Motion
 
-          - **Authentic Chrome × Brave 56dp Top Toolbar (Zero Bottom Bar by Default)**:
-            - **Single-Row Chrome × Brave Toolbar**: `[Home / ← Back]  [🔒 domain.com  ↻/×]  [🛡️ Badge]  [[2] Tabs]  [⋮ Menu]` — removes the default bottom bar so websites have 100% unobstructed viewport height from top to bottom.
-            - **Dedicated Brave Shields Toolbar Badge**: Live Material 3 tonal counter right beside the address pill shows how many ads and trackers were blocked on the current site and opens Shields in one tap.
-            - **Chrome Tab Counter & Scroll Collapse**: Tap `[2]` for the Tab Switcher or long-press for an instant New Tab; scrolling down expands the webpage on frame 0 (zero black gap) and tucks the domain capsule discreetly at top-center.
-            - **Optional Bottom Toolbar**: Users who prefer bottom navigation can toggle **Bottom navigation bar** or **Address bar: Bottom** anytime in Settings → Appearance.
-          - **Chrome × Brave Material Design 3 New Tab Page, Overflow Menu, Tabs & Omnibox**:
-            - **Brave Privacy Stats Card**: Clean 3-column Material 3 card on the New Tab Page displaying **Trackers & Ads Blocked**, **Est. Data Saved**, and **Est. Time Saved**, paired with Chrome's 56dp Material You Search pill (`Search or type web address`) and top-bar Shields pill, Profile Avatar, `[2]` Tab Counter, and `⋮` Menu.
-            - **Chrome Android Overflow Menu (`⋮`)**: Iconic top 5-icon quick action strip (**Forward**, **Bookmark**, **Downloads**, **Brave Shields**, **Reload/Stop**) above clean single-column Material 3 groups (`New tab`, `New Private tab`, `Brave Shields`, `History`, `Downloads`, `Bookmarks`, `Reading list`, `dejavu Link`, webpage tools with M3 checkboxes for `Desktop site` & `Dark web`, `Extensions`, `Wallpaper & Style`, `Settings`).
-            - **Chrome Tab Switcher & Omnibox**: Top-left `[+]` New Tab button beside the gliding `Tabs | Private` toggle in Tab Switcher, and `[Share]` `[Copy]` `[Edit URL]` buttons on the Omnibox current-page card.
-          - **Brave-Grade Mobile Adblocker Upgrades**:
-            - **Upgraded Brave Shields Sheet**: 3-column stats (**Ads & trackers**, **Data saved**, **Time saved**), stripped tracking parameter summary, `Standard | Aggressive` gliding control, and 4 protection switches.
-            - **Expanded Mobile Cosmetic Filters**: Added selectors for YouTube Mobile ad slots (`ytm-ad-slot-renderer`, `ytm-in-feed-ad-layout-renderer`), mobile sticky/bottom ad banners, and app-install nags alongside 108,000+ Brave, EasyList, EasyPrivacy, OISD, and Peter Lowe rules.
+          - **Expanded Windows Googlebook Customization Studio** (available in **Settings → Appearance & Material You** and **Wallpaper & Style Studio**):
+            - **1-Click Googlebook Studio Presets**: Instant curated themes (**Pixel Night**, **AMOLED Obsidian**, **Porcelain Studio**, **Nordic Sage**, **Berry Studio**) that apply matching Googlebook wallpaper, Material You HCT color seed, dark/light polarity, AMOLED pitch black, Material style, tab style, corner geometry, and address bar style in one click.
+            - **Corner Roundness** (`Rounded` · `Pill` · `Sharp`): Morphs Material Design 3 corner radii across tabs, omnibox, settings cards, buttons, wallpaper cards, and native Windows popovers/context menus.
+            - **Interface Density** (`Compact` · `Comfortable` · `Spacious`): Adjusts omnibox height, navigation rail width, settings row rhythm, and Start Page spacing.
+            - **Animation Feel** (`Fluid 120Hz` · `Snappy` · `Off`): Scales `--md-motion-scale` across main chrome, Start Page, Settings, and native `OverlayPopup` menus (and pauses live wallpaper animation when set to `Off`).
+            - **Address Bar Style** (`Pill` · `Outlined` · `Elevated`): Switch both the top omnibox and Start Page search bar between Googlebook tonal fill, crisp M3 outline, or elevated depth.
+            - **Start Page Layout** (`Balanced` · `Minimal` · `Focus`) & **Quick Access Columns** (`4` · `5` · `6`): Choose centered hero, distraction-free zen canvas, or compact top-aligned focus layout with customizable shortcut columns.
+          - **Silky 120Hz Expressive Material Design 3 Animations — Windows**:
+            - Upgraded M3 motion tokens to GPU-composited spatial & expressive spring curves across tabs, Settings panes, modals, Start Page staggered spatial cascade, squircle shortcut hover morphing, elastic switch thumb-stretch, gliding segmented pill indicators, and native popup/context-menu entrances.
+          - **Silky 120Hz Expressive Material Design 3 Animations — Android**:
+            - Eliminated the initial light-mode hydration flash with a first-paint transition guard.
+            - Upgraded bottom sheets to a 360ms expressive spatial spring rise with staggered card bloom, staggered Start Page & Tab Switcher card entrances, elastic Android 15 M3 switch thumb-stretch, and tactile Chrome 5-icon strip spring presses.
+            - Added native `M3_SPRING_SPATIAL` glide + crossfade transitions on tab switches in `MainActivity` and a real-time spring pop animation on the Brave Shields toolbar badge when blocked tracker counts increment.
 
           #### Downloads & Verification
-          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.14.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
-          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.14.0.0`, `/highentropyva+`, deterministic build)
-          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 640`, V1+V2+V3 signed, Android 8.0+)
+          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.15.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
+          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.15.0.0`, `/highentropyva+`, deterministic build)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 650`, V1+V2+V3 signed, Android 8.0+)
           - **SHA256SUMS.txt** — Official SHA-256 verification checksums for all release binaries (paired with GitHub SLSA Build Provenance Attestations)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
@@ -292,5 +293,5 @@ jobs:
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
             release-files/SHA256SUMS.txt \
-            --title "dejavu $TAG — Chrome × Brave Android Material Design 3 Redesign" \
+            --title "dejavu $TAG — Googlebook Customization Studio & 120Hz Expressive M3 Motion" \
             --notes-file /tmp/release_notes.md

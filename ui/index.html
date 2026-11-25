@@ -522,6 +522,35 @@
       <div id="store-pane-style" class="store-pane store-style-scroll hidden">
         <div class="store-style-card">
           <div class="store-style-head">
+            <span class="store-style-label">1-Click Googlebook Themes</span>
+            <span class="store-preset-hint">Wallpaper + Palette + Style</span>
+          </div>
+          <div class="gb-presets-strip compact" id="store-gb-presets" data-gb-presets="true">
+            <button type="button" class="gb-preset-chip" data-preset="pixel-night">
+              <span class="gb-preset-orb" style="--p1:#111318;--p2:#a8c7fa;--p3:#0842a0"></span>
+              <span class="gb-preset-name">Pixel Night</span>
+            </button>
+            <button type="button" class="gb-preset-chip" data-preset="amoled-obsidian">
+              <span class="gb-preset-orb" style="--p1:#000000;--p2:#b8c8e2;--p3:#344154"></span>
+              <span class="gb-preset-name">AMOLED</span>
+            </button>
+            <button type="button" class="gb-preset-chip" data-preset="porcelain-studio">
+              <span class="gb-preset-orb" style="--p1:#faf9ff;--p2:#1b6ef3;--p3:#d3e3fd"></span>
+              <span class="gb-preset-name">Porcelain</span>
+            </button>
+            <button type="button" class="gb-preset-chip" data-preset="nordic-sage">
+              <span class="gb-preset-orb" style="--p1:#101511;--p2:#8bd89b;--p3:#1d4d2c"></span>
+              <span class="gb-preset-name">Nordic Sage</span>
+            </button>
+            <button type="button" class="gb-preset-chip" data-preset="berry-studio">
+              <span class="gb-preset-orb" style="--p1:#171117;--p2:#f2b0e6;--p3:#692f64"></span>
+              <span class="gb-preset-name">Berry Studio</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="store-style-card">
+          <div class="store-style-head">
             <span class="store-style-label">Material You Palette</span>
             <label class="sp-pref-chip">
               <span>Auto-match</span>
@@ -597,6 +626,60 @@
             <span class="store-style-label">AMOLED Pitch Black</span>
             <button type="button" id="store-amoled-dark" class="liquid-switch m3-switch sm" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
           </div>
+
+          <div class="store-style-row">
+            <span class="store-style-label">Corner Roundness</span>
+            <div class="m3-segmented compact opt-seg" id="store-corner-radius">
+              <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="rounded"><span>Rounded</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="pill"><span>Pill</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="sharp"><span>Sharp</span></button>
+            </div>
+          </div>
+
+          <div class="store-style-row">
+            <span class="store-style-label">Interface Density</span>
+            <div class="m3-segmented compact opt-seg" id="store-ui-density">
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="compact"><span>Compact</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="comfortable"><span>Cozy</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="spacious"><span>Airy</span></button>
+            </div>
+          </div>
+
+          <div class="store-style-row">
+            <span class="store-style-label">Animation Feel</span>
+            <div class="m3-segmented compact opt-seg" id="store-animation-speed">
+              <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="fluid"><span>Fluid</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="snappy"><span>Snappy</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="off"><span>Off</span></button>
+            </div>
+          </div>
+
+          <div class="store-style-row">
+            <span class="store-style-label">Address Bar</span>
+            <div class="m3-segmented compact opt-seg" id="store-omnibox-style">
+              <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="pill"><span>Pill</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="outlined"><span>Outline</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="elevated"><span>Lift</span></button>
+            </div>
+          </div>
+
+          <div class="store-style-row">
+            <span class="store-style-label">Start Page Layout</span>
+            <div class="m3-segmented compact opt-seg" id="store-sp-layout">
+              <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="balanced"><span>Balanced</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="minimal"><span>Minimal</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="focus"><span>Focus</span></button>
+            </div>
+          </div>
+
+          <div class="store-style-row">
+            <span class="store-style-label">Shortcut Columns</span>
+            <div class="m3-segmented compact opt-seg" id="store-sc-columns">
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="4"><span>4</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="5"><span>5</span></button>
+              <button type="button" class="m3-seg-btn opt-seg-btn" data-val="6"><span>6</span></button>
+            </div>
+          </div>
         </div>
 
         <div class="sp-prefs-bar">
@@ -641,7 +724,7 @@
               <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
             </svg>
             <span class="m3-appbar-title">Settings</span>
-            <span id="settings-version-sub" class="m3-tonal-badge">v5.14.0</span>
+            <span id="settings-version-sub" class="m3-tonal-badge">v5.15.0</span>
           </div>
 
           <div class="m3-appbar-search">
@@ -830,6 +913,41 @@
                      Category 2: Appearance & Material You
                      ========================================================= -->
                 <div class="settings-pane hidden" data-pane-body="appearance" data-cat-label="Appearance & Material You">
+                  <!-- 1-Click Googlebook Studio Theme Presets -->
+                  <div class="m3-pref-section opt-group">
+                    <div class="m3-pref-heading">Googlebook Studio Presets</div>
+                    <div class="m3-pref-card">
+                      <div class="opt-row stacked">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">1-Click Material Design 3 Themes</div>
+                          <div class="opt-desc">Instantly pairs a curated Googlebook wallpaper, HCT color seed, polarity, tab style &amp; corner feel</div>
+                        </div>
+                        <div class="gb-presets-strip" id="opt-gb-presets" data-gb-presets="true">
+                          <button type="button" class="gb-preset-chip" data-preset="pixel-night">
+                            <span class="gb-preset-orb" style="--p1:#111318;--p2:#a8c7fa;--p3:#0842a0"></span>
+                            <span class="gb-preset-copy"><span class="gb-preset-name">Pixel Night</span><span class="gb-preset-sub">Sapphire · Waves</span></span>
+                          </button>
+                          <button type="button" class="gb-preset-chip" data-preset="amoled-obsidian">
+                            <span class="gb-preset-orb" style="--p1:#000000;--p2:#b8c8e2;--p3:#344154"></span>
+                            <span class="gb-preset-copy"><span class="gb-preset-name">AMOLED Obsidian</span><span class="gb-preset-sub">Pitch Black · Pills</span></span>
+                          </button>
+                          <button type="button" class="gb-preset-chip" data-preset="porcelain-studio">
+                            <span class="gb-preset-orb" style="--p1:#faf9ff;--p2:#1b6ef3;--p3:#d3e3fd"></span>
+                            <span class="gb-preset-copy"><span class="gb-preset-name">Porcelain Studio</span><span class="gb-preset-sub">Light · Paper Fold</span></span>
+                          </button>
+                          <button type="button" class="gb-preset-chip" data-preset="nordic-sage">
+                            <span class="gb-preset-orb" style="--p1:#101511;--p2:#8bd89b;--p3:#1d4d2c"></span>
+                            <span class="gb-preset-copy"><span class="gb-preset-name">Nordic Sage</span><span class="gb-preset-sub">Emerald · Vibrant</span></span>
+                          </button>
+                          <button type="button" class="gb-preset-chip" data-preset="berry-studio">
+                            <span class="gb-preset-orb" style="--p1:#171117;--p2:#f2b0e6;--p3:#692f64"></span>
+                            <span class="gb-preset-copy"><span class="gb-preset-name">Berry Studio</span><span class="gb-preset-sub">Plum · Prism</span></span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div class="m3-pref-section opt-group">
                     <div class="m3-pref-heading">Material You Theme &amp; Dynamic Color</div>
                     <div class="m3-pref-card">
@@ -944,6 +1062,42 @@
                           <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="tonal"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Tonal</span></button>
                           <button type="button" class="m3-seg-btn opt-seg-btn" data-val="vibrant"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Vibrant</span></button>
                           <button type="button" class="m3-seg-btn opt-seg-btn" data-val="minimal"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Minimal</span></button>
+                        </div>
+                      </div>
+
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Corner Roundness</div>
+                          <div class="opt-desc">Morph Material Design 3 corner geometry across tabs, cards, menus &amp; native popovers</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-corner-radius">
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="rounded"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Rounded</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="pill"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Pill</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="sharp"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sharp</span></button>
+                        </div>
+                      </div>
+
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Interface Density</div>
+                          <div class="opt-desc">Tune spacing across toolbar controls, settings rows &amp; Start Page breathing room</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-ui-density">
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="compact"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Compact</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="comfortable"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Comfortable</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="spacious"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Spacious</span></button>
+                        </div>
+                      </div>
+
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Animation Feel</div>
+                          <div class="opt-desc">Choose 120Hz Expressive Material 3 spring motion, crisp Snappy transitions, or Off</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-animation-speed">
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="fluid"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Fluid 120Hz</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="snappy"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Snappy</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="off"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Off</span></button>
                         </div>
                       </div>
 
@@ -1070,6 +1224,17 @@
                       </div>
                       <div class="opt-row">
                         <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Address Bar Style</div>
+                          <div class="opt-desc">Switch between tonal Googlebook Pill, crisp M3 Outlined border, or floating Elevated depth</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-omnibox-style">
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="pill"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Pill</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="outlined"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Outlined</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="elevated"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Elevated</span></button>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
                           <div class="opt-title opt-row-title">Compact Tab Bar</div>
                           <div class="opt-desc">Use a sleeker 34px top tab strip for extra vertical webpage viewport</div>
                         </div>
@@ -1129,6 +1294,28 @@
                         <div class="m3-segmented compact opt-seg" id="opt-shortcut-style">
                           <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="circle"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Circles</span></button>
                           <button type="button" class="m3-seg-btn opt-seg-btn" data-val="tile"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Tiles</span></button>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Start Page Layout</div>
+                          <div class="opt-desc">Switch between balanced Googlebook hero, zen Minimal canvas, or compact top-aligned Focus</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-sp-layout">
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="balanced"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Balanced</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="minimal"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Minimal</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="focus"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Focus</span></button>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Quick Access Columns</div>
+                          <div class="opt-desc">Choose how many shortcut icons appear per row on your Start Page</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-sc-columns">
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="4"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>4</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="5"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>5</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="6"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>6</span></button>
                         </div>
                       </div>
                       <div class="opt-row">
@@ -1824,7 +2011,7 @@
                         </svg>
                       </div>
                       <div class="m3-about-copy">
-                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v5.14.0</span></div>
+                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v5.15.0</span></div>
                         <div class="m3-about-sub">Googlebook Material Design 3 Browser · 16 HCT Themes (32 Light/Dark), Split View, Tab Search, Brave-Grade Shields &amp; Dual-Broker Link</div>
                         <div id="about-update-status" class="m3-about-update-line">Checking update status…</div>
                       </div>
@@ -1858,7 +2045,7 @@
                       <div class="opt-row">
                         <div class="opt-meta">
                           <div class="opt-title opt-row-title">GitHub Releases</div>
-                          <div class="opt-desc">View v5.14.0 release notes, Windows Setup installer, and Android APK</div>
+                          <div class="opt-desc">View v5.15.0 release notes, Windows Setup installer, and Android APK</div>
                         </div>
                         <button type="button" id="btn-about-github" class="m3-btn m3-btn-outlined sm">Open GitHub</button>
                       </div>
@@ -2107,7 +2294,7 @@
     <section id="reset-confirm-overlay" class="m3-modal-scrim hidden" aria-label="Reset Settings">
       <div id="reset-confirm-modal" class="m3-dialog-card compact" role="dialog" aria-modal="true">
         <h3 class="m3-dialog-title">Reset dejavu settings?</h3>
-        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v5.14.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
+        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v5.15.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
         <div class="m3-dialog-actions">
           <button type="button" id="btn-reset-cancel" class="m3-btn m3-btn-text">Cancel</button>
           <button type="button" id="btn-reset-confirm" class="m3-btn m3-btn-danger">Reset Settings</button>

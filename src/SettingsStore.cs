@@ -60,6 +60,12 @@ namespace DejavuBrowser
         public string tabBarStyle { get; set; }
         public string shortcutStyle { get; set; }
         public string clockStyle { get; set; }
+        public string cornerRadius { get; set; }
+        public string uiDensity { get; set; }
+        public string animationSpeed { get; set; }
+        public string omniboxStyle { get; set; }
+        public string startPageLayout { get; set; }
+        public int shortcutColumns { get; set; }
         public bool hideGreetingBadge { get; set; }
         public bool hideStartPageSearch { get; set; }
         public bool favoritesBarHidden { get; set; }
@@ -163,6 +169,12 @@ namespace DejavuBrowser
             tabBarStyle = "googlebook";
             shortcutStyle = "circle";
             clockStyle = "off";
+            cornerRadius = "rounded";
+            uiDensity = "comfortable";
+            animationSpeed = "fluid";
+            omniboxStyle = "pill";
+            startPageLayout = "balanced";
+            shortcutColumns = 5;
             hideGreetingBadge = false;
             hideStartPageSearch = false;
             favoritesBarHidden = false;
@@ -349,6 +361,47 @@ namespace DejavuBrowser
             return "off";
         }
 
+        public static string NormalizeCornerRadius(string val)
+        {
+            if (string.Equals(val, "pill", StringComparison.OrdinalIgnoreCase)) return "pill";
+            if (string.Equals(val, "sharp", StringComparison.OrdinalIgnoreCase)) return "sharp";
+            return "rounded";
+        }
+
+        public static string NormalizeUiDensity(string val)
+        {
+            if (string.Equals(val, "compact", StringComparison.OrdinalIgnoreCase)) return "compact";
+            if (string.Equals(val, "spacious", StringComparison.OrdinalIgnoreCase)) return "spacious";
+            return "comfortable";
+        }
+
+        public static string NormalizeAnimationSpeed(string val)
+        {
+            if (string.Equals(val, "snappy", StringComparison.OrdinalIgnoreCase)) return "snappy";
+            if (string.Equals(val, "off", StringComparison.OrdinalIgnoreCase)) return "off";
+            return "fluid";
+        }
+
+        public static string NormalizeOmniboxStyle(string val)
+        {
+            if (string.Equals(val, "outlined", StringComparison.OrdinalIgnoreCase)) return "outlined";
+            if (string.Equals(val, "elevated", StringComparison.OrdinalIgnoreCase)) return "elevated";
+            return "pill";
+        }
+
+        public static string NormalizeStartPageLayout(string val)
+        {
+            if (string.Equals(val, "minimal", StringComparison.OrdinalIgnoreCase)) return "minimal";
+            if (string.Equals(val, "focus", StringComparison.OrdinalIgnoreCase)) return "focus";
+            return "balanced";
+        }
+
+        public static int NormalizeShortcutColumns(int val)
+        {
+            if (val == 4 || val == 6) return val;
+            return 5;
+        }
+
         public static void NormalizeWindowBounds(DejavuSettings s)
         {
             if (s == null) return;
@@ -442,6 +495,12 @@ namespace DejavuBrowser
                             loaded.tabBarStyle = NormalizeTabBarStyle(loaded.tabBarStyle);
                             loaded.shortcutStyle = NormalizeShortcutStyle(loaded.shortcutStyle);
                             loaded.clockStyle = NormalizeClockStyle(loaded.clockStyle);
+                            loaded.cornerRadius = NormalizeCornerRadius(loaded.cornerRadius);
+                            loaded.uiDensity = NormalizeUiDensity(loaded.uiDensity);
+                            loaded.animationSpeed = NormalizeAnimationSpeed(loaded.animationSpeed);
+                            loaded.omniboxStyle = NormalizeOmniboxStyle(loaded.omniboxStyle);
+                            loaded.startPageLayout = NormalizeStartPageLayout(loaded.startPageLayout);
+                            loaded.shortcutColumns = NormalizeShortcutColumns(loaded.shortcutColumns);
 
                             // v5.4.0 normalizations
                             loaded.shieldLevel = NormalizeShieldLevel(loaded.shieldLevel);

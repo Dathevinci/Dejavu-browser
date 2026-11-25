@@ -32,7 +32,24 @@
       border: 1px solid color-mix(in srgb, var(--md-outline-variant) 42%, transparent);
       box-shadow: var(--md-elev-3);
       contain: layout style;
-      animation: m3OverlayIn 160ms var(--md-ease-emphasized-decel);
+      transform-origin: top center;
+      animation: m3OverlayIn calc(230ms * var(--md-motion-scale, 1)) var(--md-ease-spring-spatial, var(--md-ease-emphasized-decel)) both;
+    }
+
+    body[data-corner-radius="pill"] .overlay-shell { border-radius: 28px; }
+    body[data-corner-radius="sharp"] .overlay-shell { border-radius: 10px; }
+    body[data-corner-radius="pill"] #mode-contextmenu.overlay-shell { border-radius: 24px; }
+    body[data-corner-radius="sharp"] #mode-contextmenu.overlay-shell { border-radius: 8px; }
+    body[data-corner-radius="sharp"] .ctxm-item { border-radius: 6px; }
+    body[data-corner-radius="sharp"] .pill-btn { border-radius: 8px; }
+
+    body[data-animation-speed="snappy"] { --md-motion-scale: 0.62; }
+    body[data-animation-speed="off"] { --md-motion-scale: 0; }
+    body[data-animation-speed="off"] *,
+    body[data-animation-speed="off"] *::before,
+    body[data-animation-speed="off"] *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
     }
 
     body.theme-light .overlay-shell {
@@ -58,12 +75,12 @@
     }
 
     @keyframes m3OverlayIn {
-      from { opacity: 0; transform: translate3d(0, -5px, 0) scale(0.96); }
+      from { opacity: 0; transform: translate3d(0, -8px, 0) scale(0.955); }
       to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
     }
 
     @keyframes m3CtxOverlayIn {
-      from { opacity: 0; transform: translate3d(0, -4px, 0) scale(0.95); }
+      from { opacity: 0; transform: translate3d(0, -5px, 0) scale(0.945); }
       to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
     }
 
@@ -73,7 +90,7 @@
       background: var(--md-surface-container);
       border: 1px solid color-mix(in srgb, var(--md-outline-variant) 70%, transparent);
       box-shadow: var(--md-elev-3);
-      animation: m3CtxOverlayIn 150ms var(--md-ease-emphasized-decel);
+      animation: m3CtxOverlayIn calc(200ms * var(--md-motion-scale, 1)) var(--md-ease-spring-spatial, var(--md-ease-emphasized-decel)) both;
     }
 
     body.theme-light #mode-contextmenu.overlay-shell {
@@ -230,21 +247,21 @@
     }
 
     @keyframes m3SlideInRight {
-      from { opacity: 0; transform: translateX(14px); }
-      to { opacity: 1; transform: translateX(0); }
+      from { opacity: 0; transform: translate3d(18px, 0, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
     }
 
     @keyframes m3SidebarIn {
-      from { opacity: 0; transform: translateX(-16px); }
-      to { opacity: 1; transform: translateX(0); }
+      from { opacity: 0; transform: translate3d(-18px, 0, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
     }
 
     #prof-view-editor:not(.hidden) {
-      animation: m3SlideInRight 220ms var(--md-ease-emphasized-decel);
+      animation: m3SlideInRight calc(260ms * var(--md-motion-scale, 1)) var(--md-ease-spring-spatial, var(--md-ease-emphasized-decel)) both;
     }
 
     #mode-sidebar {
-      animation: m3SidebarIn 220ms var(--md-ease-emphasized-decel);
+      animation: m3SidebarIn calc(260ms * var(--md-motion-scale, 1)) var(--md-ease-spring-spatial, var(--md-ease-emphasized-decel)) both;
     }
 
     /* Shared M3 Pill Buttons (Tonal default / Filled Primary) */
@@ -2675,7 +2692,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v5.14.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v5.15.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -3144,7 +3161,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v5.14.0</span>
+        <span id="mn-version-lbl">dejavu v5.15.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -3759,7 +3776,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.14.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.15.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -3887,6 +3904,8 @@
       if (d.mode === 'styleHints') {
         document.body.classList.toggle('amoled-dark', !!d.amoledDark && !document.body.classList.contains('theme-light'));
         if (d.materialStyle) document.body.dataset.materialStyle = d.materialStyle;
+        if (d.cornerRadius) document.body.dataset.cornerRadius = d.cornerRadius;
+        if (d.animationSpeed) document.body.dataset.animationSpeed = d.animationSpeed;
         return;
       }
 
@@ -3906,6 +3925,12 @@
       }
       if (d.materialStyle) {
         document.body.dataset.materialStyle = d.materialStyle;
+      }
+      if (d.cornerRadius) {
+        document.body.dataset.cornerRadius = d.cornerRadius;
+      }
+      if (d.animationSpeed) {
+        document.body.dataset.animationSpeed = d.animationSpeed;
       }
       if (typeof d.reduceMotion === 'boolean') {
         document.body.classList.toggle('reduce-motion', d.reduceMotion);
@@ -5003,7 +5028,7 @@
       if (mnScreenshot) mnScreenshot.disabled = !!d.isNewTab;
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.14.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.15.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');

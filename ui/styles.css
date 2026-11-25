@@ -1,5 +1,5 @@
 /* ==========================================================================
-   dejavu v5.16.0 — Authentic Chromebook × Pixel Material Design 3 Expressive
+   dejavu v5.17.0 — Authentic Chromebook × Pixel Material Design 3 Expressive
    12 Official HCT Tonal Palettes · Official M3 Motion · State Layers
    Zero Compositing Overhead · Strictly Zero CSS Filter Softening
    ========================================================================== */
@@ -6369,7 +6369,7 @@ body.force-light .ext-details-hero {
 }
 
 /* ==========================================================================
-   Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub (v5.16.0)
+   Full-Viewport Material Design 3 dejavu Link v2.3 Continuity Hub (v5.17.0)
    Gliding Segmented Views · Device Presence & Ping · Notes & Clip History
    ========================================================================== */
 .link-hub-overlay { z-index: 175; }
@@ -7760,7 +7760,7 @@ body.force-light .link-note-card {
 }
 
 /* ==========================================================================
-   Chrome-Style Material Design 3 Extension Install Dialog & Added Bubble (v5.16.0)
+   Chrome-Style Material Design 3 Extension Install Dialog & Added Bubble (v5.17.0)
    Pure Opaque HCT Tonal Surfaces · 200ms Spring Reveal · Zero Blur
    ========================================================================== */
 @keyframes extModalReveal {
@@ -8521,4 +8521,107 @@ body[data-animation-speed="off"] .startpage-scroll {
 }
 @keyframes m3LoadSweep {
   to { transform: translate3d(100%, 0, 0); }
+}
+
+/* Built-in Focus Pomodoro Toolbar Pill */
+.focus-timer-pill {
+  height: 28px;
+  padding: 0 11px 0 9px;
+  border-radius: var(--md-shape-full);
+  border: 1px solid color-mix(in srgb, var(--md-primary) 34%, transparent);
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform var(--md-dur-spring) var(--md-ease-spring-expressive), background-color var(--md-dur-short) ease, opacity var(--md-dur-short) ease;
+  animation: m3CheckPop calc(240ms * var(--md-motion-scale)) var(--md-ease-spring-expressive) both;
+}
+.focus-timer-pill:hover { transform: scale(1.04); }
+.focus-timer-pill:active { transform: scale(0.94); }
+.focus-timer-pill.paused {
+  background: var(--md-surface-container-highest);
+  color: var(--md-on-surface-variant);
+  border-color: var(--md-outline-variant);
+}
+.focus-timer-pill .ft-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--md-primary);
+  flex-shrink: 0;
+}
+.focus-timer-pill.paused .ft-dot {
+  background: var(--md-on-surface-variant);
+  opacity: 0.6;
+}
+
+/* Smooth Bottom-Left Floating Link Hover Status Pill (GPU-Composited 120Hz) */
+.url-hover-bubble {
+  position: fixed;
+  left: 10px;
+  bottom: 8px;
+  z-index: 420;
+  max-width: min(56vw, 480px);
+  padding: 5px 12px;
+  border-radius: 10px;
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface-variant);
+  border: 1px solid color-mix(in srgb, var(--md-outline-variant) 68%, transparent);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(0, 8px, 0) scale(0.97);
+  transition: opacity var(--md-dur-short) var(--md-ease-standard), transform var(--md-dur-spring) var(--md-ease-spring-spatial);
+  will-change: transform, opacity;
+}
+.url-hover-bubble.visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+/* Quick Search Bangs Reference Pills in Settings */
+.opt-row-top-inline {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.bang-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  padding-top: 2px;
+}
+.bang-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-highest);
+  color: var(--md-on-surface-variant);
+  font-size: 11.4px;
+  font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--md-outline-variant) 46%, transparent);
+}
+.bang-chip code {
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--md-primary);
 }

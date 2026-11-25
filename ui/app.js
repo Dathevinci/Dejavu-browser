@@ -1,5 +1,5 @@
 /**
- * dejavu v5.16.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * dejavu v5.17.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
  * 12 Official HCT Material You Themes, 32 Pure M3, Butterfly & Froggie Wallpapers, Auto Wallpaper-to-Theme,
  * Redesigned Pixel At-a-Glance Message of the Day Card, Clean 5-Control ChromeOS Toolbar,
  * Zero-Glitch 120Hz Tab Strip, Brave-Grade Shields, Real-Time dejavu Link Hub & 8x Turbo Downloader.
@@ -283,7 +283,6 @@
   const optAlwaysClose = document.getElementById('opt-always-close');
   const optFullUrl = document.getElementById('opt-full-url');
   const optSmoothScroll = document.getElementById('opt-smooth-scroll');
-  const optReduceMotion = document.getElementById('opt-reduce-motion');
   const optSpFavorites = document.getElementById('opt-sp-favorites');
   const optSpFrequent = document.getElementById('opt-sp-frequent');
   const optSpPrivacy = document.getElementById('opt-sp-privacy');
@@ -320,6 +319,7 @@
   const optCustomSearchUrl = document.getElementById('opt-custom-search-url');
   const btnSaveCustomSearch = document.getElementById('btn-save-custom-search');
   const optAddressSuggestions = document.getElementById('opt-address-suggestions');
+  const optOmniboxShortcuts = document.getElementById('opt-omnibox-shortcuts');
 
   // Category 5: Tabs & On Startup
   const optStartup = document.getElementById('opt-startup');
@@ -333,7 +333,12 @@
   const optNewtabPos = document.getElementById('opt-newtab-pos');
   const optWheelTabs = document.getElementById('opt-wheel-tabs');
   const optDblclickClose = document.getElementById('opt-dblclick-close');
+  const optTabCloseAct = document.getElementById('opt-tab-close-act');
+  const optAutomuteBg = document.getElementById('opt-automute-bg');
   const btnZenPill = document.getElementById('btn-zen-pill');
+  const btnFocusTimer = document.getElementById('btn-focus-timer');
+  const focusTimerLabel = document.getElementById('focus-timer-label');
+  const urlHoverBubble = document.getElementById('url-hover-bubble');
 
   // Category 6: Downloads
   const optDownloadFolderPath = document.getElementById('opt-download-folder-path');
@@ -362,6 +367,8 @@
   const optReaderTheme = document.getElementById('opt-reader-theme');
   const optReaderFontsize = document.getElementById('opt-reader-fontsize');
   const optReaderWidth = document.getElementById('opt-reader-width');
+  const optTranslateLang = document.getElementById('opt-translate-lang');
+  const optLinkHover = document.getElementById('opt-link-hover');
   const optHwAccel = document.getElementById('opt-hw-accel');
   const optSpellcheck = document.getElementById('opt-spellcheck');
   const optDevtools = document.getElementById('opt-devtools');
@@ -596,7 +603,7 @@
     forest: '#9cd49f'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.16.0 — 32 HD + 12 Googlebook Vector + 1 Live = 45 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.17.0 — 32 HD + 12 Googlebook Vector + 1 Live = 45 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 18 Sculptural / Architectural Material Design 3 HD Wallpapers (10 Dark, 8 Light)
@@ -909,7 +916,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.16.0',
+    appVersion: bootData.appVersion || '5.17.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -2185,7 +2192,7 @@
     downloads: { title: 'Downloads', sub: 'Save folder, Turbo multi-thread accelerator connections & default video / MP3 quality' },
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.16.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.17.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2712,7 +2719,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.16.0';
+    const ver = state.appVersion || '5.17.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -2764,7 +2771,6 @@
     setSwitchState(optAlwaysClose, !!o.alwaysShowTabClose);
     setSwitchState(optFullUrl, !!o.showFullWebsiteAddress);
     setSwitchState(optSmoothScroll, o.smoothScrolling !== false);
-    setSwitchState(optReduceMotion, !!o.reduceWallpaperMotion);
     setSwitchState(optSpFavorites, !sp.hideFavorites);
     setSwitchState(optSpFrequent, !sp.hideFrequentlyVisited);
     setSwitchState(optSpPrivacy, !sp.hidePrivacyReport);
@@ -2832,6 +2838,7 @@
       optCustomSearchUrl.value = o.customSearchUrl || '';
     }
     setSwitchState(optAddressSuggestions, o.addressBarSuggestions !== false);
+    setSwitchState(optOmniboxShortcuts, o.omniboxShortcutsEnabled !== false);
 
     // Category 5: Tabs & On Startup
     setSegmentedVal(optStartup, o.startupBehavior || 'startpage');
@@ -2848,6 +2855,8 @@
     setSegmentedVal(optNewtabPos, o.newTabPosition || 'end');
     setSwitchState(optWheelTabs, o.scrollWheelSwitchTabs !== false);
     setSwitchState(optDblclickClose, !!o.doubleClickCloseTab);
+    setSegmentedVal(optTabCloseAct, o.tabCloseActivate || 'right');
+    setSwitchState(optAutomuteBg, !!o.autoMuteBackgroundTabs);
 
     // Category 6: Downloads
     const turboOn = o.turboDownloaderEnabled !== false;
@@ -2883,6 +2892,8 @@
     setSegmentedVal(optReaderTheme, o.readerTheme || 'auto');
     setSegmentedVal(optReaderFontsize, Number(o.readerFontSize || 19));
     setSegmentedVal(optReaderWidth, o.readerWidth || 'medium');
+    if (optTranslateLang) optTranslateLang.value = o.translateTargetLang || 'en';
+    setSwitchState(optLinkHover, o.showLinkHoverPreview !== false);
     setSwitchState(optHwAccel, o.hardwareAcceleration !== false);
     setSwitchState(optSpellcheck, o.spellcheckEnabled !== false);
     setSwitchState(optDevtools, o.devToolsEnabled !== false);
@@ -3150,7 +3161,6 @@
   bindBoolSwitch(optAlwaysClose, 'alwaysShowTabClose', false);
   bindBoolSwitch(optFullUrl, 'showFullWebsiteAddress', false);
   bindBoolSwitch(optSmoothScroll, 'smoothScrolling', false);
-  bindBoolSwitch(optReduceMotion, 'reduceWallpaperMotion', false);
 
   function toggleSpPref(key) {
     const next = Object.assign({}, state.startPagePrefs || {});
@@ -3250,6 +3260,7 @@
     optCustomSearchUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveCs(); });
   }
   bindBoolSwitch(optAddressSuggestions, 'addressBarSuggestions', false);
+  bindBoolSwitch(optOmniboxShortcuts, 'omniboxShortcutsEnabled', false);
 
   // Category 5 bindings
   bindSeg(optStartup, 'startupBehavior');
@@ -3271,7 +3282,104 @@
   bindSeg(optNewtabPos, 'newTabPosition');
   bindBoolSwitch(optWheelTabs, 'scrollWheelSwitchTabs', false);
   bindBoolSwitch(optDblclickClose, 'doubleClickCloseTab', false);
+  bindSeg(optTabCloseAct, 'tabCloseActivate');
+  bindBoolSwitch(optAutomuteBg, 'autoMuteBackgroundTabs', false);
   if (btnZenPill) btnZenPill.addEventListener('click', () => send({ type: 'toggleZenMode' }));
+
+  // Built-in Zero-Idle-CPU Focus Pomodoro Timer Controller
+  const focusTimer = { running: false, remainingSec: 0, intervalId: null };
+  function formatFocusMMSS(sec) {
+    const s = Math.max(0, Math.floor(sec));
+    const mm = String(Math.floor(s / 60)).padStart(2, '0');
+    const ss = String(s % 60).padStart(2, '0');
+    return `${mm}:${ss}`;
+  }
+  function renderFocusTimerPill() {
+    if (!btnFocusTimer || !focusTimerLabel) return;
+    if (focusTimer.remainingSec <= 0 && !focusTimer.running) {
+      btnFocusTimer.classList.add('hidden');
+      btnFocusTimer.classList.remove('paused');
+      return;
+    }
+    btnFocusTimer.classList.remove('hidden');
+    btnFocusTimer.classList.toggle('paused', !focusTimer.running);
+    focusTimerLabel.textContent = formatFocusMMSS(focusTimer.remainingSec);
+  }
+  function stopFocusInterval() {
+    if (focusTimer.intervalId) {
+      clearInterval(focusTimer.intervalId);
+      focusTimer.intervalId = null;
+    }
+  }
+  function startFocusInterval() {
+    stopFocusInterval();
+    focusTimer.intervalId = setInterval(() => {
+      if (!focusTimer.running) { stopFocusInterval(); return; }
+      focusTimer.remainingSec -= 1;
+      if (focusTimer.remainingSec <= 0) {
+        focusTimer.remainingSec = 0;
+        focusTimer.running = false;
+        stopFocusInterval();
+        renderFocusTimerPill();
+        showToast('Focus session complete! Great work.', 'success');
+      } else {
+        renderFocusTimerPill();
+      }
+    }, 1000);
+  }
+  function handleFocusTimerCommand(action, minutes) {
+    const act = String(action || '').toLowerCase();
+    if (act === 'start') {
+      const m = Math.max(1, Math.min(180, Number(minutes) || 25));
+      focusTimer.remainingSec = m * 60;
+      focusTimer.running = true;
+      renderFocusTimerPill();
+      startFocusInterval();
+      showToast(`Focus timer started (${m}m)`, 'info');
+    } else if (act === 'toggle') {
+      if (focusTimer.remainingSec <= 0) {
+        handleFocusTimerCommand('start', Number(minutes) || 25);
+        return;
+      }
+      focusTimer.running = !focusTimer.running;
+      if (focusTimer.running) startFocusInterval();
+      else stopFocusInterval();
+      renderFocusTimerPill();
+    } else if (act === 'reset' || act === 'stop') {
+      focusTimer.running = false;
+      focusTimer.remainingSec = 0;
+      stopFocusInterval();
+      renderFocusTimerPill();
+      showToast('Focus timer reset', 'info');
+    }
+  }
+  if (btnFocusTimer) {
+    btnFocusTimer.addEventListener('click', () => handleFocusTimerCommand('toggle'));
+    btnFocusTimer.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      handleFocusTimerCommand('reset');
+    });
+  }
+
+  // Smooth Bottom-Left Floating Link Hover Status Pill
+  let hoverHideTimer = null;
+  function updateHoverUrlPill(rawUrl) {
+    if (!urlHoverBubble) return;
+    const enabled = !(state.browserOptions && state.browserOptions.showLinkHoverPreview === false);
+    const txt = enabled ? String(rawUrl || '').trim() : '';
+    if (hoverHideTimer) { clearTimeout(hoverHideTimer); hoverHideTimer = null; }
+    if (!txt) {
+      hoverHideTimer = setTimeout(() => {
+        urlHoverBubble.classList.remove('visible');
+        urlHoverBubble.setAttribute('aria-hidden', 'true');
+      }, 90);
+      return;
+    }
+    const clean = txt.length > 96 ? `${txt.slice(0, 93)}…` : txt;
+    urlHoverBubble.textContent = clean;
+    urlHoverBubble.classList.add('visible');
+    urlHoverBubble.setAttribute('aria-hidden', 'false');
+  }
 
   // Category 6 bindings
   if (btnOptChangeDlFolder) btnOptChangeDlFolder.addEventListener('click', () => send({ type: 'pickDownloadFolder' }));
@@ -3299,6 +3407,8 @@
   bindSeg(optReaderTheme, 'readerTheme');
   bindSeg(optReaderFontsize, 'readerFontSize', Number);
   bindSeg(optReaderWidth, 'readerWidth');
+  if (optTranslateLang) optTranslateLang.addEventListener('change', () => updateOpt({ translateTargetLang: optTranslateLang.value || 'en' }));
+  bindBoolSwitch(optLinkHover, 'showLinkHoverPreview', false);
   bindBoolSwitch(optHwAccel, 'hardwareAcceleration', false);
   bindBoolSwitch(optSpellcheck, 'spellcheckEnabled', false);
   bindBoolSwitch(optDevtools, 'devToolsEnabled', false);
@@ -8114,6 +8224,10 @@
         notifyIncomingSyncDrop(msg.drop);
       } else if (msg.type === 'toast') {
         showToast(msg.message || msg.text || '', msg.tone || 'success');
+      } else if (msg.type === 'hoverUrl') {
+        updateHoverUrlPill(msg.url || '');
+      } else if (msg.type === 'focusTimerCommand') {
+        handleFocusTimerCommand(msg.action, msg.minutes);
       } else if (msg.type === 'settingsToast') {
         showToast(msg.text || msg.message || '', msg.tone || 'info');
       } else if (msg.type === 'palette') {

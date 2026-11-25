@@ -1,5 +1,5 @@
 /**
- * dejavu v5.16.0 — Zero-Idle-CPU Pure Material Design 3 Wallpaper Engine
+ * dejavu v5.17.0 — Zero-Idle-CPU Pure Material Design 3 Wallpaper Engine
  * - Static HD wallpapers (`art:wp-m3-*` & `custom`): single-shot draw on load, resize,
  *   or option change — STRICTLY ZERO continuous requestAnimationFrame loop (0.0% idle CPU!).
  * - Single adaptive live theme (`live:m3-expressive`): reacts cleanly to all 12 Material You

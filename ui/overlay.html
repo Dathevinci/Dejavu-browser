@@ -61,6 +61,107 @@
       background: var(--md-surface-container-low);
       border: 1px solid color-mix(in srgb, var(--md-outline-variant) 50%, transparent);
     }
+    .sb-focus-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 14px;
+      background: var(--md-surface-container-low);
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 50%, transparent);
+    }
+    .sb-focus-pills {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .sb-focus-btn {
+      height: 30px;
+      border: none;
+      border-radius: 999px;
+      background: var(--md-secondary-container);
+      color: var(--md-on-secondary-container);
+      font-family: inherit;
+      font-size: 11.4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 140ms var(--md-ease-spring-expressive, ease), background-color 140ms ease;
+    }
+    .sb-focus-btn:hover { background: var(--md-primary-container); color: var(--md-on-primary-container); }
+    .sb-focus-btn:active { transform: scale(0.95); }
+    .sb-focus-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .sb-focus-act {
+      flex: 1;
+      height: 28px;
+      border-radius: 999px;
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 68%, transparent);
+      background: transparent;
+      color: var(--md-on-surface-variant);
+      font-family: inherit;
+      font-size: 11.2px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 140ms ease, background-color 140ms ease, color 140ms ease;
+    }
+    .sb-focus-act:hover { background: var(--md-surface-container-highest); color: var(--md-on-surface); }
+    .sb-focus-act:active { transform: scale(0.96); }
+    .share-qr-panel {
+      margin: 4px 2px 6px;
+      padding: 12px;
+      border-radius: 16px;
+      background: var(--md-surface-container-low);
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 9px;
+    }
+    .share-qr-panel.hidden { display: none; }
+    .share-qr-frame {
+      background: #ffffff;
+      padding: 10px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+    }
+    .share-qr-frame svg { display: block; width: 148px; height: 148px; }
+    .share-qr-foot {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .share-qr-caption {
+      font-size: 11px;
+      color: var(--md-on-surface-variant);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+    .share-qr-dl {
+      height: 28px;
+      padding: 0 11px;
+      border: none;
+      border-radius: 999px;
+      background: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+      font-family: inherit;
+      font-size: 11.2px;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 140ms ease, background-color 140ms ease;
+    }
+    .share-qr-dl:active { transform: scale(0.95); }
     .sb-note-area {
       width: 100%;
       min-height: 76px;
@@ -2764,7 +2865,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v5.16.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v5.17.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -2880,6 +2981,24 @@
 
         <div class="sb-sec">
           <div class="sb-sec-head">
+            <span class="sb-sec-title">Focus Pomodoro Timer</span>
+            <span style="font-size:10.5px;color:var(--md-on-surface-variant);">Toolbar pill</span>
+          </div>
+          <div class="sb-focus-card">
+            <div class="sb-focus-pills">
+              <button id="sb-focus-25" class="sb-focus-btn" type="button">25m Focus</button>
+              <button id="sb-focus-15" class="sb-focus-btn" type="button">15m Sprint</button>
+              <button id="sb-focus-5" class="sb-focus-btn" type="button">5m Break</button>
+            </div>
+            <div class="sb-focus-actions">
+              <button id="sb-focus-toggle" class="sb-focus-act" type="button">Pause / Resume</button>
+              <button id="sb-focus-reset" class="sb-focus-act" type="button">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sb-sec">
+          <div class="sb-sec-head">
             <span class="sb-sec-title">Tab Groups</span>
             <button id="btn-sb-add-group" class="sb-mini-pill" type="button">+ New</button>
           </div>
@@ -2955,6 +3074,17 @@
           <svg viewBox="0 0 16 16" fill="none"><rect x="5.4" y="5.4" width="7.4" height="7.4" rx="1.6" stroke="currentColor" stroke-width="1.35"/><path d="M3.2 10.4V4.6A1.4 1.4 0 0 1 4.6 3.2h5.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
           <span id="sh-copy-lbl">Copy Link</span>
         </button>
+        <button id="sh-qr-toggle" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="2.2" y="2.2" width="4.4" height="4.4" rx="0.9" stroke="currentColor" stroke-width="1.35"/><rect x="9.4" y="2.2" width="4.4" height="4.4" rx="0.9" stroke="currentColor" stroke-width="1.35"/><rect x="2.2" y="9.4" width="4.4" height="4.4" rx="0.9" stroke="currentColor" stroke-width="1.35"/><path d="M9.6 9.6h1.8v1.8H9.6zM12.2 12.2h1.6v1.6h-1.6zM12.2 9.6h1.6M9.6 12.6v1.2" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+          <span id="sh-qr-lbl">QR Code for Page</span>
+        </button>
+        <div id="share-qr-panel" class="share-qr-panel hidden">
+          <div id="share-qr-frame" class="share-qr-frame" aria-label="Page QR Code"></div>
+          <div class="share-qr-foot">
+            <span id="share-qr-caption" class="share-qr-caption">Scan with any camera</span>
+            <button id="sh-qr-dl" class="share-qr-dl" type="button">Download PNG</button>
+          </div>
+        </div>
         <button id="sh-send-mobile" class="share-item" type="button">
           <svg viewBox="0 0 16 16" fill="none"><rect x="4.8" y="2.2" width="6.4" height="11.6" rx="1.5" stroke="currentColor" stroke-width="1.35"/><circle cx="8" cy="11.6" r="0.7" fill="currentColor"/></svg>
           <span>Send Tab to Mobile</span>
@@ -2971,13 +3101,17 @@
           <svg viewBox="0 0 16 16" fill="none"><path d="M3 4.5h10M3 7.5h10M3 10.5h7.2M3 13.2h5.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           <span id="sh-reader-lbl">Show Reader View</span>
         </button>
+        <button id="sh-translate" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M2.6 4.2h6.2M5.7 2.6v1.6M4 4.2c.4 2.2 1.8 4.2 3.8 5.2M7.6 4.2c-.5 2-1.8 3.8-3.8 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8.8 13.4l2.2-5.6 2.2 5.6M9.5 11.7h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Translate Page</span>
+        </button>
+        <button id="sh-pip" class="share-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.8" stroke="currentColor" stroke-width="1.3"/><rect x="7.8" y="7.5" width="4.8" height="3.8" rx="0.9" fill="currentColor"/></svg>
+          <span>Picture-in-Picture</span>
+        </button>
         <button id="sh-shot-save" class="share-item" type="button">
           <svg viewBox="0 0 16 16" fill="none"><rect x="2.2" y="3.8" width="11.6" height="8.8" rx="2" stroke="currentColor" stroke-width="1.35"/><circle cx="8" cy="8.2" r="2.1" stroke="currentColor" stroke-width="1.35"/><path d="M5.6 3.8l.7-1.2h3.4l.7 1.2" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
-          <span>Save Page Screenshot</span>
-        </button>
-        <button id="sh-shot-copy" class="share-item" type="button">
-          <svg viewBox="0 0 16 16" fill="none"><rect x="2.4" y="3.6" width="8.6" height="7" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M5.6 10.6v1.6a1.4 1.4 0 0 0 1.4 1.4h5.6a1.4 1.4 0 0 0 1.4-1.4V7a1.4 1.4 0 0 0-1.4-1.4H11" stroke="currentColor" stroke-width="1.3"/></svg>
-          <span>Copy Screenshot</span>
+          <span>Screenshot Page</span>
         </button>
         <div class="share-sep"></div>
         <button id="sh-pin" class="share-item" type="button">
@@ -3209,10 +3343,19 @@
         <span class="menu-item-label">Command Palette &amp; Calc</span>
         <span class="menu-kbd">Ctrl+K</span>
       </button>
-      <button id="mn-clean-copy" class="menu-item" type="button">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 13.5a4.2 4.2 0 0 0 5.9 0l2.4-2.4a4.2 4.2 0 0 0-5.9-5.9l-1.2 1.2M14 10.5a4.2 4.2 0 0 0-5.9 0l-2.4 2.4a4.2 4.2 0 0 0 5.9 5.9l1.2-1.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <span class="menu-item-label">Clean Copy Link</span>
-        <span class="menu-kbd">Ctrl+Shift+C</span>
+      <button id="mn-pip" class="menu-item" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="3" stroke="currentColor" stroke-width="1.8"/><rect x="11.5" y="11" width="7.2" height="5.6" rx="1.4" fill="currentColor"/></svg>
+        <span class="menu-item-label">Picture-in-Picture</span>
+        <span class="menu-kbd">Alt+P</span>
+      </button>
+      <button id="mn-translate" class="menu-item" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5h9M8.5 4v2.5M6 6.5c.6 3.2 2.6 6.1 5.6 7.5M11.4 6.5c-.8 3-2.7 5.7-5.6 7.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M13.2 20l3.3-8.4L19.8 20M14.3 17.4h4.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="menu-item-label">Translate Page</span>
+        <span class="menu-kbd">Alt+Shift+T</span>
+      </button>
+      <button id="mn-mute-others" class="menu-item" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 9.5h3.5l4.5-3.8v12.6L8 14.5H4.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M16 9.5l4.5 5M20.5 9.5l-4.5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span class="menu-item-label">Mute Other Tabs</span>
       </button>
       <button id="mn-force-dark" class="menu-item" type="button">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18.6 14.8A7.2 7.2 0 0 1 9.2 5.4a7.4 7.4 0 1 0 9.4 9.4z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -3270,7 +3413,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v5.16.0</span>
+        <span id="mn-version-lbl">dejavu v5.17.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -3885,7 +4028,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.16.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.17.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -4002,8 +4145,7 @@
       return hrs > 0 ? `${hrs}:${pad(mins)}:${pad(rem)}` : `${pad(mins)}:${pad(rem)}`;
     }
 
-    window.chrome.webview.addEventListener('message', (ev) => {
-      const d = ev.data;
+    function handleOverlayMessage(d) {
       if (!d || d.mode === 'backdrop') return;
 
       if (d.mode === 'zoomUpdate') {
@@ -4111,7 +4253,31 @@
       } else if (d.mode === 'extInstalledBubble') {
         renderExtInstalledBubble(d);
       }
-    });
+    }
+
+    if (window.chrome && window.chrome.webview) {
+      window.chrome.webview.addEventListener('message', (ev) => handleOverlayMessage(ev.data));
+    } else {
+      const pMode = new URLSearchParams(location.search).get('preview');
+      if (pMode === 'share' || pMode === 'menu' || pMode === 'sidebar') {
+        requestAnimationFrame(() => handleOverlayMessage({
+          mode: pMode,
+          isLight: false,
+          accentColor: 'amethyst',
+          isNewTab: false,
+          title: 'dejavu Browser — Material Design 3',
+          url: 'https://dathevinci.github.io/Dejavu-browser/',
+          host: 'dathevinci.github.io',
+          activeUrl: 'https://dathevinci.github.io/Dejavu-browser/',
+          activeTitle: 'dejavu Browser',
+          zoomPercent: 100,
+          appVersion: '5.17.0',
+          tabs: [],
+          tabGroups: [{ id: 'default', name: 'Start Tabs', color: '#d0bcff' }],
+          activeGroupId: 'default'
+        }));
+      }
+    }
 
     function escapeHtml(s) {
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -4147,7 +4313,11 @@
 
     const TS_QUICK_COMMANDS = [
       { id: 'darkweb', title: 'Force Dark Web (Toggle)', sub: 'Adapt bright webpages to night mode', kbd: 'Alt+Shift+D', icon: '◐', msg: { type: 'toggleForceDarkWeb' } },
-      { id: 'cleanlink', title: 'Clean Copy Link', sub: 'Copy current URL without tracking parameters', kbd: 'Ctrl+Shift+C', icon: '⛓', msg: { type: 'copyCleanLink' } },
+      { id: 'cleanlink', title: 'Copy Link (Clean)', sub: 'Copy current URL without tracking parameters', kbd: 'Ctrl+Shift+C', icon: '⛓', msg: { type: 'copyCleanLink' } },
+      { id: 'pip', title: 'Picture-in-Picture Video', sub: 'Pop active page video into a floating window', kbd: 'Alt+P', icon: '▣', msg: { type: 'togglePip' } },
+      { id: 'translate', title: 'Translate Active Page', sub: 'Open page in your target translation language', kbd: 'Alt+Shift+T', icon: '文', msg: { type: 'translateActiveTab' } },
+      { id: 'muteothers', title: 'Mute All Other Tabs', sub: 'Silence every background tab immediately', kbd: '', icon: '🔇', msg: { type: 'muteAllOtherTabs' } },
+      { id: 'focus25', title: 'Start 25m Focus Timer', sub: 'Launch a Pomodoro timer pill in the toolbar', kbd: '', icon: '⏱', msg: { type: 'focusTimerCommand', action: 'start', minutes: 25 } },
       { id: 'zen', title: 'Focus Zen Mode (Toggle)', sub: 'Hide left rail & bars for distraction-free focus', kbd: 'Ctrl+Shift+F', icon: '◎', msg: { type: 'toggleZenMode' } },
       { id: 'split', title: 'Split View (Side-by-Side)', sub: 'Browse two tabs side-by-side', kbd: 'Ctrl+Shift+V', icon: '▥', msg: { type: 'toggleSplitView' } },
       { id: 'reader', title: 'Reader View', sub: 'Clean Googlebook reading mode', kbd: 'Ctrl+Shift+R', icon: '≡', msg: { type: 'shareToggleReader' } },
@@ -4536,6 +4706,16 @@
         syncScratchpadMeta();
       });
     }
+    const sbFocus25 = document.getElementById('sb-focus-25');
+    const sbFocus15 = document.getElementById('sb-focus-15');
+    const sbFocus5 = document.getElementById('sb-focus-5');
+    const sbFocusToggle = document.getElementById('sb-focus-toggle');
+    const sbFocusReset = document.getElementById('sb-focus-reset');
+    if (sbFocus25) sbFocus25.addEventListener('click', () => send({ type: 'focusTimerCommand', action: 'start', minutes: 25 }));
+    if (sbFocus15) sbFocus15.addEventListener('click', () => send({ type: 'focusTimerCommand', action: 'start', minutes: 15 }));
+    if (sbFocus5) sbFocus5.addEventListener('click', () => send({ type: 'focusTimerCommand', action: 'start', minutes: 5 }));
+    if (sbFocusToggle) sbFocusToggle.addEventListener('click', () => send({ type: 'focusTimerCommand', action: 'toggle', minutes: 25 }));
+    if (sbFocusReset) sbFocusReset.addEventListener('click', () => send({ type: 'focusTimerCommand', action: 'reset' }));
 
     function renderSidebarPanel(d) {
       sbCurrentPageUrl = d.activeUrl || '';
@@ -4672,6 +4852,249 @@
     }
 
     // =========================================================================
+    // Offline Zero-Dependency ISO/IEC 18004 QR Code Generator (EC-L, V1-V10)
+    // =========================================================================
+    const DejavuQr = (() => {
+      const EXP = new Uint8Array(512);
+      const LOG = new Uint8Array(256);
+      let v = 1;
+      for (let i = 0; i < 255; i++) {
+        EXP[i] = v; EXP[i + 255] = v; LOG[v] = i;
+        v <<= 1; if (v & 256) v ^= 0x11d;
+      }
+      const gfMul = (a, b) => (a && b) ? EXP[LOG[a] + LOG[b]] : 0;
+      const rsGen = (deg) => {
+        let p = [1];
+        for (let i = 0; i < deg; i++) {
+          const n = new Array(p.length + 1).fill(0);
+          for (let j = 0; j < p.length; j++) {
+            n[j] ^= p[j];
+            n[j + 1] ^= gfMul(p[j], EXP[i]);
+          }
+          p = n;
+        }
+        return p;
+      };
+      const rsRem = (data, ecLen) => {
+        const gen = rsGen(ecLen);
+        const rem = new Uint8Array(ecLen);
+        for (let i = 0; i < data.length; i++) {
+          const f = data[i] ^ rem[0];
+          for (let j = 0; j < ecLen - 1; j++) rem[j] = rem[j + 1];
+          rem[ecLen - 1] = 0;
+          for (let j = 0; j < ecLen; j++) rem[j] ^= gfMul(gen[j + 1], f);
+        }
+        return rem;
+      };
+      // [ver, totalDataCw, ecPerBlock, g1Blocks, g1Data, g2Blocks, g2Data, alignCenters, verBits]
+      const VERSIONS = [
+        [1, 19, 7, 1, 19, 0, 0, [], 0],
+        [2, 34, 10, 1, 34, 0, 0, [6, 18], 0],
+        [3, 55, 15, 1, 55, 0, 0, [6, 22], 0],
+        [4, 80, 20, 1, 80, 0, 0, [6, 26], 0],
+        [5, 108, 26, 1, 108, 0, 0, [6, 30], 0],
+        [6, 136, 18, 2, 68, 0, 0, [6, 34], 0],
+        [7, 156, 20, 2, 78, 0, 0, [6, 22, 38], 0x07c94],
+        [8, 194, 24, 2, 97, 0, 0, [6, 24, 42], 0x085bc],
+        [9, 232, 30, 2, 116, 0, 0, [6, 26, 46], 0x09a99],
+        [10, 274, 18, 2, 68, 2, 69, [6, 28, 50], 0x0a4d3]
+      ];
+      function encodeBytes(str) {
+        if (typeof TextEncoder !== 'undefined') return Array.from(new TextEncoder().encode(str));
+        const out = [];
+        for (let i = 0; i < str.length; i++) {
+          const c = str.charCodeAt(i);
+          if (c < 128) out.push(c);
+          else if (c < 2048) out.push(192 | (c >> 6), 128 | (c & 63));
+          else out.push(224 | (c >> 12), 128 | ((c >> 6) & 63), 128 | (c & 63));
+        }
+        return out;
+      }
+      function encodeMatrix(rawText) {
+        let bytes = encodeBytes(String(rawText || ''));
+        if (bytes.length > 271) bytes = bytes.slice(0, 271);
+        let spec = VERSIONS[VERSIONS.length - 1];
+        for (let i = 0; i < VERSIONS.length; i++) {
+          const cap = VERSIONS[i][1] - (VERSIONS[i][0] <= 9 ? 2 : 3);
+          if (bytes.length <= cap) { spec = VERSIONS[i]; break; }
+        }
+        const [ver, totalDataCw, ecLen, g1B, g1D, g2B, g2D, aligns, verBits] = spec;
+        const bits = [];
+        const pushBits = (val, n) => { for (let i = n - 1; i >= 0; i--) bits.push((val >> i) & 1); };
+        pushBits(0b0100, 4);
+        pushBits(bytes.length, ver <= 9 ? 8 : 16);
+        for (let i = 0; i < bytes.length; i++) pushBits(bytes[i], 8);
+        const capBits = totalDataCw * 8;
+        const term = Math.min(4, capBits - bits.length);
+        for (let i = 0; i < term; i++) bits.push(0);
+        while (bits.length % 8 !== 0) bits.push(0);
+        const dataCw = new Uint8Array(totalDataCw);
+        let idx = 0;
+        for (let i = 0; i < bits.length; i += 8) {
+          let b = 0;
+          for (let k = 0; k < 8; k++) b = (b << 1) | bits[i + k];
+          dataCw[idx++] = b;
+        }
+        let padToggle = 0;
+        while (idx < totalDataCw) { dataCw[idx++] = padToggle ? 0x11 : 0xec; padToggle ^= 1; }
+
+        const blocks = [];
+        const ecBlocks = [];
+        let off = 0;
+        for (let i = 0; i < g1B; i++) { const sl = dataCw.slice(off, off + g1D); off += g1D; blocks.push(sl); ecBlocks.push(rsRem(sl, ecLen)); }
+        for (let i = 0; i < g2B; i++) { const sl = dataCw.slice(off, off + g2D); off += g2D; blocks.push(sl); ecBlocks.push(rsRem(sl, ecLen)); }
+        const stream = [];
+        const maxD = Math.max(g1D, g2D);
+        for (let i = 0; i < maxD; i++) for (let b = 0; b < blocks.length; b++) if (i < blocks[b].length) stream.push(blocks[b][i]);
+        for (let i = 0; i < ecLen; i++) for (let b = 0; b < ecBlocks.length; b++) stream.push(ecBlocks[b][i]);
+
+        const size = 17 + ver * 4;
+        const mat = Array.from({ length: size }, () => new Uint8Array(size));
+        const func = Array.from({ length: size }, () => new Uint8Array(size));
+        const setFunc = (r, c, val) => { if (r >= 0 && c >= 0 && r < size && c < size) { mat[r][c] = val ? 1 : 0; func[r][c] = 1; } };
+        const drawFinder = (r0, c0) => {
+          for (let dr = -1; dr <= 7; dr++) {
+            for (let dc = -1; dc <= 7; dc++) {
+              const r = r0 + dr, c = c0 + dc;
+              if (r < 0 || c < 0 || r >= size || c >= size) continue;
+              const inB = dr >= 0 && dr <= 6 && dc >= 0 && dc <= 6;
+              const dark = inB && (dr === 0 || dr === 6 || dc === 0 || dc === 6 || (dr >= 2 && dr <= 4 && dc >= 2 && dc <= 4));
+              setFunc(r, c, dark ? 1 : 0);
+            }
+          }
+        };
+        drawFinder(0, 0); drawFinder(0, size - 7); drawFinder(size - 7, 0);
+        for (let i = 0; i < size; i++) {
+          if (!func[6][i]) setFunc(6, i, i % 2 === 0 ? 1 : 0);
+          if (!func[i][6]) setFunc(i, 6, i % 2 === 0 ? 1 : 0);
+        }
+        for (let i = 0; i < aligns.length; i++) {
+          for (let j = 0; j < aligns.length; j++) {
+            const ar = aligns[i], ac = aligns[j];
+            if ((ar <= 8 && ac <= 8) || (ar <= 8 && ac >= size - 9) || (ar >= size - 9 && ac <= 8)) continue;
+            for (let dr = -2; dr <= 2; dr++) {
+              for (let dc = -2; dc <= 2; dc++) {
+                setFunc(ar + dr, ac + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1 ? 1 : 0);
+              }
+            }
+          }
+        }
+        for (let i = 0; i <= 8; i++) { setFunc(8, i, 0); setFunc(i, 8, 0); }
+        for (let i = size - 8; i < size; i++) { setFunc(8, i, 0); setFunc(i, 8, 0); }
+        setFunc(size - 8, 8, 1);
+        if (ver >= 7 && verBits) {
+          for (let i = 0; i < 18; i++) {
+            const bit = (verBits >> i) & 1;
+            const a = Math.floor(i / 3), b = size - 11 + (i % 3);
+            setFunc(a, b, bit); setFunc(b, a, bit);
+          }
+        }
+        let bitIdx = 0;
+        const totalBits = stream.length * 8;
+        for (let right = size - 1; right >= 1; right -= 2) {
+          if (right === 6) right = 5;
+          for (let vert = 0; vert < size; vert++) {
+            for (let j = 0; j < 2; j++) {
+              const col = right - j;
+              const upward = ((right + 1) & 2) === 0;
+              const row = upward ? size - 1 - vert : vert;
+              if (!func[row][col]) {
+                let bit = 0;
+                if (bitIdx < totalBits) bit = (stream[bitIdx >> 3] >> (7 - (bitIdx & 7))) & 1;
+                mat[row][col] = bit;
+                bitIdx++;
+              }
+            }
+          }
+        }
+        const maskFn = [
+          (r, c) => ((r + c) & 1) === 0,
+          (r) => (r & 1) === 0,
+          (_, c) => c % 3 === 0,
+          (r, c) => (r + c) % 3 === 0,
+          (r, c) => ((Math.floor(r / 2) + Math.floor(c / 3)) & 1) === 0,
+          (r, c) => ((r * c) % 2) + ((r * c) % 3) === 0,
+          (r, c) => ((((r * c) % 2) + ((r * c) % 3)) & 1) === 0,
+          (r, c) => ((((r + c) % 2) + ((r * c) % 3)) & 1) === 0
+        ];
+        const applyFormat = (grid, m) => {
+          const d = (1 << 3) | m;
+          let rem = d;
+          for (let i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+          const fmt = ((d << 10) | rem) ^ 0x5412;
+          const tlCols = [0, 1, 2, 3, 4, 5, 7, 8];
+          const tlRows = [7, 5, 4, 3, 2, 1, 0];
+          for (let i = 0; i < 8; i++) grid[8][tlCols[i]] = (fmt >> (14 - i)) & 1;
+          for (let i = 0; i < 7; i++) grid[tlRows[i]][8] = (fmt >> (6 - i)) & 1;
+          for (let i = 0; i < 7; i++) grid[size - 1 - i][8] = (fmt >> (14 - i)) & 1;
+          for (let i = 0; i < 8; i++) grid[8][size - 8 + i] = (fmt >> (7 - i)) & 1;
+        };
+        let bestGrid = null, bestPen = Infinity;
+        for (let m = 0; m < 8; m++) {
+          const g = mat.map((row) => row.slice());
+          const fn = maskFn[m];
+          for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) if (!func[r][c] && fn(r, c)) g[r][c] ^= 1;
+          applyFormat(g, m);
+          let pen = 0, dark = 0;
+          for (let r = 0; r < size; r++) {
+            let run = 1;
+            for (let c = 0; c < size; c++) {
+              dark += g[r][c];
+              if (c > 0) {
+                if (g[r][c] === g[r][c - 1]) run++;
+                else { if (run >= 5) pen += run - 2; run = 1; }
+              }
+              if (r < size - 1 && c < size - 1 && g[r][c] === g[r][c + 1] && g[r][c] === g[r + 1][c] && g[r][c] === g[r + 1][c + 1]) pen += 3;
+            }
+            if (run >= 5) pen += run - 2;
+          }
+          for (let c = 0; c < size; c++) {
+            let run = 1;
+            for (let r = 1; r < size; r++) {
+              if (g[r][c] === g[r - 1][c]) run++;
+              else { if (run >= 5) pen += run - 2; run = 1; }
+            }
+            if (run >= 5) pen += run - 2;
+          }
+          pen += Math.floor(Math.abs((dark * 100) / (size * size) - 50) / 5) * 10;
+          if (pen < bestPen) { bestPen = pen; bestGrid = g; }
+        }
+        return bestGrid;
+      }
+      function toSvg(text, px = 148) {
+        const g = encodeMatrix(text);
+        const n = g.length, q = 4, vb = n + q * 2;
+        let d = '';
+        for (let r = 0; r < n; r++) {
+          for (let c = 0; c < n; c++) {
+            if (g[r][c]) d += `M${c + q},${r + q}h1v1h-1z`;
+          }
+        }
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vb} ${vb}" width="${px}" height="${px}" shape-rendering="crispEdges"><rect width="${vb}" height="${vb}" fill="#ffffff"/><path d="${d}" fill="#141218"/></svg>`;
+      }
+      function downloadPng(text, filename) {
+        const g = encodeMatrix(text);
+        const n = g.length, q = 4, scale = 8, sz = (n + q * 2) * scale;
+        const cv = document.createElement('canvas');
+        cv.width = sz; cv.height = sz;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, sz, sz);
+        ctx.fillStyle = '#141218';
+        for (let r = 0; r < n; r++) {
+          for (let c = 0; c < n; c++) {
+            if (g[r][c]) ctx.fillRect((c + q) * scale, (r + q) * scale, scale, scale);
+          }
+        }
+        const a = document.createElement('a');
+        a.href = cv.toDataURL('image/png');
+        a.download = filename || 'dejavu-qr.png';
+        a.click();
+      }
+      return { encodeMatrix, toSvg, downloadPng };
+    })();
+
+    // =========================================================================
     // Mode 10: Material Design 3 Share / Page Actions Menu
     // =========================================================================
     const shareFav = document.getElementById('share-fav');
@@ -4680,6 +5103,12 @@
     const shareHost = document.getElementById('share-host');
     const shCopy = document.getElementById('sh-copy');
     const shCopyLbl = document.getElementById('sh-copy-lbl');
+    const shQrToggle = document.getElementById('sh-qr-toggle');
+    const shQrLbl = document.getElementById('sh-qr-lbl');
+    const shareQrPanel = document.getElementById('share-qr-panel');
+    const shareQrFrame = document.getElementById('share-qr-frame');
+    const shareQrCaption = document.getElementById('share-qr-caption');
+    const shQrDl = document.getElementById('sh-qr-dl');
     const shSendMobile = document.getElementById('sh-send-mobile');
     const shFav = document.getElementById('sh-fav');
     const shFavLbl = document.getElementById('sh-fav-lbl');
@@ -4687,9 +5116,13 @@
     const shReadingLbl = document.getElementById('sh-reading-lbl');
     const shReader = document.getElementById('sh-reader');
     const shReaderLbl = document.getElementById('sh-reader-lbl');
+    const shTranslate = document.getElementById('sh-translate');
+    const shPip = document.getElementById('sh-pip');
     const shPin = document.getElementById('sh-pin');
     const shPinLbl = document.getElementById('sh-pin-lbl');
     let copyResetTimer = null;
+    let shareActiveUrl = '';
+    let shareActiveHost = 'page';
 
     shCopy.addEventListener('click', () => {
       send({ type: 'shareCopyUrl' });
@@ -4702,14 +5135,33 @@
         send({ type: 'closePanel' });
       }, 700);
     });
+    if (shQrToggle) {
+      shQrToggle.addEventListener('click', () => {
+        if (!shareQrPanel || !shareActiveUrl) return;
+        const willOpen = shareQrPanel.classList.contains('hidden');
+        shareQrPanel.classList.toggle('hidden', !willOpen);
+        if (shQrLbl) shQrLbl.textContent = willOpen ? 'Hide QR Code' : 'QR Code for Page';
+        if (willOpen && shareQrFrame) {
+          shareQrFrame.innerHTML = DejavuQr.toSvg(shareActiveUrl, 148);
+          if (shareQrCaption) shareQrCaption.textContent = shareActiveHost || 'Scan with camera';
+        }
+      });
+    }
+    if (shQrDl) {
+      shQrDl.addEventListener('click', () => {
+        if (!shareActiveUrl) return;
+        const safeHost = String(shareActiveHost || 'page').replace(/[^a-z0-9.-]+/gi, '_').slice(0, 32);
+        DejavuQr.downloadPng(shareActiveUrl, `dejavu-qr-${safeHost}.png`);
+      });
+    }
     if (shSendMobile) shSendMobile.addEventListener('click', () => send({ type: 'shareSendMobile' }));
     shFav.addEventListener('click', () => send({ type: 'shareToggleFavorite' }));
     shReading.addEventListener('click', () => send({ type: 'shareToggleReadingList' }));
     shReader.addEventListener('click', () => send({ type: 'shareToggleReader' }));
+    if (shTranslate) shTranslate.addEventListener('click', () => send({ type: 'translateActiveTab' }));
+    if (shPip) shPip.addEventListener('click', () => send({ type: 'togglePip' }));
     const shShotSave = document.getElementById('sh-shot-save');
-    const shShotCopy = document.getElementById('sh-shot-copy');
     if (shShotSave) shShotSave.addEventListener('click', () => send({ type: 'captureScreenshot', copy: false }));
-    if (shShotCopy) shShotCopy.addEventListener('click', () => send({ type: 'captureScreenshot', copy: true }));
     shPin.addEventListener('click', () => send({ type: 'shareTogglePin' }));
     document.getElementById('sh-dup').addEventListener('click', () => send({ type: 'shareDuplicateTab' }));
     document.getElementById('sh-newwin').addEventListener('click', () => send({ type: 'shareNewWindow' }));
@@ -4719,6 +5171,10 @@
     function renderSharePanel(d) {
       shCopy.classList.remove('copied');
       shCopyLbl.textContent = 'Copy Link';
+      shareActiveUrl = (!d.isNewTab && d.url) ? String(d.url) : '';
+      shareActiveHost = d.host || 'dejavu';
+      if (shareQrPanel) shareQrPanel.classList.add('hidden');
+      if (shQrLbl) shQrLbl.textContent = 'QR Code for Page';
       const hasFav = !d.isNewTab && !!d.favicon;
       if (hasFav) {
         shareFav.src = d.favicon;
@@ -4737,12 +5193,14 @@
 
       const isNt = !!d.isNewTab;
       shCopy.disabled = isNt;
+      if (shQrToggle) shQrToggle.disabled = isNt;
       if (shSendMobile) shSendMobile.disabled = isNt;
       shFav.disabled = isNt;
       shReading.disabled = isNt;
       shReader.disabled = isNt;
+      if (shTranslate) shTranslate.disabled = isNt;
+      if (shPip) shPip.disabled = isNt;
       if (shShotSave) shShotSave.disabled = isNt;
-      if (shShotCopy) shShotCopy.disabled = isNt;
 
       shFavLbl.textContent = d.isFavorite ? 'Remove from Quick Access' : 'Add to Quick Access';
       shReadingLbl.textContent = d.isReadingList ? 'Remove from Reading List' : 'Add to Reading List';
@@ -5310,8 +5768,12 @@
     if (mnSplitView) mnSplitView.addEventListener('click', () => send({ type: 'toggleSplitView' }));
     const mnCmdPalette = document.getElementById('mn-cmd-palette');
     if (mnCmdPalette) mnCmdPalette.addEventListener('click', () => send({ type: 'openTabSearch' }));
-    const mnCleanCopy = document.getElementById('mn-clean-copy');
-    if (mnCleanCopy) mnCleanCopy.addEventListener('click', () => send({ type: 'copyCleanLink' }));
+    const mnPip = document.getElementById('mn-pip');
+    if (mnPip) mnPip.addEventListener('click', () => send({ type: 'togglePip' }));
+    const mnTranslate = document.getElementById('mn-translate');
+    if (mnTranslate) mnTranslate.addEventListener('click', () => send({ type: 'translateActiveTab' }));
+    const mnMuteOthers = document.getElementById('mn-mute-others');
+    if (mnMuteOthers) mnMuteOthers.addEventListener('click', () => send({ type: 'muteAllOtherTabs' }));
     const mnForceDark = document.getElementById('mn-force-dark');
     const mnDarkwebLbl = document.getElementById('mn-darkweb-lbl');
     if (mnForceDark) mnForceDark.addEventListener('click', () => send({ type: 'toggleForceDarkWeb' }));
@@ -5335,11 +5797,12 @@
       if (mnSplitLbl) mnSplitLbl.textContent = d.splitViewActive ? 'Exit Split View' : 'Split View';
       if (mnDarkwebLbl) mnDarkwebLbl.textContent = d.forceDarkWeb ? 'Force Dark Web: ON' : 'Force Dark Web';
       if (mnZenLbl) mnZenLbl.textContent = d.zenMode ? 'Exit Focus Zen Mode' : 'Focus Zen Mode';
-      if (mnCleanCopy) mnCleanCopy.disabled = !!d.isNewTab;
+      if (mnPip) mnPip.disabled = !!d.isNewTab;
+      if (mnTranslate) mnTranslate.disabled = !!d.isNewTab;
       if (mnScreenshot) mnScreenshot.disabled = !!d.isNewTab;
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.16.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.17.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');

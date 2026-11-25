@@ -256,23 +256,25 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — Power Productivity Features, Browsing Customizations & 120Hz Fluidity
+          ### dejavu __TAG__ — Clean Deduplicated Chrome, Offline QR Codes, Search Bangs & 120Hz Fluidity
 
-          - **Windows Power Features & Non-Theme Customizations**:
-            - **Command Palette & Instant Calculator (`Ctrl+K` / `Ctrl+Shift+A`)**: Search open & recently closed tabs, run 12 fuzzy quick commands, or evaluate math expressions live (`240 * 1.15`, `(45 + 15) / 4`) with 1-click / Enter copy.
-            - **Quick Scratchpad Notes in Side Panel (`Ctrl+Shift+L`)**: Auto-saved local scratchpad with live word count, `+ Page` quick-insert for the active page title + URL, Copy, and Clear.
-            - **Force Dark Mode on Websites (`Alt+Shift+D`) & Reading Comfort**: Smart dark-web stylesheet with natural media preservation + persisted **Reader View** defaults (**Theme**: `Auto`/`Dark`/`Sepia`/`Paper`, **Font Size**: `16px`–`24px`, **Column Width**: `Narrow`/`Balanced`/`Wide`).
-            - **Clean Copy Link (`Ctrl+Shift+C`) & Focus Zen Mode (`Ctrl+Shift+F`)**: Strips tracking parameters (`utm_*`, `fbclid`, `gclid`, `si`, `igshid`, etc.) before copying; Zen Mode hides left rail & bookmarks bar with a 1-click `Zen` exit pill.
-            - **Tab Behavior & Smoothness**: Persisted **New Tab Open Position** (`At End` / `Next to Active`), **Scroll Wheel Switches Tabs** over the tab strip, **Double-Click Tab to Close**, live M3 Zoom toast feedback, smooth scrolling, and loading bar shimmer sweep.
-          - **Android Productivity Tools, Gestures & 120Hz Native Fluidity**:
-            - **Copy Clean Link & Native Print / Save as PDF**: Tracker-stripped link copying in both the Chrome Overflow Menu (`⋮`) and Omnibox current-page card, plus native Android **Print / Save as PDF** via `PrintManager`.
-            - **Interactive Reader View & Theme**: Persisted **Reader view theme** (`Auto` · `Dark` · `Sepia` · `Paper`) with in-reader `A-`/`A+` controls and live theme dots.
-            - **Gestures, Haptics & Motion Feel**: Added **Animation feel** (`Fluid 120Hz` · `Snappy` · `Off`), **Swipe address bar for tabs**, and **Haptic feedback** toggles in Settings, paired with live damped horizontal drag-to-switch-tab physics on the URL pill and spring bounce animations on the Chrome `[N]` tab counter badge.
+          - **Clean Browser Deduplication (Windows & Android)**:
+            - **Unified Clean Copy Link**: Every `Copy Link` action across Windows and Android automatically strips tracking parameters (`utm_*`, `fbclid`, `gclid`, `si`, `igshid`, etc.). Removed redundant `Clean Copy Link` menu rows, duplicate `Copy Screenshot`, and overlapping `Reduce Motion` toggle (unified under `Animation Feel: Off`).
+          - **Windows Power Features, Customizations & 120Hz Fluidity**:
+            - **Offline Pure-SVG QR Code Share Card**: Generate scannable ISO/IEC 18004 QR codes locally inside the Share menu (zero external APIs) with 1-click **Download PNG**.
+            - **Omnibox Quick Search Bangs**: Type `!yt`, `!gh`, `!w`, `!r`, `!ddg`, `!maps`, `!amz`, `!g`, or `!tr` + query in the address bar, with a persisted toggle and pill reference in **Settings → Search Engine**.
+            - **Video Picture-in-Picture (`Alt+P`) & One-Click Translate (`Alt+Shift+T`)**: Available in Share Menu, More Menu, Command Palette, and shortcuts, plus a 10-language **Translate Target Language** picker in **Settings → Accessibility & System**.
+            - **Audio & Tab Control**: Added **Auto-Mute Background Tabs**, **Mute Other Tabs**, and **After Closing a Tab, Switch To** (`Next` | `Previous` | `Last Active`) in **Settings → Tabs & On Startup**.
+            - **Built-In Focus Pomodoro Timer & Smooth Link Hover Pill**: Side Panel `25m`/`15m`/`5m` focus timer with a live zero-idle-CPU toolbar countdown pill, plus a native `CoreWebView2` bottom-left floating destination URL preview pill gliding smoothly at 120Hz.
+          - **Android Offline QR Sheet, Search Bangs, Video Speed & Fluidity**:
+            - **Offline QR Code Bottom Sheet**: Open `⋮ → QR code` on any webpage for an instant Material 3 scannable SVG QR sheet with **Share…** and **Send to PC**.
+            - **Quick Search Bangs, Translate Page & Video Playback Speed**: Full `!yt`/`!gh`/`!w`/`!r`/`!ddg`/`!maps`/`!tr` omnibox support, one-tap **Translate page** + 10-language chip selector, and inline **Video speed** (`1×` / `1.25×` / `1.5×` / `2×`) pills in the Overflow Menu.
+            - **Keep Screen Awake, Close-All Safety & Scroll-to-Top Gesture**: Added **Keep screen awake** (`FLAG_KEEP_SCREEN_ON`) in Appearance, **Confirm before closing all tabs** in Search & tabs, and double-tap / long-press on the collapsed domain capsule to smoothly scroll pages back to the top.
 
           #### Downloads & Verification
-          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.16.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
-          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.16.0.0`, `/highentropyva+`, deterministic build)
-          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 660`, V1+V2+V3 signed, Android 8.0+)
+          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.17.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
+          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.17.0.0`, `/highentropyva+`, deterministic build)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 670`, V1+V2+V3 signed, Android 8.0+)
           - **SHA256SUMS.txt** — Official SHA-256 verification checksums for all release binaries (paired with GitHub SLSA Build Provenance Attestations)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
@@ -290,5 +292,5 @@ jobs:
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
             release-files/SHA256SUMS.txt \
-            --title "dejavu $TAG — Power Productivity Features & 120Hz Fluidity" \
+            --title "dejavu $TAG — Offline QR, Search Bangs, Focus Timer & Clean Deduplicated UI" \
             --notes-file /tmp/release_notes.md

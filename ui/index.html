@@ -140,6 +140,11 @@
           <span>Zen</span>
         </button>
 
+        <button type="button" id="btn-focus-timer" class="focus-timer-pill hidden" title="Focus Timer — Click to pause/resume · Right-click to reset">
+          <span class="ft-dot" aria-hidden="true"></span>
+          <span id="focus-timer-label">25:00</span>
+        </button>
+
         <div id="private-badge-pill" class="private-badge-pill hidden" title="Private Browsing Window — History and cookies are not saved">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" aria-hidden="true">
             <path d="M3 11.5h18M6.5 11.5l1.6-5.4a1.5 1.5 0 0 1 1.45-1.1h4.9a1.5 1.5 0 0 1 1.45 1.1l1.6 5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -729,7 +734,7 @@
               <path d="M32 19.5C33.5 23.6 34.1 27.8 33.8 33.4C33.5 39.0 32.9 45.2 32 47.6C31.1 45.2 30.5 39.0 30.2 33.4C29.9 27.8 30.5 23.6 32 19.5Z" fill="var(--md-on-primary-container)"/>
             </svg>
             <span class="m3-appbar-title">Settings</span>
-            <span id="settings-version-sub" class="m3-tonal-badge">v5.16.0</span>
+            <span id="settings-version-sub" class="m3-tonal-badge">v5.17.0</span>
           </div>
 
           <div class="m3-appbar-search">
@@ -1266,13 +1271,6 @@
                         </div>
                         <button type="button" id="opt-smooth-scroll" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
                       </div>
-                      <div class="opt-row">
-                        <div class="opt-meta">
-                          <div class="opt-title opt-row-title">Reduce Motion</div>
-                          <div class="opt-desc">Minimize UI transitions and pause Material You Live wallpaper animation</div>
-                        </div>
-                        <button type="button" id="opt-reduce-motion" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-                      </div>
                     </div>
                   </div>
 
@@ -1655,6 +1653,25 @@
                         </div>
                         <button type="button" id="opt-address-suggestions" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
                       </div>
+                      <div class="opt-row stacked">
+                        <div class="opt-row-top-inline">
+                          <div class="opt-meta">
+                            <div class="opt-title opt-row-title">Quick Search Bangs</div>
+                            <div class="opt-desc">Type a bang prefix followed by your query in the address bar to search any site directly</div>
+                          </div>
+                          <button type="button" id="opt-omnibox-shortcuts" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                        </div>
+                        <div class="bang-pills-row" aria-label="Supported search bangs">
+                          <span class="bang-chip"><code>!yt</code> YouTube</span>
+                          <span class="bang-chip"><code>!gh</code> GitHub</span>
+                          <span class="bang-chip"><code>!w</code> Wikipedia</span>
+                          <span class="bang-chip"><code>!r</code> Reddit</span>
+                          <span class="bang-chip"><code>!ddg</code> DuckDuckGo</span>
+                          <span class="bang-chip"><code>!maps</code> Maps</span>
+                          <span class="bang-chip"><code>!amz</code> Amazon</span>
+                          <span class="bang-chip"><code>!tr</code> Translate</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1776,6 +1793,24 @@
                         </div>
                         <button type="button" id="opt-dblclick-close" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
                       </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">After Closing a Tab, Switch To</div>
+                          <div class="opt-desc">Choose whether focus moves to the next tab, previous tab, or last recently active tab</div>
+                        </div>
+                        <div class="m3-segmented compact opt-seg" id="opt-tab-close-act">
+                          <button type="button" class="m3-seg-btn opt-seg-btn active" data-val="right"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Next</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="left"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Previous</span></button>
+                          <button type="button" class="m3-seg-btn opt-seg-btn" data-val="mru"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Last Active</span></button>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Auto-Mute Background Tabs</div>
+                          <div class="opt-desc">Automatically silence inactive tabs when you switch away and restore them on return</div>
+                        </div>
+                        <button type="button" id="opt-automute-bg" class="liquid-switch m3-switch" role="switch" aria-checked="false"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
                     </div>
                   </div>
 
@@ -1784,7 +1819,9 @@
                     <div class="m3-pref-card">
                       <div class="shortcuts-ref-grid">
                         <div class="kbd-row"><span>Command Palette &amp; Calculator</span><kbd>Ctrl + K</kbd></div>
-                        <div class="kbd-row"><span>Clean Copy Link</span><kbd>Ctrl + Shift + C</kbd></div>
+                        <div class="kbd-row"><span>Copy Clean Link</span><kbd>Ctrl + Shift + C</kbd></div>
+                        <div class="kbd-row"><span>Picture-in-Picture Video</span><kbd>Alt + P</kbd></div>
+                        <div class="kbd-row"><span>Translate Active Page</span><kbd>Alt + Shift + T</kbd></div>
                         <div class="kbd-row"><span>Focus Zen Mode</span><kbd>Ctrl + Shift + F</kbd></div>
                         <div class="kbd-row"><span>Force Dark Web</span><kbd>Alt + Shift + D</kbd></div>
                         <div class="kbd-row"><span>Split View</span><kbd>Ctrl + Shift + V</kbd></div>
@@ -1997,6 +2034,33 @@
                           <button type="button" class="m3-seg-btn opt-seg-btn" data-val="wide"><svg class="seg-check" viewBox="0 0 16 16" fill="none"><path d="M3.2 8.2l3.1 3.1 6.5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Wide</span></button>
                         </div>
                       </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Translate Target Language</div>
+                          <div class="opt-desc">Destination language used by one-click Translate Page (Alt+Shift+T)</div>
+                        </div>
+                        <div class="m3-select-wrap compact">
+                          <select id="opt-translate-lang" class="m3-select" aria-label="Translate Target Language">
+                            <option value="en">English</option>
+                            <option value="es">Spanish (Español)</option>
+                            <option value="fr">French (Français)</option>
+                            <option value="de">German (Deutsch)</option>
+                            <option value="ja">Japanese (日本語)</option>
+                            <option value="ko">Korean (한국어)</option>
+                            <option value="zh-CN">Chinese (中文)</option>
+                            <option value="hi">Hindi (हिन्दी)</option>
+                            <option value="pt">Portuguese (Português)</option>
+                            <option value="ar">Arabic (العربية)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="opt-row">
+                        <div class="opt-meta">
+                          <div class="opt-title opt-row-title">Floating Link Hover Preview</div>
+                          <div class="opt-desc">Smoothly glide a destination URL pill in the bottom-left corner when hovering links</div>
+                        </div>
+                        <button type="button" id="opt-link-hover" class="liquid-switch m3-switch on" role="switch" aria-checked="true"><span class="switch-knob"><svg class="sw-check" viewBox="0 0 16 16" fill="none"><path d="M3.4 8.3l3.1 3.1 6.1-6.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+                      </div>
                     </div>
                   </div>
 
@@ -2094,7 +2158,7 @@
                         </svg>
                       </div>
                       <div class="m3-about-copy">
-                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v5.16.0</span></div>
+                        <div class="m3-about-title">dejavu <span id="about-ver-badge" class="m3-status-chip primary">v5.17.0</span></div>
                         <div class="m3-about-sub">Googlebook Material Design 3 Browser · 16 HCT Themes (32 Light/Dark), Split View, Tab Search, Brave-Grade Shields &amp; Dual-Broker Link</div>
                         <div id="about-update-status" class="m3-about-update-line">Checking update status…</div>
                       </div>
@@ -2128,7 +2192,7 @@
                       <div class="opt-row">
                         <div class="opt-meta">
                           <div class="opt-title opt-row-title">GitHub Releases</div>
-                          <div class="opt-desc">View v5.16.0 release notes, Windows Setup installer, and Android APK</div>
+                          <div class="opt-desc">View v5.17.0 release notes, Windows Setup installer, and Android APK</div>
                         </div>
                         <button type="button" id="btn-about-github" class="m3-btn m3-btn-outlined sm">Open GitHub</button>
                       </div>
@@ -2377,7 +2441,7 @@
     <section id="reset-confirm-overlay" class="m3-modal-scrim hidden" aria-label="Reset Settings">
       <div id="reset-confirm-modal" class="m3-dialog-card compact" role="dialog" aria-modal="true">
         <h3 class="m3-dialog-title">Reset dejavu settings?</h3>
-        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v5.16.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
+        <p class="m3-dialog-sub">This restores your theme, startup behavior, search engine, downloads, and privacy switches to dejavu v5.17.0 defaults. Your profiles, bookmarks, and Google sign-in stay untouched.</p>
         <div class="m3-dialog-actions">
           <button type="button" id="btn-reset-cancel" class="m3-btn m3-btn-text">Cancel</button>
           <button type="button" id="btn-reset-confirm" class="m3-btn m3-btn-danger">Reset Settings</button>
@@ -3116,6 +3180,9 @@
         <button type="button" id="btn-shell-eib-manage" class="ext-bubble-manage-btn">Manage extensions</button>
       </div>
     </aside>
+
+    <!-- Smooth Bottom-Left Floating Link Hover Status Pill -->
+    <div id="url-hover-bubble" class="url-hover-bubble" aria-hidden="true"></div>
   </main>
 
   <!-- Unified Material Design 3 Browser Shell Right-Click Context Menu -->

@@ -50,6 +50,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Interpolator;
 import android.view.animation.PathInterpolator;
 import android.view.inputmethod.EditorInfo;
@@ -423,6 +424,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private boolean hapticsEnabled = true;
     private String animationSpeed = "fluid"; // "fluid" | "snappy" | "off"
     private String readerTheme = "auto"; // "auto" | "dark" | "sepia" | "light"
+    private boolean omniboxShortcutsEnabled = true;
+    private String translateTargetLang = "en";
+    private boolean confirmCloseAllTabs = true;
+    private boolean keepScreenAwake = false;
+    private long lastCollapsedTapMs = 0L;
     private int lastRenderedTabCount = -1;
     private boolean openLinksInBackground = false;
     private boolean memorySaverEnabled = true;
@@ -630,6 +636,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         loadLocalCollections();
+        applyKeepScreenAwake();
 
         adBlocker = new MobileAdBlocker(
             prefs.getLong("totalBlocked", 0),
@@ -1714,8 +1721,20 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             }
         });
 
-        // Tapping scroll-collapsed domain capsule restores full chrome bar
-        collapsedPill.setOnClickListener(v -> setChromeCollapsed(false));
+        // Tapping scroll-collapsed domain capsule restores full chrome bar;
+        // double-tapping or long-pressing smoothly glides the active webpage back to the top.
+        collapsedPill.setOnClickListener(v -> {
+            long now = SystemClock.uptimeMillis();
+            boolean isDouble = (now - lastCollapsedTapMs) < 460L;
+            lastCollapsedTapMs = now;
+            setChromeCollapsed(false);
+            if (isDouble) scrollActivePageToTop();
+        });
+        collapsedPill.setOnLongClickListener(v -> {
+            setChromeCollapsed(false);
+            scrollActivePageToTop();
+            return true;
+        });
 
         navBack.setOnClickListener(v -> {
             if (!"none".equals(activeUiScreen) && !"start".equals(activeUiScreen)) {
@@ -2570,7 +2589,46 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         scheduleSaveOpenTabsSession();
     }
 
-    private void closeAllTabs(boolean onlyPrivate) {
+    private void applyKeepScreenAwake() {
+        try {
+            Window w = getWindow();
+            if (w == null) return;
+            if (keepScreenAwake) w.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            else w.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } catch (Throwable ignored) { }
+    }
+
+    private void scrollActivePageToTop() {
+        MobileTab t = getActiveTab();
+        if (t == null || t.isNewTab || t.webView == null) return;
+        performSmartHaptic(rootContainer, HapticFeedbackConstants.CLOCK_TICK);
+        try {
+            t.webView.evaluateJavascript(
+                "(function(){try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){window.scrollTo(0,0);}})();",
+                null
+            );
+        } catch (Throwable ignored) { }
+    }
+
+    private void closeAllTabs(final boolean onlyPrivate) {
+        int matchCount = 0;
+        for (MobileTab t : tabs) {
+            if (t.isPrivate == onlyPrivate) matchCount++;
+        }
+        if (confirmCloseAllTabs && matchCount >= 2) {
+            final int countFinal = matchCount;
+            new AlertDialog.Builder(this)
+                .setTitle(onlyPrivate ? "Close all private tabs?" : "Close all tabs?")
+                .setMessage("This will close " + countFinal + (onlyPrivate ? " private tabs." : " open tabs."))
+                .setPositiveButton("Close all", (d, w) -> closeAllTabsImmediate(onlyPrivate))
+                .setNegativeButton("Cancel", null)
+                .show();
+            return;
+        }
+        closeAllTabsImmediate(onlyPrivate);
+    }
+
+    private void closeAllTabsImmediate(boolean onlyPrivate) {
         List<MobileTab> keep = new ArrayList<>();
         for (MobileTab t : tabs) {
             if (t.isPrivate == onlyPrivate) {
@@ -3782,7 +3840,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.16.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.17.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -4440,6 +4498,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("hapticsEnabled", hapticsEnabled);
                 st.put("animationSpeed", animationSpeed);
                 st.put("readerTheme", readerTheme);
+                st.put("omniboxShortcutsEnabled", omniboxShortcutsEnabled);
+                st.put("translateTargetLang", translateTargetLang);
+                st.put("confirmCloseAllTabs", confirmCloseAllTabs);
+                st.put("keepScreenAwake", keepScreenAwake);
                 st.put("openLinksInBackground", openLinksInBackground);
                 st.put("memorySaverEnabled", memorySaverEnabled);
                 st.put("turboDownloaderEnabled", turboDownloaderEnabled);
@@ -4876,6 +4938,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         animationSpeed = ("snappy".equals(asRaw) || "off".equals(asRaw)) ? asRaw : "fluid";
         String rtRaw = prefs.getString("readerTheme", "auto");
         readerTheme = ("dark".equals(rtRaw) || "sepia".equals(rtRaw) || "light".equals(rtRaw)) ? rtRaw : "auto";
+        omniboxShortcutsEnabled = prefs.getBoolean("omniboxShortcutsEnabled", true);
+        translateTargetLang = normalizeTranslateLang(prefs.getString("translateTargetLang", "en"));
+        confirmCloseAllTabs = prefs.getBoolean("confirmCloseAllTabs", true);
+        keepScreenAwake = prefs.getBoolean("keepScreenAwake", false);
         openLinksInBackground = prefs.getBoolean("openLinksInBackground", false);
         memorySaverEnabled = prefs.getBoolean("memorySaverEnabled", true);
         turboDownloaderEnabled = prefs.getBoolean("turboDownloaderEnabled", true);
@@ -5030,6 +5096,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putBoolean("hapticsEnabled", hapticsEnabled)
             .putString("animationSpeed", animationSpeed)
             .putString("readerTheme", readerTheme)
+            .putBoolean("omniboxShortcutsEnabled", omniboxShortcutsEnabled)
+            .putString("translateTargetLang", translateTargetLang)
+            .putBoolean("confirmCloseAllTabs", confirmCloseAllTabs)
+            .putBoolean("keepScreenAwake", keepScreenAwake)
             .putBoolean("openLinksInBackground", openLinksInBackground)
             .putBoolean("memorySaverEnabled", memorySaverEnabled)
             .putBoolean("turboDownloaderEnabled", turboDownloaderEnabled)
@@ -5124,11 +5194,48 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         return next;
     }
 
+    private static String normalizeTranslateLang(String raw) {
+        if (raw == null) return "en";
+        String v = raw.trim();
+        if ("es".equals(v) || "fr".equals(v) || "de".equals(v) || "ja".equals(v) || "ko".equals(v)
+            || "zh-CN".equals(v) || "hi".equals(v) || "pt".equals(v) || "ar".equals(v)) {
+            return v;
+        }
+        return "en";
+    }
+
+    private String tryResolveSearchBang(String raw) {
+        if (!omniboxShortcutsEnabled || raw == null) return null;
+        int sp = raw.indexOf(' ');
+        if (sp <= 0 || sp >= raw.length() - 1) return null;
+        String key = raw.substring(0, sp).trim().toLowerCase(Locale.US);
+        String query = raw.substring(sp + 1).trim();
+        if (query.isEmpty()) return null;
+        String enc;
+        try {
+            enc = URLEncoder.encode(query, StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            enc = Uri.encode(query);
+        }
+        if ("!yt".equals(key) || "yt".equals(key)) return "https://www.youtube.com/results?search_query=" + enc;
+        if ("!gh".equals(key) || "gh".equals(key)) return "https://github.com/search?q=" + enc;
+        if ("!w".equals(key) || "!wiki".equals(key) || "wiki".equals(key)) return "https://en.wikipedia.org/w/index.php?search=" + enc;
+        if ("!r".equals(key) || "!reddit".equals(key)) return "https://www.reddit.com/search/?q=" + enc;
+        if ("!ddg".equals(key)) return "https://duckduckgo.com/?q=" + enc;
+        if ("!maps".equals(key) || "!map".equals(key)) return "https://www.google.com/maps/search/" + enc;
+        if ("!amz".equals(key) || "!a".equals(key)) return "https://www.amazon.com/s?k=" + enc;
+        if ("!g".equals(key)) return "https://www.google.com/search?q=" + enc;
+        if ("!tr".equals(key)) return "https://translate.google.com/?sl=auto&tl=" + Uri.encode(translateTargetLang) + "&text=" + enc;
+        return null;
+    }
+
     private String resolveInputToUrl(String raw) {
         if (raw == null) return "";
         String s = raw.trim();
         if (s.isEmpty()) return "";
         if (s.startsWith("http://") || s.startsWith("https://")) return maybeUpgradeHttps(s);
+        String bangUrl = tryResolveSearchBang(s);
+        if (bangUrl != null) return bangUrl;
         if (!s.contains(" ") && s.contains(".") && !s.startsWith(".") && !s.endsWith(".")) {
             return "https://" + s;
         }
@@ -6695,6 +6802,83 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
 
         @JavascriptInterface
+        public void toggleOmniboxShortcuts() {
+            mainHandler.post(() -> {
+                omniboxShortcutsEnabled = !omniboxShortcutsEnabled;
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void setTranslateTargetLang(final String lang) {
+            mainHandler.post(() -> {
+                translateTargetLang = normalizeTranslateLang(lang);
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleConfirmCloseAllTabs() {
+            mainHandler.post(() -> {
+                confirmCloseAllTabs = !confirmCloseAllTabs;
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleKeepScreenAwake() {
+            mainHandler.post(() -> {
+                keepScreenAwake = !keepScreenAwake;
+                applyKeepScreenAwake();
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void translateActivePage() {
+            mainHandler.post(() -> {
+                MobileTab t = getActiveTab();
+                if (t == null || t.isNewTab || t.url == null || t.url.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Open a webpage first to translate", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                closeOverlayScreen();
+                String lang = normalizeTranslateLang(translateTargetLang);
+                String target = "https://translate.google.com/translate?sl=auto&tl=" + Uri.encode(lang) + "&u=" + Uri.encode(t.url);
+                loadTabUrl(t, target);
+                Toast.makeText(MainActivity.this, "Translating page (" + lang.toUpperCase(Locale.US) + ")…", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void setVideoPlaybackSpeed(final float rate) {
+            mainHandler.post(() -> {
+                MobileTab t = getActiveTab();
+                if (t == null || t.isNewTab || t.webView == null) {
+                    Toast.makeText(MainActivity.this, "Open a video page first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                final float safeRate = Math.max(0.25f, Math.min(4.0f, rate));
+                final String rateStr = (safeRate == (int) safeRate)
+                    ? String.valueOf((int) safeRate)
+                    : String.format(Locale.US, "%.2f", safeRate).replaceAll("0+$", "").replaceAll("\\.$", "");
+                String js = "(function(){var m=document.querySelectorAll('video,audio');for(var i=0;i<m.length;i++){try{m[i].playbackRate=" + safeRate + ";}catch(e){}}return m.length;})();";
+                t.webView.evaluateJavascript(js, val -> {
+                    int cnt = 0;
+                    try { cnt = Integer.parseInt(val != null ? val.replace("\"", "").trim() : "0"); } catch (Exception ignored) { }
+                    performSmartHaptic(rootContainer, HapticFeedbackConstants.CLOCK_TICK);
+                    Toast.makeText(MainActivity.this,
+                        cnt > 0 ? ("Video speed set to " + rateStr + "×") : "No media element found on this page",
+                        Toast.LENGTH_SHORT).show();
+                });
+            });
+        }
+
+        @JavascriptInterface
         public void toggleOpenLinksInBackground() {
             mainHandler.post(() -> {
                 openLinksInBackground = !openLinksInBackground;
@@ -7177,6 +7361,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 pullToRefresh = true;
                 openLinksInBackground = false;
                 memorySaverEnabled = true;
+                omniboxShortcutsEnabled = true;
+                translateTargetLang = "en";
+                confirmCloseAllTabs = true;
+                keepScreenAwake = false;
+                applyKeepScreenAwake();
                 turboDownloaderEnabled = true;
                 httpsFirst = true;
                 doNotTrack = true;

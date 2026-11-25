@@ -4,20 +4,20 @@ A fast, private native **Google Material Design 3** browser for **Windows 10/11*
 
 **Official Website:** **[dathevinci.github.io/Dejavu-browser](https://dathevinci.github.io/Dejavu-browser/)**
 
-## Download (`v5.16.0`)
+## Download (`v5.17.0`)
 
 Grab the latest release from the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
 
-- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.16.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
-- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.16.0.0`, runs from any folder or USB with no admin rights required).
-- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.16.0` · `versionCode 660`, Android 8.0+).
+- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.17.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
+- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.17.0.0`, runs from any folder or USB with no admin rights required).
+- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.17.0` · `versionCode 670`, Android 8.0+).
 - **`SHA256SUMS.txt`** — Official SHA-256 checksums paired with GitHub **SLSA Build Provenance Attestations**.
 
-## What's New in v5.16.0
+## What's New in v5.17.0
 
-- **Windows Power Features & Browsing Customizations**: Added **Command Palette & Instant Calculator** (`Ctrl+K`), **Quick Scratchpad Notes** in the Side Panel (`Ctrl+Shift+L`), **Force Dark Mode on Websites** (`Alt+Shift+D`), customizable **Reader View** defaults (Theme, Font Size, Column Width), **Clean Copy Link** (`Ctrl+Shift+C`), **Focus Zen Mode** (`Ctrl+Shift+F`), **New Tab Open Position**, **Scroll-Wheel Tab Switching**, **Double-Click Tab to Close**, and live M3 Zoom toast feedback.
-- **Android Productivity, Gestures & 120Hz Fluidity**: Added **Copy Clean Link** (tracker stripping) and native **Print / Save as PDF** in the Chrome Overflow Menu, interactive Reader View with persisted theme, **Animation Feel** (`Fluid 120Hz`/`Snappy`/`Off`), **Swipe Address Bar for Tabs** with live damped drag physics, **Haptic Feedback** toggle, and spring pop animations on the `[N]` tab counter badge.
-- **Googlebook Customization Studio**: 5 one-click Material Design 3 presets, 16 HCT color palettes, 45 wallpapers, Corner Roundness, Interface Density, Address Bar Style, Start Page Layout, and Quick Access Columns.
+- **Clean Deduplicated UI**: Unified every `Copy Link` action across Windows & Android to automatically strip tracking parameters, and removed redundant duplicate Copy, Copy Screenshot, and overlapping Reduce Motion controls.
+- **Windows Offline QR, Search Bangs, Focus Timer & Link Hover**: Offline ISO 18004 SVG QR code share card with PNG export, omnibox quick search bangs (`!yt`, `!gh`, `!w`, `!r`, `!ddg`, `!maps`, `!amz`, `!g`, `!tr`), one-click **Picture-in-Picture** (`Alt+P`) & **Translate Page** (`Alt+Shift+T`) with 10-language selector, **Auto-Mute Background Tabs**, **Mute Other Tabs**, **After Closing Tab, Switch To** (`Next` | `Previous` | `Last Active`), zero-idle-CPU Side Panel **Focus Pomodoro Timer** with live toolbar countdown pill, and native smooth bottom-left **Floating Link Hover Preview**.
+- **Android Offline QR Sheet, Video Speed & Fluidity**: Offline M3 **QR Code** bottom sheet in the Overflow Menu, omnibox **Quick search bangs**, **Translate page** with 10-language selector, inline **Video speed** (`1×` / `1.25×` / `1.5×` / `2×`) pills, **Keep screen awake**, **Confirm before closing all tabs**, and double-tap / long-press on the collapsed domain capsule to smoothly scroll webpages back to the top.
 
 ## Core Capabilities
 

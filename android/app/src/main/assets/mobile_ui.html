@@ -1237,6 +1237,37 @@
       display: inline-flex; align-items: center; gap: 2px;
       background: var(--sheet-elev); border-radius: 999px; padding: 3px;
     }
+    .vspeed-strip {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: var(--sheet-elev); border-radius: 999px; padding: 3px;
+    }
+    .vspeed-btn {
+      height: 28px; min-width: 40px; padding: 0 9px; border: none; border-radius: 999px;
+      background: transparent; color: var(--muted); font-family: inherit;
+      font-size: 12px; font-weight: 620; cursor: pointer;
+      transition: background-color 0.16s ease, color 0.16s ease, transform 0.14s var(--md-ease-spring);
+    }
+    .vspeed-btn.active { background: var(--accent-soft); color: var(--accent-ink); }
+    .vspeed-btn:active { transform: scale(0.92); }
+    .qr-sheet-card {
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      padding: 18px 16px 20px; border-radius: 24px;
+      background: var(--sheet-elev);
+    }
+    .qr-sheet-frame {
+      background: #ffffff; padding: 14px; border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+    }
+    .qr-sheet-frame svg { display: block; width: 204px; height: 204px; }
+    .qr-sheet-title {
+      font-size: 15px; font-weight: 600; color: var(--ink);
+      text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .qr-sheet-host {
+      font-size: 12.5px; color: var(--muted); text-align: center;
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     .zoom-btn {
       height: 30px; min-width: 38px; padding: 0 10px; border-radius: 999px;
       border: none; background: transparent; color: var(--ink);
@@ -1249,7 +1280,7 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.16.0) — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.17.0) — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
@@ -1791,7 +1822,7 @@
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
     /* =====================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.16.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.17.0)
        ===================================================================== */
     .sh-hero-card {
       background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
@@ -2182,9 +2213,13 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14.5V4.2M8.2 8L12 4.2 15.8 8"/><path d="M5 12.8v5.2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5.2"/></svg></span>
               <span class="g-row-meta"><span class="g-row-title">Share…</span></span>
             </button>
-            <button type="button" class="g-row" onclick="call('copyCleanActiveUrl')">
-              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13.5a4.2 4.2 0 0 0 5.9 0l2.4-2.4a4.2 4.2 0 0 0-5.9-5.9l-1.2 1.2M14 10.5a4.2 4.2 0 0 0-5.9 0l-2.4 2.4a4.2 4.2 0 0 0 5.9 5.9l1.2-1.2"/></svg></span>
-              <span class="g-row-meta"><span class="g-row-title">Copy clean link</span><span class="g-row-sub">Strips utm, fbclid &amp; tracker tags</span></span>
+            <button type="button" class="g-row" onclick="openQrSheet()">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.4"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.4"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.4"/><path d="M14.2 14.2h2.4v2.4h-2.4zM18.2 18.2h2.2v2.2h-2.2zM18.2 14.2h2.2M14.2 18.8v1.6"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">QR code</span><span class="g-row-sub">Instant offline scannable code</span></span>
+            </button>
+            <button type="button" class="g-row" onclick="call('translateActivePage')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h9M8.5 4v2.5M6 6.5c.6 3.2 2.6 6.1 5.6 7.5M11.4 6.5c-.8 3-2.7 5.7-5.6 7.4"/><path d="M13.2 20l3.3-8.4L19.8 20M14.3 17.4h4.4"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Translate page</span></span>
             </button>
             <button type="button" class="g-row" onclick="call('sendCurrentTabToPc')">
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="12.5" height="9" rx="2"/><path d="M6.5 17.5h4.5M8.75 14v3.5M14.5 11.5L21 5M21 5h-4.2M21 5v4.2"/></svg></span>
@@ -2220,6 +2255,15 @@
                 <button type="button" class="zoom-btn" onclick="stepZoom(10)">A+</button>
               </div>
             </div>
+            <div class="zoom-row">
+              <span style="font-size:14.5px;font-weight:520;color:var(--ink);">Video speed</span>
+              <div id="m-vspeed-strip" class="vspeed-strip">
+                <button type="button" class="vspeed-btn active" data-rate="1" onclick="setMobileVideoSpeed(1)">1×</button>
+                <button type="button" class="vspeed-btn" data-rate="1.25" onclick="setMobileVideoSpeed(1.25)">1.25×</button>
+                <button type="button" class="vspeed-btn" data-rate="1.5" onclick="setMobileVideoSpeed(1.5)">1.5×</button>
+                <button type="button" class="vspeed-btn" data-rate="2" onclick="setMobileVideoSpeed(2)">2×</button>
+              </div>
+            </div>
           </div>
 
           <!-- Chrome Group 4: Browser & Customization -->
@@ -2253,7 +2297,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.16.0) — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.17.0) — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2549,7 +2593,7 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.8v5.2M12 7.8h.01"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.16.0 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.17.0 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -2718,6 +2762,14 @@
                 <button type="button" id="sw-autohide" class="sw on" aria-label="Auto-hide bar on scroll"></button>
               </div>
 
+              <div class="g-row set-item" data-search="keep screen awake sleep timeout reading display on" onclick="call('toggleKeepScreenAwake')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">Keep screen awake</div>
+                  <div class="g-row-sub">Prevent screen sleep while browsing or reading</div>
+                </div>
+                <button type="button" id="sw-keep-awake" class="sw" aria-label="Keep screen awake"></button>
+              </div>
+
               <div class="set-block set-item" data-search="animation feel motion speed fluid 120hz snappy off reduce motion smooth">
                 <div style="font-size:14.5px;font-weight:540;">Animation feel</div>
                 <div class="bar-seg cols-3" id="set-anim-seg">
@@ -2880,6 +2932,38 @@
                 </div>
                 <button type="button" id="sw-memsaver" class="sw on" aria-label="Memory Saver"></button>
               </div>
+              <div class="g-row set-item" data-search="search bangs shortcuts omnibox youtube github wikipedia reddit maps translate !yt !gh !w" onclick="call('toggleOmniboxShortcuts')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">Quick search bangs</div>
+                  <div class="g-row-sub">Type !yt, !gh, !w, !r, !ddg, !maps, !tr + query</div>
+                </div>
+                <button type="button" id="sw-search-bangs" class="sw on" aria-label="Quick search bangs"></button>
+              </div>
+              <div class="set-block set-item" data-search="translate target language page translation english spanish french german japanese korean chinese hindi">
+                <div>
+                  <div style="font-size:14.5px;font-weight:540;">Translate language</div>
+                  <div style="font-size:12px;color:var(--muted);margin-top:2px;">Target language for Translate page &amp; !tr</div>
+                </div>
+                <div id="opt-m-tr-lang" class="m3-chip-strip">
+                  <button type="button" class="m3-chip active" data-lang="en" onclick="call('setTranslateTargetLang','en')">English</button>
+                  <button type="button" class="m3-chip" data-lang="es" onclick="call('setTranslateTargetLang','es')">Español</button>
+                  <button type="button" class="m3-chip" data-lang="fr" onclick="call('setTranslateTargetLang','fr')">Français</button>
+                  <button type="button" class="m3-chip" data-lang="de" onclick="call('setTranslateTargetLang','de')">Deutsch</button>
+                  <button type="button" class="m3-chip" data-lang="ja" onclick="call('setTranslateTargetLang','ja')">日本語</button>
+                  <button type="button" class="m3-chip" data-lang="ko" onclick="call('setTranslateTargetLang','ko')">한국어</button>
+                  <button type="button" class="m3-chip" data-lang="zh-CN" onclick="call('setTranslateTargetLang','zh-CN')">中文</button>
+                  <button type="button" class="m3-chip" data-lang="hi" onclick="call('setTranslateTargetLang','hi')">हिन्दी</button>
+                  <button type="button" class="m3-chip" data-lang="pt" onclick="call('setTranslateTargetLang','pt')">Português</button>
+                  <button type="button" class="m3-chip" data-lang="ar" onclick="call('setTranslateTargetLang','ar')">العربية</button>
+                </div>
+              </div>
+              <div class="g-row set-item" data-search="confirm close all tabs warning accidental safety" onclick="call('toggleConfirmCloseAllTabs')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">Confirm before closing all tabs</div>
+                  <div class="g-row-sub">Ask before wiping multiple open tabs at once</div>
+                </div>
+                <button type="button" id="sw-confirm-close-all" class="sw on" aria-label="Confirm before closing all tabs"></button>
+              </div>
             </div>
           </div>
 
@@ -2932,7 +3016,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.16.0 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.17.0 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2956,10 +3040,10 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.16.0 about">
+              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.17.0 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.16.0</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.17.0</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
                 <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check for updates</button>
@@ -2998,7 +3082,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.16.0
+          dejavu Mobile v5.17.0
         </div>
       </div>
     </div>
@@ -3344,7 +3428,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.16.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.17.0)
        =================================================================== -->
   <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -3443,6 +3527,34 @@
     </div>
   </div>
 
+  <!-- ===================================================================
+       SHEET I: OFFLINE PURE-SVG QR CODE SHARE SHEET
+       =================================================================== -->
+  <div id="scr-qr" class="sheet-backdrop hidden" onclick="closeQrSheet()">
+    <div class="sheet-panel" onclick="event.stopPropagation()">
+      <div class="sheet-head" data-swipe-dismiss="1">
+        <div class="sheet-grab"></div>
+        <div class="sheet-title-row">
+          <h2 class="sheet-title">QR Code</h2>
+          <button type="button" class="pill-btn ghost" onclick="closeQrSheet()">Done</button>
+        </div>
+      </div>
+      <div class="sheet-body" style="padding-bottom:24px;">
+        <div class="qr-sheet-card">
+          <div id="qr-sheet-frame" class="qr-sheet-frame" aria-label="Page QR Code"></div>
+          <div style="width:100%;display:flex;flex-direction:column;gap:3px;align-items:center;">
+            <div id="qr-sheet-title" class="qr-sheet-title">Current Page</div>
+            <div id="qr-sheet-host" class="qr-sheet-host">Scan with any camera</div>
+          </div>
+          <div style="display:flex;gap:8px;width:100%;justify-content:center;">
+            <button type="button" class="pill-btn primary" onclick="closeQrSheet();call('shareNative')">Share…</button>
+            <button type="button" class="pill-btn tonal" onclick="closeQrSheet();call('sendCurrentTabToPc')">Send to PC</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Inline Add / Edit Favorite Modal -->
   <div id="add-fav-modal" class="mini-modal hidden" onclick="closeAddFav()">
     <div class="mini-modal-card" onclick="event.stopPropagation()">
@@ -3482,7 +3594,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.16.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.17.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -3749,7 +3861,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.16.0)
+    // Zero-mutation DOM equality-guard helpers (v5.17.0)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -4383,7 +4495,221 @@
       }
     }
 
-    function copyActiveUrl() { if (state.activeUrl) call('copyText', state.activeUrl); }
+    function copyActiveUrl() { if (state.activeUrl) call('copyCleanActiveUrl'); }
+
+    // Offline Zero-Dependency ISO/IEC 18004 QR Code Generator (EC-L, V1-V10)
+    const MobileQr = (() => {
+      const EXP = new Uint8Array(512);
+      const LOG = new Uint8Array(256);
+      let v = 1;
+      for (let i = 0; i < 255; i++) { EXP[i] = v; EXP[i + 255] = v; LOG[v] = i; v <<= 1; if (v & 256) v ^= 0x11d; }
+      const gfMul = (a, b) => (a && b) ? EXP[LOG[a] + LOG[b]] : 0;
+      const rsGen = (deg) => {
+        let p = [1];
+        for (let i = 0; i < deg; i++) {
+          const n = new Array(p.length + 1).fill(0);
+          for (let j = 0; j < p.length; j++) { n[j] ^= p[j]; n[j + 1] ^= gfMul(p[j], EXP[i]); }
+          p = n;
+        }
+        return p;
+      };
+      const rsRem = (data, ecLen) => {
+        const gen = rsGen(ecLen);
+        const rem = new Uint8Array(ecLen);
+        for (let i = 0; i < data.length; i++) {
+          const f = data[i] ^ rem[0];
+          for (let j = 0; j < ecLen - 1; j++) rem[j] = rem[j + 1];
+          rem[ecLen - 1] = 0;
+          for (let j = 0; j < ecLen; j++) rem[j] ^= gfMul(gen[j + 1], f);
+        }
+        return rem;
+      };
+      const VERSIONS = [
+        [1, 19, 7, 1, 19, 0, 0, [], 0],
+        [2, 34, 10, 1, 34, 0, 0, [6, 18], 0],
+        [3, 55, 15, 1, 55, 0, 0, [6, 22], 0],
+        [4, 80, 20, 1, 80, 0, 0, [6, 26], 0],
+        [5, 108, 26, 1, 108, 0, 0, [6, 30], 0],
+        [6, 136, 18, 2, 68, 0, 0, [6, 34], 0],
+        [7, 156, 20, 2, 78, 0, 0, [6, 22, 38], 0x07c94],
+        [8, 194, 24, 2, 97, 0, 0, [6, 24, 42], 0x085bc],
+        [9, 232, 30, 2, 116, 0, 0, [6, 26, 46], 0x09a99],
+        [10, 274, 18, 2, 68, 2, 69, [6, 28, 50], 0x0a4d3]
+      ];
+      function encodeBytes(str) {
+        if (typeof TextEncoder !== 'undefined') return Array.from(new TextEncoder().encode(str));
+        const out = [];
+        for (let i = 0; i < str.length; i++) {
+          const c = str.charCodeAt(i);
+          if (c < 128) out.push(c);
+          else if (c < 2048) out.push(192 | (c >> 6), 128 | (c & 63));
+          else out.push(224 | (c >> 12), 128 | ((c >> 6) & 63), 128 | (c & 63));
+        }
+        return out;
+      }
+      function encodeMatrix(rawText) {
+        let bytes = encodeBytes(String(rawText || ''));
+        if (bytes.length > 271) bytes = bytes.slice(0, 271);
+        let spec = VERSIONS[VERSIONS.length - 1];
+        for (let i = 0; i < VERSIONS.length; i++) {
+          const cap = VERSIONS[i][1] - (VERSIONS[i][0] <= 9 ? 2 : 3);
+          if (bytes.length <= cap) { spec = VERSIONS[i]; break; }
+        }
+        const [ver, totalDataCw, ecLen, g1B, g1D, g2B, g2D, aligns, verBits] = spec;
+        const bits = [];
+        const pushBits = (val, n) => { for (let i = n - 1; i >= 0; i--) bits.push((val >> i) & 1); };
+        pushBits(0b0100, 4);
+        pushBits(bytes.length, ver <= 9 ? 8 : 16);
+        for (let i = 0; i < bytes.length; i++) pushBits(bytes[i], 8);
+        const capBits = totalDataCw * 8;
+        const term = Math.min(4, capBits - bits.length);
+        for (let i = 0; i < term; i++) bits.push(0);
+        while (bits.length % 8 !== 0) bits.push(0);
+        const dataCw = new Uint8Array(totalDataCw);
+        let idx = 0;
+        for (let i = 0; i < bits.length; i += 8) {
+          let b = 0; for (let k = 0; k < 8; k++) b = (b << 1) | bits[i + k]; dataCw[idx++] = b;
+        }
+        let padToggle = 0;
+        while (idx < totalDataCw) { dataCw[idx++] = padToggle ? 0x11 : 0xec; padToggle ^= 1; }
+        const blocks = [], ecBlocks = [];
+        let off = 0;
+        for (let i = 0; i < g1B; i++) { const sl = dataCw.slice(off, off + g1D); off += g1D; blocks.push(sl); ecBlocks.push(rsRem(sl, ecLen)); }
+        for (let i = 0; i < g2B; i++) { const sl = dataCw.slice(off, off + g2D); off += g2D; blocks.push(sl); ecBlocks.push(rsRem(sl, ecLen)); }
+        const stream = [];
+        const maxD = Math.max(g1D, g2D);
+        for (let i = 0; i < maxD; i++) for (let b = 0; b < blocks.length; b++) if (i < blocks[b].length) stream.push(blocks[b][i]);
+        for (let i = 0; i < ecLen; i++) for (let b = 0; b < ecBlocks.length; b++) stream.push(ecBlocks[b][i]);
+        const size = 17 + ver * 4;
+        const mat = Array.from({ length: size }, () => new Uint8Array(size));
+        const func = Array.from({ length: size }, () => new Uint8Array(size));
+        const setFunc = (r, c, val) => { if (r >= 0 && c >= 0 && r < size && c < size) { mat[r][c] = val ? 1 : 0; func[r][c] = 1; } };
+        const drawFinder = (r0, c0) => {
+          for (let dr = -1; dr <= 7; dr++) for (let dc = -1; dc <= 7; dc++) {
+            const r = r0 + dr, c = c0 + dc;
+            if (r < 0 || c < 0 || r >= size || c >= size) continue;
+            const inB = dr >= 0 && dr <= 6 && dc >= 0 && dc <= 6;
+            const dark = inB && (dr === 0 || dr === 6 || dc === 0 || dc === 6 || (dr >= 2 && dr <= 4 && dc >= 2 && dc <= 4));
+            setFunc(r, c, dark ? 1 : 0);
+          }
+        };
+        drawFinder(0, 0); drawFinder(0, size - 7); drawFinder(size - 7, 0);
+        for (let i = 0; i < size; i++) {
+          if (!func[6][i]) setFunc(6, i, i % 2 === 0 ? 1 : 0);
+          if (!func[i][6]) setFunc(i, 6, i % 2 === 0 ? 1 : 0);
+        }
+        for (let i = 0; i < aligns.length; i++) for (let j = 0; j < aligns.length; j++) {
+          const ar = aligns[i], ac = aligns[j];
+          if ((ar <= 8 && ac <= 8) || (ar <= 8 && ac >= size - 9) || (ar >= size - 9 && ac <= 8)) continue;
+          for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) setFunc(ar + dr, ac + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1 ? 1 : 0);
+        }
+        for (let i = 0; i <= 8; i++) { setFunc(8, i, 0); setFunc(i, 8, 0); }
+        for (let i = size - 8; i < size; i++) { setFunc(8, i, 0); setFunc(i, 8, 0); }
+        setFunc(size - 8, 8, 1);
+        if (ver >= 7 && verBits) {
+          for (let i = 0; i < 18; i++) {
+            const bit = (verBits >> i) & 1;
+            const a = Math.floor(i / 3), b = size - 11 + (i % 3);
+            setFunc(a, b, bit); setFunc(b, a, bit);
+          }
+        }
+        let bitIdx = 0;
+        const totalBits = stream.length * 8;
+        for (let right = size - 1; right >= 1; right -= 2) {
+          if (right === 6) right = 5;
+          for (let vert = 0; vert < size; vert++) for (let j = 0; j < 2; j++) {
+            const col = right - j;
+            const upward = ((right + 1) & 2) === 0;
+            const row = upward ? size - 1 - vert : vert;
+            if (!func[row][col]) {
+              let bit = 0;
+              if (bitIdx < totalBits) bit = (stream[bitIdx >> 3] >> (7 - (bitIdx & 7))) & 1;
+              mat[row][col] = bit;
+              bitIdx++;
+            }
+          }
+        }
+        const maskFn = [
+          (r, c) => ((r + c) & 1) === 0,
+          (r) => (r & 1) === 0,
+          (_, c) => c % 3 === 0,
+          (r, c) => (r + c) % 3 === 0,
+          (r, c) => ((Math.floor(r / 2) + Math.floor(c / 3)) & 1) === 0,
+          (r, c) => ((r * c) % 2) + ((r * c) % 3) === 0,
+          (r, c) => ((((r * c) % 2) + ((r * c) % 3)) & 1) === 0,
+          (r, c) => ((((r + c) % 2) + ((r * c) % 3)) & 1) === 0
+        ];
+        const applyFormat = (grid, m) => {
+          const d = (1 << 3) | m;
+          let rem = d;
+          for (let i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+          const fmt = ((d << 10) | rem) ^ 0x5412;
+          const tlCols = [0, 1, 2, 3, 4, 5, 7, 8];
+          const tlRows = [7, 5, 4, 3, 2, 1, 0];
+          for (let i = 0; i < 8; i++) grid[8][tlCols[i]] = (fmt >> (14 - i)) & 1;
+          for (let i = 0; i < 7; i++) grid[tlRows[i]][8] = (fmt >> (6 - i)) & 1;
+          for (let i = 0; i < 7; i++) grid[size - 1 - i][8] = (fmt >> (14 - i)) & 1;
+          for (let i = 0; i < 8; i++) grid[8][size - 8 + i] = (fmt >> (7 - i)) & 1;
+        };
+        let bestGrid = null, bestPen = Infinity;
+        for (let m = 0; m < 8; m++) {
+          const g = mat.map((row) => row.slice());
+          const fn = maskFn[m];
+          for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) if (!func[r][c] && fn(r, c)) g[r][c] ^= 1;
+          applyFormat(g, m);
+          let pen = 0, dark = 0;
+          for (let r = 0; r < size; r++) {
+            let run = 1;
+            for (let c = 0; c < size; c++) {
+              dark += g[r][c];
+              if (c > 0) { if (g[r][c] === g[r][c - 1]) run++; else { if (run >= 5) pen += run - 2; run = 1; } }
+              if (r < size - 1 && c < size - 1 && g[r][c] === g[r][c + 1] && g[r][c] === g[r + 1][c] && g[r][c] === g[r + 1][c + 1]) pen += 3;
+            }
+            if (run >= 5) pen += run - 2;
+          }
+          for (let c = 0; c < size; c++) {
+            let run = 1;
+            for (let r = 1; r < size; r++) { if (g[r][c] === g[r - 1][c]) run++; else { if (run >= 5) pen += run - 2; run = 1; } }
+            if (run >= 5) pen += run - 2;
+          }
+          pen += Math.floor(Math.abs((dark * 100) / (size * size) - 50) / 5) * 10;
+          if (pen < bestPen) { bestPen = pen; bestGrid = g; }
+        }
+        return bestGrid;
+      }
+      function toSvg(text, px = 204) {
+        const g = encodeMatrix(text);
+        const n = g.length, q = 4, vb = n + q * 2;
+        let d = '';
+        for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (g[r][c]) d += `M${c + q},${r + q}h1v1h-1z`;
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vb} ${vb}" width="${px}" height="${px}" shape-rendering="crispEdges"><rect width="${vb}" height="${vb}" fill="#ffffff"/><path d="${d}" fill="#141218"/></svg>`;
+      }
+      return { encodeMatrix, toSvg };
+    })();
+
+    let localQrOpen = false;
+    function openQrSheet() {
+      const url = (state && state.activeUrl) ? String(state.activeUrl) : '';
+      if (!url) return;
+      localQrOpen = true;
+      let hostLabel = url;
+      try { hostLabel = new URL(url).hostname.replace(/^www\./i, '') || url; } catch (_) {}
+      const frame = document.getElementById('qr-sheet-frame');
+      if (frame) frame.innerHTML = MobileQr.toSvg(url, 204);
+      setTxt(document.getElementById('qr-sheet-title'), (state && state.activeTitle) || hostLabel || 'Current Page');
+      setTxt(document.getElementById('qr-sheet-host'), hostLabel);
+      setCls(document.getElementById('scr-qr'), 'hidden', false);
+    }
+    function closeQrSheet() {
+      localQrOpen = false;
+      setCls(document.getElementById('scr-qr'), 'hidden', true);
+    }
+    function setMobileVideoSpeed(rate) {
+      document.querySelectorAll('#m-vspeed-strip .vspeed-btn').forEach((b) => {
+        setCls(b, 'active', Number(b.dataset.rate) === Number(rate));
+      });
+      call('setVideoPlaybackSpeed', Number(rate) || 1);
+    }
     function editActiveUrl() { if (state.activeUrl) call('fillOmnibox', state.activeUrl); }
     function goClipboard() { if (state.clipboardText) call('navigate', state.clipboardText); }
 
@@ -4830,7 +5156,7 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.16.0)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.17.0)
     const _domSigs = {
       sysTop: '',
       safeTop: '',
@@ -5907,7 +6233,7 @@
         : 'Standard Android downloads');
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.16.0';
+      const curV = u.currentVersion || '5.17.0';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -5982,6 +6308,7 @@
       setCls(document.getElementById('sw-brave-stats'), 'on', state.showBraveStats !== false);
       setCls(document.getElementById('sw-motd'), 'on', state.showMotd === true);
       setCls(document.getElementById('sw-autohide'), 'on', state.autoHideBar !== false);
+      setCls(document.getElementById('sw-keep-awake'), 'on', !!state.keepScreenAwake);
       const animSpd = state.animationSpeed || 'fluid';
       setCls(document.getElementById('opt-anim-fluid'), 'active', animSpd !== 'snappy' && animSpd !== 'off');
       setCls(document.getElementById('opt-anim-snappy'), 'active', animSpd === 'snappy');
@@ -6034,6 +6361,10 @@
       setCls(document.getElementById('sw-haptics'), 'on', state.hapticsEnabled !== false);
       setCls(document.getElementById('sw-bglinks'), 'on', !!state.openLinksInBackground);
       setCls(document.getElementById('sw-memsaver'), 'on', memSaverOn);
+      setCls(document.getElementById('sw-search-bangs'), 'on', state.omniboxShortcutsEnabled !== false);
+      const trLang = state.translateTargetLang || 'en';
+      document.querySelectorAll('#opt-m-tr-lang .m3-chip').forEach((chip) => setCls(chip, 'active', chip.dataset.lang === trLang));
+      setCls(document.getElementById('sw-confirm-close-all'), 'on', state.confirmCloseAllTabs !== false);
 
       // 6. Downloads Controls
       setCls(document.getElementById('sw-turbodl'), 'on', turboDlOn);
@@ -6674,7 +7005,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.16.0 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.17.0 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -6936,6 +7267,7 @@
       setCls(document.getElementById('scr-wallpapers'), 'hidden', scr !== 'wallpapers');
       setCls(document.getElementById('scr-downloads'), 'hidden', scr !== 'downloads');
       setCls(document.getElementById('scr-extensions'), 'hidden', scr !== 'extensions');
+      if (scr !== 'menu' && localQrOpen) closeQrSheet();
       const scrCtx = document.getElementById('scr-context-menu');
       if (scrCtx) {
         const showCtx = (scr === 'context-menu' && !!state.contextMenu) || !!localContextMenu;
@@ -7049,7 +7381,12 @@
         else if (fn === 'toggleHaptics') st.hapticsEnabled = !(st.hapticsEnabled !== false);
         else if (fn === 'setAnimationSpeed') st.animationSpeed = (args[0] === 'snappy' || args[0] === 'off') ? args[0] : 'fluid';
         else if (fn === 'setReaderTheme') st.readerTheme = (args[0] === 'dark' || args[0] === 'sepia' || args[0] === 'light') ? args[0] : 'auto';
-        else if (fn === 'copyCleanActiveUrl' || fn === 'printActivePage') st.screen = 'start';
+        else if (fn === 'toggleOmniboxShortcuts') st.omniboxShortcutsEnabled = !(st.omniboxShortcutsEnabled !== false);
+        else if (fn === 'setTranslateTargetLang') st.translateTargetLang = args[0] || 'en';
+        else if (fn === 'toggleConfirmCloseAllTabs') st.confirmCloseAllTabs = !(st.confirmCloseAllTabs !== false);
+        else if (fn === 'toggleKeepScreenAwake') st.keepScreenAwake = !st.keepScreenAwake;
+        else if (fn === 'copyCleanActiveUrl' || fn === 'printActivePage' || fn === 'translateActivePage') st.screen = 'start';
+        else if (fn === 'setVideoPlaybackSpeed') { /* live preview feedback */ }
         else if (fn === 'toggleOpenLinksInBackground') st.openLinksInBackground = !st.openLinksInBackground;
         else if (fn === 'setDefaultYoutubeQuality') st.defaultYoutubeQuality = args[0] || 'auto';
         else if (fn === 'toggleFloatingDownloadButton') st.floatingDownloadButton = !st.floatingDownloadButton;
@@ -7255,7 +7592,7 @@
               ],
               drops: [
                 { id: 'vid_pc_1', dropType: 'video', title: 'Material 3 Expressive Motion Deep Dive', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=422', text: 'Continue watching at 07:02', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 45000 },
-                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.16.0-release.mp4', url: 'https://example.com/dejavu-v5.16.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
+                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.17.0-release.mp4', url: 'https://example.com/dejavu-v5.17.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
                 { id: 'bt_pc_1', dropType: 'batch_tabs', title: '2 tabs from Windows 11 Desktop', url: 'https://m3.material.io', text: 'Material Design 3 · GitHub', tabs: [{ title: 'Material Design 3', url: 'https://m3.material.io' }, { title: 'GitHub', url: 'https://github.com' }], fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 210000 }
               ]
             } : {
@@ -7322,9 +7659,9 @@
               ],
               sync: previewSync,
               update: {
-                currentVersion: '5.16.0',
+                currentVersion: '5.17.0',
                 status: qp.get('upd') === '1' ? 'available' : 'uptodate',
-                latestVersion: qp.get('upd') === '1' ? '5.17.0' : '5.16.0',
+                latestVersion: qp.get('upd') === '1' ? '5.18.0' : '5.17.0',
                 sizeLabel: qp.get('upd') === '1' ? '10.2 MB' : '',
                 releaseUrl: 'https://github.com/Dathevinci/Dejavu-browser/releases/latest',
                 available: qp.get('upd') === '1',

@@ -101,6 +101,7 @@ namespace DejavuBrowser
         // v5.4.0 — Search
         public string customSearchUrl { get; set; }
         public bool addressBarSuggestions { get; set; }
+        public bool omniboxShortcutsEnabled { get; set; }
 
         // v5.4.0 — Tabs & Performance
         public bool memorySaverEnabled { get; set; }
@@ -110,12 +111,16 @@ namespace DejavuBrowser
         public string newTabPosition { get; set; }
         public bool scrollWheelSwitchTabs { get; set; }
         public bool doubleClickCloseTab { get; set; }
+        public bool autoMuteBackgroundTabs { get; set; }
+        public string tabCloseActivate { get; set; }
 
-        // v5.16.0 — Reading Comfort & Dark Web
+        // v5.17.0 — Reading Comfort & Dark Web
         public bool forceDarkWeb { get; set; }
         public string readerTheme { get; set; }
         public int readerFontSize { get; set; }
         public string readerWidth { get; set; }
+        public string translateTargetLang { get; set; }
+        public bool showLinkHoverPreview { get; set; }
 
         // v5.4.0 — Downloads
         public bool turboDownloaderEnabled { get; set; }
@@ -181,10 +186,15 @@ namespace DejavuBrowser
             newTabPosition = "end";
             scrollWheelSwitchTabs = true;
             doubleClickCloseTab = false;
+            autoMuteBackgroundTabs = false;
+            tabCloseActivate = "right";
+            omniboxShortcutsEnabled = true;
             forceDarkWeb = false;
             readerTheme = "auto";
             readerFontSize = 19;
             readerWidth = "medium";
+            translateTargetLang = "en";
+            showLinkHoverPreview = true;
             cornerRadius = "rounded";
             uiDensity = "comfortable";
             animationSpeed = "fluid";
@@ -445,6 +455,23 @@ namespace DejavuBrowser
             return "medium";
         }
 
+        public static string NormalizeTabCloseActivate(string val)
+        {
+            if (string.Equals(val, "left", StringComparison.OrdinalIgnoreCase)) return "left";
+            if (string.Equals(val, "mru", StringComparison.OrdinalIgnoreCase)) return "mru";
+            return "right";
+        }
+
+        public static string NormalizeTranslateLang(string val)
+        {
+            if (string.IsNullOrEmpty(val)) return "en";
+            string v = val.Trim();
+            if (v == "en" || v == "es" || v == "fr" || v == "de" || v == "ja" ||
+                v == "ko" || v == "zh-CN" || v == "hi" || v == "pt" || v == "ar")
+                return v;
+            return "en";
+        }
+
         public static void NormalizeWindowBounds(DejavuSettings s)
         {
             if (s == null) return;
@@ -552,6 +579,16 @@ namespace DejavuBrowser
                             loaded.readerTheme = NormalizeReaderTheme(loaded.readerTheme);
                             loaded.readerFontSize = NormalizeReaderFontSize(loaded.readerFontSize);
                             loaded.readerWidth = NormalizeReaderWidth(loaded.readerWidth);
+                            loaded.tabCloseActivate = NormalizeTabCloseActivate(loaded.tabCloseActivate);
+                            loaded.translateTargetLang = NormalizeTranslateLang(loaded.translateTargetLang);
+                            if (!text.Contains("\"omniboxShortcutsEnabled\""))
+                            {
+                                loaded.omniboxShortcutsEnabled = true;
+                            }
+                            if (!text.Contains("\"showLinkHoverPreview\""))
+                            {
+                                loaded.showLinkHoverPreview = true;
+                            }
 
                             // v5.4.0 normalizations
                             loaded.shieldLevel = NormalizeShieldLevel(loaded.shieldLevel);

@@ -57,6 +57,7 @@ namespace DejavuBrowser
         public bool IsLight;
         public bool IsPinned;
         public bool IsMuted;
+        public bool AutoMutedByBg;
         public string GroupId;
         public bool ReaderActive;
         public string ThumbnailDataUrl;
@@ -1502,6 +1503,7 @@ namespace DejavuBrowser
                 // v5.4.0 Search
                 { "customSearchUrl", _settings.customSearchUrl ?? "" },
                 { "addressBarSuggestions", _settings.addressBarSuggestions },
+                { "omniboxShortcutsEnabled", _settings.omniboxShortcutsEnabled },
 
                 // v5.4.0 Tabs & Performance
                 { "memorySaverEnabled", _settings.memorySaverEnabled },
@@ -1511,12 +1513,16 @@ namespace DejavuBrowser
                 { "newTabPosition", _settings.newTabPosition ?? "end" },
                 { "scrollWheelSwitchTabs", _settings.scrollWheelSwitchTabs },
                 { "doubleClickCloseTab", _settings.doubleClickCloseTab },
+                { "autoMuteBackgroundTabs", _settings.autoMuteBackgroundTabs },
+                { "tabCloseActivate", _settings.tabCloseActivate ?? "right" },
 
-                // v5.16.0 Reading Comfort & Dark Web
+                // v5.17.0 Reading Comfort & Dark Web
                 { "forceDarkWeb", _settings.forceDarkWeb },
                 { "readerTheme", _settings.readerTheme ?? "auto" },
                 { "readerFontSize", (_settings.readerFontSize >= 15 && _settings.readerFontSize <= 26) ? _settings.readerFontSize : 19 },
                 { "readerWidth", _settings.readerWidth ?? "medium" },
+                { "translateTargetLang", _settings.translateTargetLang ?? "en" },
+                { "showLinkHoverPreview", _settings.showLinkHoverPreview },
                 { "zenMode", _zenMode },
 
                 // v5.4.0 Downloads
@@ -1969,7 +1975,7 @@ namespace DejavuBrowser
                 case "froggie-lime": accent = "lime"; mode = "light"; return true;
                 case "wp-m3-froggie-sage.jpg":
                 case "froggie-sage": accent = "aurora"; mode = "dark"; return true;
-                // 12 bespoke v5.16.0 Googlebook Material Design 3 vector wallpapers
+                // 12 bespoke v5.17.0 Googlebook Material Design 3 vector wallpapers
                 case "vec:m3-googlebook-waves":
                 case "m3-googlebook-waves": accent = "sapphire"; mode = "dark"; return true;
                 case "vec:m3-pixel-scallops":
@@ -3350,6 +3356,35 @@ namespace DejavuBrowser
                 }
             }
 
+            // Auto-mute background tabs if enabled (restores only tabs that were auto-muted)
+            if (_settings != null && _settings.autoMuteBackgroundTabs)
+            {
+                if (tab.AutoMutedByBg && tab.CoreReady && tab.WebView != null && !tab.WebView.IsDisposed && tab.WebView.CoreWebView2 != null)
+                {
+                    try { tab.WebView.CoreWebView2.IsMuted = false; } catch { }
+                    tab.IsMuted = false;
+                    tab.AutoMutedByBg = false;
+                }
+                for (int i = 0; i < _tabs.Count; i++)
+                {
+                    BrowserTab other = _tabs[i];
+                    if (other == null || other.Id == tabId || other.IsNewTab || !other.CoreReady ||
+                        other.WebView == null || other.WebView.IsDisposed || other.WebView.CoreWebView2 == null)
+                        continue;
+                    if (!other.IsMuted)
+                    {
+                        try
+                        {
+                            other.WebView.CoreWebView2.IsMuted = true;
+                            other.IsMuted = true;
+                            other.AutoMutedByBg = true;
+                        }
+                        catch { }
+                    }
+                }
+            }
+
+            PushHoverUrlToShell("");
             UpdateWindowTitle();
 
             LayoutViews();
@@ -3497,7 +3532,25 @@ namespace DejavuBrowser
             if (_activeTabId == tabId)
             {
                 bool keepOverview = _tabOverviewOpen;
+                string closeMode = (_settings != null && !string.IsNullOrEmpty(_settings.tabCloseActivate))
+                    ? _settings.tabCloseActivate : "right";
                 int nextIdx = Math.Min(groupIdx, groupTabs.Count - 1);
+                if (string.Equals(closeMode, "left", StringComparison.OrdinalIgnoreCase))
+                {
+                    nextIdx = Math.Max(0, groupIdx - 1);
+                }
+                else if (string.Equals(closeMode, "mru", StringComparison.OrdinalIgnoreCase))
+                {
+                    DateTime bestTime = DateTime.MinValue;
+                    for (int gi = 0; gi < groupTabs.Count; gi++)
+                    {
+                        if (groupTabs[gi].LastActiveUtc >= bestTime)
+                        {
+                            bestTime = groupTabs[gi].LastActiveUtc;
+                            nextIdx = gi;
+                        }
+                    }
+                }
                 ActivateTab(groupTabs[nextIdx].Id);
                 if (keepOverview)
                 {
@@ -4153,6 +4206,13 @@ namespace DejavuBrowser
                     tab.ForceDarkScriptId = await core.AddScriptToExecuteOnDocumentCreatedAsync(BuildForceDarkWebScript(true));
                 }
                 core.WebMessageReceived += (s, e) => OnTabContentWebMessage(tab, e);
+                core.StatusBarTextChanged += (s, e) =>
+                {
+                    if (tab.Id == _activeTabId)
+                    {
+                        try { PushHoverUrlToShell(core.StatusBarText ?? ""); } catch { }
+                    }
+                };
 
                 // Hole #2 Fix: Enable Chromium C++ Network.setBlockedURLs BEFORE the very first navigation!
                 string initialNavUrl = !string.IsNullOrEmpty(tab.PendingNavigateUrl) ? tab.PendingNavigateUrl : tab.Url;
@@ -7194,9 +7254,9 @@ namespace DejavuBrowser
                 return true;
             if (ctrl && !alt && !shift && key == Keys.F5)
                 return true;
-            if (alt && !ctrl && !shift && (key == Keys.D || key == Keys.Left || key == Keys.Right))
+            if (alt && !ctrl && !shift && (key == Keys.D || key == Keys.Left || key == Keys.Right || key == Keys.P))
                 return true;
-            if (alt && shift && !ctrl && key == Keys.D)
+            if (alt && shift && !ctrl && (key == Keys.D || key == Keys.T))
                 return true;
             if (ctrl && alt && !shift && key == Keys.R)
                 return true;
@@ -7267,7 +7327,9 @@ namespace DejavuBrowser
             if (alt && !ctrl && !shift && key == Keys.D) { FocusShellOmnibox(); return true; }
             if (alt && !ctrl && !shift && key == Keys.Left) { GoBackActiveTab(); return true; }
             if (alt && !ctrl && !shift && key == Keys.Right) { GoForwardActiveTab(); return true; }
+            if (alt && !ctrl && !shift && key == Keys.P) { TogglePictureInPictureActiveTabAsync(); return true; }
             if (alt && shift && !ctrl && key == Keys.D) { ToggleForceDarkWeb(); return true; }
+            if (alt && shift && !ctrl && key == Keys.T) { TranslateActiveTab(); return true; }
             if (ctrl && alt && !shift && key == Keys.R) { ToggleReaderModeActiveTabAsync(); return true; }
 
             if (ctrl && !alt)
@@ -7527,6 +7589,19 @@ namespace DejavuBrowser
                 _settings.scrollWheelSwitchTabs = Convert.ToBoolean(msg["scrollWheelSwitchTabs"]);
             if (msg.ContainsKey("doubleClickCloseTab"))
                 _settings.doubleClickCloseTab = Convert.ToBoolean(msg["doubleClickCloseTab"]);
+            if (msg.ContainsKey("omniboxShortcutsEnabled"))
+                _settings.omniboxShortcutsEnabled = Convert.ToBoolean(msg["omniboxShortcutsEnabled"]);
+            if (msg.ContainsKey("autoMuteBackgroundTabs"))
+                _settings.autoMuteBackgroundTabs = Convert.ToBoolean(msg["autoMuteBackgroundTabs"]);
+            if (msg.ContainsKey("tabCloseActivate"))
+                _settings.tabCloseActivate = SettingsStore.NormalizeTabCloseActivate(Convert.ToString(msg["tabCloseActivate"]));
+            if (msg.ContainsKey("translateTargetLang"))
+                _settings.translateTargetLang = SettingsStore.NormalizeTranslateLang(Convert.ToString(msg["translateTargetLang"]));
+            if (msg.ContainsKey("showLinkHoverPreview"))
+            {
+                _settings.showLinkHoverPreview = Convert.ToBoolean(msg["showLinkHoverPreview"]);
+                if (!_settings.showLinkHoverPreview) PushHoverUrlToShell("");
+            }
             if (msg.ContainsKey("forceDarkWeb"))
             {
                 bool fdw = Convert.ToBoolean(msg["forceDarkWeb"]);
@@ -8014,7 +8089,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.16.0 defaults", "success");
+            PushShellToast("Settings restored to v5.17.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -8993,12 +9068,12 @@ namespace DejavuBrowser
 
         private void ShowSharePopoverAt(int anchorRightCss)
         {
-            ShowActionMenuPopoverAt("share", anchorRightCss, 296, 488);
+            ShowActionMenuPopoverAt("share", anchorRightCss, 304, 560);
         }
 
         private void ShowMenuPopoverAt(int anchorRightCss)
         {
-            ShowActionMenuPopoverAt("menu", anchorRightCss, 328, 668);
+            ShowActionMenuPopoverAt("menu", anchorRightCss, 328, 704);
         }
 
         private void ShowActionMenuPopoverAt(string modeName, int anchorRightCss, int widthCss, int heightCss)
@@ -10157,6 +10232,140 @@ namespace DejavuBrowser
             PushShellToast(stripped > 0
                 ? ("Copied clean link · stripped " + stripped + (stripped == 1 ? " tracker" : " trackers"))
                 : "Copied clean link", "success");
+        }
+
+        private string _lastHoverUrl = "";
+        private void PushHoverUrlToShell(string url)
+        {
+            string val = (_settings != null && !_settings.showLinkHoverPreview) ? "" : (url ?? "").Trim();
+            if (string.Equals(val, _lastHoverUrl, StringComparison.Ordinal)) return;
+            _lastHoverUrl = val;
+            if (!_shellReady || _shellView == null || _shellView.CoreWebView2 == null) return;
+            try
+            {
+                _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(new Dictionary<string, object>
+                {
+                    { "type", "hoverUrl" },
+                    { "url", val }
+                }));
+            }
+            catch { }
+        }
+
+        private async void TogglePictureInPictureActiveTabAsync()
+        {
+            BrowserTab t = GetActiveTab();
+            if (t == null || t.IsNewTab || !t.CoreReady || t.WebView == null || t.WebView.IsDisposed || t.WebView.CoreWebView2 == null)
+            {
+                PushShellToast("Open a webpage with a video to use Picture-in-Picture", "info");
+                return;
+            }
+            string pipJs =
+                "(async function(){" +
+                "try{" +
+                "  if(document.pictureInPictureElement){await document.exitPictureInPicture();return 'off';}" +
+                "  var vids=Array.prototype.slice.call(document.querySelectorAll('video')).filter(function(v){return v.readyState>=1&&!v.disablePictureInPicture;});" +
+                "  if(!vids.length)return 'none';" +
+                "  vids.sort(function(a,b){var pa=a.paused?0:1,pb=b.paused?0:1;if(pa!==pb)return pb-pa;return (b.videoWidth*b.videoHeight)-(a.videoWidth*a.videoHeight);});" +
+                "  await vids[0].requestPictureInPicture();return 'on';" +
+                "}catch(e){return 'err';}" +
+                "})()";
+            try
+            {
+                string res = await t.WebView.CoreWebView2.ExecuteScriptAsync(pipJs);
+                if (res != null && res.Contains("on")) PushShellToast("Picture-in-Picture active (Alt+P)", "success");
+                else if (res != null && res.Contains("off")) PushShellToast("Exited Picture-in-Picture", "info");
+                else PushShellToast("No playable video found on this page", "info");
+            }
+            catch { PushShellToast("Picture-in-Picture unavailable on this page", "info"); }
+        }
+
+        private void TranslateActiveTab()
+        {
+            BrowserTab t = GetActiveTab();
+            if (t == null || t.IsNewTab || string.IsNullOrWhiteSpace(t.Url))
+            {
+                PushShellToast("Open a webpage first to translate it", "info");
+                return;
+            }
+            if (t.Url.IndexOf("translate.google.", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                t.Url.IndexOf(".translate.goog", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                PushShellToast("This page is already translated", "info");
+                return;
+            }
+            string lang = (_settings != null && !string.IsNullOrEmpty(_settings.translateTargetLang))
+                ? _settings.translateTargetLang : "en";
+            string trUrl = "https://translate.google.com/translate?sl=auto&tl=" + Uri.EscapeDataString(lang) +
+                "&u=" + Uri.EscapeDataString(t.Url);
+            NavigateActiveTab(trUrl);
+            PushShellToast("Translating page (" + lang.ToUpperInvariant() + ")…", "info");
+        }
+
+        private void MuteAllOtherTabs()
+        {
+            int count = 0;
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab t = _tabs[i];
+                if (t == null || t.Id == _activeTabId || t.IsNewTab || !t.CoreReady ||
+                    t.WebView == null || t.WebView.IsDisposed || t.WebView.CoreWebView2 == null)
+                    continue;
+                if (!t.IsMuted)
+                {
+                    try
+                    {
+                        t.WebView.CoreWebView2.IsMuted = true;
+                        t.IsMuted = true;
+                        t.AutoMutedByBg = false;
+                        count++;
+                    }
+                    catch { }
+                }
+            }
+            PushTabDeltaToShell();
+            PushShellToast(count > 0 ? ("Muted " + count + (count == 1 ? " other tab" : " other tabs")) : "All other tabs are already muted", "info");
+        }
+
+        private void ForwardFocusTimerToShell(Dictionary<string, object> msg)
+        {
+            if (!_shellReady || _shellView == null || _shellView.CoreWebView2 == null) return;
+            try
+            {
+                var payload = new Dictionary<string, object>
+                {
+                    { "type", "focusTimerCommand" },
+                    { "action", msg.ContainsKey("action") ? Convert.ToString(msg["action"]) : "toggle" },
+                    { "minutes", msg.ContainsKey("minutes") ? Convert.ToInt32(msg["minutes"]) : 25 }
+                };
+                _shellView.CoreWebView2.PostWebMessageAsJson(_json.Serialize(payload));
+            }
+            catch { }
+        }
+
+        private string TryResolveSearchBang(string s)
+        {
+            if (_settings != null && !_settings.omniboxShortcutsEnabled) return null;
+            int sp = s.IndexOf(' ');
+            if (sp <= 0 || sp >= s.Length - 1) return null;
+            string prefix = s.Substring(0, sp).Trim().ToLowerInvariant();
+            string query = s.Substring(sp + 1).Trim();
+            if (string.IsNullOrEmpty(query)) return null;
+            string q = Uri.EscapeDataString(query);
+            if (prefix == "!yt" || prefix == "yt") return "https://www.youtube.com/results?search_query=" + q;
+            if (prefix == "!gh" || prefix == "gh") return "https://github.com/search?q=" + q;
+            if (prefix == "!w" || prefix == "!wiki" || prefix == "wiki") return "https://en.wikipedia.org/w/index.php?search=" + q;
+            if (prefix == "!r" || prefix == "!reddit") return "https://www.reddit.com/search/?q=" + q;
+            if (prefix == "!ddg") return "https://duckduckgo.com/?q=" + q;
+            if (prefix == "!maps") return "https://www.google.com/maps/search/" + q;
+            if (prefix == "!amz") return "https://www.amazon.com/s?k=" + q;
+            if (prefix == "!g") return "https://www.google.com/search?q=" + q;
+            if (prefix == "!tr")
+            {
+                string tl = (_settings != null && !string.IsNullOrEmpty(_settings.translateTargetLang)) ? _settings.translateTargetLang : "en";
+                return "https://translate.google.com/?sl=auto&tl=" + Uri.EscapeDataString(tl) + "&text=" + q;
+            }
+            return null;
         }
 
         private void ToggleMuteTab(int tabId)
@@ -11349,6 +11558,15 @@ namespace DejavuBrowser
                     case "copyCleanLink":
                         CopyCleanUrlActiveTab();
                         break;
+                    case "togglePip":
+                        TogglePictureInPictureActiveTabAsync();
+                        break;
+                    case "translateActiveTab":
+                        TranslateActiveTab();
+                        break;
+                    case "muteAllOtherTabs":
+                        MuteAllOtherTabs();
+                        break;
                     case "captureScreenshot":
                         CaptureVisiblePageAsync(msg.ContainsKey("copy") && Convert.ToBoolean(msg["copy"]));
                         break;
@@ -12211,11 +12429,7 @@ namespace DejavuBrowser
                 }
                 else if (type == "shareCopyUrl")
                 {
-                    BrowserTab t = GetActiveTab();
-                    if (t != null && !t.IsNewTab && !string.IsNullOrEmpty(t.Url))
-                    {
-                        try { Clipboard.SetText(t.Url); } catch { }
-                    }
+                    CopyCleanUrlActiveTab();
                 }
                 else if (type == "shareToggleFavorite")
                 {
@@ -12276,6 +12490,25 @@ namespace DejavuBrowser
                 {
                     HidePopover();
                     ToggleMuteTab(_activeTabId);
+                }
+                else if (type == "togglePip")
+                {
+                    HidePopover();
+                    TogglePictureInPictureActiveTabAsync();
+                }
+                else if (type == "translateActiveTab")
+                {
+                    HidePopover();
+                    TranslateActiveTab();
+                }
+                else if (type == "muteAllOtherTabs")
+                {
+                    HidePopover();
+                    MuteAllOtherTabs();
+                }
+                else if (type == "focusTimerCommand")
+                {
+                    ForwardFocusTimerToShell(msg);
                 }
                 else if (type == "tabSearchSwitch")
                 {
@@ -12863,6 +13096,8 @@ namespace DejavuBrowser
             {
                 return "https://" + s;
             }
+            string bangUrl = TryResolveSearchBang(s);
+            if (!string.IsNullOrEmpty(bangUrl)) return bangUrl;
             string q = Uri.EscapeDataString(s);
             if (_settings.searchEngine == "custom" && !string.IsNullOrWhiteSpace(_settings.customSearchUrl))
             {

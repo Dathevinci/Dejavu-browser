@@ -256,26 +256,23 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — Googlebook Customization Studio & 120Hz Expressive Material Design 3 Motion
+          ### dejavu __TAG__ — Power Productivity Features, Browsing Customizations & 120Hz Fluidity
 
-          - **Expanded Windows Googlebook Customization Studio** (available in **Settings → Appearance & Material You** and **Wallpaper & Style Studio**):
-            - **1-Click Googlebook Studio Presets**: Instant curated themes (**Pixel Night**, **AMOLED Obsidian**, **Porcelain Studio**, **Nordic Sage**, **Berry Studio**) that apply matching Googlebook wallpaper, Material You HCT color seed, dark/light polarity, AMOLED pitch black, Material style, tab style, corner geometry, and address bar style in one click.
-            - **Corner Roundness** (`Rounded` · `Pill` · `Sharp`): Morphs Material Design 3 corner radii across tabs, omnibox, settings cards, buttons, wallpaper cards, and native Windows popovers/context menus.
-            - **Interface Density** (`Compact` · `Comfortable` · `Spacious`): Adjusts omnibox height, navigation rail width, settings row rhythm, and Start Page spacing.
-            - **Animation Feel** (`Fluid 120Hz` · `Snappy` · `Off`): Scales `--md-motion-scale` across main chrome, Start Page, Settings, and native `OverlayPopup` menus (and pauses live wallpaper animation when set to `Off`).
-            - **Address Bar Style** (`Pill` · `Outlined` · `Elevated`): Switch both the top omnibox and Start Page search bar between Googlebook tonal fill, crisp M3 outline, or elevated depth.
-            - **Start Page Layout** (`Balanced` · `Minimal` · `Focus`) & **Quick Access Columns** (`4` · `5` · `6`): Choose centered hero, distraction-free zen canvas, or compact top-aligned focus layout with customizable shortcut columns.
-          - **Silky 120Hz Expressive Material Design 3 Animations — Windows**:
-            - Upgraded M3 motion tokens to GPU-composited spatial & expressive spring curves across tabs, Settings panes, modals, Start Page staggered spatial cascade, squircle shortcut hover morphing, elastic switch thumb-stretch, gliding segmented pill indicators, and native popup/context-menu entrances.
-          - **Silky 120Hz Expressive Material Design 3 Animations — Android**:
-            - Eliminated the initial light-mode hydration flash with a first-paint transition guard.
-            - Upgraded bottom sheets to a 360ms expressive spatial spring rise with staggered card bloom, staggered Start Page & Tab Switcher card entrances, elastic Android 15 M3 switch thumb-stretch, and tactile Chrome 5-icon strip spring presses.
-            - Added native `M3_SPRING_SPATIAL` glide + crossfade transitions on tab switches in `MainActivity` and a real-time spring pop animation on the Brave Shields toolbar badge when blocked tracker counts increment.
+          - **Windows Power Features & Non-Theme Customizations**:
+            - **Command Palette & Instant Calculator (`Ctrl+K` / `Ctrl+Shift+A`)**: Search open & recently closed tabs, run 12 fuzzy quick commands, or evaluate math expressions live (`240 * 1.15`, `(45 + 15) / 4`) with 1-click / Enter copy.
+            - **Quick Scratchpad Notes in Side Panel (`Ctrl+Shift+L`)**: Auto-saved local scratchpad with live word count, `+ Page` quick-insert for the active page title + URL, Copy, and Clear.
+            - **Force Dark Mode on Websites (`Alt+Shift+D`) & Reading Comfort**: Smart dark-web stylesheet with natural media preservation + persisted **Reader View** defaults (**Theme**: `Auto`/`Dark`/`Sepia`/`Paper`, **Font Size**: `16px`–`24px`, **Column Width**: `Narrow`/`Balanced`/`Wide`).
+            - **Clean Copy Link (`Ctrl+Shift+C`) & Focus Zen Mode (`Ctrl+Shift+F`)**: Strips tracking parameters (`utm_*`, `fbclid`, `gclid`, `si`, `igshid`, etc.) before copying; Zen Mode hides left rail & bookmarks bar with a 1-click `Zen` exit pill.
+            - **Tab Behavior & Smoothness**: Persisted **New Tab Open Position** (`At End` / `Next to Active`), **Scroll Wheel Switches Tabs** over the tab strip, **Double-Click Tab to Close**, live M3 Zoom toast feedback, smooth scrolling, and loading bar shimmer sweep.
+          - **Android Productivity Tools, Gestures & 120Hz Native Fluidity**:
+            - **Copy Clean Link & Native Print / Save as PDF**: Tracker-stripped link copying in both the Chrome Overflow Menu (`⋮`) and Omnibox current-page card, plus native Android **Print / Save as PDF** via `PrintManager`.
+            - **Interactive Reader View & Theme**: Persisted **Reader view theme** (`Auto` · `Dark` · `Sepia` · `Paper`) with in-reader `A-`/`A+` controls and live theme dots.
+            - **Gestures, Haptics & Motion Feel**: Added **Animation feel** (`Fluid 120Hz` · `Snappy` · `Off`), **Swipe address bar for tabs**, and **Haptic feedback** toggles in Settings, paired with live damped horizontal drag-to-switch-tab physics on the URL pill and spring bounce animations on the Chrome `[N]` tab counter badge.
 
           #### Downloads & Verification
-          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.15.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
-          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.15.0.0`, `/highentropyva+`, deterministic build)
-          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 650`, V1+V2+V3 signed, Android 8.0+)
+          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.16.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
+          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.16.0.0`, `/highentropyva+`, deterministic build)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 660`, V1+V2+V3 signed, Android 8.0+)
           - **SHA256SUMS.txt** — Official SHA-256 verification checksums for all release binaries (paired with GitHub SLSA Build Provenance Attestations)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
@@ -293,5 +290,5 @@ jobs:
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
             release-files/SHA256SUMS.txt \
-            --title "dejavu $TAG — Googlebook Customization Studio & 120Hz Expressive M3 Motion" \
+            --title "dejavu $TAG — Power Productivity Features & 120Hz Fluidity" \
             --notes-file /tmp/release_notes.md

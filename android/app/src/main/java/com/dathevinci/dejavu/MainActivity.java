@@ -33,6 +33,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -416,6 +419,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private boolean blockPopups = true;
     private boolean blockThirdPartyCookies = false;
     private boolean pullToRefresh = true;
+    private boolean toolbarSwipeTabs = true;
+    private boolean hapticsEnabled = true;
+    private String animationSpeed = "fluid"; // "fluid" | "snappy" | "off"
+    private String readerTheme = "auto"; // "auto" | "dark" | "sepia" | "light"
+    private int lastRenderedTabCount = -1;
     private boolean openLinksInBackground = false;
     private boolean memorySaverEnabled = true;
     private boolean turboDownloaderEnabled = true;
@@ -1557,9 +1565,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             }
         });
 
-        // Horizontal swipe left/right on address pill to switch tabs (Safari iOS / Chrome feel!)
+        // Interactive horizontal swipe left/right on address pill to switch tabs (live drag physics!)
         View.OnTouchListener pillSwipeListener = (v, ev) -> {
-            if (urlInput.hasFocus()) return false;
+            if (!toolbarSwipeTabs || urlInput.hasFocus()) return false;
             switch (ev.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     swipeStartX = ev.getRawX();
@@ -1569,15 +1577,33 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 case MotionEvent.ACTION_MOVE:
                     float dx = ev.getRawX() - swipeStartX;
                     float dy = ev.getRawY() - swipeStartY;
+                    if (!swipeConsumed && Math.abs(dx) > dp(10) && Math.abs(dx) > Math.abs(dy) * 1.25f) {
+                        if (urlPillBox != null && !"off".equals(animationSpeed)) {
+                            float drag = Math.max(-dp(22), Math.min(dp(22), dx * 0.34f));
+                            urlPillBox.setTranslationX(drag);
+                        }
+                    }
                     if (!swipeConsumed && Math.abs(dx) > dp(52) && Math.abs(dx) > Math.abs(dy) * 1.4f) {
                         swipeConsumed = true;
                         switchAdjacentTab(dx < 0 ? 1 : -1);
-                        v.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
+                        performSmartHaptic(v, HapticFeedbackConstants.CLOCK_TICK);
+                        if (urlPillBox != null) {
+                            urlPillBox.animate().cancel();
+                            long dur = scaleAnimMs(220);
+                            if (dur <= 0L) urlPillBox.setTranslationX(0f);
+                            else urlPillBox.animate().translationX(0f).setDuration(dur).setInterpolator(M3_SPRING).start();
+                        }
                         return true;
                     }
                     return false;
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
+                    if (urlPillBox != null && urlPillBox.getTranslationX() != 0f) {
+                        urlPillBox.animate().cancel();
+                        long dur = scaleAnimMs(200);
+                        if (dur <= 0L) urlPillBox.setTranslationX(0f);
+                        else urlPillBox.animate().translationX(0f).setDuration(dur).setInterpolator(M3_SPRING).start();
+                    }
                     boolean was = swipeConsumed;
                     swipeConsumed = false;
                     return was;
@@ -3756,7 +3782,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.15.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.16.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -4286,6 +4312,19 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         navTabsBadge.setText(tabCountStr);
         if (compactTabsBadge != null) compactTabsBadge.setText(tabCountStr);
         if (topTabsBadge != null) topTabsBadge.setText(tabCountStr);
+        if (lastRenderedTabCount > 0 && tabCount != lastRenderedTabCount && !"off".equals(animationSpeed)) {
+            long popDur = scaleAnimMs(220);
+            TextView[] badges = new TextView[] { topTabsBadge, navTabsBadge, compactTabsBadge };
+            for (TextView b : badges) {
+                if (b != null && b.getVisibility() == View.VISIBLE) {
+                    b.animate().cancel();
+                    b.setScaleX(0.76f);
+                    b.setScaleY(0.76f);
+                    b.animate().scaleX(1f).scaleY(1f).setDuration(popDur).setInterpolator(M3_SPRING).start();
+                }
+            }
+        }
+        lastRenderedTabCount = tabCount;
 
         applySyncPillTheme(p, isLight, isSyncActivelyPaired());
     }
@@ -4397,6 +4436,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("blockPopups", blockPopups);
                 st.put("blockThirdPartyCookies", blockThirdPartyCookies);
                 st.put("pullToRefresh", pullToRefresh);
+                st.put("toolbarSwipeTabs", toolbarSwipeTabs);
+                st.put("hapticsEnabled", hapticsEnabled);
+                st.put("animationSpeed", animationSpeed);
+                st.put("readerTheme", readerTheme);
                 st.put("openLinksInBackground", openLinksInBackground);
                 st.put("memorySaverEnabled", memorySaverEnabled);
                 st.put("turboDownloaderEnabled", turboDownloaderEnabled);
@@ -4506,28 +4549,51 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         syncManager.publishFullSnapshot(collectOpenTabsArray(), bookmarks, readingList, history);
     }
 
+    private void performSmartHaptic(View v, int feedbackConstant) {
+        if (!hapticsEnabled || v == null) return;
+        try { v.performHapticFeedback(feedbackConstant); } catch (Throwable ignored) { }
+    }
+
+    private long scaleAnimMs(long baseMs) {
+        if ("off".equals(animationSpeed)) return 0L;
+        if ("snappy".equals(animationSpeed)) return Math.max(40L, Math.round(baseMs * 0.62f));
+        return baseMs;
+    }
+
     private void injectReaderMode() {
         MobileTab t = getActiveTab();
         if (t == null || t.isNewTab || t.webView == null) return;
         boolean isLight = isEffectiveLightTheme();
         M3Palette p = resolveM3Palette(isLight, false);
-        String bg = toCssHex(p.bg);
-        String fg = toCssHex(p.onSurface);
+        String darkBg = amoledDark ? "#000000" : "#141218";
+        String initTheme = ("dark".equals(readerTheme) || "sepia".equals(readerTheme) || "light".equals(readerTheme))
+            ? readerTheme
+            : (isLight ? "light" : "dark");
+        String accentHex = toCssHex(p.primary);
         String btnBg = toCssHex(p.primaryContainer);
         String btnFg = toCssHex(p.onPrimaryContainer);
-        String accentHex = toCssHex(p.primary);
         String js = "(function(){var ex=document.getElementById('__djv_m_reader');if(ex){ex.remove();return;}" +
             "var art=document.querySelector('article,main,[role=\"main\"]')||document.body;" +
-            "var ps=Array.from(art.querySelectorAll('p,h1,h2,h3,li')).map(function(n){return n.innerText.trim();}).filter(function(s){return s.length>24;}).slice(0,95);" +
+            "var ps=Array.from(art.querySelectorAll('p,h1,h2,h3,li')).map(function(n){return n.innerText.trim();}).filter(function(s){return s.length>24;}).slice(0,110);" +
+            "var TH={dark:{bg:'" + darkBg + "',fg:'#e6e0e9',bar:'#211f26'},sepia:{bg:'#f7efe2',fg:'#2c2419',bar:'#ede2cf'},light:{bg:'#fef7ff',fg:'#1d1b20',bar:'#f3edf7'}};" +
+            "var cur='" + initTheme + "';var sz=18;" +
             "var ov=document.createElement('div');ov.id='__djv_m_reader';" +
-            "ov.style.cssText='position:fixed;inset:0;z-index:2147483647;background:" + bg + ";color:" + fg + ";overflow-y:auto;padding:28px 22px 96px;font:18px/1.75 Georgia,serif;';" +
-            "var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;font-family:Roboto,system-ui,sans-serif;';" +
-            "var sp=document.createElement('span');sp.style.cssText='color:" + accentHex + ";font-size:12px;font-weight:700;letter-spacing:.08em;';sp.textContent='DEJAVU READER';" +
-            "var btn=document.createElement('button');btn.type='button';btn.style.cssText='background:" + btnBg + ";color:" + btnFg + ";border:none;border-radius:999px;padding:8px 18px;font-size:13px;font-weight:600;';btn.textContent='Done';" +
-            "btn.addEventListener('click',function(){ov.remove();});hdr.appendChild(sp);hdr.appendChild(btn);ov.appendChild(hdr);" +
-            "var h1=document.createElement('h1');h1.style.cssText='font-size:26px;line-height:1.28;margin:0 0 20px;';h1.textContent=document.title||'';ov.appendChild(h1);" +
+            "ov.style.cssText='position:fixed;inset:0;z-index:2147483647;overflow-y:auto;padding:24px 20px 104px;font-family:Georgia,serif;line-height:1.76;opacity:0;transition:opacity .22s ease,background-color .2s ease,color .2s ease;';" +
+            "var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:20px;padding:8px 12px;border-radius:999px;font-family:Roboto,system-ui,sans-serif;';" +
+            "var sp=document.createElement('span');sp.style.cssText='color:" + accentHex + ";font-size:11.5px;font-weight:700;letter-spacing:.06em;';sp.textContent='READER';" +
+            "var ctrls=document.createElement('div');ctrls.style.cssText='display:flex;align-items:center;gap:6px;';" +
+            "function mk(txt,cb){var b=document.createElement('button');b.type='button';b.textContent=txt;b.style.cssText='border:none;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:600;background:rgba(128,128,128,0.16);color:inherit;';b.onclick=cb;return b;}" +
+            "function mkDot(k,bgc){var b=document.createElement('button');b.type='button';b.style.cssText='width:20px;height:20px;border-radius:50%;border:2px solid rgba(130,130,150,0.45);background:'+bgc+';padding:0;';b.onclick=function(){cur=k;ap();};return b;}" +
+            "var btn=document.createElement('button');btn.type='button';btn.style.cssText='background:" + btnBg + ";color:" + btnFg + ";border:none;border-radius:999px;padding:7px 15px;font-size:12.5px;font-weight:600;';btn.textContent='Done';" +
+            "btn.addEventListener('click',function(){ov.style.opacity='0';setTimeout(function(){ov.remove();},180);});" +
+            "ctrls.appendChild(mk('A-',function(){sz=Math.max(14,sz-2);ap();}));" +
+            "ctrls.appendChild(mk('A+',function(){sz=Math.min(26,sz+2);ap();}));" +
+            "ctrls.appendChild(mkDot('dark','#141218'));ctrls.appendChild(mkDot('sepia','#f7efe2'));ctrls.appendChild(mkDot('light','#fef7ff'));" +
+            "ctrls.appendChild(btn);hdr.appendChild(sp);hdr.appendChild(ctrls);ov.appendChild(hdr);" +
+            "var h1=document.createElement('h1');h1.style.cssText='font-size:25px;line-height:1.26;margin:0 0 18px;';h1.textContent=document.title||'';ov.appendChild(h1);" +
             "ps.forEach(function(p){var pe=document.createElement('p');pe.style.cssText='margin:0 0 16px;';pe.textContent=p;ov.appendChild(pe);});" +
-            "document.body.appendChild(ov);})();";
+            "function ap(){var t=TH[cur]||TH.dark;ov.style.background=t.bg;ov.style.color=t.fg;ov.style.fontSize=sz+'px';hdr.style.background=t.bar;}" +
+            "ap();document.body.appendChild(ov);requestAnimationFrame(function(){ov.style.opacity='1';});})();";
         t.webView.evaluateJavascript(js, null);
     }
 
@@ -4804,6 +4870,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         blockPopups = prefs.getBoolean("blockPopups", true);
         blockThirdPartyCookies = prefs.getBoolean("blockThirdPartyCookies", false);
         pullToRefresh = prefs.getBoolean("pullToRefresh", true);
+        toolbarSwipeTabs = prefs.getBoolean("toolbarSwipeTabs", true);
+        hapticsEnabled = prefs.getBoolean("hapticsEnabled", true);
+        String asRaw = prefs.getString("animationSpeed", "fluid");
+        animationSpeed = ("snappy".equals(asRaw) || "off".equals(asRaw)) ? asRaw : "fluid";
+        String rtRaw = prefs.getString("readerTheme", "auto");
+        readerTheme = ("dark".equals(rtRaw) || "sepia".equals(rtRaw) || "light".equals(rtRaw)) ? rtRaw : "auto";
         openLinksInBackground = prefs.getBoolean("openLinksInBackground", false);
         memorySaverEnabled = prefs.getBoolean("memorySaverEnabled", true);
         turboDownloaderEnabled = prefs.getBoolean("turboDownloaderEnabled", true);
@@ -4954,6 +5026,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putBoolean("blockPopups", blockPopups)
             .putBoolean("blockThirdPartyCookies", blockThirdPartyCookies)
             .putBoolean("pullToRefresh", pullToRefresh)
+            .putBoolean("toolbarSwipeTabs", toolbarSwipeTabs)
+            .putBoolean("hapticsEnabled", hapticsEnabled)
+            .putString("animationSpeed", animationSpeed)
+            .putString("readerTheme", readerTheme)
             .putBoolean("openLinksInBackground", openLinksInBackground)
             .putBoolean("memorySaverEnabled", memorySaverEnabled)
             .putBoolean("turboDownloaderEnabled", turboDownloaderEnabled)
@@ -6512,6 +6588,109 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 if (swipeRefresh != null) swipeRefresh.setEnabled(pullToRefresh && onWeb);
                 saveLocalCollections();
                 pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleToolbarSwipeTabs() {
+            mainHandler.post(() -> {
+                toolbarSwipeTabs = !toolbarSwipeTabs;
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleHaptics() {
+            mainHandler.post(() -> {
+                hapticsEnabled = !hapticsEnabled;
+                if (hapticsEnabled) performSmartHaptic(rootContainer, HapticFeedbackConstants.CLOCK_TICK);
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void setAnimationSpeed(final String speed) {
+            mainHandler.post(() -> {
+                String v = speed != null ? speed.trim().toLowerCase(Locale.US) : "fluid";
+                animationSpeed = ("snappy".equals(v) || "off".equals(v)) ? v : "fluid";
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void setReaderTheme(final String theme) {
+            mainHandler.post(() -> {
+                String v = theme != null ? theme.trim().toLowerCase(Locale.US) : "auto";
+                readerTheme = ("dark".equals(v) || "sepia".equals(v) || "light".equals(v)) ? v : "auto";
+                saveLocalCollections();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void copyCleanActiveUrl() {
+            mainHandler.post(() -> {
+                MobileTab t = getActiveTab();
+                if (t == null || t.isNewTab || t.url == null || t.url.isEmpty()) return;
+                String cleaned = t.url;
+                int stripped = 0;
+                try {
+                    Uri u = Uri.parse(t.url);
+                    if (u.getQuery() != null && !u.getQuery().isEmpty()) {
+                        Uri.Builder b = u.buildUpon().clearQuery();
+                        for (String key : u.getQueryParameterNames()) {
+                            String lk = key == null ? "" : key.toLowerCase(Locale.US);
+                            boolean isTrk = lk.startsWith("utm_") || "fbclid".equals(lk) || "gclid".equals(lk)
+                                || "dclid".equals(lk) || "msclkid".equals(lk) || "mc_eid".equals(lk)
+                                || "mc_cid".equals(lk) || "igshid".equals(lk) || "si".equals(lk)
+                                || "ref".equals(lk) || "ref_src".equals(lk) || "ref_url".equals(lk)
+                                || "spm".equals(lk) || "_hsenc".equals(lk) || "_hsmi".equals(lk)
+                                || "yclid".equals(lk) || "feature".equals(lk) || "pp".equals(lk);
+                            if (isTrk) {
+                                stripped++;
+                            } else {
+                                for (String val : u.getQueryParameters(key)) {
+                                    b.appendQueryParameter(key, val);
+                                }
+                            }
+                        }
+                        cleaned = b.build().toString();
+                    }
+                } catch (Exception ignored) { }
+                try {
+                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm != null) cm.setPrimaryClip(ClipData.newPlainText("Clean URL", cleaned));
+                } catch (Exception ignored) { }
+                performSmartHaptic(rootContainer, HapticFeedbackConstants.CLOCK_TICK);
+                Toast.makeText(MainActivity.this,
+                    stripped > 0 ? ("Clean link copied · stripped " + stripped + (stripped == 1 ? " tracker" : " trackers")) : "Clean link copied",
+                    Toast.LENGTH_SHORT).show();
+                closeOverlayScreen();
+            });
+        }
+
+        @JavascriptInterface
+        public void printActivePage() {
+            mainHandler.post(() -> {
+                MobileTab t = getActiveTab();
+                if (t == null || t.isNewTab || t.webView == null) {
+                    Toast.makeText(MainActivity.this, "Open a webpage first to print or save as PDF", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                closeOverlayScreen();
+                try {
+                    PrintManager pm = (PrintManager) getSystemService(Context.PRINT_SERVICE);
+                    if (pm != null) {
+                        String jobName = "dejavu - " + ((t.title != null && !t.title.isEmpty()) ? t.title : formatHost(t.url));
+                        PrintDocumentAdapter adapter = t.webView.createPrintDocumentAdapter(jobName);
+                        pm.print(jobName, adapter, new PrintAttributes.Builder().build());
+                    }
+                } catch (Throwable ex) {
+                    Toast.makeText(MainActivity.this, "Print unavailable on this device", Toast.LENGTH_SHORT).show();
+                }
             });
         }
 

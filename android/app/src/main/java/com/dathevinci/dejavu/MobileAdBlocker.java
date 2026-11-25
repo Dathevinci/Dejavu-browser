@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 
 /**
- * dejavu True Brave-Exact Shields Mobile Engine (v5.15.0)
+ * dejavu True Brave-Exact Shields Mobile Engine (v5.16.0)
  * - Background cached EasyList + EasyPrivacy + uBlock Quick-Fixes + Brave Specific/Disconnect/Unbreak + OISD + Peter Lowe
  *   compiled into ctx.getFilesDir()/filters-v4/ with 24h TTL (zero UI-thread I/O, 100,000+ rules!)
  * - 720+ millisecond-0 built-in core ad, tracker, telemetry, OEM, d3ward, adblock-tester, popunder & crypto-miner domains
@@ -844,7 +844,7 @@ public final class MobileAdBlocker {
             conn.setInstanceFollowRedirects(false);
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(15000);
-            conn.setRequestProperty("User-Agent", "dejavu-mobile/5.15.0");
+            conn.setRequestProperty("User-Agent", "dejavu-mobile/5.16.0");
             conn.setRequestProperty("Accept-Encoding", "gzip");
             int code = conn.getResponseCode();
             if (code >= 300 && code < 400) {

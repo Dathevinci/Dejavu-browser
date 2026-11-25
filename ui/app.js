@@ -1,5 +1,5 @@
 /**
- * dejavu v5.15.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
+ * dejavu v5.16.0 Native Shell Controller — Authentic Chromebook × Pixel Material Design 3
  * 12 Official HCT Material You Themes, 32 Pure M3, Butterfly & Froggie Wallpapers, Auto Wallpaper-to-Theme,
  * Redesigned Pixel At-a-Glance Message of the Day Card, Clean 5-Control ChromeOS Toolbar,
  * Zero-Glitch 120Hz Tab Strip, Brave-Grade Shields, Real-Time dejavu Link Hub & 8x Turbo Downloader.
@@ -330,6 +330,10 @@
   const optMemoryMinutes = document.getElementById('opt-memory-minutes');
   const optConfirmCloseTabs = document.getElementById('opt-confirm-close-tabs');
   const optTabHover = document.getElementById('opt-tab-hover');
+  const optNewtabPos = document.getElementById('opt-newtab-pos');
+  const optWheelTabs = document.getElementById('opt-wheel-tabs');
+  const optDblclickClose = document.getElementById('opt-dblclick-close');
+  const btnZenPill = document.getElementById('btn-zen-pill');
 
   // Category 6: Downloads
   const optDownloadFolderPath = document.getElementById('opt-download-folder-path');
@@ -354,6 +358,10 @@
   const optAutofillPayments = document.getElementById('opt-autofill-payments');
 
   // Category 8: Accessibility & System
+  const optForceDarkWeb = document.getElementById('opt-force-dark-web');
+  const optReaderTheme = document.getElementById('opt-reader-theme');
+  const optReaderFontsize = document.getElementById('opt-reader-fontsize');
+  const optReaderWidth = document.getElementById('opt-reader-width');
   const optHwAccel = document.getElementById('opt-hw-accel');
   const optSpellcheck = document.getElementById('opt-spellcheck');
   const optDevtools = document.getElementById('opt-devtools');
@@ -588,7 +596,7 @@
     forest: '#9cd49f'
   };
 
-  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.15.0 — 32 HD + 12 Googlebook Vector + 1 Live = 45 Themes)
+  // Pure Google Pixel × Material Design 3 Wallpaper Studio (v5.16.0 — 32 HD + 12 Googlebook Vector + 1 Live = 45 Themes)
   const DEFAULT_WALLPAPER_ID = 'art:wp-m3-amethyst.jpg';
   const WALLPAPER_CATALOG = [
     // 18 Sculptural / Architectural Material Design 3 HD Wallpapers (10 Dark, 8 Light)
@@ -827,6 +835,14 @@
       memorySaverMinutes: 15,
       confirmCloseMultipleTabs: false,
       tabHoverPreview: true,
+      newTabPosition: 'end',
+      scrollWheelSwitchTabs: true,
+      doubleClickCloseTab: false,
+      forceDarkWeb: false,
+      readerTheme: 'auto',
+      readerFontSize: 19,
+      readerWidth: 'medium',
+      zenMode: false,
       turboDownloaderEnabled: true,
       downloadFolder: '',
       askDownloadLocation: false,
@@ -893,7 +909,7 @@
     profiles: bootData.profiles || [],
     mainProfileId: bootData.mainProfileId || 'default',
     onboardingCompleted: !!bootData.onboardingCompleted,
-    appVersion: bootData.appVersion || '5.15.0',
+    appVersion: bootData.appVersion || '5.16.0',
     settings: bootData.settings || null,
     shields: bootData.shields || null,
     isDefaultBrowser: !!bootData.isDefaultBrowser,
@@ -1630,9 +1646,21 @@
     if (val) send({ type: 'navigate', input: val });
   });
 
+  let lastWheelTabSwitchMs = 0;
   tabsStrip.addEventListener('wheel', (e) => {
-    if (Math.abs(e.deltaY) > 0) tabsStrip.scrollLeft += e.deltaY;
-  }, { passive: true });
+    if (Math.abs(e.deltaY) === 0) return;
+    const allowWheelSwitch = !(state.browserOptions && state.browserOptions.scrollWheelSwitchTabs === false);
+    if (allowWheelSwitch && !e.shiftKey && Array.isArray(state.tabs) && state.tabs.length > 1) {
+      e.preventDefault();
+      const now = Date.now();
+      if (now - lastWheelTabSwitchMs >= 110) {
+        lastWheelTabSwitchMs = now;
+        send({ type: 'cycleTab', delta: e.deltaY > 0 ? 1 : -1 });
+      }
+      return;
+    }
+    tabsStrip.scrollLeft += e.deltaY;
+  }, { passive: false });
 
   // =========================================================================
   // Start Page Sections: Quick Access (Drag-to-Reorder), Frequently Visited, Reading List
@@ -2157,7 +2185,7 @@
     downloads: { title: 'Downloads', sub: 'Save folder, Turbo multi-thread accelerator connections & default video / MP3 quality' },
     autofill: { title: 'Passwords & Autofill', sub: 'Google Password Manager integration, saved credentials, addresses & payment autofill' },
     system: { title: 'Accessibility & System', sub: 'Hardware acceleration, spellcheck, Developer Tools, Default Browser & settings reset' },
-    about: { title: 'About dejavu', sub: 'Version v5.15.0, automatic background updates, WebView2 runtime & profile data folder' }
+    about: { title: 'About dejavu', sub: 'Version v5.16.0, automatic background updates, WebView2 runtime & profile data folder' }
   };
 
   function normalizePaneKey(pane) {
@@ -2594,6 +2622,14 @@
       !!o.compactTabBar,
       !!o.alwaysShowTabClose,
       !!o.hideNavRail,
+      !!o.zenMode,
+      !!o.forceDarkWeb,
+      o.newTabPosition || 'end',
+      o.scrollWheelSwitchTabs !== false,
+      !!o.doubleClickCloseTab,
+      o.readerTheme || 'auto',
+      Number(o.readerFontSize || 19),
+      o.readerWidth || 'medium',
       !!o.reduceWallpaperMotion,
       o.showHomeButton !== false,
       !!o.hideGreetingBadge,
@@ -2628,7 +2664,9 @@
       body.classList.toggle('amoled-dark', !!o.amoledDark);
       body.classList.toggle('compact-tabs', !!o.compactTabBar);
       body.classList.toggle('always-show-tab-close', !!o.alwaysShowTabClose);
-      body.classList.toggle('nav-rail-hidden', !!o.hideNavRail);
+      body.classList.toggle('zen-mode', !!o.zenMode);
+      body.classList.toggle('nav-rail-hidden', !!o.hideNavRail || !!o.zenMode);
+      if (btnZenPill) btnZenPill.classList.toggle('hidden', !o.zenMode);
       body.classList.toggle('reduce-motion', !!o.reduceWallpaperMotion || animSpd === 'off');
       if (btnToolbarHome) btnToolbarHome.classList.toggle('hidden', o.showHomeButton === false);
       if (spPrivateChip) spPrivateChip.classList.toggle('hidden', !state.isPrivateWindow);
@@ -2674,7 +2712,7 @@
     const o = state.browserOptions || {};
     const sp = state.startPagePrefs || {};
     const sh = state.shields || {};
-    const ver = state.appVersion || '5.15.0';
+    const ver = state.appVersion || '5.16.0';
 
     if (settingsVersionSub) settingsVersionSub.textContent = `v${ver}`;
     if (aboutVerBadge) aboutVerBadge.textContent = `v${ver}`;
@@ -2807,6 +2845,9 @@
     if (rowMemoryMinutes) rowMemoryMinutes.classList.toggle('is-disabled', !memOn);
     setSwitchState(optConfirmCloseTabs, !!o.confirmCloseMultipleTabs);
     setSwitchState(optTabHover, o.tabHoverPreview !== false);
+    setSegmentedVal(optNewtabPos, o.newTabPosition || 'end');
+    setSwitchState(optWheelTabs, o.scrollWheelSwitchTabs !== false);
+    setSwitchState(optDblclickClose, !!o.doubleClickCloseTab);
 
     // Category 6: Downloads
     const turboOn = o.turboDownloaderEnabled !== false;
@@ -2838,6 +2879,10 @@
     setSwitchState(optAutofillPayments, !!o.autofillPayments);
 
     // Category 8: Accessibility & System
+    setSwitchState(optForceDarkWeb, !!o.forceDarkWeb);
+    setSegmentedVal(optReaderTheme, o.readerTheme || 'auto');
+    setSegmentedVal(optReaderFontsize, Number(o.readerFontSize || 19));
+    setSegmentedVal(optReaderWidth, o.readerWidth || 'medium');
     setSwitchState(optHwAccel, o.hardwareAcceleration !== false);
     setSwitchState(optSpellcheck, o.spellcheckEnabled !== false);
     setSwitchState(optDevtools, o.devToolsEnabled !== false);
@@ -3223,6 +3268,10 @@
   bindSeg(optMemoryMinutes, 'memorySaverMinutes', Number);
   bindBoolSwitch(optConfirmCloseTabs, 'confirmCloseMultipleTabs', false);
   bindBoolSwitch(optTabHover, 'tabHoverPreview', false);
+  bindSeg(optNewtabPos, 'newTabPosition');
+  bindBoolSwitch(optWheelTabs, 'scrollWheelSwitchTabs', false);
+  bindBoolSwitch(optDblclickClose, 'doubleClickCloseTab', false);
+  if (btnZenPill) btnZenPill.addEventListener('click', () => send({ type: 'toggleZenMode' }));
 
   // Category 6 bindings
   if (btnOptChangeDlFolder) btnOptChangeDlFolder.addEventListener('click', () => send({ type: 'pickDownloadFolder' }));
@@ -3246,6 +3295,10 @@
   bindBoolSwitch(optAutofillPayments, 'autofillPayments', false);
 
   // Category 8 bindings
+  bindBoolSwitch(optForceDarkWeb, 'forceDarkWeb', false);
+  bindSeg(optReaderTheme, 'readerTheme');
+  bindSeg(optReaderFontsize, 'readerFontSize', Number);
+  bindSeg(optReaderWidth, 'readerWidth');
   bindBoolSwitch(optHwAccel, 'hardwareAcceleration', false);
   bindBoolSwitch(optSpellcheck, 'spellcheckEnabled', false);
   bindBoolSwitch(optDevtools, 'devToolsEnabled', false);
@@ -4809,6 +4862,13 @@
         });
         el.addEventListener('auxclick', (e) => {
           if (e.button === 1) { e.preventDefault(); requestCloseTab(tab.id, el); }
+        });
+        el.addEventListener('dblclick', (e) => {
+          if (e.target.closest('.tab-close') || e.target.closest('.tab-audio-btn')) return;
+          const allowDbl = !!(state.browserOptions && state.browserOptions.doubleClickCloseTab);
+          if (!allowDbl) return;
+          const latest = (state.tabs || []).find((t) => t.id === tab.id) || tab;
+          if (!latest.pinned) requestCloseTab(tab.id, el);
         });
         el.addEventListener('contextmenu', (e) => {
           e.preventDefault();

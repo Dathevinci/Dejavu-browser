@@ -52,6 +52,78 @@
       transition-duration: 0.01ms !important;
     }
 
+    .sb-note-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 14px;
+      background: var(--md-surface-container-low);
+      border: 1px solid color-mix(in srgb, var(--md-outline-variant) 50%, transparent);
+    }
+    .sb-note-area {
+      width: 100%;
+      min-height: 76px;
+      max-height: 180px;
+      resize: vertical;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--md-on-surface);
+      font-family: inherit;
+      font-size: 12.2px;
+      line-height: 1.48;
+      user-select: text;
+    }
+    .sb-note-area::placeholder { color: var(--md-on-surface-variant); opacity: 0.7; }
+    .sb-note-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10.5px;
+      color: var(--md-on-surface-variant);
+      padding-top: 4px;
+      border-top: 1px solid color-mix(in srgb, var(--md-outline-variant) 40%, transparent);
+    }
+    .sb-note-clear {
+      border: none;
+      background: transparent;
+      color: var(--md-error);
+      font-family: inherit;
+      font-size: 10.8px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+    .sb-note-clear:hover { background: var(--md-state-hover); }
+    .ts-calc-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 13px;
+      margin-bottom: 8px;
+      border-radius: 14px;
+      background: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+      cursor: pointer;
+      transition: transform calc(140ms * var(--md-motion-scale, 1)) var(--md-ease-spring-spatial), opacity 140ms ease;
+    }
+    .ts-calc-card.selected { box-shadow: 0 0 0 2px var(--md-primary); }
+    .ts-calc-card:active { transform: scale(0.98); }
+    .ts-calc-val { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .ts-calc-sub { font-size: 11px; opacity: 0.82; }
+    .ts-cmd-kbd {
+      font-size: 10.2px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface-variant);
+      flex-shrink: 0;
+    }
+
     body.theme-light .overlay-shell {
       background: var(--md-surface-container-low);
       border-color: color-mix(in srgb, var(--md-outline-variant) 58%, transparent);
@@ -2692,7 +2764,7 @@
           <button id="btn-manage-profiles" class="pill-btn">Manage Profiles</button>
         </div>
         <div class="prof-footer">
-          <div id="prof-ver-text" class="ver-info">dejavu v5.15.0</div>
+          <div id="prof-ver-text" class="ver-info">dejavu v5.16.0</div>
           <button id="btn-update-action" class="pill-btn" style="height:26px;font-size:11px;">Check updates</button>
         </div>
       </div>
@@ -2789,6 +2861,23 @@
       </div>
 
       <div class="sb-scroll">
+        <div class="sb-sec">
+          <div class="sb-sec-head">
+            <span class="sb-sec-title">Quick Scratchpad</span>
+            <div style="display:inline-flex;align-items:center;gap:4px;">
+              <button id="btn-sb-note-link" class="sb-mini-pill hidden" type="button" title="Insert active page link">+ Page</button>
+              <button id="btn-sb-note-copy" class="sb-mini-pill" type="button" title="Copy scratchpad notes">Copy</button>
+            </div>
+          </div>
+          <div class="sb-note-card">
+            <textarea id="sb-note-input" class="sb-note-area" rows="4" placeholder="Jot down quick notes, links, or ideas… (auto-saved locally)"></textarea>
+            <div class="sb-note-foot">
+              <span id="sb-note-meta">0 words · Auto-saved</span>
+              <button id="btn-sb-note-clear" class="sb-note-clear hidden" type="button">Clear</button>
+            </div>
+          </div>
+        </div>
+
         <div class="sb-sec">
           <div class="sb-sec-head">
             <span class="sb-sec-title">Tab Groups</span>
@@ -3062,7 +3151,7 @@
       <div class="panel-head">
         <div class="panel-title">
           <svg viewBox="0 0 18 18" width="16" height="16" fill="none" style="color:var(--md-primary);flex-shrink:0;"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.65"/><path d="M12 12l3.6 3.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-          <span>Search Tabs</span>
+          <span>Command Palette &amp; Tabs</span>
           <span id="ts-count-badge" class="engine-badge">0</span>
         </div>
         <button id="btn-ts-close" class="icon-btn sm" type="button" title="Close (Esc)">
@@ -3071,7 +3160,7 @@
       </div>
       <div class="ts-search-wrap">
         <svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M12 12l3.6 3.6" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>
-        <input id="ts-search-input" type="text" placeholder="Search open &amp; recently closed tabs…" spellcheck="false" autocomplete="off">
+        <input id="ts-search-input" type="text" placeholder="Search tabs, commands, or math (e.g. 240 * 1.15)…" spellcheck="false" autocomplete="off">
       </div>
       <div id="ts-results-list" class="panel-scroll"></div>
     </div>
@@ -3114,6 +3203,26 @@
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M12 4.5v15" stroke="currentColor" stroke-width="1.8"/></svg>
         <span id="mn-split-lbl" class="menu-item-label">Split View</span>
         <span class="menu-kbd">Ctrl+Shift+V</span>
+      </button>
+      <button id="mn-cmd-palette" class="menu-item" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="1.8"/><path d="M15.2 15.2L20 20" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/></svg>
+        <span class="menu-item-label">Command Palette &amp; Calc</span>
+        <span class="menu-kbd">Ctrl+K</span>
+      </button>
+      <button id="mn-clean-copy" class="menu-item" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 13.5a4.2 4.2 0 0 0 5.9 0l2.4-2.4a4.2 4.2 0 0 0-5.9-5.9l-1.2 1.2M14 10.5a4.2 4.2 0 0 0-5.9 0l-2.4 2.4a4.2 4.2 0 0 0 5.9 5.9l1.2-1.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span class="menu-item-label">Clean Copy Link</span>
+        <span class="menu-kbd">Ctrl+Shift+C</span>
+      </button>
+      <button id="mn-force-dark" class="menu-item" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18.6 14.8A7.2 7.2 0 0 1 9.2 5.4a7.4 7.4 0 1 0 9.4 9.4z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="mn-darkweb-lbl" class="menu-item-label">Force Dark Web</span>
+        <span class="menu-kbd">Alt+Shift+D</span>
+      </button>
+      <button id="mn-zen-mode" class="menu-item" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="7.5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg>
+        <span id="mn-zen-lbl" class="menu-item-label">Focus Zen Mode</span>
+        <span class="menu-kbd">Ctrl+Shift+F</span>
       </button>
       <button id="mn-screenshot" class="menu-item" type="button">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="3" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12.5" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 6l1.2-2h4.6l1.2 2" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
@@ -3161,7 +3270,7 @@
         <span class="menu-kbd">Ctrl+,</span>
       </button>
       <div class="menu-footer">
-        <span id="mn-version-lbl">dejavu v5.15.0</span>
+        <span id="mn-version-lbl">dejavu v5.16.0</span>
         <span id="mn-profile-lbl" class="prof-chip">Personal</span>
       </div>
     </div>
@@ -3776,7 +3885,7 @@
         btnUpdateAction.textContent = 'Restart & Update';
         btnUpdateAction.classList.add('primary');
       } else {
-        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.15.0'}`;
+        profVerText.textContent = d.updateStatus || `dejavu v${d.appVersion || '5.16.0'}`;
         btnUpdateAction.textContent = 'Check updates';
         btnUpdateAction.classList.remove('primary');
       }
@@ -4036,17 +4145,108 @@
       requestAnimationFrame(() => { if (tsSearchInput) tsSearchInput.focus(); });
     }
 
+    const TS_QUICK_COMMANDS = [
+      { id: 'darkweb', title: 'Force Dark Web (Toggle)', sub: 'Adapt bright webpages to night mode', kbd: 'Alt+Shift+D', icon: '◐', msg: { type: 'toggleForceDarkWeb' } },
+      { id: 'cleanlink', title: 'Clean Copy Link', sub: 'Copy current URL without tracking parameters', kbd: 'Ctrl+Shift+C', icon: '⛓', msg: { type: 'copyCleanLink' } },
+      { id: 'zen', title: 'Focus Zen Mode (Toggle)', sub: 'Hide left rail & bars for distraction-free focus', kbd: 'Ctrl+Shift+F', icon: '◎', msg: { type: 'toggleZenMode' } },
+      { id: 'split', title: 'Split View (Side-by-Side)', sub: 'Browse two tabs side-by-side', kbd: 'Ctrl+Shift+V', icon: '▥', msg: { type: 'toggleSplitView' } },
+      { id: 'reader', title: 'Reader View', sub: 'Clean Googlebook reading mode', kbd: 'Ctrl+Shift+R', icon: '≡', msg: { type: 'shareToggleReader' } },
+      { id: 'shot', title: 'Screenshot Visible Page', sub: 'Save PNG capture of active tab', kbd: 'Ctrl+Shift+S', icon: '⬒', msg: { type: 'captureScreenshot', copy: false } },
+      { id: 'sidebar', title: 'Side Panel & Scratchpad Notes', sub: 'Open Tab Groups, Notes & Reading List', kbd: 'Ctrl+Shift+L', icon: '◧', msg: { type: 'openSidebar' } },
+      { id: 'mute', title: 'Mute / Unmute Active Tab', sub: 'Toggle audio playback on current tab', kbd: 'Ctrl+M', icon: '♪', msg: { type: 'toggleMuteActiveTab' } },
+      { id: 'dup', title: 'Duplicate Active Tab', sub: 'Open a copy of the current page', kbd: '', icon: '⧉', msg: { type: 'shareDuplicateTab' } },
+      { id: 'pin', title: 'Pin / Unpin Active Tab', sub: 'Lock current tab to the left edge', kbd: '', icon: '✦', msg: { type: 'shareTogglePin' } },
+      { id: 'private', title: 'New Private Window', sub: 'Browse without saving history or cookies', kbd: 'Ctrl+Shift+N', icon: '◈', msg: { type: 'openPrivateWindow' } },
+      { id: 'settings', title: 'Open Browser Settings', sub: 'Themes, Shields, Tabs & Reading Comfort', kbd: 'Ctrl+,', icon: '⚙', msg: { type: 'openSettings', pane: 'appearance' } }
+    ];
+
+    function safeEvalMathExpr(raw) {
+      const expr = String(raw || '').replace(/^\s*=\s*/, '').trim();
+      if (!expr || expr.length > 80) return null;
+      if (!/[+\-*/%^]/.test(expr) || !/\d/.test(expr)) return null;
+      if (!/^[\d\s+\-*/%^().]+$/.test(expr)) return null;
+      let i = 0;
+      const skipWs = () => { while (i < expr.length && expr[i] === ' ') i++; };
+      function parseExpr() {
+        let v = parseTerm();
+        while (true) {
+          skipWs();
+          const c = expr[i];
+          if (c === '+' || c === '-') { i++; const r = parseTerm(); v = c === '+' ? v + r : v - r; }
+          else break;
+        }
+        return v;
+      }
+      function parseTerm() {
+        let v = parsePower();
+        while (true) {
+          skipWs();
+          const c = expr[i];
+          if (c === '*' || c === '/' || c === '%') {
+            i++;
+            const r = parsePower();
+            if ((c === '/' || c === '%') && r === 0) return NaN;
+            v = c === '*' ? v * r : (c === '/' ? v / r : v % r);
+          } else break;
+        }
+        return v;
+      }
+      function parsePower() {
+        let v = parseUnary();
+        skipWs();
+        if (expr[i] === '^') { i++; v = Math.pow(v, parsePower()); }
+        return v;
+      }
+      function parseUnary() {
+        skipWs();
+        if (expr[i] === '+') { i++; return parseUnary(); }
+        if (expr[i] === '-') { i++; return -parseUnary(); }
+        return parsePrimary();
+      }
+      function parsePrimary() {
+        skipWs();
+        if (expr[i] === '(') {
+          i++;
+          const v = parseExpr();
+          skipWs();
+          if (expr[i] !== ')') return NaN;
+          i++;
+          return v;
+        }
+        const start = i;
+        let seenDot = false;
+        while (i < expr.length && ((expr[i] >= '0' && expr[i] <= '9') || (expr[i] === '.' && !seenDot))) {
+          if (expr[i] === '.') seenDot = true;
+          i++;
+        }
+        if (i === start) return NaN;
+        return Number(expr.slice(start, i));
+      }
+      try {
+        const val = parseExpr();
+        skipWs();
+        if (i !== expr.length || !Number.isFinite(val)) return null;
+        const rounded = Math.round(val * 1e6) / 1e6;
+        return { raw: String(rounded), pretty: rounded.toLocaleString(undefined, { maximumFractionDigits: 6 }), expr };
+      } catch (_) {
+        return null;
+      }
+    }
+
     function renderTabSearchItems() {
       if (!tsResultsList) return;
-      const q = (tsSearchInput ? tsSearchInput.value : '').trim().toLowerCase();
+      const rawQ = (tsSearchInput ? tsSearchInput.value : '').trim();
+      const q = rawQ.toLowerCase();
+      const calcHit = safeEvalMathExpr(rawQ);
       const matchOpen = tsOpenTabs.filter((t) => !q || (t.title || '').toLowerCase().includes(q) || (t.url || '').toLowerCase().includes(q) || (t.host || '').toLowerCase().includes(q));
       const matchClosed = tsClosedTabs.filter((c) => !q || (c.title || '').toLowerCase().includes(q) || (c.url || '').toLowerCase().includes(q) || (c.host || '').toLowerCase().includes(q));
+      const matchCmds = TS_QUICK_COMMANDS.filter((c) => !q || c.title.toLowerCase().includes(q) || c.sub.toLowerCase().includes(q) || c.kbd.toLowerCase().includes(q)).slice(0, q ? 8 : 5);
 
       tsFlatItems = [];
       tsResultsList.innerHTML = '';
 
-      if (!matchOpen.length && !matchClosed.length) {
-        tsResultsList.innerHTML = '<div class="empty-msg">No matching tabs found</div>';
+      if (!calcHit && !matchOpen.length && !matchClosed.length && !matchCmds.length) {
+        tsResultsList.innerHTML = '<div class="empty-msg">No matching tabs or commands found</div>';
         return;
       }
 
@@ -4054,6 +4254,22 @@
       const closeSvg = '<svg viewBox="0 0 16 16" fill="none"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
 
       const frag = document.createDocumentFragment();
+      if (calcHit) {
+        const calcIdx = tsFlatItems.length;
+        tsFlatItems.push({ kind: 'calc', value: calcHit.raw });
+        const card = document.createElement('div');
+        card.className = 'ts-calc-card' + (calcIdx === tsSelIdx ? ' selected' : '');
+        card.innerHTML = `
+          <div>
+            <div class="ts-calc-val">= ${escapeHtml(calcHit.pretty)}</div>
+            <div class="ts-calc-sub">${escapeHtml(calcHit.expr)} · Instant Calculator</div>
+          </div>
+          <span class="ts-cmd-kbd">Copy ↵</span>
+        `;
+        card.addEventListener('click', () => send({ type: 'copyCalcResult', value: calcHit.raw }));
+        frag.appendChild(card);
+      }
+
       if (matchOpen.length) {
         const hdr = document.createElement('div');
         hdr.className = 'section-label';
@@ -4094,10 +4310,37 @@
         });
       }
 
-      if (matchClosed.length) {
+      if (matchCmds.length) {
         const hdr = document.createElement('div');
         hdr.className = 'section-label';
         hdr.style.marginTop = matchOpen.length ? '8px' : '0';
+        hdr.textContent = 'Quick Commands';
+        frag.appendChild(hdr);
+
+        matchCmds.forEach((cmd) => {
+          const itemIdx = tsFlatItems.length;
+          tsFlatItems.push({ kind: 'cmd', cmd });
+          const row = document.createElement('div');
+          row.className = 'ts-row' + (itemIdx === tsSelIdx ? ' selected' : '');
+          row.innerHTML = `
+            <span class="ts-fav">${escapeHtml(cmd.icon)}</span>
+            <div class="ts-meta">
+              <div class="ts-title"></div>
+              <div class="ts-sub"></div>
+            </div>
+            ${cmd.kbd ? `<span class="ts-cmd-kbd">${escapeHtml(cmd.kbd)}</span>` : ''}
+          `;
+          row.querySelector('.ts-title').textContent = cmd.title;
+          row.querySelector('.ts-sub').textContent = cmd.sub;
+          row.addEventListener('click', () => send(cmd.msg));
+          frag.appendChild(row);
+        });
+      }
+
+      if (matchClosed.length) {
+        const hdr = document.createElement('div');
+        hdr.className = 'section-label';
+        hdr.style.marginTop = (matchOpen.length || matchCmds.length) ? '8px' : '0';
         hdr.textContent = `Recently Closed (${matchClosed.length})`;
         frag.appendChild(hdr);
 
@@ -4141,7 +4384,9 @@
           e.preventDefault();
           const chosen = tsFlatItems[tsSelIdx] || tsFlatItems[0];
           if (!chosen) return;
-          if (chosen.kind === 'open') send({ type: 'tabSearchSwitch', id: chosen.tab.id });
+          if (chosen.kind === 'calc') send({ type: 'copyCalcResult', value: chosen.value });
+          else if (chosen.kind === 'open') send({ type: 'tabSearchSwitch', id: chosen.tab.id });
+          else if (chosen.kind === 'cmd') send(chosen.cmd.msg);
           else if (chosen.kind === 'closed') send({ type: 'tabSearchReopen', url: chosen.closed.url });
         }
       });
@@ -4243,7 +4488,60 @@
     });
     btnSbSaveRl.addEventListener('click', () => send({ type: 'sidebarToggleReadingList' }));
 
+    // Quick Scratchpad Notes inside Side Panel (localStorage auto-save)
+    const sbNoteInput = document.getElementById('sb-note-input');
+    const sbNoteMeta = document.getElementById('sb-note-meta');
+    const btnSbNoteLink = document.getElementById('btn-sb-note-link');
+    const btnSbNoteCopy = document.getElementById('btn-sb-note-copy');
+    const btnSbNoteClear = document.getElementById('btn-sb-note-clear');
+    let sbCurrentPageUrl = '';
+    let sbCurrentPageTitle = '';
+    function syncScratchpadMeta() {
+      if (!sbNoteInput) return;
+      const txt = sbNoteInput.value || '';
+      const words = txt.trim() ? txt.trim().split(/\s+/).length : 0;
+      if (sbNoteMeta) sbNoteMeta.textContent = `${words} ${words === 1 ? 'word' : 'words'} · Auto-saved`;
+      if (btnSbNoteClear) btnSbNoteClear.classList.toggle('hidden', txt.length === 0);
+    }
+    if (sbNoteInput) {
+      try { sbNoteInput.value = localStorage.getItem('dejavu_scratchpad_v1') || ''; } catch (_) {}
+      syncScratchpadMeta();
+      sbNoteInput.addEventListener('input', () => {
+        try { localStorage.setItem('dejavu_scratchpad_v1', sbNoteInput.value); } catch (_) {}
+        syncScratchpadMeta();
+      });
+    }
+    if (btnSbNoteLink) {
+      btnSbNoteLink.addEventListener('click', () => {
+        if (!sbNoteInput || !sbCurrentPageUrl) return;
+        const line = `${sbCurrentPageTitle || sbCurrentPageUrl}\n${sbCurrentPageUrl}`;
+        sbNoteInput.value = sbNoteInput.value.trim() ? `${sbNoteInput.value.trim()}\n\n${line}` : line;
+        try { localStorage.setItem('dejavu_scratchpad_v1', sbNoteInput.value); } catch (_) {}
+        syncScratchpadMeta();
+        sbNoteInput.focus();
+      });
+    }
+    if (btnSbNoteCopy) {
+      btnSbNoteCopy.addEventListener('click', () => {
+        const val = sbNoteInput ? sbNoteInput.value : '';
+        if (!val.trim()) return;
+        send({ type: 'copyCalcResult', value: val });
+      });
+    }
+    if (btnSbNoteClear) {
+      btnSbNoteClear.addEventListener('click', () => {
+        if (!sbNoteInput) return;
+        sbNoteInput.value = '';
+        try { localStorage.removeItem('dejavu_scratchpad_v1'); } catch (_) {}
+        syncScratchpadMeta();
+      });
+    }
+
     function renderSidebarPanel(d) {
+      sbCurrentPageUrl = d.activeUrl || '';
+      sbCurrentPageTitle = d.activeTitle || '';
+      if (btnSbNoteLink) btnSbNoteLink.classList.toggle('hidden', !sbCurrentPageUrl);
+      if (sbNoteInput) syncScratchpadMeta();
       if (d.profile && window.DejavuAvatars) {
         sbProfAvatar.innerHTML = window.DejavuAvatars.renderHtml(d.profile.avatar, 30);
         sbProfName.textContent = d.profile.name || 'Personal';
@@ -5010,6 +5308,16 @@
     const mnSplitView = document.getElementById('mn-split-view');
     const mnSplitLbl = document.getElementById('mn-split-lbl');
     if (mnSplitView) mnSplitView.addEventListener('click', () => send({ type: 'toggleSplitView' }));
+    const mnCmdPalette = document.getElementById('mn-cmd-palette');
+    if (mnCmdPalette) mnCmdPalette.addEventListener('click', () => send({ type: 'openTabSearch' }));
+    const mnCleanCopy = document.getElementById('mn-clean-copy');
+    if (mnCleanCopy) mnCleanCopy.addEventListener('click', () => send({ type: 'copyCleanLink' }));
+    const mnForceDark = document.getElementById('mn-force-dark');
+    const mnDarkwebLbl = document.getElementById('mn-darkweb-lbl');
+    if (mnForceDark) mnForceDark.addEventListener('click', () => send({ type: 'toggleForceDarkWeb' }));
+    const mnZenMode = document.getElementById('mn-zen-mode');
+    const mnZenLbl = document.getElementById('mn-zen-lbl');
+    if (mnZenMode) mnZenMode.addEventListener('click', () => send({ type: 'toggleZenMode' }));
     const mnScreenshot = document.getElementById('mn-screenshot');
     if (mnScreenshot) mnScreenshot.addEventListener('click', () => send({ type: 'captureScreenshot', copy: false }));
     const mnExtensions = document.getElementById('mn-extensions');
@@ -5025,10 +5333,13 @@
 
     function renderMenuPanel(d) {
       if (mnSplitLbl) mnSplitLbl.textContent = d.splitViewActive ? 'Exit Split View' : 'Split View';
+      if (mnDarkwebLbl) mnDarkwebLbl.textContent = d.forceDarkWeb ? 'Force Dark Web: ON' : 'Force Dark Web';
+      if (mnZenLbl) mnZenLbl.textContent = d.zenMode ? 'Exit Focus Zen Mode' : 'Focus Zen Mode';
+      if (mnCleanCopy) mnCleanCopy.disabled = !!d.isNewTab;
       if (mnScreenshot) mnScreenshot.disabled = !!d.isNewTab;
       const zp = typeof d.zoomPercent === 'number' ? d.zoomPercent : 100;
       if (mnZoomReset) mnZoomReset.textContent = `${zp}%`;
-      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.15.0'}`;
+      if (mnVersionLbl) mnVersionLbl.textContent = `dejavu v${d.appVersion || '5.16.0'}`;
       if (mnProfileLbl) {
         const p = d.activeProfile;
         mnProfileLbl.textContent = d.isPrivateWindow ? 'Private' : ((p && (p.googleDisplayName || p.name)) || 'Personal');

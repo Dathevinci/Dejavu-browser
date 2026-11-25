@@ -4,20 +4,20 @@ A fast, private native **Google Material Design 3** browser for **Windows 10/11*
 
 **Official Website:** **[dathevinci.github.io/Dejavu-browser](https://dathevinci.github.io/Dejavu-browser/)**
 
-## Download (`v5.15.0`)
+## Download (`v5.16.0`)
 
 Grab the latest release from the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
 
-- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.15.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
-- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.15.0.0`, runs from any folder or USB with no admin rights required).
-- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.15.0` · `versionCode 650`, Android 8.0+).
+- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.16.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
+- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.16.0.0`, runs from any folder or USB with no admin rights required).
+- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.16.0` · `versionCode 660`, Android 8.0+).
 - **`SHA256SUMS.txt`** — Official SHA-256 checksums paired with GitHub **SLSA Build Provenance Attestations**.
 
-## What's New in v5.15.0
+## What's New in v5.16.0
 
-- **Expanded Windows Googlebook Customization Studio**: Added 5 one-click Material Design 3 theme presets (**Pixel Night**, **AMOLED Obsidian**, **Porcelain Studio**, **Nordic Sage**, **Berry Studio**) plus 6 new persisted controls in Settings → Appearance & Wallpaper Studio: **Corner Roundness** (`Rounded`/`Pill`/`Sharp`), **Interface Density** (`Compact`/`Comfortable`/`Spacious`), **Animation Feel** (`Fluid 120Hz`/`Snappy`/`Off`), **Address Bar Style** (`Pill`/`Outlined`/`Elevated`), **Start Page Layout** (`Balanced`/`Minimal`/`Focus`), and **Quick Access Columns** (`4`/`5`/`6`) — synced live across main chrome and native popovers.
-- **120Hz Expressive Material Design 3 Animations (Windows & Android)**: Upgraded both platforms to GPU-accelerated spatial & expressive spring curves with gliding segmented pill indicators, elastic M3 switch thumb-stretch, staggered Start Page & sheet card blooms, native Android tab-switch glide/crossfade, real-time spring pop on the Brave Shields badge, and zero initial light-mode hydration flash.
-- **Chrome × Brave Android Foundation**: 56dp single-row Chrome top toolbar with live Brave Shields badge, Brave 3-column Privacy Stats NTP, Chrome 5-icon Overflow Menu strip, and 108K+ ad/tracker/cosmetic rules.
+- **Windows Power Features & Browsing Customizations**: Added **Command Palette & Instant Calculator** (`Ctrl+K`), **Quick Scratchpad Notes** in the Side Panel (`Ctrl+Shift+L`), **Force Dark Mode on Websites** (`Alt+Shift+D`), customizable **Reader View** defaults (Theme, Font Size, Column Width), **Clean Copy Link** (`Ctrl+Shift+C`), **Focus Zen Mode** (`Ctrl+Shift+F`), **New Tab Open Position**, **Scroll-Wheel Tab Switching**, **Double-Click Tab to Close**, and live M3 Zoom toast feedback.
+- **Android Productivity, Gestures & 120Hz Fluidity**: Added **Copy Clean Link** (tracker stripping) and native **Print / Save as PDF** in the Chrome Overflow Menu, interactive Reader View with persisted theme, **Animation Feel** (`Fluid 120Hz`/`Snappy`/`Off`), **Swipe Address Bar for Tabs** with live damped drag physics, **Haptic Feedback** toggle, and spring pop animations on the `[N]` tab counter badge.
+- **Googlebook Customization Studio**: 5 one-click Material Design 3 presets, 16 HCT color palettes, 45 wallpapers, Corner Roundness, Interface Density, Address Bar Style, Start Page Layout, and Quick Access Columns.
 
 ## Core Capabilities
 

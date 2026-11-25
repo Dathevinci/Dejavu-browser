@@ -107,6 +107,15 @@ namespace DejavuBrowser
         public int memorySaverMinutes { get; set; }
         public bool confirmCloseMultipleTabs { get; set; }
         public bool tabHoverPreview { get; set; }
+        public string newTabPosition { get; set; }
+        public bool scrollWheelSwitchTabs { get; set; }
+        public bool doubleClickCloseTab { get; set; }
+
+        // v5.16.0 — Reading Comfort & Dark Web
+        public bool forceDarkWeb { get; set; }
+        public string readerTheme { get; set; }
+        public int readerFontSize { get; set; }
+        public string readerWidth { get; set; }
 
         // v5.4.0 — Downloads
         public bool turboDownloaderEnabled { get; set; }
@@ -169,6 +178,13 @@ namespace DejavuBrowser
             tabBarStyle = "googlebook";
             shortcutStyle = "circle";
             clockStyle = "off";
+            newTabPosition = "end";
+            scrollWheelSwitchTabs = true;
+            doubleClickCloseTab = false;
+            forceDarkWeb = false;
+            readerTheme = "auto";
+            readerFontSize = 19;
+            readerWidth = "medium";
             cornerRadius = "rounded";
             uiDensity = "comfortable";
             animationSpeed = "fluid";
@@ -402,6 +418,33 @@ namespace DejavuBrowser
             return 5;
         }
 
+        public static string NormalizeNewTabPosition(string val)
+        {
+            if (string.Equals(val, "after-active", StringComparison.OrdinalIgnoreCase)) return "after-active";
+            return "end";
+        }
+
+        public static string NormalizeReaderTheme(string val)
+        {
+            if (string.Equals(val, "dark", StringComparison.OrdinalIgnoreCase)) return "dark";
+            if (string.Equals(val, "sepia", StringComparison.OrdinalIgnoreCase)) return "sepia";
+            if (string.Equals(val, "light", StringComparison.OrdinalIgnoreCase)) return "light";
+            return "auto";
+        }
+
+        public static int NormalizeReaderFontSize(int val)
+        {
+            if (val < 15 || val > 26) return 19;
+            return val;
+        }
+
+        public static string NormalizeReaderWidth(string val)
+        {
+            if (string.Equals(val, "narrow", StringComparison.OrdinalIgnoreCase)) return "narrow";
+            if (string.Equals(val, "wide", StringComparison.OrdinalIgnoreCase)) return "wide";
+            return "medium";
+        }
+
         public static void NormalizeWindowBounds(DejavuSettings s)
         {
             if (s == null) return;
@@ -501,6 +544,14 @@ namespace DejavuBrowser
                             loaded.omniboxStyle = NormalizeOmniboxStyle(loaded.omniboxStyle);
                             loaded.startPageLayout = NormalizeStartPageLayout(loaded.startPageLayout);
                             loaded.shortcutColumns = NormalizeShortcutColumns(loaded.shortcutColumns);
+                            loaded.newTabPosition = NormalizeNewTabPosition(loaded.newTabPosition);
+                            if (!text.Contains("\"scrollWheelSwitchTabs\""))
+                            {
+                                loaded.scrollWheelSwitchTabs = true;
+                            }
+                            loaded.readerTheme = NormalizeReaderTheme(loaded.readerTheme);
+                            loaded.readerFontSize = NormalizeReaderFontSize(loaded.readerFontSize);
+                            loaded.readerWidth = NormalizeReaderWidth(loaded.readerWidth);
 
                             // v5.4.0 normalizations
                             loaded.shieldLevel = NormalizeShieldLevel(loaded.shieldLevel);

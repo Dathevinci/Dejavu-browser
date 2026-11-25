@@ -41,12 +41,24 @@
 
       --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.22);
       --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.28);
+      --m-motion-scale: 1;
       --md-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
       --md-ease-decel: cubic-bezier(0.05, 0.7, 0.1, 1.0);
       --md-ease-spring: cubic-bezier(0.34, 1.46, 0.64, 1);
       --md-ease-spring-smooth: cubic-bezier(0.22, 1.14, 0.36, 1);
       --md-ease-spatial: cubic-bezier(0.18, 1.06, 0.28, 1);
       --font: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    body[data-animation-speed="snappy"] { --m-motion-scale: 0.62; }
+    body[data-animation-speed="off"] { --m-motion-scale: 0; }
+    body[data-animation-speed="off"] *,
+    body[data-animation-speed="off"] *::before,
+    body[data-animation-speed="off"] *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
     }
 
     /* Prevent initial dark-to-light theme hydration flash on first paint */
@@ -268,33 +280,33 @@
       overflow: hidden;
       contain: layout style;
       will-change: transform, opacity;
-      animation: sheetRise 0.36s var(--md-ease-spatial) both;
+      animation: sheetRise calc(360ms * var(--m-motion-scale)) var(--md-ease-spatial) both;
     }
     .sheet-backdrop:not(.hidden):not(.is-closing) .sheet-body > *:nth-child(1) {
-      animation: sheetItemBloom 0.28s var(--md-ease-decel) 20ms both;
+      animation: sheetItemBloom calc(280ms * var(--m-motion-scale)) var(--md-ease-decel) calc(20ms * var(--m-motion-scale)) both;
     }
     .sheet-backdrop:not(.hidden):not(.is-closing) .sheet-body > *:nth-child(2) {
-      animation: sheetItemBloom 0.3s var(--md-ease-decel) 50ms both;
+      animation: sheetItemBloom calc(300ms * var(--m-motion-scale)) var(--md-ease-decel) calc(50ms * var(--m-motion-scale)) both;
     }
     .sheet-backdrop:not(.hidden):not(.is-closing) .sheet-body > *:nth-child(3) {
-      animation: sheetItemBloom 0.32s var(--md-ease-decel) 80ms both;
+      animation: sheetItemBloom calc(320ms * var(--m-motion-scale)) var(--md-ease-decel) calc(80ms * var(--m-motion-scale)) both;
     }
     .sheet-backdrop:not(.hidden):not(.is-closing) .sheet-body > *:nth-child(4) {
-      animation: sheetItemBloom 0.34s var(--md-ease-decel) 105ms both;
+      animation: sheetItemBloom calc(340ms * var(--m-motion-scale)) var(--md-ease-decel) calc(105ms * var(--m-motion-scale)) both;
     }
     .sheet-backdrop.is-closing::before {
-      animation: fadeScrimOut 0.2s var(--md-ease-emphasized) both;
+      animation: fadeScrimOut calc(200ms * var(--m-motion-scale)) var(--md-ease-emphasized) both;
     }
     .sheet-backdrop.is-closing .sheet-panel {
-      animation: sheetDrop 0.22s cubic-bezier(0.3, 0, 0.8, 0.15) both;
+      animation: sheetDrop calc(220ms * var(--m-motion-scale)) cubic-bezier(0.3, 0, 0.8, 0.15) both;
     }
     #scr-tabs:not(.hidden), #scr-omnibox:not(.hidden) {
-      animation: screenFadeRise 0.28s var(--md-ease-spatial) both;
+      animation: screenFadeRise calc(280ms * var(--m-motion-scale)) var(--md-ease-spatial) both;
     }
-    #scr-start:not(.hidden) .sp-hero { animation: spCascade 0.34s var(--md-ease-spatial) both; }
-    #scr-start:not(.hidden) .sp-glance-stack { animation: spCascade 0.38s var(--md-ease-spatial) 35ms both; }
-    #scr-start:not(.hidden) .sp-brave-stats { animation: spCascade 0.4s var(--md-ease-spatial) 60ms both; }
-    #scr-start:not(.hidden) .sp-qa-wrap { animation: spCascade 0.42s var(--md-ease-spatial) 85ms both; }
+    #scr-start:not(.hidden) .sp-hero { animation: spCascade calc(340ms * var(--m-motion-scale)) var(--md-ease-spatial) both; }
+    #scr-start:not(.hidden) .sp-glance-stack { animation: spCascade calc(380ms * var(--m-motion-scale)) var(--md-ease-spatial) calc(35ms * var(--m-motion-scale)) both; }
+    #scr-start:not(.hidden) .sp-brave-stats { animation: spCascade calc(400ms * var(--m-motion-scale)) var(--md-ease-spatial) calc(60ms * var(--m-motion-scale)) both; }
+    #scr-start:not(.hidden) .sp-qa-wrap { animation: spCascade calc(420ms * var(--m-motion-scale)) var(--md-ease-spatial) calc(85ms * var(--m-motion-scale)) both; }
 
     @keyframes fadeScrim { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fadeScrimOut { from { opacity: 1; } to { opacity: 0; } }
@@ -621,6 +633,15 @@
       position: relative;
       display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
       padding: 4px; border-radius: 999px; background: var(--input-bg);
+    }
+    .bar-seg.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .bar-seg.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .bar-seg.cols-3 button,
+    .bar-seg.cols-4 button {
+      font-size: 12.2px;
+      gap: 4px;
+      padding: 0 4px;
+      white-space: nowrap;
     }
     .bar-seg .seg-glider { top: 4px; height: calc(100% - 8px); }
     .bar-seg button {
@@ -1228,7 +1249,7 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.15.0) — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.16.0) — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
@@ -1770,7 +1791,7 @@
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
     /* =====================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.15.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.16.0)
        ===================================================================== */
     .sh-hero-card {
       background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
@@ -1977,7 +1998,7 @@
       <button type="button" class="icon-btn tonal" style="width:34px;height:34px;" title="Share" aria-label="Share link" onclick="call('shareNative')">
         <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.4V3.8M6.8 6.8L10 3.6l3.2 3.2"/><path d="M4 11.2v4.3A1.7 1.7 0 0 0 5.7 17.2h8.6a1.7 1.7 0 0 0 1.7-1.7v-4.3"/></svg>
       </button>
-      <button type="button" class="icon-btn tonal" style="width:34px;height:34px;" title="Copy link" aria-label="Copy link" onclick="copyActiveUrl()">
+      <button type="button" class="icon-btn tonal" style="width:34px;height:34px;" title="Copy clean link" aria-label="Copy clean link" onclick="call('copyCleanActiveUrl')">
         <svg viewBox="0 0 18 18" width="16" height="16" fill="none"><rect x="6" y="6" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 12H3.5A1.5 1.5 0 0 1 2 10.5v-7A1.5 1.5 0 0 1 3.5 2h7A1.5 1.5 0 0 1 12 3.5V4" stroke="currentColor" stroke-width="1.5"/></svg>
       </button>
       <button type="button" class="icon-btn tonal" style="width:34px;height:34px;" title="Edit URL" aria-label="Edit URL" onclick="editActiveUrl()">
@@ -2161,6 +2182,10 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14.5V4.2M8.2 8L12 4.2 15.8 8"/><path d="M5 12.8v5.2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5.2"/></svg></span>
               <span class="g-row-meta"><span class="g-row-title">Share…</span></span>
             </button>
+            <button type="button" class="g-row" onclick="call('copyCleanActiveUrl')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13.5a4.2 4.2 0 0 0 5.9 0l2.4-2.4a4.2 4.2 0 0 0-5.9-5.9l-1.2 1.2M14 10.5a4.2 4.2 0 0 0-5.9 0l-2.4 2.4a4.2 4.2 0 0 0 5.9 5.9l1.2-1.2"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Copy clean link</span><span class="g-row-sub">Strips utm, fbclid &amp; tracker tags</span></span>
+            </button>
             <button type="button" class="g-row" onclick="call('sendCurrentTabToPc')">
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="12.5" height="9" rx="2"/><path d="M6.5 17.5h4.5M8.75 14v3.5M14.5 11.5L21 5M21 5h-4.2M21 5v4.2"/></svg></span>
               <span class="g-row-meta"><span class="g-row-title">Send to PC</span></span>
@@ -2172,6 +2197,10 @@
             <button type="button" class="g-row" onclick="call('openReaderMode')">
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5h15M4.5 11.5h15M4.5 16.5h9.5"/></svg></span>
               <span class="g-row-meta"><span class="g-row-title">Reader view</span></span>
+            </button>
+            <button type="button" class="g-row" onclick="call('printActivePage')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 8.5V4.5h11v4M6.5 16H5a2 2 0 0 1-2-2v-3.5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2V14a2 2 0 0 1-2 2h-1.5"/><rect x="6.5" y="13.5" width="11" height="6" rx="1.2"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Print / Save as PDF</span></span>
             </button>
             <button type="button" class="g-row" onclick="call('toggleDesktopMode')">
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8.5 19.5h7M12 16.5v3"/></svg></span>
@@ -2224,7 +2253,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.15.0) — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.16.0) — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2520,7 +2549,7 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.8v5.2M12 7.8h.01"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.15.0 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.16.0 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -2688,6 +2717,27 @@
                 </div>
                 <button type="button" id="sw-autohide" class="sw on" aria-label="Auto-hide bar on scroll"></button>
               </div>
+
+              <div class="set-block set-item" data-search="animation feel motion speed fluid 120hz snappy off reduce motion smooth">
+                <div style="font-size:14.5px;font-weight:540;">Animation feel</div>
+                <div class="bar-seg cols-3" id="set-anim-seg">
+                  <span class="seg-glider is-tonal" aria-hidden="true"></span>
+                  <button type="button" id="opt-anim-fluid" class="active" onclick="call('setAnimationSpeed','fluid')">Fluid 120Hz</button>
+                  <button type="button" id="opt-anim-snappy" onclick="call('setAnimationSpeed','snappy')">Snappy</button>
+                  <button type="button" id="opt-anim-off" onclick="call('setAnimationSpeed','off')">Off</button>
+                </div>
+              </div>
+
+              <div class="set-block set-item" data-search="reader view theme auto dark sepia paper reading mode article">
+                <div style="font-size:14.5px;font-weight:540;">Reader view theme</div>
+                <div class="bar-seg cols-4" id="set-reader-seg">
+                  <span class="seg-glider is-tonal" aria-hidden="true"></span>
+                  <button type="button" id="opt-reader-auto" class="active" onclick="call('setReaderTheme','auto')">Auto</button>
+                  <button type="button" id="opt-reader-dark" onclick="call('setReaderTheme','dark')">Dark</button>
+                  <button type="button" id="opt-reader-sepia" onclick="call('setReaderTheme','sepia')">Sepia</button>
+                  <button type="button" id="opt-reader-light" onclick="call('setReaderTheme','light')">Paper</button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2802,6 +2852,20 @@
                 </div>
                 <button type="button" id="sw-ptr" class="sw on" aria-label="Pull-to-refresh"></button>
               </div>
+              <div class="g-row set-item" data-search="swipe address bar switch tabs gesture navigation toolbar" onclick="call('toggleToolbarSwipeTabs')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">Swipe address bar for tabs</div>
+                  <div class="g-row-sub">Glide left or right on the URL bar to switch tabs</div>
+                </div>
+                <button type="button" id="sw-swipe-tabs" class="sw on" aria-label="Swipe address bar for tabs"></button>
+              </div>
+              <div class="g-row set-item" data-search="haptic feedback vibration touch tactile feel" onclick="call('toggleHaptics')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">Haptic feedback</div>
+                  <div class="g-row-sub">Subtle tactile ticks on tab swipes &amp; actions</div>
+                </div>
+                <button type="button" id="sw-haptics" class="sw on" aria-label="Haptic feedback"></button>
+              </div>
               <div class="g-row set-item" data-search="open links background tab keep current" onclick="call('toggleOpenLinksInBackground')">
                 <div class="g-row-meta">
                   <div class="g-row-title">Open links in background</div>
@@ -2868,7 +2932,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.15.0 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.16.0 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2892,10 +2956,10 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.15.0 about">
+              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.16.0 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.15.0</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.16.0</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
                 <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check for updates</button>
@@ -2934,7 +2998,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.15.0
+          dejavu Mobile v5.16.0
         </div>
       </div>
     </div>
@@ -3280,7 +3344,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.15.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.16.0)
        =================================================================== -->
   <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -3418,7 +3482,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.15.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.16.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -3685,7 +3749,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.15.0)
+    // Zero-mutation DOM equality-guard helpers (v5.16.0)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -4766,7 +4830,7 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.15.0)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.16.0)
     const _domSigs = {
       sysTop: '',
       safeTop: '',
@@ -4836,6 +4900,8 @@
       syncMobileGlider(document.getElementById('set-clock-seg'));
       syncMobileGlider(document.getElementById('set-bar-seg'));
       syncMobileGlider(document.getElementById('set-barstyle-seg'));
+      syncMobileGlider(document.getElementById('set-anim-seg'));
+      syncMobileGlider(document.getElementById('set-reader-seg'));
       syncMobileGlider(document.getElementById('set-shield-level-seg'));
       syncMobileGlider(document.getElementById('shields-level-seg'));
       syncMobileGlider(document.getElementById('dl-mode-seg'));
@@ -5841,7 +5907,7 @@
         : 'Standard Android downloads');
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.15.0';
+      const curV = u.currentVersion || '5.16.0';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -5916,6 +5982,17 @@
       setCls(document.getElementById('sw-brave-stats'), 'on', state.showBraveStats !== false);
       setCls(document.getElementById('sw-motd'), 'on', state.showMotd === true);
       setCls(document.getElementById('sw-autohide'), 'on', state.autoHideBar !== false);
+      const animSpd = state.animationSpeed || 'fluid';
+      setCls(document.getElementById('opt-anim-fluid'), 'active', animSpd !== 'snappy' && animSpd !== 'off');
+      setCls(document.getElementById('opt-anim-snappy'), 'active', animSpd === 'snappy');
+      setCls(document.getElementById('opt-anim-off'), 'active', animSpd === 'off');
+      const rdrTh = state.readerTheme || 'auto';
+      setCls(document.getElementById('opt-reader-auto'), 'active', rdrTh !== 'dark' && rdrTh !== 'sepia' && rdrTh !== 'light');
+      setCls(document.getElementById('opt-reader-dark'), 'active', rdrTh === 'dark');
+      setCls(document.getElementById('opt-reader-sepia'), 'active', rdrTh === 'sepia');
+      setCls(document.getElementById('opt-reader-light'), 'active', rdrTh === 'light');
+      syncMobileGlider(document.getElementById('set-anim-seg'));
+      syncMobileGlider(document.getElementById('set-reader-seg'));
 
       // 4. Privacy & Security Controls (Brave-Grade Shields)
       setCls(document.getElementById('sw-adblock'), 'on', shieldOn);
@@ -5953,6 +6030,8 @@
         });
       }
       setCls(document.getElementById('sw-ptr'), 'on', state.pullToRefresh !== false);
+      setCls(document.getElementById('sw-swipe-tabs'), 'on', state.toolbarSwipeTabs !== false);
+      setCls(document.getElementById('sw-haptics'), 'on', state.hapticsEnabled !== false);
       setCls(document.getElementById('sw-bglinks'), 'on', !!state.openLinksInBackground);
       setCls(document.getElementById('sw-memsaver'), 'on', memSaverOn);
 
@@ -6595,7 +6674,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.15.0 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.16.0 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -6748,6 +6827,8 @@
       if (document.body.dataset.materialStyle !== nextMat) document.body.dataset.materialStyle = nextMat;
       const nextSc = state.shortcutStyle || 'circle';
       if (document.body.dataset.shortcutStyle !== nextSc) document.body.dataset.shortcutStyle = nextSc;
+      const nextAnimSpd = state.animationSpeed || 'fluid';
+      if (document.body.dataset.animationSpeed !== nextAnimSpd) document.body.dataset.animationSpeed = nextAnimSpd;
       if (!_hydratedOnce) {
         _hydratedOnce = true;
         requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('no-theme-trans')));
@@ -6964,6 +7045,11 @@
         else if (fn === 'toggleBlockThirdPartyCookies') st.blockThirdPartyCookies = !st.blockThirdPartyCookies;
         else if (fn === 'setSearchEngine') st.searchEngine = args[0] || 'google';
         else if (fn === 'togglePullToRefresh') st.pullToRefresh = !st.pullToRefresh;
+        else if (fn === 'toggleToolbarSwipeTabs') st.toolbarSwipeTabs = !(st.toolbarSwipeTabs !== false);
+        else if (fn === 'toggleHaptics') st.hapticsEnabled = !(st.hapticsEnabled !== false);
+        else if (fn === 'setAnimationSpeed') st.animationSpeed = (args[0] === 'snappy' || args[0] === 'off') ? args[0] : 'fluid';
+        else if (fn === 'setReaderTheme') st.readerTheme = (args[0] === 'dark' || args[0] === 'sepia' || args[0] === 'light') ? args[0] : 'auto';
+        else if (fn === 'copyCleanActiveUrl' || fn === 'printActivePage') st.screen = 'start';
         else if (fn === 'toggleOpenLinksInBackground') st.openLinksInBackground = !st.openLinksInBackground;
         else if (fn === 'setDefaultYoutubeQuality') st.defaultYoutubeQuality = args[0] || 'auto';
         else if (fn === 'toggleFloatingDownloadButton') st.floatingDownloadButton = !st.floatingDownloadButton;
@@ -7169,7 +7255,7 @@
               ],
               drops: [
                 { id: 'vid_pc_1', dropType: 'video', title: 'Material 3 Expressive Motion Deep Dive', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=422', text: 'Continue watching at 07:02', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 45000 },
-                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.15.0-release.mp4', url: 'https://example.com/dejavu-v5.15.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
+                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.16.0-release.mp4', url: 'https://example.com/dejavu-v5.16.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
                 { id: 'bt_pc_1', dropType: 'batch_tabs', title: '2 tabs from Windows 11 Desktop', url: 'https://m3.material.io', text: 'Material Design 3 · GitHub', tabs: [{ title: 'Material Design 3', url: 'https://m3.material.io' }, { title: 'GitHub', url: 'https://github.com' }], fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 210000 }
               ]
             } : {
@@ -7236,9 +7322,9 @@
               ],
               sync: previewSync,
               update: {
-                currentVersion: '5.15.0',
+                currentVersion: '5.16.0',
                 status: qp.get('upd') === '1' ? 'available' : 'uptodate',
-                latestVersion: qp.get('upd') === '1' ? '5.16.0' : '5.15.0',
+                latestVersion: qp.get('upd') === '1' ? '5.17.0' : '5.16.0',
                 sizeLabel: qp.get('upd') === '1' ? '10.2 MB' : '',
                 releaseUrl: 'https://github.com/Dathevinci/Dejavu-browser/releases/latest',
                 available: qp.get('upd') === '1',

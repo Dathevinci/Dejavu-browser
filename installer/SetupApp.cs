@@ -163,7 +163,7 @@ namespace DejavuSetup
     {
         private const int BaseWidth = 780;
         private const int BaseHeight = 520;
-        private const string AppVersion = "5.15.0";
+        private const string AppVersion = "5.16.0";
 
         private readonly bool _uninstall;
         private readonly JavaScriptSerializer _json = new JavaScriptSerializer();

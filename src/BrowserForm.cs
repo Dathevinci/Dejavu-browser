@@ -48,6 +48,7 @@ namespace DejavuBrowser
         public int FingerprintingBlockedCount;
         public int TrackingParamsStripped;
         public string ShieldScriptId;
+        public string ForceDarkScriptId;
         public string PendingTopNavUrl;
         public bool CdpNetworkReady;
         public bool CdpBlockListApplied;
@@ -86,6 +87,7 @@ namespace DejavuBrowser
             FingerprintingBlockedCount = 0;
             TrackingParamsStripped = 0;
             ShieldScriptId = null;
+            ForceDarkScriptId = null;
             PendingTopNavUrl = null;
             CdpNetworkReady = false;
             CdpBlockListApplied = false;
@@ -1506,6 +1508,16 @@ namespace DejavuBrowser
                 { "memorySaverMinutes", _settings.memorySaverMinutes > 0 ? _settings.memorySaverMinutes : 15 },
                 { "confirmCloseMultipleTabs", _settings.confirmCloseMultipleTabs },
                 { "tabHoverPreview", _settings.tabHoverPreview },
+                { "newTabPosition", _settings.newTabPosition ?? "end" },
+                { "scrollWheelSwitchTabs", _settings.scrollWheelSwitchTabs },
+                { "doubleClickCloseTab", _settings.doubleClickCloseTab },
+
+                // v5.16.0 Reading Comfort & Dark Web
+                { "forceDarkWeb", _settings.forceDarkWeb },
+                { "readerTheme", _settings.readerTheme ?? "auto" },
+                { "readerFontSize", (_settings.readerFontSize >= 15 && _settings.readerFontSize <= 26) ? _settings.readerFontSize : 19 },
+                { "readerWidth", _settings.readerWidth ?? "medium" },
+                { "zenMode", _zenMode },
 
                 // v5.4.0 Downloads
                 { "turboDownloaderEnabled", _settings.turboDownloaderEnabled },
@@ -1527,9 +1539,11 @@ namespace DejavuBrowser
             };
         }
 
+        private bool _zenMode = false;
+
         private int NavRailCssWidth
         {
-            get { return (_settings != null && _settings.hideNavRail) ? 0 : 56; }
+            get { return (_zenMode || (_settings != null && _settings.hideNavRail)) ? 0 : 56; }
         }
 
         private int NavRailWidthPx
@@ -1955,7 +1969,7 @@ namespace DejavuBrowser
                 case "froggie-lime": accent = "lime"; mode = "light"; return true;
                 case "wp-m3-froggie-sage.jpg":
                 case "froggie-sage": accent = "aurora"; mode = "dark"; return true;
-                // 12 bespoke v5.15.0 Googlebook Material Design 3 vector wallpapers
+                // 12 bespoke v5.16.0 Googlebook Material Design 3 vector wallpapers
                 case "vec:m3-googlebook-waves":
                 case "m3-googlebook-waves": accent = "sapphire"; mode = "dark"; return true;
                 case "vec:m3-pixel-scallops":
@@ -3163,7 +3177,10 @@ namespace DejavuBrowser
 
         private void CreateTab(string initialUrl, bool activate)
         {
-            CreateTab(initialUrl, activate, -1);
+            int afterId = (_settings != null &&
+                string.Equals(_settings.newTabPosition, "after-active", StringComparison.OrdinalIgnoreCase) &&
+                _activeTabId > 0) ? _activeTabId : -1;
+            CreateTab(initialUrl, activate, afterId);
         }
 
         private void CreateTab(string initialUrl, bool activate, int afterTabId)
@@ -4130,6 +4147,10 @@ namespace DejavuBrowser
                 {
                     await core.AddScriptToExecuteOnDocumentCreatedAsync(BuildCwsThemeAndExtsScript(tab));
                     await core.AddScriptToExecuteOnDocumentCreatedAsync(_cwsBannerScript);
+                }
+                if (_settings != null && _settings.forceDarkWeb)
+                {
+                    tab.ForceDarkScriptId = await core.AddScriptToExecuteOnDocumentCreatedAsync(BuildForceDarkWebScript(true));
                 }
                 core.WebMessageReceived += (s, e) => OnTabContentWebMessage(tab, e);
 
@@ -7175,6 +7196,8 @@ namespace DejavuBrowser
                 return true;
             if (alt && !ctrl && !shift && (key == Keys.D || key == Keys.Left || key == Keys.Right))
                 return true;
+            if (alt && shift && !ctrl && key == Keys.D)
+                return true;
             if (ctrl && alt && !shift && key == Keys.R)
                 return true;
 
@@ -7185,7 +7208,8 @@ namespace DejavuBrowser
                     if (key == Keys.I || key == Keys.N || key == Keys.T || key == Keys.B ||
                         key == Keys.L || key == Keys.R || key == Keys.O || key == Keys.OemPipe ||
                         key == Keys.D || key == Keys.M || key == Keys.Tab ||
-                        key == Keys.V || key == Keys.A || key == Keys.S)
+                        key == Keys.V || key == Keys.A || key == Keys.S ||
+                        key == Keys.C || key == Keys.F)
                     {
                         return true;
                     }
@@ -7195,7 +7219,7 @@ namespace DejavuBrowser
                 if (key == Keys.Oemcomma || key == Keys.T || key == Keys.W || key == Keys.F4 ||
                     key == Keys.N || key == Keys.J || key == Keys.L || key == Keys.R ||
                     key == Keys.F || key == Keys.H || key == Keys.D || key == Keys.M ||
-                    key == Keys.P || key == Keys.U || key == Keys.S ||
+                    key == Keys.P || key == Keys.U || key == Keys.S || key == Keys.K ||
                     key == Keys.Tab || key == Keys.Oemplus || key == Keys.Add ||
                     key == Keys.OemMinus || key == Keys.Subtract || key == Keys.D0 || key == Keys.NumPad0 ||
                     (key >= Keys.D1 && key <= Keys.D9) || (key >= Keys.NumPad1 && key <= Keys.NumPad9))
@@ -7243,6 +7267,7 @@ namespace DejavuBrowser
             if (alt && !ctrl && !shift && key == Keys.D) { FocusShellOmnibox(); return true; }
             if (alt && !ctrl && !shift && key == Keys.Left) { GoBackActiveTab(); return true; }
             if (alt && !ctrl && !shift && key == Keys.Right) { GoForwardActiveTab(); return true; }
+            if (alt && shift && !ctrl && key == Keys.D) { ToggleForceDarkWeb(); return true; }
             if (ctrl && alt && !shift && key == Keys.R) { ToggleReaderModeActiveTabAsync(); return true; }
 
             if (ctrl && !alt)
@@ -7259,8 +7284,11 @@ namespace DejavuBrowser
                 if (shift && key == Keys.V) { ToggleSplitView(); return true; }
                 if (shift && key == Keys.A) { ShowTabSearchPopoverAt((int)(ClientSize.Width / DpiScale) - 160); return true; }
                 if (shift && key == Keys.S) { CaptureVisiblePageAsync(false); return true; }
+                if (shift && key == Keys.C) { CopyCleanUrlActiveTab(); return true; }
+                if (shift && key == Keys.F) { ToggleZenMode(); return true; }
 
                 if (!shift && key == Keys.Oemcomma) { SetSettingsOpen(!_settingsOpen, string.IsNullOrEmpty(_settingsPane) ? "you" : _settingsPane); return true; }
+                if (!shift && key == Keys.K) { ShowTabSearchPopoverAt((int)(ClientSize.Width / DpiScale) - 160); return true; }
                 if (!shift && key == Keys.T) { CreateDefaultNewTab(true); return true; }
                 if (!shift && (key == Keys.W || key == Keys.F4)) { CloseTab(_activeTabId); return true; }
                 if (!shift && key == Keys.N) { _appContext.OpenWindow(null, false, this, false, false); return true; }
@@ -7493,6 +7521,33 @@ namespace DejavuBrowser
                     _settings.shortcutColumns = SettingsStore.NormalizeShortcutColumns(cols);
                 }
             }
+            if (msg.ContainsKey("newTabPosition"))
+                _settings.newTabPosition = SettingsStore.NormalizeNewTabPosition(Convert.ToString(msg["newTabPosition"]));
+            if (msg.ContainsKey("scrollWheelSwitchTabs"))
+                _settings.scrollWheelSwitchTabs = Convert.ToBoolean(msg["scrollWheelSwitchTabs"]);
+            if (msg.ContainsKey("doubleClickCloseTab"))
+                _settings.doubleClickCloseTab = Convert.ToBoolean(msg["doubleClickCloseTab"]);
+            if (msg.ContainsKey("forceDarkWeb"))
+            {
+                bool fdw = Convert.ToBoolean(msg["forceDarkWeb"]);
+                if (_settings.forceDarkWeb != fdw)
+                {
+                    _settings.forceDarkWeb = fdw;
+                    ApplyForceDarkWebToAllTabsAsync();
+                }
+            }
+            if (msg.ContainsKey("readerTheme"))
+                _settings.readerTheme = SettingsStore.NormalizeReaderTheme(Convert.ToString(msg["readerTheme"]));
+            if (msg.ContainsKey("readerFontSize"))
+            {
+                int rfs;
+                if (int.TryParse(Convert.ToString(msg["readerFontSize"]), out rfs))
+                {
+                    _settings.readerFontSize = SettingsStore.NormalizeReaderFontSize(rfs);
+                }
+            }
+            if (msg.ContainsKey("readerWidth"))
+                _settings.readerWidth = SettingsStore.NormalizeReaderWidth(Convert.ToString(msg["readerWidth"]));
             if (msg.ContainsKey("hideGreetingBadge"))
                 _settings.hideGreetingBadge = Convert.ToBoolean(msg["hideGreetingBadge"]);
             if (msg.ContainsKey("hideStartPageSearch"))
@@ -7959,7 +8014,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.15.0 defaults", "success");
+            PushShellToast("Settings restored to v5.16.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
@@ -8774,7 +8829,16 @@ namespace DejavuBrowser
             bool readerAmoled = (!startLight && !_isPrivateWindow && _settings != null && _settings.amoledDark);
             string readerDarkBg = readerAmoled ? "#000000" : "#141218";
             string readerDarkBar = readerAmoled ? "#111016" : "#211f26";
-            string initTheme = startLight ? "light" : "dark";
+            string prefTheme = (_settings != null && !string.IsNullOrEmpty(_settings.readerTheme)) ? _settings.readerTheme : "auto";
+            string initTheme = (prefTheme == "dark" || prefTheme == "sepia" || prefTheme == "light")
+                ? prefTheme
+                : (startLight ? "light" : "dark");
+            int initFontSize = (_settings != null && _settings.readerFontSize >= 15 && _settings.readerFontSize <= 26)
+                ? _settings.readerFontSize
+                : 19;
+            int initWidthIdx = 1;
+            if (_settings != null && string.Equals(_settings.readerWidth, "narrow", StringComparison.OrdinalIgnoreCase)) initWidthIdx = 0;
+            else if (_settings != null && string.Equals(_settings.readerWidth, "wide", StringComparison.OrdinalIgnoreCase)) initWidthIdx = 2;
 
             string readerJs =
                 "(function(){" +
@@ -8803,7 +8867,7 @@ namespace DejavuBrowser
                 "if(parts.length===0){var fb=(document.body.innerText||'').slice(0,6000);words=fb.split(/\\s+/).length;parts.push('<p>'+fb.replace(/</g,'&lt;')+'</p>');}" +
                 "var mins=Math.max(1,Math.round(words/215));" +
                 "var THEMES={dark:{bg:'" + readerDarkBg + "',fg:'#e6e0e9',bar:'" + readerDarkBar + "',barFg:'#e6e0e9',bd:'rgba(202,196,208,0.16)',pri:'#d0bcff',onPri:'#381e72'},sepia:{bg:'#f7efe2',fg:'#2c2419',bar:'#ede2cf',barFg:'#2c2419',bd:'rgba(94,76,52,0.18)',pri:'#8a5600',onPri:'#ffffff'},light:{bg:'#fef7ff',fg:'#1d1b20',bar:'#f3edf7',barFg:'#1d1b20',bd:'rgba(73,69,79,0.16)',pri:'#6750a4',onPri:'#ffffff'}};" +
-                "var curT='" + initTheme + "';var sz=19;var fontIdx=0;var widthIdx=1;" +
+                "var curT='" + initTheme + "';var sz=" + initFontSize + ";var fontIdx=0;var widthIdx=" + initWidthIdx + ";" +
                 "var FONTS=[{lbl:'Sans',val:'\"Google Sans\",\"Segoe UI Variable\",\"Segoe UI\",system-ui,sans-serif'},{lbl:'Serif',val:'Georgia,\"Times New Roman\",serif'},{lbl:'Mono',val:'\"Cascadia Mono\",Consolas,monospace'}];" +
                 "var WIDTHS=[{lbl:'Narrow',val:'600px'},{lbl:'Medium',val:'720px'},{lbl:'Wide',val:'860px'}];" +
                 "var ov=document.createElement('div');ov.id=ID;" +
@@ -8919,7 +8983,9 @@ namespace DejavuBrowser
                 { "readingList", _profiles.ReadingList },
                 { "recentHistory", recentHist },
                 { "canSaveCurrent", active != null && !active.IsNewTab },
-                { "isCurrentInReadingList", active != null && !active.IsNewTab && _profiles.IsInReadingList(active.Url) }
+                { "isCurrentInReadingList", active != null && !active.IsNewTab && _profiles.IsInReadingList(active.Url) },
+                { "activeUrl", (active != null && !active.IsNewTab) ? (active.Url ?? "") : "" },
+                { "activeTitle", (active != null && !active.IsNewTab) ? (string.IsNullOrEmpty(active.Title) ? FormatDisplayUrl(active.Url) : active.Title) : "" }
             };
             if (backdrop != null) payload["backdrop"] = backdrop;
             return _json.Serialize(payload);
@@ -8932,7 +8998,7 @@ namespace DejavuBrowser
 
         private void ShowMenuPopoverAt(int anchorRightCss)
         {
-            ShowActionMenuPopoverAt("menu", anchorRightCss, 326, 608);
+            ShowActionMenuPopoverAt("menu", anchorRightCss, 328, 668);
         }
 
         private void ShowActionMenuPopoverAt(string modeName, int anchorRightCss, int widthCss, int heightCss)
@@ -8983,6 +9049,8 @@ namespace DejavuBrowser
                 { "isPrivateWindow", _isPrivateWindow },
                 { "windowCount", _appContext.WindowCount },
                 { "splitViewActive", IsSplitViewActiveNow() },
+                { "forceDarkWeb", _settings != null && _settings.forceDarkWeb },
+                { "zenMode", _zenMode },
                 { "activeProfile", _profiles.ActiveProfile }
             };
 
@@ -9957,6 +10025,7 @@ namespace DejavuBrowser
             PersistTabZoom(t, pct);
             if (_settingsOpen) PushFullStateToShell();
             else PushTabDeltaToShell();
+            PushShellToast("Zoom " + pct + "%", "info");
         }
 
         private void ResetZoom()
@@ -9973,6 +10042,121 @@ namespace DejavuBrowser
             PersistTabZoom(t, 100);
             if (_settingsOpen) PushFullStateToShell();
             else PushTabDeltaToShell();
+            PushShellToast("Zoom reset to 100%", "info");
+        }
+
+        private static string BuildForceDarkWebScript(bool enabled)
+        {
+            if (!enabled)
+            {
+                return "(function(){var el=document.getElementById('__dejavu_force_dark__');if(el)el.remove();})();";
+            }
+            return "(function(){" +
+                "if(location.protocol==='dejavu:'||location.hostname==='dejavu.local')return;" +
+                "var id='__dejavu_force_dark__';" +
+                "if(document.getElementById(id))return;" +
+                "var s=document.createElement('style');s.id=id;" +
+                "s.textContent='html{filter:invert(0.91) hue-rotate(180deg)!important;background:#111116!important;color-scheme:dark!important;}" +
+                "img,video,picture,canvas,iframe,[style*=\"background-image\"]{filter:invert(1) hue-rotate(180deg)!important;}';" +
+                "(document.head||document.documentElement).appendChild(s);" +
+                "})();";
+        }
+
+        private async void ApplyForceDarkWebToAllTabsAsync()
+        {
+            bool enabled = _settings != null && _settings.forceDarkWeb;
+            string js = BuildForceDarkWebScript(enabled);
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                BrowserTab t = _tabs[i];
+                if (t == null || t.IsNewTab || !t.CoreReady || t.WebView == null || t.WebView.IsDisposed || t.WebView.CoreWebView2 == null) continue;
+                try
+                {
+                    if (!string.IsNullOrEmpty(t.ForceDarkScriptId))
+                    {
+                        try { t.WebView.CoreWebView2.RemoveScriptToExecuteOnDocumentCreated(t.ForceDarkScriptId); } catch { }
+                        t.ForceDarkScriptId = null;
+                    }
+                    if (enabled)
+                    {
+                        t.ForceDarkScriptId = await t.WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(js);
+                    }
+                    await t.WebView.CoreWebView2.ExecuteScriptAsync(js);
+                }
+                catch { }
+            }
+        }
+
+        private void ToggleForceDarkWeb()
+        {
+            if (_settings == null) return;
+            _settings.forceDarkWeb = !_settings.forceDarkWeb;
+            _profiles.SaveActiveSettings(_settings);
+            ApplyForceDarkWebToAllTabsAsync();
+            PushFullStateToShell();
+            PushShellToast(_settings.forceDarkWeb ? "Force Dark Web enabled" : "Force Dark Web disabled", "info");
+        }
+
+        private void ToggleZenMode()
+        {
+            _zenMode = !_zenMode;
+            LayoutViews();
+            PushFullStateToShell();
+            PushShellToast(_zenMode ? "Focus Zen Mode on · Ctrl+Shift+F to exit" : "Focus Zen Mode off", "info");
+        }
+
+        private void CycleActiveTab(int delta)
+        {
+            List<BrowserTab> groupTabs = GetActiveGroupTabs();
+            if (groupTabs.Count <= 1) return;
+            int cur = groupTabs.FindIndex(t => t.Id == _activeTabId);
+            if (cur < 0) cur = 0;
+            int step = delta >= 0 ? 1 : -1;
+            int next = (cur + step + groupTabs.Count) % groupTabs.Count;
+            ActivateTab(groupTabs[next].Id);
+        }
+
+        private void CopyCleanUrlActiveTab()
+        {
+            BrowserTab t = GetActiveTab();
+            if (t == null || t.IsNewTab || string.IsNullOrWhiteSpace(t.Url))
+            {
+                PushShellToast("Open a webpage first to copy a clean link", "info");
+                return;
+            }
+            string cleaned = t.Url;
+            int stripped = 0;
+            try
+            {
+                Uri uri = new Uri(t.Url);
+                if (!string.IsNullOrEmpty(uri.Query) && uri.Query.Length > 1)
+                {
+                    string[] pairs = uri.Query.Substring(1).Split('&');
+                    var kept = new List<string>();
+                    for (int i = 0; i < pairs.Length; i++)
+                    {
+                        string p = pairs[i];
+                        if (string.IsNullOrEmpty(p)) continue;
+                        int eq = p.IndexOf('=');
+                        string key = (eq >= 0 ? p.Substring(0, eq) : p).Trim().ToLowerInvariant();
+                        bool isTracker = key.StartsWith("utm_") || key == "fbclid" || key == "gclid" ||
+                            key == "dclid" || key == "msclkid" || key == "mc_eid" || key == "mc_cid" ||
+                            key == "igshid" || key == "si" || key == "ref" || key == "ref_src" ||
+                            key == "ref_url" || key == "spm" || key == "_hsenc" || key == "_hsmi" ||
+                            key == "yclid" || key == "feature" || key == "pp";
+                        if (isTracker) stripped++;
+                        else kept.Add(p);
+                    }
+                    UriBuilder ub = new UriBuilder(uri);
+                    ub.Query = kept.Count > 0 ? string.Join("&", kept.ToArray()) : "";
+                    cleaned = ub.Uri.AbsoluteUri;
+                }
+            }
+            catch { }
+            try { Clipboard.SetText(cleaned); } catch { }
+            PushShellToast(stripped > 0
+                ? ("Copied clean link · stripped " + stripped + (stripped == 1 ? " tracker" : " trackers"))
+                : "Copied clean link", "success");
         }
 
         private void ToggleMuteTab(int tabId)
@@ -11153,6 +11337,18 @@ namespace DejavuBrowser
                     case "openTabSearch":
                         ShowTabSearchPopoverAt(msg.ContainsKey("anchorRight") ? Convert.ToInt32(msg["anchorRight"]) : ((int)(ClientSize.Width / DpiScale) - 140));
                         break;
+                    case "cycleTab":
+                        CycleActiveTab(msg.ContainsKey("delta") ? Convert.ToInt32(msg["delta"]) : 1);
+                        break;
+                    case "toggleForceDarkWeb":
+                        ToggleForceDarkWeb();
+                        break;
+                    case "toggleZenMode":
+                        ToggleZenMode();
+                        break;
+                    case "copyCleanLink":
+                        CopyCleanUrlActiveTab();
+                        break;
                     case "captureScreenshot":
                         CaptureVisiblePageAsync(msg.ContainsKey("copy") && Convert.ToBoolean(msg["copy"]));
                         break;
@@ -12050,6 +12246,36 @@ namespace DejavuBrowser
                 {
                     HidePopover();
                     ShowTabSearchPopoverAt((int)(ClientSize.Width / DpiScale) - 160);
+                }
+                else if (type == "toggleForceDarkWeb")
+                {
+                    HidePopover();
+                    ToggleForceDarkWeb();
+                }
+                else if (type == "toggleZenMode")
+                {
+                    HidePopover();
+                    ToggleZenMode();
+                }
+                else if (type == "copyCleanLink")
+                {
+                    HidePopover();
+                    CopyCleanUrlActiveTab();
+                }
+                else if (type == "copyCalcResult")
+                {
+                    HidePopover();
+                    string val = msg.ContainsKey("value") ? Convert.ToString(msg["value"]) : "";
+                    if (!string.IsNullOrEmpty(val))
+                    {
+                        try { Clipboard.SetText(val); } catch { }
+                        PushShellToast("Copied " + val, "success");
+                    }
+                }
+                else if (type == "toggleMuteActiveTab")
+                {
+                    HidePopover();
+                    ToggleMuteTab(_activeTabId);
                 }
                 else if (type == "tabSearchSwitch")
                 {

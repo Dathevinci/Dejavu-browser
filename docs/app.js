@@ -1,5 +1,5 @@
 /**
- * dejavu Official Website — Google Material Design 3 Interactive Controller (v5.15.0)
+ * dejavu Official Website — Google Material Design 3 Interactive Controller (v5.16.0)
  * Strictly ZERO window scroll listeners & ZERO scroll hijacking.
  * Uses IntersectionObserver for topbar elevation and active nav highlighting.
  */
@@ -7,7 +7,7 @@
   'use strict';
 
   const REPO = 'Dathevinci/Dejavu-browser';
-  const FALLBACK_VERSION = 'v5.15.0';
+  const FALLBACK_VERSION = 'v5.16.0';
   const root = document.documentElement;
 
   const VALID_SEEDS = [

@@ -3439,14 +3439,14 @@ namespace DejavuBrowser
                             {
                                 { "ok", true },
                                 { "app", "dejavu" },
-                                { "version", "5.13.0" },
+                                { "version", "5.14.0" },
                                 { "snapshot", snapBlob ?? "" }
                             };
                             respJson = _json.Serialize(respObj);
                         }
                         else
                         {
-                            respJson = "{\"ok\":true,\"app\":\"dejavu\",\"version\":\"5.13.0\"}";
+                            respJson = "{\"ok\":true,\"app\":\"dejavu\",\"version\":\"5.14.0\"}";
                         }
 
                         byte[] respBytes = Encoding.UTF8.GetBytes(respJson);

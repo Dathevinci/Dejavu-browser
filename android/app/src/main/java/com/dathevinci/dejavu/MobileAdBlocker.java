@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 
 /**
- * dejavu True Brave-Exact Shields Mobile Engine (v5.13.0)
+ * dejavu True Brave-Exact Shields Mobile Engine (v5.14.0)
  * - Background cached EasyList + EasyPrivacy + uBlock Quick-Fixes + Brave Specific/Disconnect/Unbreak + OISD + Peter Lowe
  *   compiled into ctx.getFilesDir()/filters-v4/ with 24h TTL (zero UI-thread I/O, 100,000+ rules!)
  * - 720+ millisecond-0 built-in core ad, tracker, telemetry, OEM, d3ward, adblock-tester, popunder & crypto-miner domains
@@ -619,6 +619,8 @@ public final class MobileAdBlocker {
     public boolean isListsReady() { return listsReady; }
     public long getTotalBlocked() { return totalBlocked.get(); }
     public long getTotalTrackingStripped() { return totalTrackingStripped.get(); }
+    public long getEstimatedDataSavedKb() { return totalBlocked.get() * 31L; }
+    public long getEstimatedTimeSavedMs() { return totalBlocked.get() * 50L; }
     public void setTotalTrackingStripped(long count) { this.totalTrackingStripped.set(Math.max(0L, count)); }
 
     public long recordExternalBlocked(int delta) {
@@ -842,7 +844,7 @@ public final class MobileAdBlocker {
             conn.setInstanceFollowRedirects(false);
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(15000);
-            conn.setRequestProperty("User-Agent", "dejavu-mobile/5.13.0");
+            conn.setRequestProperty("User-Agent", "dejavu-mobile/5.14.0");
             conn.setRequestProperty("Accept-Encoding", "gzip");
             int code = conn.getResponseCode();
             if (code >= 300 && code < 400) {
@@ -1791,8 +1793,8 @@ public final class MobileAdBlocker {
             + "}"
 
             // 1. Cosmetic Ad CSS + Downloaded Generic Cosmetic CSS + Fanboy Cookie Banner Blocker + Scroll Unlock
-            + "var BASE_AD_CSS='ins.adsbygoogle,iframe[id^=\"google_ads_iframe\"],iframe[src*=\"doubleclick.net\"],iframe[src*=\"googlesyndication.com\"],iframe[src*=\"amazon-adsystem.com\"],iframe[src*=\"adnxs.com\"],iframe[src*=\"criteo.\"],iframe[src*=\"taboola.\"],iframe[src*=\"outbrain.\"],[id^=\"google_ads_\"],[id^=\"div-gpt-ad\"],[class*=\"ad-banner\"],[class*=\"ad-slot\"],.ad-container,.ad-wrapper,.advertisement-container,[data-ad-slot],[data-ad-unit],[data-google-query-id],.outbrain-widget,.OUTBRAIN,[id^=\"outbrain_widget\"],[id^=\"taboola-\"],.taboola-widget,.mgbox,.rc-wc-widget,shreddit-ad-post,[data-testid=\"promoted-post\"],.promotedlink,ytd-ad-slot-renderer,ytd-promoted-sparkles-web-renderer,ytd-promoted-sparkles-text-search-renderer,ytd-in-feed-ad-layout-renderer,ytd-banner-promo-renderer,ytd-display-ad-renderer,ytd-companion-slot-renderer,ytd-action-companion-ad-renderer,ytd-masthead-ad-v3-renderer,ytm-promoted-sparkles-web-renderer,ytm-promoted-sparkles-text-search-renderer,ytm-promoted-video-renderer,ytm-companion-ad-renderer,ytm-companion-slot,ytm-statement-banner-renderer,ytm-banner-promo-renderer,ad-slot-renderer,#masthead-ad,#player-ads,.ad-showing .video-ads,.ytp-ad-overlay-container,.ytp-ad-text-overlay,.ytp-ad-image-overlay,.ytp-ad-module,.ytp-ad-player-overlay,.ytp-featured-product,tp-yt-paper-dialog:has(ytd-enforcement-message-view-model){display:none!important;height:0!important;max-height:0!important;overflow:hidden!important;}';"
-            + "var AGGR_AD_CSS='[class*=\"sponsored-card\"],[class*=\"sponsored-content\"],.sponsored-post,.native-ad,[data-ad-region],[data-testid=\"placementTracking\"],[aria-label=\"Sponsored\"],.smartbanner,.app-install-banner,.open-in-app-banner,.newsletter-modal,.exit-intent-popup,.share-buttons-widget,.addthis_inline_share_toolbox{display:none!important;height:0!important;max-height:0!important;overflow:hidden!important;}';"
+            + "var BASE_AD_CSS='ins.adsbygoogle,iframe[id^=\"google_ads_iframe\"],iframe[src*=\"doubleclick.net\"],iframe[src*=\"googlesyndication.com\"],iframe[src*=\"amazon-adsystem.com\"],iframe[src*=\"adnxs.com\"],iframe[src*=\"criteo.\"],iframe[src*=\"taboola.\"],iframe[src*=\"outbrain.\"],[id^=\"google_ads_\"],[id^=\"div-gpt-ad\"],[class*=\"ad-banner\"],[class*=\"ad-slot\"],.ad-container,.ad-wrapper,.advertisement-container,[data-ad-slot],[data-ad-unit],[data-google-query-id],.outbrain-widget,.OUTBRAIN,[id^=\"outbrain_widget\"],[id^=\"taboola-\"],.taboola-widget,.mgbox,.rc-wc-widget,shreddit-ad-post,[data-testid=\"promoted-post\"],.promotedlink,ytd-ad-slot-renderer,ytd-promoted-sparkles-web-renderer,ytd-promoted-sparkles-text-search-renderer,ytd-in-feed-ad-layout-renderer,ytd-banner-promo-renderer,ytd-display-ad-renderer,ytd-companion-slot-renderer,ytd-action-companion-ad-renderer,ytd-masthead-ad-v3-renderer,ytm-ad-slot-renderer,ytm-in-feed-ad-layout-renderer,ytm-promoted-sparkles-web-renderer,ytm-promoted-sparkles-text-search-renderer,ytm-promoted-video-renderer,ytm-companion-ad-renderer,ytm-companion-slot,ytm-statement-banner-renderer,ytm-banner-promo-renderer,ad-slot-renderer,#masthead-ad,#player-ads,.ad-showing .video-ads,.ytp-ad-overlay-container,.ytp-ad-text-overlay,.ytp-ad-image-overlay,.ytp-ad-module,.ytp-ad-player-overlay,.ytp-featured-product,tp-yt-paper-dialog:has(ytd-enforcement-message-view-model){display:none!important;height:0!important;max-height:0!important;overflow:hidden!important;}';"
+            + "var AGGR_AD_CSS='[class*=\"sponsored-card\"],[class*=\"sponsored-content\"],.sponsored-post,.native-ad,[data-ad-region],[data-testid=\"placementTracking\"],[aria-label=\"Sponsored\"],.smartbanner,.app-install-banner,.open-in-app-banner,xpromo-app-selector,shreddit-experience-tree[banner],.newsletter-modal,.exit-intent-popup,.share-buttons-widget,.addthis_inline_share_toolbox,[id*=\"sticky-ad\"],[class*=\"sticky-ad\"],[class*=\"bottom-ad\"]{display:none!important;height:0!important;max-height:0!important;overflow:hidden!important;}';"
             + "var CK_SEL='#onetrust-consent-sdk,#onetrust-banner-sdk,.onetrust-pc-dark-filter,#CybotCookiebotDialog,#CybotCookiebotDialogBodyUnderlay,.qc-cmp2-container,#qc-cmp2-container,#didomi-host,.didomi-popup-backdrop,#truste-consent-track,.truste_overlay,.truste_box_overlay,.cky-consent-container,.cky-overlay,#usercentrics-root,.osano-cm-window,#iubenda-cs-banner,#cmplz-cookiebanner-container,[id^=\"sp_message_container_\"],.fc-consent-root,.fc-dialog-overlay,#cookie-law-info-bar,#cookie-banner,.cookie-banner,.cookie-consent,.cc-window,.cc-banner,[aria-label*=\"cookie\" i][role=\"dialog\"]';"
             + "function applyShieldStyles(){"
             +   "try{"

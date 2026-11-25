@@ -256,26 +256,25 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           cat > /tmp/release_notes.md <<'EOF'
-          ### dejavu __TAG__ — Zero-Overlap Compact Android Bar, Core Browser Fixes & A-to-Z Googlebook Material Design 3
+          ### dejavu __TAG__ — Authentic Chrome × Brave Android Browser with Material Design 3
 
-          - **Zero-Overlap Android Bottom Bar & Compact Single-Row Mode (`54dp`)**:
-            - **Never Covers Websites**: Webpages now reserve the exact height of the visible bottom bar so fixed site navbars (YouTube, Reddit, Discord, Gemini, manga readers), chat inputs, and footers are always completely visible and tappable.
-            - **Zero Black Scroll Gap**: Scrolling down expands the webpage behind the bar on frame 0 before gliding the bar away; scrolling up glides the bar smoothly back over the page and restores bottom clearance once settled.
-            - **Compact 1-Row Default (`54dp`)**: Cuts webpage bottom bar height in half (Back + compact Address Pill with tab-swipe + Tab count badge + Menu in one slim Googlebook bar), switchable anytime with **Classic (2-Row)** in Settings → Appearance.
-            - **Inner-Scroll SPA Support**: Detects scrolling inside nested `overflow-y: auto` containers on modern web apps so the bottom bar hides and reveals smoothly everywhere.
-          - **Core Android Browser Fixes & Material 3 Native Polish**:
-            - **File & Photo Uploads (`onShowFileChooser`)**: Full single and multi-file chooser support for `<input type="file">` across all websites.
-            - **External App Links (`intent://`, `mailto:`, `tel:`, `market:`, `whatsapp:`)**: Opens installed apps cleanly with `browser_fallback_url` support instead of dead `ERR_UNKNOWN_URL_SCHEME` pages.
-            - **Material 3 Permission & Share Dialogs**: Themed Googlebook Material 3 dialogs for WebRTC Camera/Microphone, Geolocation, and Share-to-dejavu (zero stock Android AlertDialogs).
-            - **True Immersive Fullscreen Video & Link Integrity**: Fullscreen video hides system bars edge-to-edge and restores cleanly; removed the `DNT` link-tap reload hijack that could drop `Referer`/SPA state; added `onPageFinished` session auto-save and deferred `pushStateToUi()` while browsing live webpages for lower CPU/RAM usage.
-          - **Windows A-to-Z Googlebook Material 3 Parity & Functional Fixes**:
-            - **AMOLED Pitch Black & Material Style Everywhere**: Every native Windows popup (Main Menu, Profile Switcher, Shields, Tab Search, Sidebar, Extensions, Context Menus, Split View divider, and Reader View) now honors true `#000000` AMOLED surfaces, all 16 dynamic palettes, Material Style (`Tonal` | `Vibrant` | `Minimal`), and keyboard focus rings.
-            - **Googlebook Wallpaper Auto-Match & Split View Wake Fix**: Added all 12 bespoke `vec:m3-*` Googlebook vector wallpapers to C# startup auto-theme matching and ensured Memory-Saver-hibernated tabs resume immediately when opened in Split View.
+          - **Authentic Chrome × Brave 56dp Top Toolbar (Zero Bottom Bar by Default)**:
+            - **Single-Row Chrome × Brave Toolbar**: `[Home / ← Back]  [🔒 domain.com  ↻/×]  [🛡️ Badge]  [[2] Tabs]  [⋮ Menu]` — removes the default bottom bar so websites have 100% unobstructed viewport height from top to bottom.
+            - **Dedicated Brave Shields Toolbar Badge**: Live Material 3 tonal counter right beside the address pill shows how many ads and trackers were blocked on the current site and opens Shields in one tap.
+            - **Chrome Tab Counter & Scroll Collapse**: Tap `[2]` for the Tab Switcher or long-press for an instant New Tab; scrolling down expands the webpage on frame 0 (zero black gap) and tucks the domain capsule discreetly at top-center.
+            - **Optional Bottom Toolbar**: Users who prefer bottom navigation can toggle **Bottom navigation bar** or **Address bar: Bottom** anytime in Settings → Appearance.
+          - **Chrome × Brave Material Design 3 New Tab Page, Overflow Menu, Tabs & Omnibox**:
+            - **Brave Privacy Stats Card**: Clean 3-column Material 3 card on the New Tab Page displaying **Trackers & Ads Blocked**, **Est. Data Saved**, and **Est. Time Saved**, paired with Chrome's 56dp Material You Search pill (`Search or type web address`) and top-bar Shields pill, Profile Avatar, `[2]` Tab Counter, and `⋮` Menu.
+            - **Chrome Android Overflow Menu (`⋮`)**: Iconic top 5-icon quick action strip (**Forward**, **Bookmark**, **Downloads**, **Brave Shields**, **Reload/Stop**) above clean single-column Material 3 groups (`New tab`, `New Private tab`, `Brave Shields`, `History`, `Downloads`, `Bookmarks`, `Reading list`, `dejavu Link`, webpage tools with M3 checkboxes for `Desktop site` & `Dark web`, `Extensions`, `Wallpaper & Style`, `Settings`).
+            - **Chrome Tab Switcher & Omnibox**: Top-left `[+]` New Tab button beside the gliding `Tabs | Private` toggle in Tab Switcher, and `[Share]` `[Copy]` `[Edit URL]` buttons on the Omnibox current-page card.
+          - **Brave-Grade Mobile Adblocker Upgrades**:
+            - **Upgraded Brave Shields Sheet**: 3-column stats (**Ads & trackers**, **Data saved**, **Time saved**), stripped tracking parameter summary, `Standard | Aggressive` gliding control, and 4 protection switches.
+            - **Expanded Mobile Cosmetic Filters**: Added selectors for YouTube Mobile ad slots (`ytm-ad-slot-renderer`, `ytm-in-feed-ad-layout-renderer`), mobile sticky/bottom ad banners, and app-install nags alongside 108,000+ Brave, EasyList, EasyPrivacy, OISD, and Peter Lowe rules.
 
           #### Downloads & Verification
-          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.13.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
-          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.13.0.0`, `/highentropyva+`, deterministic build)
-          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 630`, V1+V2+V3 signed, Android 8.0+)
+          - **dejavu-Setup.exe** — Windows 10/11 Chromebook-style Material You Setup (`FileVersion 5.14.0.0`, `asInvoker`, zero `WScript.Shell`/batch scripts)
+          - **dejavu.exe** — Windows 10/11 Portable Single-File (`FileVersion 5.14.0.0`, `/highentropyva+`, deterministic build)
+          - **dejavu-mobile.apk** — Android Mobile Browser App (`__TAG__` · `versionCode 640`, V1+V2+V3 signed, Android 8.0+)
           - **SHA256SUMS.txt** — Official SHA-256 verification checksums for all release binaries (paired with GitHub SLSA Build Provenance Attestations)
           EOF
           sed -i 's/^          //' /tmp/release_notes.md
@@ -293,5 +292,5 @@ jobs:
             release-files/dejavu.exe \
             release-files/dejavu-mobile.apk \
             release-files/SHA256SUMS.txt \
-            --title "dejavu $TAG — Compact Android Bar, Browser Function Fixes & A-to-Z Googlebook M3" \
+            --title "dejavu $TAG — Chrome × Brave Android Material Design 3 Redesign" \
             --notes-file /tmp/release_notes.md

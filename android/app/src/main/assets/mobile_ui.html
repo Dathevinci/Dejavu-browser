@@ -648,20 +648,35 @@
     .m3-chip.active .chip-chk { display: inline; }
 
     /* =====================================================================
-       SCREEN 1: START PAGE — BREATHABLE, CALM PIXEL MATERIAL DESIGN 3
+       SCREEN 1: START PAGE — CHROME x BRAVE MATERIAL DESIGN 3 NTP
        ===================================================================== */
     #scr-start {
-      padding: calc(var(--safe-top) + 12px) 20px calc(var(--safe-bottom) + 28px);
-      gap: 20px;
+      padding: calc(var(--safe-top) + 10px) 18px calc(var(--safe-bottom) + 26px);
+      gap: 18px;
     }
     .sp-topbar {
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      min-height: 40px;
     }
+    .sp-top-left {
+      display: flex; align-items: center; gap: 7px; min-width: 0;
+    }
+    .sp-shields-pill {
+      height: 34px; padding: 0 11px 0 9px; border-radius: 999px;
+      background: var(--accent-soft); border: none;
+      color: var(--accent-bright); font-family: inherit; font-size: 12px; font-weight: 640;
+      display: inline-flex; align-items: center; gap: 5px; cursor: pointer; flex-shrink: 0;
+      transition: transform 0.18s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized), opacity 0.16s ease;
+    }
+    body.theme-light .sp-shields-pill { color: var(--accent); }
+    .sp-shields-pill.off { background: var(--sheet-elev); color: var(--muted); opacity: 0.72; }
+    .sp-shields-pill:active { transform: scale(0.95); }
+
     .sp-link-pill {
-      height: 34px; padding: 0 13px 0 11px; border-radius: 999px;
+      height: 34px; padding: 0 11px 0 9px; border-radius: 999px;
       background: var(--sheet-elev); border: none;
-      color: var(--ink); font-family: inherit; font-size: 12.5px; font-weight: 560;
-      display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+      color: var(--ink); font-family: inherit; font-size: 12px; font-weight: 560;
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0;
       transition: transform 0.18s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized);
     }
     body.theme-light .sp-link-pill { background: rgba(255, 255, 255, 0.88); }
@@ -677,19 +692,38 @@
     .sp-link-pill.on .link-ico { display: none; }
     .sp-link-pill.on.synced .dot { background: var(--accent); }
 
-    .sp-top-acts { display: flex; align-items: center; gap: 10px; }
-    .sp-wp-btn {
-      width: 38px; height: 38px; border-radius: 50%; border: none;
+    .sp-top-acts { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .sp-wp-btn, .sp-menu-btn {
+      width: 36px; height: 36px; border-radius: 50%; border: none;
       background: var(--sheet-elev); color: var(--ink);
       display: inline-flex; align-items: center; justify-content: center;
-      cursor: pointer; padding: 0;
+      cursor: pointer; padding: 0; flex-shrink: 0;
       transition: transform 0.18s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized);
     }
-    body.theme-light .sp-wp-btn { background: rgba(255, 255, 255, 0.88); color: var(--muted); }
-    .sp-wp-btn:active { transform: scale(0.94); }
+    body.theme-light .sp-wp-btn, body.theme-light .sp-menu-btn { background: rgba(255, 255, 255, 0.88); color: var(--muted); }
+    .sp-wp-btn:active, .sp-menu-btn:active { transform: scale(0.93); }
+
+    .sp-tabs-btn {
+      width: 36px; height: 36px; border-radius: 50%; border: none;
+      background: var(--sheet-elev); color: var(--ink);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0; flex-shrink: 0;
+      transition: transform 0.18s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized);
+    }
+    body.theme-light .sp-tabs-btn { background: rgba(255, 255, 255, 0.88); }
+    .sp-tabs-btn:active { transform: scale(0.93); }
+    .sp-tabs-sq {
+      width: 20px; height: 20px; border-radius: 5.5px;
+      border: 1.7px solid var(--muted); color: var(--ink);
+      font-size: 10.5px; font-weight: 700; line-height: 1;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    body.mode-private .sp-tabs-sq {
+      border-color: var(--accent); color: var(--accent); background: rgba(208, 188, 255, 0.14);
+    }
 
     .sp-prof-btn {
-      position: relative; width: 36px; height: 36px; padding: 0;
+      position: relative; width: 34px; height: 34px; padding: 0;
       border-radius: 50%; border: none; background: transparent;
       display: inline-flex; align-items: center; justify-content: center;
       cursor: pointer; flex-shrink: 0;
@@ -697,9 +731,9 @@
     }
     .sp-prof-btn:active { transform: scale(0.94); }
     .sp-prof-av {
-      width: 36px; height: 36px; border-radius: 50%;
+      width: 34px; height: 34px; border-radius: 50%;
       display: inline-flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 700; color: #1d1b20;
+      font-size: 13.5px; font-weight: 700; color: #1d1b20;
       overflow: hidden; position: relative;
     }
     .sp-prof-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -711,17 +745,46 @@
 
     .sp-hero {
       display: flex; flex-direction: column; align-items: center; text-align: center;
-      padding: 16px 8px 0; gap: 6px;
+      padding: 8px 8px 0; gap: 6px;
     }
     .sp-logo-badge {
-      width: 56px; height: 56px; border-radius: 16px;
+      width: 54px; height: 54px; border-radius: 16px;
       display: inline-flex; align-items: center; justify-content: center;
       transition: transform 0.22s var(--md-ease-spring);
     }
-    .sp-logo-badge svg { width: 56px; height: 56px; display: block; }
+    .sp-logo-badge svg { width: 54px; height: 54px; display: block; }
     .sp-brand {
       margin: 2px 0 0; font-size: 26px; font-weight: 580;
-      letter-spacing: -0.02em; line-height: 1.15; color: var(--ink);
+      letter-spacing: -0.025em; line-height: 1.15; color: var(--ink);
+    }
+
+    /* Brave-Style Material 3 Privacy Stats Card on NTP */
+    .sp-brave-stats {
+      width: 100%; border: none; border-radius: 22px;
+      background: var(--group-bg); padding: 13px 10px;
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;
+      text-align: center; cursor: pointer; font-family: inherit; color: var(--ink);
+      box-shadow: var(--shadow-sm); contain: layout style;
+      transition: transform 0.18s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized);
+    }
+    body.theme-light .sp-brave-stats { background: rgba(255, 255, 255, 0.94); }
+    .sp-brave-stats:active { transform: scale(0.985); background: var(--group-press); }
+    .sp-bs-col {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 0 4px; position: relative;
+    }
+    .sp-bs-col + .sp-bs-col::before {
+      content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
+      width: 1px; background: var(--divider);
+    }
+    .sp-bs-num {
+      font-size: 19px; font-weight: 660; letter-spacing: -0.02em; line-height: 1.12;
+      color: var(--accent); font-variant-numeric: tabular-nums;
+    }
+    .sp-bs-col:nth-child(2) .sp-bs-num { color: var(--mint); }
+    .sp-bs-col:nth-child(3) .sp-bs-num { color: var(--ink); }
+    .sp-bs-lbl {
+      font-size: 10.8px; font-weight: 540; line-height: 1.25; color: var(--muted);
     }
 
     /* Unified Google Pixel At-a-Glance M3 Message of the Day Card + Search Stack */
@@ -958,15 +1021,25 @@
     .q-chip:active { transform: scale(0.96); background: var(--group-press); }
 
     /* =====================================================================
-       SCREEN 3: TAB SWITCHER — CRISP PIXEL M3 CARDS (ZERO NEON GLOW)
+       SCREEN 3: TAB SWITCHER — AUTHENTIC CHROME ANDROID MATERIAL 3
        ===================================================================== */
     #scr-tabs { background: var(--canvas-bg); padding: 0; overflow: hidden; }
     .tabs-top {
       flex-shrink: 0;
-      padding: calc(var(--safe-top) + 12px) 16px 12px;
-      display: flex; align-items: center; justify-content: center;
+      padding: calc(var(--safe-top) + 10px) 14px 10px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
       background: var(--canvas-bg);
     }
+    .tabs-top-add {
+      width: 38px; height: 38px; border-radius: 12px; border: none;
+      background: var(--accent-soft); color: var(--accent-bright);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; padding: 0;
+      transition: transform 0.18s var(--md-ease-spring), background-color 0.16s var(--md-ease-emphasized);
+    }
+    body.theme-light .tabs-top-add { color: var(--accent); }
+    .tabs-top-add:active { transform: scale(0.93); }
+    .tabs-top-add.priv { background: #4f378b; color: #eaddff; }
     .tabs-scroll {
       flex: 1; min-height: 0; overflow-y: auto;
       overscroll-behavior-y: contain;
@@ -1048,40 +1121,53 @@
     .tabs-add-fab.priv { background: #4f378b; color: #eaddff; }
 
     /* =====================================================================
-       SHEET A: MENU — CALM, MONOCHROME, SCANNABLE
+       SHEET A: AUTHENTIC CHROME x BRAVE ANDROID OVERFLOW MENU (M3)
        ===================================================================== */
+    .chrome-menu-strip {
+      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+      background: var(--group-bg); border-radius: 22px; padding: 6px 4px;
+      contain: layout style;
+    }
+    .cm-strip-btn {
+      position: relative; height: 48px; border-radius: 16px; border: none;
+      background: transparent; color: var(--ink);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
+      transition: background-color 0.15s var(--md-ease-emphasized), transform 0.18s var(--md-ease-spring), opacity 0.15s ease, color 0.15s ease;
+    }
+    .cm-strip-btn:active { background: var(--group-press); transform: scale(0.92); }
+    .cm-strip-btn.active { color: var(--accent); background: var(--accent-soft); }
+    .cm-strip-btn.disabled { opacity: 0.34; pointer-events: none; }
+    .cm-strip-badge {
+      position: absolute; top: 5px; right: 6px;
+      min-width: 16px; height: 15px; padding: 0 4px; border-radius: 999px;
+      background: var(--accent); color: var(--accent-ink);
+      font-size: 9.5px; font-weight: 760; line-height: 15px; text-align: center;
+      display: none;
+    }
+    .cm-strip-badge.show { display: inline-block; }
+
+    .chrome-chk {
+      width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0;
+      border: 2px solid var(--subtle); background: transparent;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--accent-ink);
+      transition: background-color 0.15s var(--md-ease-emphasized), border-color 0.15s var(--md-ease-emphasized);
+    }
+    .chrome-chk.on { background: var(--accent); border-color: var(--accent); }
+
     .page-hdr-card {
       display: flex; align-items: center; gap: 12px;
-      padding: 12px 14px; border-radius: 20px; background: var(--group-bg);
-    }
-    .menu-act-row {
-      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
-    }
-    .menu-act-btn {
-      background: transparent; border: none; color: var(--ink);
-      font-family: inherit; padding: 4px 2px;
-      display: flex; flex-direction: column; align-items: center; gap: 7px;
-      font-size: 11.5px; font-weight: 520; cursor: pointer;
-      transition: transform 0.18s var(--md-ease-spring);
-    }
-    .menu-act-btn:active { transform: scale(0.94); }
-    .menu-act-circle {
-      width: 44px; height: 44px; border-radius: 50%;
-      background: var(--sheet-elev); color: var(--ink);
-      display: inline-flex; align-items: center; justify-content: center;
-      transition: background-color 0.16s var(--md-ease-emphasized), color 0.16s var(--md-ease-emphasized);
-    }
-    .menu-act-btn.active .menu-act-circle {
-      background: var(--accent-soft); color: var(--accent-bright);
-    }
-    body.theme-light .menu-act-btn.active .menu-act-circle { color: var(--accent); }
-
-    .menu-page-controls {
-      display: flex; flex-direction: column; gap: 10px;
+      padding: 11px 14px; border-radius: 20px; background: var(--group-bg);
     }
     .zoom-row {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 14px 10px 16px; border-radius: 18px; background: var(--group-bg);
+      padding: 11px 16px 11px 18px;
+      position: relative;
+    }
+    .zoom-row::before {
+      content: ''; position: absolute; left: 18px; right: 18px; top: 0;
+      height: 1px; background: var(--divider);
     }
     .zoom-stepper {
       display: inline-flex; align-items: center; gap: 2px;
@@ -1099,7 +1185,7 @@
     }
 
     /* =====================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.13.0) — UNIFIED CALM AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.14.0) — UNIFIED CALM AUTO-SYNC HUB
        ===================================================================== */
     .sync-card {
       background: var(--group-bg); border-radius: 22px; padding: 16px;
@@ -1641,7 +1727,7 @@
     .empty.compact { padding: 16px 14px; font-size: 13px; }
 
     /* =====================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.13.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.14.0)
        ===================================================================== */
     .sh-hero-card {
       background: var(--group-bg); border-radius: 24px; padding: 16px 18px;
@@ -1663,19 +1749,27 @@
     .sh-status-txt { font-size: 12.5px; font-weight: 540; color: var(--mint); margin-top: 2px; }
     .sh-status-txt.off { color: var(--muted); }
     .sh-stats-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
       contain: layout style;
     }
     .sh-stat-card {
-      background: var(--group-bg); border-radius: 20px; padding: 14px 16px;
-      display: flex; flex-direction: column; gap: 3px;
+      background: var(--group-bg); border-radius: 20px; padding: 13px 10px;
+      display: flex; flex-direction: column; align-items: center; text-align: center; gap: 3px;
     }
     .sh-stat-num {
-      font-size: 26px; font-weight: 640; letter-spacing: -0.025em; line-height: 1.1;
-      color: var(--ink);
+      font-size: 21px; font-weight: 660; letter-spacing: -0.025em; line-height: 1.12;
+      color: var(--accent);
     }
-    .sh-stat-lbl { font-size: 12px; font-weight: 560; color: var(--muted); }
-    .sh-stat-sub { font-size: 11px; color: var(--subtle); margin-top: 2px; }
+    .sh-stat-card:nth-child(2) .sh-stat-num { color: var(--mint); }
+    .sh-stat-card:nth-child(3) .sh-stat-num { color: var(--ink); }
+    .sh-stat-lbl { font-size: 11px; font-weight: 560; color: var(--muted); line-height: 1.25; }
+    .sh-stat-sub { font-size: 10.5px; color: var(--subtle); margin-top: 1px; }
+    .sh-cleaned-bar {
+      background: var(--group-bg); border-radius: 16px; padding: 10px 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      font-size: 12.5px; color: var(--muted);
+    }
+    .sh-cleaned-val { font-weight: 640; color: var(--ink); }
     .sh-level-card {
       background: var(--group-bg); border-radius: 22px; padding: 15px 18px;
       display: flex; flex-direction: column; gap: 11px;
@@ -1710,30 +1804,43 @@
   </div>
 
   <!-- ===================================================================
-       SCREEN 1: START PAGE — CALM GOOGLE PIXEL MATERIAL DESIGN 3
+       SCREEN 1: START PAGE — CHROME x BRAVE MATERIAL DESIGN 3 NTP
        =================================================================== -->
   <section id="scr-start" class="screen">
     <div class="sp-topbar">
-      <button type="button" id="sp-link-pill" class="sp-link-pill" onclick="call('openScreen','sync')">
-        <span class="dot" aria-hidden="true"></span>
-        <span class="link-ico" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="12.5" height="9" rx="2"/><path d="M6.5 17.5h4.5M8.75 14v3.5M14.5 11.5L21 5M21 5h-4.2M21 5v4.2"/></svg>
-        </span>
-        <span id="sp-link-txt">Link</span>
-      </button>
+      <div class="sp-top-left">
+        <button type="button" id="sp-shields-pill" class="sp-shields-pill" aria-label="Brave Shields" onclick="call('openScreen','shields')">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8L4.6 5.8v5.6c0 4.8 3.2 8.2 7.4 9.6 4.2-1.4 7.4-4.8 7.4-9.6V5.8L12 2.8z"/><path d="M8.8 12.2l2.2 2.2 4.4-4.5"/></svg>
+          <span id="sp-shields-cnt">0</span>
+        </button>
+
+        <button type="button" id="sp-link-pill" class="sp-link-pill" onclick="call('openScreen','sync')">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="link-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="12.5" height="9" rx="2"/><path d="M6.5 17.5h4.5M8.75 14v3.5M14.5 11.5L21 5M21 5h-4.2M21 5v4.2"/></svg>
+          </span>
+          <span id="sp-link-txt">Link</span>
+        </button>
+      </div>
 
       <div class="sp-top-acts">
-        <button type="button" class="sp-wp-btn" aria-label="Wallpapers" onclick="call('openScreen','wallpapers')">
-          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5" fill="currentColor" stroke="none"/><path d="M4 17l4.8-4.6 3.2 2.9 2.8-2.8L20 17"/></svg>
+        <button type="button" class="sp-wp-btn" aria-label="Wallpaper and Style" onclick="call('openScreen','wallpapers')">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5" fill="currentColor" stroke="none"/><path d="M4 17l4.8-4.6 3.2 2.9 2.8-2.8L20 17"/></svg>
         </button>
         <button type="button" id="sp-profile-btn" class="sp-prof-btn" aria-label="Account and profiles" onclick="call('openScreen','profile')">
           <span id="sp-profile-av" class="sp-prof-av" style="background:#d0bcff;">P</span>
           <span id="sp-upd-dot" class="sp-upd-dot" aria-hidden="true"></span>
         </button>
+        <button type="button" id="sp-tabs-btn" class="sp-tabs-btn" aria-label="Switch tabs" onclick="call('openScreen','tabs')">
+          <span id="sp-tabs-sq" class="sp-tabs-sq">1</span>
+        </button>
+        <button type="button" id="sp-menu-btn" class="sp-menu-btn" aria-label="Menu" onclick="call('openScreen','menu')">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><circle cx="12" cy="5.5" r="1.75"/><circle cx="12" cy="12" r="1.75"/><circle cx="12" cy="18.5" r="1.75"/></svg>
+        </button>
       </div>
     </div>
 
-    <!-- Calm Centered Hero (with Optional Googlebook Digital Clock) -->
+    <!-- Calm Centered Hero (with Optional Digital Clock) -->
     <div id="sp-hero-normal" class="sp-hero">
       <div id="sp-clock-wrap" class="sp-clock-wrap hidden" aria-live="off">
         <div id="sp-clock-time" class="sp-clock-time">12:00</div>
@@ -1761,9 +1868,29 @@
       <p>Pages you visit here won't be saved to history or synced to your Windows PC.</p>
     </div>
 
-    <!-- Unified Pixel At-a-Glance M3 MOTD Card + 56px Search Pill -->
+    <!-- Chrome 56px Search Pill + Brave Material 3 Privacy Stats Card + Optional MOTD -->
     <div class="sp-glance-stack">
-      <div id="sp-motd-card" class="sp-motd-card" role="region" aria-label="Pixel Message of the Day">
+      <button type="button" id="sp-search-pill" class="sp-m3-search" onclick="call('focusOmnibox')">
+        <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);flex-shrink:0;"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.2 4.2"/></svg>
+        <span id="sp-search-txt" class="sp-m3-search-txt">Search or type web address</span>
+      </button>
+
+      <button type="button" id="sp-brave-stats" class="sp-brave-stats" aria-label="Brave Shields Privacy Stats" onclick="call('openScreen','shields')">
+        <span class="sp-bs-col">
+          <span id="sp-bs-blocked" class="sp-bs-num">0</span>
+          <span class="sp-bs-lbl">Trackers &amp; ads blocked</span>
+        </span>
+        <span class="sp-bs-col">
+          <span id="sp-bs-data" class="sp-bs-num">0 KB</span>
+          <span class="sp-bs-lbl">Est. data saved</span>
+        </span>
+        <span class="sp-bs-col">
+          <span id="sp-bs-time" class="sp-bs-num">0s</span>
+          <span class="sp-bs-lbl">Est. time saved</span>
+        </span>
+      </button>
+
+      <div id="sp-motd-card" class="sp-motd-card" role="region" aria-label="Pixel Message of the Day" style="display:none;">
         <span id="sp-motd-ico" class="sp-motd-medallion" aria-hidden="true"></span>
         <div class="sp-motd-body">
           <div id="sp-motd-overline" class="sp-motd-overline"></div>
@@ -1773,11 +1900,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4.6V9h-4.4"/></svg>
         </button>
       </div>
-
-      <button type="button" id="sp-search-pill" class="sp-m3-search" onclick="call('focusOmnibox')">
-        <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);flex-shrink:0;"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.2 4.2"/></svg>
-        <span id="sp-search-txt" class="sp-m3-search-txt">Search or enter website</span>
-      </button>
     </div>
 
     <!-- Airy Borderless 4-Column Quick Access Tiles -->
@@ -1809,11 +1931,14 @@
         <div id="omni-active-title" class="g-row-title" style="font-size:14px;"></div>
         <div id="omni-active-url" class="g-row-sub"></div>
       </div>
-      <button type="button" class="icon-btn tonal" style="width:34px;height:34px;" title="Copy link" onclick="copyActiveUrl()">
+      <button type="button" class="icon-btn tonal" style="width:34px;height:34px;" title="Share" aria-label="Share link" onclick="call('shareNative')">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.4V3.8M6.8 6.8L10 3.6l3.2 3.2"/><path d="M4 11.2v4.3A1.7 1.7 0 0 0 5.7 17.2h8.6a1.7 1.7 0 0 0 1.7-1.7v-4.3"/></svg>
+      </button>
+      <button type="button" class="icon-btn tonal" style="width:34px;height:34px;" title="Copy link" aria-label="Copy link" onclick="copyActiveUrl()">
         <svg viewBox="0 0 18 18" width="16" height="16" fill="none"><rect x="6" y="6" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 12H3.5A1.5 1.5 0 0 1 2 10.5v-7A1.5 1.5 0 0 1 3.5 2h7A1.5 1.5 0 0 1 12 3.5V4" stroke="currentColor" stroke-width="1.5"/></svg>
       </button>
-      <button type="button" class="icon-btn tonal" style="width:34px;height:34px;" title="Send to PC" onclick="call('sendCurrentTabToPc')">
-        <svg viewBox="0 0 18 18" width="16" height="16" fill="none"><rect x="2.2" y="3.5" width="10" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 13.5h3.4M7.2 11v2.5M11.5 9.5L16 5M16 5h-3.4M16 5v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <button type="button" class="icon-btn tonal" style="width:34px;height:34px;" title="Edit URL" aria-label="Edit URL" onclick="editActiveUrl()">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M3.8 16.2h3.2l8.5-8.5a1.5 1.5 0 0 0 0-2.2l-1-1a1.5 1.5 0 0 0-2.2 0L3.8 13v3.2z"/></svg>
       </button>
     </div>
 
@@ -1837,10 +1962,13 @@
   </section>
 
   <!-- ===================================================================
-       SCREEN 3: TAB SWITCHER
+       SCREEN 3: TAB SWITCHER — AUTHENTIC CHROME ANDROID MATERIAL 3
        =================================================================== -->
   <section id="scr-tabs" class="screen hidden">
     <div class="tabs-top">
+      <button type="button" id="tabs-top-add" class="tabs-top-add" aria-label="New tab" onclick="openNewInMode()">
+        <svg viewBox="0 0 20 20" width="19" height="19" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>
+      </button>
       <div class="mode-seg" id="tabs-mode-seg">
         <span class="seg-glider" aria-hidden="true"></span>
         <button type="button" id="seg-tabs-normal" class="mode-seg-btn active" onclick="setTabViewMode(false)">
@@ -1851,6 +1979,7 @@
           <span id="seg-tabs-priv-lbl">Private</span>
         </button>
       </div>
+      <button type="button" class="pill-btn ghost" onclick="call('closeScreen')">Done</button>
     </div>
 
     <div class="tabs-scroll">
@@ -1876,7 +2005,7 @@
   </section>
 
   <!-- ===================================================================
-       SHEET A: MENU BOTTOM SHEET — CALM & SCANNABLE
+       SHEET A: AUTHENTIC CHROME x BRAVE ANDROID OVERFLOW MENU (M3)
        =================================================================== -->
   <div id="scr-menu" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -1895,13 +2024,33 @@
       </div>
 
       <div class="sheet-body">
-        <!-- Main Menu View -->
-        <div id="menu-view-main" style="display:flex;flex-direction:column;gap:16px;">
-          <!-- Live Webpage Header (Hidden on Start Page) -->
+        <!-- Main Chrome x Brave Overflow Menu View -->
+        <div id="menu-view-main" style="display:flex;flex-direction:column;gap:14px;">
+          <!-- Authentic Chrome Top 5-Icon Quick Action Strip: Forward | Bookmark | Downloads | Brave Shields | Reload -->
+          <div class="chrome-menu-strip" role="toolbar" aria-label="Quick page actions">
+            <button type="button" id="cm-btn-fwd" class="cm-strip-btn" aria-label="Forward" title="Forward" onclick="call('goForward')">
+              <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+            <button type="button" id="cm-btn-bm" class="cm-strip-btn" aria-label="Bookmark page" title="Bookmark" onclick="call('toggleBookmark')">
+              <svg id="menu-bm-svg" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.6 6.8 19.4l1-5.8-4.2-4.1 5.8-.8L12 3.4z"/></svg>
+            </button>
+            <button type="button" id="cm-btn-dl" class="cm-strip-btn" aria-label="Downloads" title="Downloads" onclick="call('openDownloads')">
+              <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.2v10.6M8 11.2L12 15.2l4-4M4.8 19.2h14.4"/></svg>
+            </button>
+            <button type="button" id="cm-btn-sh" class="cm-strip-btn" aria-label="Brave Shields" title="Brave Shields" onclick="call('openScreen','shields')">
+              <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8L4.6 5.8v5.6c0 4.8 3.2 8.2 7.4 9.6 4.2-1.4 7.4-4.8 7.4-9.6V5.8L12 2.8z"/><path d="M8.8 12.2l2.2 2.2 4.4-4.5"/></svg>
+              <span id="cm-sh-badge" class="cm-strip-badge">0</span>
+            </button>
+            <button type="button" id="cm-btn-rel" class="cm-strip-btn" aria-label="Reload page" title="Reload" onclick="call('reloadPage')">
+              <svg id="cm-rel-svg" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4.6V9h-4.4"/></svg>
+            </button>
+          </div>
+
+          <!-- Compact Live Webpage Header (Hidden on Start Page) -->
           <div id="menu-page-hdr" class="page-hdr-card" style="display:none;">
             <div id="menu-page-ico"></div>
             <div class="g-row-meta">
-              <div id="menu-page-title" class="g-row-title" style="font-size:14.5px;"></div>
+              <div id="menu-page-title" class="g-row-title" style="font-size:14px;"></div>
               <div id="menu-page-host" class="g-row-sub"></div>
             </div>
             <button type="button" class="icon-btn" title="Copy link" onclick="copyActiveUrl()">
@@ -1909,74 +2058,28 @@
             </button>
           </div>
 
-          <!-- 4-Icon Monochrome M3 Action Row (Live Webpages Only) -->
-          <div id="menu-page-actions" class="menu-act-row" style="display:none;">
-            <button type="button" id="menu-bm-btn" class="menu-act-btn" onclick="call('toggleBookmark')">
-              <span class="menu-act-circle">
-                <svg id="menu-bm-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.6 6.8 19.4l1-5.8-4.2-4.1 5.8-.8L12 3.4z"/></svg>
-              </span>
-              <span>Bookmark</span>
-            </button>
-            <button type="button" class="menu-act-btn" onclick="call('shareNative')">
-              <span class="menu-act-circle">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14.5V4.2M8.2 8L12 4.2 15.8 8"/><path d="M5 12.8v5.2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5.2"/></svg>
-              </span>
-              <span>Share</span>
-            </button>
-            <button type="button" class="menu-act-btn" onclick="call('sendCurrentTabToPc')">
-              <span class="menu-act-circle">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="12.5" height="9" rx="2"/><path d="M6.5 17.5h4.5M8.75 14v3.5M14.5 11.5L21 5M21 5h-4.2M21 5v4.2"/></svg>
-              </span>
-              <span>Send to PC</span>
-            </button>
-            <button type="button" class="menu-act-btn" onclick="mobileDlTab='media';call('openDownloads')">
-              <span class="menu-act-circle">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.2v10.6M8 11.2L12 15.2l4-4M4.8 19.2h14.4"/></svg>
-              </span>
-              <span>Media / 8x</span>
-            </button>
-          </div>
-
-          <!-- Clean Page Controls Chip Strip + Text Size (Live Webpages Only) -->
-          <div id="menu-page-controls" class="menu-page-controls" style="display:none;">
-            <div class="m3-chip-strip">
-              <button type="button" id="m-desk-chip" class="m3-chip" onclick="call('toggleDesktopMode')">
-                <span class="chip-chk">✓</span><span>Desktop site</span>
-              </button>
-              <button type="button" id="m-darkweb-chip" class="m3-chip" onclick="call('toggleDarkWebPages')">
-                <span class="chip-chk">✓</span><span>Dark web</span>
-              </button>
-              <button type="button" class="m3-chip" onclick="call('openFindInPage')">
-                <span>Find</span>
-              </button>
-              <button type="button" class="m3-chip" onclick="call('openReaderMode')">
-                <span>Reader</span>
-              </button>
-            </div>
-            <div class="zoom-row">
-              <span style="font-size:14px;font-weight:520;color:var(--muted);">Text size</span>
-              <div class="zoom-stepper">
-                <button type="button" class="zoom-btn" onclick="stepZoom(-10)">A-</button>
-                <span id="m-zoom-val" class="zoom-val" onclick="call('setPageZoom',100)">100%</span>
-                <button type="button" class="zoom-btn" onclick="stepZoom(10)">A+</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Calm M3 List Group 1: Library -->
+          <!-- Chrome Group 1: Tabs & Brave Shields -->
           <div class="g-group">
-            <button type="button" class="g-row" onclick="setMenuSubView('bookmarks')">
-              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.6 6.8 19.4l1-5.8-4.2-4.1 5.8-.8L12 3.4z"/></svg></span>
-              <span class="g-row-meta"><span class="g-row-title">Bookmarks</span></span>
-              <span id="m-cnt-bm" class="g-row-val">0</span>
-              <span class="g-chev">›</span>
+            <button type="button" class="g-row" onclick="call('openNewTab','')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M12 8.6v6.8M8.6 12h6.8"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">New tab</span></span>
             </button>
-            <button type="button" class="g-row" onclick="setMenuSubView('reading')">
-              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4h11a1.5 1.5 0 0 1 1.5 1.5v14.8l-7-3.8-7 3.8V5.5A1.5 1.5 0 0 1 6.5 4z"/></svg></span>
-              <span class="g-row-meta"><span class="g-row-title">Reading list</span></span>
-              <span id="m-cnt-rl" class="g-row-val">0</span>
-              <span class="g-chev">›</span>
+            <button type="button" class="g-row" onclick="call('openNewPrivateTab','')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18M6 11l2-5.5A1.5 1.5 0 0 1 9.4 4.5h5.2a1.5 1.5 0 0 1 1.4 1L18 11"/><circle cx="7.5" cy="16" r="2.6"/><circle cx="16.5" cy="16" r="2.6"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">New Private tab</span></span>
             </button>
+            <button type="button" class="g-row" onclick="call('openScreen','shields')">
+              <span class="m3-ico" style="color:var(--accent);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8L4.6 5.8v5.6c0 4.8 3.2 8.2 7.4 9.6 4.2-1.4 7.4-4.8 7.4-9.6V5.8L12 2.8z"/><path d="M8.8 12.2l2.2 2.2 4.4-4.5"/></svg></span>
+              <span class="g-row-meta">
+                <span class="g-row-title">Brave Shields</span>
+                <span id="m-shields-sub" class="g-row-sub">Shields UP · Ads &amp; trackers blocked</span>
+              </span>
+              <span id="m-shields-val" class="mini-tag primary">UP</span>
+            </button>
+          </div>
+
+          <!-- Chrome Group 2: Library (History, Downloads, Bookmarks, Reading list, dejavu Link) -->
+          <div class="g-group">
             <button type="button" class="g-row" onclick="setMenuSubView('history')">
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.6V12l3.2 2"/></svg></span>
               <span class="g-row-meta"><span class="g-row-title">History</span></span>
@@ -1989,16 +2092,66 @@
               <span id="m-cnt-dl" class="g-row-val">0</span>
               <span class="g-chev">›</span>
             </button>
-          </div>
-
-          <!-- Calm M3 List Group 2: Tools & Preferences -->
-          <div class="g-group">
+            <button type="button" class="g-row" onclick="setMenuSubView('bookmarks')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.6 6.8 19.4l1-5.8-4.2-4.1 5.8-.8L12 3.4z"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Bookmarks</span></span>
+              <span id="m-cnt-bm" class="g-row-val">0</span>
+              <span class="g-chev">›</span>
+            </button>
+            <button type="button" class="g-row" onclick="setMenuSubView('reading')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4h11a1.5 1.5 0 0 1 1.5 1.5v14.8l-7-3.8-7 3.8V5.5A1.5 1.5 0 0 1 6.5 4z"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Reading list</span></span>
+              <span id="m-cnt-rl" class="g-row-val">0</span>
+              <span class="g-chev">›</span>
+            </button>
             <button type="button" class="g-row" onclick="call('openScreen','sync')">
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="12.5" height="9" rx="2"/><path d="M6.5 17.5h4.5M8.75 14v3.5M14.5 11.5L21 5M21 5h-4.2M21 5v4.2"/></svg></span>
               <span class="g-row-meta"><span class="g-row-title">dejavu Link</span></span>
               <span id="m-sync-val" class="g-row-val"></span>
               <span class="g-chev">›</span>
             </button>
+          </div>
+
+          <!-- Chrome Group 3: Page Tools (Visible on Live Webpages) -->
+          <div id="menu-page-group" class="g-group" style="display:none;">
+            <button type="button" class="g-row" onclick="call('shareNative')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14.5V4.2M8.2 8L12 4.2 15.8 8"/><path d="M5 12.8v5.2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5.2"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Share…</span></span>
+            </button>
+            <button type="button" class="g-row" onclick="call('sendCurrentTabToPc')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="12.5" height="9" rx="2"/><path d="M6.5 17.5h4.5M8.75 14v3.5M14.5 11.5L21 5M21 5h-4.2M21 5v4.2"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Send to PC</span></span>
+            </button>
+            <button type="button" class="g-row" onclick="call('openFindInPage')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.2 4.2"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Find in page</span></span>
+            </button>
+            <button type="button" class="g-row" onclick="call('openReaderMode')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5h15M4.5 11.5h15M4.5 16.5h9.5"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Reader view</span></span>
+            </button>
+            <button type="button" class="g-row" onclick="call('toggleDesktopMode')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8.5 19.5h7M12 16.5v3"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Desktop site</span></span>
+              <span id="m-desk-chk" class="chrome-chk" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="g-row" onclick="call('toggleDarkWebPages')">
+              <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18.4 14.8A7 7 0 0 1 9.2 5.6a7.2 7.2 0 1 0 9.2 9.2z"/></svg></span>
+              <span class="g-row-meta"><span class="g-row-title">Dark web</span></span>
+              <span id="m-darkweb-chk" class="chrome-chk" aria-hidden="true"></span>
+            </button>
+            <div class="zoom-row">
+              <span style="font-size:14.5px;font-weight:520;color:var(--ink);">Text size</span>
+              <div class="zoom-stepper">
+                <button type="button" class="zoom-btn" onclick="stepZoom(-10)">A-</button>
+                <span id="m-zoom-val" class="zoom-val" onclick="call('setPageZoom',100)">100%</span>
+                <button type="button" class="zoom-btn" onclick="stepZoom(10)">A+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chrome Group 4: Browser & Customization -->
+          <div class="g-group">
             <button type="button" class="g-row" onclick="call('openScreen','extensions')">
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 3.8a2.1 2.1 0 0 1 2.1 2.1v1.2h2.4a1.9 1.9 0 0 1 1.9 1.9v2.6h-1.2a2.1 2.1 0 1 0 0 4.2h1.2v2.6a1.9 1.9 0 0 1-1.9 1.9h-2.8v-1.2a2.1 2.1 0 1 0-4.2 0v1.2H7.6a1.9 1.9 0 0 1-1.9-1.9v-2.8h1.2a2.1 2.1 0 1 0 0-4.2H5.7V9a1.9 1.9 0 0 1 1.9-1.9H10V5.9a2.1 2.1 0 0 1 3.4-2.1z"/></svg></span>
               <span class="g-row-meta"><span class="g-row-title">Extensions</span></span>
@@ -2007,7 +2160,7 @@
             </button>
             <button type="button" class="g-row" onclick="call('openScreen','wallpapers')">
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5" fill="currentColor" stroke="none"/><path d="M4 17l4.8-4.6 3.2 2.9 2.8-2.8L20 17"/></svg></span>
-              <span class="g-row-meta"><span class="g-row-title">Wallpapers</span></span>
+              <span class="g-row-meta"><span class="g-row-title">Wallpaper &amp; Style</span></span>
               <span class="g-chev">›</span>
             </button>
             <button type="button" class="g-row" onclick="call('openScreen','settings')">
@@ -2028,7 +2181,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET B: DEJAVU LINK v2.3 (v5.13.0) — SERENE AUTO-SYNC HUB
+       SHEET B: DEJAVU LINK v2.3 (v5.14.0) — SERENE AUTO-SYNC HUB
        =================================================================== -->
   <div id="scr-sync" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -2324,7 +2477,7 @@
               <span class="m3-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 10.8v5.2M12 7.8h.01"/></svg></span>
               <span class="g-row-meta">
                 <span class="g-row-title">Sync &amp; about</span>
-                <span id="set-sum-about" class="g-row-sub">v5.13.0 · Ready</span>
+                <span id="set-sum-about" class="g-row-sub">v5.14.0 · Ready</span>
               </span>
               <span class="g-chev">›</span>
             </button>
@@ -2441,19 +2594,27 @@
                 <button type="button" id="sw-desktop-def" class="sw" aria-label="Desktop site by default"></button>
               </div>
 
-              <div class="set-block set-item" data-search="address bar position bottom top navigation toolbar">
+              <div class="set-block set-item" data-search="address bar position top chrome brave bottom navigation toolbar">
                 <div style="font-size:14.5px;font-weight:540;">Address bar</div>
                 <div class="bar-seg" id="set-bar-seg">
                   <span class="seg-glider is-tonal" aria-hidden="true"></span>
-                  <button type="button" id="opt-bar-bottom" class="active" onclick="call('setBarPosition','bottom')">Bottom</button>
-                  <button type="button" id="opt-bar-top" onclick="call('setBarPosition','top')">Top</button>
+                  <button type="button" id="opt-bar-top" class="active" onclick="call('setBarPosition','top')">Top (Chrome)</button>
+                  <button type="button" id="opt-bar-bottom" onclick="call('setBarPosition','bottom')">Bottom</button>
                 </div>
               </div>
 
-              <div class="set-block set-item" data-search="bottom bar layout compact single row two row slim googlebook navigation toolbar">
+              <div id="set-bottom-toolbar-row" class="g-row set-item" data-search="bottom navigation bar toolbar brave chrome hide show" onclick="call('toggleBottomToolbar')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">Bottom navigation bar</div>
+                  <div class="g-row-sub">Optional Brave-style bottom toolbar</div>
+                </div>
+                <button type="button" id="sw-bottom-bar" class="sw" aria-label="Bottom navigation bar"></button>
+              </div>
+
+              <div id="set-barstyle-block" class="set-block set-item" data-search="bottom bar layout compact single row two row slim navigation toolbar">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
                   <div style="font-size:14.5px;font-weight:540;">Bottom bar style</div>
-                  <span style="font-size:11.5px;color:var(--on-surface-var);">Compact never covers pages</span>
+                  <span style="font-size:11.5px;color:var(--muted);">Compact never covers pages</span>
                 </div>
                 <div class="bar-seg" id="set-barstyle-seg">
                   <span class="seg-glider is-tonal" aria-hidden="true"></span>
@@ -2462,12 +2623,20 @@
                 </div>
               </div>
 
+              <div class="g-row set-item" data-search="brave privacy stats shields blocked ads trackers data time saved new tab" onclick="call('toggleBraveStats')">
+                <div class="g-row-meta">
+                  <div class="g-row-title">Brave Privacy Stats</div>
+                  <div class="g-row-sub">Ads blocked, data &amp; time saved on New Tab</div>
+                </div>
+                <button type="button" id="sw-brave-stats" class="sw on" aria-label="Brave Privacy Stats"></button>
+              </div>
+
               <div class="g-row set-item" data-search="pixel message of the day motd at a glance daily quote start page greeting" onclick="call('toggleMotd')">
                 <div class="g-row-meta">
                   <div class="g-row-title">Pixel Message of the Day</div>
-                  <div class="g-row-sub">Daily At a Glance note on Start Page</div>
+                  <div class="g-row-sub">Optional daily At a Glance note on New Tab</div>
                 </div>
-                <button type="button" id="sw-motd" class="sw on" aria-label="Pixel Message of the Day"></button>
+                <button type="button" id="sw-motd" class="sw" aria-label="Pixel Message of the Day"></button>
               </div>
 
               <div class="g-row set-item" data-search="auto hide bar scroll fullscreen reading toolbar" onclick="call('toggleAutoHideBar')">
@@ -2656,7 +2825,7 @@
           </div>
 
           <!-- SUB-VIEW 5: SYNC & ABOUT -->
-          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.13.0 about reset defaults">
+          <div id="set-cat-about" class="set-section" data-cat="about" data-search="system default browser role apps links sync dejavu link google auto sync pc passphrase passkey passkeys webauthn software update github releases signed sha256 version 5.14.0 about reset defaults">
             <div class="sec-hdr set-sec-hdr">
               <span>Sync &amp; about</span>
               <span class="set-match-pill"></span>
@@ -2680,10 +2849,10 @@
                 <span class="g-chev">›</span>
               </button>
 
-              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.13.0 about">
+              <div class="g-row set-item" data-search="software update auto updater github releases signed sha256 apk version 5.14.0 about">
                 <span id="opt-about-logo" style="width:32px;height:32px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;" aria-hidden="true"></span>
                 <div class="g-row-meta">
-                  <div id="opt-upd-title" class="g-row-title">dejavu v5.13.0</div>
+                  <div id="opt-upd-title" class="g-row-title">dejavu v5.14.0</div>
                   <div id="opt-upd-sub" class="g-row-sub">Up to date</div>
                 </div>
                 <button type="button" id="opt-upd-btn" class="pill-btn sm" onclick="handleUpdateBtn()">Check for updates</button>
@@ -2722,7 +2891,7 @@
         </div>
 
         <div id="opt-ver-footer" style="text-align:center;font-size:12px;color:var(--subtle);padding:4px 0 6px;">
-          dejavu Mobile v5.13.0
+          dejavu Mobile v5.14.0
         </div>
       </div>
     </div>
@@ -3068,7 +3237,7 @@
   </div>
 
   <!-- ===================================================================
-       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.13.0)
+       SHEET H: BRAVE-GRADE MATERIAL DESIGN 3 SHIELDS BOTTOM SHEET (v5.14.0)
        =================================================================== -->
   <div id="scr-shields" class="sheet-backdrop hidden" onclick="backdropClose(event)">
     <div class="sheet-panel" onclick="event.stopPropagation()">
@@ -3093,18 +3262,28 @@
           <button type="button" id="sw-shields-master" class="sw on" aria-label="Toggle site shields"></button>
         </div>
 
-        <!-- Compact 2-Column Live Stats -->
+        <!-- Authentic Brave 3-Column Privacy Stats (Ads & Trackers | Data Saved | Time Saved) -->
         <div class="sh-stats-grid">
           <div class="sh-stat-card">
             <div id="sh-stat-blocked" class="sh-stat-num">0</div>
-            <div class="sh-stat-lbl">Trackers &amp; ads blocked</div>
-            <div id="sh-stat-blocked-total" class="sh-stat-sub">0 lifetime</div>
+            <div class="sh-stat-lbl">Ads &amp; trackers</div>
+            <div id="sh-stat-blocked-total" class="sh-stat-sub">0 total</div>
           </div>
           <div class="sh-stat-card">
-            <div id="sh-stat-cleaned" class="sh-stat-num">0</div>
-            <div class="sh-stat-lbl">Tracking links cleaned</div>
-            <div id="sh-stat-cleaned-total" class="sh-stat-sub">0 lifetime</div>
+            <div id="sh-stat-data" class="sh-stat-num">0 KB</div>
+            <div class="sh-stat-lbl">Data saved</div>
+            <div class="sh-stat-sub">est. bandwidth</div>
           </div>
+          <div class="sh-stat-card">
+            <div id="sh-stat-time" class="sh-stat-num">0s</div>
+            <div class="sh-stat-lbl">Time saved</div>
+            <div class="sh-stat-sub">est. load time</div>
+          </div>
+        </div>
+
+        <div class="sh-cleaned-bar">
+          <span>Tracking parameters stripped from URLs</span>
+          <span id="sh-stat-cleaned-val" class="sh-cleaned-val">0 (0 total)</span>
         </div>
 
         <!-- Gliding 2-Way Standard | Aggressive M3 Segmented Pill -->
@@ -3196,7 +3375,7 @@
     <div class="mini-modal-card" onclick="event.stopPropagation()">
       <h3 style="margin:0;font-size:18px;font-weight:600;">Reset settings?</h3>
       <div style="font-size:13.5px;line-height:1.5;color:var(--muted);">
-        Restores browser preferences to v5.13.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
+        Restores browser preferences to v5.14.0 defaults. Your bookmarks, profiles, scripts, and PC Link stay safe.
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
         <button type="button" class="pill-btn ghost muted" onclick="closeResetSettingsModal()">Cancel</button>
@@ -3463,7 +3642,7 @@
       return `<span class="site-ico" style="width:${sz}px;height:${sz}px;border-radius:${rad}px;background:${bg};font-size:${Math.round(sz*0.48)}px;">${ch}${favSrc ? `<img src="${favSrc}" alt="" onerror="this.style.display='none'">` : ''}</span>`;
     }
 
-    // Zero-mutation DOM equality-guard helpers (v5.13.0)
+    // Zero-mutation DOM equality-guard helpers (v5.14.0)
     function setTxt(el, v) {
       if (!el) return;
       const s = String(v == null ? '' : v);
@@ -3570,7 +3749,7 @@
       const overline = document.getElementById('sp-motd-overline');
       const txt = document.getElementById('sp-motd-txt');
       if (!card || !txt) return;
-      const visible = state.showMotd !== false && !state.activePrivate;
+      const visible = state.showMotd === true && !state.activePrivate;
       setDisp(card, visible ? 'flex' : 'none');
       if (!visible) return;
       const d = new Date();
@@ -4098,7 +4277,27 @@
     }
 
     function copyActiveUrl() { if (state.activeUrl) call('copyText', state.activeUrl); }
+    function editActiveUrl() { if (state.activeUrl) call('fillOmnibox', state.activeUrl); }
     function goClipboard() { if (state.clipboardText) call('navigate', state.clipboardText); }
+
+    function formatCompactCount(n) {
+      const v = Math.max(0, Number(n || 0));
+      if (v >= 1000000) return (v / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+      if (v >= 10000) return (v / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+      return v.toLocaleString();
+    }
+    function formatBraveDataSaved(blocked) {
+      const kb = Math.max(0, Number(blocked || 0)) * 31;
+      if (kb >= 1048576) return (kb / 1048576).toFixed(1).replace(/\.0$/, '') + ' GB';
+      if (kb >= 1024) return (kb / 1024).toFixed(1).replace(/\.0$/, '') + ' MB';
+      return kb.toLocaleString() + ' KB';
+    }
+    function formatBraveTimeSaved(blocked) {
+      const sec = Math.round(Math.max(0, Number(blocked || 0)) * 0.05);
+      if (sec >= 3600) return (sec / 3600).toFixed(1).replace(/\.0$/, '') + ' hr';
+      if (sec >= 60) return (sec / 60).toFixed(1).replace(/\.0$/, '') + ' min';
+      return sec + 's';
+    }
     let syncSubTab = 'drops';
     function isHttpUrl(s) {
       return /^https?:\/\/\S+/i.test(String(s || '').trim());
@@ -4524,7 +4723,7 @@
       });
     }
 
-    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.13.0)
+    // Anti-glitch DOM signature diff-guards & smooth gliding pill helper (v5.14.0)
     const _domSigs = {
       sysTop: '',
       safeTop: '',
@@ -4605,6 +4804,7 @@
     }
     window.addEventListener('resize', syncAllMobileGliders, { passive: true });
 
+    let spTabsLongPressBound = false;
     function renderStartPage() {
       updateClockGreeting();
       const isPriv = !!state.activePrivate;
@@ -4612,7 +4812,45 @@
       setDisp(document.getElementById('sp-hero-normal'), isPriv ? 'none' : 'flex');
       setDisp(document.getElementById('sp-hero-private'), isPriv ? 'flex' : 'none');
       setDisp(document.getElementById('sp-fav-section'), isPriv ? 'none' : 'flex');
-      setTxt(document.getElementById('sp-search-txt'), isPriv ? 'Search privately or enter website' : 'Search or enter website');
+      setTxt(document.getElementById('sp-search-txt'), isPriv ? 'Search privately or type URL' : 'Search or type web address');
+
+      // Brave Shields Live Pill + 3-Column Privacy Stats Card
+      const sh = state.shields || {};
+      const shieldOn = state.adBlockEnabled !== false;
+      const totBlk = Number(sh.totalBlocked != null ? sh.totalBlocked : (state.totalBlocked || 0));
+      const shPill = document.getElementById('sp-shields-pill');
+      if (shPill) {
+        setCls(shPill, 'off', !shieldOn);
+        setTxt(document.getElementById('sp-shields-cnt'), shieldOn ? formatCompactCount(totBlk) : 'Off');
+      }
+      const bsCard = document.getElementById('sp-brave-stats');
+      if (bsCard) {
+        const showBs = state.showBraveStats !== false && !isPriv;
+        setDisp(bsCard, showBs ? 'grid' : 'none');
+        if (showBs) {
+          setTxt(document.getElementById('sp-bs-blocked'), formatCompactCount(totBlk));
+          setTxt(document.getElementById('sp-bs-data'), formatBraveDataSaved(totBlk));
+          setTxt(document.getElementById('sp-bs-time'), formatBraveTimeSaved(totBlk));
+        }
+      }
+
+      // Chrome NTP Top-Right Rounded-Square Tab Counter (Long-press -> New Tab)
+      const allTabs = Array.isArray(state.tabs) ? state.tabs : [];
+      const poolCount = allTabs.filter((t) => !!t.isPrivate === isPriv).length;
+      const spTabsSq = document.getElementById('sp-tabs-sq');
+      if (spTabsSq) {
+        setTxt(spTabsSq, poolCount > 99 ? '∞' : String(Math.max(1, poolCount)));
+      }
+      if (!spTabsLongPressBound) {
+        const spTabsBtn = document.getElementById('sp-tabs-btn');
+        if (spTabsBtn) {
+          spTabsLongPressBound = true;
+          attachLongPress(spTabsBtn, () => {
+            if (state.activePrivate) call('openNewPrivateTab', '');
+            else call('openNewTab', '');
+          });
+        }
+      }
 
       // Minimal Top-Left Link Pill
       const sync = state.sync || {};
@@ -4622,7 +4860,7 @@
       const linkPill = document.getElementById('sp-link-pill');
       setCls(linkPill, 'on', isLinked);
       setCls(linkPill, 'synced', !connected && isGoogleSync);
-      setTxt(document.getElementById('sp-link-txt'), isLinked ? 'PC Linked' : 'Link');
+      setTxt(document.getElementById('sp-link-txt'), isLinked ? 'PC' : 'Link');
 
       // Circular Profile Avatar Only + Mint Update Dot When Available
       setDisp(document.getElementById('sp-upd-dot'), (state.update && state.update.available) ? 'block' : 'none');
@@ -4889,6 +5127,7 @@
 
       const fab = document.getElementById('btn-tabs-new');
       setCls(fab, 'priv', tabViewPrivate);
+      setCls(document.getElementById('tabs-top-add'), 'priv', tabViewPrivate);
       setTxt(document.getElementById('btn-tabs-new-lbl'), tabViewPrivate ? 'New private' : 'New tab');
 
       const tg = document.getElementById('tabs-grid');
@@ -4983,25 +5222,78 @@
 
     function renderMenuSheet() {
       const hasWeb = !!state.activeUrl;
+      const sh = state.shields || {};
+      const siteUp = typeof sh.siteShieldUp === 'boolean' ? sh.siteShieldUp : (state.adBlockEnabled !== false);
+      const tabBlk = Number(sh.tabBlocked || 0);
+      const totBlk = Number(sh.totalBlocked != null ? sh.totalBlocked : (state.totalBlocked || 0));
+
+      // Top 5-Icon Chrome Action Strip
+      const fwdBtn = document.getElementById('cm-btn-fwd');
+      setCls(fwdBtn, 'disabled', !(hasWeb && state.canGoForward));
+
+      const bmBtn = document.getElementById('cm-btn-bm');
+      const bmSvg = document.getElementById('menu-bm-svg');
+      const isBm = hasWeb && !!state.isBookmarked;
+      setCls(bmBtn, 'disabled', !hasWeb);
+      setCls(bmBtn, 'active', isBm);
+      setAttr(bmSvg, 'fill', isBm ? 'currentColor' : 'none');
+
+      const shBtn = document.getElementById('cm-btn-sh');
+      const shBadge = document.getElementById('cm-sh-badge');
+      setCls(shBtn, 'active', siteUp);
+      if (shBadge) {
+        const showB = hasWeb && siteUp && tabBlk > 0;
+        setCls(shBadge, 'show', showB);
+        if (showB) setTxt(shBadge, tabBlk > 99 ? '99+' : String(tabBlk));
+      }
+
+      const relBtn = document.getElementById('cm-btn-rel');
+      const relSvg = document.getElementById('cm-rel-svg');
+      setCls(relBtn, 'disabled', !hasWeb);
+      if (relSvg) {
+        relSvg.innerHTML = state.activeLoading
+          ? '<path d="M6 6l12 12M18 6L6 18"/>'
+          : '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4.6V9h-4.4"/>';
+      }
+
+      // Brave Shields Row Summary
+      const mShSub = document.getElementById('m-shields-sub');
+      const mShVal = document.getElementById('m-shields-val');
+      if (mShSub) {
+        if (!siteUp) setTxt(mShSub, hasWeb ? 'Paused on this site' : 'Shields paused');
+        else if (hasWeb && tabBlk > 0) setTxt(mShSub, `${tabBlk} blocked on this site · ${formatCompactCount(totBlk)} total`);
+        else setTxt(mShSub, `${formatCompactCount(totBlk)} ads & trackers blocked`);
+      }
+      if (mShVal) {
+        setTxt(mShVal, siteUp ? 'UP' : 'DOWN');
+        setCls(mShVal, 'primary', siteUp);
+      }
+
       setDisp(document.getElementById('menu-page-hdr'), hasWeb ? 'flex' : 'none');
-      setDisp(document.getElementById('menu-page-actions'), hasWeb ? 'grid' : 'none');
-      setDisp(document.getElementById('menu-page-controls'), hasWeb ? 'flex' : 'none');
+      setDisp(document.getElementById('menu-page-group'), hasWeb ? 'block' : 'none');
 
       if (hasWeb) {
         const icoSig = `${state.activeUrl || ''}|${state.activeTitle || ''}`;
         if (icoSig !== _domSigs.menuPageIco) {
           _domSigs.menuPageIco = icoSig;
-          document.getElementById('menu-page-ico').innerHTML = getSiteIconHtml(state.activeUrl, state.activeTitle, 34);
+          document.getElementById('menu-page-ico').innerHTML = getSiteIconHtml(state.activeUrl, state.activeTitle, 32);
         }
         setTxt(document.getElementById('menu-page-title'), state.activeTitle || getHost(state.activeUrl));
         setTxt(document.getElementById('menu-page-host'), getHost(state.activeUrl));
-        const bmBtn = document.getElementById('menu-bm-btn');
-        const bmSvg = document.getElementById('menu-bm-svg');
-        const isBm = !!state.isBookmarked;
-        setCls(bmBtn, 'active', isBm);
-        setAttr(bmSvg, 'fill', isBm ? 'currentColor' : 'none');
-        setCls(document.getElementById('m-desk-chip'), 'active', !!state.desktopMode);
-        setCls(document.getElementById('m-darkweb-chip'), 'active', !!state.darkWebPages);
+
+        const chkSvg = '<svg viewBox="0 0 14 14" width="12" height="12" fill="none"><path d="M2.6 7.2l2.8 2.8L11.2 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        const deskChk = document.getElementById('m-desk-chk');
+        if (deskChk) {
+          const on = !!state.desktopMode;
+          setCls(deskChk, 'on', on);
+          deskChk.innerHTML = on ? chkSvg : '';
+        }
+        const darkChk = document.getElementById('m-darkweb-chk');
+        if (darkChk) {
+          const on = !!state.darkWebPages;
+          setCls(darkChk, 'on', on);
+          darkChk.innerHTML = on ? chkSvg : '';
+        }
         setTxt(document.getElementById('m-zoom-val'), `${state.activeZoom || state.pageZoom || 100}%`);
       }
 
@@ -5361,10 +5653,13 @@
         : (host ? `Shields are DOWN for ${host}` : 'Shields are paused'));
       setCls(document.getElementById('sw-shields-master'), 'on', siteUp);
 
-      setTxt(document.getElementById('sh-stat-blocked'), tabBlk.toLocaleString());
-      setTxt(document.getElementById('sh-stat-blocked-total'), `${totBlk.toLocaleString()} lifetime`);
-      setTxt(document.getElementById('sh-stat-cleaned'), tabCln.toLocaleString());
-      setTxt(document.getElementById('sh-stat-cleaned-total'), `${totCln.toLocaleString()} lifetime`);
+      setTxt(document.getElementById('sh-stat-blocked'), (host ? tabBlk : totBlk).toLocaleString());
+      setTxt(document.getElementById('sh-stat-blocked-total'), host ? `${formatCompactCount(totBlk)} total` : 'lifetime');
+      setTxt(document.getElementById('sh-stat-data'), formatBraveDataSaved(totBlk));
+      setTxt(document.getElementById('sh-stat-time'), formatBraveTimeSaved(totBlk));
+      setTxt(document.getElementById('sh-stat-cleaned-val'), host
+        ? `${tabCln.toLocaleString()} (${totCln.toLocaleString()} total)`
+        : `${totCln.toLocaleString()} total`);
 
       setTxt(document.getElementById('sh-level-hint'), level === 'aggressive' ? 'Strict ad, telemetry & CMP blocking' : 'Balanced protection');
       setCls(document.getElementById('sh-lvl-std'), 'active', level !== 'aggressive');
@@ -5477,8 +5772,8 @@
       const modeLbl = mode === 'light' ? 'Light' : (mode === 'auto' ? 'Auto' : 'Dark');
       const curAcc = state.accentColor || 'amethyst';
       const accLblTxt = ACCENT_LABEL[curAcc] || 'Amethyst';
-      const isTop = state.barPosition === 'top';
-      setTxt(document.getElementById('set-sum-appearance'), `${modeLbl} · ${accLblTxt} · ${isTop ? 'Top bar' : 'Bottom bar'}`);
+      const isTop = state.barPosition !== 'bottom';
+      setTxt(document.getElementById('set-sum-appearance'), `${modeLbl} · ${accLblTxt} · ${isTop ? 'Top (Chrome)' : 'Bottom bar'}`);
 
       const sh = state.shields || {};
       const shieldOn = state.adBlockEnabled !== false;
@@ -5503,7 +5798,7 @@
         : 'Standard Android downloads');
 
       const u = state.update || {};
-      const curV = u.currentVersion || '5.13.0';
+      const curV = u.currentVersion || '5.14.0';
       const sync = state.sync || {};
       const syncShort = u.available ? 'Update ready'
         : ((sync.syncMode === 'google' && sync.googleEmail) ? 'Auto-synced'
@@ -5568,10 +5863,15 @@
       setCls(document.getElementById('sw-darkweb'), 'on', !!state.darkWebPages);
       setCls(document.getElementById('opt-bar-bottom'), 'active', !isTop);
       setCls(document.getElementById('opt-bar-top'), 'active', isTop);
+      const showBottomBar = !!state.showBottomToolbar;
+      setCls(document.getElementById('sw-bottom-bar'), 'on', showBottomBar);
+      setCls(document.getElementById('set-bottom-toolbar-row'), 'is-disabled', !isTop);
+      setCls(document.getElementById('set-barstyle-block'), 'is-disabled', isTop && !showBottomBar);
       const isCompactBar = state.compactBottomBar !== false;
       setCls(document.getElementById('opt-barstyle-compact'), 'active', isCompactBar);
       setCls(document.getElementById('opt-barstyle-expanded'), 'active', !isCompactBar);
-      setCls(document.getElementById('sw-motd'), 'on', state.showMotd !== false);
+      setCls(document.getElementById('sw-brave-stats'), 'on', state.showBraveStats !== false);
+      setCls(document.getElementById('sw-motd'), 'on', state.showMotd === true);
       setCls(document.getElementById('sw-autohide'), 'on', state.autoHideBar !== false);
 
       // 4. Privacy & Security Controls (Brave-Grade Shields)
@@ -6252,7 +6552,7 @@
     };
 
     // =========================================================================
-    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.13.0 — Calm Monochrome M3)
+    // EXTENSIONS & CUSTOM USERSCRIPTS (v5.14.0 — Calm Monochrome M3)
     // =========================================================================
     const DEFAULT_BUILTIN_EXTENSIONS = [
       { id: 'sponsor_clean',  name: 'Sponsor & annoyance cleaner', desc: 'Hides promos & newsletter popups',  enabled: true },
@@ -6569,10 +6869,13 @@
         }
         else if (fn === 'toggleAutoThemeFromWallpaper') st.autoThemeFromWallpaper = !(st.autoThemeFromWallpaper !== false);
         else if (fn === 'setAutoThemeFromWallpaper') st.autoThemeFromWallpaper = !!args[0];
-        else if (fn === 'setBarPosition') st.barPosition = args[0] || 'bottom';
+        else if (fn === 'setBarPosition') st.barPosition = args[0] === 'bottom' ? 'bottom' : 'top';
+        else if (fn === 'toggleBottomToolbar') st.showBottomToolbar = !st.showBottomToolbar;
+        else if (fn === 'toggleBraveStats') st.showBraveStats = !(st.showBraveStats !== false);
         else if (fn === 'setBottomBarStyle') st.compactBottomBar = args[0] !== 'expanded';
         else if (fn === 'toggleCompactBottomBar') st.compactBottomBar = !(st.compactBottomBar !== false);
         else if (fn === 'toggleAutoHideBar') st.autoHideBar = !st.autoHideBar;
+        else if (fn === 'goForward' || fn === 'goBack' || fn === 'reloadPage') st.screen = 'start';
         else if (fn === 'toggleDarkWebPages') st.darkWebPages = !st.darkWebPages;
         else if (fn === 'toggleDesktopMode') st.desktopMode = !st.desktopMode;
         else if (fn === 'toggleBookmark') st.isBookmarked = !st.isBookmarked;
@@ -6603,7 +6906,7 @@
           else if (args[0] === 'trackingParams') cur.stripTrackingParams = !(cur.stripTrackingParams !== false);
           st.shields = cur;
         }
-        else if (fn === 'toggleMotd') st.showMotd = !(st.showMotd !== false);
+        else if (fn === 'toggleMotd') st.showMotd = !(st.showMotd === true);
         else if (fn === 'toggleHttpsFirst') {
           st.httpsFirst = !st.httpsFirst;
           st.shields = Object.assign({}, st.shields || {}, { httpsFirst: st.httpsFirst });
@@ -6757,7 +7060,8 @@
         }
         else if (fn === 'resetSettings') {
           st.themeMode = 'dark'; st.effectiveTheme = 'dark'; st.accentColor = 'amethyst'; st.pageZoom = 100;
-          st.autoThemeFromWallpaper = true; st.showMotd = true;
+          st.autoThemeFromWallpaper = true; st.showMotd = false; st.showBraveStats = true;
+          st.barPosition = 'top'; st.showBottomToolbar = false; st.compactBottomBar = true;
           st.desktopSiteDefault = false; st.httpsFirst = true; st.doNotTrack = true; st.blockPopups = true;
           st.blockThirdPartyCookies = false; st.searchEngine = 'google'; st.pullToRefresh = true;
           st.openLinksInBackground = false; st.defaultYoutubeQuality = 'auto'; st.floatingDownloadButton = true;
@@ -6817,7 +7121,7 @@
               ],
               drops: [
                 { id: 'vid_pc_1', dropType: 'video', title: 'Material 3 Expressive Motion Deep Dive', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=422', text: 'Continue watching at 07:02', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 45000 },
-                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.13.0-release.mp4', url: 'https://example.com/dejavu-v5.13.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
+                { id: 'dl_pc_1', dropType: 'download', title: 'dejavu-v5.14.0-release.mp4', url: 'https://example.com/dejavu-v5.14.0-release.mp4', quality: '1080p', text: '8x Turbo Download handoff', fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 95000 },
                 { id: 'bt_pc_1', dropType: 'batch_tabs', title: '2 tabs from Windows 11 Desktop', url: 'https://m3.material.io', text: 'Material Design 3 · GitHub', tabs: [{ title: 'Material Design 3', url: 'https://m3.material.io' }, { title: 'GitHub', url: 'https://github.com' }], fromName: 'Windows 11 Desktop', platform: 'windows', ts: nowMs - 210000 }
               ]
             } : {
@@ -6833,11 +7137,12 @@
               screen: initScreen, activeTabId: 1,
               activeUrl: isWeb ? (initScreen === 'shields' ? 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' : 'https://m3.material.io/styles/color/roles') : '',
               activeTitle: isWeb ? (initScreen === 'shields' ? 'YouTube' : 'Material Design 3 — Color & Surface Tokens') : 'Start Page',
+              activeLoading: false, canGoBack: isWeb, canGoForward: isWeb,
               isBookmarked: qp.get('bm') === '1', desktopMode: qp.get('desk') === '1',
               searchEngine: 'google', wallpaper: initWp, accentColor: initSeed,
               themeMode: initMode, effectiveTheme: initMode === 'light' ? 'light' : 'dark',
-              autoThemeFromWallpaper: true, showMotd: true,
-              barPosition: 'bottom', compactBottomBar: true, autoHideBar: true, darkWebPages: false, pageZoom: 100,
+              autoThemeFromWallpaper: true, showMotd: false, showBraveStats: true,
+              barPosition: 'top', showBottomToolbar: false, compactBottomBar: true, autoHideBar: true, darkWebPages: false, pageZoom: 100,
               desktopSiteDefault: false, httpsFirst: true, doNotTrack: true, blockPopups: true,
               blockThirdPartyCookies: false, pullToRefresh: true, openLinksInBackground: false,
               defaultYoutubeQuality: 'auto', floatingDownloadButton: true, adBlockEnabled: true,
@@ -6862,7 +7167,7 @@
                 pausedCount: 0
               },
               profiles: [prof1, prof2], activeProfileId: 'default', mainProfileId: 'default', activeProfile: prof1,
-              sysTop: 28, safeTop: 28, sysBottom: 16, safeBottom: 72, imeBottom: initIme,
+              sysTop: 28, safeTop: 28, sysBottom: 16, safeBottom: 24, imeBottom: initIme,
               tabs: [
                 { id: 1, title: 'Start Page', url: 'dejavu://newtab', isNewTab: true, isPrivate: false },
                 { id: 2, title: 'Material Design 3', url: 'https://m3.material.io', isNewTab: false, isPrivate: false }
@@ -6883,9 +7188,9 @@
               ],
               sync: previewSync,
               update: {
-                currentVersion: '5.13.0',
+                currentVersion: '5.14.0',
                 status: qp.get('upd') === '1' ? 'available' : 'uptodate',
-                latestVersion: qp.get('upd') === '1' ? '5.14.0' : '5.13.0',
+                latestVersion: qp.get('upd') === '1' ? '5.15.0' : '5.14.0',
                 sizeLabel: qp.get('upd') === '1' ? '10.2 MB' : '',
                 releaseUrl: 'https://github.com/Dathevinci/Dejavu-browser/releases/latest',
                 available: qp.get('upd') === '1',

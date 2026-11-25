@@ -4,20 +4,20 @@ A fast, private native **Google Material Design 3** browser for **Windows 10/11*
 
 **Official Website:** **[dathevinci.github.io/Dejavu-browser](https://dathevinci.github.io/Dejavu-browser/)**
 
-## Download (`v5.13.0`)
+## Download (`v5.14.0`)
 
 Grab the latest release from the **[Official Website](https://dathevinci.github.io/Dejavu-browser/)** or **[GitHub Releases](https://github.com/Dathevinci/Dejavu-browser/releases/latest)**:
 
-- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.13.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
-- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.13.0.0`, runs from any folder or USB with no admin rights required).
-- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.13.0` · `versionCode 630`, Android 8.0+).
+- **`dejavu-Setup.exe`** — Chromebook-style Material You per-user Windows installer (`FileVersion 5.14.0.0`, `asInvoker`, `/highentropyva+`, deterministic build, zero `WScript.Shell` or batch scripts).
+- **`dejavu.exe`** — Standalone portable single-file Windows executable (`FileVersion 5.14.0.0`, runs from any folder or USB with no admin rights required).
+- **`dejavu-mobile.apk`** — V1+V2+V3 signed Android Mobile Browser (`v5.14.0` · `versionCode 640`, Android 8.0+).
 - **`SHA256SUMS.txt`** — Official SHA-256 checksums paired with GitHub **SLSA Build Provenance Attestations**.
 
-## What's New in v5.13.0
+## What's New in v5.14.0
 
-- **Zero-Overlap Compact Android Bottom Bar (`54dp`)**: Webpages reserve the exact height of the visible bar so site footers, chat inputs, and bottom navbars are never covered, while scroll-collapse expands the page cleanly behind the bar with zero black gap. Includes a new **Compact (1-Row)** default bar (switchable with **Classic (2-Row)** in Settings) and SPA inner-scroll detection.
-- **Core Android Browser Upgrades**: Added `<input type="file">` file/photo upload picker (`onShowFileChooser`), external app URI & `intent://` handling with fallback URLs, themed Googlebook Material 3 camera/mic/location & share dialogs, true immersive fullscreen video, `onPageFinished` session auto-save, and deferred `pushStateToUi()` for lower browsing CPU/RAM.
-- **Windows A-to-Z Googlebook Material 3 Parity**: Every native popup (Main Menu, Profile, Shields, Tab Search, Sidebar, Extensions, Context Menus, Split View divider, and Reader View) now honors **AMOLED Pitch Black**, all 16 dynamic palettes, and **Material Style**; fixed Split View wake-up for hibernated tabs and added C# auto-theme matching for all 12 Googlebook vector wallpapers.
+- **Authentic Chrome × Brave Android 56dp Top Toolbar**: Replaced the default bottom bar with Chrome's clean single-row top bar (`[Home/Back] [🔒 Address Pill ↻] [🛡️ Brave Shields Badge] [[2] Tabs] [⋮ Menu]`) so webpages have 100% unobstructed viewport height, with smooth scroll-collapse and optional Bottom Bar toggles in Settings.
+- **Chrome × Brave Material Design 3 Mobile UI**: Redesigned the Android New Tab Page with Chrome's 56dp Search pill, top-bar Shields pill + Tab Counter + `⋮` Menu, and **Brave's 3-column Privacy Stats card** (Ads & trackers blocked, Est. data saved, Est. time saved); rebuilt the Overflow Menu (`⋮`) with Chrome's top 5-icon quick action strip and single-column M3 groups; added top-left `[+]` in Tab Switcher and `[Share]` `[Copy]` `[Edit URL]` in the Omnibox.
+- **Brave-Grade Shields Upgrades**: Upgraded the Shields sheet to Brave's 3-column stats + stripped tracking links summary, and added extra mobile cosmetic rules for YouTube Mobile ad slots, sticky/bottom ad banners, and app-install nags.
 
 ## Core Capabilities
 

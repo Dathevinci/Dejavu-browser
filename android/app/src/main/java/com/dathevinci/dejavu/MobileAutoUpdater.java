@@ -49,7 +49,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Native in-app automatic updater for dejavu Mobile v5.13.0.
+ * Native in-app automatic updater for dejavu Mobile v5.14.0.
  * Checks official GitHub Releases over HTTPS, downloads the signed APK in-app,
  * verifies SHA-256 against SHA256SUMS.txt + package archive integrity + signing certificate,
  * and installs in-place via Android's official PackageInstaller.Session API (with automatic
@@ -139,7 +139,7 @@ public final class MobileAutoUpdater {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private volatile WeakReference<Activity> hostActivityRef = new WeakReference<>(null);
 
-    private volatile String currentVersion = "5.13.0";
+    private volatile String currentVersion = "5.14.0";
     // "idle" | "checking" | "uptodate" | "available" | "downloading" | "verifying" | "installing" | "ready" | "error"
     private volatile String status = "idle";
     private volatile String latestVersion = "";
@@ -187,7 +187,7 @@ public final class MobileAutoUpdater {
                 return cleanVersion(pi.versionName);
             }
         } catch (Exception ignored) { }
-        return "5.13.0";
+        return "5.14.0";
     }
 
     @SuppressWarnings("deprecation")

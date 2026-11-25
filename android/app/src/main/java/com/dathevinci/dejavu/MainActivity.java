@@ -392,13 +392,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private String shortcutStyle = "circle"; // "circle" | "tile"
     private String clockStyle = "off"; // "off" | "minimal" | "bold"
     private boolean autoThemeFromWallpaper = true; // Pixel Wallpaper & Style auto theme + polarity matching
-    private boolean showMotd = true; // Google Pixel Message of the Day
+    private boolean showMotd = false; // Optional Google Pixel Message of the Day (off by default in clean Chrome x Brave NTP)
+    private boolean showBraveStats = true; // Brave-style Material 3 Privacy Stats card on New Tab Page
     private boolean localOverlayOpen = false;
     private boolean bookmarksInitialized = false;
     private final List<String> deletedBookmarkUrls = new ArrayList<>();
     private final Runnable saveSessionTask = this::saveOpenTabsSession;
-    private String barPosition = "bottom"; // "bottom" (Safari/Samsung) | "top" (Chrome)
-    private boolean compactBottomBar = true; // Compact 54dp single-row Googlebook bar on webpages (false = 2-row)
+    private String barPosition = "top"; // "top" (Chrome x Brave default) | "bottom" (optional bottom bar)
+    private boolean showBottomToolbar = false; // Optional Brave-style bottom navigation toolbar (off by default — zero bottom overlap)
+    private boolean compactBottomBar = true; // Compact 54dp single-row bar when bottom mode is active (false = 2-row)
     private boolean autoHideBar = true;
     private boolean uiStateDirty = false;
     private boolean darkWebPages = false;
@@ -458,7 +460,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private WebView uiWebView;
 
     private LinearLayout topChrome;
+    private LinearLayout topChromeRow;
+    private ImageView topHome;
     private FrameLayout topUrlSlot;
+    private View topShieldWrap;
+    private ImageView topShieldIco;
+    private TextView topShieldBadge;
+    private View topTabsWrap;
+    private TextView topTabsBadge;
+    private ImageView topMenu;
     private ProgressBar loadProgressTop;
     private LinearLayout findBar;
     private EditText findInput;
@@ -879,7 +889,15 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         uiWebView = findViewById(R.id.ui_webview);
 
         topChrome = findViewById(R.id.top_chrome);
+        topChromeRow = findViewById(R.id.top_chrome_row);
+        topHome = findViewById(R.id.top_home);
         topUrlSlot = findViewById(R.id.top_url_slot);
+        topShieldWrap = findViewById(R.id.top_shield_wrap);
+        topShieldIco = findViewById(R.id.top_shield_ico);
+        topShieldBadge = findViewById(R.id.top_shield_badge);
+        topTabsWrap = findViewById(R.id.top_tabs_wrap);
+        topTabsBadge = findViewById(R.id.top_tabs_badge);
+        topMenu = findViewById(R.id.top_menu);
         loadProgressTop = findViewById(R.id.load_progress_top);
         findBar = findViewById(R.id.find_bar);
         findInput = findViewById(R.id.find_input);
@@ -973,11 +991,11 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private void updateCollapsedPillLayoutParams() {
         if (collapsedPill == null) return;
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) collapsedPill.getLayoutParams();
-        boolean isTop = "top".equals(barPosition);
-        int targetGravity = isTop ? (Gravity.BOTTOM | Gravity.END) : (Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        int targetTop = isTop ? 0 : (insetTopPx + dp(6));
-        int targetBottom = isTop ? (insetBottomPx + dp(10)) : 0;
-        int targetEnd = isTop ? (insetRightPx + dp(12)) : 0;
+        // Always tuck whisper-slim domain capsule cleanly at top-center under the status bar so it NEVER covers web bottom navbars
+        int targetGravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+        int targetTop = insetTopPx + dp(6);
+        int targetBottom = 0;
+        int targetEnd = 0;
         if (lp.gravity != targetGravity || lp.topMargin != targetTop || lp.bottomMargin != targetBottom || lp.getMarginEnd() != targetEnd) {
             lp.gravity = targetGravity;
             lp.topMargin = targetTop;
@@ -990,8 +1008,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private int computeVisibleTopChromePx() {
         if (topChrome == null || topChrome.getVisibility() != View.VISIBLE) return 0;
         int total = 0;
-        if (topUrlSlot != null && topUrlSlot.getVisibility() == View.VISIBLE) {
-            total += topUrlSlot.getHeight() > 0 ? topUrlSlot.getHeight() : dp(64);
+        if (topChromeRow != null && topChromeRow.getVisibility() == View.VISIBLE) {
+            total += topChromeRow.getHeight() > 0 ? topChromeRow.getHeight() : dp(56);
         }
         if (findBar != null && findBar.getVisibility() == View.VISIBLE) {
             total += findBar.getHeight() > 0 ? findBar.getHeight() : dp(48);
@@ -1054,7 +1072,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             if (parent instanceof ViewGroup) ((ViewGroup) parent).removeView(urlPillBox);
             target.addView(urlPillBox);
         }
-        int desiredH = compact ? dp(40) : dp(44);
+        int desiredH = isTop ? dp(42) : (compact ? dp(40) : dp(44));
         ViewGroup.LayoutParams lp = urlPillBox.getLayoutParams();
         if (lp != null && lp.height != desiredH) {
             lp.height = desiredH;
@@ -1071,8 +1089,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         boolean hideBottomForWebIme = onWeb && !urlInput.hasFocus() && isImeVisible();
 
         int topPad = insetTopPx;
-        if (topBar && hasWebTab && !chromeCollapsed && topChrome != null && topChrome.getVisibility() == View.VISIBLE) {
-            topPad += (topUrlSlot != null && topUrlSlot.getHeight() > 0) ? topUrlSlot.getHeight() : dp(60);
+        if (topBar && hasWebTab && !chromeCollapsed && topChrome != null && topChrome.getVisibility() == View.VISIBLE
+            && topChromeRow != null && topChromeRow.getVisibility() == View.VISIBLE) {
+            topPad += topChromeRow.getHeight() > 0 ? topChromeRow.getHeight() : dp(56);
         }
         if (findBar != null && findBar.getVisibility() == View.VISIBLE) {
             topPad += findBar.getHeight() > 0 ? findBar.getHeight() : dp(48);
@@ -1399,6 +1418,22 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         if (navForward != null) navForward.setColorFilter(p.onSurfaceVariant);
         if (compactBack != null) compactBack.setColorFilter(p.onSurfaceVariant);
         if (compactMenu != null) compactMenu.setColorFilter(p.onSurfaceVariant);
+        if (topHome != null) topHome.setColorFilter(p.onSurfaceVariant);
+        if (topMenu != null) topMenu.setColorFilter(p.onSurfaceVariant);
+        if (topShieldIco != null) topShieldIco.setColorFilter(p.primary);
+        if (topShieldBadge != null) {
+            topShieldBadge.setBackground(makeM3PillDrawable(p.primaryContainer, 0, 0f, 8f));
+            topShieldBadge.setTextColor(p.onPrimaryContainer);
+        }
+        if (topTabsBadge != null) {
+            if (isPriv) {
+                topTabsBadge.setBackground(makeM3PillDrawable(withAlpha(p.primary, 0x28), p.primary, 1.6f, 6f));
+                topTabsBadge.setTextColor(p.primary);
+            } else {
+                topTabsBadge.setBackground(makeM3PillDrawable(Color.TRANSPARENT, p.onSurfaceVariant, 1.6f, 6f));
+                topTabsBadge.setTextColor(p.onSurface);
+            }
+        }
         applySyncPillTheme(p, isLight, isSyncActivelyPaired());
         if (navMenu != null) navMenu.setColorFilter(p.onSurfaceVariant);
         if (navTabsBadge != null) {
@@ -1574,7 +1609,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 }
                 updateUrlInlineButtons();
             } else {
-                urlInput.setGravity(Gravity.CENTER);
+                urlInput.setGravity("top".equals(barPosition) ? (Gravity.START | Gravity.CENTER_VERTICAL) : Gravity.CENTER);
                 if ("omnibox".equals(activeUiScreen)) {
                     closeOverlayScreen();
                 } else {
@@ -1679,9 +1714,49 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
         if (compactTabsWrap != null) {
             compactTabsWrap.setOnClickListener(v -> navTabsWrap.performClick());
+            compactTabsWrap.setOnLongClickListener(v -> {
+                MobileTab cur = getActiveTab();
+                v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                createTab(null, true, cur != null && cur.isPrivate);
+                return true;
+            });
         }
         if (compactMenu != null) {
             compactMenu.setOnClickListener(v -> navMenu.performClick());
+        }
+
+        // Authentic Chrome x Brave 56dp Top Toolbar Listeners
+        if (topHome != null) {
+            topHome.setOnClickListener(v -> {
+                if ("omnibox".equals(activeUiScreen) || urlInput.hasFocus()) {
+                    hideKeyboard();
+                    urlInput.clearFocus();
+                    closeOverlayScreen();
+                } else {
+                    goActiveTabHome();
+                }
+            });
+        }
+        if (topShieldWrap != null) {
+            topShieldWrap.setOnClickListener(v -> {
+                if ("shields".equals(activeUiScreen)) {
+                    closeOverlayScreen();
+                } else {
+                    openUiScreen("shields");
+                }
+            });
+        }
+        if (topTabsWrap != null) {
+            topTabsWrap.setOnClickListener(v -> navTabsWrap.performClick());
+            topTabsWrap.setOnLongClickListener(v -> {
+                MobileTab cur = getActiveTab();
+                v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                createTab(null, true, cur != null && cur.isPrivate);
+                return true;
+            });
+        }
+        if (topMenu != null) {
+            topMenu.setOnClickListener(v -> navMenu.performClick());
         }
 
         navForward.setOnClickListener(v -> {
@@ -1722,13 +1797,23 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 openUiScreen("tabs");
             }
         });
+        navTabsWrap.setOnLongClickListener(v -> {
+            MobileTab cur = getActiveTab();
+            v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            createTab(null, true, cur != null && cur.isPrivate);
+            return true;
+        });
 
         navMenu.setOnClickListener(v -> {
             if ("menu".equals(activeUiScreen)) closeOverlayScreen();
             else openUiScreen("menu");
         });
 
-        // Tactile Material Design 3 120Hz spring press feedback on Bottom App Bar & toolbar controls
+        // Tactile Material Design 3 120Hz spring press feedback on Top & Bottom toolbar controls
+        attachSpringPress(topHome, topHome, 0.94f, 1.0f);
+        attachSpringPress(topShieldWrap, topShieldWrap, 0.94f, 1.0f);
+        attachSpringPress(topTabsWrap, topTabsBadge, 0.94f, 1.0f);
+        attachSpringPress(topMenu, topMenu, 0.94f, 1.0f);
         attachSpringPress(navBack, navBack, 0.94f, 1.0f);
         attachSpringPress(navForward, navForward, 0.94f, 1.0f);
         attachSpringPress(navSyncWrap, navSyncPill, 0.94f, 1.04f);
@@ -1951,7 +2036,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         chromeCollapsed = collapsed;
 
         boolean isTop = "top".equals(barPosition);
-        float pillHiddenOffset = isTop ? dp(14) : -dp(14);
+        float pillHiddenOffset = -dp(14);
         if (collapsed) {
             // Expand WebView behind the bar on frame 0 BEFORE gliding the bar away -> ZERO black dead bar!
             pendingDeferredViewportPad = false;
@@ -1980,12 +2065,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
         } else {
-            if (topChrome != null) {
+            if (topChrome != null && topChrome.getVisibility() == View.VISIBLE) {
                 topChrome.animate().cancel();
                 topChrome.animate().translationY(0f).alpha(1f).setDuration(220)
                     .setInterpolator(M3_EMPHASIZED_DECEL).start();
             }
-            if (bottomChrome != null) {
+            if (bottomChrome != null && bottomChrome.getVisibility() == View.VISIBLE) {
                 bottomChrome.animate().cancel();
                 bottomChrome.animate().translationY(0f).alpha(1f).setDuration(220)
                     .setInterpolator(M3_EMPHASIZED_DECEL)
@@ -3662,7 +3747,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     }
 
     // =========================================================================
-    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.13.0)
+    // Android Material Design 3 Extensions & Custom Userscripts Engine (v5.14.0)
     // =========================================================================
     private JSONObject buildExtensionsSnapshot() {
         JSONObject root = new JSONObject();
@@ -3929,6 +4014,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
 
     private void updateChromeVisibility() {
         boolean isTop = "top".equals(barPosition);
+        boolean wantBottomBar = !isTop || showBottomToolbar;
         boolean hideBars = localOverlayOpen || isModalSheetScreen(activeUiScreen) || "tabs".equals(activeUiScreen);
         boolean isStart = "start".equals(activeUiScreen);
         boolean inOmnibox = "omnibox".equals(activeUiScreen);
@@ -3944,28 +4030,32 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             statusScrim.setVisibility(onWeb ? View.VISIBLE : View.GONE);
         }
         if (compactWebRow != null) {
-            compactWebRow.setVisibility((!hideBars && compactWeb && !hideBottomForWebIme) ? View.VISIBLE : View.GONE);
+            compactWebRow.setVisibility((wantBottomBar && !hideBars && compactWeb && !hideBottomForWebIme) ? View.VISIBLE : View.GONE);
         }
         if (navDockRow != null) {
-            navDockRow.setVisibility((hideBars || inOmnibox || hideBottomForWebIme || compactWeb) ? View.GONE : View.VISIBLE);
+            navDockRow.setVisibility((!wantBottomBar || hideBars || inOmnibox || hideBottomForWebIme || compactWeb) ? View.GONE : View.VISIBLE);
         }
 
-        // Start Page has its own Pixel Search Pill (#sp-search-pill): hide native URL slots on "start"
+        // Start Page has its own Chrome x Brave NTP top bar & 56dp Search Pill: hide native URL slots on "start"
         if (showUrlBar && !compactWeb) {
             if (isTop) {
-                animateUrlSlotReveal(topUrlSlot, true);
+                if (topUrlSlot != null) topUrlSlot.setVisibility(View.VISIBLE);
+                if (topShieldWrap != null) topShieldWrap.setVisibility(inOmnibox ? View.GONE : View.VISIBLE);
+                if (topTabsWrap != null) topTabsWrap.setVisibility(inOmnibox ? View.GONE : View.VISIBLE);
+                if (topMenu != null) topMenu.setVisibility(inOmnibox ? View.GONE : View.VISIBLE);
+                animateUrlSlotReveal(topChromeRow, true);
                 hideUrlSlotImmediate(bottomUrlSlot);
             } else {
                 animateUrlSlotReveal(bottomUrlSlot, false);
-                hideUrlSlotImmediate(topUrlSlot);
+                hideUrlSlotImmediate(topChromeRow);
             }
         } else {
             hideUrlSlotImmediate(bottomUrlSlot);
-            hideUrlSlotImmediate(topUrlSlot);
+            hideUrlSlotImmediate(topChromeRow);
         }
 
         if (bottomChrome != null) {
-            boolean showBottom = !hideBars && !(inOmnibox && isTop) && !hideBottomForWebIme;
+            boolean showBottom = wantBottomBar && !hideBars && !(inOmnibox && isTop) && !hideBottomForWebIme;
             int bottomBarPad = inOmnibox ? Math.max(insetBottomPx, insetImePx) : insetBottomPx;
             if (bottomChrome.getPaddingLeft() != insetLeftPx ||
                 bottomChrome.getPaddingRight() != insetRightPx ||
@@ -4081,14 +4171,16 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         MobileTab t = getActiveTab();
         boolean isLight = isEffectiveLightTheme();
         boolean isPriv = t != null && t.isPrivate;
+        boolean isTop = "top".equals(barPosition);
+        boolean inOmnibox = "omnibox".equals(activeUiScreen) || urlInput.hasFocus();
         boolean onWeb = (t != null && !t.isNewTab && "none".equals(activeUiScreen));
         M3Palette p = resolveM3Palette(isLight, isPriv);
 
         if (!urlInput.hasFocus()) {
             updatingUrlText = true;
-            urlInput.setGravity(Gravity.CENTER);
+            urlInput.setGravity(isTop ? (Gravity.START | Gravity.CENTER_VERTICAL) : Gravity.CENTER);
             urlInput.setText(onWeb ? formatHost(t.url) : "");
-            urlInput.setHint(isPriv ? "Search privately or enter website" : "Search or enter website");
+            urlInput.setHint(isPriv ? "Search privately or type URL" : "Search or type web address");
             updatingUrlText = false;
         }
 
@@ -4100,22 +4192,43 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             } else if (!onWeb || urlInput.hasFocus()) {
                 btnShieldIco.setImageResource(R.drawable.ic_search);
                 btnShieldIco.setColorFilter(p.onSurfaceVariant);
-            } else if (siteShieldUp && (t.blockedCount > 0 || t.trackingParamsStripped > 0)) {
-                btnShieldIco.setImageResource(R.drawable.ic_shield);
-                btnShieldIco.setColorFilter(p.primary);
-            } else if (t.url != null && t.url.startsWith("https://")) {
-                btnShieldIco.setImageResource(R.drawable.ic_shield);
-                btnShieldIco.setColorFilter(siteShieldUp ? p.primary : p.onSurfaceVariant);
+            } else if (isTop) {
+                // Authentic Chrome x Brave pill: HTTPS lock inside address pill, dedicated Brave Shields badge right beside it
+                if (t.url != null && t.url.startsWith("https://")) {
+                    btnShieldIco.setImageResource(R.drawable.ic_lock);
+                    btnShieldIco.setColorFilter(p.onSurfaceVariant);
+                } else {
+                    btnShieldIco.setImageResource(R.drawable.ic_shield);
+                    btnShieldIco.setColorFilter(siteShieldUp ? p.primary : p.onSurfaceVariant);
+                }
             } else {
                 btnShieldIco.setImageResource(R.drawable.ic_shield);
                 btnShieldIco.setColorFilter(siteShieldUp ? p.primary : p.onSurfaceVariant);
             }
         }
 
-        btnShieldWrap.setAlpha((!onWeb || siteShieldUp) ? 1.0f : 0.45f);
-        // Keep URL pill clutter-free: never display numeric tracker badge digits inside url_pill_box
+        btnShieldWrap.setAlpha((!onWeb || isTop || siteShieldUp) ? 1.0f : 0.45f);
+        // Keep URL pill clutter-free: live blocked counter lives on dedicated Brave top_shield_badge
         if (btnShieldCount != null) {
             btnShieldCount.setVisibility(View.GONE);
+        }
+
+        if (topHome != null) {
+            topHome.setImageResource(inOmnibox ? R.drawable.ic_back : R.drawable.ic_home);
+            topHome.setContentDescription(inOmnibox ? "Cancel search" : "Home");
+        }
+        if (topShieldIco != null && topShieldWrap != null) {
+            topShieldIco.setColorFilter(siteShieldUp ? p.primary : p.onSurfaceVariant);
+            topShieldWrap.setAlpha(siteShieldUp ? 1.0f : 0.48f);
+        }
+        if (topShieldBadge != null) {
+            int blk = (onWeb && t != null) ? t.blockedCount : 0;
+            if (onWeb && siteShieldUp && blk > 0) {
+                topShieldBadge.setText(blk > 99 ? "99+" : String.valueOf(blk));
+                topShieldBadge.setVisibility(View.VISIBLE);
+            } else {
+                topShieldBadge.setVisibility(View.GONE);
+            }
         }
 
         btnReload.setImageResource(onWeb && t.loading ? R.drawable.ic_close : R.drawable.ic_reload);
@@ -4148,6 +4261,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         String tabCountStr = tabCount > 99 ? "∞" : String.valueOf(Math.max(1, tabCount));
         navTabsBadge.setText(tabCountStr);
         if (compactTabsBadge != null) compactTabsBadge.setText(tabCountStr);
+        if (topTabsBadge != null) topTabsBadge.setText(tabCountStr);
 
         applySyncPillTheme(p, isLight, isSyncActivelyPaired());
     }
@@ -4191,8 +4305,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
     private int computeVisibleTopChromeDp() {
         if (topChrome == null || topChrome.getVisibility() != View.VISIBLE) return 0;
         int total = 0;
-        if (topUrlSlot != null && topUrlSlot.getVisibility() == View.VISIBLE) {
-            total += topUrlSlot.getHeight() > 0 ? pxToDp(topUrlSlot.getHeight()) : 64;
+        if (topChromeRow != null && topChromeRow.getVisibility() == View.VISIBLE) {
+            total += topChromeRow.getHeight() > 0 ? pxToDp(topChromeRow.getHeight()) : 56;
         }
         if (findBar != null && findBar.getVisibility() == View.VISIBLE) {
             total += findBar.getHeight() > 0 ? pxToDp(findBar.getHeight()) : 48;
@@ -4246,7 +4360,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("clockStyle", clockStyle);
                 st.put("autoThemeFromWallpaper", autoThemeFromWallpaper);
                 st.put("showMotd", showMotd);
+                st.put("showBraveStats", showBraveStats);
                 st.put("barPosition", barPosition);
+                st.put("showBottomToolbar", showBottomToolbar);
                 st.put("compactBottomBar", compactBottomBar);
                 st.put("autoHideBar", autoHideBar);
                 st.put("darkWebPages", darkWebPages);
@@ -4299,6 +4415,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 st.put("activeZoom", resolveZoomForUrl(activePageUrl));
                 st.put("activeTitle", (active != null && !active.isNewTab) ? active.title : (active != null && active.isPrivate ? "Private Tab" : "Start Page"));
                 st.put("activePrivate", active != null && active.isPrivate);
+                st.put("activeLoading", active != null && !active.isNewTab && active.loading);
+                st.put("canGoBack", active != null && !active.isNewTab && active.webView != null && active.webView.canGoBack());
+                st.put("canGoForward", active != null && !active.isNewTab && active.webView != null && active.webView.canGoForward());
                 st.put("desktopMode", active != null && active.desktopMode);
                 st.put("isBookmarked", active != null && !active.isNewTab && hasUrl(bookmarks, active.url));
                 st.put("isInReading", active != null && !active.isNewTab && hasUrl(readingList, active.url));
@@ -4617,8 +4736,25 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         String cs = prefs.getString("clockStyle", "off");
         clockStyle = ("minimal".equals(cs) || "bold".equals(cs)) ? cs : "off";
         autoThemeFromWallpaper = prefs.getBoolean("autoThemeFromWallpaper", true);
-        showMotd = prefs.getBoolean("showMotd", true);
-        barPosition = "top".equals(prefs.getString("barPosition", "bottom")) ? "top" : "bottom";
+        boolean migratedChromeBrave = prefs.getBoolean("chromeBraveUiV1Migrated", false);
+        if (!migratedChromeBrave) {
+            barPosition = "top";
+            showBottomToolbar = false;
+            showBraveStats = true;
+            showMotd = false;
+            prefs.edit()
+                .putString("barPosition", "top")
+                .putBoolean("showBottomToolbar", false)
+                .putBoolean("showBraveStats", true)
+                .putBoolean("showMotd", false)
+                .putBoolean("chromeBraveUiV1Migrated", true)
+                .apply();
+        } else {
+            showMotd = prefs.getBoolean("showMotd", false);
+            showBraveStats = prefs.getBoolean("showBraveStats", true);
+            barPosition = "bottom".equals(prefs.getString("barPosition", "top")) ? "bottom" : "top";
+            showBottomToolbar = prefs.getBoolean("showBottomToolbar", false);
+        }
         compactBottomBar = prefs.getBoolean("compactBottomBar", true);
         autoHideBar = prefs.getBoolean("autoHideBar", true);
         darkWebPages = prefs.getBoolean("darkWebPages", false);
@@ -4780,7 +4916,9 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
             .putString("clockStyle", clockStyle)
             .putBoolean("autoThemeFromWallpaper", autoThemeFromWallpaper)
             .putBoolean("showMotd", showMotd)
+            .putBoolean("showBraveStats", showBraveStats)
             .putString("barPosition", barPosition)
+            .putBoolean("showBottomToolbar", showBottomToolbar)
             .putBoolean("compactBottomBar", compactBottomBar)
             .putBoolean("autoHideBar", autoHideBar)
             .putBoolean("darkWebPages", darkWebPages)
@@ -5437,6 +5575,42 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         }
 
         @JavascriptInterface
+        public void goBack() {
+            mainHandler.post(() -> {
+                closeOverlayScreen();
+                MobileTab t = getActiveTab();
+                if (t != null && !t.isNewTab && t.webView != null && t.webView.canGoBack()) {
+                    t.webView.goBack();
+                } else if (t != null && !t.isNewTab) {
+                    goActiveTabHome();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void goForward() {
+            mainHandler.post(() -> {
+                closeOverlayScreen();
+                MobileTab t = getActiveTab();
+                if (t != null && !t.isNewTab && t.webView != null && t.webView.canGoForward()) {
+                    t.webView.goForward();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void reloadPage() {
+            mainHandler.post(() -> {
+                closeOverlayScreen();
+                MobileTab t = getActiveTab();
+                if (t != null && !t.isNewTab && t.webView != null) {
+                    if (t.loading) t.webView.stopLoading();
+                    else t.webView.reload();
+                }
+            });
+        }
+
+        @JavascriptInterface
         public void openDownloads() {
             mainHandler.post(() -> {
                 scanActivePageMedia();
@@ -6063,10 +6237,32 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
         @JavascriptInterface
         public void setBarPosition(final String pos) {
             mainHandler.post(() -> {
-                barPosition = "top".equalsIgnoreCase(pos) ? "top" : "bottom";
+                barPosition = "bottom".equalsIgnoreCase(pos) ? "bottom" : "top";
                 saveLocalCollections();
                 applyBarPosition();
                 applyNativeTheme();
+                updateChromeUi();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleBottomToolbar() {
+            mainHandler.post(() -> {
+                showBottomToolbar = !showBottomToolbar;
+                saveLocalCollections();
+                applyBarPosition();
+                applyNativeTheme();
+                updateChromeUi();
+                pushStateToUi();
+            });
+        }
+
+        @JavascriptInterface
+        public void toggleBraveStats() {
+            mainHandler.post(() -> {
+                showBraveStats = !showBraveStats;
+                saveLocalCollections();
                 pushStateToUi();
             });
         }
@@ -6762,10 +6958,12 @@ public class MainActivity extends AppCompatActivity implements SyncManager.Liste
                 shortcutStyle = "circle";
                 clockStyle = "off";
                 autoThemeFromWallpaper = true;
-                showMotd = true;
+                showMotd = false;
+                showBraveStats = true;
                 accentColor = "amethyst";
                 wallpaper = "wp-m3-amethyst.jpg";
-                barPosition = "bottom";
+                barPosition = "top";
+                showBottomToolbar = false;
                 compactBottomBar = true;
                 autoHideBar = true;
                 darkWebPages = false;

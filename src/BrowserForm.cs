@@ -1949,7 +1949,7 @@ namespace DejavuBrowser
                 case "froggie-lime": accent = "lime"; mode = "light"; return true;
                 case "wp-m3-froggie-sage.jpg":
                 case "froggie-sage": accent = "aurora"; mode = "dark"; return true;
-                // 12 bespoke v5.13.0 Googlebook Material Design 3 vector wallpapers
+                // 12 bespoke v5.14.0 Googlebook Material Design 3 vector wallpapers
                 case "vec:m3-googlebook-waves":
                 case "m3-googlebook-waves": accent = "sapphire"; mode = "dark"; return true;
                 case "vec:m3-pixel-scallops":
@@ -7927,7 +7927,7 @@ namespace DejavuBrowser
             }
             _appContext.BroadcastSettingsApplied();
             RefreshShieldScriptsOnAllTabsAsync();
-            PushShellToast("Settings restored to v5.13.0 defaults", "success");
+            PushShellToast("Settings restored to v5.14.0 defaults", "success");
         }
 
         private void ToggleFavoriteActiveTab()
